@@ -1,0 +1,216 @@
+# Contributing to FedRAMP 20x MCP Server
+
+Thank you for your interest in contributing to the FedRAMP 20x MCP Server! This document provides guidelines for contributing to the project.
+
+## Code of Conduct
+
+This project follows a professional and respectful code of conduct. Please be considerate and constructive in all interactions.
+
+## How to Contribute
+
+### Reporting Issues
+
+- Check existing issues before creating a new one
+- Provide clear steps to reproduce bugs
+- Include relevant environment information (Python version, OS, etc.)
+- Use descriptive titles and detailed descriptions
+
+### Suggesting Features
+
+- Check if the feature has already been requested
+- Explain the use case and benefits
+- Consider how it aligns with FedRAMP 20x requirements
+- Be open to discussion and alternative solutions
+
+### Pull Requests
+
+1. **Fork the repository** and create a feature branch
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+2. **Make your changes**
+   - Follow the existing code style
+   - Add tests for new functionality
+   - Update documentation as needed
+   - Keep commits focused and atomic
+
+3. **Test your changes**
+   ```bash
+   uv run pytest
+   ```
+
+4. **Update documentation**
+   - Update README.md if adding features or changing behavior
+   - Update docstrings for new functions/tools
+   - Add examples if applicable
+
+5. **Submit the pull request**
+   - Provide a clear description of the changes
+   - Reference any related issues
+   - Ensure CI/CD checks pass
+
+## Development Setup
+
+### Prerequisites
+
+- Python 3.10 or higher
+
+### Installation
+
+```bash
+# Clone your fork
+git clone https://github.com/YOUR-USERNAME/FedRAMP20xMCP.git
+cd FedRAMP20xMCP
+
+# Create virtual environment and install dependencies
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install -e ".[dev]"
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+pytest
+
+# Run specific test file
+pytest tests/test_loader.py
+
+# Run with coverage
+pytest --cov=src --cov-report=html
+```
+
+### Testing with MCP Inspector
+
+```bash
+npx @modelcontextprotocol/inspector python -m fedramp_20x_mcp
+```
+
+### Testing with VS Code
+
+1. The `.vscode/mcp.json` is already configured and committed
+2. Ensure you've installed the package: `pip install -e ".[dev]"`
+3. Reload VS Code
+4. Grant permissions when prompted (first use)
+5. Test the server using GitHub Copilot Chat
+
+**Note:** The mcp.json uses `python -m fedramp_20x_mcp` which requires the package to be installed in your active Python environment. If you're using a virtual environment, ensure it's activated or configure VS Code to use it.
+
+**Security Best Practice:** Never use `"alwaysAllow"` in MCP configurations that will be shared. Users should explicitly grant permissions.
+
+## Code Style
+
+- Follow PEP 8 conventions
+- Use type hints for function signatures
+- Write descriptive docstrings for all public functions
+- Keep functions focused and single-purpose
+- Use meaningful variable names
+
+## Project Structure
+
+```
+FedRAMP20xMCP/
+├── src/
+│   └── fedramp_20x_mcp/    # Main package
+│       ├── __init__.py     # Package initialization
+│       ├── __main__.py     # Entry point for python -m
+│       ├── server.py       # MCP server (tools, prompts, server setup)
+│       └── data_loader.py  # Data fetching and caching logic
+├── tests/                   # Test suite
+│   ├── __init__.py
+│   ├── test_loader.py
+│   ├── test_definitions.py
+│   └── test_all_tools.py
+├── .github/                # GitHub configuration
+│   ├── workflows/          # CI/CD workflows
+│   └── copilot-instructions.md  # GitHub Copilot context
+├── .vscode/                # VS Code configuration
+│   ├── mcp.json            # MCP server configuration
+│   └── settings.json.example  # Example VS Code settings
+├── pyproject.toml          # Project metadata and dependencies
+├── LICENSE                 # MIT License
+├── README.md               # User-facing documentation
+├── CONTRIBUTING.md         # This file
+└── .gitignore              # Git exclusions
+```
+
+## Adding New Tools
+
+When adding a new MCP tool:
+
+1. Add the tool function in `src/fedramp_20x_mcp/server.py`
+2. Decorate with `@mcp.tool()`
+3. Provide clear parameter descriptions
+4. Return structured data
+5. Add tests in `test_all_tools.py`
+6. Document in README.md
+
+Example:
+```python
+@server.call_tool()
+async def your_tool_name(
+    parameter_name: str
+) -> list[types.TextContent]:
+    """
+    Brief description of what the tool does.
+    
+    Args:
+        parameter_name: Description of the parameter
+        
+    Returns:
+        List of TextContent with the results
+    """
+    # Implementation
+    return [types.TextContent(type="text", text=result)]
+```
+
+## Adding New Prompts
+
+When adding a new comprehensive prompt:
+
+1. Add the prompt function in `fedramp_server.py`
+2. Decorate with `@server.list_prompts()` or `@server.get_prompt()`
+3. Provide detailed, actionable content
+4. Include examples and templates
+5. Document in README.md under "Available Prompts"
+
+## Data Updates
+
+The server fetches FedRAMP 20x data from:
+https://github.com/FedRAMP/docs/tree/main/data
+
+If FedRAMP updates their data format:
+1. Update `data_loader.py` to handle new structure
+2. Add tests for new data formats
+3. Update documentation
+4. Bump version number
+
+## Azure-First Guidance
+
+This project prioritizes Azure services in all examples and recommendations:
+- Use Azure services in code examples (Azure Functions, Key Vault, AKS, etc.)
+- Reference Azure Government for FedRAMP compliance
+- Include Azure CLI and PowerShell examples
+- Mention Bicep/ARM templates for IaC
+- Highlight Microsoft Entra ID, Defender, Sentinel integration
+
+## Versioning
+
+We follow [Semantic Versioning](https://semver.org/):
+- **MAJOR**: Breaking API changes
+- **MINOR**: New features, backward compatible
+- **PATCH**: Bug fixes, backward compatible
+
+## Questions?
+
+- Open an issue for general questions
+- Tag issues with `question` label
+- Check existing documentation first
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the MIT License.
+
+Thank you for contributing! 🎉

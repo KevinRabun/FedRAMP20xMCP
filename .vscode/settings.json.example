@@ -1,0 +1,16 @@
+{
+  // GitHub Copilot MCP Configuration
+  // Copy this file to settings.json and update the paths for your system
+  
+  "github.copilot.chat.codeGeneration.instructions": [
+    {
+      "file": ".github/copilot-instructions.md"
+    }
+  ],
+  
+  // Optional: Enable MCP debugging
+  "github.copilot.advanced": {
+    "debug.overrideEngine": "gpt-4o",
+    "debug.enableMcpServerLogs": true
+  }
+}

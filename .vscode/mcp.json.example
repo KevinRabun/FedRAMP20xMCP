@@ -1,0 +1,83 @@
+{
+  // VS Code MCP Configuration Example for FedRAMP 20x MCP Server
+  // Copy this file to 'mcp.json' in the same directory and update paths as needed
+  
+  // WORKSPACE-LEVEL CONFIGURATION (Recommended)
+  // This configuration is suitable for sharing with others via git
+  // Users will be prompted to grant permissions on first use
+  "servers": {
+    "fedramp-20x-mcp": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "fedramp-20x-mcp"]
+    }
+  }
+}
+
+// ============================================================================
+// Additional Configuration Options
+// ============================================================================
+
+// OPTION 1: Using absolute path to uv (if uv not in PATH)
+// {
+//   "servers": {
+//     "fedramp-20x-mcp": {
+//       "type": "stdio",
+//       "command": "C:\\Users\\YourUsername\\.local\\bin\\uv.exe",  // Windows
+//       // "command": "/Users/yourusername/.local/bin/uv",         // macOS
+//       // "command": "/home/yourusername/.local/bin/uv",          // Linux
+//       "args": ["run", "fedramp-20x-mcp"]
+//     }
+//   }
+// }
+
+// OPTION 2: Using Python directly (after pip install)
+// {
+//   "servers": {
+//     "fedramp-20x-mcp": {
+//       "type": "stdio",
+//       "command": "python",
+//       "args": ["-m", "fedramp_20x_mcp"]
+//     }
+//   }
+// }
+
+// OPTION 3: Direct command (if installed globally)
+// {
+//   "servers": {
+//     "fedramp-20x-mcp": {
+//       "type": "stdio",
+//       "command": "fedramp-20x-mcp"
+//     }
+//   }
+// }
+
+// ============================================================================
+// USER-LEVEL CONFIGURATION (Alternative)
+// ============================================================================
+// For global availability across all VS Code projects, add to User Settings:
+// File -> Preferences -> Settings -> Search "MCP" -> Edit settings.json
+//
+// {
+//   "github.copilot.chat.mcp.servers": {
+//     "fedramp-20x-mcp": {
+//       "type": "stdio",
+//       "command": "uv",
+//       "args": [
+//         "--directory",
+//         "/absolute/path/to/FedRAMP20xMCP",
+//         "run",
+//         "fedramp-20x-mcp"
+//       ]
+//     }
+//   }
+// }
+
+// ============================================================================
+// SECURITY NOTES
+// ============================================================================
+// - Do NOT use "alwaysAllow" - it bypasses permission prompts
+// - VS Code will ask you to approve tool/prompt access on first use
+// - This is a security feature to ensure you trust the MCP server
+// - Grant permissions only if you trust the source code
+
