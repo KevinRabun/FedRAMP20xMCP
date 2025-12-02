@@ -1,8 +1,0 @@
-{
-  "name": "fedramp-20x-mcp",
-  "vendor": "Kevin Rabun",
-  "description": "FedRAMP 20x security requirements and controls with Azure-first guidance. Provides 20 tools for querying requirements, definitions, KSIs, and official documentation.",
-  "sourceUrl": "https://github.com/KevinRabun/FedRAMP20xMCP",
-  "homepage": "https://github.com/KevinRabun/FedRAMP20xMCP",
-  "license": "MIT"
-}
