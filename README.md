@@ -169,6 +169,145 @@ Test the server using the MCP Inspector:
 npx @modelcontextprotocol/inspector python -m fedramp_20x_mcp
 ```
 
+## Recommended MCP Server Setup
+
+For the best FedRAMP 20x compliance workflow, combine this server with other MCP servers that provide Azure and Microsoft context. Here's a complete configuration that includes Azure integration, Microsoft documentation, and GitHub access.
+
+### Complete .vscode/mcp.json Configuration
+
+Create or update `.vscode/mcp.json` in your project with this configuration:
+
+```jsonc
+{
+  "servers": {
+    // FedRAMP 20x Requirements & Documentation
+    "fedramp-20x-mcp": {
+      "type": "stdio",
+      "command": "${workspaceFolder}/.venv/Scripts/python.exe",  // Windows
+      // "command": "${workspaceFolder}/.venv/bin/python",       // macOS/Linux
+      "args": ["-m", "fedramp_20x_mcp"]
+    },
+    
+    // Azure Resources & Operations (Official Microsoft MCP Server)
+    "azure-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@azure/mcp-server-azure"
+      ],
+      "env": {
+        "AZURE_SUBSCRIPTION_ID": "your-subscription-id-here"
+      }
+    },
+    
+    // Microsoft Documentation (Learn, Azure Docs, API References)
+    "microsoft-docs": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@microsoft/mcp-server-docs"
+      ]
+    },
+    
+    // GitHub (for Azure samples, Bicep templates, FedRAMP examples)
+    "github": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "your-github-token-here"
+      }
+    }
+  }
+}
+```
+
+### What Each Server Provides
+
+**fedramp-20x-mcp** (This Server)
+- 329 FedRAMP 20x requirements
+- 72 Key Security Indicators
+- 50 official definitions
+- 15 markdown documentation files
+- Implementation examples and Azure guidance
+- Compliance validation tools
+
+**azure-mcp** (Microsoft Official)
+- Query Azure resources (VMs, databases, networks)
+- Check Azure Policy compliance
+- Review Security Center/Defender alerts
+- Validate configurations against FedRAMP requirements
+- Real-time Azure resource inventory
+
+**microsoft-docs**
+- Azure service documentation
+- API references
+- Best practices guides
+- Architecture patterns
+- Security baselines
+
+**github**
+- Access Azure Quick Start templates
+- FedRAMP Bicep/Terraform examples
+- Azure sample applications
+- Community compliance patterns
+
+### Setup Steps
+
+1. **Configure Azure Authentication** (for azure-mcp):
+   ```bash
+   # Install Azure CLI if not already installed
+   # Login to Azure
+   az login
+   
+   # Set your subscription
+   az account set --subscription "your-subscription-id"
+   
+   # Add subscription ID to mcp.json
+   ```
+
+2. **Configure GitHub Token** (for github):
+   - Go to https://github.com/settings/tokens
+   - Create a Personal Access Token with `repo` scope
+   - Add token to mcp.json `GITHUB_PERSONAL_ACCESS_TOKEN`
+
+3. **Reload VS Code** to activate all servers
+
+4. **Grant Permissions** when VS Code prompts (first use)
+
+### Example Workflow with Multiple Servers
+
+```
+User: "Check if my Azure Key Vault configuration meets FedRAMP KSI-IAM-06 requirements"
+
+AI Assistant uses:
+1. fedramp-20x-mcp → Get KSI-IAM-06 requirements
+2. azure-mcp → Query actual Key Vault configuration
+3. microsoft-docs → Get Azure Key Vault security best practices
+4. Returns compliance analysis with gaps and remediation steps
+```
+
+### Simplified Setup (FedRAMP Only)
+
+If you only want FedRAMP requirements without Azure integration:
+
+```jsonc
+{
+  "servers": {
+    "fedramp-20x-mcp": {
+      "type": "stdio",
+      "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "args": ["-m", "fedramp_20x_mcp"]
+    }
+  }
+}
+```
+
 ## Available Tools
 
 ### get_control
