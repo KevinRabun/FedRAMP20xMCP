@@ -6875,9 +6875,11 @@ async def generate_ksi_specification(
     
     doc.add_heading('6.3 Evidence Collection Schedule', 2)
     doc.add_paragraph(
-        "Evidence should be collected on a quarterly basis to align with FedRAMP "
+        "Evidence should be collected regularly to align with FedRAMP "
         "Collaborative Continuous Monitoring (CCM) requirements. Automate evidence "
-        "collection where possible using Azure Functions, Logic Apps, or Azure Automation."
+        "collection where possible using Azure Functions, Logic Apps, or Azure Automation. "
+        "Engineering teams should determine the appropriate collection frequency based on "
+        "system criticality and organizational requirements."
     )
     
     # Implementation Plan Template
@@ -6886,7 +6888,6 @@ async def generate_ksi_specification(
     phases = [
         {
             'phase': 'Phase 1: Requirements Analysis',
-            'duration': '1-2 weeks',
             'activities': [
                 'Review NIST 800-53 control requirements',
                 'Map controls to Azure services and features',
@@ -6896,7 +6897,6 @@ async def generate_ksi_specification(
         },
         {
             'phase': 'Phase 2: Design',
-            'duration': '2-3 weeks',
             'activities': [
                 'Create Azure architecture diagrams',
                 'Design IaC templates (Bicep/Terraform)',
@@ -6907,7 +6907,6 @@ async def generate_ksi_specification(
         },
         {
             'phase': 'Phase 3: Implementation',
-            'duration': '3-4 weeks',
             'activities': [
                 'Deploy Azure infrastructure using IaC',
                 'Configure Azure services and policies',
@@ -6918,7 +6917,6 @@ async def generate_ksi_specification(
         },
         {
             'phase': 'Phase 4: Testing and Validation',
-            'duration': '1-2 weeks',
             'activities': [
                 'Validate Azure Policy compliance',
                 'Test evidence collection automation',
@@ -6929,7 +6927,6 @@ async def generate_ksi_specification(
         },
         {
             'phase': 'Phase 5: Documentation and Evidence',
-            'duration': '1 week',
             'activities': [
                 'Collect and organize all evidence',
                 'Document implementation details',
@@ -6942,7 +6939,6 @@ async def generate_ksi_specification(
     
     for phase_info in phases:
         doc.add_heading(phase_info['phase'], 2)
-        doc.add_paragraph(f"Duration: {phase_info['duration']}")
         doc.add_paragraph("Activities:")
         for activity in phase_info['activities']:
             doc.add_paragraph(activity, style='List Bullet')

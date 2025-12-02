@@ -326,8 +326,8 @@ Generate a comprehensive product specification Word document for a KSI to guide 
 - **Requirement Statement**: Full KSI requirement text
 - **NIST 800-53 Controls**: Related security controls with titles
 - **Azure-First Implementation**: Recommended Azure services, IaC guidance, automation strategies
-- **Evidence Collection**: User-defined strategy + recommended evidence types and schedule
-- **5-Phase Implementation Plan**: Requirements analysis → Design → Implementation → Testing → Documentation
+- **Evidence Collection**: User-defined strategy + recommended evidence types and flexible collection schedule
+- **5-Phase Implementation Plan**: Requirements analysis → Design → Implementation → Testing → Documentation (engineering teams determine timelines)
 - **Team Roles**: Cloud architect, DevOps, security engineer, compliance specialist, etc.
 - **Success Criteria**: Measurable outcomes for implementation validation
 - **Risks and Mitigation**: Common risks with Azure-specific mitigation strategies
