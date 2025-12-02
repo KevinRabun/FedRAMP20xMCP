@@ -4,6 +4,10 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: read
+  id-token: write  # Required for trusted publishing to PyPI
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -40,8 +44,6 @@ jobs:
   publish:
     needs: test
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write  # Required for trusted publishing
     
     steps:
     - uses: actions/checkout@v4
