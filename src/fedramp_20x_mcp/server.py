@@ -16,9 +16,6 @@ from pathlib import Path
 from typing import Any, Optional
 
 from mcp.server.fastmcp import FastMCP
-from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-from openpyxl.utils import get_column_letter
 
 from .data_loader import get_data_loader
 
@@ -6370,6 +6367,13 @@ async def export_to_excel(
     Returns:
         Path to the generated Excel file
     """
+    # Import openpyxl here to avoid import errors if not installed
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    except ImportError:
+        return "Error: openpyxl package is required for Excel export. Install with: pip install openpyxl"
+    
     await data_loader.load_data()
     
     # Determine output path
