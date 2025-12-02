@@ -65,6 +65,10 @@ htmlcov/
 .env
 .env.local
 
+# MCP Registry tokens
+.mcpregistry_registry_token
+.mcpregistry_github_token
+
 # Build artifacts
 *.whl
 *.tar.gz
