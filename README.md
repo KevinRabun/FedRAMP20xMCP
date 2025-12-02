@@ -60,6 +60,7 @@ uv pip install -e .
 - `mcp>=1.2.0` - Model Context Protocol SDK
 - `httpx>=0.27.0` - HTTP client for fetching FedRAMP data
 - `openpyxl>=3.1.0` - Excel file generation for export features
+- `python-docx>=1.1.0` - Word document generation for KSI specifications
 
 **Troubleshooting:** If you get "Python was not found" errors:
 1. Ensure Python is installed and added to PATH
@@ -130,7 +131,7 @@ uv pip install -e .
    - Open Copilot Chat
    - Ask questions about FedRAMP 20x requirements
    - Use `@workspace` to query specific controls or families
-   - Access all 16 tools and 9 comprehensive prompts
+   - Access all 17 tools and 9 comprehensive prompts
 
 ### With Claude Desktop
 
@@ -308,6 +309,41 @@ Export FedRAMP 20x data to CSV files for data analysis and spreadsheet imports.
 - Export all KSIs: `export_to_csv("ksi")`
 - Export all requirements: `export_to_csv("all_requirements")`
 - Export definitions: `export_to_csv("definitions")`
+
+### generate_ksi_specification
+Generate a comprehensive product specification Word document for a KSI to guide engineering implementation and planning.
+
+**Parameters:**
+- `ksi_id` (string): The KSI identifier (e.g., "KSI-AFR-01")
+- `evidence_collection_strategy` (string): High-level evidence collection strategy description provided by the user
+- `output_path` (string, optional): Custom output path. If not provided, saves to Downloads folder
+
+**Returns:** Path to the generated Word (.docx) document
+
+**Document Contents:**
+- **Metadata**: KSI ID, category, impact levels, status, date
+- **Overview**: Purpose and scope aligned with FedRAMP 20x
+- **Requirement Statement**: Full KSI requirement text
+- **NIST 800-53 Controls**: Related security controls with titles
+- **Azure-First Implementation**: Recommended Azure services, IaC guidance, automation strategies
+- **Evidence Collection**: User-defined strategy + recommended evidence types and schedule
+- **5-Phase Implementation Plan**: Requirements analysis → Design → Implementation → Testing → Documentation
+- **Team Roles**: Cloud architect, DevOps, security engineer, compliance specialist, etc.
+- **Success Criteria**: Measurable outcomes for implementation validation
+- **Risks and Mitigation**: Common risks with Azure-specific mitigation strategies
+- **Resources**: Links to FedRAMP, NIST, Azure documentation
+
+**Azure Services Recommended** (context-aware based on KSI category):
+- Microsoft Entra ID, Azure Policy, Azure Monitor (all KSIs)
+- Microsoft Defender for Cloud, Azure Key Vault, Azure Firewall (category-specific)
+- Microsoft Sentinel, Azure Automation, Log Analytics (control-specific)
+
+**Example usage:**
+```
+Generate specification for KSI-AFR-01:
+> generate_ksi_specification with ksi_id="KSI-AFR-01" 
+  and evidence_collection_strategy="Collect Azure Policy compliance reports quarterly using Azure Automation runbooks. Store evidence in Azure Blob Storage with immutable storage policy."
+```
 
 ## Available Prompts
 
