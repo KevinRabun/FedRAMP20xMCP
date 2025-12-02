@@ -4,7 +4,11 @@ An MCP (Model Context Protocol) server that provides access to FedRAMP 20x secur
 
 ## Overview
 
-This server loads FedRAMP 20x requirements data from the official [FedRAMP documentation repository](https://github.com/FedRAMP/docs/tree/main/data) and provides tools for querying requirements by control, family, or keyword.
+This server loads FedRAMP 20x data from the official [FedRAMP documentation repository](https://github.com/FedRAMP/docs) and provides tools for querying requirements by control, family, or keyword.
+
+**Data Sources:**
+- **Requirements Data:** JSON files from [github.com/FedRAMP/docs/tree/main/data](https://github.com/FedRAMP/docs/tree/main/data)
+- **Documentation:** Markdown files from [github.com/FedRAMP/docs/tree/main/docs](https://github.com/FedRAMP/docs/tree/main/docs)
 
 **Azure Focus:** All implementation examples, architecture patterns, and vendor recommendations prioritize Microsoft Azure services (Azure Government, Microsoft Entra ID, Azure Key Vault, AKS, Azure Functions, Bicep, etc.) while remaining cloud-agnostic where appropriate.
 
@@ -31,6 +35,8 @@ The server provides access to **329 requirements** across all 12 FedRAMP 20x doc
 - **Keyword Search**: Search across all requirements using keywords
 - **FedRAMP Definitions**: Look up official FedRAMP term definitions
 - **Key Security Indicators**: Access and query FedRAMP Key Security Indicators (KSI)
+- **Documentation Search**: Search and retrieve official FedRAMP documentation markdown files
+- **Dynamic Content**: Automatically discovers and loads all markdown documentation files
 
 ## Installation
 
@@ -248,6 +254,29 @@ Validate a system architecture against FedRAMP 20x requirements.
 
 **Parameters:**
 - `architecture_description` (string): Description of the architecture to validate
+
+### search_documentation
+Search FedRAMP official documentation markdown files for specific keywords.
+
+**Parameters:**
+- `keywords` (string): Keywords to search for in documentation
+
+**Returns:** Matching documentation sections with context from all available markdown files
+
+**Note:** Automatically loads all markdown files from the docs directory, so new documentation is always searchable.
+
+### get_documentation_file
+Get the full content of a specific FedRAMP documentation file.
+
+**Parameters:**
+- `filename` (string): The markdown filename (e.g., "overview.md", "key-security-indicators.md")
+
+**Returns:** Full markdown content of the documentation file
+
+### list_documentation_files
+List all available FedRAMP documentation files.
+
+**Returns:** Complete list of all markdown documentation files dynamically discovered from the repository
 
 ### export_to_excel
 Export FedRAMP 20x data to Excel files for offline analysis and reporting.

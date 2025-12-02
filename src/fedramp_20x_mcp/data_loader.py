@@ -21,6 +21,7 @@ GITHUB_RAW_BASE = "https://raw.githubusercontent.com"
 FEDRAMP_REPO = "FedRAMP/docs"
 FEDRAMP_BRANCH = "main"
 DATA_PATH = "data"
+DOCS_PATH = "docs"
 
 # Cache configuration
 CACHE_DIR = Path(__file__).parent / "__fedramp_cache__"
@@ -36,10 +37,16 @@ class FedRAMPDataLoader:
         self.cache_dir.mkdir(exist_ok=True)
         self._data_cache: Optional[Dict[str, Any]] = None
         self._cache_timestamp: Optional[datetime] = None
+        self._docs_cache: Optional[Dict[str, str]] = None
+        self._docs_cache_timestamp: Optional[datetime] = None
 
     def _get_cache_file(self) -> Path:
         """Get the cache file path."""
         return self.cache_dir / "fedramp_controls.json"
+    
+    def _get_docs_cache_file(self) -> Path:
+        """Get the documentation cache file path."""
+        return self.cache_dir / "fedramp_docs.json"
 
     def _is_cache_valid(self) -> bool:
         """Check if the cache is still valid."""
@@ -462,6 +469,183 @@ class FedRAMPDataLoader:
                 results.append(definition)
 
         return results
+
+
+    async def _fetch_docs_file_list(self) -> List[Dict[str, Any]]:
+        """Fetch the list of markdown files from the docs directory."""
+        url = f"{GITHUB_API_BASE}/repos/{FEDRAMP_REPO}/contents/{DOCS_PATH}"
+        
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(url)
+                response.raise_for_status()
+                files = response.json()
+                
+                # Filter for markdown files only
+                markdown_files = [
+                    f for f in files 
+                    if isinstance(f, dict) and f.get("name", "").endswith(".md") and f.get("type") == "file"
+                ]
+                
+                logger.info(f"Found {len(markdown_files)} markdown files in docs directory")
+                return markdown_files
+            except Exception as e:
+                logger.error(f"Failed to fetch docs file list: {e}")
+                return []
+
+    async def _fetch_markdown_file(self, filename: str) -> Optional[str]:
+        """Fetch a single markdown file from the docs directory."""
+        url = f"{GITHUB_RAW_BASE}/{FEDRAMP_REPO}/{FEDRAMP_BRANCH}/{DOCS_PATH}/{filename}"
+        
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(url)
+                response.raise_for_status()
+                content = response.text
+                logger.info(f"Fetched {filename}")
+                return content
+            except Exception as e:
+                logger.error(f"Failed to fetch {filename}: {e}")
+                return None
+
+    async def load_documentation(self, force_refresh: bool = False) -> Dict[str, str]:
+        """
+        Load FedRAMP documentation markdown files.
+
+        Args:
+            force_refresh: Force refresh from remote source
+
+        Returns:
+            Dictionary mapping filenames to their markdown content
+        """
+        # Check memory cache first
+        if not force_refresh and self._docs_cache and self._docs_cache_timestamp:
+            if datetime.now() - self._docs_cache_timestamp < CACHE_DURATION:
+                logger.info("Using in-memory docs cache")
+                return self._docs_cache
+
+        # Try to load from disk cache
+        if not force_refresh:
+            cache_file = self._get_docs_cache_file()
+            if cache_file.exists():
+                try:
+                    with open(cache_file, "r", encoding="utf-8") as f:
+                        cached_data = json.load(f)
+                        logger.info("Loaded documentation from cache")
+                        self._docs_cache = cached_data
+                        self._docs_cache_timestamp = datetime.now()
+                        return cached_data
+                except Exception as e:
+                    logger.error(f"Failed to load docs cache: {e}")
+
+        # Fetch from remote
+        logger.info("Fetching documentation from GitHub repository")
+        
+        # Get list of markdown files
+        files = await self._fetch_docs_file_list()
+        if not files:
+            # If fetch fails and we have cache, use it even if old
+            cache_file = self._get_docs_cache_file()
+            if cache_file.exists():
+                try:
+                    with open(cache_file, "r", encoding="utf-8") as f:
+                        cached_data = json.load(f)
+                        logger.warning("Using stale docs cache due to fetch failure")
+                        return cached_data
+                except Exception as e:
+                    logger.error(f"Failed to load stale cache: {e}")
+            raise Exception("Failed to fetch documentation and no cache available")
+
+        # Fetch all markdown files
+        docs_data: Dict[str, str] = {}
+        
+        for file_info in files:
+            filename = file_info.get("name", "")
+            content = await self._fetch_markdown_file(filename)
+            
+            if content:
+                docs_data[filename] = content
+
+        # Save to cache
+        cache_file = self._get_docs_cache_file()
+        try:
+            with open(cache_file, "w", encoding="utf-8") as f:
+                json.dump(docs_data, f, indent=2)
+                logger.info("Saved documentation to cache")
+        except Exception as e:
+            logger.error(f"Failed to save docs cache: {e}")
+
+        self._docs_cache = docs_data
+        self._docs_cache_timestamp = datetime.now()
+
+        logger.info(f"Loaded {len(docs_data)} documentation files")
+        return docs_data
+
+    def search_documentation(self, keywords: str) -> List[Dict[str, Any]]:
+        """
+        Search FedRAMP documentation by keywords.
+
+        Args:
+            keywords: Keywords to search for
+
+        Returns:
+            List of matching documentation sections with context
+        """
+        if not self._docs_cache:
+            return []
+
+        keywords_lower = keywords.lower()
+        results = []
+
+        for filename, content in self._docs_cache.items():
+            content_lower = content.lower()
+            
+            # Check if keywords appear in the document
+            if keywords_lower in content_lower:
+                # Find all occurrences with context
+                lines = content.split('\n')
+                for i, line in enumerate(lines):
+                    if keywords_lower in line.lower():
+                        # Get context (3 lines before and after)
+                        start = max(0, i - 3)
+                        end = min(len(lines), i + 4)
+                        context_lines = lines[start:end]
+                        
+                        results.append({
+                            "filename": filename,
+                            "line_number": i + 1,
+                            "match": line.strip(),
+                            "context": '\n'.join(context_lines)
+                        })
+
+        return results
+
+    def get_documentation_file(self, filename: str) -> Optional[str]:
+        """
+        Get the full content of a specific documentation file.
+
+        Args:
+            filename: The markdown filename (e.g., "overview.md")
+
+        Returns:
+            Full markdown content or None if not found
+        """
+        if not self._docs_cache:
+            return None
+        
+        return self._docs_cache.get(filename)
+
+    def list_documentation_files(self) -> List[str]:
+        """
+        List all available documentation files.
+
+        Returns:
+            List of documentation filenames
+        """
+        if not self._docs_cache:
+            return []
+        
+        return list(self._docs_cache.keys())
 
 
 # Global data loader instance
