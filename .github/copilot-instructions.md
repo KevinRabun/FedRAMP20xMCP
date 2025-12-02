@@ -23,7 +23,7 @@ This project is an MCP server that loads FedRAMP 20x requirements from JSON file
 ✅ 1-hour data caching with automatic refresh
 
 ### Current Capabilities
-The server provides 20 MCP tools:
+The server provides 21 MCP tools:
 
 **Core Tools:**
 1. **get_control** - Get specific FedRAMP requirement by ID
@@ -52,6 +52,9 @@ The server provides 20 MCP tools:
 18. **export_to_excel** - Export data to Excel files
 19. **export_to_csv** - Export data to CSV files
 20. **generate_ksi_specification** - Generate detailed KSI product specifications
+
+**Planning Tools:**
+21. **generate_implementation_questions** - Generate strategic interview questions for PMs and engineers to think through FedRAMP 20x implementation considerations
 
 **Comprehensive Prompts:**
 1. **initial_assessment_roadmap** - 9-11 month roadmap with budget/team guidance

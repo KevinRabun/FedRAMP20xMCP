@@ -7208,6 +7208,266 @@ def _get_azure_recommendations(category: str, controls: list) -> list:
     return unique_recommendations
 
 
+@mcp.tool()
+async def generate_implementation_questions(requirement_id: str) -> str:
+    """
+    Generate strategic interview questions for product managers and engineers.
+    
+    Helps teams think through FedRAMP 20x implementation considerations by providing
+    thoughtful questions about architecture, operations, compliance, and trade-offs.
+    
+    Works with both requirements (e.g., "FRR-CCM-01") and KSIs (e.g., "KSI-IAM-01").
+    
+    Args:
+        requirement_id: The requirement or KSI ID to generate questions for
+    
+    Returns:
+        Strategic questions organized by stakeholder role and concern area
+    """
+    await data_loader.load_data()
+    
+    # Try to get as requirement first, then as KSI
+    item = data_loader.get_control(requirement_id)
+    if not item:
+        item = data_loader.get_ksi(requirement_id)
+    
+    if not item:
+        return f"Requirement or KSI '{requirement_id}' not found. Please check the ID format (e.g., 'FRR-CCM-01' or 'KSI-IAM-01')."
+    
+    title = item.get('title', item.get('name', 'N/A'))
+    description = item.get('description', item.get('statement', 'N/A'))
+    family = item.get('family', 'N/A')
+    
+    result = f"""# Implementation Questions for {requirement_id}
+
+## Requirement Overview
+**Title:** {title}
+**Family:** {family}
+**Description:** {description}
+
+---
+
+## Strategic Questions for Product Managers
+
+### Business & Risk Perspective:
+1. **Business Impact**: How will implementing this requirement affect our product roadmap and time-to-market?
+   
+2. **Customer Value**: Which of our federal customers will benefit most from this compliance capability?
+   
+3. **Competitive Position**: How does implementing this requirement differentiate us in the FedRAMP marketplace?
+   
+4. **Resource Allocation**: What trade-offs are we making by prioritizing this requirement over other features?
+   
+5. **Cost-Benefit**: What's the total cost of ownership (TCO) for implementing and maintaining this control long-term?
+
+### Planning & Prioritization:
+6. **Dependencies**: What other requirements or KSIs must be implemented before this one?
+   
+7. **Phasing**: Should this be implemented in phases, or does it require a complete solution from day one?
+   
+8. **Quick Wins**: Are there interim measures we can implement to partially satisfy this requirement faster?
+   
+9. **Vendor Support**: Do Azure or Microsoft 365 services already provide capabilities we can leverage?
+   
+10. **Documentation**: What policy and procedure documentation will we need to create and maintain?
+
+---
+
+## Technical Questions for Engineers
+
+### Architecture & Design:
+11. **System Design**: How does this requirement influence our overall system architecture?
+    
+12. **Azure Services**: Which Azure or Microsoft 365 services can help us meet this requirement natively?
+    
+13. **Automation**: What aspects of this requirement can be automated vs. require manual processes?
+    
+14. **Scalability**: Will our implementation scale as our customer base and data volumes grow?
+    
+15. **Performance**: What performance impacts should we expect from implementing this control?
+
+### Implementation Details:
+16. **Integration**: How does this integrate with our existing security and compliance infrastructure?
+    
+17. **Configuration**: What configuration management is needed to maintain consistency across environments?
+    
+18. **Monitoring**: How will we monitor and alert on compliance status for this requirement?
+    
+19. **Testing**: How can we test that this control is working effectively? What does "good" look like?
+    
+20. **Evidence**: What evidence needs to be collected, and how will we automate its collection?
+
+### Operations & Maintenance:
+21. **Day-to-Day**: What are the ongoing operational tasks required to maintain this control?
+    
+22. **Troubleshooting**: What failure modes should we anticipate, and how will we diagnose issues?
+    
+23. **Updates**: How will updates to Azure services or our application affect this control?
+    
+24. **Disaster Recovery**: How does this requirement fit into our disaster recovery and business continuity plans?
+    
+25. **Technical Debt**: What technical debt might we accumulate with a quick implementation vs. a more robust solution?
+
+---
+
+## Cross-Functional Questions
+
+### Security & Compliance:
+26. **Defense in Depth**: How does this control work with other controls to provide defense in depth?
+    
+27. **Audit Trail**: What audit trails are required, and how long must we retain them?
+    
+28. **Access Control**: Who needs access to configure, monitor, or modify this control?
+    
+29. **Incident Response**: How does this requirement impact our incident response procedures?
+    
+30. **Continuous Monitoring**: How will we continuously validate compliance with this requirement?
+
+### User Experience:
+31. **User Impact**: Will implementing this requirement affect user experience or workflows?
+    
+32. **Training**: What training will users or administrators need for this control?
+    
+33. **Communication**: How should we communicate changes to customers and stakeholders?
+    
+34. **Support**: What support burden will this create for our customer success team?
+    
+35. **Accessibility**: Does this control maintain accessibility and usability standards?
+
+---
+
+## Azure-Specific Considerations
+
+### Azure Implementation:
+"""
+    
+    # Add Azure-specific questions based on family/keywords
+    keywords = title.lower() + ' ' + description.lower()
+    
+    if any(word in keywords for word in ['identity', 'access', 'authentication', 'authorization']):
+        result += """
+36. **Entra ID Configuration**: How should we configure Microsoft Entra ID to support this requirement?
+    
+37. **RBAC Design**: What Azure RBAC roles and assignments are needed?
+    
+38. **Conditional Access**: Should we implement Conditional Access policies for this control?
+    
+39. **Privileged Access**: Do we need Privileged Identity Management (PIM) for just-in-time access?
+"""
+    
+    if any(word in keywords for word in ['monitor', 'log', 'audit', 'visibility', 'detect']):
+        result += """
+40. **Log Analytics**: What logs need to be sent to Azure Monitor and retained for how long?
+    
+41. **Sentinel Integration**: Should Microsoft Sentinel be used for threat detection or compliance monitoring?
+    
+42. **Alerting Strategy**: What alerts should be configured, and who should receive them?
+    
+43. **Dashboard Design**: What compliance dashboards should we create for visibility?
+"""
+    
+    if any(word in keywords for word in ['configuration', 'policy', 'governance', 'compliance']):
+        result += """
+44. **Azure Policy**: What Azure Policies should be created to enforce this requirement?
+    
+45. **Blueprints**: Should we use Azure Blueprints to package this control for repeatable deployment?
+    
+46. **Management Groups**: How should management group hierarchy support this control?
+    
+47. **Resource Tags**: What tagging strategy is needed for compliance tracking?
+"""
+    
+    if any(word in keywords for word in ['security', 'vulnerability', 'threat', 'protection']):
+        result += """
+48. **Defender Configuration**: How should Microsoft Defender for Cloud be configured?
+    
+49. **Security Baseline**: Does this align with Azure Security Benchmark recommendations?
+    
+50. **Vulnerability Scanning**: What vulnerability scanning tools should be integrated?
+    
+51. **Penetration Testing**: How will we conduct penetration testing for this control?
+"""
+    
+    if any(word in keywords for word in ['data', 'encryption', 'confidential', 'protection']):
+        result += """
+52. **Key Vault**: How should Azure Key Vault be used for secrets and key management?
+    
+53. **Encryption Strategy**: What data needs encryption at rest and in transit?
+    
+54. **Data Classification**: How does data classification affect implementation?
+    
+55. **Data Residency**: Are there data residency requirements that impact Azure region selection?
+"""
+    
+    result += """
+
+---
+
+## Decision Framework
+
+### Must Answer Before Implementation:
+- [ ] Have we clearly defined what "compliance" means for this requirement?
+- [ ] Do we have executive sponsorship and budget approval?
+- [ ] Have we identified all affected systems and data flows?
+- [ ] Do we know who is accountable for this control's success?
+- [ ] Have we validated our approach with a FedRAMP expert or 3PAO?
+
+### Success Criteria:
+- [ ] Control can be demonstrated to work as designed
+- [ ] Evidence collection is automated and reliable
+- [ ] Documentation is complete and approved
+- [ ] Team is trained on operation and troubleshooting
+- [ ] Control passes internal testing and review
+
+### Red Flags to Watch For:
+- [ ] No clear owner or accountability for the control
+- [ ] Significant manual processes that don't scale
+- [ ] Heavy reliance on undocumented configurations
+- [ ] No monitoring or alerting for control failures
+- [ ] Implementation differs significantly from documented design
+
+---
+
+## Next Steps
+
+1. **Research Phase**: Gather information about Azure capabilities and best practices
+2. **Design Phase**: Create architecture diagrams and implementation plans
+3. **Review Phase**: Get design reviewed by security, compliance, and architecture teams
+4. **Prototype Phase**: Build proof-of-concept in non-production environment
+5. **Test Phase**: Validate control works as designed and collects proper evidence
+6. **Document Phase**: Create all required policies, procedures, and runbooks
+7. **Deploy Phase**: Implement in production with proper change management
+8. **Validate Phase**: Conduct internal audit to verify compliance
+9. **Monitor Phase**: Continuously monitor and report on control effectiveness
+
+---
+
+## Recommended Resources
+
+### Microsoft Documentation:
+- Azure Security Benchmark: https://learn.microsoft.com/en-us/security/benchmark/azure/
+- Azure Well-Architected Framework: https://learn.microsoft.com/en-us/azure/well-architected/
+- FedRAMP on Azure: https://learn.microsoft.com/en-us/azure/compliance/offerings/offering-fedramp
+
+### FedRAMP Resources:
+- FedRAMP.gov: https://www.fedramp.gov/
+- FedRAMP 20x Documentation: https://github.com/FedRAMP/docs
+- FedRAMP Marketplace: https://marketplace.fedramp.gov/
+
+### Community:
+- Azure Community: https://techcommunity.microsoft.com/t5/azure/ct-p/Azure
+- FedRAMP PMO: https://www.fedramp.gov/program-basics/
+
+---
+
+*Use these questions to facilitate team discussions, planning sessions, and design reviews. The goal is to ensure thorough thinking about implementation before committing resources.*
+
+*Generated by FedRAMP 20x MCP Server - Implementation Questions Tool*
+"""
+    
+    return result
+
+
 def main():
     """Run the FedRAMP 20x MCP server."""
     logger.info("Starting FedRAMP 20x MCP Server")

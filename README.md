@@ -41,6 +41,7 @@ The server provides access to **329 requirements** across all 12 FedRAMP 20x doc
 - **Key Security Indicators**: Access and query FedRAMP Key Security Indicators (KSI)
 - **Documentation Search**: Search and retrieve official FedRAMP documentation markdown files
 - **Dynamic Content**: Automatically discovers and loads all markdown documentation files
+- **Implementation Planning**: Generate strategic interview questions to help product managers and engineers think through FedRAMP 20x implementation considerations
 
 ## Installation
 
@@ -515,6 +516,61 @@ Generate a comprehensive product specification Word document for a KSI to guide 
 Generate specification for KSI-AFR-01:
 > generate_ksi_specification with ksi_id="KSI-AFR-01" 
   and evidence_collection_strategy="Collect Azure Policy compliance reports quarterly using Azure Automation runbooks. Store evidence in Azure Blob Storage with immutable storage policy."
+```
+
+### generate_implementation_questions
+Generate strategic interview questions for product managers and engineers to facilitate thoughtful planning discussions.
+
+**Parameters:**
+- `requirement_id` (string): The requirement or KSI identifier (e.g., "FRR-CCM-01", "KSI-IAM-01")
+
+**Returns:** Comprehensive set of strategic questions organized by stakeholder role
+
+**Question Categories:**
+1. **Strategic Questions for Product Managers** (10 questions):
+   - Business Impact & ROI
+   - Customer Value & Competitive Position
+   - Resource Allocation & Prioritization
+   - Dependencies & Phasing
+   - Cost-Benefit Analysis
+
+2. **Technical Questions for Engineers** (15 questions):
+   - Architecture & Design Decisions
+   - Azure Service Selection
+   - Automation Opportunities
+   - Monitoring & Evidence Collection
+   - Operations & Maintenance
+
+3. **Cross-Functional Questions** (10 questions):
+   - Security & Compliance Integration
+   - User Experience Impact
+   - Training & Support Needs
+   - Incident Response Alignment
+
+4. **Azure-Specific Considerations** (dynamic, up to 20 questions):
+   - Microsoft Entra ID configuration
+   - Azure RBAC and Conditional Access
+   - Log Analytics and Sentinel integration
+   - Azure Policy and governance
+   - Defender for Cloud setup
+   - Key Vault and encryption strategy
+
+**Additional Guidance:**
+- Decision Framework (5 must-answer questions before implementation)
+- Success Criteria (5 measurable outcomes)
+- Red Flags (5 warning signs to watch for)
+- Next Steps (9-phase implementation approach)
+- Recommended Resources (Microsoft docs, FedRAMP resources, community)
+
+**Purpose:** Help teams think deeply about implementation considerations, trade-offs, and success criteria before committing resources. Questions are designed to facilitate planning sessions, design reviews, and stakeholder alignment.
+
+**Example usage:**
+```
+Generate questions for continuous monitoring requirement:
+> generate_implementation_questions with requirement_id="FRR-CCM-01"
+
+Generate questions for identity and access KSI:
+> generate_implementation_questions with requirement_id="KSI-IAM-01"
 ```
 
 ## Available Prompts
