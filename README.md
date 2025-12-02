@@ -636,23 +636,32 @@ FedRAMP20xMCP/
 │   └── fedramp_20x_mcp/    # Main package
 │       ├── __init__.py     # Package initialization
 │       ├── __main__.py     # Entry point for python -m
-│       ├── server.py       # MCP server implementation
-│       └── data_loader.py  # FedRAMP data fetching and caching
+│       ├── server.py       # MCP server implementation (21 tools, 15 prompts)
+│       ├── data_loader.py  # FedRAMP data fetching and caching
+│       └── __fedramp_cache__/  # Runtime cache for FedRAMP data
 ├── tests/                   # Test suite
 │   ├── __init__.py
-│   ├── test_loader.py
-│   ├── test_definitions.py
-│   └── test_all_tools.py
+│   ├── test_loader.py      # Data loader tests
+│   ├── test_definitions.py # Definition tool tests
+│   ├── test_docs_integration.py  # Documentation integration tests
+│   ├── test_implementation_questions.py  # Implementation questions tests
+│   └── test_all_tools.py   # Comprehensive tool tests
 ├── .github/
 │   ├── workflows/          # CI/CD workflows
-│   └── copilot-instructions.md
+│   │   ├── test.yml        # Test workflow (multi-platform)
+│   │   ├── publish.yml     # PyPI & MCP Registry publishing
+│   │   └── release.yml     # GitHub release workflow
+│   └── copilot-instructions.md  # GitHub Copilot context
 ├── .vscode/
 │   ├── mcp.json            # VS Code MCP configuration
 │   └── settings.json.example
 ├── pyproject.toml          # Project metadata and dependencies
+├── server.json             # MCP Registry metadata
+├── uv.lock                 # UV dependency lock file
 ├── LICENSE                 # MIT License
 ├── README.md               # This file
-└── CONTRIBUTING.md         # Contribution guidelines
+├── CONTRIBUTING.md         # Contribution guidelines
+└── .gitignore              # Git exclusions (includes MCP tokens)
 ```
 
 ## License
