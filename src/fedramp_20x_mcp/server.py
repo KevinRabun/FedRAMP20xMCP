@@ -460,16 +460,16 @@ async def initial_assessment_roadmap() -> str:
 
 # FedRAMP 20x Initial Assessment Roadmap
 
-## Phase 1: Foundation (Weeks 1-4)
+## Phase 1: Foundation
 
-**Week 1-2: Understanding & Planning**
+**Understanding & Planning**
 - [ ] Review all FedRAMP 20x standards (use list_family_controls for each)
 - [ ] Identify your authorization level (Low, Moderate, High)
 - [ ] Determine service categorization (SaaS, PaaS, IaaS)
 - [ ] Assemble core team (CISO, compliance PM, engineering lead)
 - [ ] Budget for 3PAO, tools, and staff time
 
-**Week 3-4: Initial Scoping**
+**Initial Scoping**
 - [ ] Define authorization boundary (FRR-MAS)
 - [ ] Inventory all information resources
 - [ ] Document Federal Customer Data flows
@@ -478,22 +478,22 @@ async def initial_assessment_roadmap() -> str:
 
 **Deliverables**: Authorization boundary diagram, resource inventory, project charter
 
-## Phase 2: Infrastructure & Tools (Weeks 5-12)
+## Phase 2: Infrastructure & Tools
 
-**Security Monitoring (Weeks 5-8)**
+**Security Monitoring**
 - [ ] Select and deploy SIEM solution (KSI-MLA-01)
 - [ ] Configure log forwarding from all systems
 - [ ] Set up vulnerability scanning (FRR-VDR-01)
 - [ ] Implement container/code scanning
 - [ ] Configure alerting and dashboards
 
-**Identity & Access (Weeks 7-10)**
+**Identity & Access**
 - [ ] Implement phishing-resistant MFA (KSI-IAM-01)
 - [ ] Configure least-privilege IAM (KSI-IAM-05)
 - [ ] Set up identity provider integration
 - [ ] Document access procedures
 
-**Automation Foundation (Weeks 9-12)**
+**Automation Foundation**
 - [ ] Implement Infrastructure as Code (KSI-MLA-05)
 - [ ] Set up CI/CD pipelines (KSI-CMT-03)
 - [ ] Configure automated testing
@@ -501,23 +501,23 @@ async def initial_assessment_roadmap() -> str:
 
 **Deliverables**: Operational SIEM, vulnerability scanning, MFA, IaC
 
-## Phase 3: Compliance Infrastructure (Weeks 13-20)
+## Phase 3: Compliance Infrastructure
 
-**KSI Tracking (Weeks 13-16)**
+**KSI Tracking**
 - [ ] Review all 72 KSIs (use list_ksi)
 - [ ] Map KSIs to your monitoring systems
 - [ ] Implement automated KSI collection
 - [ ] Create KSI dashboards
 - [ ] Document collection procedures
 
-**Authorization Data Sharing API (Weeks 15-20)**
+**Authorization Data Sharing API**
 - [ ] Design API endpoints (FRR-ADS)
 - [ ] Implement OSCAL format support
 - [ ] Configure authentication (OAuth 2.0 or mTLS)
 - [ ] Integrate with data sources
 - [ ] Test with sample queries
 
-**Continuous Monitoring Setup (Weeks 17-20)**
+**Continuous Monitoring Setup**
 - [ ] Document quarterly review process (FRR-CCM-QR)
 - [ ] Set up continuous vulnerability scanning
 - [ ] Configure persistent validation (FRR-PVA)
@@ -525,23 +525,23 @@ async def initial_assessment_roadmap() -> str:
 
 **Deliverables**: KSI collection system, Data Sharing API, ConMon procedures
 
-## Phase 4: Documentation (Weeks 21-28)
+## Phase 4: Documentation
 
-**Core Documentation (Weeks 21-24)**
+**Core Documentation**
 - [ ] System Security Plan (OSCAL format)
 - [ ] Vulnerability Detection & Response procedures (FRR-VDR)
 - [ ] Incident Communications Procedures (FRR-ICP)
 - [ ] Significant Change Notification procedures (FRR-SCN)
 - [ ] All 72 KSI implementation descriptions
 
-**Policies & Procedures (Weeks 23-26)**
+**Policies & Procedures**
 - [ ] Security policies aligned to FedRAMP 20x
 - [ ] Change management procedures (KSI-CMT-04)
 - [ ] Incident response plan (KSI-INR-01)
 - [ ] Backup and recovery plan (KSI-RPL-02)
 - [ ] Training programs (KSI-CED)
 
-**Evidence Collection (Weeks 25-28)**
+**Evidence Collection**
 - [ ] Configure automated evidence collection
 - [ ] Validate all KSI metrics are being tracked
 - [ ] Test Authorization Data Sharing API
@@ -550,22 +550,22 @@ async def initial_assessment_roadmap() -> str:
 
 **Deliverables**: Complete SSP, all policies/procedures, evidence collection system
 
-## Phase 5: Assessment Preparation (Weeks 29-36)
+## Phase 5: Assessment Preparation
 
-**Internal Readiness (Weeks 29-32)**
+**Internal Readiness**
 - [ ] Internal security assessment
 - [ ] Gap remediation
 - [ ] Evidence validation
 - [ ] Practice runs with team
 - [ ] Documentation review
 
-**3PAO Selection & Engagement (Weeks 31-34)**
+**3PAO Selection & Engagement**
 - [ ] Select 3PAO assessor
 - [ ] Kickoff meeting
 - [ ] Provide documentation
 - [ ] Schedule assessment
 
-**Assessment (Weeks 35-36)**
+**Assessment**
 - [ ] 3PAO conducts assessment
 - [ ] Daily standups with assessor
 - [ ] Address findings in real-time
@@ -573,20 +573,20 @@ async def initial_assessment_roadmap() -> str:
 
 **Deliverables**: Security Assessment Report (SAR)
 
-## Phase 6: Authorization (Weeks 37-44)
+## Phase 6: Authorization
 
-**POA&M Development (Weeks 37-38)**
+**POA&M Development**
 - [ ] Document all findings
 - [ ] Create remediation plans
 - [ ] Assign ownership and timelines
 - [ ] Get executive approval
 
-**Package Submission (Weeks 39-40)**
+**Package Submission**
 - [ ] Compile complete ATO package
 - [ ] Submit to agency/FedRAMP
 - [ ] Respond to initial questions
 
-**Authorization Review (Weeks 41-44)**
+**Authorization Review**
 - [ ] Agency/FedRAMP reviews package
 - [ ] Respond to questions
 - [ ] Provide additional evidence
@@ -644,16 +644,14 @@ async def initial_assessment_roadmap() -> str:
 - Verify OSCAL support
 - Check for KSI alignment
 
-## Estimated Totals
+## Timeline & Resource Planning
 
-**Timeline**: 9-11 months from start to ATO
-**Team Size**: 5-8 FTE during peak periods
-**Budget**: $300K-800K (tools, 3PAO, staff)
+Engineering teams should determine their own timelines based on available resources, organizational requirements, existing infrastructure maturity, and compliance readiness. Consider factors such as team size, budget constraints, existing security controls, and agency-specific requirements when planning your implementation schedule.
 
 ## Next Steps
 
 1. Use get_implementation_examples for specific requirements
-2. Use estimate_implementation_effort to refine timeline
+2. Use check_requirement_dependencies to understand relationships
 3. Use check_requirement_dependencies to understand relationships
 4. Use search_requirements to find specific guidance
 
@@ -1355,280 +1353,249 @@ async def ksi_implementation_priorities() -> str:
 
 # KSI Implementation Priority Guide
 
-## Priority 1: Foundation (Weeks 1-8)
+**Note:** Engineering teams should determine their own implementation timelines based on system complexity, team size, existing infrastructure, and organizational resources. The priorities below indicate logical sequencing and dependencies, but actual durations will vary by organization.
+
+## Priority 1: Foundation
 **Must be completed first - other KSIs depend on these**
 
 ### Critical Infrastructure
 1. **KSI-MLA-01: SIEM** ⭐ HIGHEST PRIORITY
    - Why: Required for logging all other KSIs
    - Impact: Blocks 15+ other KSIs
-   - Effort: 6-12 weeks
    - Dependencies: None
 
 2. **KSI-IAM-01: Phishing-Resistant MFA** ⭐ HIGH PRIORITY
    - Why: Security foundation, quick win
    - Impact: Protects all access
-   - Effort: 2-4 weeks
    - Dependencies: None
 
 3. **KSI-PIY-01: Automated Inventory**
    - Why: Needed to track what you're securing
    - Impact: Required for boundary management
-   - Effort: 3-4 weeks
    - Dependencies: None
 
 4. **KSI-MLA-02: Audit Logging**
    - Why: Foundation for compliance evidence
    - Impact: Enables incident investigation
-   - Effort: 2-3 weeks
    - Dependencies: KSI-MLA-01 (SIEM)
 
-## Priority 2: Security Controls (Weeks 4-12)
+## Priority 2: Security Controls
 **Core security capabilities**
 
 ### Vulnerability Management
 5. **KSI-AFR-04: Vulnerability Detection and Response** (ties to FRR-VDR)
    - Why: Required for continuous scanning
    - Impact: Critical for compliance
-   - Effort: 4-8 weeks
    - Dependencies: None
 
 6. **KSI-SVC-07: Patching**
    - Why: Vulnerability remediation
    - Impact: Keeps systems secure
-   - Effort: 3-6 weeks
    - Dependencies: KSI-AFR-04, automated deployment
 
 ### Access Management
 7. **KSI-IAM-05: Least Privilege**
    - Why: Limits blast radius
    - Impact: Reduces risk across all systems
-   - Effort: 4-6 weeks
    - Dependencies: KSI-IAM-01, KSI-PIY-01
 
 8. **KSI-IAM-06: Suspicious Activity Detection**
    - Why: Threat detection
    - Impact: Early incident detection
-   - Effort: 3-4 weeks
    - Dependencies: KSI-MLA-01 (SIEM)
 
 ### Secret Management
 9. **KSI-SVC-06: Secret Management**
    - Why: Prevents credential exposure
    - Impact: Critical security control
-   - Effort: 4-6 weeks
    - Dependencies: None
 
-## Priority 3: Automation & Operations (Weeks 8-16)
+## Priority 3: Automation & Operations
 **Improve efficiency and reduce manual work**
 
 ### Infrastructure as Code
 10. **KSI-MLA-05: Infrastructure as Code**
     - Why: Enables repeatability and audit
     - Impact: Foundation for automation
-    - Effort: 6-10 weeks
     - Dependencies: None
 
 11. **KSI-SVC-04: Configuration Automation**
     - Why: Consistent, auditable configs
     - Impact: Reduces drift, improves security
-    - Effort: 4-6 weeks
     - Dependencies: KSI-MLA-05
 
 ### CI/CD Integration
 12. **KSI-CMT-03: Automated Testing and Validation**
     - Why: Quality and security gates
     - Impact: Prevents bad deployments
-    - Effort: 4-8 weeks
     - Dependencies: CI/CD pipeline
 
 13. **KSI-CMT-01: Log and Monitor Changes**
     - Why: Change tracking and audit
     - Impact: Required for FRR-SCN compliance
-    - Effort: 2-4 weeks
     - Dependencies: KSI-MLA-01 (SIEM)
 
-## Priority 4: Cloud-Native Security (Weeks 10-18)
+## Priority 4: Cloud-Native Security
 **For containerized/Kubernetes environments**
 
 ### Network Security
 14. **KSI-CNA-01: Restrict Network Traffic**
     - Why: Defense in depth
     - Impact: Limits lateral movement
-    - Effort: 3-5 weeks
     - Dependencies: Network mapping
 
 15. **KSI-CNA-03: Enforce Traffic Flow**
     - Why: Network segmentation
     - Impact: Contains breaches
-    - Effort: 4-6 weeks
     - Dependencies: KSI-CNA-01
 
 16. **KSI-CNA-04: Immutable Infrastructure**
     - Why: Prevents tampering
     - Impact: Improves security posture
-    - Effort: 6-10 weeks
     - Dependencies: KSI-MLA-05 (IaC)
 
 ### Continuous Assessment
 17. **KSI-CNA-08: Persistent Assessment and Automated Enforcement**
     - Why: Real-time compliance checking
     - Impact: Continuous validation
-    - Effort: 6-8 weeks
     - Dependencies: Policy engine (OPA/Kyverno)
 
-## Priority 5: Incident Response (Weeks 12-20)
+## Priority 5: Incident Response
 **Detection and response capabilities**
 
 ### Incident Management
 18. **KSI-INR-01: Incident Response Procedure**
     - Why: Required for compliance
     - Impact: Effective incident handling
-    - Effort: 3-4 weeks
     - Dependencies: None
 
 19. **KSI-INR-02: Incident Logging**
     - Why: Evidence and investigation
     - Impact: Post-incident analysis
-    - Effort: 2-3 weeks
     - Dependencies: KSI-MLA-01 (SIEM)
 
 20. **KSI-INR-03: Incident After Action Reports**
     - Why: Continuous improvement
     - Impact: Learn from incidents
-    - Effort: 1-2 weeks
     - Dependencies: KSI-INR-01, KSI-INR-02
 
-## Priority 6: Business Continuity (Weeks 14-22)
+## Priority 6: Business Continuity
 **Resilience and recovery**
 
 ### Backup & Recovery
 21. **KSI-RPL-01: Recovery Objectives**
     - Why: Define RTO/RPO
     - Impact: Business continuity planning
-    - Effort: 2-3 weeks
     - Dependencies: Business analysis
 
 22. **KSI-RPL-03: System Backups**
     - Why: Data protection
     - Impact: Recovery capability
-    - Effort: 3-5 weeks
     - Dependencies: KSI-RPL-01
 
 23. **KSI-RPL-02: Recovery Plan**
     - Why: Documented procedures
     - Impact: Faster recovery
-    - Effort: 3-4 weeks
     - Dependencies: KSI-RPL-01, KSI-RPL-03
 
 24. **KSI-RPL-04: Recovery Testing**
     - Why: Validate backup/recovery works
     - Impact: Confidence in recovery
-    - Effort: 2-4 weeks (quarterly)
     - Dependencies: KSI-RPL-02, KSI-RPL-03
 
-## Priority 7: Governance & Culture (Weeks 16-28)
+## Priority 7: Governance & Culture
 **Organizational capabilities**
 
 ### Education
 25. **KSI-CED-01: General Education**
     - Why: Security awareness baseline
     - Impact: Reduces human error
-    - Effort: 4-6 weeks (initial setup)
     - Dependencies: Training platform
 
 26. **KSI-CED-02: Role-Specific Education**
     - Why: Targeted training
     - Impact: Better security practices
-    - Effort: 4-8 weeks
     - Dependencies: KSI-CED-01
 
 27. **KSI-CED-03: Development and Engineering Education**
     - Why: Secure coding practices
     - Impact: Fewer vulnerabilities
-    - Effort: 3-6 weeks
     - Dependencies: KSI-CED-01
 
 ### Supply Chain
 28. **KSI-PIY-07: Supply Chain Risk Management**
     - Why: Third-party risk
     - Impact: Vendor security
-    - Effort: 6-10 weeks
     - Dependencies: Vendor assessment process
 
 29. **KSI-TPR-04: Supply Chain Risk Monitoring**
     - Why: Ongoing vendor oversight
     - Impact: Continuous third-party risk
-    - Effort: 4-6 weeks
     - Dependencies: KSI-PIY-07
 
 ### Executive Support
 30. **KSI-PIY-08: Executive Support**
     - Why: Resources and priority
     - Impact: Project success
-    - Effort: Ongoing
     - Dependencies: Business case
 
-## Priority 8: Advanced Capabilities (Weeks 20-32)
+## Priority 8: Advanced Capabilities
 **Nice-to-have and advanced features**
 
 ### Additional Security
 31. **KSI-IAM-02: Passwordless Authentication**
     - Why: Better UX and security
     - Impact: Reduces password attacks
-    - Effort: 6-10 weeks
     - Dependencies: KSI-IAM-01
 
 32. **KSI-IAM-04: Just-in-Time Authorization**
     - Why: Temporary elevated access
     - Impact: Reduces standing privileges
-    - Effort: 8-12 weeks
     - Dependencies: KSI-IAM-05
 
 33. **KSI-SVC-02: Network Encryption**
     - Why: Data in transit protection
     - Impact: Confidentiality
-    - Effort: 2-4 weeks
     - Dependencies: TLS/mTLS implementation
 
 ## Quick Wins (Can be done anytime)
-**Low effort, high visibility**
+**High visibility, relatively straightforward**
 
-- **KSI-AFR-08: FedRAMP Security Inbox** (1-2 days)
+- **KSI-AFR-08: FedRAMP Security Inbox**
   - Set up email forwarding to security inbox
 
-- **KSI-PIY-03: Vulnerability Disclosure Program** (1-2 weeks)
+- **KSI-PIY-03: Vulnerability Disclosure Program**
   - Create security.txt, disclosure policy
 
-- **KSI-SVC-10: Data Destruction** (2-3 weeks)
+- **KSI-SVC-10: Data Destruction**
   - Document and implement data deletion procedures
 
-- **KSI-CMT-04: Change Management Procedure** (2-3 weeks)
+- **KSI-CMT-04: Change Management Procedure**
   - Document existing change process
 
 ## Implementation Strategy
 
-### Phase 1 (Months 1-3): Foundation
+### Phase 1: Foundation
 Focus on Priority 1-2 KSIs
 - SIEM (KSI-MLA-01) ← Start immediately
 - MFA (KSI-IAM-01) ← Parallel track
-- Vulnerability scanning (KSI-AFR-04) ← Week 4
-- Basic logging (KSI-MLA-02) ← Week 6
+- Vulnerability scanning (KSI-AFR-04)
+- Basic logging (KSI-MLA-02)
 
-### Phase 2 (Months 4-6): Core Security
+### Phase 2: Core Security
 Priority 3-4 KSIs
 - IaC (KSI-MLA-05)
 - Secret management (KSI-SVC-06)
 - Network controls (KSI-CNA-01, CNA-03)
 - Automated testing (KSI-CMT-03)
 
-### Phase 3 (Months 7-9): Operations
+### Phase 3: Operations
 Priority 5-6 KSIs
 - Incident response (KSI-INR-01, INR-02, INR-03)
 - Backup/recovery (KSI-RPL-01 through RPL-04)
 - Change tracking (KSI-CMT-01)
 
-### Phase 4 (Months 10-12): Maturity
+### Phase 4: Maturity
 Priority 7-8 KSIs
 - Training programs (KSI-CED)
 - Supply chain management (KSI-PIY-07, TPR-04)
@@ -1645,7 +1612,7 @@ Priority 7-8 KSIs
 ❌ Starting with advanced KSIs before foundation
 ❌ Trying to implement all 72 simultaneously
 ❌ Ignoring dependencies between KSIs
-❌ Not allocating enough time for SIEM
+❌ Underestimating SIEM implementation complexity
 
 **Success Patterns:**
 ✓ Start with SIEM and MFA in parallel
@@ -1661,8 +1628,8 @@ Priority 7-8 KSIs
 - 1 IAM Specialist (MFA, access controls)
 - 1 Compliance PM (coordination, documentation)
 
-**Peak Team (Months 4-8):**
-Add 2-3 more engineers for parallel workstreams
+**Expanded Team:**
+Add 2-3 more engineers for parallel workstreams during peak implementation phases
 
 Use list_ksi to see all 72 indicators, and get_ksi(ksi_id) for detailed requirements."""
 
