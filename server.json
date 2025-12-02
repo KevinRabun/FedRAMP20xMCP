@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "name": "io.github.KevinRabun/FedRAMP20xMCP",
+  "description": "An MCP server that provides access to FedRAMP 20x security requirements and controls.",
+  "repository": {
+    "url": "https://github.com/KevinRabun/FedRAMP20xMCP",
+    "source": "github"
+  },
+  "version": "0.3.1",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "fedramp-20x-mcp",
+      "version": "0.3.1",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
