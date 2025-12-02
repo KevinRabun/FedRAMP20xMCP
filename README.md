@@ -4,6 +4,8 @@
 [![PyPI version](https://badge.fury.io/py/fedramp-20x-mcp.svg)](https://pypi.org/project/fedramp-20x-mcp/)
 [![Python Versions](https://img.shields.io/pypi/pyversions/fedramp-20x-mcp.svg)](https://pypi.org/project/fedramp-20x-mcp/)
 
+<!-- mcp-name: io.github.KevinRabun/FedRAMP20xMCP -->
+
 An MCP (Model Context Protocol) server that provides access to FedRAMP 20x security requirements and controls with **Azure-first guidance**.
 
 ## Overview
