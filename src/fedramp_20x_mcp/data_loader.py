@@ -7,6 +7,7 @@ from the official GitHub repository.
 
 import json
 import logging
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from datetime import datetime, timedelta
@@ -86,9 +87,15 @@ class FedRAMPDataLoader:
         """Fetch the list of JSON files from the GitHub repository."""
         url = f"{GITHUB_API_BASE}/repos/{FEDRAMP_REPO}/contents/{DATA_PATH}"
         
+        # Use GITHUB_TOKEN if available to avoid rate limits
+        headers = {}
+        github_token = os.environ.get("GITHUB_TOKEN")
+        if github_token:
+            headers["Authorization"] = f"Bearer {github_token}"
+        
         async with httpx.AsyncClient() as client:
             try:
-                response = await client.get(url)
+                response = await client.get(url, headers=headers)
                 response.raise_for_status()
                 files = response.json()
                 
@@ -475,9 +482,15 @@ class FedRAMPDataLoader:
         """Fetch the list of markdown files from the docs directory."""
         url = f"{GITHUB_API_BASE}/repos/{FEDRAMP_REPO}/contents/{DOCS_PATH}"
         
+        # Use GITHUB_TOKEN if available to avoid rate limits
+        headers = {}
+        github_token = os.environ.get("GITHUB_TOKEN")
+        if github_token:
+            headers["Authorization"] = f"Bearer {github_token}"
+        
         async with httpx.AsyncClient() as client:
             try:
-                response = await client.get(url)
+                response = await client.get(url, headers=headers)
                 response.raise_for_status()
                 files = response.json()
                 
