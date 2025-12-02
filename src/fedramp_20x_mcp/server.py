@@ -6,12 +6,19 @@ security requirements and controls.
 """
 
 import asyncio
+import csv
 import json
 import logging
+import os
 import sys
-from typing import Any
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Optional
 
 from mcp.server.fastmcp import FastMCP
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
 
 from .data_loader import get_data_loader
 
@@ -6343,6 +6350,320 @@ async def validate_architecture(architecture_description: str) -> str:
 Use search_requirements and get_implementation_examples for specific requirements."""
     
     return result
+
+
+@mcp.tool()
+async def export_to_excel(
+    export_type: str,
+    output_path: Optional[str] = None
+) -> str:
+    """
+    Export FedRAMP 20x data to an Excel file.
+    
+    Args:
+        export_type: Type of data to export. Options:
+            - "ksi" - All 72 Key Security Indicators
+            - "all_requirements" - All 329 requirements across all families
+            - "definitions" - All FedRAMP definitions
+        output_path: Optional custom output path. If not provided, saves to Downloads folder
+        
+    Returns:
+        Path to the generated Excel file
+    """
+    await data_loader.load_data()
+    
+    # Determine output path
+    if output_path is None:
+        downloads_folder = str(Path.home() / "Downloads")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"FedRAMP_20x_{export_type}_{timestamp}.xlsx"
+        output_path = os.path.join(downloads_folder, filename)
+    
+    # Create workbook
+    wb = Workbook()
+    if wb.active:
+        wb.remove(wb.active)  # Remove default sheet
+    
+    # Define styles
+    header_font = Font(bold=True, color="FFFFFF", size=11)
+    header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+    header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    cell_alignment = Alignment(vertical="top", wrap_text=True)
+    border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    if export_type == "ksi":
+        # Export all KSIs
+        ws = wb.create_sheet("Key Security Indicators")
+        
+        # Headers
+        headers = ["KSI ID", "Name", "Category", "Status", "Statement", "Note", "NIST 800-53 Controls", "Reference", "Reference URL", "Impact Levels"]
+        ws.append(headers)
+        
+        # Style headers
+        for col_num, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_num)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_alignment
+            cell.border = border
+        
+        # Get all KSIs
+        all_ksi = data_loader.list_all_ksi()
+        
+        for ksi in all_ksi:
+            ksi_id = ksi.get('id', '')
+            name = ksi.get('name', '')
+            category = ksi.get('category', '')
+            retired = ksi.get('retired', False)
+            status = 'Retired' if retired else 'Active'
+            statement = ksi.get('statement', '')
+            note = ksi.get('note', '')
+            
+            # Format controls
+            controls = ksi.get('controls', [])
+            if controls:
+                control_list = [f"{c.get('control_id', '').upper()} - {c.get('title', '')}" for c in controls]
+                controls_str = '; '.join(control_list)
+            else:
+                controls_str = ''
+            
+            reference = ksi.get('reference', '')
+            reference_url = ksi.get('reference_url', '')
+            impact = ksi.get('impact', {})
+            impact_levels = ', '.join([k.title() for k, v in impact.items() if v]) if impact else ''
+            
+            row = [ksi_id, name, category, status, statement, note, controls_str, reference, reference_url, impact_levels]
+            ws.append(row)
+            
+            # Style data rows
+            for col_num in range(1, len(headers) + 1):
+                cell = ws.cell(row=ws.max_row, column=col_num)
+                cell.alignment = cell_alignment
+                cell.border = border
+        
+        # Adjust column widths
+        ws.column_dimensions['A'].width = 15  # KSI ID
+        ws.column_dimensions['B'].width = 40  # Name
+        ws.column_dimensions['C'].width = 30  # Category
+        ws.column_dimensions['D'].width = 10  # Status
+        ws.column_dimensions['E'].width = 60  # Statement
+        ws.column_dimensions['F'].width = 40  # Note
+        ws.column_dimensions['G'].width = 70  # NIST 800-53 Controls
+        ws.column_dimensions['H'].width = 30  # Reference
+        ws.column_dimensions['I'].width = 50  # Reference URL
+        ws.column_dimensions['J'].width = 20  # Impact Levels
+        
+        # Freeze header row
+        ws.freeze_panes = 'A2'
+    
+    elif export_type == "all_requirements":
+        # Export all requirements
+        ws = wb.create_sheet("All Requirements")
+        
+        headers = ["Requirement ID", "Family", "Term/Name", "Description", "Document"]
+        ws.append(headers)
+        
+        # Style headers
+        for col_num, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_num)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_alignment
+            cell.border = border
+        
+        # Get all requirements
+        if not data_loader._data_cache:
+            return "Error: Data not loaded. Please try again."
+        all_reqs = data_loader._data_cache["requirements"]
+        
+        for req_id, req in sorted(all_reqs.items()):
+            family = req_id.split('-')[0] if '-' in req_id else ''
+            term = req.get('term', req.get('name', ''))
+            description = req.get('description', req.get('definition', ''))
+            document = req.get('document_name', '')
+            
+            row = [req_id, family, term, description, document]
+            ws.append(row)
+            
+            # Style data rows
+            for col_num in range(1, len(headers) + 1):
+                cell = ws.cell(row=ws.max_row, column=col_num)
+                cell.alignment = cell_alignment
+                cell.border = border
+        
+        # Adjust column widths
+        ws.column_dimensions['A'].width = 18  # ID
+        ws.column_dimensions['B'].width = 12  # Family
+        ws.column_dimensions['C'].width = 40  # Term
+        ws.column_dimensions['D'].width = 60  # Description
+        ws.column_dimensions['E'].width = 30  # Document
+        
+        ws.freeze_panes = 'A2'
+    
+    elif export_type == "definitions":
+        # Export all definitions
+        ws = wb.create_sheet("FedRAMP Definitions")
+        
+        headers = ["Term", "Definition", "Notes", "References"]
+        ws.append(headers)
+        
+        # Style headers
+        for col_num, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_num)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_alignment
+            cell.border = border
+        
+        # Get all definitions
+        all_defs = data_loader.list_all_definitions()
+        
+        for defn in sorted(all_defs, key=lambda x: x.get('term', '')):
+            term = defn.get('term', '')
+            definition = defn.get('definition', '')
+            notes = defn.get('notes', '')
+            references = defn.get('references', '')
+            
+            row = [term, definition, notes, references]
+            ws.append(row)
+            
+            # Style data rows
+            for col_num in range(1, len(headers) + 1):
+                cell = ws.cell(row=ws.max_row, column=col_num)
+                cell.alignment = cell_alignment
+                cell.border = border
+        
+        # Adjust column widths
+        ws.column_dimensions['A'].width = 30  # Term
+        ws.column_dimensions['B'].width = 60  # Definition
+        ws.column_dimensions['C'].width = 40  # Notes
+        ws.column_dimensions['D'].width = 30  # References
+        
+        ws.freeze_panes = 'A2'
+    
+    else:
+        return f"Error: Unknown export_type '{export_type}'. Valid options: ksi, all_requirements, definitions"
+    
+    # Save workbook
+    wb.save(output_path)
+    
+    return f"Excel file created successfully at: {output_path}"
+
+
+@mcp.tool()
+async def export_to_csv(
+    export_type: str,
+    output_path: Optional[str] = None
+) -> str:
+    """
+    Export FedRAMP 20x data to a CSV file.
+    
+    Args:
+        export_type: Type of data to export. Options:
+            - "ksi" - All 72 Key Security Indicators
+            - "all_requirements" - All 329 requirements across all families
+            - "definitions" - All FedRAMP definitions
+        output_path: Optional custom output path. If not provided, saves to Downloads folder
+        
+    Returns:
+        Path to the generated CSV file
+    """
+    await data_loader.load_data()
+    
+    # Determine output path
+    if output_path is None:
+        downloads_folder = str(Path.home() / "Downloads")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"FedRAMP_20x_{export_type}_{timestamp}.csv"
+        output_path = os.path.join(downloads_folder, filename)
+    
+    if export_type == "ksi":
+        # Export all KSIs
+        headers = ["KSI ID", "Name", "Category", "Status", "Statement", "Note", "NIST 800-53 Controls", "Reference", "Reference URL", "Impact Levels"]
+        
+        with open(output_path, 'w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(headers)
+            
+            # Get all KSIs
+            all_ksi = data_loader.list_all_ksi()
+            
+            for ksi in all_ksi:
+                ksi_id = ksi.get('id', '')
+                name = ksi.get('name', '')
+                category = ksi.get('category', '')
+                retired = ksi.get('retired', False)
+                status = 'Retired' if retired else 'Active'
+                statement = ksi.get('statement', '')
+                note = ksi.get('note', '')
+                
+                # Format controls
+                controls = ksi.get('controls', [])
+                if controls:
+                    control_list = [f"{c.get('control_id', '').upper()} - {c.get('title', '')}" for c in controls]
+                    controls_str = '; '.join(control_list)
+                else:
+                    controls_str = ''
+                
+                reference = ksi.get('reference', '')
+                reference_url = ksi.get('reference_url', '')
+                impact = ksi.get('impact', {})
+                impact_levels = ', '.join([k.title() for k, v in impact.items() if v]) if impact else ''
+                
+                row = [ksi_id, name, category, status, statement, note, controls_str, reference, reference_url, impact_levels]
+                writer.writerow(row)
+    
+    elif export_type == "all_requirements":
+        # Export all requirements
+        headers = ["Requirement ID", "Family", "Term/Name", "Description", "Document"]
+        
+        with open(output_path, 'w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(headers)
+            
+            # Get all requirements
+            if not data_loader._data_cache:
+                return "Error: Data not loaded. Please try again."
+            all_reqs = data_loader._data_cache["requirements"]
+            
+            for req_id, req in sorted(all_reqs.items()):
+                family = req_id.split('-')[0] if '-' in req_id else ''
+                term = req.get('term', req.get('name', ''))
+                description = req.get('description', req.get('definition', ''))
+                document = req.get('document_name', '')
+                
+                row = [req_id, family, term, description, document]
+                writer.writerow(row)
+    
+    elif export_type == "definitions":
+        # Export all definitions
+        headers = ["Term", "Definition", "Notes", "References"]
+        
+        with open(output_path, 'w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(headers)
+            
+            # Get all definitions
+            all_defs = data_loader.list_all_definitions()
+            
+            for defn in sorted(all_defs, key=lambda x: x.get('term', '')):
+                term = defn.get('term', '')
+                definition = defn.get('definition', '')
+                notes = defn.get('notes', '')
+                references = defn.get('references', '')
+                
+                row = [term, definition, notes, references]
+                writer.writerow(row)
+    
+    else:
+        return f"Error: Unknown export_type '{export_type}'. Valid options: ksi, all_requirements, definitions"
+    
+    return f"CSV file created successfully at: {output_path}"
 
 
 def main():

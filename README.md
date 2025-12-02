@@ -51,7 +51,15 @@ cd FedRAMP20xMCP
 python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -e .
+
+# If using uv (alternative package manager):
+uv pip install -e .
 ```
+
+**Dependencies:**
+- `mcp>=1.2.0` - Model Context Protocol SDK
+- `httpx>=0.27.0` - HTTP client for fetching FedRAMP data
+- `openpyxl>=3.1.0` - Excel file generation for export features
 
 **Troubleshooting:** If you get "Python was not found" errors:
 1. Ensure Python is installed and added to PATH
@@ -122,7 +130,7 @@ pip install -e .
    - Open Copilot Chat
    - Ask questions about FedRAMP 20x requirements
    - Use `@workspace` to query specific controls or families
-   - Access all 14 tools and 9 comprehensive prompts
+   - Access all 16 tools and 9 comprehensive prompts
 
 ### With Claude Desktop
 
@@ -239,6 +247,67 @@ Validate a system architecture against FedRAMP 20x requirements.
 
 **Parameters:**
 - `architecture_description` (string): Description of the architecture to validate
+
+### export_to_excel
+Export FedRAMP 20x data to Excel files for offline analysis and reporting.
+
+**Parameters:**
+- `export_type` (string): Type of data to export:
+  - `"ksi"` - All 72 Key Security Indicators
+  - `"all_requirements"` - All 329 requirements across all families
+  - `"definitions"` - All FedRAMP term definitions
+- `output_path` (string, optional): Custom output path. If not provided, saves to Downloads folder
+
+**Returns:** Path to the generated Excel file with professional formatting (styled headers, borders, frozen panes)
+
+**KSI Export Columns:**
+1. **KSI ID** - Unique identifier (e.g., KSI-AFR-01)
+2. **Name** - KSI name
+3. **Category** - Control family category
+4. **Status** - Active or Retired
+5. **Statement** - Full requirement statement
+6. **Note** - Additional information (e.g., supersession notes for retired KSIs)
+7. **NIST 800-53 Controls** - Related security controls with titles
+8. **Reference** - Reference document name (if applicable)
+9. **Reference URL** - Link to FedRAMP documentation (if applicable)
+10. **Impact Levels** - Applicable levels (Low, Moderate, High)
+
+**All Requirements Export Columns:**
+1. **Requirement ID** - Unique identifier
+2. **Family** - Control family
+3. **Term/Name** - Requirement name
+4. **Description** - Full description
+5. **Document** - Source document
+
+**Definitions Export Columns:**
+1. **Term** - FedRAMP term
+2. **Definition** - Term definition
+3. **Notes** - Additional context
+4. **References** - Related documentation
+
+**Example usage:**
+- Export all KSIs: `export_to_excel("ksi")`
+- Export all requirements: `export_to_excel("all_requirements")`
+- Export definitions: `export_to_excel("definitions")`
+
+### export_to_csv
+Export FedRAMP 20x data to CSV files for data analysis and spreadsheet imports.
+
+**Parameters:**
+- `export_type` (string): Type of data to export:
+  - `"ksi"` - All 72 Key Security Indicators
+  - `"all_requirements"` - All 329 requirements across all families
+  - `"definitions"` - All FedRAMP term definitions
+- `output_path` (string, optional): Custom output path. If not provided, saves to Downloads folder
+
+**Returns:** Path to the generated CSV file
+
+**Columns:** Same structure as Excel export (see above for detailed column descriptions)
+
+**Example usage:**
+- Export all KSIs: `export_to_csv("ksi")`
+- Export all requirements: `export_to_csv("all_requirements")`
+- Export definitions: `export_to_csv("definitions")`
 
 ## Available Prompts
 
