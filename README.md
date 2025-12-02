@@ -131,7 +131,7 @@ uv pip install -e .
    - Open Copilot Chat
    - Ask questions about FedRAMP 20x requirements
    - Use `@workspace` to query specific controls or families
-   - Access all 17 tools and 9 comprehensive prompts
+   - Access all 17 tools and 15 prompts
 
 ### With Claude Desktop
 
@@ -347,39 +347,41 @@ Generate specification for KSI-AFR-01:
 
 ## Available Prompts
 
-### initial_assessment_roadmap
-Provides a complete 9-11 month roadmap for achieving FedRAMP 20x authorization, including phases, timelines, team requirements, and budget estimates.
+The server provides **15 prompts** for FedRAMP compliance workflows:
 
-### quarterly_review_checklist
-Comprehensive checklist for conducting FedRAMP 20x quarterly reviews (FRR-CCM-QR), covering all 72 KSIs, vulnerability review, change review, and more.
+### Core Analysis and Planning Prompts
 
-### api_design_guide
-Complete guide for designing and implementing the Authorization Data Sharing API (FRR-ADS), including required endpoints, authentication, OSCAL formats, and examples.
+**gap_analysis** - Guide FedRAMP gap analysis to identify applicable requirements, KSIs, and evidence needs
 
-### ksi_implementation_priorities
-Prioritized guide for implementing all 72 Key Security Indicators across 8 priority phases with a 12-month rollout timeline.
+**ato_package_checklist** - Comprehensive checklist for preparing FedRAMP ATO packages
 
-### vendor_evaluation
-Comprehensive vendor assessment framework with category-specific questions, scorecard template, and evaluation criteria for FedRAMP 20x compliance.
+**control_implementation** - Detailed guidance for implementing specific NIST 800-53 controls
 
-### documentation_generator
-Provides OSCAL SSP templates, procedure templates (VDR, ICP, SCN), and KSI implementation documentation templates.
+**risk_assessment** - Framework for conducting FedRAMP-aligned risk assessments
 
-### migration_from_rev5
-Detailed migration plan from FedRAMP Rev 5 to FedRAMP 20x, including 7-phase approach, gap analysis, requirement mapping, and budget estimates ($180K-630K).
+**continuous_monitoring** - Guide for establishing continuous monitoring programs
 
-### audit_preparation
-Comprehensive guide for preparing for FedRAMP 20x assessment and audit, including 12-week preparation timeline, evidence gathering, common findings, and interview preparation.
+**boundary_definition** - Help define authorization boundaries and interconnections
 
-### azure_ksi_automation
-**Complete guide for implementing all 72 KSIs using Microsoft, Azure, and M365 capabilities.** Provides detailed automation approaches for each KSI family including:
-- PowerShell scripts for evidence collection
-- Azure CLI commands for infrastructure automation
-- Microsoft Graph API integration for identity/M365
-- KQL queries for Sentinel/Log Analytics
-- Azure Functions, Logic Apps, and Automation runbooks
-- Complete evidence collection framework with Azure Blob Storage
-- Integration with Microsoft Defender suite, Entra ID, Key Vault, and Sentinel
+### Major Comprehensive Prompts
+
+**initial_assessment_roadmap** - Complete 9-11 month roadmap for FedRAMP 20x authorization with phases, timelines, team requirements, and budget estimates
+
+**quarterly_review_checklist** - Comprehensive checklist for FedRAMP 20x quarterly reviews (FRR-CCM-QR) covering all 72 KSIs, vulnerability review, and change review
+
+**api_design_guide** - Complete guide for Authorization Data Sharing API (FRR-ADS) with endpoints, authentication, OSCAL formats, and examples
+
+**ksi_implementation_priorities** - Prioritized guide for implementing all 72 Key Security Indicators across 8 priority phases with 12-month rollout timeline
+
+**vendor_evaluation** - Comprehensive vendor assessment framework with category-specific questions, scorecard template, and evaluation criteria
+
+**documentation_generator** - OSCAL SSP templates, procedure templates (VDR, ICP, SCN), and KSI implementation documentation templates
+
+**migration_from_rev5** - Detailed migration plan from FedRAMP Rev 5 to 20x with 7-phase approach, gap analysis, requirement mapping, and budget estimates ($180K-630K)
+
+**audit_preparation** - Comprehensive guide for FedRAMP 20x assessment preparation with 12-week timeline, evidence gathering, common findings, and interview prep
+
+**azure_ksi_automation** - **Complete guide for implementing all 72 KSIs using Microsoft, Azure, and M365 capabilities** including PowerShell scripts, Azure CLI commands, Microsoft Graph API integration, KQL queries, Azure Functions/Logic Apps, evidence collection framework, and integration with Defender suite, Entra ID, Key Vault, and Sentinel
 
 ## Data Source
 
