@@ -81,8 +81,7 @@ jobs:
     
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        password: ${{ secrets.PYPI_API_TOKEN }}
+      # Uses trusted publishing (OIDC) - no password needed
     
     - name: Wait for PyPI to update
       run: sleep 60
