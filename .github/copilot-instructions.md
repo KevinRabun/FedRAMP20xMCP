@@ -126,6 +126,30 @@ The server provides 26 MCP tools:
 - Avoid Unicode symbols in test output (use ASCII-safe markers like ✅/❌ for Windows compatibility)
 - **NEVER use deprecated functionality** - Always verify that libraries, actions, APIs, or methods are actively maintained and not deprecated before recommending or implementing them
 
+### Version Management (CRITICAL - MUST DO FOR EVERY RELEASE)
+**When creating a new release, ALWAYS update all 3 version files simultaneously:**
+
+1. **pyproject.toml** - `version = "X.Y.Z"` (line 3)
+2. **server.json** - `"version": "X.Y.Z"` (TWO locations: top-level and in packages array)
+3. **src/fedramp_20x_mcp/__init__.py** - `__version__ = "X.Y.Z"` (line 8)
+
+**Version Update Checklist:**
+- [ ] Update pyproject.toml version
+- [ ] Update server.json top-level version
+- [ ] Update server.json packages[0].version
+- [ ] Update __init__.py __version__
+- [ ] Commit with message "Version X.Y.Z: [description]"
+- [ ] Create annotated tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z: [description]"`
+- [ ] Push with tags: `git push origin main --tags`
+
+**Why This Matters:**
+- PyPI rejects duplicate versions (causes publish failures)
+- MCP server registry requires consistent versions
+- Python module version must match package version
+- Inconsistent versions confuse users and tools
+
+**Failure to update all 3 files will break the release process!**
+
 ### Content Sourcing Requirements (CRITICAL)
 **All recommendations, guidance, and code examples MUST be sourced to authoritative content:**
 
