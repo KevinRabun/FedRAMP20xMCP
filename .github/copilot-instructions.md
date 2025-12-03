@@ -2,6 +2,16 @@
 
 This project is an MCP server that loads FedRAMP 20x requirements from JSON files and official documentation markdown files from https://github.com/FedRAMP/docs and answers user questions about those requirements.
 
+## Important Clarification: OSCAL Format Requirements
+
+**Critical for User Guidance:** FedRAMP 20x requires **machine-readable** formats (JSON, XML, or structured data) for Authorization Data Sharing (FRR-ADS). **OSCAL is the preferred format but NOT strictly required.**
+
+- **Required:** Machine-readable formats (JSON/XML/structured data)
+- **Preferred:** OSCAL format for maximum FedRAMP ecosystem interoperability
+- **Source:** FRR-ADS-01 specifies "machine-readable" - OSCAL is strongly recommended but not mandatory
+
+When users ask about OSCAL requirements, clarify this distinction. See OSCAL_CLARIFICATION.md for detailed guidance.
+
 ## References
 - [MCP Python SDK Documentation](https://github.com/modelcontextprotocol/python-sdk)
 - [MCP Server Build Guide](https://modelcontextprotocol.io/docs/develop/build-server)

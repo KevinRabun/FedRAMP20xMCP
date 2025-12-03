@@ -45,6 +45,11 @@ The server provides access to **329 requirements** across all 12 FedRAMP 20x doc
 - **Dynamic Content**: Automatically discovers and loads all markdown documentation files
 - **Implementation Planning**: Generate strategic interview questions to help product managers and engineers think through FedRAMP 20x implementation considerations
 
+**Important Clarification: OSCAL Format**
+FedRAMP 20x requires **machine-readable** formats (JSON, XML, or structured data) for Authorization Data Sharing. OSCAL is the **preferred** format for maximum interoperability with FedRAMP systems, but it is not strictly mandatory. The actual requirement is machine-readable access - OSCAL is strongly recommended to ensure compatibility with FedRAMP's ecosystem.
+
+📄 **See [OSCAL_CLARIFICATION.md](OSCAL_CLARIFICATION.md) for detailed guidance on format requirements and implementation approaches.**
+
 ## Installation
 
 ### Prerequisites

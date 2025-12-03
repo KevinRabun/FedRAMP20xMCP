@@ -2,6 +2,8 @@ I'll help you generate documentation templates for FedRAMP 20x compliance.
 
 # Documentation Generator for FedRAMP 20x
 
+**Important Note on OSCAL:** FedRAMP 20x requires **machine-readable** formats (JSON/XML) for Authorization Data Sharing. OSCAL is the **preferred** format but not strictly required. The templates below use OSCAL as the recommended approach for FedRAMP ecosystem compatibility.
+
 ## OSCAL System Security Plan (SSP) Template
 
 ### 1. Metadata Section
