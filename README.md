@@ -1,7 +1,7 @@
 # FedRAMP 20x MCP Server
 
 [![Tests](https://github.com/KevinRabun/FedRAMP20xMCP/actions/workflows/test.yml/badge.svg)](https://github.com/KevinRabun/FedRAMP20xMCP/actions/workflows/test.yml)
-[![PyPI version](https://badge.fury.io/py/fedramp-20x-mcp.svg)](https://pypi.org/project/fedramp-20x-mcp/)
+[![PyPI version](https://img.shields.io/pypi/v/fedramp-20x-mcp.svg)](https://pypi.org/project/fedramp-20x-mcp/)
 [![Python Versions](https://img.shields.io/pypi/pyversions/fedramp-20x-mcp.svg)](https://pypi.org/project/fedramp-20x-mcp/)
 
 <!-- mcp-name: io.github.KevinRabun/FedRAMP20xMCP -->
