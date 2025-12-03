@@ -1,4 +1,4 @@
-name: Release and Publish
+name: Publish to PyPI
 
 on:
   push:
@@ -42,22 +42,8 @@ jobs:
       run: |
         pytest tests/test_docs_integration.py -v
 
-  create-release:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          generate_release_notes: true
-          draft: false
-          prerelease: false
-
   publish:
-    needs: [test, create-release]
+    needs: test
     runs-on: ubuntu-latest
     
     steps:
@@ -78,6 +64,13 @@ jobs:
     
     - name: Check package
       run: python -m twine check dist/*
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        generate_release_notes: true
+        draft: false
+        prerelease: false
     
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
