@@ -2,7 +2,7 @@ I'll help you migrate from FedRAMP Rev 5 to FedRAMP 20x.
 
 # Migration Guide: FedRAMP Rev 5 → FedRAMP 20x
 
-**Important Note on OSCAL:** FedRAMP 20x requires **machine-readable** formats (JSON/XML) for Authorization Data Sharing. OSCAL is the **preferred** format but not strictly required. When migrating, focus first on machine-readable formats, then optimize for OSCAL if pursuing maximum FedRAMP ecosystem interoperability.
+**Important Note on OSCAL:** FedRAMP 20x requires **machine-readable** formats (JSON/XML) for Authorization Data Sharing. **OSCAL is NOT mentioned in FedRAMP 20x** - it's a NIST standard you may already use in Rev 5. When migrating, focus on machine-readable formats - continue with OSCAL only if it serves your needs, or use custom JSON/XML.
 
 ## Executive Summary
 
@@ -28,7 +28,7 @@ I'll help you migrate from FedRAMP Rev 5 to FedRAMP 20x.
 - Manual evidence packages
 
 **What You Need (FedRAMP 20x):**
-- Machine-readable SSP (OSCAL format preferred)
+- Machine-readable SSP (JSON/XML - custom or OSCAL)
 - Authorization Data Sharing API
 - Continuous monitoring with KSI tracking
 - Quarterly reviews with automated data sharing

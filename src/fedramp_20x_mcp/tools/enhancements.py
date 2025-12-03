@@ -454,7 +454,7 @@ Send alert to Slack/PagerDuty
    GET /api/v1/change-notifications
    
    Authentication: OAuth 2.0 or mTLS
-   Format: Machine-readable (JSON/XML required; OSCAL format preferred for interoperability)
+   Format: Machine-readable (JSON/XML required; OSCAL is one optional NIST standard approach)
    ```
 
 2. **OSCAL Format Example**
@@ -1359,7 +1359,7 @@ async def validate_architecture_impl(architecture_description: str, data_loader)
 
 **3. Data Sharing (FRR-ADS)**
 - API for sharing authorization data
-- Machine-readable format required (JSON/XML); OSCAL format preferred for FedRAMP ecosystem compatibility
+- Machine-readable format required (JSON/XML); OSCAL is one optional NIST standard approach
 - OAuth 2.0 or mTLS authentication
 
 **4. Key Security Indicators**

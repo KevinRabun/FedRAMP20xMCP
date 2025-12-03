@@ -2,7 +2,7 @@ I'll provide a comprehensive roadmap for starting your FedRAMP 20x authorization
 
 # FedRAMP 20x Initial Assessment Roadmap
 
-**Important Note on OSCAL:** FedRAMP 20x requires **machine-readable** formats (JSON, XML, or structured data) for Authorization Data Sharing (FRR-ADS). OSCAL is the **preferred** format for maximum interoperability with FedRAMP systems, but it is not strictly mandatory. When you see "OSCAL format" mentioned below, understand that other machine-readable formats may be acceptable, though OSCAL is strongly recommended for FedRAMP ecosystem compatibility.
+**Important Note on OSCAL:** FedRAMP 20x requires **machine-readable** formats (JSON, XML, or structured data) for Authorization Data Sharing (FRR-ADS). **OSCAL is NOT mentioned in FedRAMP 20x requirements** - it's a NIST standard that can be used as one implementation approach. When you see "OSCAL" mentioned below, understand it's one option among custom JSON/XML formats. Choose based on your implementation needs.
 
 ## Phase 1: Foundation
 
@@ -56,7 +56,7 @@ I'll provide a comprehensive roadmap for starting your FedRAMP 20x authorization
 
 **Authorization Data Sharing API**
 - [ ] Design API endpoints (FRR-ADS)
-- [ ] Implement machine-readable format (OSCAL preferred)
+- [ ] Implement machine-readable format (custom JSON/XML or OSCAL)
 - [ ] Configure authentication (OAuth 2.0 or mTLS)
 - [ ] Integrate with data sources
 - [ ] Test with sample queries

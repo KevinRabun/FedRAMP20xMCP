@@ -8,8 +8,9 @@ FedRAMP 20x requires CSPs to share authorization data via API rather than docume
 
 **Important: Format Requirements**
 - **Required:** Machine-readable formats (JSON, XML, or other structured data)
-- **Preferred:** OSCAL format for maximum interoperability with FedRAMP systems
-- The actual FRR-ADS requirements specify "machine-readable" - OSCAL is strongly recommended but not mandatory
+- **Optional:** OSCAL is a NIST standard that can be used as one implementation approach
+- FRR-ADS requirements specify "machine-readable" only - OSCAL is NOT mentioned in FedRAMP 20x
+- Choose custom JSON/XML or OSCAL based on your implementation needs
 
 ## Required Endpoints
 
@@ -20,7 +21,7 @@ GET /api/v1/authorization-boundary
 GET /api/v1/system-characteristics
 ```
 
-**Response Format (OSCAL SSP - Preferred):**
+**Response Format Example (Using OSCAL - One Option):**
 ```json
 {
   "system-security-plan": {
@@ -419,7 +420,7 @@ paths:
 
 - [ ] Choose authentication method (OAuth 2.0 or mTLS)
 - [ ] Implement all required endpoints
-- [ ] Use machine-readable formats (JSON/XML) - OSCAL preferred but not required
+- [ ] Use machine-readable formats (JSON/XML) - custom or OSCAL based on your needs
 - [ ] Add proper error handling
 - [ ] Implement rate limiting
 - [ ] Add comprehensive logging

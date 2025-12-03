@@ -9,7 +9,7 @@ I'll help you prepare for your FedRAMP 20x assessment and audit.
 **Complete Documentation Checklist:**
 
 **Required Core Documents:**
-- [ ] System Security Plan (machine-readable format; OSCAL preferred)
+- [ ] System Security Plan (machine-readable format: JSON/XML)
 - [ ] FRR-ADS: Authorization Data Sharing API Documentation
 - [ ] FRR-VDR: Vulnerability Disclosure & Remediation Procedures
 - [ ] FRR-ICP: Incident Communication Plan
@@ -104,7 +104,7 @@ I'll help you prepare for your FedRAMP 20x assessment and audit.
 
 **Functionality Tests:**
 - [ ] All 6 required endpoints operational
-- [ ] Machine-readable format validates (OSCAL preferred)
+- [ ] Machine-readable format validates
 - [ ] Authentication working (OAuth 2.0 or mTLS)
 - [ ] Rate limiting configured properly
 - [ ] Error handling returns proper codes
