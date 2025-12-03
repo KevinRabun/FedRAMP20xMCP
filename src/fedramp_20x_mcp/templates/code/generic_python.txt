@@ -1,0 +1,63 @@
+## Python Code
+
+```python
+#!/usr/bin/env python3
+\"\"\"
+Generic KSI Evidence Collector
+Collects compliance evidence and stores in Azure Blob Storage
+\"\"\"
+
+import os
+import json
+from datetime import datetime
+from azure.identity import DefaultAzureCredential
+from azure.storage.blob import BlobServiceClient
+
+def collect_evidence():
+    \"\"\"Collect evidence for the KSI\"\"\"
+    # Customize this function based on your KSI requirements
+    evidence = {
+        "collection_date": datetime.utcnow().isoformat(),
+        "ksi_id": "KSI-XXX-XX",
+        "compliance_status": "compliant",
+        "evidence_data": {
+            # Add your evidence data here
+        }
+    }
+    return evidence
+
+def store_evidence(evidence_data: dict):
+    \"\"\"Store evidence in Azure Blob Storage\"\"\"
+    credential = DefaultAzureCredential()
+    storage_account = os.environ["EVIDENCE_STORAGE_ACCOUNT"]
+    
+    blob_service_client = BlobServiceClient(
+        account_url=f"https://{storage_account}.blob.core.windows.net",
+        credential=credential
+    )
+    
+    timestamp = datetime.utcnow().strftime("%Y-%m-%d")
+    blob_name = f"evidence/{timestamp}.json"
+    
+    blob_client = blob_service_client.get_blob_client(
+        container="evidence",
+        blob=blob_name
+    )
+    
+    evidence_json = json.dumps(evidence_data, indent=2)
+    blob_client.upload_blob(evidence_json, overwrite=True)
+    
+    return blob_name
+
+def main():
+    print(f"Starting evidence collection: {datetime.utcnow()}")
+    
+    evidence = collect_evidence()
+    blob_name = store_evidence(evidence)
+    
+    print(f"✓ Evidence stored: {blob_name}")
+    print(f"Status: {evidence['compliance_status']}")
+
+if __name__ == "__main__":
+    main()
+```

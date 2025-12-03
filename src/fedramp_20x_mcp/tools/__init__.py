@@ -1,0 +1,157 @@
+"""
+FedRAMP 20x MCP Server - Tools Module
+
+This module organizes all MCP tool functions into logical groups.
+Each submodule contains related tools that are registered with the MCP server.
+"""
+import json
+import logging
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from mcp.server.fastmcp import FastMCP
+    from ..data_loader import FedRAMPDataLoader
+
+logger = logging.getLogger(__name__)
+
+
+def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
+    """
+    Register all tool functions with the MCP server.
+    
+    Args:
+        mcp: The FastMCP server instance
+        data_loader: The data loader instance for accessing FedRAMP data
+    """
+    # Import all tool modules
+    from . import requirements, definitions, ksi, documentation, export, enhancements, evidence
+    from ..templates import get_infrastructure_template, get_code_template
+    
+    # Requirements tools
+    @mcp.tool()
+    async def get_control(control_id: str) -> str:
+        """Get detailed information about a specific FedRAMP 20x requirement."""
+        return await requirements.get_control_impl(control_id, data_loader)
+    
+    @mcp.tool()
+    async def list_family_controls(family: str) -> str:
+        """List all requirements within a specific document family."""
+        return await requirements.list_family_controls_impl(family, data_loader)
+    
+    @mcp.tool()
+    async def search_requirements(keywords: str) -> str:
+        """Search for FedRAMP 20x requirements containing specific keywords."""
+        return await requirements.search_requirements_impl(keywords, data_loader)
+    
+    # Definition tools
+    @mcp.tool()
+    async def get_definition(term: str) -> str:
+        """Get the FedRAMP definition for a specific term."""
+        return await definitions.get_definition_impl(term, data_loader)
+    
+    @mcp.tool()
+    async def list_definitions() -> str:
+        """List all FedRAMP definitions with their terms."""
+        return await definitions.list_definitions_impl(data_loader)
+    
+    @mcp.tool()
+    async def search_definitions(keywords: str) -> str:
+        """Search FedRAMP definitions by keywords."""
+        return await definitions.search_definitions_impl(keywords, data_loader)
+    
+    # KSI tools
+    @mcp.tool()
+    async def get_ksi(ksi_id: str) -> str:
+        """Get detailed information about a specific Key Security Indicator."""
+        return await ksi.get_ksi_impl(ksi_id, data_loader)
+    
+    @mcp.tool()
+    async def list_ksi() -> str:
+        """List all Key Security Indicators."""
+        return await ksi.list_ksi_impl(data_loader)
+    
+    # Documentation tools
+    @mcp.tool()
+    async def search_documentation(keywords: str) -> str:
+        """Search FedRAMP official documentation by keywords."""
+        return await documentation.search_documentation_impl(keywords, data_loader)
+    
+    @mcp.tool()
+    async def get_documentation_file(file_path: str) -> str:
+        """Get the full content of a specific FedRAMP documentation file."""
+        return await documentation.get_documentation_file_impl(file_path, data_loader)
+    
+    @mcp.tool()
+    async def list_documentation_files() -> str:
+        """List all available FedRAMP documentation files."""
+        return await documentation.list_documentation_files_impl(data_loader)
+    
+    # Export tools
+    @mcp.tool()
+    async def export_to_excel(export_type: str, output_path: str = "") -> str:
+        """Export FedRAMP 20x data to Excel format."""
+        return await export.export_to_excel(export_type, output_path)
+    
+    @mcp.tool()
+    async def export_to_csv(export_type: str, output_path: str = "") -> str:
+        """Export FedRAMP 20x data to CSV format."""
+        return await export.export_to_csv(export_type, output_path)
+    
+    @mcp.tool()
+    async def generate_ksi_specification(ksi_id: str, evidence_collection_strategy: str, output_path: str = "") -> str:
+        """Generate a detailed product specification document for a KSI."""
+        return await export.generate_ksi_specification(ksi_id, evidence_collection_strategy, output_path)
+    
+    # Enhancement tools
+    @mcp.tool()
+    async def compare_with_rev4(requirement_area: str) -> str:
+        """Compare FedRAMP 20x requirements to Rev 4/Rev 5 to understand changes."""
+        return await enhancements.compare_with_rev4_impl(requirement_area, data_loader)
+    
+    @mcp.tool()
+    async def get_implementation_examples(requirement_id: str) -> str:
+        """Get practical implementation examples for a requirement."""
+        return await enhancements.get_implementation_examples_impl(requirement_id, data_loader)
+    
+    @mcp.tool()
+    async def check_requirement_dependencies(requirement_id: str) -> str:
+        """Show which requirements are related or dependent on a specific requirement."""
+        return await enhancements.check_requirement_dependencies_impl(requirement_id, data_loader)
+    
+    @mcp.tool()
+    async def estimate_implementation_effort(requirement_id: str) -> str:
+        """Provide rough effort estimates for implementing a specific requirement."""
+        return await enhancements.estimate_implementation_effort_impl(requirement_id, data_loader)
+    
+    @mcp.tool()
+    async def get_cloud_native_guidance(technology: str) -> str:
+        """Get cloud-native specific guidance for implementing FedRAMP 20x."""
+        return await enhancements.get_cloud_native_guidance_impl(technology, data_loader)
+    
+    @mcp.tool()
+    async def validate_architecture(architecture_description: str) -> str:
+        """Validate a cloud architecture against FedRAMP 20x requirements."""
+        return await enhancements.validate_architecture_impl(architecture_description, data_loader)
+    
+    @mcp.tool()
+    async def generate_implementation_questions(requirement_id: str) -> str:
+        """Generate strategic questions for PMs and engineers about implementing a requirement."""
+        return await enhancements.generate_implementation_questions_impl(requirement_id, data_loader)
+    
+    # Evidence automation tools
+    @mcp.tool()
+    async def get_infrastructure_code_for_ksi(ksi_id: str, infrastructure_type: str = "bicep") -> str:
+        """Generate infrastructure code templates for automating KSI evidence collection."""
+        return await evidence.get_infrastructure_code_for_ksi_impl(ksi_id, data_loader, get_infrastructure_template, infrastructure_type)
+    
+    @mcp.tool()
+    async def get_evidence_collection_code(ksi_id: str, language: str = "python") -> str:
+        """Provide code examples for collecting KSI evidence programmatically."""
+        return await evidence.get_evidence_collection_code_impl(ksi_id, data_loader, get_code_template, language)
+    
+    @mcp.tool()
+    async def get_evidence_automation_architecture(ksi_category: str = "all") -> str:
+        """Provide comprehensive architecture guidance for automated evidence collection."""
+        return await evidence.get_evidence_automation_architecture_impl(data_loader, ksi_category)
+    
+    logger.info("Registered 24 tools across 7 modules")

@@ -1,0 +1,33 @@
+## Bicep Template
+
+```bicep
+// main.bicep - Authorization Framework Evidence Collection
+param location string = resourceGroup().location
+
+// Storage for vulnerability scan results and authorization evidence
+resource evidenceStorage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: 'stfedrampafrevidence'
+  location: location
+  sku: { name: 'Standard_GRS' }
+  properties: {
+    supportsHttpsTrafficOnly: true
+    minimumTlsVersion: 'TLS1_2'
+  }
+}
+
+// Microsoft Defender for Cloud (configured via Policy)
+// This provides vulnerability scanning automatically
+
+// Container Registry with scanning enabled
+resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
+  name: 'acrfedrampvuln'
+  location: location
+  sku: { name: 'Premium' }  // Required for Defender scanning
+  properties: {
+    adminUserEnabled: false
+  }
+}
+
+output storageAccountName string = evidenceStorage.name
+output containerRegistryName string = acr.name
+```

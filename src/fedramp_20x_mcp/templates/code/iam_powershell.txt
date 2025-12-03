@@ -1,0 +1,162 @@
+## PowerShell Code
+
+```powershell
+#Requires -Modules Az.Accounts, Az.Storage, Microsoft.Graph
+
+<#
+.SYNOPSIS
+    Collects IAM evidence for FedRAMP 20x KSI-IAM-01
+.DESCRIPTION
+    Gathers MFA enrollment and usage data from Microsoft Entra ID
+    and stores evidence in Azure Blob Storage
+#>
+
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory=$false)]
+    [string]$StorageAccountName = $env:EVIDENCE_STORAGE_ACCOUNT,
+    
+    [Parameter(Mandatory=$false)]
+    [string]$ContainerName = "iam-evidence"
+)
+
+# Connect to Microsoft Graph
+Connect-MgGraph -Scopes "User.Read.All", "UserAuthenticationMethod.Read.All"
+
+function Get-MFAEvidence {
+    Write-Host "Collecting MFA evidence..." -ForegroundColor Cyan
+    
+    $evidence = @{
+        collection_date = (Get-Date).ToUniversalTime().ToString("o")
+        ksi_id = "KSI-IAM-01"
+        total_users = 0
+        users_with_mfa = 0
+        non_compliant_users = @()
+        mfa_methods = @{}
+    }
+    
+    # Get all users
+    $users = Get-MgUser -All
+    
+    foreach ($user in $users) {
+        $evidence.total_users++
+        
+        # Get authentication methods
+        $authMethods = Get-MgUserAuthenticationMethod -UserId $user.Id
+        
+        $hasPhishingResistant = $false
+        $userMethods = @()
+        
+        foreach ($method in $authMethods) {
+            $methodType = $method.AdditionalProperties.'@odata.type'
+            $userMethods += $methodType
+            
+            # Check for FIDO2
+            if ($methodType -like "*fido2*") {
+                $hasPhishingResistant = $true
+            }
+        }
+        
+        if ($hasPhishingResistant) {
+            $evidence.users_with_mfa++
+        }
+        else {
+            $evidence.non_compliant_users += @{
+                user_id = $user.Id
+                upn = $user.UserPrincipalName
+                methods = $userMethods
+            }
+        }
+        
+        # Count method types
+        foreach ($method in $userMethods) {
+            if ($evidence.mfa_methods.ContainsKey($method)) {
+                $evidence.mfa_methods[$method]++
+            }
+            else {
+                $evidence.mfa_methods[$method] = 1
+            }
+        }
+    }
+    
+    # Calculate compliance
+    if ($evidence.total_users -gt 0) {
+        $evidence.compliance_percentage = [math]::Round(
+            ($evidence.users_with_mfa / $evidence.total_users) * 100, 2
+        )
+    }
+    else {
+        $evidence.compliance_percentage = 0
+    }
+    
+    return $evidence
+}
+
+function Save-Evidence {
+    param(
+        [Parameter(Mandatory=$true)]
+        [hashtable]$Evidence,
+        
+        [Parameter(Mandatory=$true)]
+        [string]$EvidenceType
+    )
+    
+    Write-Host "Storing evidence..." -ForegroundColor Cyan
+    
+    # Connect to Azure Storage
+    $storageContext = New-AzStorageContext -StorageAccountName $StorageAccountName -UseConnectedAccount
+    
+    # Create container if it doesn't exist
+    $container = Get-AzStorageContainer -Name $ContainerName -Context $storageContext -ErrorAction SilentlyContinue
+    if (-not $container) {
+        New-AzStorageContainer -Name $ContainerName -Context $storageContext -Permission Off
+    }
+    
+    # Create blob name with timestamp
+    $timestamp = Get-Date -Format "yyyy-MM-dd"
+    $blobName = "$EvidenceType/$timestamp.json"
+    
+    # Convert to JSON and upload
+    $json = $Evidence | ConvertTo-Json -Depth 10
+    $tempFile = [System.IO.Path]::GetTempFileName()
+    $json | Out-File -FilePath $tempFile -Encoding UTF8
+    
+    Set-AzStorageBlobContent `
+        -File $tempFile `
+        -Container $ContainerName `
+        -Blob $blobName `
+        -Context $storageContext `
+        -Force
+    
+    Remove-Item $tempFile
+    
+    Write-Host "✓ Evidence stored: $blobName" -ForegroundColor Green
+}
+
+# Main execution
+try {
+    Write-Host "Starting IAM evidence collection: $(Get-Date)" -ForegroundColor Yellow
+    
+    # Collect MFA evidence
+    $mfaEvidence = Get-MFAEvidence
+    Save-Evidence -Evidence $mfaEvidence -EvidenceType "ksi-iam-01-mfa"
+    
+    Write-Host "MFA Compliance: $($mfaEvidence.compliance_percentage)%" -ForegroundColor Green
+    Write-Host "✓ IAM evidence collection complete" -ForegroundColor Green
+}
+catch {
+    Write-Error "Evidence collection failed: $_"
+    exit 1
+}
+finally {
+    Disconnect-MgGraph
+}
+```
+
+### Azure Automation Runbook
+To deploy this as an Azure Automation Runbook:
+
+1. Create the runbook in Azure Automation
+2. Add required modules: Az.Accounts, Az.Storage, Microsoft.Graph
+3. Configure Managed Identity with appropriate permissions
+4. Schedule for daily execution

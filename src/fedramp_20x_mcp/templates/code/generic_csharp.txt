@@ -1,0 +1,65 @@
+## C# Code (.NET 8)
+
+```csharp
+using Azure.Identity;
+using Azure.Storage.Blobs;
+using System.Text.Json;
+
+public class KSIEvidenceCollector
+{
+    private readonly BlobServiceClient _blobClient;
+
+    public KSIEvidenceCollector()
+    {
+        var credential = new DefaultAzureCredential();
+        var storageAccount = Environment.GetEnvironmentVariable("EVIDENCE_STORAGE_ACCOUNT");
+        
+        _blobClient = new BlobServiceClient(
+            new Uri($"https://{storageAccount}.blob.core.windows.net"),
+            credential
+        );
+    }
+
+    public async Task<Evidence> CollectEvidenceAsync(string ksiId)
+    {
+        var evidence = new Evidence
+        {
+            CollectionDate = DateTime.UtcNow,
+            KsiId = ksiId,
+            ComplianceStatus = "compliant",
+            EvidenceData = new Dictionary<string, object>
+            {
+                // Add your evidence data here
+            }
+        };
+
+        return evidence;
+    }
+
+    public async Task StoreEvidenceAsync(Evidence evidence)
+    {
+        var timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        var blobName = $"evidence/{timestamp}.json";
+        
+        var containerClient = _blobClient.GetBlobContainerClient("evidence");
+        await containerClient.CreateIfNotExistsAsync();
+        
+        var blobClient = containerClient.GetBlobClient(blobName);
+        var json = JsonSerializer.Serialize(evidence, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        
+        await blobClient.UploadAsync(BinaryData.FromString(json), overwrite: true);
+        Console.WriteLine($"✓ Evidence stored: {blobName}");
+    }
+}
+
+public class Evidence
+{
+    public DateTime CollectionDate { get; set; }
+    public string KsiId { get; set; }
+    public string ComplianceStatus { get; set; }
+    public Dictionary<string, object> EvidenceData { get; set; }
+}
+```

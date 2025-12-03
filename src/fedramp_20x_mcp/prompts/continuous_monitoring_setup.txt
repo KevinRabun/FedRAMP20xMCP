@@ -1,0 +1,61 @@
+I'll help you establish a FedRAMP-compliant continuous monitoring program.
+
+**Continuous Monitoring Components**:
+
+**1. Collaborative Continuous Monitoring (CCM)**
+- Quarterly reviews with agencies
+- Continuous authorization maintenance
+- Agency-specific monitoring requirements
+
+**2. Persistent Validation & Assessment (PVA)**
+- Regular assessment schedules based on impact level
+- Validation procedures
+- Evidence collection and documentation
+
+**3. Key Security Indicators (KSI) Tracking**
+Track 72 indicators across 11 categories:
+- Authorization & Accreditation metrics
+- Cybersecurity Education completion
+- Commitment to security practices
+- Change Management effectiveness
+- Identity & Access Management
+- Information Resources management
+- Monitoring, Logging & Analysis
+- Privacy protection
+- Reporting compliance
+- Service Offerings documentation
+- Third Party Resources management
+
+**4. Monitoring Schedule**:
+
+**Monthly Activities**:
+- [ ] Vulnerability scanning
+- [ ] Log review and analysis
+- [ ] Incident tracking and reporting
+- [ ] KSI metrics collection
+
+**Quarterly Activities**:
+- [ ] CCM reviews with agencies
+- [ ] Security posture assessment
+- [ ] Control effectiveness evaluation
+- [ ] Significant change review
+
+**Annual Activities**:
+- [ ] Full security assessment (based on impact level)
+- [ ] Authorization package update
+- [ ] Third-party assessment coordination
+
+**5. Reporting Requirements**:
+- Monthly vulnerability reports
+- Quarterly CCM deliverables
+- Incident notifications (as they occur)
+- Annual assessment reports
+
+**Setup Steps**:
+1. Use list_ksi to review all 72 Key Security Indicators
+2. Use search_requirements with "monitoring" to find related requirements
+3. Use get_control for specific CCM and PVA requirements
+4. Document your monitoring procedures and schedules
+5. Establish automated collection where possible
+
+**Next Steps**: Would you like detailed requirements for a specific monitoring component?

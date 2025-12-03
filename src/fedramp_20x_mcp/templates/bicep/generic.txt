@@ -1,0 +1,47 @@
+## Bicep Template
+
+```bicep
+// main.bicep - Generic KSI Evidence Collection Infrastructure
+param location string = resourceGroup().location
+param ksiId string
+
+// Evidence Storage Account
+resource evidenceStorage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: 'st${toLower(replace(ksiId, '-', ''))}evidence'
+  location: location
+  kind: 'StorageV2'
+  sku: {
+    name: 'Standard_GRS'
+  }
+  properties: {
+    supportsHttpsTrafficOnly: true
+    minimumTlsVersion: 'TLS1_2'
+    encryption: {
+      keySource: 'Microsoft.Storage'
+    }
+  }
+}
+
+// Container for evidence files
+resource evidenceContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
+  name: '${evidenceStorage.name}/default/evidence'
+  properties: {
+    publicAccess: 'None'
+  }
+}
+
+// Log Analytics for metrics
+resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+  name: 'log-${toLower(ksiId)}'
+  location: location
+  properties: {
+    sku: {
+      name: 'PerGB2018'
+    }
+    retentionInDays: 730
+  }
+}
+
+output storageAccountName string = evidenceStorage.name
+output workspaceId string = logAnalytics.properties.customerId
+```

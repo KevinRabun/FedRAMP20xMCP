@@ -1,0 +1,54 @@
+## Bicep Template
+
+```bicep
+// main.bicep - Service Management Evidence Collection
+param location string = resourceGroup().location
+
+// Key Vault for secret management (KSI-SVC-06)
+resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {
+  name: 'kv-fedramp-secrets'
+  location: location
+  properties: {
+    sku: {
+      family: 'A'
+      name: 'standard'
+    }
+    tenantId: subscription().tenantId
+    enableRbacAuthorization: true
+    enableSoftDelete: true
+    softDeleteRetentionInDays: 90
+    enablePurgeProtection: true
+  }
+}
+
+// Diagnostic settings for Key Vault audit logs
+resource keyVaultDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'kv-diagnostics'
+  scope: keyVault
+  properties: {
+    workspaceId: logAnalytics.id
+    logs: [
+      {
+        category: 'AuditEvent'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: 730
+        }
+      }
+    ]
+  }
+}
+
+resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+  name: 'log-fedramp-keyvault'
+  location: location
+  properties: {
+    sku: { name: 'PerGB2018' }
+    retentionInDays: 730
+  }
+}
+
+output keyVaultName string = keyVault.name
+output workspaceId string = logAnalytics.id
+```

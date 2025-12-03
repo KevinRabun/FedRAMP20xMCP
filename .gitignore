@@ -60,6 +60,7 @@ Thumbs.db
 htmlcov/
 .tox/
 .nox/
+temp_test_exports/
 
 # Environment variables
 .env

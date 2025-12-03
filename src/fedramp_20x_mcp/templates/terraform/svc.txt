@@ -1,0 +1,46 @@
+## Terraform Configuration
+
+```hcl
+# main.tf - Service Management Evidence Collection
+resource "azurerm_log_analytics_workspace" "keyvault" {
+  name                = "log-fedramp-keyvault"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.evidence.name
+  sku                 = "PerGB2018"
+  retention_in_days   = 730
+}
+
+resource "azurerm_key_vault" "secrets" {
+  name                       = "kv-fedramp-secrets"
+  location                   = var.location
+  resource_group_name        = azurerm_resource_group.evidence.name
+  tenant_id                  = data.azurerm_client_config.current.tenant_id
+  sku_name                   = "standard"
+  enable_rbac_authorization  = true
+  soft_delete_retention_days = 90
+  purge_protection_enabled   = true
+}
+
+resource "azurerm_monitor_diagnostic_setting" "keyvault" {
+  name                       = "kv-diagnostics"
+  target_resource_id         = azurerm_key_vault.secrets.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.keyvault.id
+
+  enabled_log {
+    category = "AuditEvent"
+    
+    retention_policy {
+      enabled = true
+      days    = 730
+    }
+  }
+}
+
+output "key_vault_name" {
+  value = azurerm_key_vault.secrets.name
+}
+
+output "workspace_id" {
+  value = azurerm_log_analytics_workspace.keyvault.id
+}
+```

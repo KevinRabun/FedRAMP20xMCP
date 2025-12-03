@@ -1,0 +1,29 @@
+## Terraform Configuration
+
+```hcl
+# main.tf - Authorization Framework Evidence Collection
+resource "azurerm_storage_account" "afr_evidence" {
+  name                     = "stfedrampafrevidence"
+  resource_group_name      = azurerm_resource_group.evidence.name
+  location                 = var.location
+  account_tier             = "Standard"
+  account_replication_type = "GRS"
+  min_tls_version          = "TLS1_2"
+}
+
+resource "azurerm_container_registry" "vuln_scanning" {
+  name                = "acrfedrampvuln"
+  resource_group_name = azurerm_resource_group.evidence.name
+  location            = var.location
+  sku                 = "Premium"
+  admin_enabled       = false
+}
+
+output "storage_account_name" {
+  value = azurerm_storage_account.afr_evidence.name
+}
+
+output "container_registry_name" {
+  value = azurerm_container_registry.vuln_scanning.name
+}
+```

@@ -1,0 +1,150 @@
+## C# Code (.NET 8)
+
+```csharp
+using Azure.Identity;
+using Azure.Storage.Blobs;
+using Microsoft.Graph;
+using System.Text.Json;
+
+public class IAMEvidenceCollector
+{
+    private readonly GraphServiceClient _graphClient;
+    private readonly BlobServiceClient _blobClient;
+    private readonly string _evidenceContainer = "iam-evidence";
+
+    public IAMEvidenceCollector()
+    {
+        var credential = new DefaultAzureCredential();
+        _graphClient = new GraphServiceClient(credential);
+        
+        var storageAccount = Environment.GetEnvironmentVariable("EVIDENCE_STORAGE_ACCOUNT");
+        _blobClient = new BlobServiceClient(
+            new Uri($"https://{storageAccount}.blob.core.windows.net"),
+            credential
+        );
+    }
+
+    public async Task<MFAEvidence> CollectMFAEvidenceAsync()
+    {
+        var evidence = new MFAEvidence
+        {
+            CollectionDate = DateTime.UtcNow,
+            KsiId = "KSI-IAM-01"
+        };
+
+        // Get all users
+        var users = await _graphClient.Users.GetAsync();
+        
+        foreach (var user in users.Value)
+        {
+            evidence.TotalUsers++;
+            
+            // Get authentication methods
+            var authMethods = await _graphClient.Users[user.Id]
+                .Authentication.Methods.GetAsync();
+            
+            bool hasPhishingResistant = authMethods.Value
+                .Any(m => m.OdataType.Contains("fido2", StringComparison.OrdinalIgnoreCase));
+            
+            if (hasPhishingResistant)
+            {
+                evidence.UsersWithMFA++;
+            }
+            else
+            {
+                evidence.NonCompliantUsers.Add(new UserInfo
+                {
+                    UserId = user.Id,
+                    UserPrincipalName = user.UserPrincipalName
+                });
+            }
+        }
+
+        evidence.CompliancePercentage = evidence.TotalUsers > 0
+            ? (double)evidence.UsersWithMFA / evidence.TotalUsers * 100
+            : 0;
+
+        return evidence;
+    }
+
+    public async Task StoreEvidenceAsync<T>(T evidence, string evidenceType)
+    {
+        var timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        var blobName = $"{evidenceType}/{timestamp}.json";
+        
+        var containerClient = _blobClient.GetBlobContainerClient(_evidenceContainer);
+        await containerClient.CreateIfNotExistsAsync();
+        
+        var blobClient = containerClient.GetBlobClient(blobName);
+        var json = JsonSerializer.Serialize(evidence, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        
+        await blobClient.UploadAsync(
+            BinaryData.FromString(json),
+            overwrite: true
+        );
+        
+        Console.WriteLine($"✓ Evidence stored: {blobName}");
+    }
+
+    public async Task RunCollectionAsync()
+    {
+        Console.WriteLine($"Starting IAM evidence collection: {DateTime.UtcNow}");
+        
+        var mfaEvidence = await CollectMFAEvidenceAsync();
+        await StoreEvidenceAsync(mfaEvidence, "ksi-iam-01-mfa");
+        
+        Console.WriteLine($"MFA Compliance: {mfaEvidence.CompliancePercentage:F1}%");
+        Console.WriteLine("✓ IAM evidence collection complete");
+    }
+}
+
+public class MFAEvidence
+{
+    public DateTime CollectionDate { get; set; }
+    public string KsiId { get; set; }
+    public int TotalUsers { get; set; }
+    public int UsersWithMFA { get; set; }
+    public double CompliancePercentage { get; set; }
+    public List<UserInfo> NonCompliantUsers { get; set; } = new();
+}
+
+public class UserInfo
+{
+    public string UserId { get; set; }
+    public string UserPrincipalName { get; set; }
+}
+
+// Azure Function entry point
+public static class IAMEvidenceFunction
+{
+    [FunctionName("CollectIAMEvidence")]
+    public static async Task Run(
+        [TimerTrigger("0 0 2 * * *")] TimerInfo timer,  // Daily at 2 AM
+        ILogger log)
+    {
+        log.LogInformation("IAM evidence collection triggered");
+        
+        var collector = new IAMEvidenceCollector();
+        await collector.RunCollectionAsync();
+    }
+}
+```
+
+### Project File (csproj)
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <AzureFunctionsVersion>v4</AzureFunctionsVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Azure.Identity" Version="1.10.4" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.19.1" />
+    <PackageReference Include="Microsoft.Graph" Version="5.36.0" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.20.0" />
+  </ItemGroup>
+</Project>
+```

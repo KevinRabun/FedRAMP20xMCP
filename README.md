@@ -144,7 +144,7 @@ uv pip install -e .
    - Open Copilot Chat
    - Ask questions about FedRAMP 20x requirements
    - Use `@workspace` to query specific controls or families
-   - Access all 17 tools and 15 prompts
+   - Access all 24 tools and 9 prompts
 
 ### With Claude Desktop
 
@@ -240,8 +240,9 @@ Create or update `.vscode/mcp.json` in your project with this configuration:
 - 329 FedRAMP 20x requirements
 - 72 Key Security Indicators
 - 50 official definitions
-- 15 markdown documentation files
+- Official markdown documentation files
 - Implementation examples and Azure guidance
+- Evidence collection automation tools
 - Compliance validation tools
 
 **azure-mcp** (Microsoft Official)
@@ -316,6 +317,15 @@ If you only want FedRAMP requirements without Azure integration:
 ```
 
 ## Available Tools
+
+The server provides **24 tools** organized into the following categories:
+
+**Core Tools (8):** Query requirements, definitions, and KSIs
+**Documentation Tools (3):** Search and retrieve FedRAMP documentation
+**Enhancement Tools (6):** Implementation examples, dependencies, effort estimation
+**Export Tools (3):** Excel/CSV export and KSI specification generation
+**Planning Tools (1):** Generate strategic implementation questions
+**Evidence Collection Automation Tools (3):** Infrastructure code, collection code, architecture guidance
 
 ### get_control
 Get detailed information about a specific FedRAMP requirement or control.
@@ -566,25 +576,127 @@ Generate strategic interview questions for product managers and engineers to fac
 
 **Purpose:** Help teams think deeply about implementation considerations, trade-offs, and success criteria before committing resources. Questions are designed to facilitate planning sessions, design reviews, and stakeholder alignment.
 
-**Example usage:**
-```
-Generate questions for continuous monitoring requirement:
-> generate_implementation_questions with requirement_id="FRR-CCM-01"
+### get_infrastructure_code_for_ksi
+Generate Infrastructure as Code templates (Bicep or Terraform) for automated evidence collection infrastructure.
 
-Generate questions for identity and access KSI:
-> generate_implementation_questions with requirement_id="KSI-IAM-01"
+**Parameters:**
+- `ksi_id` (string): The Key Security Indicator identifier (e.g., "KSI-IAM-01", "KSI-MLA-01")
+- `infrastructure_type` (string): Either "bicep" or "terraform"
+
+**Returns:** Complete IaC templates for deploying evidence collection infrastructure
+
+**Supported KSI Families:**
+- **IAM (Identity and Access Management)**: Microsoft Entra ID, Log Analytics workspaces, diagnostic settings, automation accounts
+- **MLA (Monitoring, Logging, and Auditing)**: Log Analytics workspaces, Azure Sentinel, diagnostic settings, alert rules
+- **AFR (Audit and Financial Reporting)**: Storage accounts with immutability, event subscriptions, audit logs
+- **CNA (Change Notification and Approval)**: Event Grid topics, Logic Apps, DevOps pipelines, change tracking
+- **RPL (Release Pipeline)**: Azure DevOps pipelines, deployment slots, rollback capabilities, approval gates
+- **SVC (Service and Vulnerability Management)**: Defender for Cloud, security assessments, compliance dashboards
+
+**Example Usage:**
 ```
+> get_infrastructure_code_for_ksi with ksi_id="KSI-IAM-01" and infrastructure_type="bicep"
+```
+
+**Output Includes:**
+- Azure resource definitions (Log Analytics, Storage, Event Grid, etc.)
+- Diagnostic settings for evidence collection
+- Retention policies and immutability
+- Integration with Azure Monitor and Sentinel
+- Automation for evidence gathering
+- RBAC roles and permissions
+
+### get_evidence_collection_code
+Generate business logic code (Python, C#, or PowerShell) for collecting and storing KSI evidence programmatically.
+
+**Parameters:**
+- `ksi_id` (string): The Key Security Indicator identifier (e.g., "KSI-IAM-01")
+- `language` (string): Either "python", "csharp", or "powershell"
+
+**Returns:** Complete code examples with authentication, evidence collection, and storage
+
+**Code Features:**
+- **Authentication**: Azure DefaultAzureCredential pattern for managed identity or local development
+- **Evidence Collection**: SDKs for Microsoft Graph API, Azure Resource Manager, Azure Monitor
+- **Evidence Storage**: Save to Azure Blob Storage with immutability and metadata tagging
+- **Error Handling**: Comprehensive try-catch patterns and logging
+- **Documentation**: Inline comments explaining each step
+
+**Supported Languages:**
+- **Python**: Uses azure-identity, azure-storage-blob, azure-monitor-query, msgraph-sdk
+- **C#**: Uses Azure.Identity, Azure.Storage.Blobs, Azure.Monitor.Query, Microsoft.Graph
+- **PowerShell**: Uses Az.Accounts, Az.Storage, Az.Monitor, Microsoft.Graph modules
+
+**Example Usage:**
+```
+> get_evidence_collection_code with ksi_id="KSI-MLA-01" and language="python"
+```
+
+**Output Includes:**
+- SDK imports and authentication setup
+- Evidence collection logic specific to the KSI
+- JSON formatting and metadata tagging
+- Blob storage upload with immutability
+- Error handling and retry logic
+
+### get_evidence_automation_architecture
+Get comprehensive architecture guidance for automated evidence collection systems.
+
+**Parameters:**
+- `scope` (string): Architecture scope - "minimal", "single-ksi", "category", or "all"
+
+**Returns:** Complete architecture patterns with components, data flows, and implementation guidance
+
+**Architecture Scopes:**
+1. **minimal**: Quick-start architecture for pilot projects
+   - Single Log Analytics workspace
+   - Azure Function for scheduled evidence collection
+   - Blob storage with basic retention
+   - Event Grid for notifications
+   - Estimated ~$100-200/month
+
+2. **single-ksi**: Production architecture for one KSI
+   - Dedicated evidence collection infrastructure
+   - Azure Functions with monitoring
+   - Managed identities for security
+   - Sentinel integration
+   - Estimated ~$300-500/month
+
+3. **category**: Enterprise architecture for one KSI category (IAM, MLA, etc.)
+   - Category-specific evidence collectors
+   - Centralized evidence storage
+   - Automated reporting dashboards
+   - Integration with Azure Policy
+   - Estimated ~$1,000-2,000/month
+
+4. **all**: Complete enterprise architecture for all 72 KSIs
+   - Multi-region evidence collection
+   - High-availability design
+   - Automated compliance reporting
+   - Integration with GRC tools
+   - Estimated ~$5,000-10,000/month
+
+**Example Usage:**
+```
+> get_evidence_automation_architecture with scope="all"
+```
+
+**Output Includes:**
+- Component diagram and descriptions
+- Data flow architecture
+- Security and identity patterns
+- Monitoring and alerting strategy
+- Evidence storage and retention
+- Disaster recovery considerations
+- Integration patterns with Azure services
+- Scaling recommendations
+- Implementation steps
 
 ## Available Prompts
 
-The server provides **15 prompts** for FedRAMP compliance workflows:
-
-### Core Analysis and Planning Prompts
-
-**gap_analysis** - Guide FedRAMP gap analysis to identify applicable requirements, KSIs, and evidence needs
-
-**ato_package_checklist** - Comprehensive checklist for preparing FedRAMP ATO packages
-
+The server provides **9 prompts** for FedRAMP compliance workflows:
+> generate_implementation_questions with requirement_id="FRR-CCM-01"
+### Major Comprehensive Prompts
 **control_implementation** - Detailed guidance for implementing specific NIST 800-53 controls
 
 **risk_assessment** - Framework for conducting FedRAMP-aligned risk assessments
@@ -622,11 +734,34 @@ https://github.com/FedRAMP/docs/tree/main/data
 
 ### Running Tests
 
+The project includes comprehensive test coverage across all functionality:
+
 ```bash
+# Run all tests
 pytest
-# or with coverage
+
+# Run with coverage report
 pytest --cov=src --cov-report=html
+
+# Run specific test suites
+python tests/test_loader.py                      # Data loading (329 requirements)
+python tests/test_definitions.py                 # Definitions & KSIs (50 + 72)
+python tests/test_docs_integration.py            # Documentation (15 files)
+python tests/test_implementation_questions.py    # Strategic questions
+python tests/test_tool_registration.py           # Architecture validation (24 tools)
+python tests/test_evidence_automation.py         # IaC generation (Bicep/Terraform/Code)
+python tests/test_all_tools.py                   # All tools comprehensive test
 ```
+
+**Test Coverage:**
+- ✅ **Data Loading:** 329 requirements from 12 documents
+- ✅ **Definitions:** 50 FedRAMP terms
+- ✅ **KSIs:** 72 Key Security Indicators
+- ✅ **Documentation:** 15 official FedRAMP markdown files
+- ✅ **Tool Registration:** All 24 tools across 7 modules
+- ✅ **IaC Generation:** Bicep & Terraform templates for IAM, MLA, AFR families
+- ✅ **Code Generation:** Python, C#, PowerShell evidence collection code
+- ✅ **Template Variations:** Family-specific customization validated
 
 ### Project Structure
 
@@ -636,16 +771,34 @@ FedRAMP20xMCP/
 │   └── fedramp_20x_mcp/    # Main package
 │       ├── __init__.py     # Package initialization
 │       ├── __main__.py     # Entry point for python -m
-│       ├── server.py       # MCP server implementation (21 tools, 15 prompts)
+│       ├── server.py       # MCP server entry point (270 lines, 15 prompts)
 │       ├── data_loader.py  # FedRAMP data fetching and caching
+│       ├── templates/      # Infrastructure & code templates
+│       │   ├── __init__.py # Template loader functions
+│       │   ├── bicep/      # Bicep IaC templates (7 files)
+│       │   ├── terraform/  # Terraform IaC templates (6 files)
+│       │   └── code/       # Code generation templates (7 files)
+│       ├── prompts/        # Prompt templates (15 files)
+│       │   └── __init__.py # Prompt loader function
+│       ├── tools/          # Tool modules (24 tools across 7 modules)
+│       │   ├── __init__.py # Tool registration system
+│       │   ├── requirements.py    # Core requirements tools (3)
+│       │   ├── definitions.py     # Definition lookup tools (3)
+│       │   ├── ksi.py             # KSI tools (2)
+│       │   ├── documentation.py   # Documentation tools (3)
+│       │   ├── export.py          # Export tools (3)
+│       │   ├── enhancements.py    # Enhancement tools (7)
+│       │   └── evidence.py        # Evidence automation tools (3)
 │       └── __fedramp_cache__/  # Runtime cache for FedRAMP data
 ├── tests/                   # Test suite
 │   ├── __init__.py
-│   ├── test_loader.py      # Data loader tests
-│   ├── test_definitions.py # Definition tool tests
-│   ├── test_docs_integration.py  # Documentation integration tests
+│   ├── test_loader.py      # Data loader tests (329 requirements)
+│   ├── test_definitions.py # Definition tool tests (50 definitions, 72 KSIs)
+│   ├── test_docs_integration.py  # Documentation integration tests (15 files)
 │   ├── test_implementation_questions.py  # Implementation questions tests
-│   └── test_all_tools.py   # Comprehensive tool tests
+│   ├── test_tool_registration.py  # Tool architecture validation (24 tools, 7 modules)
+│   ├── test_evidence_automation.py  # IaC generation tests (Bicep/Terraform/Python/C#/PowerShell)
+│   └── test_all_tools.py   # Comprehensive tool tests (all 24 tools)
 ├── .github/
 │   ├── workflows/          # CI/CD workflows
 │   │   ├── test.yml        # Test workflow (multi-platform)
@@ -663,6 +816,13 @@ FedRAMP20xMCP/
 ├── CONTRIBUTING.md         # Contribution guidelines
 └── .gitignore              # Git exclusions (includes MCP tokens)
 ```
+
+**Architecture Highlights:**
+- **Modular Design:** Tools organized into 7 logical modules by functionality
+- **Template System:** Reusable Bicep/Terraform templates for IaC generation
+- **Prompt Templates:** External prompt files for easy updates without code changes
+- **Clean Separation:** 97.2% reduction in main server.py (9,810 → 270 lines)
+- **Registration Pattern:** Tools use `*_impl` functions with centralized registration
 
 ## License
 

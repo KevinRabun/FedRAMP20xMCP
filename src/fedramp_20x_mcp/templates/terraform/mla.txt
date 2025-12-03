@@ -1,0 +1,29 @@
+## Terraform Configuration
+
+```hcl
+# main.tf - Monitoring, Logging & Analysis Infrastructure
+resource "azurerm_log_analytics_workspace" "sentinel" {
+  name                = "log-${var.environment_name}-sentinel"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.evidence.name
+  sku                 = "PerGB2018"
+  retention_in_days   = 730
+}
+
+resource "azurerm_sentinel_log_analytics_workspace_onboarding" "sentinel" {
+  workspace_id = azurerm_log_analytics_workspace.sentinel.id
+}
+
+resource "azurerm_storage_account" "mla_evidence" {
+  name                     = "st${var.environment_name}mlaevidence"
+  resource_group_name      = azurerm_resource_group.evidence.name
+  location                 = var.location
+  account_tier             = "Standard"
+  account_replication_type = "GRS"
+  min_tls_version          = "TLS1_2"
+}
+
+output "workspace_id" {
+  value = azurerm_log_analytics_workspace.sentinel.workspace_id
+}
+```

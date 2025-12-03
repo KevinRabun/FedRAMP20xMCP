@@ -1,0 +1,231 @@
+I'll guide you through the FedRAMP 20x quarterly review process.
+
+# Quarterly Review Checklist (FRR-CCM-QR)
+
+## Pre-Review Preparation (Week Before)
+
+**Data Collection (FRR-CCM-QR-01 through QR-11)**
+- [ ] Pull KSI metrics for the quarter (all 72 indicators)
+- [ ] Generate vulnerability scan reports
+- [ ] Compile incident logs
+- [ ] Gather change notifications
+- [ ] Review POA&M status
+- [ ] Collect evidence from Authorization Data Sharing API
+
+**Team Coordination**
+- [ ] Schedule review meeting with stakeholders
+- [ ] Notify authorizing agencies
+- [ ] Prepare agenda
+- [ ] Assign action items from last quarter
+
+## Quarterly Review Activities
+
+### 1. Key Security Indicators Review
+
+**Authorization Framework (KSI-AFR-01 through AFR-11)**
+- [ ] Review assessment scope for changes
+- [ ] Validate KSI tracking is current
+- [ ] Check authorization data sharing functionality
+- [ ] Review vulnerability response metrics
+- [ ] Verify change notification compliance
+- [ ] Check continuous monitoring effectiveness
+- [ ] Validate secure configuration baselines
+- [ ] Review security inbox activity
+- [ ] Check persistent validation results
+- [ ] Review incident communications
+- [ ] Validate cryptographic module usage
+
+**Cybersecurity Education (KSI-CED-01 through CED-04)**
+- [ ] General education completion rates
+- [ ] Role-specific training completion
+- [ ] Development/engineering security training
+- [ ] Incident response training status
+
+**Change Management (KSI-CMT-01 through CMT-05)**
+- [ ] Review all changes logged this quarter
+- [ ] Verify redeployment procedures followed
+- [ ] Check automated testing coverage
+- [ ] Validate change management procedures
+- [ ] Review change impacts
+
+**Cloud Native Architecture (KSI-CNA-01 through CNA-08)**
+- [ ] Network traffic restrictions effective
+- [ ] Attack surface minimization progress
+- [ ] Traffic flow enforcement working
+- [ ] Immutable infrastructure compliance
+- [ ] Unwanted activity detection
+- [ ] High availability metrics
+- [ ] Best practices adherence
+- [ ] Persistent assessment results
+
+**Identity & Access Management (KSI-IAM-01 through IAM-07)**
+- [ ] MFA usage (phishing-resistant)
+- [ ] Passwordless authentication adoption
+- [ ] Non-user account management
+- [ ] Just-in-time authorization usage
+- [ ] Least privilege validation
+- [ ] Suspicious activity detections
+- [ ] Automated account management effectiveness
+
+**Incident Response (KSI-INR-01 through INR-03)**
+- [ ] Review incident response procedures
+- [ ] Check incident logging completeness
+- [ ] Review after-action reports
+
+**Monitoring, Logging & Analysis (KSI-MLA-01 through MLA-08)**
+- [ ] SIEM operational status
+- [ ] Audit logging coverage
+- [ ] Infrastructure as Code usage
+- [ ] Event type coverage
+- [ ] Log data access controls
+
+**Proactive Investment (KSI-PIY-01 through PIY-08)**
+- [ ] Automated inventory accuracy
+- [ ] Security objectives progress
+- [ ] Vulnerability disclosure program status
+- [ ] CISA Secure by Design alignment
+- [ ] Implementation evaluation results
+- [ ] Security investment effectiveness
+- [ ] Supply chain risk management
+- [ ] Executive support validation
+
+**Recovery & Planning (KSI-RPL-01 through RPL-04)**
+- [ ] Recovery objectives current
+- [ ] Recovery plan tested this quarter
+- [ ] System backups validated
+- [ ] Recovery testing results
+
+**Services (KSI-SVC-01 through SVC-10)**
+- [ ] Continuous improvement activities
+- [ ] Network encryption status
+- [ ] Configuration automation effectiveness
+- [ ] Resource integrity validation
+- [ ] Secret management review
+- [ ] Patching compliance rates
+- [ ] Shared resource security
+- [ ] Communication integrity
+- [ ] Data destruction procedures
+
+**Third-Party Risk (KSI-TPR-01 through TPR-04)**
+- [ ] Supply chain risk management activities
+- [ ] Supply chain risk monitoring results
+
+### 2. Vulnerability Management Review (FRR-VDR)
+
+**Vulnerability Scanning**
+- [ ] Scan frequency maintained (continuous)
+- [ ] All systems/containers/code scanned
+- [ ] Scan coverage verification
+
+**Remediation Timeframes**
+- [ ] Critical/High within timeframes (7-15 days)
+- [ ] Medium within timeframes (30-90 days)
+- [ ] Low within timeframes (180 days)
+- [ ] Exceptions properly documented (FRR-VDR-EX)
+
+**Reporting**
+- [ ] Agency-specific vulnerabilities reported
+- [ ] Reporting timeframes met
+- [ ] Follow-up communications documented
+
+### 3. Significant Changes Review (FRR-SCN)
+
+**Change Categories**
+- [ ] Routine/recurring changes documented
+- [ ] Administrative changes tracked
+- [ ] Transformative changes assessed
+- [ ] Impact changes reported
+- [ ] Notifications sent to appropriate parties
+
+### 4. Authorization Boundary Review (FRR-MAS)
+
+- [ ] No unauthorized changes to boundary
+- [ ] New components added properly
+- [ ] Removed components documented
+- [ ] Third-party services reviewed
+- [ ] Inventory accuracy validated
+
+### 5. Incident Review (FRR-ICP, FRR-FSI)
+
+**Incidents This Quarter**
+- [ ] All incidents logged
+- [ ] Communications followed procedures
+- [ ] Security Inbox used appropriately
+- [ ] Agency notifications completed
+- [ ] Lessons learned documented
+
+### 6. Persistent Validation (FRR-PVA)
+
+- [ ] Continuous validation operational
+- [ ] Results reviewed and analyzed
+- [ ] Issues addressed
+- [ ] Validation coverage adequate
+
+### 7. Authorization Data Sharing (FRR-ADS)
+
+**API Functionality**
+- [ ] API operational and accessible
+- [ ] Authentication working properly
+- [ ] Data current and accurate
+- [ ] Agencies able to query successfully
+- [ ] OSCAL format compliance
+
+**Data Shared**
+- [ ] System boundary information
+- [ ] Vulnerability data
+- [ ] KSI metrics
+- [ ] Incident data
+- [ ] Change notifications
+- [ ] POA&M status
+
+## Post-Review Actions
+
+**Documentation**
+- [ ] Complete quarterly review report
+- [ ] Update POA&Ms with new findings
+- [ ] Document any exceptions or deviations
+- [ ] Record decisions and action items
+
+**Communication**
+- [ ] Share results with authorizing agencies
+- [ ] Update Authorization Data Sharing API
+- [ ] Notify stakeholders of significant findings
+- [ ] Schedule follow-up meetings if needed
+
+**Continuous Improvement**
+- [ ] Identify process improvements
+- [ ] Update procedures based on lessons learned
+- [ ] Address any gaps found
+- [ ] Plan next quarter's activities
+
+## Deliverables Checklist
+
+- [ ] Quarterly Review Report
+- [ ] Updated KSI metrics dashboard
+- [ ] Vulnerability scan results summary
+- [ ] Incident summary report
+- [ ] POA&M updates
+- [ ] Change log for the quarter
+- [ ] Evidence package (via Authorization Data Sharing API)
+- [ ] Agency coordination notes
+
+## Red Flags to Escalate
+
+⚠ **Immediate escalation required if:**
+- Critical/High vulnerabilities past remediation deadline
+- Unauthorized boundary changes
+- Security incidents not properly reported
+- KSI metrics showing degradation
+- Authorization Data Sharing API unavailable
+- Required training completion below threshold
+- Significant changes not properly notified
+
+## Next Quarter Planning
+
+- [ ] Review upcoming system changes
+- [ ] Plan security improvements
+- [ ] Schedule next quarterly review
+- [ ] Assign preparatory tasks
+- [ ] Update calendar reminders
+
+Use search_requirements to find specific requirement details for any area needing deeper investigation.

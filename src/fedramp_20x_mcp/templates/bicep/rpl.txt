@@ -1,0 +1,44 @@
+## Bicep Template
+
+```bicep
+// main.bicep - Backup & Recovery Evidence Collection
+param location string = resourceGroup().location
+
+// Recovery Services Vault
+resource recoveryVault 'Microsoft.RecoveryServices/vaults@2023-04-01' = {
+  name: 'rsv-fedramp-backup'
+  location: location
+  sku: {
+    name: 'RS0'
+    tier: 'Standard'
+  }
+  properties: {}
+}
+
+// Backup Policy for VMs
+resource backupPolicy 'Microsoft.RecoveryServices/vaults/backupPolicies@2023-04-01' = {
+  parent: recoveryVault
+  name: 'DailyBackupPolicy'
+  properties: {
+    backupManagementType: 'AzureIaasVM'
+    instantRpRetentionRangeInDays: 5
+    schedulePolicy: {
+      schedulePolicyType: 'SimpleSchedulePolicy'
+      scheduleRunFrequency: 'Daily'
+      scheduleRunTimes: ['2023-01-01T02:00:00Z']
+    }
+    retentionPolicy: {
+      retentionPolicyType: 'LongTermRetentionPolicy'
+      dailySchedule: {
+        retentionTimes: ['2023-01-01T02:00:00Z']
+        retentionDuration: {
+          count: 30
+          durationType: 'Days'
+        }
+      }
+    }
+  }
+}
+
+output recoveryVaultName string = recoveryVault.name
+```

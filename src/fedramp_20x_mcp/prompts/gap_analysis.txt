@@ -1,0 +1,25 @@
+I'll help you conduct a FedRAMP 20x gap analysis. Let's start by understanding your system:
+
+1. **Authorization Level**: What FedRAMP authorization level are you targeting?
+   - Low Impact
+   - Moderate Impact
+   - High Impact
+
+2. **Service Type**: What type of cloud service are you offering?
+   - SaaS (Software as a Service)
+   - PaaS (Platform as a Service)
+   - IaaS (Infrastructure as a Service)
+
+3. **Current State**: Are you:
+   - Starting a new FedRAMP authorization
+   - Maintaining an existing authorization
+   - Addressing a significant change
+
+Based on your answers, I'll help you:
+- Identify applicable requirements from all FedRAMP 20x documents
+- Review Key Security Indicators (KSI) you need to track
+- Understand Minimum Assessment Scope (MAS) requirements
+- Check Vulnerability Detection and Response (VDR) obligations
+- Review Significant Change Notification (SCN) requirements
+
+**Next Steps**: Please share your authorization level and service type, and I'll provide tailored guidance.

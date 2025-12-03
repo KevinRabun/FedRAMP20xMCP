@@ -1,0 +1,497 @@
+I'll help you generate documentation templates for FedRAMP 20x compliance.
+
+# Documentation Generator for FedRAMP 20x
+
+## OSCAL System Security Plan (SSP) Template
+
+### 1. Metadata Section
+```json
+{
+  "system-security-plan": {
+    "uuid": "GENERATE-UUID-HERE",
+    "metadata": {
+      "title": "[Your System Name] System Security Plan",
+      "published": "YYYY-MM-DDTHH:MM:SSZ",
+      "last-modified": "YYYY-MM-DDTHH:MM:SSZ",
+      "version": "1.0.0",
+      "oscal-version": "1.1.2",
+      "roles": [
+        {
+          "id": "ciso",
+          "title": "Chief Information Security Officer"
+        },
+        {
+          "id": "system-owner",
+          "title": "System Owner"
+        },
+        {
+          "id": "authorizing-official",
+          "title": "Authorizing Official"
+        }
+      ],
+      "parties": [
+        {
+          "uuid": "GENERATE-UUID",
+          "type": "organization",
+          "name": "[Your Organization Name]",
+          "email-addresses": ["security@example.com"]
+        }
+      ],
+      "responsible-parties": [
+        {
+          "role-id": "ciso",
+          "party-uuids": ["PARTY-UUID"]
+        }
+      ]
+    }
+  }
+}
+```
+
+### 2. System Characteristics (FRR-MAS)
+```json
+{
+  "system-characteristics": {
+    "system-ids": [
+      {
+        "identifier-type": "https://fedramp.gov",
+        "id": "FR-########"
+      }
+    ],
+    "system-name": "[Your System Name]",
+    "system-name-short": "[Acronym]",
+    "description": "[Detailed system description including Federal Customer Data handling]",
+    "security-sensitivity-level": "moderate",
+    "system-information": {
+      "information-types": [
+        {
+          "uuid": "GENERATE-UUID",
+          "title": "Federal Customer Data",
+          "description": "Information provided by federal agencies",
+          "categorizations": [
+            {
+              "system": "https://doi.org/10.6028/NIST.SP.800-60v2r1",
+              "information-type-ids": ["C.3.5.8"]
+            }
+          ],
+          "confidentiality-impact": {
+            "base": "moderate",
+            "selected": "moderate"
+          },
+          "integrity-impact": {
+            "base": "moderate",
+            "selected": "moderate"
+          },
+          "availability-impact": {
+            "base": "moderate",
+            "selected": "moderate"
+          }
+        }
+      ]
+    },
+    "security-impact-level": {
+      "security-objective-confidentiality": "moderate",
+      "security-objective-integrity": "moderate",
+      "security-objective-availability": "moderate"
+    },
+    "authorization-boundary": {
+      "description": "[Detailed boundary description per FRR-MAS requirements]",
+      "diagrams": [
+        {
+          "uuid": "GENERATE-UUID",
+          "description": "System Architecture Diagram",
+          "links": [
+            {
+              "href": "https://example.com/architecture.png",
+              "rel": "diagram"
+            }
+          ]
+        }
+      ],
+      "remarks": "Includes all information resources likely to handle Federal Customer Data"
+    },
+    "network-architecture": {
+      "description": "Network segmentation and traffic flow (KSI-CNA-01, CNA-03)"
+    },
+    "data-flow": {
+      "description": "Federal Customer Data flow through system"
+    }
+  }
+}
+```
+
+### 3. System Implementation
+```json
+{
+  "system-implementation": {
+    "users": [
+      {
+        "uuid": "GENERATE-UUID",
+        "role-ids": ["system-admin"],
+        "authorized-privileges": [
+          {
+            "title": "System Administration",
+            "description": "Full administrative access",
+            "functions-performed": ["user-management", "configuration"]
+          }
+        ]
+      }
+    ],
+    "components": [
+      {
+        "uuid": "GENERATE-UUID",
+        "type": "software",
+        "title": "Web Application Server",
+        "description": "Primary application hosting environment",
+        "status": {
+          "state": "operational"
+        },
+        "props": [
+          {
+            "name": "handles-federal-customer-data",
+            "value": "yes"
+          },
+          {
+            "name": "vendor",
+            "value": "[Vendor Name]"
+          }
+        ]
+      }
+    ],
+    "inventory-items": [
+      {
+        "uuid": "GENERATE-UUID",
+        "description": "Component inventory per KSI-PIY-01",
+        "props": [
+          {
+            "name": "asset-id",
+            "value": "AST-001"
+          },
+          {
+            "name": "asset-type",
+            "value": "virtual-machine"
+          }
+        ],
+        "implemented-components": [
+          {
+            "component-uuid": "COMPONENT-UUID"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+## Vulnerability Detection & Response Procedure (FRR-VDR)
+
+```markdown
+# Vulnerability Detection and Response Procedure
+
+## 1. Vulnerability Scanning (FRR-VDR-01)
+
+### Scanning Frequency
+- **Infrastructure**: Continuous, minimum daily
+- **Containers**: On build and weekly in production
+- **Code**: On every commit (SAST)
+- **Dependencies**: Daily checks
+
+### Scanning Tools
+- Infrastructure: [Tool Name]
+- Containers: [Tool Name]
+- Code: [Tool Name]
+- Dependencies: [Tool Name]
+
+## 2. Remediation Timeframes (FRR-VDR-TF)
+
+### High Impact Systems
+| Severity | CVSS Score | Timeframe |
+|----------|------------|-----------|
+| Critical | 9.0-10.0   | 7 days    |
+| High     | 7.0-8.9    | 15 days   |
+| Medium   | 4.0-6.9    | 60 days   |
+| Low      | 0.1-3.9    | 180 days  |
+
+### Moderate Impact Systems
+| Severity | CVSS Score | Timeframe |
+|----------|------------|-----------|
+| Critical | 9.0-10.0   | 15 days   |
+| High     | 7.0-8.9    | 30 days   |
+| Medium   | 4.0-6.9    | 90 days   |
+| Low      | 0.1-3.9    | 180 days  |
+
+## 3. Remediation Process
+
+1. **Detection**: Automated scan identifies vulnerability
+2. **Triage**: Security team assesses within 24 hours
+3. **Assignment**: Create ticket, assign to owner
+4. **Remediation**: Apply patch or mitigating control
+5. **Validation**: Re-scan to confirm fix
+6. **Documentation**: Update POA&M if needed
+
+## 4. Exception Process (FRR-VDR-EX)
+
+Exceptions may be granted for:
+- No patch available
+- Patch breaks critical functionality
+- Compensating controls in place
+
+**Exception Request Must Include:**
+- Vulnerability details (CVE, CVSS)
+- Business justification
+- Risk assessment
+- Compensating controls
+- Exception duration (max 90 days)
+- Review date
+
+**Approval Required From:**
+- CISO
+- System Owner
+- Authorizing Official (for High/Critical)
+
+## 5. Agency Reporting (FRR-VDR-RP)
+
+Report to affected agencies within 24 hours if:
+- Critical/High vulnerability affects their data
+- Active exploitation detected
+- Patch will cause service disruption
+
+**Report Via:**
+- FedRAMP Security Inbox (FRR-FSI)
+- Agency-specific incident channels (FRR-ICP)
+```
+
+## Incident Communications Procedure (FRR-ICP)
+
+```markdown
+# Incident Communications Procedure
+
+## 1. Incident Classification
+
+### Severity Levels
+- **Critical**: Data breach, service outage affecting federal data
+- **High**: Security event with potential data impact
+- **Medium**: Security event contained, no data impact
+- **Low**: Security event, no immediate risk
+
+## 2. Notification Timeframes
+
+| Severity | Internal | FedRAMP | Agencies | Public |
+|----------|----------|---------|----------|--------|
+| Critical | Immediate| 1 hour  | 2 hours  | TBD    |
+| High     | 1 hour   | 4 hours | 6 hours  | TBD    |
+| Medium   | 4 hours  | 24 hours| 24 hours | N/A    |
+| Low      | 24 hours | N/A     | N/A      | N/A    |
+
+## 3. Communication Channels (FRR-FSI)
+
+**FedRAMP Security Inbox**: security@fedramp.gov
+- All security-related communications
+- Vulnerability notifications
+- Significant changes
+- Incident reports
+
+**Agency-Specific Channels**: Per ICP agreements
+- Direct agency security contacts
+- Agency-specific portals
+- Coordinated disclosure timelines
+
+## 4. Incident Report Template
+
+```
+Subject: [INCIDENT] [SEVERITY] - [Brief Description]
+
+Incident ID: INC-YYYY-###
+Date/Time Detected: YYYY-MM-DD HH:MM UTC
+Severity: [Critical/High/Medium/Low]
+Status: [Investigating/Contained/Resolved]
+
+IMPACT:
+- Systems Affected: [List]
+- Data Affected: [Federal Customer Data? Yes/No]
+- Agencies Affected: [List or "None"]
+- User Impact: [Description]
+
+SUMMARY:
+[What happened, when detected, initial assessment]
+
+RESPONSE ACTIONS:
+- [Action 1]
+- [Action 2]
+
+NEXT STEPS:
+[Planned actions and timeline]
+
+CONTACT:
+[Incident Commander name and contact]
+```
+
+## 5. Post-Incident Activities (KSI-INR-03)
+
+Within 30 days of incident closure:
+- [ ] Complete after-action report
+- [ ] Identify root cause
+- [ ] Document lessons learned
+- [ ] Update procedures if needed
+- [ ] Implement preventive measures
+- [ ] Share with relevant stakeholders
+```
+
+## Significant Change Notification Template (FRR-SCN)
+
+```markdown
+# Significant Change Notification
+
+## Change Information
+- **Change ID**: CHG-YYYY-###
+- **Date**: YYYY-MM-DD
+- **Type**: [Routine/Administrative/Transformative/Impact]
+- **Submitted By**: [Name, Role]
+
+## Change Description
+[Detailed description of the change]
+
+## Impact Assessment
+
+### Authorization Boundary (FRR-MAS)
+- [ ] No boundary changes
+- [ ] New components added: [List]
+- [ ] Components removed: [List]
+- [ ] Third-party services changed: [List]
+
+### Security Controls
+- [ ] No control changes
+- [ ] Controls added: [List]
+- [ ] Controls modified: [List]
+- [ ] Controls removed: [List]
+
+### Federal Customer Data
+- [ ] No impact to data handling
+- [ ] New data types collected: [List]
+- [ ] Data flow changes: [Description]
+- [ ] Data retention changes: [Description]
+
+### Risk Assessment
+- **Likelihood**: [Low/Medium/High]
+- **Impact**: [Low/Medium/High]
+- **Overall Risk**: [Low/Medium/High]
+
+## Notification Required (FRR-SCN)
+- [ ] FedRAMP PMO
+- [ ] Authorizing Agencies: [List]
+- [ ] 3PAO (if assessment needed)
+
+## Testing & Validation
+- [ ] Security testing completed
+- [ ] Vulnerability scan completed
+- [ ] Configuration review completed
+- [ ] Monitoring updated
+
+## Approvals
+- System Owner: ________________ Date: ______
+- CISO: ________________ Date: ______
+- Change Advisory Board: ________________ Date: ______
+
+## Implementation
+- **Scheduled Date**: YYYY-MM-DD HH:MM UTC
+- **Rollback Plan**: [Description]
+- **Monitoring**: [How change will be monitored]
+```
+
+## KSI Implementation Documentation Template
+
+```markdown
+# Key Security Indicator: [KSI-ID]
+
+## Indicator Information
+- **ID**: [e.g., KSI-IAM-01]
+- **Title**: [e.g., Phishing-Resistant MFA]
+- **Category**: [e.g., Identity & Access Management]
+- **Implementation Date**: YYYY-MM-DD
+- **Owner**: [Name, Role]
+
+## Requirement Description
+[Copy requirement text from get_ksi(ksi_id)]
+
+## Implementation Approach
+
+### Technology/Tools
+- [Tool/service name]
+- [Configuration details]
+- [Integration points]
+
+### Procedures
+1. [Step 1]
+2. [Step 2]
+3. [Step 3]
+
+## Evidence Collection
+
+### Automated Collection
+- **Frequency**: [Continuous/Daily/Weekly]
+- **Method**: [API/Log extraction/Report generation]
+- **Storage**: [Location]
+- **Format**: [JSON/CSV/PDF]
+
+### Manual Collection
+- **Frequency**: [Monthly/Quarterly]
+- **Responsible Party**: [Name, Role]
+- **Checklist**: [Items to collect]
+
+## Metrics & Measurement
+
+### Current Status
+- **Compliance**: [Compliant/Partial/Non-compliant]
+- **Metric Value**: [e.g., "100% of users"]
+- **Last Measured**: YYYY-MM-DD
+
+### Targets
+- **Target Value**: [e.g., "100%"]
+- **Target Date**: YYYY-MM-DD
+
+### Tracking
+- **Dashboard**: [Link to dashboard]
+- **Reporting**: [Where metrics are published]
+
+## Testing & Validation
+- **Test Procedure**: [How compliance is tested]
+- **Test Frequency**: [Quarterly/Annual]
+- **Last Test Date**: YYYY-MM-DD
+- **Next Test Date**: YYYY-MM-DD
+
+## Related Requirements
+[List related KSIs and FRR requirements using check_requirement_dependencies]
+
+## Evidence for 3PAO
+- [ ] Policy documentation
+- [ ] Configuration screenshots
+- [ ] Compliance reports
+- [ ] Test results
+- [ ] Training records (if applicable)
+```
+
+## Quick Reference: Required Documents
+
+**Core Documents:**
+1. System Security Plan (OSCAL format preferred)
+2. Vulnerability Detection & Response Procedure (FRR-VDR)
+3. Incident Communications Procedure (FRR-ICP)
+4. Significant Change Notification Procedure (FRR-SCN)
+5. Continuous Monitoring Plan (FRR-CCM)
+6. All 72 KSI Implementation Documents
+
+**Supporting Documents:**
+7. Authorization Boundary Description (FRR-MAS)
+8. Authorization Data Sharing API Documentation (FRR-ADS)
+9. Persistent Validation Procedures (FRR-PVA)
+10. Recommended Secure Configuration (FRR-RSC)
+11. Cryptographic Module Usage (FRR-UCM)
+
+**Quarterly Deliverables:**
+12. Quarterly Review Report (FRR-CCM-QR)
+13. KSI Metrics Dashboard
+14. Vulnerability Status Report
+15. Incident Summary
+16. Change Log
+
+Use get_control(requirement_id) to get specific requirement details for any documentation section.

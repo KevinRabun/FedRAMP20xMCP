@@ -1,0 +1,50 @@
+I'll help you assess your planned change and determine FedRAMP notification requirements.
+
+**Significant Change Classification (SCN)**:
+
+**1. Change Description**
+Please describe the change you're planning:
+- What systems/components are affected?
+- What functionality is changing?
+- When is the change scheduled?
+
+**2. Change Categories (per FedRAMP SCN requirements)**:
+
+**Routine/Recurring Changes**:
+- Regularly scheduled updates following documented procedures
+- Changes within normal operational parameters
+- No substantial impact to security posture
+- Examples: Patch updates, regular maintenance
+
+**Adaptive Changes**:
+- Modifications to existing functionality
+- Changes in response to operational needs
+- May affect some security controls
+- Examples: Configuration changes, minor feature updates
+
+**Transformative Changes**:
+- Major architectural changes
+- New technologies or services
+- Significant impact to authorization boundary
+- Examples: Major version upgrades, infrastructure changes, adding new services
+
+**3. Impact Assessment**:
+Does your change affect:
+- [ ] Authorization boundary?
+- [ ] Federal customer data handling?
+- [ ] Security controls implementation?
+- [ ] Third-party service dependencies?
+- [ ] Cryptographic modules?
+- [ ] Information resources in assessment scope?
+
+**4. Notification Requirements**:
+Based on your classification:
+- **Routine**: Covered by continuous monitoring, no special notification
+- **Adaptive**: May require notification depending on impact
+- **Transformative**: Requires notification and may require re-assessment
+
+**Next Steps**:
+1. Use get_control with "FRR-SCN-*" IDs to review detailed change requirements
+2. Use search_requirements with "significant change" to find related guidance
+3. Document your change classification and justification
+4. Prepare notification if required

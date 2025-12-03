@@ -1,0 +1,224 @@
+## Python Code
+
+```python
+#!/usr/bin/env python3
+\"\"\"
+IAM Evidence Collector for FedRAMP 20x
+Collects MFA usage, authentication logs, and access control evidence
+\"\"\"
+
+import os
+import json
+from datetime import datetime, timedelta
+from azure.identity import DefaultAzureCredential
+from azure.mgmt.resource import ResourceManagementClient
+from azure.storage.blob import BlobServiceClient
+from msgraph import GraphServiceClient
+
+# Configuration
+SUBSCRIPTION_ID = os.environ["AZURE_SUBSCRIPTION_ID"]
+STORAGE_ACCOUNT = os.environ["EVIDENCE_STORAGE_ACCOUNT"]
+EVIDENCE_CONTAINER = "iam-evidence"
+
+async def collect_mfa_evidence():
+    \"\"\"Collect MFA enrollment and usage evidence for KSI-IAM-01\"\"\"
+    # WAF Security: Use managed identity with explicit configuration
+    credential = DefaultAzureCredential(
+        exclude_environment_credential=False,
+        exclude_managed_identity_credential=False,
+        exclude_shared_token_cache_credential=True,
+        logging_enable=True  # Enable for troubleshooting
+    )
+    graph_client = GraphServiceClient(credential)
+    
+    # Get all users
+    users = await graph_client.users.get()
+    
+    mfa_report = {
+        "collection_date": datetime.utcnow().isoformat(),
+        "ksi_id": "KSI-IAM-01",
+        "total_users": 0,
+        "users_with_mfa": 0,
+        "mfa_methods": {},
+        "non_compliant_users": []
+    }
+    
+    for user in users.value:
+        mfa_report["total_users"] += 1
+        
+        # Get authentication methods
+        auth_methods = await graph_client.users.by_user_id(user.id).authentication.methods.get()
+        
+        has_phishing_resistant = False
+        user_methods = []
+        
+        for method in auth_methods.value:
+            method_type = method.odata_type
+            user_methods.append(method_type)
+            
+            # Check for FIDO2 (phishing-resistant)
+            if "fido2" in method_type.lower():
+                has_phishing_resistant = True
+        
+        if has_phishing_resistant:
+            mfa_report["users_with_mfa"] += 1
+        else:
+            mfa_report["non_compliant_users"].append({
+                "user_id": user.id,
+                "upn": user.user_principal_name,
+                "methods": user_methods
+            })
+        
+        # Count method types
+        for method in user_methods:
+            mfa_report["mfa_methods"][method] = mfa_report["mfa_methods"].get(method, 0) + 1
+    
+    # Calculate compliance percentage
+    mfa_report["compliance_percentage"] = (
+        mfa_report["users_with_mfa"] / mfa_report["total_users"] * 100
+        if mfa_report["total_users"] > 0 else 0
+    )
+    
+    return mfa_report
+
+async def collect_conditional_access_evidence():
+    \"\"\"Collect Conditional Access policy evidence for KSI-IAM-05\"\"\"
+    credential = DefaultAzureCredential(
+        exclude_environment_credential=False,
+        exclude_managed_identity_credential=False,
+        exclude_shared_token_cache_credential=True
+    )
+    graph_client = GraphServiceClient(credential)
+    
+    # Get all CA policies
+    policies = await graph_client.identity.conditional_access.policies.get()
+    
+    ca_report = {
+        "collection_date": datetime.utcnow().isoformat(),
+        "ksi_id": "KSI-IAM-05",
+        "total_policies": len(policies.value),
+        "enabled_policies": 0,
+        "policies": []
+    }
+    
+    for policy in policies.value:
+        policy_info = {
+            "id": policy.id,
+            "display_name": policy.display_name,
+            "state": policy.state,
+            "conditions": str(policy.conditions),
+            "grant_controls": str(policy.grant_controls)
+        }
+        
+        if policy.state == "enabled":
+            ca_report["enabled_policies"] += 1
+        
+        ca_report["policies"].append(policy_info)
+    
+    return ca_report
+
+async def store_evidence(evidence_data: dict, evidence_type: str):
+    \"\"\"Store evidence in Azure Blob Storage with immutability and metadata\"\"\"
+    # WAF Security: Use managed identity for authentication
+    credential = DefaultAzureCredential(
+        exclude_environment_credential=False,  # Allow environment variables in dev
+        exclude_managed_identity_credential=False,  # Use managed identity in Azure
+        exclude_shared_token_cache_credential=True,  # Don't use cached tokens
+        logging_enable=True  # Enable SDK logging for troubleshooting
+    )
+    
+    blob_service_client = BlobServiceClient(
+        account_url=f"https://{STORAGE_ACCOUNT}.blob.core.windows.net",
+        credential=credential,
+        connection_timeout=30,  # WAF Reliability: Set timeout
+        read_timeout=30
+    )
+    
+    # Create blob name with timestamp
+    timestamp = datetime.utcnow().strftime("%Y-%m-%d-%H%M%S")
+    blob_name = f"{evidence_type}/{timestamp}.json"
+    
+    try:
+        # Get blob client
+        blob_client = blob_service_client.get_blob_client(
+            container=EVIDENCE_CONTAINER,
+            blob=blob_name
+        )
+        
+        evidence_json = json.dumps(evidence_data, indent=2)
+        
+        # WAF Security: Add metadata for evidence chain of custody
+        metadata = {
+            "ksi_id": evidence_data.get("ksi_id", "unknown"),
+            "collection_date": evidence_data.get("collection_date", ""),
+            "evidence_type": evidence_type,
+            "version": "1.0"
+        }
+        
+        # Upload evidence with metadata
+        blob_client.upload_blob(
+            evidence_json,
+            overwrite=False,  # Prevent accidental overwrites
+            metadata=metadata,
+            tags={"compliance": "fedramp", "type": evidence_type}
+        )
+        
+        # WAF Operational Excellence: Log successful upload
+        print(f"✓ Evidence stored: {blob_name}")
+        print(f"  Size: {len(evidence_json)} bytes")
+        return blob_name
+        
+    except Exception as e:
+        # WAF Reliability: Proper error handling
+        print(f"✗ Failed to store evidence: {str(e)}")
+        raise
+
+async def main():
+    \"\"\"Main evidence collection function\"\"\"
+    print(f"Starting IAM evidence collection: {datetime.utcnow()}")
+    
+    # Collect MFA evidence
+    mfa_evidence = await collect_mfa_evidence()
+    await store_evidence(mfa_evidence, "ksi-iam-01-mfa")
+    print(f"MFA Compliance: {mfa_evidence['compliance_percentage']:.1f}%")
+    
+    # Collect Conditional Access evidence
+    ca_evidence = await collect_conditional_access_evidence()
+    await store_evidence(ca_evidence, "ksi-iam-05-conditional-access")
+    print(f"CA Policies: {ca_evidence['enabled_policies']}/{ca_evidence['total_policies']} enabled")
+    
+    print("✓ IAM evidence collection complete")
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
+```
+
+### Requirements (requirements.txt)
+```
+# Azure SDK for Python - Use latest stable versions
+azure-identity>=1.18.0  # Latest stable as of Dec 2025
+azure-mgmt-resource>=23.1.0
+azure-storage-blob>=12.23.0
+msgraph-sdk>=1.10.0
+azure-monitor-query>=1.5.0
+
+# Optional: Retry and resilience
+tenacity>=8.2.0  # For custom retry logic
+```
+
+### Environment Variables
+```bash
+# Required for local development and Azure deployment
+export AZURE_SUBSCRIPTION_ID="your-subscription-id"
+export EVIDENCE_STORAGE_ACCOUNT="stfedrampprodevidence"
+export AZURE_TENANT_ID="your-tenant-id"
+
+# Optional: For local development only
+export AZURE_CLIENT_ID="your-app-registration-client-id"
+export AZURE_CLIENT_SECRET="your-client-secret"
+```
+
+### Managed Identity Configuration (Azure Deployment)
+When deployed to Azure Function, the managed identity is automatically used.
+No environment variables or secrets needed - WAF Security best practice.

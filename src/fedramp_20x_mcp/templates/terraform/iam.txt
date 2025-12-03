@@ -1,0 +1,219 @@
+# main.tf - IAM Evidence Collection Infrastructure
+# Follows Azure CAF naming conventions and WAF best practices
+
+terraform {
+  required_version = ">= 1.0"
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 3.0"
+    }
+  }
+}
+
+provider "azurerm" {
+  features {
+    key_vault {
+      purge_soft_delete_on_destroy = false
+    }
+    resource_group {
+      prevent_deletion_if_contains_resources = true
+    }
+  }
+}
+
+variable "environment_name" {
+  description = "Environment name (prod, dev, test)"
+  default     = "prod"
+}
+
+variable "workload_name" {
+  description = "Workload name"
+  default     = "fedramp"
+}
+
+variable "location" {
+  description = "Azure region"
+  default     = "eastus"
+}
+
+# CAF recommended tags for governance
+locals {
+  tags = {
+    Environment  = var.environment_name
+    Workload     = var.workload_name
+    CostCenter   = "Security"
+    ManagedBy    = "Terraform"
+    Compliance   = "FedRAMP"
+  }
+}
+
+# Log Analytics Workspace (CAF naming)
+resource "azurerm_log_analytics_workspace" "iam" {
+  name                = "log-${var.workload_name}-${var.environment_name}-iam"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.evidence.name
+  sku                 = "PerGB2018"
+  retention_in_days   = 730  # 2 years for FedRAMP
+  tags                = local.tags
+
+  # Prevent accidental deletion
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+# Storage Account for evidence (CAF naming)
+resource "azurerm_storage_account" "iam_evidence" {
+  name                     = "st${var.workload_name}${var.environment_name}iam"
+  resource_group_name      = azurerm_resource_group.evidence.name
+  location                 = var.location
+  account_tier             = "Standard"
+  account_replication_type = "GRS"  # Geo-redundant for WAF Reliability
+  min_tls_version          = "TLS1_2"
+  https_traffic_only       = true
+  
+  # WAF Security best practices
+  allow_nested_items_to_be_public = false
+  public_network_access_enabled   = false  # Consider private endpoint
+  
+  identity {
+    type = "SystemAssigned"
+  }
+
+  blob_properties {
+    delete_retention_policy {
+      days = 30  # Soft delete for 30 days
+    }
+    container_delete_retention_policy {
+      days = 30
+    }
+  }
+
+  network_rules {
+    default_action = "Deny"
+    bypass         = ["AzureServices"]
+  }
+
+  tags = local.tags
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+# Blob container
+resource "azurerm_storage_container" "iam_evidence" {
+  name                  = "iam-evidence"
+  storage_account_name  = azurerm_storage_account.iam_evidence.name
+  container_access_type = "private"
+}
+
+# Application Insights (CAF naming)
+resource "azurerm_application_insights" "iam" {
+  name                = "appi-${var.workload_name}-${var.environment_name}-iam"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.evidence.name
+  workspace_id        = azurerm_log_analytics_workspace.iam.id
+  application_type    = "web"
+  tags                = local.tags
+}
+
+# Function App Service Plan (CAF naming)
+resource "azurerm_service_plan" "iam" {
+  name                = "asp-${var.workload_name}-${var.environment_name}-iam"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.evidence.name
+  os_type             = "Linux"
+  sku_name            = "Y1"  # Consumption plan
+  tags                = local.tags
+}
+
+# Function App (CAF naming)
+resource "azurerm_linux_function_app" "iam" {
+  name                       = "func-${var.workload_name}-${var.environment_name}-iam"
+  location                   = var.location
+  resource_group_name        = azurerm_resource_group.evidence.name
+  service_plan_id            = azurerm_service_plan.iam.id
+  storage_account_name       = azurerm_storage_account.iam_evidence.name
+  https_only                 = true  # WAF Security: Force HTTPS
+  
+  identity {
+    type = "SystemAssigned"  # WAF Security: Use managed identity
+  }
+
+  site_config {
+    application_insights_connection_string = azurerm_application_insights.iam.connection_string
+    ftps_state                             = "Disabled"  # WAF Security
+    minimum_tls_version                    = "1.2"
+    
+    application_stack {
+      dotnet_version              = "8.0"
+      use_dotnet_isolated_runtime = true
+    }
+  }
+
+  app_settings = {
+    "FUNCTIONS_WORKER_RUNTIME"       = "dotnet-isolated"
+    "LOG_ANALYTICS_WORKSPACE_ID"     = azurerm_log_analytics_workspace.iam.workspace_id
+    "EVIDENCE_STORAGE_ACCOUNT"       = azurerm_storage_account.iam_evidence.name
+    "AZURE_STORAGE_IDENTITY_CLIENT_ID" = "SystemAssigned"  # Use managed identity
+  }
+
+  tags = local.tags
+}
+
+# RBAC: Grant Function App Storage Blob Data Contributor role
+resource "azurerm_role_assignment" "function_storage" {
+  scope                = azurerm_storage_account.iam_evidence.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = azurerm_linux_function_app.iam.identity[0].principal_id
+}
+
+# Metric alert for function failures (WAF Reliability)
+resource "azurerm_monitor_metric_alert" "function_failures" {
+  name                = "alert-${var.workload_name}-${var.environment_name}-iam-failures"
+  resource_group_name = azurerm_resource_group.evidence.name
+  scopes              = [azurerm_linux_function_app.iam.id]
+  description         = "Alert when IAM evidence collection fails"
+  severity            = 2
+  frequency           = "PT5M"
+  window_size         = "PT15M"
+
+  criteria {
+    metric_namespace = "Microsoft.Web/sites"
+    metric_name      = "FunctionExecutionCount"
+    aggregation      = "Total"
+    operator         = "GreaterThan"
+    threshold        = 5
+
+    dimension {
+      name     = "Status"
+      operator = "Include"
+      values   = ["Failed"]
+    }
+  }
+
+  tags = local.tags
+}
+
+# Outputs
+output "log_analytics_workspace_id" {
+  value       = azurerm_log_analytics_workspace.iam.workspace_id
+  description = "Log Analytics workspace ID"
+}
+
+output "evidence_storage_name" {
+  value       = azurerm_storage_account.iam_evidence.name
+  description = "Evidence storage account name"
+}
+
+output "function_app_name" {
+  value       = azurerm_linux_function_app.iam.name
+  description = "Function app name"
+}
+
+output "function_app_principal_id" {
+  value       = azurerm_linux_function_app.iam.identity[0].principal_id
+  description = "Function app managed identity principal ID"
+}

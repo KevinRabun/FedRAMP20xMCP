@@ -1,0 +1,82 @@
+## Bicep Template
+
+```bicep
+// main.bicep - Monitoring, Logging & Analysis Infrastructure
+param location string = resourceGroup().location
+param environmentName string = 'fedramp'
+
+// Sentinel Workspace (includes Log Analytics)
+resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+  name: 'log-${environmentName}-sentinel'
+  location: location
+  properties: {
+    sku: {
+      name: 'PerGB2018'
+    }
+    retentionInDays: 730
+  }
+}
+
+// Enable Microsoft Sentinel
+resource sentinel 'Microsoft.SecurityInsights/onboardingStates@2023-02-01' = {
+  name: 'default'
+  scope: logAnalytics
+  properties: {}
+}
+
+// Evidence Storage
+resource evidenceStorage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: 'st${environmentName}mlaevidence'
+  location: location
+  kind: 'StorageV2'
+  sku: {
+    name: 'Standard_GRS'
+  }
+  properties: {
+    supportsHttpsTrafficOnly: true
+    minimumTlsVersion: 'TLS1_2'
+  }
+}
+
+// Data Collection Rules for centralized logging
+resource dataCollectionEndpoint 'Microsoft.Insights/dataCollectionEndpoints@2022-06-01' = {
+  name: 'dce-${environmentName}-mla'
+  location: location
+  properties: {}
+}
+
+resource dataCollectionRule 'Microsoft.Insights/dataCollectionRules@2022-06-01' = {
+  name: 'dcr-${environmentName}-mla'
+  location: location
+  properties: {
+    dataCollectionEndpointId: dataCollectionEndpoint.id
+    streamDeclarations: {
+      'Custom-SecurityLogs': {
+        columns: [
+          {name: 'TimeGenerated', type: 'datetime'}
+          {name: 'EventType', type: 'string'}
+          {name: 'EventData', type: 'dynamic'}
+        ]
+      }
+    }
+    destinations: {
+      logAnalytics: [
+        {
+          workspaceResourceId: logAnalytics.id
+          name: 'centralWorkspace'
+        }
+      ]
+    }
+    dataFlows: [
+      {
+        streams: ['Custom-SecurityLogs']
+        destinations: ['centralWorkspace']
+      }
+    ]
+  }
+}
+
+output workspaceId string = logAnalytics.properties.customerId
+output workspaceKey string = logAnalytics.listKeys().primarySharedKey
+output dataCollectionEndpointUrl string = dataCollectionEndpoint.properties.logsIngestion.endpoint
+```

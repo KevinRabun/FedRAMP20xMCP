@@ -1,0 +1,48 @@
+## Bicep Template
+
+```bicep
+// main.bicep - Cloud Native Architecture Evidence
+param location string = resourceGroup().location
+
+// AKS cluster with monitoring
+resource aks 'Microsoft.ContainerService/managedClusters@2023-10-01' = {
+  name: 'aks-fedramp-prod'
+  location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    dnsPrefix: 'fedramp'
+    enableRBAC: true
+    networkProfile: {
+      networkPlugin: 'azure'
+      networkPolicy: 'calico'  // For KSI-CNA-01
+      serviceCidr: '10.0.0.0/16'
+      dnsServiceIP: '10.0.0.10'
+    }
+    addonProfiles: {
+      omsagent: {
+        enabled: true
+        config: {
+          logAnalyticsWorkspaceResourceID: logAnalytics.id
+        }
+      }
+      azurePolicy: {
+        enabled: true  // For KSI-CNA-08
+      }
+    }
+  }
+}
+
+resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+  name: 'log-fedramp-aks'
+  location: location
+  properties: {
+    sku: { name: 'PerGB2018' }
+    retentionInDays: 730
+  }
+}
+
+output aksClusterName string = aks.name
+output workspaceId string = logAnalytics.id
+```

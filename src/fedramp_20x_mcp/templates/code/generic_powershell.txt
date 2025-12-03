@@ -1,0 +1,65 @@
+## PowerShell Code
+
+```powershell
+#Requires -Modules Az.Accounts, Az.Storage
+
+<#
+.SYNOPSIS
+    Generic KSI evidence collector for FedRAMP 20x
+#>
+
+param(
+    [Parameter(Mandatory=$true)]
+    [string]$KsiId,
+    
+    [Parameter(Mandatory=$false)]
+    [string]$StorageAccountName = $env:EVIDENCE_STORAGE_ACCOUNT
+)
+
+function Get-KSIEvidence {
+    param([string]$KsiId)
+    
+    $evidence = @{
+        collection_date = (Get-Date).ToUniversalTime().ToString("o")
+        ksi_id = $KsiId
+        compliance_status = "compliant"
+        evidence_data = @{
+            # Add your evidence data here
+        }
+    }
+    
+    return $evidence
+}
+
+function Save-Evidence {
+    param(
+        [hashtable]$Evidence,
+        [string]$StorageAccount
+    )
+    
+    $context = New-AzStorageContext -StorageAccountName $StorageAccount -UseConnectedAccount
+    
+    $timestamp = Get-Date -Format "yyyy-MM-dd"
+    $blobName = "evidence/$timestamp.json"
+    
+    $json = $Evidence | ConvertTo-Json -Depth 10
+    $tempFile = [System.IO.Path]::GetTempFileName()
+    $json | Out-File -FilePath $tempFile -Encoding UTF8
+    
+    Set-AzStorageBlobContent `
+        -File $tempFile `
+        -Container "evidence" `
+        -Blob $blobName `
+        -Context $context `
+        -Force
+    
+    Remove-Item $tempFile
+    Write-Host "✓ Evidence stored: $blobName"
+}
+
+# Main
+$evidence = Get-KSIEvidence -KsiId $KsiId
+Save-Evidence -Evidence $evidence -StorageAccount $StorageAccountName
+
+Write-Host "Status: $($evidence.compliance_status)"
+```

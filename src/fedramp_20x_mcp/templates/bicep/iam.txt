@@ -1,0 +1,211 @@
+// main.bicep - IAM Evidence Collection Infrastructure
+// Follows Azure CAF naming conventions and WAF best practices
+param location string = resourceGroup().location
+param environmentName string = 'prod'
+param workloadName string = 'fedramp'
+
+// CAF recommended tags for governance
+param tags object = {
+  Environment: environmentName
+  Workload: workloadName
+  CostCenter: 'Security'
+  ManagedBy: 'IaC'
+  Compliance: 'FedRAMP'
+}
+
+// Log Analytics Workspace for IAM logs (CAF naming: log-<workload>-<env>-<purpose>)
+resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
+  name: 'log-${workloadName}-${environmentName}-iam'
+  location: location
+  tags: tags
+  properties: {
+    sku: {
+      name: 'PerGB2018'
+    }
+    retentionInDays: 730  // 2 years retention for FedRAMP
+    features: {
+      immediatePurgeDataOn30Days: false  // Prevent accidental data loss
+    }
+  }
+}
+
+// Storage Account for evidence (CAF naming: st<workload><env><unique>)
+resource evidenceStorage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
+  name: 'st${workloadName}${environmentName}iam'
+  location: location
+  kind: 'StorageV2'
+  tags: tags
+  sku: {
+    name: 'Standard_GRS'  // Geo-redundant for WAF Reliability
+  }
+  identity: {
+    type: 'SystemAssigned'  // Enable managed identity
+  }
+  properties: {
+    supportsHttpsTrafficOnly: true
+    minimumTlsVersion: 'TLS1_2'
+    allowBlobPublicAccess: false  // WAF Security: Block public access
+    networkAcls: {
+      defaultAction: 'Deny'  // WAF Security: Default deny
+      bypass: 'AzureServices'
+    }
+    encryption: {
+      keySource: 'Microsoft.Storage'
+      requireInfrastructureEncryption: true  // Double encryption
+      services: {
+        blob: {
+          enabled: true
+        }
+        file: {
+          enabled: true
+        }
+      }
+    }
+  }
+}
+
+// Blob service configuration
+resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01' = {
+  parent: evidenceStorage
+  name: 'default'
+  properties: {
+    deleteRetentionPolicy: {
+      enabled: true
+      days: 30  // Soft delete for 30 days
+    }
+    containerDeleteRetentionPolicy: {
+      enabled: true
+      days: 30
+    }
+  }
+}
+
+// Container for IAM evidence
+resource evidenceContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+  parent: blobService
+  name: 'iam-evidence'
+  properties: {
+    publicAccess: 'None'
+  }
+}
+
+// Application Insights for monitoring (CAF naming: appi-<workload>-<env>-<purpose>)
+resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
+  name: 'appi-${workloadName}-${environmentName}-iam'
+  location: location
+  tags: tags
+  kind: 'web'
+  properties: {
+    Application_Type: 'web'
+    WorkspaceResourceId: logAnalytics.id
+  }
+}
+
+// Azure Function for IAM data collection (CAF naming: func-<workload>-<env>-<purpose>)
+resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
+  name: 'asp-${workloadName}-${environmentName}-iam'
+  location: location
+  tags: tags
+  sku: {
+    name: 'Y1'  // Consumption plan for cost optimization
+    tier: 'Dynamic'
+  }
+}
+
+resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
+  name: 'func-${workloadName}-${environmentName}-iam'
+  location: location
+  kind: 'functionapp'
+  tags: tags
+  identity: {
+    type: 'SystemAssigned'  // WAF Security: Use managed identity
+  }
+  properties: {
+    serverFarmId: appServicePlan.id
+    httpsOnly: true  // WAF Security: Force HTTPS
+    siteConfig: {
+      minTlsVersion: '1.2'
+      ftpsState: 'Disabled'  // WAF Security: Disable FTP
+      appSettings: [
+        {
+          name: 'AzureWebJobsStorage__accountName'
+          value: evidenceStorage.name  // WAF Security: Managed identity auth
+        }
+        {
+          name: 'FUNCTIONS_EXTENSION_VERSION'
+          value: '~4'
+        }
+        {
+          name: 'FUNCTIONS_WORKER_RUNTIME'
+          value: 'dotnet-isolated'
+        }
+        {
+          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+          value: appInsights.properties.ConnectionString
+        }
+        {
+          name: 'LOG_ANALYTICS_WORKSPACE_ID'
+          value: logAnalytics.properties.customerId
+        }
+        {
+          name: 'EVIDENCE_STORAGE_ACCOUNT'
+          value: evidenceStorage.name  // Reference by name for managed identity
+        }
+      ]
+    }
+  }
+}
+
+// RBAC: Grant Function App Storage Blob Data Contributor role
+resource storageRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(evidenceStorage.id, functionApp.id, 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
+  scope: evidenceStorage
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe') // Storage Blob Data Contributor
+    principalId: functionApp.identity.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// Metric alert for function failures (WAF Reliability)
+resource alertRule 'Microsoft.Insights/metricAlerts@2018-03-01' = {
+  name: 'alert-${workloadName}-${environmentName}-iam-failures'
+  location: 'global'
+  tags: tags
+  properties: {
+    description: 'Alert when IAM evidence collection fails'
+    severity: 2
+    enabled: true
+    scopes: [
+      functionApp.id
+    ]
+    evaluationFrequency: 'PT5M'
+    windowSize: 'PT15M'
+    criteria: {
+      'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
+      allOf: [
+        {
+          name: 'FunctionErrors'
+          metricName: 'FunctionExecutionCount'
+          dimensions: [
+            {
+              name: 'Status'
+              operator: 'Include'
+              values: ['Failed']
+            }
+          ]
+          operator: 'GreaterThan'
+          threshold: 5
+          timeAggregation: 'Total'
+        }
+      ]
+    }
+    actions: []  // Configure action group for notifications
+  }
+}
+
+// Outputs
+output logAnalyticsWorkspaceId string = logAnalytics.properties.customerId
+output evidenceStorageAccountName string = evidenceStorage.name
+output functionAppName string = functionApp.name
+output functionAppPrincipalId string = functionApp.identity.principalId

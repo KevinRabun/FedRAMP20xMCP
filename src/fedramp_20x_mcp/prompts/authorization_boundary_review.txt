@@ -1,0 +1,76 @@
+I'll help you review your FedRAMP authorization boundary for completeness.
+
+**Minimum Assessment Scope (MAS) Boundary Review**:
+
+**1. Information Resources Inventory**
+
+Must include ALL information resources that are **likely to handle federal customer data** or **likely to impact information handling**:
+
+**Machine-Based Information Resources**:
+- [ ] Application servers
+- [ ] Database servers
+- [ ] Web servers
+- [ ] Load balancers
+- [ ] Storage systems
+- [ ] Network devices
+- [ ] Security appliances
+- [ ] Monitoring systems
+- [ ] Backup systems
+- [ ] Development/staging environments (if they handle customer data)
+
+**Non-Machine-Based Information Resources**:
+- [ ] Organizational policies
+- [ ] Security procedures
+- [ ] Employees with system access
+- [ ] Training programs
+- [ ] Incident response processes
+- [ ] Change management procedures
+
+**2. Third-Party Information Resources**
+
+Document ALL third-party services:
+- [ ] Cloud infrastructure providers
+- [ ] SaaS tools and services
+- [ ] Development tools
+- [ ] Monitoring/logging services
+- [ ] Identity providers
+- [ ] Payment processors
+- [ ] CDN providers
+
+**3. Federal Customer Data Flow**
+
+Trace data flow through your system:
+- Where does federal customer data enter?
+- What systems process or store it?
+- How is it transmitted?
+- Where is it backed up?
+- How is it deleted/archived?
+
+**4. Boundary Exclusions**
+
+FedRAMP explicitly excludes certain categories (per OMB direction):
+- Identify any excluded services
+- Document why they're out of scope
+- Verify exclusions are valid
+
+**5. Assessment Scope Validation**
+
+For each component, verify:
+- [ ] Is it documented in the system inventory?
+- [ ] Is its function clearly described?
+- [ ] Are security controls identified?
+- [ ] Is it included in the assessment scope?
+- [ ] Are interconnections documented?
+
+**Common Boundary Gaps**:
+❌ Missing development/staging environments that process customer data
+❌ Undocumented third-party services
+❌ Forgotten monitoring or logging systems
+❌ Backup systems not included
+❌ Non-machine resources (policies, procedures, people) omitted
+
+**Next Steps**:
+1. Use search_requirements with "minimum assessment scope" or "information resource"
+2. Use list_family_controls with "MAS" for detailed requirements
+3. Review get_definition for "Information Resource" and "Cloud Service Offering"
+4. Document any boundary additions or clarifications needed

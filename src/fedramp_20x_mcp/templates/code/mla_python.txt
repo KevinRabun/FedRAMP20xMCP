@@ -1,0 +1,124 @@
+## Python Code
+
+```python
+#!/usr/bin/env python3
+\"\"\"
+Monitoring, Logging & Analysis Evidence Collector
+Collects log coverage, retention, and SIEM evidence
+\"\"\"
+
+import os
+import json
+from datetime import datetime, timedelta
+from azure.identity import DefaultAzureCredential
+from azure.monitor.query import LogsQueryClient
+from azure.storage.blob import BlobServiceClient
+
+WORKSPACE_ID = os.environ["LOG_ANALYTICS_WORKSPACE_ID"]
+STORAGE_ACCOUNT = os.environ["EVIDENCE_STORAGE_ACCOUNT"]
+
+def collect_log_coverage_evidence():
+    \"\"\"Collect evidence of log sources for KSI-MLA-02\"\"\"
+    credential = DefaultAzureCredential(
+        exclude_environment_credential=False,
+        exclude_managed_identity_credential=False,
+        exclude_shared_token_cache_credential=True
+    )
+    logs_client = LogsQueryClient(credential)
+    
+    # Query to find all distinct log sources
+    query = \"\"\"
+    union *
+    | where TimeGenerated > ago(7d)
+    | distinct Type
+    | summarize LogTypes = make_set(Type)
+    \"\"\"
+    
+    response = logs_client.query_workspace(
+        workspace_id=WORKSPACE_ID,
+        query=query,
+        timespan=timedelta(days=7)
+    )
+    
+    log_types = []
+    for table in response.tables:
+        for row in table.rows:
+            log_types = row[0]
+    
+    evidence = {
+        "collection_date": datetime.utcnow().isoformat(),
+        "ksi_id": "KSI-MLA-02",
+        "workspace_id": WORKSPACE_ID,
+        "log_sources_count": len(log_types),
+        "log_sources": log_types,
+        "required_sources": [
+            "AzureActivity",
+            "SigninLogs",
+            "AuditLogs",
+            "SecurityEvent",
+            "Syslog",
+            "ContainerLog"
+        ]
+    }
+    
+    # Check coverage
+    required = set(evidence["required_sources"])
+    actual = set(log_types)
+    evidence["missing_sources"] = list(required - actual)
+    evidence["coverage_percentage"] = len(actual & required) / len(required) * 100
+    
+    return evidence
+
+def collect_retention_evidence():
+    \"\"\"Collect log retention configuration evidence\"\"\"
+    credential = DefaultAzureCredential()
+    
+    # Query workspace retention settings
+    from azure.mgmt.loganalytics import LogAnalyticsManagementClient
+    
+    client = LogAnalyticsManagementClient(credential, os.environ["AZURE_SUBSCRIPTION_ID"])
+    workspaces = client.workspaces.list()
+    
+    retention_report = {
+        "collection_date": datetime.utcnow().isoformat(),
+        "ksi_id": "KSI-MLA-02",
+        "workspaces": []
+    }
+    
+    for workspace in workspaces:
+        retention_report["workspaces"].append({
+            "name": workspace.name,
+            "retention_days": workspace.retention_in_days,
+            "compliant": workspace.retention_in_days >= 365  # FedRAMP minimum
+        })
+    
+    return retention_report
+
+async def main():
+    print("Starting MLA evidence collection")
+    
+    # Collect evidence
+    coverage = collect_log_coverage_evidence()
+    print(f"Log Coverage: {coverage['coverage_percentage']:.1f}%")
+    
+    retention = collect_retention_evidence()
+    print(f"Workspaces checked: {len(retention['workspaces'])}")
+    
+    # Store evidence
+    credential = DefaultAzureCredential()
+    blob_client = BlobServiceClient(
+        account_url=f"https://{STORAGE_ACCOUNT}.blob.core.windows.net",
+        credential=credential
+    )
+    
+    timestamp = datetime.utcnow().strftime("%Y-%m-%d")
+    for evidence_type, evidence_data in [("coverage", coverage), ("retention", retention)]:
+        blob_name = f"ksi-mla-02/{evidence_type}-{timestamp}.json"
+        blob = blob_client.get_blob_client(container="mla-evidence", blob=blob_name)
+        blob.upload_blob(json.dumps(evidence_data, indent=2), overwrite=True)
+        print(f"✓ Stored: {blob_name}")
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
+```

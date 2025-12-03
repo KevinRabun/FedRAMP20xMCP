@@ -23,7 +23,7 @@ This project is an MCP server that loads FedRAMP 20x requirements from JSON file
 ✅ 1-hour data caching with automatic refresh
 
 ### Current Capabilities
-The server provides 21 MCP tools:
+The server provides 24 MCP tools:
 
 **Core Tools:**
 1. **get_control** - Get specific FedRAMP requirement by ID
@@ -56,6 +56,11 @@ The server provides 21 MCP tools:
 **Planning Tools:**
 21. **generate_implementation_questions** - Generate strategic interview questions for PMs and engineers to think through FedRAMP 20x implementation considerations
 
+**🆕 Evidence Collection Automation Tools:**
+22. **get_infrastructure_code_for_ksi** - Generate Bicep/Terraform templates for automated evidence collection infrastructure
+23. **get_evidence_collection_code** - Provide Python/C#/PowerShell code examples for collecting KSI evidence programmatically
+24. **get_evidence_automation_architecture** - Complete end-to-end architecture guidance for automated evidence collection
+
 **Comprehensive Prompts:**
 1. **initial_assessment_roadmap** - 9-11 month roadmap with budget/team guidance
 2. **quarterly_review_checklist** - FRR-CCM-QR checklist for all 72 KSIs
@@ -75,10 +80,103 @@ The server provides 21 MCP tools:
 - Official documentation markdown files (dynamically discovered)
 - 1-hour caching with automatic refresh
 
+## Code Organization
+**All 4 Phases Refactoring Complete (97.2% reduction):**
+- server.py reduced from 9,810 lines to 270 lines
+- Infrastructure templates in `templates/bicep/` and `templates/terraform/` (13 files)
+- Code templates in `templates/code/` (7 files: Python, C#, PowerShell)
+- Template loaders: `get_infrastructure_template(family, type)` and `get_code_template(family, language)` in `templates/__init__.py`
+- Prompt templates in `prompts/` directory (15 files)
+- Prompt loader: `load_prompt(name)` in `prompts/__init__.py`
+- Tool modules in `tools/` directory (7 modules, 24 tools)
+- Tool registration: `register_tools(mcp, data_loader)` in `tools/__init__.py`
+
+**Tool Organization:**
+- `tools/requirements.py` - Core requirements tools (3 tools)
+- `tools/definitions.py` - Definition lookup tools (3 tools)
+- `tools/ksi.py` - Key Security Indicator tools (2 tools)
+- `tools/documentation.py` - Documentation search tools (3 tools)
+- `tools/export.py` - Data export tools (3 tools)
+- `tools/enhancements.py` - Implementation guidance tools (7 tools)
+- `tools/evidence.py` - Evidence automation tools (3 tools)
+- Each module has `*_impl` functions, registered via wrappers in `tools/__init__.py`
+
 ## Development Rules
+
+### Code Standards
 - Use Python 3.10+
 - Use MCP Python SDK 1.2.0+
 - Do not print to stdout (use logging to stderr)
 - Use STDIO transport for MCP server
-- Document all tools and endpoints
-- Update this file as features are added
+- Avoid Unicode symbols in test output (use ASCII-safe markers like ✅/❌ for Windows compatibility)
+
+### Project Structure
+- Infrastructure templates: `templates/{bicep,terraform}/` directory (7 templates each)
+- Code templates: `templates/code/` directory (7 templates: Python, C#, PowerShell)
+- Prompt templates: `prompts/` directory (15 prompts)
+- Tool modules: `tools/` directory (7 modules, 24 tools)
+- Tests: `tests/` directory (15 test files)
+
+### Template & Prompt Management
+- Use `get_infrastructure_template(family, type)` to load infrastructure templates
+- Use `get_code_template(family, language)` to load code generation templates
+- Use `load_prompt(name)` to load prompt templates
+- Templates fall back to generic when family-specific versions don't exist
+- All templates must have comments/documentation
+- Keep prompts focused and under 30KB
+
+### Tool Development
+- Tools use registration pattern: `*_impl` functions in modules, wrappers with `@mcp.tool()` in `tools/__init__.py`
+- To add new tool: 
+  1. Create `*_impl` function in appropriate module (`tools/requirements.py`, `tools/definitions.py`, etc.)
+  2. Add wrapper in `tools/__init__.py`
+  3. Create corresponding test in `tests/test_*_tools.py`
+  4. Update `TESTING.md` with new test documentation
+
+### Test Hygiene (Critical)
+- **ALWAYS create tests** when adding new tools, templates, or prompts
+- Test files must validate actual functionality, not just existence
+- Include both success and error cases in tests
+- Test file naming: `test_<component>_tools.py` for tools, `test_<resource>.py` for resources
+- Run all tests before committing: `python tests/test_*.py`
+- Update `TESTING.md` immediately when adding new tests
+
+### Test Organization (15 test files)
+**Core Functionality (7 files):**
+- `test_loader.py` - Data loading validation
+- `test_definitions.py` - Definition/KSI lookup
+- `test_docs_integration.py` - Documentation loading
+- `test_implementation_questions.py` - Question generation
+- `test_tool_registration.py` - Architecture validation
+- `test_evidence_automation.py` - IaC generation
+- `test_all_tools.py` - Integration testing
+
+**Tool Functional Tests (6 files):**
+- `test_requirements_tools.py` - Requirements tools (get_control, list_family_controls, search_requirements)
+- `test_definitions_tools.py` - Definition tools (get_definition, list_definitions, search_definitions)
+- `test_ksi_tools.py` - KSI tools (get_ksi, list_ksi)
+- `test_documentation_tools.py` - Documentation tools (search, get_file, list_files)
+- `test_export_tools.py` - Export tools (excel, csv, ksi_specification)
+- `test_enhancement_tools.py` - 7 enhancement tools (compare, examples, dependencies, etc.)
+
+**Resource Validation (2 files):**
+- `test_prompts.py` - All 15 prompt templates
+- `test_templates.py` - All 21 infrastructure/code templates
+
+### Documentation Standards
+- **Single source of truth**: Keep all documentation consolidated in primary files
+- **TESTING.md** - Primary testing documentation (DO NOT create separate summary files)
+- **README.md** - User-facing documentation
+- **copilot-instructions.md** - This file, for development guidance
+- Update documentation immediately when making changes
+- Include metrics and examples in documentation
+- Document fallback behavior for templates/resources
+
+### Adding New Features Checklist
+1. ✅ Implement feature in appropriate module
+2. ✅ Create comprehensive tests (success + error cases)
+3. ✅ Update `TESTING.md` with test documentation
+4. ✅ Update this file (`copilot-instructions.md`) with feature details
+5. ✅ Run full test suite to ensure no regressions
+6. ✅ Update `README.md` if user-facing changes
+7. ✅ Commit with descriptive message including test results

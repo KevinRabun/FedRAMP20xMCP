@@ -1,0 +1,349 @@
+I'll help you evaluate vendors and tools for FedRAMP 20x compatibility.
+
+# Vendor/Tool Evaluation Guide for FedRAMP 20x
+
+## General Vendor Questions
+
+### FedRAMP Awareness
+1. Is your product/service FedRAMP authorized?
+   - If yes, at what impact level? (Low/Moderate/High)
+   - What's your FedRAMP authorization date?
+   - Are you familiar with FedRAMP 20x changes from Rev 5?
+
+2. Do you have customers who use your product for FedRAMP compliance?
+   - Can you provide references?
+   - What FedRAMP 20x standards do they use your product for?
+
+### Data Handling
+3. Does your service handle Federal Customer Data?
+   - Where is data stored geographically?
+   - Is data encrypted at rest and in transit?
+   - Can you provide data residency guarantees?
+
+4. What is your data retention and deletion policy?
+   - Can you delete data on demand? (KSI-SVC-10)
+   - Do you provide certificates of destruction?
+
+## Category-Specific Questions
+
+### SIEM / Security Monitoring Tools (KSI-MLA-01)
+
+**Required Capabilities:**
+- [ ] Can ingest logs from all our sources (cloud, on-prem, containers)?
+- [ ] Supports structured logging (JSON)?
+- [ ] Can retain logs for 1+ years?
+- [ ] Provides API access to log data?
+- [ ] Supports automated alerting?
+- [ ] Can generate compliance reports?
+- [ ] OSCAL format support or export capability?
+
+**FedRAMP 20x Specific:**
+- [ ] Can track all 72 KSI metrics?
+- [ ] Can provide data for Authorization Data Sharing API (FRR-ADS)?
+- [ ] Supports continuous monitoring (FRR-CCM)?
+- [ ] Can generate quarterly review reports?
+
+**Questions to Ask:**
+- What's your typical log ingestion rate capability?
+- Do you offer government regions/dedicated instances?
+- Can you integrate with our Authorization Data Sharing API?
+- What's your SLA for log availability?
+
+**Top Vendors:**
+- Microsoft Sentinel (FedRAMP authorized, Azure-native)
+- Splunk Cloud (FedRAMP authorized)
+- Datadog (FedRAMP authorized)
+- Sumo Logic (FedRAMP authorized)
+
+### Vulnerability Scanning Tools (FRR-VDR, KSI-AFR-04)
+
+**Required Capabilities:**
+- [ ] Continuous/automated scanning?
+- [ ] Covers infrastructure, containers, and code?
+- [ ] Provides CVSS scores and remediation guidance?
+- [ ] Can scan on-demand and scheduled?
+- [ ] API access to vulnerability data?
+- [ ] Integrates with ticketing systems?
+- [ ] Supports exception management (FRR-VDR-EX)?
+
+**FedRAMP 20x Specific:**
+- [ ] Can track remediation timeframes by severity (FRR-VDR-TF)?
+- [ ] Provides data for Authorization Data Sharing API?
+- [ ] Supports agency-specific vulnerability reporting (FRR-VDR-RP)?
+
+**Questions to Ask:**
+- How often can we scan without impacting performance?
+- Do you support scanning ephemeral containers?
+- Can you scan during CI/CD pipeline?
+- What's the false positive rate?
+- How do you handle zero-day vulnerabilities?
+
+**Top Vendors:**
+- Microsoft Defender for Cloud (FedRAMP authorized, Azure-native)
+- Tenable.io (FedRAMP authorized)
+- Qualys (FedRAMP authorized)
+- Snyk (code and container scanning)
+- Trivy (open source, container scanning)
+
+### Identity & Access Management (KSI-IAM)
+
+**Required Capabilities:**
+- [ ] Phishing-resistant MFA (FIDO2/WebAuthn)? (KSI-IAM-01)
+- [ ] Supports passwordless authentication? (KSI-IAM-02)
+- [ ] Provides detailed audit logs? (KSI-MLA-02)
+- [ ] Supports conditional access policies?
+- [ ] Can integrate with all your applications?
+- [ ] API access for user management?
+
+**FedRAMP 20x Specific:**
+- [ ] Can enforce least privilege? (KSI-IAM-05)
+- [ ] Detects suspicious activity? (KSI-IAM-06)
+- [ ] Supports just-in-time access? (KSI-IAM-04)
+- [ ] Can provide MFA compliance data for KSI tracking?
+
+**Questions to Ask:**
+- What MFA methods do you support? (must include FIDO2)
+- Can you disable SMS/TOTP for privileged accounts?
+- How do you handle service account authentication?
+- What's your session timeout capability?
+- Can you export IAM events to our SIEM?
+
+**Top Vendors:**
+- Microsoft Entra ID (formerly Azure AD, FedRAMP authorized, Azure-native)
+- Okta (FedRAMP authorized)
+- Ping Identity (FedRAMP authorized)
+
+### Secret Management (KSI-SVC-06)
+
+**Required Capabilities:**
+- [ ] Encrypted storage of secrets?
+- [ ] Automatic secret rotation?
+- [ ] Access audit logs?
+- [ ] API access for applications?
+- [ ] Integration with CI/CD pipelines?
+- [ ] Emergency access procedures?
+
+**FedRAMP 20x Specific:**
+- [ ] Can provide secret access logs to SIEM?
+- [ ] Supports automated secret rotation?
+- [ ] Can track secret usage for KSI metrics?
+
+**Questions to Ask:**
+- How are secrets encrypted (algorithm, key management)?
+- Do you support dynamic secrets?
+- Can you integrate with our cloud provider's KMS?
+- What happens if your service is unavailable?
+- Can secrets be backed up securely?
+
+**Top Vendors:**
+- Azure Key Vault (FedRAMP authorized, Azure-native)
+- HashiCorp Vault (FedRAMP authorized)
+- CyberArk (FedRAMP authorized)
+
+### Cloud Infrastructure (KSI-CNA, KSI-SVC)
+
+**Required Capabilities:**
+- [ ] Network isolation/segmentation?
+- [ ] Encryption at rest and in transit?
+- [ ] Immutable infrastructure support?
+- [ ] API-driven management?
+- [ ] Compliance certifications?
+- [ ] Logging and monitoring built-in?
+
+**FedRAMP 20x Specific:**
+- [ ] Supports Infrastructure as Code? (KSI-MLA-05)
+- [ ] Can restrict network traffic programmatically? (KSI-CNA-01)
+- [ ] Provides high availability options? (KSI-CNA-06)
+- [ ] Supports immutable deployments? (KSI-CNA-04)
+
+**Questions to Ask:**
+- What FedRAMP impact levels are authorized?
+- Do you offer government-only regions?
+- Can you provide dedicated infrastructure?
+- What's your SLA and how is it measured?
+- How do you handle data sovereignty?
+
+**Top Vendors:**
+- Azure Government (FedRAMP High, recommended for Azure workloads)
+- Azure Commercial (FedRAMP High for many services)
+- AWS GovCloud (FedRAMP High)
+- Google Cloud (FedRAMP High)
+
+### Backup & Disaster Recovery (KSI-RPL)
+
+**Required Capabilities:**
+- [ ] Automated backups?
+- [ ] Point-in-time recovery?
+- [ ] Encrypted backups?
+- [ ] Off-site/geo-redundant storage?
+- [ ] Regular restore testing?
+- [ ] Documented RTO/RPO?
+
+**FedRAMP 20x Specific:**
+- [ ] Can meet your recovery objectives? (KSI-RPL-01)
+- [ ] Supports automated recovery testing? (KSI-RPL-04)
+- [ ] Provides backup success metrics for KSI tracking?
+
+**Questions to Ask:**
+- What's your guaranteed RTO and RPO?
+- How often are backups tested?
+- Can we perform test restores on-demand?
+- Where are backups stored geographically?
+- What's the retention period?
+
+**Top Vendors:**
+- Azure Backup (FedRAMP authorized, Azure-native)
+- Azure Site Recovery (FedRAMP authorized, for DR)
+- Veeam (FedRAMP authorized)
+- Druva (FedRAMP authorized)
+
+### CI/CD & DevOps Tools (KSI-CMT)
+
+**Required Capabilities:**
+- [ ] Security scanning in pipeline?
+- [ ] Automated testing support?
+- [ ] Audit logs of all deployments?
+- [ ] Rollback capabilities?
+- [ ] Integration with secrets management?
+- [ ] Infrastructure as Code support?
+
+**FedRAMP 20x Specific:**
+- [ ] Can log all changes for tracking? (KSI-CMT-01)
+- [ ] Supports automated testing? (KSI-CMT-03)
+- [ ] Can provide deployment metrics for KSI tracking?
+- [ ] Integrates with change notification system (FRR-SCN)?
+
+**Questions to Ask:**
+- Can you block deployments based on security findings?
+- How do you handle secrets in CI/CD?
+- What's your audit log retention?
+- Can you integrate with our SIEM?
+- Do you support deployment approvals?
+
+**Top Vendors:**
+- Azure DevOps (FedRAMP authorized, Azure-native)
+- GitHub Actions (with FedRAMP-authorized runners, Microsoft-owned)
+- GitLab (FedRAMP authorized)
+- Jenkins (self-hosted)
+
+## Third-Party Service Provider Evaluation
+
+### Supply Chain Risk (KSI-PIY-07, KSI-TPR-04)
+
+**Due Diligence Questions:**
+1. Security Posture
+   - [ ] Do you have SOC 2 Type II certification?
+   - [ ] Are you FedRAMP authorized?
+   - [ ] Do you have ISO 27001 certification?
+   - [ ] When was your last security assessment?
+
+2. Incident Response
+   - [ ] What's your incident notification timeframe?
+   - [ ] Have you had breaches in the last 3 years?
+   - [ ] Can you provide incident response reports?
+
+3. Data Protection
+   - [ ] How do you protect Federal Customer Data?
+   - [ ] What encryption do you use?
+   - [ ] Who has access to our data?
+   - [ ] Can you segregate our data from other customers?
+
+4. Monitoring & Logging
+   - [ ] Can you provide logs of access to our data?
+   - [ ] How long do you retain logs?
+   - [ ] Can we access logs via API?
+
+5. Business Continuity
+   - [ ] What's your uptime SLA?
+   - [ ] What's your disaster recovery plan?
+   - [ ] Have you tested recovery procedures?
+
+6. Vendor Management
+   - [ ] Do you use fourth-party vendors?
+   - [ ] How do you manage supply chain risk?
+   - [ ] Can you provide a list of subprocessors?
+
+## Evaluation Scorecard Template
+
+```
+Vendor Name: __________________
+Product/Service: __________________
+Date: __________________
+
+Category: [SIEM | Vulnerability | IAM | Secrets | Cloud | Backup | CI/CD | Other]
+
+Scoring: 0=No, 1=Partial, 2=Yes, N/A=Not Applicable
+
+FedRAMP Readiness:
+[ ] FedRAMP authorized (2)
+[ ] FedRAMP ready (1)
+[ ] In process (1)
+[ ] No plans (0)
+
+Technical Capabilities:
+[ ] Meets functional requirements (0-2)
+[ ] API access for automation (0-2)
+[ ] Integration capabilities (0-2)
+[ ] Scalability (0-2)
+
+FedRAMP 20x Alignment:
+[ ] KSI data collection (0-2)
+[ ] Authorization Data Sharing API compatible (0-2)
+[ ] Continuous monitoring support (0-2)
+[ ] OSCAL format support (0-2)
+
+Security:
+[ ] Encryption at rest/transit (0-2)
+[ ] Audit logging (0-2)
+[ ] Access controls (0-2)
+[ ] Incident response (0-2)
+
+Operational:
+[ ] SLA meets requirements (0-2)
+[ ] Support quality (0-2)
+[ ] Pricing (0-2)
+[ ] Customer references (0-2)
+
+Total Score: _____ / 40
+
+Decision:
+[ ] Approved
+[ ] Approved with conditions
+[ ] Needs more evaluation
+[ ] Rejected
+
+Notes:
+```
+
+## Red Flags
+
+⚠ **Do not select vendor if:**
+- Not FedRAMP authorized and no path to authorization
+- Stores data outside US (unless approved exception)
+- Cannot provide audit logs
+- No API access for automation
+- Poor incident response history
+- Cannot support required SLAs
+- Unwilling to sign BAA (if handling PHI)
+- Cannot isolate federal customer data
+
+## Best Practices
+
+✅ **Do:**
+- Prefer FedRAMP-authorized vendors
+- Get everything in writing (SLAs, data handling, security)
+- Test integrations before committing
+- Validate API capabilities hands-on
+- Check customer references
+- Include FedRAMP 20x requirements in RFP
+- Plan for vendor exit (data export, deletion)
+
+❌ **Don't:**
+- Assume FedRAMP Rev 5 authorization covers 20x needs
+- Select based on price alone
+- Skip technical validation
+- Forget to include in authorization boundary
+- Ignore integration complexity
+- Overlook hidden costs (support, training, scaling)
+
+Use search_requirements to find specific requirements for vendor evaluation areas.
