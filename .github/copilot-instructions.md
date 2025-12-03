@@ -109,6 +109,7 @@ The server provides 24 MCP tools:
 - Do not print to stdout (use logging to stderr)
 - Use STDIO transport for MCP server
 - Avoid Unicode symbols in test output (use ASCII-safe markers like ✅/❌ for Windows compatibility)
+- **NEVER use deprecated functionality** - Always verify that libraries, actions, APIs, or methods are actively maintained and not deprecated before recommending or implementing them
 
 ### Project Structure
 - Infrastructure templates: `templates/{bicep,terraform}/` directory (7 templates each)
