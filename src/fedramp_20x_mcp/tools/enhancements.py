@@ -844,6 +844,7 @@ spec:
 **4. Secret Management (KSI-SVC-06)**
 ```yaml
 # Use Azure Key Vault Provider for Secrets Store CSI Driver
+# Per Azure WAF Security pillar: https://learn.microsoft.com/azure/aks/csi-secrets-store-driver
 apiVersion: secrets-store.csi.x-k8s.io/v1
 kind: SecretProviderClass
 metadata:
@@ -872,9 +873,9 @@ az aks enable-addons -a monitoring -n myAKSCluster -g myResourceGroup
 ```
 
 **6. Monitoring (KSI-MLA-01, KSI-CNA-08)**
-- Use Azure Monitor for metrics and Container Insights
-- Configure Microsoft Defender for Containers for runtime security
-- Use Azure Policy for Kubernetes admission control
+- Use Azure Monitor for metrics and Container Insights per Azure WAF Operational Excellence
+- Configure Microsoft Defender for Containers for runtime security (Azure WAF Security: https://learn.microsoft.com/azure/defender-for-cloud/defender-for-containers-introduction)
+- Use Azure Policy for Kubernetes admission control per Azure WAF Governance
 
 **7. Authorization Boundary (FRR-MAS)**
 Must include:
@@ -908,6 +909,7 @@ docker run aquasec/trivy image myapp:latest
 **2. Image Signing (KSI-SVC-05, SVC-09)**
 ```bash
 # Use Azure Container Registry content trust or Notation
+# Per Azure WAF Security: https://learn.microsoft.com/azure/container-registry/container-registry-content-trust
 # Enable content trust in ACR:
 az acr config content-trust update --registry myregistry --status enabled
 
@@ -916,13 +918,14 @@ notation sign myregistry.azurecr.io/myapp:v1.0.0
 notation verify myregistry.azurecr.io/myapp:v1.0.0
 ```
 
-**3. Runtime Security (KSI-CNA-05, CNA-08)**
-- Use minimal base images (distroless, Alpine)
+**3. Runtime Security (KSI-CNA-05, KSI-CNA-08)**
+- Use minimal base images (distroless, Alpine) per Azure WAF Security best practices
 - Run as non-root user
 - Use read-only root filesystem
 - Drop all capabilities
 
 ```dockerfile
+# Use Microsoft-maintained distroless images per Azure CAF
 FROM mcr.microsoft.com/cbl-mariner/distroless/minimal:2.0
 USER nonroot:nonroot
 COPY --chown=nonroot:nonroot app /app
@@ -974,6 +977,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 **2. Secret Management (KSI-SVC-06)**
 ```python
 # Azure Functions example with Managed Identity
+# Per Azure WAF Security and Azure Functions best practices: https://learn.microsoft.com/azure/azure-functions/security-concepts
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
 import azure.functions as func
@@ -1242,10 +1246,10 @@ I don't have specific guidance for "{technology}".
    - Distributed tracing
    - Metrics collection
 
-4. **Security by Default**
-   - Least privilege IAM
-   - Network segmentation
-   - Encryption everywhere
+4. **Security by Default** (Azure WAF Security Pillar)
+   - Least privilege IAM (KSI-IAM-05)
+   - Network segmentation (KSI-CNA-01)
+   - Encryption everywhere (Azure WAF: https://learn.microsoft.com/azure/security/fundamentals/encryption-overview)
 
 5. **API-First** (FRR-ADS)
    - Everything exposed as APIs
@@ -1275,15 +1279,15 @@ async def validate_architecture_impl(architecture_description: str, data_loader)
     # Check for key components
     if "kubernetes" in desc_lower or "k8s" in desc_lower or "aks" in desc_lower:
         findings.append("✓ Kubernetes/AKS detected - ensure KSI-CNA-04 (Immutable Infrastructure) compliance")
-        recommendations.append("Implement network policies (KSI-CNA-01) and Azure Policy for AKS")
+        recommendations.append("Implement network policies per KSI-CNA-01 using Azure Policy for AKS (Azure WAF: https://learn.microsoft.com/azure/aks/best-practices)")
     
     if "lambda" in desc_lower or "serverless" in desc_lower or "azure functions" in desc_lower or "function app" in desc_lower:
-        findings.append("✓ Serverless detected - ensure function-level identity/RBAC (KSI-IAM-05)")
-        recommendations.append("Enable Application Insights and forward logs to Sentinel (SIEM)")
+        findings.append("✓ Serverless detected - ensure function-level identity/RBAC per KSI-IAM-05")
+        recommendations.append("Enable Application Insights per Azure WAF Operational Excellence and forward to Sentinel for KSI-MLA-01 compliance (https://learn.microsoft.com/azure/azure-functions/security-concepts)")
     
     if "database" in desc_lower or "rds" in desc_lower or "postgres" in desc_lower or "azure sql" in desc_lower or "cosmos" in desc_lower:
-        findings.append("✓ Database detected - ensure encryption at rest and in transit (TDE for Azure SQL)")
-        recommendations.append("Verify audit logging enabled (KSI-MLA-02) and backed up (KSI-RPL-03)")
+        findings.append("✓ Database detected - ensure encryption per Azure WAF Security pillar (TDE for Azure SQL: https://learn.microsoft.com/azure/azure-sql/database/transparent-data-encryption-tde-overview)")
+        recommendations.append("Verify audit logging enabled per KSI-MLA-02 and backed up per KSI-RPL-03 (Azure WAF Reliability: https://learn.microsoft.com/azure/well-architected/reliability/)")
     
     if "api" in desc_lower or "rest" in desc_lower:
         findings.append("✓ API detected - consider for Authorization Data Sharing (FRR-ADS)")
@@ -1293,12 +1297,12 @@ async def validate_architecture_impl(architecture_description: str, data_loader)
     concerns = []
     
     if "public" in desc_lower and "internet" in desc_lower:
-        concerns.append("⚠ Public internet exposure detected - ensure WAF and DDoS protection")
+        concerns.append("⚠ Public internet exposure detected - ensure WAF and DDoS protection (Azure WAF: https://learn.microsoft.com/azure/web-application-firewall/)")
         concerns.append("⚠ Review KSI-CNA-01 (Restrict Network Traffic) carefully")
     
     if "ssh" in desc_lower or "bastion" in desc_lower:
-        concerns.append("⚠ SSH access detected - consider Session Manager instead")
-        concerns.append("⚠ If SSH required, ensure phishing-resistant MFA (KSI-IAM-01)")
+        concerns.append("⚠ SSH access detected - consider Azure Bastion for secure RDP/SSH per Azure WAF Security (https://learn.microsoft.com/azure/bastion/bastion-overview)")
+        concerns.append("⚠ If SSH required, ensure phishing-resistant MFA per KSI-IAM-01")
     
     if "password" in desc_lower or "credentials" in desc_lower:
         concerns.append("⚠ Credential management mentioned - ensure secret manager (KSI-SVC-06)")

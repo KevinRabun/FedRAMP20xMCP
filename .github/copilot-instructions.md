@@ -126,6 +126,48 @@ The server provides 26 MCP tools:
 - Avoid Unicode symbols in test output (use ASCII-safe markers like ✅/❌ for Windows compatibility)
 - **NEVER use deprecated functionality** - Always verify that libraries, actions, APIs, or methods are actively maintained and not deprecated before recommending or implementing them
 
+### Content Sourcing Requirements (CRITICAL)
+**All recommendations, guidance, and code examples MUST be sourced to authoritative content:**
+
+1. **FedRAMP Requirements Sourcing:**
+   - Every FedRAMP requirement reference MUST cite specific requirement IDs (e.g., "FRR-ADS-01", "KSI-IAM-01")
+   - Cite specific FedRAMP 20x families: ADS, AFR, CCM, CNA, CMT, FSI, IAM, ICP, MAS, MLA, PIY, PVA, RPL, RSC, SCN, SVC, TPR, UCM, VDR
+   - Reference official FedRAMP 20x documentation from https://github.com/FedRAMP/docs when appropriate
+   - Never make assumptions about FedRAMP requirements without citing source
+
+2. **Azure/Cloud Architecture Sourcing:**
+   - Azure service recommendations MUST reference Azure Well-Architected Framework (WAF) pillars:
+     * Security: https://learn.microsoft.com/azure/well-architected/security/
+     * Reliability: https://learn.microsoft.com/azure/well-architected/reliability/
+     * Performance Efficiency: https://learn.microsoft.com/azure/well-architected/performance-efficiency/
+     * Cost Optimization: https://learn.microsoft.com/azure/well-architected/cost-optimization/
+     * Operational Excellence: https://learn.microsoft.com/azure/well-architected/operational-excellence/
+   - Infrastructure as Code MUST follow Azure Cloud Adoption Framework (CAF) naming conventions:
+     * https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/resource-naming
+   - Azure security recommendations MUST cite Azure Security Benchmark:
+     * https://learn.microsoft.com/security/benchmark/azure/
+   - Service-specific guidance MUST link to official Microsoft Learn documentation
+
+3. **Validation Requirements:**
+   - Before adding new guidance, verify sources are current and authoritative
+   - Check that FedRAMP requirement IDs exist in loaded data
+   - Verify Azure service recommendations are production-ready and FedRAMP-authorized where applicable
+   - Document any assumptions or general best practices as such (not authoritative requirements)
+
+4. **Examples of Proper Sourcing:**
+   - ✅ "Configure Azure Bastion for secure RDP/SSH per Azure WAF Security (https://learn.microsoft.com/azure/bastion/bastion-overview) to address KSI-CNA-01"
+   - ✅ "Use Azure Key Vault per Azure WAF Security pillar (https://learn.microsoft.com/azure/key-vault/) for KSI-SVC-06 compliance"
+   - ✅ "Follow Azure CAF naming conventions (https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/resource-naming)"
+   - ❌ "Use encryption everywhere" (too general, no source)
+   - ❌ "Azure recommends..." (cite specific WAF pillar or documentation)
+
+5. **Where Sourcing Applies:**
+   - All tool outputs (especially `validate_architecture`, `get_cloud_native_guidance`, `get_implementation_examples`)
+   - All prompt templates (comprehensive guides)
+   - All infrastructure templates (Bicep/Terraform comments)
+   - All code templates (code comments and documentation strings)
+   - README examples and guidance
+
 ### Project Structure
 - Infrastructure templates: `templates/{bicep,terraform}/` directory (7 templates each)
 - Code templates: `templates/code/` directory (7 templates: Python, C#, PowerShell)
