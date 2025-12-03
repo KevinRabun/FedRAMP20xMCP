@@ -5,7 +5,7 @@ This module contains tool implementation functions for export.
 """
 import json
 import logging
-from typing import Any
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
