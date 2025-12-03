@@ -138,6 +138,16 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         """Generate strategic questions for PMs and engineers about implementing a requirement."""
         return await enhancements.generate_implementation_questions_impl(requirement_id, data_loader)
     
+    @mcp.tool()
+    async def get_ksi_implementation_matrix(ksi_family: str) -> str:
+        """Get implementation matrix showing all KSIs in a family with Azure services, effort, and priority."""
+        return await enhancements.get_ksi_implementation_matrix_impl(ksi_family, data_loader)
+    
+    @mcp.tool()
+    async def generate_implementation_checklist(ksi_id: str) -> str:
+        """Generate actionable step-by-step implementation checklist for a specific KSI."""
+        return await enhancements.generate_implementation_checklist_impl(ksi_id, data_loader)
+    
     # Evidence automation tools
     @mcp.tool()
     async def get_infrastructure_code_for_ksi(ksi_id: str, infrastructure_type: str = "bicep") -> str:
@@ -154,4 +164,4 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         """Provide comprehensive architecture guidance for automated evidence collection."""
         return await evidence.get_evidence_automation_architecture_impl(data_loader, ksi_category)
     
-    logger.info("Registered 24 tools across 7 modules")
+    logger.info("Registered 26 tools across 7 modules")

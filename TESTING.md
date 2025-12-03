@@ -208,9 +208,51 @@ python tests/test_export_tools.py
 python tests/test_enhancement_tools.py
 ```
 
+### 14. test_implementation_mapping_tools.py ⭐ NEW
+**Purpose:** Functional tests for 2 implementation mapping tools
+
+**Coverage:**
+- ✅ get_ksi_implementation_matrix_impl (valid/invalid families, all 10 families, case insensitivity)
+- ✅ generate_implementation_checklist_impl (valid/invalid KSIs, family-specific content, code snippets)
+- ✅ Matrix content validation (complexity, priority, effort, Azure services)
+- ✅ Checklist content validation (7 phases, Bicep templates, Azure CLI, troubleshooting)
+- ✅ Azure focus verification (Entra ID, Azure Monitor, Key Vault, SDK usage)
+
+**What It Tests:**
+1. **Matrix Generation:** Validates family-level KSI matrices with all required columns (ID, name, complexity, priority, effort)
+2. **Checklist Generation:** Validates detailed step-by-step checklists with 7 implementation phases
+3. **Family Coverage:** Tests all 10 KSI families (IAM, MLA, AFR, CNA, SVC, RPL, TPR, INR, PIY, CMT)
+4. **Azure Focus:** Verifies Azure-specific content (Entra ID, Monitor, CLI, Bicep, SDK)
+5. **Content Quality:** Ensures matrices include Azure service recommendations and implementation phases
+6. **Error Handling:** Validates invalid family/KSI handling with helpful error messages
+
+**Example Output:**
+```
+=== Testing get_ksi_implementation_matrix ===
+1. Testing valid family (IAM)...
+✓ Valid family IAM works correctly
+2. Testing valid family (MLA)...
+✓ Valid family MLA works correctly
+5. Testing content structure...
+✓ Content structure is correct
+
+=== Testing generate_implementation_checklist ===
+1. Testing valid KSI (KSI-IAM-01)...
+✓ Valid KSI checklist generated correctly
+2. Testing IAM family-specific content...
+✓ IAM-specific content included
+5. Testing code snippets...
+✓ Code snippets included
+```
+
+**Run:**
+```bash
+python tests/test_implementation_mapping_tools.py
+```
+
 ### Resource Validation Tests
 
-### 14. test_prompts.py ⭐ NEW
+### 15. test_prompts.py ⭐ NEW
 **Purpose:** Validate all prompt templates load and contain expected content
 
 **Coverage:**
@@ -225,7 +267,7 @@ python tests/test_enhancement_tools.py
 python tests/test_prompts.py
 ```
 
-### 15. test_templates.py ⭐ NEW
+### 16. test_templates.py ⭐ NEW
 **Purpose:** Validate all infrastructure and code templates
 
 **Coverage:**
@@ -259,7 +301,7 @@ python tests/test_all_tools.py
 
 ## Running All Tests
 
-### Sequential Execution (All 15 Tests)
+### Sequential Execution (All 16 Tests)
 ```bash
 # Core functionality
 python tests/test_loader.py
@@ -277,6 +319,7 @@ python tests/test_ksi_tools.py
 python tests/test_documentation_tools.py
 python tests/test_export_tools.py
 python tests/test_enhancement_tools.py
+python tests/test_implementation_mapping_tools.py
 
 # Resource validation
 python tests/test_prompts.py
@@ -286,7 +329,7 @@ python tests/test_templates.py
 ### Quick Test Subsets
 ```bash
 # Test all tool functionality only
-python tests/test_requirements_tools.py; python tests/test_definitions_tools.py; python tests/test_ksi_tools.py; python tests/test_documentation_tools.py; python tests/test_export_tools.py; python tests/test_enhancement_tools.py
+python tests/test_requirements_tools.py; python tests/test_definitions_tools.py; python tests/test_ksi_tools.py; python tests/test_documentation_tools.py; python tests/test_export_tools.py; python tests/test_enhancement_tools.py; python tests/test_implementation_mapping_tools.py
 
 # Test all resource validation only
 python tests/test_prompts.py; python tests/test_templates.py
@@ -318,7 +361,7 @@ All tests passing as of December 3, 2025:
 | test_definitions.py | ✅ PASS | 50 definitions, 72 KSIs |
 | test_docs_integration.py | ✅ PASS | 15 documentation files |
 | test_implementation_questions.py | ✅ PASS | 3 test cases |
-| test_tool_registration.py | ✅ PASS | 24 tools, 7 modules |
+| test_tool_registration.py | ✅ PASS | 26 tools, 7 modules |
 | test_evidence_automation.py | ✅ PASS | 9 test cases (IaC + code) |
 | test_all_tools.py | ✅ PASS | All tools integration |
 | **Tool Functional Tests** |||
@@ -328,13 +371,14 @@ All tests passing as of December 3, 2025:
 | test_documentation_tools.py ⭐ | ✅ PASS | 3 tools, 13 test cases |
 | test_export_tools.py ⭐ | ✅ PASS | 3 tools, 2 test cases |
 | test_enhancement_tools.py ⭐ | ✅ PASS | 7 tools, 24 test cases |
+| test_implementation_mapping_tools.py ⭐ | ✅ PASS | 2 tools, 24 test cases |
 | **Resource Validation** |||
 | test_prompts.py ⭐ | ✅ PASS | 15 prompts validated |
 | test_templates.py ⭐ | ✅ PASS | 21 templates validated |
 
 **Summary:**
-- ✅ 15/15 test files passing
-- ✅ 24/24 tools functionally tested
+- ✅ 16/16 test files passing
+- ✅ 26/26 tools functionally tested
 - ✅ 15/15 prompts validated
 - ✅ 21/21 templates validated
 - ✅ 100% coverage across all components
@@ -435,7 +479,7 @@ if __name__ == "__main__":
 Current coverage: **100%** across all components
 
 | Component | Coverage | Details |
-|-----------|----------|---------|
+|-----------|----------|------|
 | Data Loading | 100% | 329 requirements, 50 definitions, 72 KSIs |
 | Core Tools | 100% | All 3 requirement tools tested |
 | Definition Tools | 100% | All 3 definition tools tested |
@@ -443,6 +487,7 @@ Current coverage: **100%** across all components
 | Documentation Tools | 100% | All 3 documentation tools tested |
 | Export Tools | 100% | All 3 export tools tested |
 | Enhancement Tools | 100% | All 7 enhancement tools tested |
+| Implementation Mapping Tools | 100% | All 2 implementation mapping tools tested |
 | Evidence Tools | 100% | All 3 evidence automation tools tested |
 | Template System | 100% | All 21 templates validated |
 | Prompt System | 100% | All 15 prompts validated |
@@ -499,9 +544,9 @@ Current coverage: **100%** across all components
 
 ### Execution Time
 - Core functionality tests: ~15 seconds total
-- Tool functional tests: ~12 seconds total  
+- Tool functional tests: ~14 seconds total  
 - Resource validation tests: ~4 seconds total
-- **Full test suite (15 files): ~40-50 seconds**
+- **Full test suite (16 files): ~45-55 seconds**
 
 ### Test Case Count
 - Core functionality: ~30 test cases
@@ -511,9 +556,10 @@ Current coverage: **100%** across all components
 - Documentation tools: 13 test cases
 - Export tools: 2 test cases
 - Enhancement tools: 24 test cases
+- Implementation mapping tools: 24 test cases
 - Prompts: 4 test functions covering all 15 prompts
 - Templates: 8 test functions covering all 21 templates
-- **Total: 100+ test cases across 15 files**
+- **Total: 110+ test cases across 16 files**
 
 ### Detailed Test Results
 
@@ -562,5 +608,5 @@ Current coverage: **100%** across all components
 ---
 
 *Last Updated: December 3, 2025*  
-*Status: All 15 test files passing ✅*  
-*Coverage: 24/24 tools + 15/15 prompts + 21/21 templates (100%)*
+*Status: All 16 test files passing ✅*  
+*Coverage: 26/26 tools + 15/15 prompts + 21/21 templates (100%)*

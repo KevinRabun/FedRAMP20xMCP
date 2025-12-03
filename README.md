@@ -318,7 +318,7 @@ If you only want FedRAMP requirements without Azure integration:
 
 ## Available Tools
 
-The server provides **24 tools** organized into the following categories:
+The server provides **26 tools** organized into the following categories:
 
 **Core Tools (8):** Query requirements, definitions, and KSIs
 **Documentation Tools (3):** Search and retrieve FedRAMP documentation
@@ -326,6 +326,7 @@ The server provides **24 tools** organized into the following categories:
 **Export Tools (3):** Excel/CSV export and KSI specification generation
 **Planning Tools (1):** Generate strategic implementation questions
 **Evidence Collection Automation Tools (3):** Infrastructure code, collection code, architecture guidance
+**Implementation Mapping Tools (2):** KSI family matrices and step-by-step implementation checklists
 
 ### get_control
 Get detailed information about a specific FedRAMP requirement or control.

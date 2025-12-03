@@ -1373,6 +1373,630 @@ Use search_requirements and get_implementation_examples for specific requirement
 
 
 
+async def get_ksi_implementation_matrix_impl(ksi_family: str, data_loader) -> str:
+    """
+    Get implementation matrix showing all KSIs in a family with Azure services, effort, and priority.
+    
+    Provides engineers with a high-level view of what needs to be implemented for a KSI family,
+    including recommended Azure services, complexity, and suggested implementation order.
+    
+    Args:
+        ksi_family: KSI family code (e.g., "IAM", "MLA", "CNA", "AFR", "SVC", "RPL", "TPR", "INR", "PIY", "CMT")
+    
+    Returns:
+        Implementation matrix with all KSIs in the family
+    """
+    await data_loader.load_data()
+    
+    family_upper = ksi_family.upper()
+    
+    # Get all KSIs for this family
+    all_ksis = data_loader.list_all_ksi()
+    family_ksis = [k for k in all_ksis if k.get('id', '').startswith(f'KSI-{family_upper}-')]
+    
+    if not family_ksis:
+        available_families = sorted(set(k.get('id', '').split('-')[1] for k in all_ksis if '-' in k.get('id', '')))
+        return f"""No KSIs found for family '{ksi_family}'.
+
+**Available KSI Families:**
+{', '.join(available_families)}
+
+Use get_ksi_implementation_matrix with one of the above family codes."""
+    
+    family_name_map = {
+        'IAM': 'Identity and Access Management',
+        'MLA': 'Monitoring, Logging, and Auditing',
+        'AFR': 'Automated Findings and Remediation',
+        'CNA': 'Cloud-Native Architecture',
+        'SVC': 'Service Management',
+        'RPL': 'Recovery and Planning',
+        'TPR': 'Third-Party Risk',
+        'INR': 'Incident Response',
+        'PIY': 'Privacy and Inventory',
+        'CMT': 'Change Management and Testing'
+    }
+    
+    azure_services_map = {
+        'IAM': ['Microsoft Entra ID', 'Conditional Access', 'Privileged Identity Management', 'Azure RBAC', 'Microsoft Entra ID Protection'],
+        'MLA': ['Azure Monitor', 'Log Analytics', 'Microsoft Sentinel', 'Application Insights', 'Azure Policy', 'Azure Automation'],
+        'AFR': ['Microsoft Defender for Cloud', 'Microsoft Defender for Containers', 'Azure Policy', 'Azure Security Center', 'GitHub Advanced Security'],
+        'CNA': ['Azure Kubernetes Service', 'Azure Container Registry', 'Azure Policy for AKS', 'Azure Firewall', 'Azure Virtual Network'],
+        'SVC': ['Azure Key Vault', 'Azure Automation', 'Azure Update Management', 'Azure Backup', 'Azure Monitor'],
+        'RPL': ['Azure Backup', 'Azure Site Recovery', 'Azure Blob Storage', 'Recovery Services Vault', 'Azure Policy'],
+        'TPR': ['Microsoft Purview', 'Azure Policy', 'Microsoft Defender for Cloud', 'Azure Security Center'],
+        'INR': ['Microsoft Sentinel', 'Azure Logic Apps', 'Azure Monitor', 'Microsoft Defender XDR', 'Azure Automation'],
+        'PIY': ['Microsoft Purview', 'Azure Resource Graph', 'Azure Policy', 'Microsoft Defender for Cloud', 'Azure Automation'],
+        'CMT': ['Azure DevOps', 'GitHub Actions', 'Azure Policy', 'Azure Monitor', 'Azure Automation', 'Azure Resource Manager']
+    }
+    
+    complexity_map = {
+        'KSI-IAM-01': 'Medium', 'KSI-IAM-02': 'Medium', 'KSI-IAM-03': 'Low', 'KSI-IAM-04': 'Low', 'KSI-IAM-05': 'Medium', 'KSI-IAM-06': 'High', 'KSI-IAM-07': 'Medium',
+        'KSI-MLA-01': 'High', 'KSI-MLA-02': 'High', 'KSI-MLA-03': 'Medium', 'KSI-MLA-04': 'Medium', 'KSI-MLA-05': 'High', 'KSI-MLA-06': 'Low', 'KSI-MLA-07': 'Low', 'KSI-MLA-08': 'Medium',
+        'KSI-AFR-01': 'Medium', 'KSI-AFR-02': 'High', 'KSI-AFR-03': 'Medium', 'KSI-AFR-04': 'Medium', 'KSI-AFR-05': 'Low',
+        'KSI-CNA-01': 'Medium', 'KSI-CNA-02': 'Low', 'KSI-CNA-03': 'Medium', 'KSI-CNA-04': 'High', 'KSI-CNA-05': 'Medium', 'KSI-CNA-06': 'High', 'KSI-CNA-07': 'Medium', 'KSI-CNA-08': 'High',
+        'KSI-SVC-01': 'Medium', 'KSI-SVC-02': 'Medium', 'KSI-SVC-03': 'Medium', 'KSI-SVC-04': 'High', 'KSI-SVC-05': 'High', 'KSI-SVC-06': 'High', 'KSI-SVC-07': 'Medium', 'KSI-SVC-08': 'Low', 'KSI-SVC-09': 'Medium',
+        'KSI-RPL-01': 'Medium', 'KSI-RPL-02': 'Medium', 'KSI-RPL-03': 'High', 'KSI-RPL-04': 'Medium',
+        'KSI-TPR-01': 'Low', 'KSI-TPR-02': 'Medium', 'KSI-TPR-03': 'Medium', 'KSI-TPR-04': 'High',
+        'KSI-INR-01': 'Medium', 'KSI-INR-02': 'Medium', 'KSI-INR-03': 'Low',
+        'KSI-PIY-01': 'High', 'KSI-PIY-02': 'Medium', 'KSI-PIY-03': 'Low', 'KSI-PIY-04': 'Medium', 'KSI-PIY-05': 'Medium',
+        'KSI-CMT-01': 'High', 'KSI-CMT-02': 'Medium', 'KSI-CMT-03': 'High', 'KSI-CMT-04': 'Medium', 'KSI-CMT-05': 'Low'
+    }
+    
+    priority_map = {
+        'KSI-IAM-01': 'Critical', 'KSI-MLA-01': 'Critical', 'KSI-MLA-02': 'Critical', 'KSI-AFR-01': 'Critical', 'KSI-SVC-06': 'Critical',
+        'KSI-IAM-02': 'High', 'KSI-IAM-05': 'High', 'KSI-CNA-04': 'High', 'KSI-CNA-08': 'High', 'KSI-RPL-03': 'High', 'KSI-PIY-01': 'High', 'KSI-CMT-01': 'High', 'KSI-CMT-03': 'High',
+    }
+    
+    family_name = family_name_map.get(family_upper, family_upper)
+    azure_services = azure_services_map.get(family_upper, ['Microsoft Entra ID', 'Azure Monitor', 'Azure Policy'])
+    
+    result = f"""# {family_upper} Implementation Matrix: {family_name}
+
+## Overview
+
+**KSI Count:** {len(family_ksis)} KSIs in this family
+**Recommended Azure Services:**
+"""
+    
+    for service in azure_services:
+        result += f"- {service}\n"
+    
+    result += f"""
+
+## Implementation Matrix
+
+| KSI ID | Name | Complexity | Priority | Estimated Effort |
+|--------|------|------------|----------|------------------|
+"""
+    
+    for ksi in sorted(family_ksis, key=lambda x: x.get('id', '')):
+        ksi_id = ksi.get('id', 'N/A')
+        name = ksi.get('name', 'N/A')
+        complexity = complexity_map.get(ksi_id, 'Medium')
+        priority = priority_map.get(ksi_id, 'Medium')
+        
+        effort_map = {
+            'Low': '1-2 weeks',
+            'Medium': '3-4 weeks',
+            'High': '6-8 weeks'
+        }
+        effort = effort_map.get(complexity, '3-4 weeks')
+        
+        result += f"| {ksi_id} | {name[:40]}... | {complexity} | {priority} | {effort} |\n"
+    
+    result += f"""
+
+## Suggested Implementation Order
+
+### Phase 1: Foundation (Critical Priority)
+"""
+    
+    critical = [k for k in family_ksis if priority_map.get(k.get('id'), 'Medium') == 'Critical']
+    if critical:
+        for ksi in critical:
+            result += f"1. **{ksi.get('id')}**: {ksi.get('name')}\n"
+    else:
+        result += "*No critical priority items in this family*\n"
+    
+    result += f"""
+
+### Phase 2: Core Capabilities (High Priority)
+"""
+    
+    high = [k for k in family_ksis if priority_map.get(k.get('id'), 'Medium') == 'High']
+    if high:
+        for ksi in high:
+            result += f"- {ksi.get('id')}: {ksi.get('name')}\n"
+    else:
+        result += "*High priority items should be addressed after critical items*\n"
+    
+    result += f"""
+
+### Phase 3: Complete Coverage (Medium/Low Priority)
+*Implement remaining KSIs for full compliance*
+
+## Quick Start Guide
+
+### 1. Set Up Azure Infrastructure
+```bash
+# Create resource group for {family_upper} resources
+az group create --name rg-fedramp-{family_upper.lower()} --location eastus
+
+# Deploy monitoring/logging infrastructure
+az deployment group create \\
+    --resource-group rg-fedramp-{family_upper.lower()} \\
+    --template-file infrastructure.bicep
+```
+
+### 2. Configure Azure Services
+"""
+    
+    for i, service in enumerate(azure_services[:3], 1):
+        result += f"{i}. Configure {service}\n"
+    
+    result += f"""
+
+### 3. Implement Evidence Collection
+```python
+# Use provided code templates
+# Example: Collect {family_upper} evidence
+python collect_{family_upper.lower()}_evidence.py
+```
+
+### 4. Test and Validate
+- Verify all KSIs can be demonstrated
+- Ensure evidence collection is automated
+- Test integration with Authorization Data Sharing API
+
+## Key Dependencies
+
+**Prerequisites:**
+- Azure subscription with appropriate permissions
+- Microsoft Entra ID tenant
+- Log Analytics workspace
+- Azure Key Vault for secrets
+
+**Related Requirements:**
+- FRR-CCM: Continuous monitoring
+- FRR-ADS: Authorization data sharing
+- FRR-KSI: KSI tracking requirements
+
+## Common Challenges
+
+### Challenge 1: Data Collection Frequency
+**Solution:** Use Azure Functions with timer triggers for automated collection
+
+### Challenge 2: Cross-Service Integration
+**Solution:** Use Managed Identities for service-to-service authentication
+
+### Challenge 3: Evidence Retention
+**Solution:** Azure Blob Storage with immutability policies
+
+## Detailed Implementation
+
+For detailed implementation of specific KSIs:
+- Use `get_implementation_examples("KSI-{family_upper}-##")` for code examples
+- Use `get_infrastructure_code_for_ksi("KSI-{family_upper}-##")` for IaC templates
+- Use `generate_implementation_checklist("KSI-{family_upper}-##")` for step-by-step guide
+- Use `generate_implementation_questions("KSI-{family_upper}-##")` for planning discussions
+
+## Resources
+
+- **Azure Documentation:** https://learn.microsoft.com/azure/
+- **FedRAMP 20x Docs:** https://github.com/FedRAMP/docs
+- **NIST 800-53:** https://csrc.nist.gov/publications/detail/sp/800-53/rev-5/final
+
+*Generated by FedRAMP 20x MCP Server - KSI Implementation Matrix Tool*
+"""
+    
+    return result
+
+
+
+async def generate_implementation_checklist_impl(ksi_id: str, data_loader) -> str:
+    """
+    Generate actionable implementation checklist for a specific KSI.
+    
+    Provides engineers with a step-by-step checklist for implementing a KSI,
+    including Azure service setup, code deployment, testing, and evidence collection.
+    
+    Args:
+        ksi_id: The KSI identifier (e.g., "KSI-IAM-01", "KSI-MLA-01")
+    
+    Returns:
+        Detailed implementation checklist with Azure-specific steps
+    """
+    await data_loader.load_data()
+    
+    ksi = data_loader.get_ksi(ksi_id)
+    if not ksi:
+        return f"KSI '{ksi_id}' not found. Use list_ksi to see all available KSIs."
+    
+    ksi_name = ksi.get('name', 'N/A')
+    ksi_description = ksi.get('description', 'N/A')
+    category = ksi.get('category', 'N/A')
+    
+    result = f"""# Implementation Checklist: {ksi_id}
+
+## {ksi_name}
+
+**Category:** {category}
+**Description:** {ksi_description}
+
+---
+
+## Pre-Implementation Checklist
+
+### Prerequisites
+- [ ] Azure subscription with Owner or Contributor role
+- [ ] Microsoft Entra ID Global Administrator access (if IAM changes needed)
+- [ ] Azure CLI installed and authenticated (`az login`)
+- [ ] Development environment set up (VS Code, Azure extensions)
+- [ ] Git repository for Infrastructure as Code
+
+### Planning
+- [ ] Read FedRAMP 20x requirement for {ksi_id}
+- [ ] Identify which systems/services are in scope
+- [ ] Review related KSIs and requirements
+- [ ] Determine evidence collection frequency
+- [ ] Get stakeholder approval for implementation approach
+
+### Resource Preparation
+- [ ] Create resource group: `rg-fedramp-{ksi_id.lower().replace('-', '')}`
+- [ ] Set up Azure Key Vault for secrets
+- [ ] Create Log Analytics workspace (if not already exists)
+- [ ] Set up Azure Blob Storage for evidence
+
+---
+
+## Implementation Steps
+
+### Step 1: Infrastructure Deployment
+
+**1.1 Create IaC Templates**
+- [ ] Generate Bicep template: `get_infrastructure_code_for_ksi("{ksi_id}", "bicep")`
+- [ ] Review and customize template for your environment
+- [ ] Add to git repository
+- [ ] Create parameters file with environment-specific values
+
+**1.2 Deploy Infrastructure**
+```bash
+# Create resource group
+az group create \\
+    --name rg-fedramp-{ksi_id.lower()} \\
+    --location eastus
+
+# Deploy Bicep template
+az deployment group create \\
+    --resource-group rg-fedramp-{ksi_id.lower()} \\
+    --template-file main.bicep \\
+    --parameters @parameters.json
+
+# Verify deployment
+az deployment group show \\
+    --resource-group rg-fedramp-{ksi_id.lower()} \\
+    --name main
+```
+
+- [ ] Infrastructure deployed successfully
+- [ ] All resources visible in Azure Portal
+- [ ] No deployment errors or warnings
+
+### Step 2: Azure Service Configuration
+
+"""
+    
+    # Add family-specific configuration steps
+    family = ksi_id.split('-')[1] if '-' in ksi_id else ''
+    
+    if family == 'IAM':
+        result += """**2.1 Configure Microsoft Entra ID**
+- [ ] Enable Conditional Access policies
+- [ ] Configure MFA settings (phishing-resistant required)
+- [ ] Set up Privileged Identity Management (PIM) for admin roles
+- [ ] Configure Azure RBAC for least privilege
+- [ ] Enable Identity Protection
+
+**2.2 Set Up Monitoring**
+- [ ] Enable diagnostic settings for Entra ID
+- [ ] Forward sign-in logs to Log Analytics
+- [ ] Forward audit logs to Log Analytics
+- [ ] Configure alerts for suspicious activity
+
+"""
+    elif family == 'MLA':
+        result += """**2.1 Configure Azure Monitor & Sentinel**
+- [ ] Deploy Microsoft Sentinel workspace
+- [ ] Enable all relevant data connectors
+- [ ] Configure log retention (1 year minimum)
+- [ ] Set up Log Analytics workspace
+- [ ] Enable diagnostic settings for all Azure resources
+
+**2.2 Configure Logging**
+- [ ] Configure Application Insights for applications
+- [ ] Set up diagnostic settings for each resource
+- [ ] Forward logs to Log Analytics
+- [ ] Configure log retention policies
+- [ ] Test log ingestion
+
+"""
+    elif family == 'AFR':
+        result += """**2.1 Configure Microsoft Defender**
+- [ ] Enable Microsoft Defender for Cloud
+- [ ] Enable Defender for Containers
+- [ ] Enable Defender for Servers
+- [ ] Configure vulnerability assessment
+- [ ] Set up security recommendations
+
+**2.2 Configure Vulnerability Scanning**
+- [ ] Enable Microsoft Defender for Container Registries
+- [ ] Configure GitHub Advanced Security (if using GitHub)
+- [ ] Set up CI/CD pipeline scanning
+- [ ] Configure scan frequency
+- [ ] Set up alerting for findings
+
+"""
+    elif family == 'SVC':
+        result += """**2.1 Configure Azure Key Vault**
+- [ ] Deploy Azure Key Vault
+- [ ] Configure access policies or RBAC
+- [ ] Enable soft delete and purge protection
+- [ ] Configure diagnostic logging
+- [ ] Set up secret rotation policies
+
+**2.2 Configure Automation**
+- [ ] Create Azure Automation account
+- [ ] Set up Managed Identity
+- [ ] Configure runbooks for secret rotation
+- [ ] Test automation workflows
+- [ ] Configure schedules
+
+"""
+    else:
+        result += """**2.1 Configure Azure Services**
+- [ ] Deploy required Azure services
+- [ ] Configure service-specific settings
+- [ ] Enable diagnostic logging
+- [ ] Set up Managed Identities
+- [ ] Configure networking and security
+
+**2.2 Set Up Monitoring**
+- [ ] Enable Azure Monitor
+- [ ] Configure Log Analytics workspace
+- [ ] Set up alerting rules
+- [ ] Configure dashboards
+- [ ] Test data collection
+
+"""
+    
+    result += f"""### Step 3: Code Deployment
+
+**3.1 Generate Evidence Collection Code**
+- [ ] Generate code template: `get_evidence_collection_code("{ksi_id}", "python")`
+- [ ] Review and customize for your environment
+- [ ] Add to git repository
+- [ ] Set up CI/CD pipeline
+
+**3.2 Deploy Collection Function**
+```bash
+# Deploy Azure Function
+func azure functionapp publish func-{ksi_id.lower()}-collector
+
+# Verify deployment
+az functionapp show \\
+    --name func-{ksi_id.lower()}-collector \\
+    --resource-group rg-fedramp-{ksi_id.lower()}
+
+# Test function
+curl https://func-{ksi_id.lower()}-collector.azurewebsites.net/api/health
+```
+
+- [ ] Function deployed successfully
+- [ ] Function app is running
+- [ ] Managed Identity configured
+- [ ] Application Insights enabled
+
+**3.3 Configure Collection Schedule**
+- [ ] Set up timer trigger (daily/weekly based on requirement)
+- [ ] Configure retry policies
+- [ ] Set up error alerting
+- [ ] Test scheduled execution
+
+### Step 4: Testing & Validation
+
+**4.1 Unit Testing**
+- [ ] Test evidence collection logic
+- [ ] Test data formatting
+- [ ] Test error handling
+- [ ] Test authentication (Managed Identity)
+- [ ] All tests passing
+
+**4.2 Integration Testing**
+- [ ] Test end-to-end evidence collection
+- [ ] Verify evidence stored correctly in Blob Storage
+- [ ] Test evidence retrieval
+- [ ] Verify evidence format (JSON/OSCAL)
+- [ ] Test API integration (if applicable)
+
+**4.3 Compliance Validation**
+- [ ] Evidence demonstrates compliance with {ksi_id}
+- [ ] Evidence is complete and accurate
+- [ ] Evidence collection is automated
+- [ ] Evidence retention meets requirements (1+ years)
+- [ ] Evidence is accessible via API (FRR-ADS)
+
+**4.4 Security Testing**
+- [ ] No secrets in code or logs
+- [ ] All secrets stored in Azure Key Vault
+- [ ] Managed Identity working correctly
+- [ ] Least privilege access configured
+- [ ] Network security properly configured
+
+### Step 5: Documentation
+
+**5.1 Technical Documentation**
+- [ ] Architecture diagram created
+- [ ] Data flow diagram created
+- [ ] Infrastructure documented (IaC in git)
+- [ ] API documentation (if applicable)
+- [ ] Runbook for troubleshooting
+
+**5.2 Compliance Documentation**
+- [ ] Control implementation statement written
+- [ ] Evidence collection procedure documented
+- [ ] Add to System Security Plan (SSP)
+- [ ] Update Authorization Boundary diagram
+- [ ] Document in Configuration Management Plan
+
+**5.3 Operational Documentation**
+- [ ] Daily operations runbook
+- [ ] Escalation procedures
+- [ ] Backup and recovery procedures
+- [ ] Contact information for support
+
+### Step 6: Evidence Collection Setup
+
+**6.1 Configure Evidence Storage**
+- [ ] Blob Storage container created
+- [ ] Immutability policy configured
+- [ ] Lifecycle management configured
+- [ ] Access policies configured
+- [ ] Encryption verified
+
+**6.2 Test Evidence Collection**
+```bash
+# Manually trigger collection
+az functionapp function invoke \\
+    --name func-{ksi_id.lower()}-collector \\
+    --function-name CollectEvidence \\
+    --resource-group rg-fedramp-{ksi_id.lower()}
+
+# Verify evidence stored
+az storage blob list \\
+    --account-name st{ksi_id.lower().replace('-', '')}evidence \\
+    --container-name evidence
+```
+
+- [ ] Evidence collection executed successfully
+- [ ] Evidence file created in Blob Storage
+- [ ] Evidence contains expected data
+- [ ] Evidence format is correct
+
+**6.3 Set Up Evidence Monitoring**
+- [ ] Configure alerts for collection failures
+- [ ] Create dashboard for collection status
+- [ ] Set up weekly evidence review
+- [ ] Document evidence access procedures
+
+### Step 7: Integration with FRR-ADS
+
+**7.1 API Setup**
+- [ ] Expose evidence via Authorization Data Sharing API
+- [ ] Configure authentication (OAuth 2.0 or mTLS)
+- [ ] Test API endpoints
+- [ ] Document API for FedRAMP PMO
+- [ ] Provide API credentials to authorized users
+
+**7.2 API Testing**
+- [ ] Test GET requests for evidence
+- [ ] Test authentication
+- [ ] Test rate limiting
+- [ ] Test error handling
+- [ ] All API tests passing
+
+---
+
+## Post-Implementation Checklist
+
+### Monitoring & Maintenance
+- [ ] Set up alerts for collection failures
+- [ ] Configure weekly evidence reviews
+- [ ] Schedule quarterly access reviews
+- [ ] Plan for infrastructure updates
+- [ ] Document lessons learned
+
+### Compliance Validation
+- [ ] Internal audit completed
+- [ ] All evidence requirements met
+- [ ] Documentation complete and approved
+- [ ] 3PAO review scheduled (if applicable)
+- [ ] Stakeholders notified of completion
+
+### Continuous Improvement
+- [ ] Monitor collection performance
+- [ ] Optimize collection efficiency
+- [ ] Address any gaps identified
+- [ ] Update documentation as needed
+- [ ] Plan for future enhancements
+
+---
+
+## Troubleshooting Common Issues
+
+### Issue: Evidence collection failing
+**Troubleshooting steps:**
+1. Check Azure Function logs in Application Insights
+2. Verify Managed Identity has correct permissions
+3. Test connectivity to data sources
+4. Check for API rate limiting
+5. Review error messages in logs
+
+### Issue: Evidence format incorrect
+**Troubleshooting steps:**
+1. Review evidence specification
+2. Check data transformation logic
+3. Validate against OSCAL schema (if using OSCAL)
+4. Test with sample data
+5. Review FedRAMP requirements
+
+### Issue: API authentication failing
+**Troubleshooting steps:**
+1. Verify credentials/tokens
+2. Check token expiration
+3. Review access policies
+4. Test authentication independently
+5. Check network connectivity
+
+---
+
+## Success Criteria
+
+✅ All checklist items completed
+✅ Evidence collected automatically on schedule
+✅ Evidence demonstrates compliance with {ksi_id}
+✅ Documentation complete and approved
+✅ Team trained on operation and troubleshooting
+✅ Integration with FRR-ADS API working
+✅ Monitoring and alerting configured
+✅ Internal audit passed
+
+---
+
+## Next Steps
+
+1. **Mark completion:** Update project tracker with completion status
+2. **Schedule review:** Set up quarterly review of implementation
+3. **Train team:** Ensure all team members understand operations
+4. **Document lessons:** Capture lessons learned for future KSIs
+5. **Move to next KSI:** Use `get_ksi_implementation_matrix` to identify next priority
+
+---
+
+## Related Tools
+
+- `get_implementation_examples("{ksi_id}")` - Get code examples
+- `get_infrastructure_code_for_ksi("{ksi_id}")` - Get IaC templates
+- `get_evidence_collection_code("{ksi_id}")` - Get collection code
+- `generate_implementation_questions("{ksi_id}")` - Planning questions
+- `get_cloud_native_guidance("azure")` - Azure-specific guidance
+
+*Generated by FedRAMP 20x MCP Server - Implementation Checklist Tool*
+"""
+    
+    return result
+
+
+
 async def generate_implementation_questions_impl(requirement_id: str, data_loader) -> str:
     """
     Generate strategic interview questions for product managers and engineers.

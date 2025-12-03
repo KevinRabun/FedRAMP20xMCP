@@ -7,12 +7,12 @@
     "url": "https://github.com/KevinRabun/FedRAMP20xMCP",
     "source": "github"
   },
-  "version": "0.4.5",
+  "version": "0.4.6",
   "packages": [
     {
       "registryType": "pypi",
       "identifier": "fedramp-20x-mcp",
-      "version": "0.4.5",
+      "version": "0.4.6",
       "transport": {
         "type": "stdio"
       }

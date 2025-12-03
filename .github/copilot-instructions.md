@@ -23,7 +23,7 @@ This project is an MCP server that loads FedRAMP 20x requirements from JSON file
 ✅ 1-hour data caching with automatic refresh
 
 ### Current Capabilities
-The server provides 24 MCP tools:
+The server provides 26 MCP tools:
 
 **Core Tools:**
 1. **get_control** - Get specific FedRAMP requirement by ID
@@ -61,6 +61,10 @@ The server provides 24 MCP tools:
 23. **get_evidence_collection_code** - Provide Python/C#/PowerShell code examples for collecting KSI evidence programmatically
 24. **get_evidence_automation_architecture** - Complete end-to-end architecture guidance for automated evidence collection
 
+**🆕 Implementation Mapping Tools:**
+25. **get_ksi_implementation_matrix** - Get comprehensive implementation matrix for all KSIs in a family (complexity, priority, effort estimates, Azure services)
+26. **generate_implementation_checklist** - Generate detailed step-by-step implementation checklist for specific KSI with Azure-focused guidance
+
 **Comprehensive Prompts:**
 1. **initial_assessment_roadmap** - 9-11 month roadmap with budget/team guidance
 2. **quarterly_review_checklist** - FRR-CCM-QR checklist for all 72 KSIs
@@ -88,7 +92,7 @@ The server provides 24 MCP tools:
 - Template loaders: `get_infrastructure_template(family, type)` and `get_code_template(family, language)` in `templates/__init__.py`
 - Prompt templates in `prompts/` directory (15 files)
 - Prompt loader: `load_prompt(name)` in `prompts/__init__.py`
-- Tool modules in `tools/` directory (7 modules, 24 tools)
+- Tool modules in `tools/` directory (7 modules, 26 tools)
 - Tool registration: `register_tools(mcp, data_loader)` in `tools/__init__.py`
 
 **Tool Organization:**
@@ -97,7 +101,7 @@ The server provides 24 MCP tools:
 - `tools/ksi.py` - Key Security Indicator tools (2 tools)
 - `tools/documentation.py` - Documentation search tools (3 tools)
 - `tools/export.py` - Data export tools (3 tools)
-- `tools/enhancements.py` - Implementation guidance tools (7 tools)
+- `tools/enhancements.py` - Implementation guidance tools (9 tools: 7 enhancement + 2 implementation mapping)
 - `tools/evidence.py` - Evidence automation tools (3 tools)
 - Each module has `*_impl` functions, registered via wrappers in `tools/__init__.py`
 
