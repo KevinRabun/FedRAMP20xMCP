@@ -1,9 +1,9 @@
 # Code Analyzer Expansion Roadmap
 
-## Current Status: Phase 6A Complete ✅
+## Current Status: Phase 6B Complete ✅
 
-**Coverage:** 45 KSIs out of 72 (62.5%)
-**Families Covered:** IAM (7/7 complete), MLA (5/8), SVC (8/10), CNA (6/8), PIY (3/8), CMT (3/3 complete), AFR (4/6), CED (1/2), INR (2/2 complete), RPL (4/4 complete)
+**Coverage:** 53 KSIs out of 72 (73.6%)
+**Families Covered:** IAM (7/7 complete), MLA (7/8), SVC (10/10 complete), CNA (8/8 complete), PIY (3/8), CMT (4/4 complete), AFR (5/7), CED (1/2), INR (3/3 complete), RPL (4/4 complete)
 
 ### Phase 1: Foundation (COMPLETE) ✅
 
@@ -524,29 +524,178 @@
 
 ---
 
-## Phase 6B: Service Management & Advanced Monitoring 🎯
+## Phase 6B: Advanced Infrastructure Security (COMPLETE) ✅
 
-**Target:** Add 8 KSIs → 53 total (~74% coverage)
-**Focus:** Service integrity, advanced logging, configuration management
-**Effort:** 1-2 weeks
+**Target:** Add 8 KSIs → 53 total (73.6% coverage)
+**Focus:** Communication integrity, data lifecycle, advanced monitoring, microservices
+**Completed:** January 2025
 **Priority:** MEDIUM
 
-### Remaining High-Priority KSIs (8 total)
+### IaC Additions (8 KSIs)
 
-#### Service Management (2 KSIs)
-- KSI-SVC-09: Service integrity verification
-- KSI-SVC-10: Secure data destruction
+#### KSI-SVC-09: Communication Integrity ✅
+**Implementation:**
+- Detects mutual TLS (mTLS) and certificate-based authentication
+- Validates Application Gateway SSL policies (TLS 1.2+, modern cipher suites)
+- Checks App Service client certificate validation
+- Validates API Management certificate requirements
 
-#### Advanced Monitoring (2 KSIs)
-- KSI-MLA-07: Log correlation and analysis
-- KSI-MLA-08: Anomaly detection
+**Detection Patterns (Bicep):**
+- `Microsoft.Network/applicationGateways` with `sslPolicy` (predefined/custom)
+- `Microsoft.Web/sites` with `clientCertEnabled: true`, `clientCertMode: 'Required'`
+- `Microsoft.ApiManagement` with certificate configuration
+- Missing mTLS = MEDIUM severity
 
-#### Authorization & Findings (2 KSIs)
-- KSI-AFR-07: Remediation tracking
-- KSI-AFR-08: False positive management
+**Detection Patterns (Terraform):**
+- `azurerm_application_gateway` with `ssl_policy` block
+- `azurerm_linux_web_app` with `client_certificate_enabled`, `client_certificate_mode = "Required"`
+- `azurerm_api_management` with certificate blocks
+- Reports good practice when mTLS detected
 
-#### Cloud Native Architecture (1 KSI)
-- KSI-CNA-08: Microservices security
+#### KSI-SVC-10: Data Destruction ✅
+**Implementation:**
+- Detects soft delete and lifecycle policies for secure data removal
+- Validates blob lifecycle management policies
+- Checks SQL/Cosmos DB backup retention
+- Key Vault purge protection validation
+
+**Detection Patterns (Bicep):**
+- `Microsoft.Storage/storageAccounts/managementPolicies` with lifecycle rules
+- Key Vault `softDeleteRetentionInDays` (90 days recommended)
+- Storage `deleteRetentionPolicy` (30+ days)
+- SQL `shortTermRetentionPolicy` with retention days
+
+**Detection Patterns (Terraform):**
+- `azurerm_storage_management_policy` with delete actions
+- `azurerm_key_vault` with `soft_delete_retention_days`, `purge_protection_enabled`
+- Storage `delete_retention_policy` in blob_properties
+- SQL `short_term_retention_policy` configuration
+
+#### KSI-MLA-07: Event Types Monitoring ✅
+**Implementation:**
+- Validates comprehensive event type documentation
+- Checks Data Collection Rules for event categorization
+- Detects monitoring workbooks for event visibility
+- Log Analytics workspace validation
+
+**Detection Patterns (Bicep):**
+- `Microsoft.OperationalInsights/workspaces` with diagnostic settings
+- `Microsoft.Insights/dataCollectionRules` with specific event streams
+- `Microsoft.Insights/workbooks` for event monitoring
+- Missing DCR = MEDIUM severity
+
+**Detection Patterns (Terraform):**
+- `azurerm_log_analytics_workspace` configuration
+- `azurerm_monitor_data_collection_rule` with data_flow blocks
+- `azurerm_application_insights_workbook` for dashboards
+- Reports good practice when comprehensive logging configured
+
+#### KSI-MLA-08: Log Data Access ✅
+**Implementation:**
+- Validates least-privilege RBAC on Log Analytics workspaces
+- Checks for resource-scoped log permissions
+- Detects Private Link endpoints for secure log access
+- PIM integration for just-in-time log access
+
+**Detection Patterns (Bicep):**
+- Log Analytics with `Microsoft.Authorization/roleAssignments` (scope = workspace)
+- `publicNetworkAccessForQuery: 'Disabled'` for private-only access
+- `enableLogAccessUsingOnlyResourcePermissions: true` for resource context
+- Missing RBAC = HIGH severity
+
+**Detection Patterns (Terraform):**
+- `azurerm_log_analytics_workspace` with role assignments
+- `public_network_access_enabled = false` for secure access
+- `azurerm_private_endpoint` for Log Analytics
+- RBAC alone = good practice; Private Link absence = suggestion
+
+#### KSI-AFR-07: Secure Configuration ✅
+**Implementation:**
+- Validates secure-by-default settings across all resources
+- Checks HTTPS enforcement (httpsOnly, minTlsVersion)
+- Detects disabled public access (publicNetworkAccess)
+- Validates Azure AD authentication enforcement
+
+**Detection Patterns (Bicep):**
+- App Service: `httpsOnly: true`, `minTlsVersion: '1.2'`
+- Storage: `allowBlobPublicAccess: false`, `minimumTlsVersion: 'TLS1_2'`
+- SQL: `minimalTlsVersion: '1.2'`, `publicNetworkAccess: 'Disabled'`
+- Key Vault: `enableRbacAuthorization: true`, `publicNetworkAccess: 'disabled'`
+
+**Detection Patterns (Terraform):**
+- `azurerm_linux_web_app`: `https_only = true`, `minimum_tls_version = "1.2"`
+- `azurerm_storage_account`: `allow_nested_items_to_be_public = false`, `min_tls_version = "TLS1_2"`
+- `azurerm_mssql_server`: `minimum_tls_version = "1.2"`, `public_network_access_enabled = false`
+- Insecure defaults = HIGH severity
+
+#### KSI-CNA-08: Microservices Security ✅
+**Implementation:**
+- Detects service mesh configuration (Istio on AKS)
+- Validates Dapr for distributed applications
+- Checks API Management for microservices gateway
+- Network policy enforcement for pod-to-pod
+
+**Detection Patterns (Bicep):**
+- AKS `serviceMeshProfile` with `mode: 'Istio'`
+- Container Apps with `dapr` configuration (`appId`, `appProtocol`)
+- `Microsoft.ApiManagement` for gateway pattern
+- Missing service mesh = MEDIUM severity
+
+**Detection Patterns (Terraform):**
+- `azurerm_kubernetes_cluster` with `service_mesh_profile { mode = "Istio" }`
+- `azurerm_container_app` with `dapr { enabled = true }`
+- `azurerm_api_management` for microservices
+- Any control (service mesh OR dapr OR apim) = good practice
+
+#### KSI-INR-03: Incident After-Action Reports ✅
+**Implementation:**
+- Detects automated incident after-action reporting
+- Validates Logic Apps for post-incident workflows
+- Checks Automation runbooks for lessons learned
+- Sentinel playbook integration
+
+**Detection Patterns (Bicep):**
+- `Microsoft.Logic/workflows` for automated reporting
+- `Microsoft.Automation/automationAccounts/runbooks` for quarterly reviews
+- Logic Apps with SecurityInsights integration (Sentinel playbooks)
+- Missing automation = MEDIUM severity
+
+**Detection Patterns (Terraform):**
+- `azurerm_logic_app_workflow` for after-action automation
+- `azurerm_automation_runbook` for lessons learned integration
+- `azurerm_sentinel_automation_rule` for playbooks
+- Reports good practice when workflows configured
+
+#### KSI-CMT-04: Change Management Procedures ✅
+**Implementation:**
+- Validates change tracking via resource tags
+- Detects staged deployment patterns (slots, blue-green)
+- Checks Traffic Manager for controlled rollouts
+- Resource locks for production protection
+
+**Detection Patterns (Bicep):**
+- Resource tags: `changeTicket`, `deploymentId`, `version`, `approvedBy`
+- App Service slots for staged deployments
+- Traffic Manager with weighted routing (blue-green)
+- Management locks (CanNotDelete) on critical resources
+
+**Detection Patterns (Terraform):**
+- Tags map with `change_ticket`, `deployment_id`, `version`
+- `azurerm_linux_web_app_slot` for staging
+- `azurerm_traffic_manager_profile` with weighted endpoints
+- `azurerm_management_lock` for production resources
+
+**Test Coverage:** 16 new tests (87 total) - All passing ✅
+**Implementations:** BicepAnalyzer + TerraformAnalyzer complete
+
+---
+
+## Phase 7: Complete Coverage 🚀
+
+**Target:** Add remaining 19 KSIs → 72 total (100% coverage)
+**Focus:** Organizational/policy requirements (limited IaC detection)
+**Effort:** 3-4 weeks
+**Priority:** LOW
 
 #### Incident Response (1 KSI)
 - KSI-INR-03: Incident response automation

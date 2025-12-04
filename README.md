@@ -603,7 +603,7 @@ Generate strategic interview questions for product managers and engineers to fac
 ### analyze_infrastructure_code
 Analyze Infrastructure as Code (IaC) files for FedRAMP 20x compliance issues and provide actionable recommendations.
 
-> **📊 Current Coverage:** Phase 6A complete with 45 KSIs (62.5% of 72 total). Covers infrastructure resilience (disaster recovery, backups, recovery testing), network security (traffic flow, DDoS protection), identity & access (least privilege), and cryptographic controls (FIPS-validated modules). See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for expansion plan to 100% coverage.
+> **📊 Current Coverage:** Phase 6B complete with 53 KSIs (73.6% of 72 total). Covers infrastructure resilience, communication integrity (TLS/mTLS), data destruction (lifecycle policies), comprehensive event monitoring (DCR), log access controls, secure configurations, microservices security (Istio/Dapr/APIM), incident after-action automation, and change management. See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for expansion plan to 100% coverage.
 
 **Parameters:**
 - `code` (string): The IaC code content to analyze
@@ -685,7 +685,27 @@ Analyze Infrastructure as Code (IaC) files for FedRAMP 20x compliance issues and
 - **KSI-INR-02**: Incident response logging (diagnostic settings on Logic Apps)
 - **KSI-AFR-03**: Threat intelligence integration (Defender for Cloud, threat intel feeds)
 
-> **📈 Next:** Phase 6 will add remaining 35 KSIs to reach 100% coverage. See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for full 6-phase plan.
+**Phase 6A - Infrastructure Resilience & Cryptography:**
+- **KSI-RPL-01**: Recovery objectives (RTO/RPO documentation)
+- **KSI-RPL-02**: Recovery plans (Site Recovery, DR orchestration)
+- **KSI-RPL-03**: System backups (Backup policies, 365-day retention)
+- **KSI-RPL-04**: Recovery testing (Automation, scheduled DR drills)
+- **KSI-CNA-03**: Traffic flow enforcement (Firewall, NSG flow logs)
+- **KSI-CNA-05**: DDoS protection (DDoS Protection Plan on VNets)
+- **KSI-IAM-05**: Least privilege access (RBAC, JIT, managed identities)
+- **KSI-AFR-11**: FIPS cryptographic modules (Key Vault Premium, TLS 1.2+)
+
+**Phase 6B - Advanced Infrastructure Security:**
+- **KSI-SVC-09**: Communication integrity (Application Gateway SSL, mTLS validation)
+- **KSI-SVC-10**: Data destruction (soft delete, lifecycle policies, immutability)
+- **KSI-MLA-07**: Event types monitoring (Data Collection Rules, comprehensive event taxonomy)
+- **KSI-MLA-08**: Log data access (RBAC on Log Analytics, private endpoints)
+- **KSI-AFR-07**: Secure configuration (HTTPS only, TLS 1.2+, disabled public access)
+- **KSI-CNA-08**: Microservices security (Istio service mesh, Dapr, API Management)
+- **KSI-INR-03**: Incident after-action reports (Logic Apps automation, Sentinel playbooks)
+- **KSI-CMT-04**: Change management procedures (change tags, deployment slots, Traffic Manager)
+
+> **📈 Next:** Phase 7 will add remaining 19 KSIs to reach 100% coverage (72/72 KSIs). See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for full expansion plan.
 
 **Example usage:**
 ```bicep
@@ -994,10 +1014,11 @@ python tests/test_all_tools.py                   # All tools comprehensive test
 - ✅ **Definitions:** 50 FedRAMP terms
 - ✅ **KSIs:** 72 Key Security Indicators
 - ✅ **Documentation:** 15 official FedRAMP markdown files
-- ✅ **Tool Registration:** All 24 tools across 7 modules
+- ✅ **Tool Registration:** All 29 tools across 8 modules
 - ✅ **IaC Generation:** Bicep & Terraform templates for IAM, MLA, AFR families
 - ✅ **Code Generation:** Python, C#, PowerShell evidence collection code
 - ✅ **Template Variations:** Family-specific customization validated
+- ✅ **Code Analyzers:** 87 passing tests across 53 KSIs (73.6% FedRAMP coverage)
 
 ### Project Structure
 

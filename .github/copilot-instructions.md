@@ -124,7 +124,7 @@ The server provides 26 MCP tools:
 
 **Analyzer Organization:**
 - `analyzers/base.py` - Base classes (Finding, AnalysisResult, Severity, BaseAnalyzer)
-- `analyzers/iac_analyzer.py` - BicepAnalyzer, TerraformAnalyzer (31 KSIs)
+- `analyzers/iac_analyzer.py` - BicepAnalyzer, TerraformAnalyzer (39 KSIs across 6 phases)
 - `analyzers/app_analyzer.py` - PythonAnalyzer (8 KSIs)
 - `analyzers/cicd_analyzer.py` - CICDAnalyzer (6 KSIs)
 - **Phase 1 (8 KSIs - Foundation):** MLA-05, SVC-06, CNA-01, IAM-03, SVC-03, IAM-01, SVC-08, PIY-02
@@ -133,7 +133,8 @@ The server provides 26 MCP tools:
 - **Phase 4 (6 KSIs - DevSecOps Automation):** CMT-01, CMT-02, CMT-03, AFR-01, AFR-02, CED-01
 - **Phase 5 (6 KSIs - Runtime Security & Monitoring):** MLA-03, MLA-04, MLA-06, INR-01, INR-02, AFR-03
 - **Phase 6A (8 KSIs - Infrastructure Resilience):** RPL-01, RPL-02, RPL-03, RPL-04, CNA-03, CNA-05, IAM-05, AFR-11
-- **Coverage:** 45 KSIs out of 72 (62.5%) - see ANALYZER_ROADMAP.md for expansion plan
+- **Phase 6B (8 KSIs - Advanced Infrastructure Security):** SVC-09, SVC-10, MLA-07, MLA-08, AFR-07, CNA-08, INR-03, CMT-04
+- **Coverage:** 53 KSIs out of 72 (73.6%) - see ANALYZER_ROADMAP.md for expansion plan
 
 ## Development Rules
 
@@ -250,7 +251,7 @@ The server provides 26 MCP tools:
 - `test_implementation_questions.py` - Question generation
 - `test_tool_registration.py` - Architecture validation
 - `test_evidence_automation.py` - IaC generation
-- `test_code_analyzer.py` - Code analysis engine (55 tests: 13 Phase 1, 18 Phase 3, 12 Phase 4, 12 Phase 5)
+- `test_code_analyzer.py` - Code analysis engine (87 tests: 13 Phase 1, 18 Phase 3, 12 Phase 4, 12 Phase 5, 16 Phase 6A, 16 Phase 6B)
 - `test_all_tools.py` - Integration testing
 
 **Tool Functional Tests (7 files):**
