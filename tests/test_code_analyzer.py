@@ -1856,6 +1856,452 @@ def test_bicep_with_cryptographic_modules():
     print(f"✅ Recognized cryptographic modules: {good_practices[0].title}")
 
 
+# ============================================================================
+# Phase 6B Tests: Service Management, Advanced Monitoring, Secure Config
+# ============================================================================
+
+def test_bicep_missing_communication_integrity():
+    """Test detection of missing mTLS/certificate authentication."""
+    print("\n=== Testing Bicep: Missing Communication Integrity (KSI-SVC-09) ===")
+    
+    code = """
+    resource appService 'Microsoft.Web/sites@2022-03-01' = {
+      name: 'app-name'
+      location: location
+      properties: {
+        httpsOnly: true
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "app.bicep")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-SVC-09" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing mTLS"
+    assert findings[0].severity == Severity.MEDIUM
+    print(f"✅ Detected missing communication integrity: {findings[0].title}")
+
+
+def test_bicep_with_communication_integrity():
+    """Test that mTLS configuration is recognized."""
+    print("\n=== Testing Bicep: With Communication Integrity (KSI-SVC-09) ===")
+    
+    code = """
+    resource appService 'Microsoft.Web/sites@2022-03-01' = {
+      name: 'app-name'
+      location: location
+      properties: {
+        clientCertEnabled: true
+        clientCertMode: 'Required'
+        httpsOnly: true
+      }
+    }
+    
+    resource apim 'Microsoft.ApiManagement/service@2022-08-01' = {
+      name: 'apim-name'
+      properties: {
+        clientCertificateEnabled: true
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "mtls.bicep")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-SVC-09" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize mTLS"
+    print(f"✅ Recognized communication integrity: {good_practices[0].title}")
+
+
+def test_bicep_missing_data_destruction():
+    """Test detection of missing soft delete capabilities."""
+    print("\n=== Testing Bicep: Missing Data Destruction (KSI-SVC-10) ===")
+    
+    code = """
+    resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+      name: 'storage'
+      location: location
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "storage.bicep")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-SVC-10" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing soft delete"
+    assert findings[0].severity == Severity.MEDIUM
+    print(f"✅ Detected missing data destruction: {findings[0].title}")
+
+
+def test_bicep_with_data_destruction():
+    """Test that soft delete is recognized."""
+    print("\n=== Testing Bicep: With Data Destruction (KSI-SVC-10) ===")
+    
+    code = """
+    resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {
+      name: 'kv-name'
+      properties: {
+        enableSoftDelete: true
+        enablePurgeProtection: true
+        softDeleteRetentionInDays: 90
+      }
+    }
+    
+    resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+      name: 'storage'
+      properties: {
+        deleteRetentionPolicy: {
+          enabled: true
+          days: 30
+        }
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "soft-delete.bicep")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-SVC-10" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize soft delete"
+    print(f"✅ Recognized data destruction capabilities: {good_practices[0].title}")
+
+
+def test_bicep_missing_event_types():
+    """Test detection of missing event type documentation."""
+    print("\n=== Testing Bicep: Missing Event Types (KSI-MLA-07) ===")
+    
+    code = """
+    resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+      name: 'storage'
+      location: location
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "storage.bicep")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-MLA-07" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing event types"
+    assert findings[0].severity == Severity.MEDIUM
+    print(f"✅ Detected missing event types: {findings[0].title}")
+
+
+def test_bicep_with_event_types():
+    """Test that data collection rules are recognized."""
+    print("\n=== Testing Bicep: With Event Types (KSI-MLA-07) ===")
+    
+    code = """
+    resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+      name: 'law-name'
+      properties: {
+        retentionInDays: 365
+      }
+    }
+    
+    resource dcr 'Microsoft.Insights/dataCollectionRules@2022-06-01' = {
+      name: 'dcr-security'
+      properties: {
+        description: 'Security event types for monitoring'
+        dataSources: {
+          windowsEventLogs: [{
+            name: 'SecurityEvents'
+            streams: ['Microsoft-SecurityEvent']
+          }]
+        }
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "event-types.bicep")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-MLA-07" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize event types"
+    print(f"✅ Recognized event types monitoring: {good_practices[0].title}")
+
+
+def test_bicep_missing_log_access_control():
+    """Test detection of missing log RBAC."""
+    print("\n=== Testing Bicep: Missing Log Access Control (KSI-MLA-08) ===")
+    
+    code = """
+    resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+      name: 'law-name'
+      location: location
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "logs.bicep")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-MLA-08" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing log RBAC"
+    assert findings[0].severity == Severity.HIGH
+    print(f"✅ Detected missing log access control: {findings[0].title}")
+
+
+def test_bicep_with_log_access_control():
+    """Test that log RBAC is recognized."""
+    print("\n=== Testing Bicep: With Log Access Control (KSI-MLA-08) ===")
+    
+    code = """
+    resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+      name: 'law-name'
+      properties: {
+        publicNetworkAccessForQuery: 'Disabled'
+        features: {
+          enableLogAccessUsingOnlyResourcePermissions: true
+        }
+      }
+    }
+    
+    resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+      scope: logAnalytics
+      name: guid(logAnalytics.id, 'LogReader')
+      properties: {
+        principalId: principalId
+        roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '73c42c96-874c-492b-b04d-ab87d138a893')
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "log-rbac.bicep")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-MLA-08" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize log RBAC"
+    print(f"✅ Recognized log access control: {good_practices[0].title}")
+
+
+def test_bicep_insecure_configuration():
+    """Test detection of insecure default configurations."""
+    print("\n=== Testing Bicep: Insecure Configuration (KSI-AFR-07) ===")
+    
+    code = """
+    resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+      name: 'storage'
+      properties: {
+        allowBlobPublicAccess: true
+        publicNetworkAccess: 'Enabled'
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "storage.bicep")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-AFR-07" and not f.good_practice]
+    assert len(findings) > 0, "Should detect insecure config"
+    assert findings[0].severity == Severity.HIGH
+    print(f"✅ Detected insecure configuration: {findings[0].title}")
+
+
+def test_bicep_with_secure_configuration():
+    """Test that secure defaults are recognized."""
+    print("\n=== Testing Bicep: With Secure Configuration (KSI-AFR-07) ===")
+    
+    code = """
+    resource appService 'Microsoft.Web/sites@2022-03-01' = {
+      name: 'app-name'
+      properties: {
+        httpsOnly: true
+        siteConfig: {
+          minTlsVersion: '1.2'
+          ftpsState: 'Disabled'
+        }
+      }
+    }
+    
+    resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+      name: 'storage'
+      properties: {
+        allowBlobPublicAccess: false
+        publicNetworkAccess: 'Disabled'
+        minimumTlsVersion: 'TLS1_2'
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "secure-defaults.bicep")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-AFR-07" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize secure config"
+    print(f"✅ Recognized secure configuration: {good_practices[0].title}")
+
+
+def test_bicep_missing_microservices_security():
+    """Test detection of missing service mesh/API security."""
+    print("\n=== Testing Bicep: Missing Microservices Security (KSI-CNA-08) ===")
+    
+    code = """
+    resource aks 'Microsoft.ContainerService/managedClusters@2023-07-01' = {
+      name: 'aks-name'
+      location: location
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "aks.bicep")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-CNA-08" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing service mesh"
+    assert findings[0].severity == Severity.MEDIUM
+    print(f"✅ Detected missing microservices security: {findings[0].title}")
+
+
+def test_bicep_with_microservices_security():
+    """Test that service mesh is recognized."""
+    print("\n=== Testing Bicep: With Microservices Security (KSI-CNA-08) ===")
+    
+    code = """
+    resource aks 'Microsoft.ContainerService/managedClusters@2023-07-01' = {
+      name: 'aks-name'
+      properties: {
+        serviceMeshProfile: {
+          mode: 'Istio'
+          istio: {
+            components: {
+              ingressGateways: [{ enabled: true }]
+            }
+          }
+        }
+      }
+    }
+    
+    resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
+      name: 'app-name'
+      properties: {
+        configuration: {
+          dapr: {
+            enabled: true
+            appId: 'myapp'
+          }
+        }
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "service-mesh.bicep")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-CNA-08" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize service mesh"
+    print(f"✅ Recognized microservices security: {good_practices[0].title}")
+
+
+def test_bicep_missing_incident_after_action():
+    """Test detection of missing incident automation."""
+    print("\n=== Testing Bicep: Missing Incident After-Action (KSI-INR-03) ===")
+    
+    code = """
+    resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+      name: 'storage'
+      location: location
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "storage.bicep")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-INR-03" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing incident automation"
+    assert findings[0].severity == Severity.MEDIUM
+    print(f"✅ Detected missing incident after-action: {findings[0].title}")
+
+
+def test_bicep_with_incident_after_action():
+    """Test that incident automation is recognized."""
+    print("\n=== Testing Bicep: With Incident After-Action (KSI-INR-03) ===")
+    
+    code = """
+    resource logicApp 'Microsoft.Logic/workflows@2019-05-01' = {
+      name: 'incident-after-action'
+      properties: {
+        state: 'Enabled'
+        definition: {
+          triggers: {
+            'When_an_incident_is_closed': {
+              type: 'ApiConnectionWebhook'
+            }
+          }
+        }
+      }
+    }
+    
+    resource automation 'Microsoft.Automation/automationAccounts@2022-08-08' = {
+      name: 'auto-incident-review'
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "incident-automation.bicep")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-INR-03" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize incident automation"
+    print(f"✅ Recognized incident after-action: {good_practices[0].title}")
+
+
+def test_bicep_missing_change_management():
+    """Test detection of missing change tracking."""
+    print("\n=== Testing Bicep: Missing Change Management (KSI-CMT-04) ===")
+    
+    code = """
+    resource appService 'Microsoft.Web/sites@2022-03-01' = {
+      name: 'app-name'
+      location: location
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "app.bicep")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-CMT-04" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing change management"
+    assert findings[0].severity == Severity.MEDIUM
+    print(f"✅ Detected missing change management: {findings[0].title}")
+
+
+def test_bicep_with_change_management():
+    """Test that change tracking is recognized."""
+    print("\n=== Testing Bicep: With Change Management (KSI-CMT-04) ===")
+    
+    code = """
+    var changeTags = {
+      changeTicket: 'CHG-12345'
+      deploymentId: deployment().name
+      version: 'v1.2.3'
+    }
+    
+    resource appService 'Microsoft.Web/sites@2022-03-01' = {
+      name: 'app-name'
+      tags: changeTags
+      properties: {}
+    }
+    
+    resource stagingSlot 'Microsoft.Web/sites/slots@2022-03-01' = {
+      parent: appService
+      name: 'staging'
+      tags: changeTags
+    }
+    
+    resource trafficManager 'Microsoft.Network/trafficManagerProfiles@2022-04-01' = {
+      name: 'tm-name'
+      properties: {
+        trafficRoutingMethod: 'Weighted'
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "change-tracking.bicep")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-CMT-04" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize change management"
+    print(f"✅ Recognized change management: {good_practices[0].title}")
+
+
 def run_all_tests():
     """Run all analyzer tests."""
     print("\n" + "="*70)
@@ -1997,6 +2443,38 @@ def run_all_tests():
         # Bicep tests - Phase 6A: Cryptographic Modules (KSI-AFR-11)
         test_bicep_missing_cryptographic_modules,
         test_bicep_with_cryptographic_modules,
+        
+        # Bicep tests - Phase 6B: Communication Integrity (KSI-SVC-09)
+        test_bicep_missing_communication_integrity,
+        test_bicep_with_communication_integrity,
+        
+        # Bicep tests - Phase 6B: Data Destruction (KSI-SVC-10)
+        test_bicep_missing_data_destruction,
+        test_bicep_with_data_destruction,
+        
+        # Bicep tests - Phase 6B: Event Types (KSI-MLA-07)
+        test_bicep_missing_event_types,
+        test_bicep_with_event_types,
+        
+        # Bicep tests - Phase 6B: Log Access Control (KSI-MLA-08)
+        test_bicep_missing_log_access_control,
+        test_bicep_with_log_access_control,
+        
+        # Bicep tests - Phase 6B: Secure Configuration (KSI-AFR-07)
+        test_bicep_insecure_configuration,
+        test_bicep_with_secure_configuration,
+        
+        # Bicep tests - Phase 6B: Microservices Security (KSI-CNA-08)
+        test_bicep_missing_microservices_security,
+        test_bicep_with_microservices_security,
+        
+        # Bicep tests - Phase 6B: Incident After-Action (KSI-INR-03)
+        test_bicep_missing_incident_after_action,
+        test_bicep_with_incident_after_action,
+        
+        # Bicep tests - Phase 6B: Change Management (KSI-CMT-04)
+        test_bicep_missing_change_management,
+        test_bicep_with_change_management,
     ]
     
     passed = 0

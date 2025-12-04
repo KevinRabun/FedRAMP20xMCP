@@ -119,6 +119,31 @@ class BicepAnalyzer(BaseAnalyzer):
         # Check for cryptographic modules (KSI-AFR-11)
         self._check_cryptographic_modules(code, file_path)
         
+        # Phase 6B: Service Management, Advanced Monitoring, Secure Config, Microservices
+        # Check for communication integrity (KSI-SVC-09)
+        self._check_communication_integrity(code, file_path)
+        
+        # Check for data destruction (KSI-SVC-10)
+        self._check_data_destruction(code, file_path)
+        
+        # Check for event types monitoring (KSI-MLA-07)
+        self._check_event_types_monitoring(code, file_path)
+        
+        # Check for log data access (KSI-MLA-08)
+        self._check_log_data_access(code, file_path)
+        
+        # Check for secure configuration (KSI-AFR-07)
+        self._check_secure_configuration(code, file_path)
+        
+        # Check for microservices security (KSI-CNA-08)
+        self._check_microservices_security(code, file_path)
+        
+        # Check for incident after-action (KSI-INR-03)
+        self._check_incident_after_action(code, file_path)
+        
+        # Check for change management (KSI-CMT-04)
+        self._check_change_management(code, file_path)
+        
         return self.result
     
     def _check_diagnostic_settings(self, code: str, file_path: str) -> None:
@@ -1361,6 +1386,349 @@ class BicepAnalyzer(BaseAnalyzer):
                 recommendation="Regularly rotate cryptographic keys and review cipher suites for algorithm deprecations.",
                 good_practice=True
             ))
+    
+    def _check_communication_integrity(self, code: str, file_path: str) -> None:
+        """Check for communication integrity validation (KSI-SVC-09)."""
+        # Check for TLS/mTLS configuration
+        has_mtls = bool(re.search(r"(clientCertificateMode|mutual.*tls|mtls)", code, re.IGNORECASE))
+        
+        # Check for certificate validation
+        has_cert_validation = bool(re.search(r"(certificateThumbprint|clientCertificate|sslCertificate)", code, re.IGNORECASE))
+        
+        # Check for API Management with certificate auth
+        has_apim_cert = bool(re.search(r"Microsoft\.ApiManagement.*clientCertificateEnabled.*true", code, re.DOTALL))
+        
+        # Check for App Service client certificates
+        has_app_cert = bool(re.search(r"Microsoft\.Web/sites.*clientCertEnabled.*true", code, re.DOTALL))
+        
+        # Check for Application Gateway with mutual auth
+        has_appgw_mtls = bool(re.search(r"Microsoft\.Network/applicationGateways.*sslProfile", code))
+        
+        if not has_mtls and not has_cert_validation and not has_apim_cert and not has_app_cert:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-09",
+                severity=Severity.MEDIUM,
+                title="Communication integrity not validated",
+                description="Missing mTLS or certificate-based authentication for machine-to-machine communications. FedRAMP 20x requires persistent validation of communication authenticity and integrity.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure mutual TLS (mTLS) for service-to-service communications:\n```bicep\n// App Service with client certificates\nresource appService 'Microsoft.Web/sites@2022-03-01' = {\n  name: 'app-name'\n  properties: {\n    clientCertEnabled: true\n    clientCertMode: 'Required'\n    httpsOnly: true\n  }\n}\n\n// API Management with client certificate validation\nresource apim 'Microsoft.ApiManagement/service@2022-08-01' = {\n  name: 'apim-name'\n  properties: {\n    certificates: [\n      {\n        encodedCertificate: base64(loadTextContent('client-cert.pfx'))\n        certificatePassword: keyVaultSecret.properties.value\n      }\n    ]\n  }\n}\n\nresource apimApi 'Microsoft.ApiManagement/service/apis@2022-08-01' = {\n  parent: apim\n  name: 'secure-api'\n  properties: {\n    subscriptionRequired: true\n    authentication: {\n      clientCertificateRequired: true\n    }\n  }\n}\n\n// Application Gateway with SSL profile\nresource appGw 'Microsoft.Network/applicationGateways@2023-05-01' = {\n  name: 'appgw-name'\n  properties: {\n    sslProfiles: [\n      {\n        name: 'mtls-profile'\n        properties: {\n          clientAuthConfiguration: {\n            verifyClientCertIssuerDN: true\n          }\n          trustedClientCertificates: [{\n            id: clientCert.id\n          }]\n        }\n      }\n    ]\n  }\n}\n```\nSource: Azure WAF Security - Network security and encryption (https://learn.microsoft.com/azure/well-architected/security/networking)"
+            ))
+        elif has_mtls or has_cert_validation or has_apim_cert or has_app_cert:
+            line_num = self.get_line_number(code, "clientCertificate") or self.get_line_number(code, "mtls")
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-09",
+                severity=Severity.INFO,
+                title="Communication integrity validation configured",
+                description="mTLS or certificate-based authentication configured for service communications.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Regularly rotate certificates and validate certificate chains. Monitor for certificate expiration.",
+                good_practice=True
+            ))
+    
+    def _check_data_destruction(self, code: str, file_path: str) -> None:
+        """Check for secure data destruction capabilities (KSI-SVC-10)."""
+        # Check for soft delete enabled on Key Vault
+        has_soft_delete = bool(re.search(r"enableSoftDelete.*true", code))
+        has_purge_protection = bool(re.search(r"enablePurgeProtection.*true", code))
+        
+        # Check for Storage account soft delete
+        has_storage_soft_delete = bool(re.search(r"deleteRetentionPolicy.*enabled.*true", code, re.DOTALL))
+        
+        # Check for SQL backup retention
+        has_sql_retention = bool(re.search(r"(Microsoft\.Sql.*retentionDays|backupRetentionDays)", code))
+        
+        # Check for diagnostic settings with retention
+        has_diagnostic_retention = bool(re.search(r"retentionPolicy.*enabled.*true", code, re.DOTALL))
+        
+        if not has_soft_delete and not has_storage_soft_delete:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-10",
+                severity=Severity.MEDIUM,
+                title="Data destruction capabilities not configured",
+                description="Missing soft delete and purge protection for data resources. FedRAMP 20x requires prompt removal of federal customer data when requested while preventing accidental deletion.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure soft delete and purge protection:\n```bicep\n// Key Vault with soft delete and purge protection\nresource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {\n  name: 'kv-name'\n  properties: {\n    enableSoftDelete: true  // 90-day retention\n    enablePurgeProtection: true  // Prevents permanent deletion during retention\n    softDeleteRetentionInDays: 90\n  }\n}\n\n// Storage account with soft delete\nresource storage 'Microsoft.Storage/storageAccounts@2023-01-01' = {\n  name: 'stname'\n  properties: {\n    // Blob soft delete\n    blobServices: {\n      deleteRetentionPolicy: {\n        enabled: true\n        days: 30  // FedRAMP: align with data retention requirements\n      }\n    }\n  }\n}\n\n// SQL database with backup retention\nresource sqlDb 'Microsoft.Sql/servers/databases@2022-05-01-preview' = {\n  name: 'db-name'\n  properties: {\n    backupRetentionDays: 35  // Point-in-time restore window\n    isLedgerDatabase: true  // Immutable ledger for audit trail\n  }\n}\n\n// Cosmos DB with point-in-time restore\nresource cosmos 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = {\n  name: 'cosmos-name'\n  properties: {\n    backupPolicy: {\n      type: 'Continuous'\n      continuousModeProperties: {\n        tier: 'Continuous30Days'  // 30-day point-in-time restore\n      }\n    }\n  }\n}\n```\nSource: Azure WAF Reliability - Backup and data protection (https://learn.microsoft.com/azure/well-architected/reliability/backup-and-recovery)"
+            ))
+        elif has_soft_delete or has_storage_soft_delete:
+            line_num = self.get_line_number(code, "enableSoftDelete") or self.get_line_number(code, "deleteRetentionPolicy")
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-10",
+                severity=Severity.INFO,
+                title="Data destruction capabilities configured",
+                description="Soft delete and retention policies enable prompt data removal while preventing accidental deletion.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Document data destruction procedures and test customer data removal workflows quarterly.",
+                good_practice=True
+            ))
+    
+    def _check_event_types_monitoring(self, code: str, file_path: str) -> None:
+        """Check for documented event types and monitoring configuration (KSI-MLA-07)."""
+        # Check for Log Analytics workspace
+        has_log_analytics = bool(re.search(r"Microsoft\.OperationalInsights/workspaces", code))
+        
+        # Check for diagnostic settings with specific log categories
+        has_log_categories = bool(re.search(r"(logs.*category|categoryGroup)", code, re.IGNORECASE))
+        
+        # Check for workbook or dashboard definitions
+        has_workbook = bool(re.search(r"(Microsoft\.Insights/workbooks|Microsoft\.Portal/dashboards)", code))
+        
+        # Check for data collection rules
+        has_dcr = bool(re.search(r"Microsoft\.Insights/dataCollectionRules", code))
+        
+        if not has_log_analytics and not has_log_categories:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-07",
+                severity=Severity.MEDIUM,
+                title="Event types not documented or monitored",
+                description="Missing Log Analytics workspace or specific log category configuration. FedRAMP 20x requires maintaining a list of monitored event types for all information resources.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure Log Analytics with specific event type monitoring:\n```bicep\n// Log Analytics workspace\nresource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {\n  name: 'law-name'\n  location: location\n  properties: {\n    retentionInDays: 365  // FedRAMP requirement\n    sku: {\n      name: 'PerGB2018'\n    }\n  }\n}\n\n// Diagnostic settings with specific log categories\nresource diagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {\n  name: 'diag-settings'\n  scope: targetResource\n  properties: {\n    workspaceId: logAnalytics.id\n    logs: [\n      { category: 'AuditEvent', enabled: true, retentionPolicy: { enabled: true, days: 365 } }\n      { category: 'SignInLogs', enabled: true, retentionPolicy: { enabled: true, days: 365 } }\n      { category: 'AzureActivity', enabled: true, retentionPolicy: { enabled: true, days: 365 } }\n      { category: 'SecurityEvent', enabled: true, retentionPolicy: { enabled: true, days: 365 } }\n    ]\n    metrics: [\n      { category: 'AllMetrics', enabled: true, retentionPolicy: { enabled: true, days: 365 } }\n    ]\n  }\n}\n\n// Data Collection Rule for specific event types\nresource dcr 'Microsoft.Insights/dataCollectionRules@2022-06-01' = {\n  name: 'dcr-security-events'\n  location: location\n  properties: {\n    description: 'Security event types for FedRAMP monitoring'\n    dataSources: {\n      windowsEventLogs: [\n        {\n          name: 'SecurityEvents'\n          streams: ['Microsoft-SecurityEvent']\n          xPathQueries: [\n            'Security!*[System[(EventID=4624 or EventID=4625 or EventID=4648)]]'  // Logon events\n            'Security!*[System[(EventID=4719 or EventID=4739)]]'  // Policy changes\n          ]\n        }\n      ]\n      syslog: [\n        {\n          name: 'SyslogAuth'\n          streams: ['Microsoft-Syslog']\n          facilityNames: ['auth', 'authpriv', 'security']\n          logLevels: ['Alert', 'Critical', 'Error', 'Warning']\n        }\n      ]\n    }\n    destinations: {\n      logAnalytics: [{ workspaceResourceId: logAnalytics.id, name: 'law' }]\n    }\n  }\n}\n```\nSource: Azure Monitor - Data collection (https://learn.microsoft.com/azure/azure-monitor/essentials/data-collection)"
+            ))
+        elif not has_dcr and not has_workbook:
+            line_num = self.get_line_number(code, "Microsoft.OperationalInsights")
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-07",
+                severity=Severity.LOW,
+                title="Event types not formally documented",
+                description="Log Analytics configured but missing data collection rules or monitoring workbooks. Consider documenting specific event types.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Add Data Collection Rules to document specific event types and create monitoring workbooks for visibility."
+            ))
+        else:
+            line_num = self.get_line_number(code, "dataCollectionRules") or self.get_line_number(code, "workbooks")
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-07",
+                severity=Severity.INFO,
+                title="Event types documented and monitored",
+                description="Data collection rules and monitoring infrastructure properly configured for event type tracking.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Regularly review and update the list of monitored event types based on threat intelligence and audit findings.",
+                good_practice=True
+            ))
+    
+    def _check_log_data_access(self, code: str, file_path: str) -> None:
+        """Check for least-privilege access to log data (KSI-MLA-08)."""
+        # Check for Log Analytics workspace
+        has_log_analytics = bool(re.search(r"Microsoft\.OperationalInsights/workspaces", code))
+        
+        # Check for RBAC on Log Analytics
+        has_rbac = bool(re.search(r"Microsoft\.Authorization/roleAssignments", code))
+        
+        # Check for table-level RBAC
+        has_table_rbac = bool(re.search(r"(table.*access|workspace.*rbac)", code, re.IGNORECASE))
+        
+        # Check for Private Link for Log Analytics
+        has_private_link = bool(re.search(r"Microsoft\.Network/privateEndpoints.*OperationalInsights", code, re.DOTALL))
+        
+        if has_log_analytics and has_rbac:
+            line_num = self.get_line_number(code, "roleAssignments") or self.get_line_number(code, "Microsoft.OperationalInsights")
+            # RBAC is configured - this is good practice
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-08",
+                severity=Severity.INFO,
+                title="Log data access properly restricted",
+                description="Least-privilege RBAC configured for Log Analytics workspace access.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Regularly review log access permissions and use PIM for just-in-time access to sensitive logs. Consider adding Private Link endpoints for network-level access control.",
+                good_practice=True
+            ))
+        elif has_log_analytics:
+            line_num = self.get_line_number(code, "Microsoft.OperationalInsights")
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-08",
+                severity=Severity.HIGH,
+                title="Log data access not restricted",
+                description="Log Analytics workspace without RBAC role assignments. FedRAMP 20x requires least-privileged, role-based access for log data.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure workspace-level and table-level RBAC for Log Analytics:\n```bicep\n// Log Analytics workspace with resource-scoped access\nresource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {\n  name: 'law-name'\n  properties: {\n    publicNetworkAccessForIngestion: 'Disabled'  // Force Private Link\n    publicNetworkAccessForQuery: 'Disabled'\n    features: {\n      enableLogAccessUsingOnlyResourcePermissions: true  // Resource-context RBAC\n    }\n  }\n}\n\n// RBAC: Read-only access to specific tables\nresource logReaderRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {\n  scope: logAnalytics\n  name: guid(logAnalytics.id, 'LogReader', principalId)\n  properties: {\n    principalId: principalId\n    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '73c42c96-874c-492b-b04d-ab87d138a893')  // Log Analytics Reader\n  }\n}\n\n// Table-level access control\nresource sensitiveTable 'Microsoft.OperationalInsights/workspaces/tables@2022-10-01' = {\n  parent: logAnalytics\n  name: 'SecurityEvent'\n  properties: {\n    plan: 'Analytics'\n    retentionInDays: 365\n    totalRetentionInDays: 730  // Archive for extended retention\n    // Table-level RBAC applied via resource context\n  }\n}\n\n// Private endpoint for secure access\nresource privateEndpoint 'Microsoft.Network/privateEndpoints@2023-05-01' = {\n  name: 'pe-law'\n  location: location\n  properties: {\n    subnet: { id: subnetId }\n    privateLinkServiceConnections: [{\n      name: 'law-connection'\n      properties: {\n        privateLinkServiceId: logAnalytics.id\n        groupIds: ['azuremonitor']\n      }\n    }]\n  }\n}\n\n// JIT access using PIM for security analysts\n// Note: PIM eligibility configured via Azure AD, not IaC\n```\nSource: Azure Monitor - Workspace access control (https://learn.microsoft.com/azure/azure-monitor/logs/manage-access)"
+            ))
+    
+    def _check_secure_configuration(self, code: str, file_path: str) -> None:
+        """Check for secure-by-default configurations (KSI-AFR-07)."""
+        # Check for secure defaults: HTTPS only, TLS 1.2+, encryption
+        has_https_only = bool(re.search(r"httpsOnly.*true", code))
+        has_min_tls = bool(re.search(r"minTlsVersion.*'1\.2'", code))
+        has_public_access_disabled = bool(re.search(r"publicNetworkAccess.*'Disabled'", code))
+        
+        # Check for insecure configurations
+        has_public_blob_access = bool(re.search(r"allowBlobPublicAccess.*true", code))
+        has_public_network_enabled = bool(re.search(r"publicNetworkAccess.*'Enabled'", code))
+        has_weak_tls = bool(re.search(r"minTlsVersion.*'1\.[01]'", code))
+        
+        # Count secure defaults
+        secure_defaults = sum([has_https_only, has_min_tls, has_public_access_disabled])
+        insecure_configs = sum([has_public_blob_access, has_public_network_enabled, has_weak_tls])
+        
+        if insecure_configs > 0:
+            line_num = self.get_line_number(code, "publicNetworkAccess.*'Enabled'") or self.get_line_number(code, "allowBlobPublicAccess.*true")
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-07",
+                severity=Severity.HIGH,
+                title="Insecure default configurations detected",
+                description="Resources configured with insecure defaults (public access enabled, weak TLS, public blob access). FedRAMP 20x requires secure-by-default configurations.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Apply secure default configurations:\n```bicep\n// App Service secure defaults\nresource appService 'Microsoft.Web/sites@2022-03-01' = {\n  name: 'app-name'\n  properties: {\n    httpsOnly: true  // Redirect HTTP to HTTPS\n    clientAffinityEnabled: false  // Stateless for scalability\n    siteConfig: {\n      minTlsVersion: '1.2'  // TLS 1.2 minimum\n      ftpsState: 'Disabled'  // Disable FTP\n      http20Enabled: true  // Enable HTTP/2\n      alwaysOn: true\n      use32BitWorkerProcess: false\n    }\n  }\n}\n\n// Storage account secure defaults\nresource storage 'Microsoft.Storage/storageAccounts@2023-01-01' = {\n  name: 'stname'\n  properties: {\n    allowBlobPublicAccess: false  // No anonymous access\n    publicNetworkAccess: 'Disabled'  // Private endpoints only\n    minimumTlsVersion: 'TLS1_2'\n    supportsHttpsTrafficOnly: true\n    allowSharedKeyAccess: false  // Force Azure AD auth\n    encryption: {\n      requireInfrastructureEncryption: true  // Double encryption\n      services: {\n        blob: { enabled: true, keyType: 'Account' }\n        file: { enabled: true, keyType: 'Account' }\n      }\n    }\n  }\n}\n\n// SQL Server secure defaults\nresource sqlServer 'Microsoft.Sql/servers@2022-05-01-preview' = {\n  name: 'sql-name'\n  properties: {\n    minimalTlsVersion: '1.2'\n    publicNetworkAccess: 'Disabled'\n    administratorLogin: null  // Use Azure AD auth only\n    administrators: {\n      administratorType: 'ActiveDirectory'\n      principalId: adminGroupId\n      azureADOnlyAuthentication: true  // Disable SQL auth\n    }\n  }\n}\n\n// Key Vault secure defaults\nresource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {\n  name: 'kv-name'\n  properties: {\n    enableRbacAuthorization: true  // Use RBAC instead of access policies\n    publicNetworkAccess: 'Disabled'\n    networkAcls: {\n      defaultAction: 'Deny'\n      bypass: 'AzureServices'\n    }\n  }\n}\n```\nSource: Azure Security Baseline - Secure configuration (https://learn.microsoft.com/security/benchmark/azure/security-controls-v3-posture-vulnerability-management)"
+            ))
+        elif secure_defaults == 0:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-07",
+                severity=Severity.MEDIUM,
+                title="Secure default configurations not enforced",
+                description="Missing secure-by-default settings. FedRAMP 20x requires documented secure configurations.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Apply secure defaults: HTTPS only, TLS 1.2+, disable public access, Azure AD authentication."
+            ))
+        else:
+            line_num = self.get_line_number(code, "httpsOnly") or self.get_line_number(code, "minTlsVersion")
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-07",
+                severity=Severity.INFO,
+                title="Secure default configurations applied",
+                description="Resources configured with secure defaults (HTTPS, TLS 1.2+, restricted access).",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Document secure configuration standards and use Azure Policy to enforce organization-wide.",
+                good_practice=True
+            ))
+    
+    def _check_microservices_security(self, code: str, file_path: str) -> None:
+        """Check for microservices security configuration (KSI-CNA-08)."""
+        # Check for service mesh (Istio, Linkerd, Dapr)
+        has_service_mesh = bool(re.search(r"(serviceMeshProfile|istio|linkerd|dapr)", code, re.IGNORECASE))
+        
+        # Check for API Management in front of microservices
+        has_apim = bool(re.search(r"Microsoft\.ApiManagement", code))
+        
+        # Check for Container Apps with Dapr
+        has_container_apps_dapr = bool(re.search(r"Microsoft\.App/containerApps.*dapr", code, re.DOTALL))
+        
+        # Check for AKS with network policies
+        has_aks_network_policy = bool(re.search(r"managedClusters.*networkPolicy", code, re.DOTALL))
+        
+        # Check for Azure Front Door or Application Gateway
+        has_ingress_controller = bool(re.search(r"(Microsoft\.Network/frontDoors|Microsoft\.Network/applicationGateways)", code))
+        
+        if not has_service_mesh and not has_apim and not has_container_apps_dapr:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-CNA-08",
+                severity=Severity.MEDIUM,
+                title="Microservices security controls missing",
+                description="Missing service mesh or API gateway for microservices security. FedRAMP 20x requires persistent security posture assessment for machine-based resources.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure service mesh or API Management for microservices:\n```bicep\n// AKS with Istio service mesh\nresource aks 'Microsoft.ContainerService/managedClusters@2023-07-01' = {\n  name: 'aks-name'\n  properties: {\n    serviceMeshProfile: {\n      mode: 'Istio'  // Enable Istio service mesh\n      istio: {\n        components: {\n          ingressGateways: [{ enabled: true }]\n        }\n      }\n    }\n    networkProfile: {\n      networkPolicy: 'cilium'  // Or 'azure', 'calico'\n      serviceMesh: {\n        enabled: true\n      }\n    }\n  }\n}\n\n// Container Apps with Dapr\nresource containerApp 'Microsoft.App/containerApps@2023-05-01' = {\n  name: 'app-name'\n  properties: {\n    configuration: {\n      dapr: {\n        enabled: true\n        appId: 'myapp'\n        appProtocol: 'grpc'\n        appPort: 3000\n        enableApiLogging: true  // Log service-to-service calls\n      }\n      ingress: {\n        external: false  // Internal only\n        transport: 'http2'  // gRPC support\n        clientCertificateMode: 'require'  // mTLS\n      }\n    }\n  }\n}\n\n// API Management for microservices gateway\nresource apim 'Microsoft.ApiManagement/service@2022-08-01' = {\n  name: 'apim-name'\n  properties: {\n    virtualNetworkType: 'Internal'  // Internal VNet integration\n  }\n}\n\nresource apimPolicy 'Microsoft.ApiManagement/service/policies@2022-08-01' = {\n  parent: apim\n  name: 'policy'\n  properties: {\n    value: '''<policies>\n      <inbound>\n        <rate-limit calls=\"100\" renewal-period=\"60\" />\n        <validate-jwt header-name=\"Authorization\">\n          <openid-config url=\"https://login.microsoftonline.com/{{tenant}}/.well-known/openid-configuration\" />\n        </validate-jwt>\n        <check-header name=\"X-Client-Certificate\" failed-check-httpcode=\"403\" />\n      </inbound>\n      <backend><forward-request /></backend>\n      <outbound />\n      <on-error />\n    </policies>'''\n  }\n}\n```\nSource: Azure WAF Security - Application security (https://learn.microsoft.com/azure/well-architected/security/application-design)"
+            ))
+        elif (has_service_mesh or has_container_apps_dapr or has_apim):
+            # Some security controls exist - recognize as good practice
+            line_num = self.get_line_number(code, "serviceMeshProfile") or self.get_line_number(code, "dapr") or self.get_line_number(code, "Microsoft.ApiManagement")
+            recommendation = "Monitor service mesh metrics and regularly review service-to-service authentication policies."
+            if has_service_mesh and not has_aks_network_policy:
+                recommendation += " Consider adding AKS network policies to enforce pod-to-pod communication rules for defense-in-depth."
+            self.add_finding(Finding(
+                requirement_id="KSI-CNA-08",
+                severity=Severity.INFO,
+                title="Microservices security controls configured",
+                description="Service mesh or API gateway provides security posture assessment and mTLS for microservices.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation=recommendation,
+                good_practice=True
+            ))
+    
+    def _check_incident_after_action(self, code: str, file_path: str) -> None:
+        """Check for incident after-action reporting (KSI-INR-03)."""
+        # Check for automation workflows for incident response
+        has_logic_apps = bool(re.search(r"Microsoft\.Logic/workflows", code))
+        
+        # Check for automation runbooks
+        has_automation = bool(re.search(r"Microsoft\.Automation/automationAccounts", code))
+        
+        # Check for Sentinel playbooks
+        has_sentinel_playbook = bool(re.search(r"Microsoft\.Logic/workflows.*SecurityInsights", code, re.DOTALL))
+        
+        # Check for incident documentation storage (Storage or Cosmos)
+        has_incident_storage = bool(re.search(r"(incident|response|after.*action)", code, re.IGNORECASE))
+        
+        if not has_logic_apps and not has_automation and not has_sentinel_playbook:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-INR-03",
+                severity=Severity.MEDIUM,
+                title="Incident after-action reporting not automated",
+                description="Missing automation for incident after-action reports. FedRAMP 20x requires generating after-action reports and regularly incorporating lessons learned.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure automated incident after-action reporting:\n```bicep\n// Logic App for incident after-action report generation\nresource incidentWorkflow 'Microsoft.Logic/workflows@2019-05-01' = {\n  name: 'incident-after-action'\n  location: location\n  properties: {\n    state: 'Enabled'\n    definition: {\n      '$schema': 'https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#'\n      triggers: {\n        'When_an_incident_is_closed': {\n          type: 'ApiConnectionWebhook'\n          inputs: {\n            host: { connection: { name: '@parameters(\\'$connections\\')[\\'azuresentinel\\'][\\'connectionId\\']' } }\n            path: '/incident-creation'\n          }\n        }\n      }\n      actions: {\n        'Get_incident_details': {\n          type: 'ApiConnection'\n          inputs: {\n            host: { connection: { name: '@parameters(\\'$connections\\')[\\'azuresentinel\\'][\\'connectionId\\']' } }\n            path: '/Incidents/@{triggerBody()?[\\'IncidentNumber\\']}'\n          }\n        }\n        'Generate_after_action_report': {\n          type: 'Compose'\n          inputs: {\n            incidentId: '@{body(\\'Get_incident_details\\')?[\\'name\\']}'\n            severity: '@{body(\\'Get_incident_details\\')?[\\'properties\\']?[\\'severity\\']}'\n            closedTime: '@{utcNow()}'\n            rootCause: '@{body(\\'Get_incident_details\\')?[\\'properties\\']?[\\'description\\']}'\n            lessonsLearned: 'To be completed by incident commander'\n            remediationActions: '@{body(\\'Get_incident_details\\')?[\\'properties\\']?[\\'title\\']}'\n          }\n        }\n        'Store_report_in_Cosmos': {\n          type: 'ApiConnection'\n          inputs: {\n            host: { connection: { name: '@parameters(\\'$connections\\')[\\'documentdb\\'][\\'connectionId\\']' } }\n            method: 'post'\n            path: '/dbs/incidentdb/colls/after-action-reports/docs'\n            body: '@outputs(\\'Generate_after_action_report\\')'\n          }\n        }\n        'Notify_security_team': {\n          type: 'ApiConnection'\n          inputs: {\n            host: { connection: { name: '@parameters(\\'$connections\\')[\\'teams\\'][\\'connectionId\\']' } }\n            method: 'post'\n            path: '/flowbot/actions/PostMessage'\n            body: {\n              messageBody: 'Incident @{body(\\'Get_incident_details\\')?[\\'name\\']} closed. After-action report generated.'\n              recipient: '@{parameters(\\'securityTeamEmail\\')}'\n            }\n          }\n        }\n      }\n    }\n  }\n}\n\n// Cosmos DB for incident reports\nresource cosmos 'Microsoft.DocumentDB/databaseAccounts@2023-04-15' = {\n  name: 'cosmos-incidents'\n  properties: {\n    databaseAccountOfferType: 'Standard'\n    locations: [{ locationName: location }]\n  }\n}\n\n// Automation runbook for lessons learned integration\nresource automation 'Microsoft.Automation/automationAccounts@2022-08-08' = {\n  name: 'auto-incident-review'\n}\n\nresource runbook 'Microsoft.Automation/automationAccounts/runbooks@2022-08-08' = {\n  parent: automation\n  name: 'Integrate-LessonsLearned'\n  properties: {\n    runbookType: 'PowerShell'\n    description: 'Quarterly review to integrate lessons learned into security procedures'\n  }\n}\n```\nSource: Azure Sentinel - Incident management (https://learn.microsoft.com/azure/sentinel/incident-investigation)"
+            ))
+        elif has_logic_apps or has_automation:
+            line_num = self.get_line_number(code, "Microsoft.Logic") or self.get_line_number(code, "Microsoft.Automation")
+            self.add_finding(Finding(
+                requirement_id="KSI-INR-03",
+                severity=Severity.INFO,
+                title="Incident after-action automation configured",
+                description="Automation workflows configured for incident after-action reporting.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Conduct quarterly reviews to incorporate lessons learned into security procedures and update incident response playbooks.",
+                good_practice=True
+            ))
+    
+    def _check_change_management(self, code: str, file_path: str) -> None:
+        """Check for change management procedure implementation (KSI-CMT-04)."""
+        # Check for resource tags with change tracking
+        has_change_tags = bool(re.search(r"(changeTicket|changeId|deploymentId|version)", code, re.IGNORECASE))
+        
+        # Check for deployment slots (staged rollout)
+        has_deployment_slots = bool(re.search(r"Microsoft\.Web/sites/slots", code))
+        
+        # Check for blue-green deployment pattern (Traffic Manager)
+        has_traffic_manager = bool(re.search(r"Microsoft\.Network/trafficManagerProfiles", code))
+        
+        # Check for Container App revisions
+        has_revisions = bool(re.search(r"(revision.*management|trafficWeight)", code, re.IGNORECASE))
+        
+        # Check for immutable deployment pattern (resource locks)
+        has_locks = bool(re.search(r"Microsoft\.Authorization/locks", code))
+        
+        if not has_change_tags and not has_deployment_slots and not has_traffic_manager:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-CMT-04",
+                severity=Severity.MEDIUM,
+                title="Change management procedures not implemented",
+                description="Missing change tracking tags and staged deployment patterns. FedRAMP 20x requires documented change management procedures.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Implement change management in IaC:\n```bicep\n// Resource tags for change tracking\nvar changeTags = {\n  changeTicket: 'CHG-12345'  // ServiceNow/ADO work item\n  deployedBy: 'pipeline-name'\n  deploymentId: deployment().name\n  version: 'v1.2.3'\n  environment: 'production'\n  approvedBy: 'security-team@company.com'\n  changeDate: utcNow('yyyy-MM-dd')\n}\n\n// App Service with deployment slots (staged rollout)\nresource appService 'Microsoft.Web/sites@2022-03-01' = {\n  name: 'app-name'\n  tags: changeTags\n  properties: {\n    // Production slot\n  }\n}\n\nresource stagingSlot 'Microsoft.Web/sites/slots@2022-03-01' = {\n  parent: appService\n  name: 'staging'\n  tags: changeTags\n  properties: {\n    // Deploy to staging first, then swap to production\n  }\n}\n\n// Container Apps with traffic splitting (blue-green)\nresource containerApp 'Microsoft.App/containerApps@2023-05-01' = {\n  name: 'app-name'\n  tags: changeTags\n  properties: {\n    configuration: {\n      ingress: {\n        traffic: [\n          { revisionName: 'blue-revision', weight: 90 }  // Current stable\n          { revisionName: 'green-revision', weight: 10 }  // New version canary\n        ]\n      }\n    }\n  }\n}\n\n// Traffic Manager for blue-green deployment\nresource trafficManager 'Microsoft.Network/trafficManagerProfiles@2022-04-01' = {\n  name: 'tm-name'\n  tags: changeTags\n  properties: {\n    trafficRoutingMethod: 'Weighted'\n    endpoints: [\n      { name: 'blue', weight: 100, target: blueApp.properties.defaultHostName }\n      { name: 'green', weight: 0, target: greenApp.properties.defaultHostName }  // Ready for cutover\n    ]\n  }\n}\n\n// Resource locks to prevent accidental changes\nresource productionLock 'Microsoft.Authorization/locks@2020-05-01' = {\n  scope: appService\n  name: 'production-lock'\n  properties: {\n    level: 'CanNotDelete'  // Requires change ticket to modify\n    notes: 'Production resource - requires change management approval'\n  }\n}\n```\nSource: Azure CAF - Change management (https://learn.microsoft.com/azure/cloud-adoption-framework/ready/considerations/development-strategy-development-lifecycle)"
+            ))
+        elif has_change_tags or has_deployment_slots:
+            line_num = self.get_line_number(code, "changeTicket") or self.get_line_number(code, "slots")
+            self.add_finding(Finding(
+                requirement_id="KSI-CMT-04",
+                severity=Severity.INFO,
+                title="Change management procedures implemented",
+                description="Change tracking tags and staged deployment patterns configured for controlled rollouts.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Document change management procedures and integrate with ITSM system for audit trail.",
+                good_practice=True
+            ))
 
 
 class TerraformAnalyzer(BaseAnalyzer):
@@ -1427,6 +1795,16 @@ class TerraformAnalyzer(BaseAnalyzer):
         self._check_ddos_protection(code, file_path)          # KSI-CNA-05
         self._check_least_privilege(code, file_path)          # KSI-IAM-05
         self._check_cryptographic_modules(code, file_path)    # KSI-AFR-11
+        
+        # Phase 6B: Service Management, Advanced Monitoring, Secure Config, Microservices
+        self._check_communication_integrity(code, file_path)  # KSI-SVC-09
+        self._check_data_destruction(code, file_path)         # KSI-SVC-10
+        self._check_event_types_monitoring(code, file_path)   # KSI-MLA-07
+        self._check_log_data_access(code, file_path)          # KSI-MLA-08
+        self._check_secure_configuration(code, file_path)     # KSI-AFR-07
+        self._check_microservices_security(code, file_path)   # KSI-CNA-08
+        self._check_incident_after_action(code, file_path)    # KSI-INR-03
+        self._check_change_management(code, file_path)        # KSI-CMT-04
         
         return self.result
     
@@ -2627,4 +3005,328 @@ class TerraformAnalyzer(BaseAnalyzer):
                 recommendation="Regularly rotate cryptographic keys and review cipher suites for algorithm deprecations.",
                 good_practice=True
             ))
-
+    
+    def _check_communication_integrity(self, code: str, file_path: str) -> None:
+        """Check for communication integrity validation (KSI-SVC-09)."""
+        # Check for App Service client certificates
+        has_client_cert = bool(re.search(r"client_certificate_(enabled|mode)", code))
+        
+        # Check for API Management client certificates
+        has_apim_cert = bool(re.search(r"azurerm_api_management.*certificate", code, re.DOTALL))
+        
+        # Check for Application Gateway mutual auth
+        has_appgw_ssl = bool(re.search(r"azurerm_application_gateway.*ssl_(policy|profile|certificate)", code, re.DOTALL))
+        
+        # Check for Front Door custom HTTPS
+        has_frontdoor_https = bool(re.search(r"azurerm_frontdoor.*custom_https", code, re.DOTALL))
+        
+        if not has_client_cert and not has_apim_cert and not has_appgw_ssl:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-09",
+                severity=Severity.MEDIUM,
+                title="Communication integrity not validated",
+                description="Missing mTLS or certificate-based authentication. FedRAMP 20x requires persistent validation of communication authenticity.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure mutual TLS for service-to-service communications:\n```hcl\n# App Service with client certificates\nresource \"azurerm_linux_web_app\" \"app\" {\n  name                = \"app-${random_id.suffix.hex}\"\n  resource_group_name = azurerm_resource_group.rg.name\n  location            = azurerm_resource_group.rg.location\n  service_plan_id     = azurerm_service_plan.plan.id\n\n  https_only                = true\n  client_certificate_enabled = true\n  client_certificate_mode    = \"Required\"\n\n  site_config {\n    minimum_tls_version = \"1.2\"\n  }\n}\n\n# API Management with client certificate validation\nresource \"azurerm_api_management\" \"apim\" {\n  name                = \"apim-${random_id.suffix.hex}\"\n  location            = azurerm_resource_group.rg.location\n  resource_group_name = azurerm_resource_group.rg.name\n  publisher_name      = \"FedRAMP Publisher\"\n  publisher_email     = \"admin@example.com\"\n  sku_name            = \"Premium_1\"\n\n  certificate {\n    encoded_certificate  = filebase64(\"client-cert.pfx\")\n    certificate_password = var.cert_password\n    store_name           = \"CertificateAuthority\"\n  }\n}\n\nresource \"azurerm_api_management_api\" \"api\" {\n  name                = \"secure-api\"\n  resource_group_name = azurerm_resource_group.rg.name\n  api_management_name = azurerm_api_management.apim.name\n  revision            = \"1\"\n  display_name        = \"Secure API\"\n  protocols           = [\"https\"]\n}\n\nresource \"azurerm_api_management_api_policy\" \"policy\" {\n  api_name            = azurerm_api_management_api.api.name\n  api_management_name = azurerm_api_management.apim.name\n  resource_group_name = azurerm_resource_group.rg.name\n\n  xml_content = <<XML\n<policies>\n  <inbound>\n    <base />\n    <check-header name=\"X-Client-Certificate\" failed-check-httpcode=\"403\" />\n    <validate-jwt header-name=\"Authorization\">\n      <openid-config url=\"https://login.microsoftonline.com/${data.azurerm_client_config.current.tenant_id}/.well-known/openid-configuration\" />\n    </validate-jwt>\n  </inbound>\n</policies>\nXML\n}\n```\nSource: Azure WAF Security - Network security (https://learn.microsoft.com/azure/well-architected/security/networking)"
+            ))
+        else:
+            line_num = self.get_line_number(code, "client_certificate") or self.get_line_number(code, "ssl_policy")
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-09",
+                severity=Severity.INFO,
+                title="Communication integrity validation configured",
+                description="mTLS or certificate-based authentication configured for service communications.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Regularly rotate certificates and validate certificate chains. Monitor for certificate expiration.",
+                good_practice=True
+            ))
+    
+    def _check_data_destruction(self, code: str, file_path: str) -> None:
+        """Check for secure data destruction capabilities (KSI-SVC-10)."""
+        # Check for Key Vault soft delete
+        has_kv_soft_delete = bool(re.search(r"soft_delete_(enabled|retention_days)", code))
+        has_purge_protection = bool(re.search(r"purge_protection_enabled", code))
+        
+        # Check for Storage soft delete
+        has_storage_soft_delete = bool(re.search(r"(blob|container)_delete_retention_policy", code))
+        
+        # Check for SQL backup retention
+        has_sql_backup = bool(re.search(r"backup_retention_days", code))
+        
+        # Check for Cosmos DB backup
+        has_cosmos_backup = bool(re.search(r"backup\s*\{", code))
+        
+        if not has_kv_soft_delete and not has_storage_soft_delete:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-10",
+                severity=Severity.MEDIUM,
+                title="Data destruction capabilities not configured",
+                description="Missing soft delete and purge protection. FedRAMP 20x requires prompt customer data removal while preventing accidental deletion.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure soft delete and purge protection:\n```hcl\n# Key Vault with soft delete and purge protection\nresource \"azurerm_key_vault\" \"kv\" {\n  name                        = \"kv-${random_id.suffix.hex}\"\n  location                    = azurerm_resource_group.rg.location\n  resource_group_name         = azurerm_resource_group.rg.name\n  tenant_id                   = data.azurerm_client_config.current.tenant_id\n  sku_name                    = \"premium\"\n  soft_delete_retention_days  = 90  # 90-day retention\n  purge_protection_enabled    = true  # Prevent permanent deletion during retention\n  enable_rbac_authorization   = true\n}\n\n# Storage account with soft delete\nresource \"azurerm_storage_account\" \"storage\" {\n  name                     = \"st${random_id.suffix.hex}\"\n  resource_group_name      = azurerm_resource_group.rg.name\n  location                 = azurerm_resource_group.rg.location\n  account_tier             = \"Standard\"\n  account_replication_type = \"GRS\"\n\n  blob_properties {\n    delete_retention_policy {\n      days = 30  # FedRAMP: align with retention requirements\n    }\n    container_delete_retention_policy {\n      days = 30\n    }\n    versioning_enabled = true\n  }\n}\n\n# SQL database with backup retention\nresource \"azurerm_mssql_database\" \"db\" {\n  name           = \"sqldb-${random_id.suffix.hex}\"\n  server_id      = azurerm_mssql_server.sql.id\n  sku_name       = \"S0\"\n  ledger_enabled = true  # Immutable ledger for audit trail\n\n  short_term_retention_policy {\n    retention_days = 35  # Point-in-time restore window\n  }\n\n  long_term_retention_policy {\n    weekly_retention  = \"P12W\"\n    monthly_retention = \"P12M\"\n    yearly_retention  = \"P5Y\"\n  }\n}\n\n# Cosmos DB with point-in-time restore\nresource \"azurerm_cosmosdb_account\" \"cosmos\" {\n  name                = \"cosmos-${random_id.suffix.hex}\"\n  location            = azurerm_resource_group.rg.location\n  resource_group_name = azurerm_resource_group.rg.name\n  offer_type          = \"Standard\"\n\n  backup {\n    type                = \"Continuous\"\n    tier                = \"Continuous30Days\"\n  }\n\n  consistency_policy {\n    consistency_level = \"Session\"\n  }\n}\n```\nSource: Azure WAF Reliability - Backup (https://learn.microsoft.com/azure/well-architected/reliability/backup-and-recovery)"
+            ))
+        else:
+            line_num = self.get_line_number(code, "soft_delete") or self.get_line_number(code, "delete_retention")
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-10",
+                severity=Severity.INFO,
+                title="Data destruction capabilities configured",
+                description="Soft delete and retention policies enable prompt data removal while preventing accidental deletion.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Document data destruction procedures and test customer data removal workflows quarterly.",
+                good_practice=True
+            ))
+    
+    def _check_event_types_monitoring(self, code: str, file_path: str) -> None:
+        """Check for documented event types and monitoring (KSI-MLA-07)."""
+        # Check for Log Analytics workspace
+        has_log_analytics = bool(re.search(r"azurerm_log_analytics_workspace", code))
+        
+        # Check for diagnostic settings with log categories
+        has_log_categories = bool(re.search(r"enabled_log\s*\{", code))
+        
+        # Check for data collection rules
+        has_dcr = bool(re.search(r"azurerm_monitor_data_collection_rule", code))
+        
+        # Check for workbooks
+        has_workbook = bool(re.search(r"azurerm_application_insights_workbook", code))
+        
+        if not has_log_analytics and not has_log_categories:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-07",
+                severity=Severity.MEDIUM,
+                title="Event types not documented or monitored",
+                description="Missing Log Analytics workspace or specific log category configuration. FedRAMP 20x requires maintaining a list of monitored event types.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure Log Analytics with specific event type monitoring:\n```hcl\n# Log Analytics workspace\nresource \"azurerm_log_analytics_workspace\" \"law\" {\n  name                = \"law-${random_id.suffix.hex}\"\n  location            = azurerm_resource_group.rg.location\n  resource_group_name = azurerm_resource_group.rg.name\n  sku                 = \"PerGB2018\"\n  retention_in_days   = 365  # FedRAMP requirement\n}\n\n# Diagnostic settings with specific log categories\nresource \"azurerm_monitor_diagnostic_setting\" \"diag\" {\n  name                       = \"diag-settings\"\n  target_resource_id         = azurerm_key_vault.kv.id\n  log_analytics_workspace_id = azurerm_log_analytics_workspace.law.id\n\n  enabled_log {\n    category = \"AuditEvent\"\n  }\n  enabled_log {\n    category = \"AllMetrics\"\n  }\n\n  metric {\n    category = \"AllMetrics\"\n    enabled  = true\n  }\n}\n\n# Data collection rule for specific event types\nresource \"azurerm_monitor_data_collection_rule\" \"dcr\" {\n  name                = \"dcr-security-events\"\n  resource_group_name = azurerm_resource_group.rg.name\n  location            = azurerm_resource_group.rg.location\n  description         = \"Security event types for FedRAMP monitoring\"\n\n  destinations {\n    log_analytics {\n      workspace_resource_id = azurerm_log_analytics_workspace.law.id\n      name                  = \"law\"\n    }\n  }\n\n  data_flow {\n    streams      = [\"Microsoft-SecurityEvent\"]\n    destinations = [\"law\"]\n  }\n\n  data_sources {\n    windows_event_log {\n      name    = \"SecurityEvents\"\n      streams = [\"Microsoft-SecurityEvent\"]\n      x_path_queries = [\n        \"Security!*[System[(EventID=4624 or EventID=4625 or EventID=4648)]]\",  # Logon events\n        \"Security!*[System[(EventID=4719 or EventID=4739)]]\",  # Policy changes\n      ]\n    }\n\n    syslog {\n      name           = \"SyslogAuth\"\n      facility_names = [\"auth\", \"authpriv\", \"security\"]\n      log_levels     = [\"Alert\", \"Critical\", \"Error\", \"Warning\"]\n      streams        = [\"Microsoft-Syslog\"]\n    }\n  }\n}\n```\nSource: Azure Monitor - Data collection (https://learn.microsoft.com/azure/azure-monitor/essentials/data-collection)"
+            ))
+        elif not has_dcr and not has_workbook:
+            line_num = self.get_line_number(code, "azurerm_log_analytics_workspace")
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-07",
+                severity=Severity.LOW,
+                title="Event types not formally documented",
+                description="Log Analytics configured but missing data collection rules or monitoring workbooks.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Add Data Collection Rules to document specific event types."
+            ))
+        else:
+            line_num = self.get_line_number(code, "azurerm_monitor_data_collection_rule") or self.get_line_number(code, "enabled_log")
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-07",
+                severity=Severity.INFO,
+                title="Event types documented and monitored",
+                description="Data collection rules and monitoring infrastructure properly configured.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Regularly review and update monitored event types based on threat intelligence.",
+                good_practice=True
+            ))
+    
+    def _check_log_data_access(self, code: str, file_path: str) -> None:
+        """Check for least-privilege access to log data (KSI-MLA-08)."""
+        # Check for Log Analytics workspace
+        has_log_analytics = bool(re.search(r"azurerm_log_analytics_workspace", code))
+        
+        # Check for RBAC assignments
+        has_rbac = bool(re.search(r"azurerm_role_assignment", code))
+        
+        # Check for private endpoint
+        has_private_endpoint = bool(re.search(r"azurerm_private_endpoint.*log_analytics", code, re.DOTALL))
+        
+        if has_log_analytics and has_rbac:
+            line_num = self.get_line_number(code, "azurerm_role_assignment") or self.get_line_number(code, "azurerm_log_analytics_workspace")
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-08",
+                severity=Severity.INFO,
+                title="Log data access properly restricted",
+                description="Least-privilege RBAC configured for Log Analytics workspace access.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Regularly review log access permissions and use PIM for just-in-time access. Consider adding Private Link endpoints.",
+                good_practice=True
+            ))
+        elif has_log_analytics:
+            line_num = self.get_line_number(code, "azurerm_log_analytics_workspace")
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-08",
+                severity=Severity.HIGH,
+                title="Log data access not restricted",
+                description="Log Analytics workspace without RBAC role assignments. FedRAMP 20x requires least-privileged access for log data.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure workspace-level RBAC:\n```hcl\n# Log Analytics workspace\nresource \"azurerm_log_analytics_workspace\" \"law\" {\n  name                = \"law-${random_id.suffix.hex}\"\n  resource_group_name = azurerm_resource_group.rg.name\n  location            = azurerm_resource_group.rg.location\n  sku                 = \"PerGB2018\"\n  retention_in_days   = 365\n}\n\n# RBAC: Log Analytics Reader\nresource \"azurerm_role_assignment\" \"log_reader\" {\n  scope                = azurerm_log_analytics_workspace.law.id\n  role_definition_name = \"Log Analytics Reader\"\n  principal_id         = data.azurerm_client_config.current.object_id\n}\n\n# Private endpoint for secure access\nresource \"azurerm_private_endpoint\" \"pe_law\" {\n  name                = \"pe-law\"\n  location            = azurerm_resource_group.rg.location\n  resource_group_name = azurerm_resource_group.rg.name\n  subnet_id           = azurerm_subnet.subnet.id\n\n  private_service_connection {\n    name                           = \"law-connection\"\n    private_connection_resource_id = azurerm_log_analytics_workspace.law.id\n    is_manual_connection           = false\n    subresource_names              = [\"azuremonitor\"]\n  }\n}\n```\nSource: Azure Monitor - Access control (https://learn.microsoft.com/azure/azure-monitor/logs/manage-access)"
+            ))
+    
+    def _check_secure_configuration(self, code: str, file_path: str) -> None:
+        """Check for secure-by-default configurations (KSI-AFR-07)."""
+        # Check for secure defaults
+        has_https_only = bool(re.search(r"https_only\s*=\s*true", code))
+        has_min_tls = bool(re.search(r"(min_tls_version|minimum_tls_version)\s*=\s*\"(1\.2|TLS1_2)\"", code))
+        has_public_access_disabled = bool(re.search(r"public_network_access_enabled\s*=\s*false", code))
+        
+        # Check for insecure configurations
+        has_public_blob_access = bool(re.search(r"allow_nested_items_to_be_public\s*=\s*true", code))
+        has_public_network_enabled = bool(re.search(r"public_network_access_enabled\s*=\s*true", code))
+        has_weak_tls = bool(re.search(r"(min_tls_version|minimum_tls_version)\s*=\s*\"(1\.[01]|TLS1_[01])\"", code))
+        
+        secure_defaults = sum([has_https_only, has_min_tls, has_public_access_disabled])
+        insecure_configs = sum([has_public_blob_access, has_public_network_enabled, has_weak_tls])
+        
+        if insecure_configs > 0:
+            line_num = self.get_line_number(code, "public_network_access_enabled.*true") or self.get_line_number(code, "allow_nested_items_to_be_public.*true")
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-07",
+                severity=Severity.HIGH,
+                title="Insecure default configurations detected",
+                description="Resources configured with insecure defaults. FedRAMP 20x requires secure-by-default configurations.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Apply secure default configurations:\n```hcl\n# App Service secure defaults\nresource \"azurerm_linux_web_app\" \"app\" {\n  name                = \"app-${random_id.suffix.hex}\"\n  resource_group_name = azurerm_resource_group.rg.name\n  location            = azurerm_resource_group.rg.location\n  service_plan_id     = azurerm_service_plan.plan.id\n  https_only          = true  # Redirect HTTP to HTTPS\n\n  site_config {\n    minimum_tls_version = \"1.2\"\n    ftps_state          = \"Disabled\"  # Disable FTP\n    http2_enabled       = true\n    always_on           = true\n  }\n}\n\n# Storage account secure defaults\nresource \"azurerm_storage_account\" \"storage\" {\n  name                            = \"st${random_id.suffix.hex}\"\n  resource_group_name             = azurerm_resource_group.rg.name\n  location                        = azurerm_resource_group.rg.location\n  account_tier                    = \"Standard\"\n  account_replication_type        = \"GRS\"\n  allow_nested_items_to_be_public = false  # No anonymous access\n  public_network_access_enabled   = false  # Private endpoints only\n  min_tls_version                 = \"TLS1_2\"\n  enable_https_traffic_only       = true\n  shared_access_key_enabled       = false  # Force Azure AD auth\n\n  infrastructure_encryption_enabled = true  # Double encryption\n}\n\n# SQL Server secure defaults\nresource \"azurerm_mssql_server\" \"sql\" {\n  name                         = \"sql-${random_id.suffix.hex}\"\n  resource_group_name          = azurerm_resource_group.rg.name\n  location                     = azurerm_resource_group.rg.location\n  version                      = \"12.0\"\n  minimum_tls_version          = \"1.2\"\n  public_network_access_enabled = false\n\n  azuread_administrator {\n    login_username = \"AzureAD Admin\"\n    object_id      = data.azurerm_client_config.current.object_id\n  }\n}\n```\nSource: Azure Security Baseline - Secure configuration (https://learn.microsoft.com/security/benchmark/azure/security-controls-v3-posture-vulnerability-management)"
+            ))
+        elif secure_defaults == 0:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-07",
+                severity=Severity.MEDIUM,
+                title="Secure default configurations not enforced",
+                description="Missing secure-by-default settings. FedRAMP 20x requires documented secure configurations.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Apply secure defaults: HTTPS only, TLS 1.2+, disable public access, Azure AD authentication."
+            ))
+        else:
+            line_num = self.get_line_number(code, "https_only") or self.get_line_number(code, "min_tls_version")
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-07",
+                severity=Severity.INFO,
+                title="Secure default configurations applied",
+                description="Resources configured with secure defaults (HTTPS, TLS 1.2+, restricted access).",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Document secure configuration standards and use Azure Policy to enforce organization-wide.",
+                good_practice=True
+            ))
+    
+    def _check_microservices_security(self, code: str, file_path: str) -> None:
+        """Check for microservices security configuration (KSI-CNA-08)."""
+        # Check for AKS with service mesh
+        has_aks_service_mesh = bool(re.search(r"azurerm_kubernetes_cluster.*service_mesh_profile", code, re.DOTALL))
+        
+        # Check for Container Apps with Dapr
+        has_container_apps_dapr = bool(re.search(r"azurerm_container_app.*dapr", code, re.DOTALL))
+        
+        # Check for API Management
+        has_apim = bool(re.search(r"azurerm_api_management", code))
+        
+        # Check for network policies
+        has_network_policy = bool(re.search(r"network_policy", code))
+        
+        if not has_aks_service_mesh and not has_container_apps_dapr and not has_apim:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-CNA-08",
+                severity=Severity.MEDIUM,
+                title="Microservices security controls missing",
+                description="Missing service mesh or API gateway. FedRAMP 20x requires persistent security posture assessment for machine-based resources.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure service mesh or API Management:\n```hcl\n# AKS with service mesh\nresource \"azurerm_kubernetes_cluster\" \"aks\" {\n  name                = \"aks-${random_id.suffix.hex}\"\n  location            = azurerm_resource_group.rg.location\n  resource_group_name = azurerm_resource_group.rg.name\n  dns_prefix          = \"aks\"\n\n  service_mesh_profile {\n    mode = \"Istio\"  # Enable Istio service mesh\n    internal_ingress_gateway_enabled = true\n    external_ingress_gateway_enabled = false\n  }\n\n  network_profile {\n    network_plugin = \"azure\"\n    network_policy = \"cilium\"  # Or 'azure', 'calico'\n  }\n\n  default_node_pool {\n    name       = \"default\"\n    node_count = 3\n    vm_size    = \"Standard_D2s_v3\"\n  }\n}\n\n# Container Apps with Dapr\nresource \"azurerm_container_app\" \"app\" {\n  name                         = \"app-${random_id.suffix.hex}\"\n  container_app_environment_id = azurerm_container_app_environment.env.id\n  resource_group_name          = azurerm_resource_group.rg.name\n  revision_mode                = \"Single\"\n\n  template {\n    container {\n      name   = \"app\"\n      image  = \"mcr.microsoft.com/azuredocs/aci-helloworld:latest\"\n      cpu    = 0.25\n      memory = \"0.5Gi\"\n    }\n  }\n\n  dapr {\n    app_id       = \"myapp\"\n    app_protocol = \"grpc\"\n    app_port     = 3000\n  }\n\n  ingress {\n    external_enabled = false  # Internal only\n    target_port      = 3000\n    transport        = \"http2\"  # gRPC support\n  }\n}\n\n# API Management for microservices gateway\nresource \"azurerm_api_management\" \"apim\" {\n  name                = \"apim-${random_id.suffix.hex}\"\n  location            = azurerm_resource_group.rg.location\n  resource_group_name = azurerm_resource_group.rg.name\n  publisher_name      = \"FedRAMP Publisher\"\n  publisher_email     = \"admin@example.com\"\n  sku_name            = \"Premium_1\"\n  virtual_network_type = \"Internal\"\n}\n```\nSource: Azure WAF Security - Application security (https://learn.microsoft.com/azure/well-architected/security/application-design)"
+            ))
+        else:
+            line_num = self.get_line_number(code, "service_mesh_profile") or self.get_line_number(code, "dapr") or self.get_line_number(code, "azurerm_api_management")
+            recommendation = "Monitor service mesh metrics and regularly review service-to-service authentication policies."
+            if (has_aks_service_mesh or has_container_apps_dapr) and not has_network_policy:
+                recommendation += " Consider adding network policies to enforce pod-to-pod communication rules."
+            self.add_finding(Finding(
+                requirement_id="KSI-CNA-08",
+                severity=Severity.INFO,
+                title="Microservices security controls configured",
+                description="Service mesh or API gateway provides security posture assessment and mTLS.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation=recommendation,
+                good_practice=True
+            ))
+    
+    def _check_incident_after_action(self, code: str, file_path: str) -> None:
+        """Check for incident after-action reporting (KSI-INR-03)."""
+        # Check for Logic Apps
+        has_logic_app = bool(re.search(r"azurerm_logic_app_workflow", code))
+        
+        # Check for Automation accounts
+        has_automation = bool(re.search(r"azurerm_automation_account", code))
+        
+        # Check for Functions (serverless workflows)
+        has_functions = bool(re.search(r"azurerm_function_app", code))
+        
+        if not has_logic_app and not has_automation and not has_functions:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-INR-03",
+                severity=Severity.MEDIUM,
+                title="Incident after-action reporting not automated",
+                description="Missing automation for incident after-action reports. FedRAMP 20x requires generating after-action reports and incorporating lessons learned.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure automated incident after-action reporting:\n```hcl\n# Logic App for incident after-action\nresource \"azurerm_logic_app_workflow\" \"incident_workflow\" {\n  name                = \"incident-after-action\"\n  location            = azurerm_resource_group.rg.location\n  resource_group_name = azurerm_resource_group.rg.name\n}\n\n# Cosmos DB for incident reports\nresource \"azurerm_cosmosdb_account\" \"cosmos\" {\n  name                = \"cosmos-incidents\"\n  location            = azurerm_resource_group.rg.location\n  resource_group_name = azurerm_resource_group.rg.name\n  offer_type          = \"Standard\"\n\n  consistency_policy {\n    consistency_level = \"Session\"\n  }\n\n  geo_location {\n    location          = azurerm_resource_group.rg.location\n    failover_priority = 0\n  }\n}\n\n# Automation runbook for lessons learned\nresource \"azurerm_automation_account\" \"automation\" {\n  name                = \"auto-incident-review\"\n  location            = azurerm_resource_group.rg.location\n  resource_group_name = azurerm_resource_group.rg.name\n  sku_name            = \"Basic\"\n}\n\nresource \"azurerm_automation_runbook\" \"runbook\" {\n  name                    = \"Integrate-LessonsLearned\"\n  location                = azurerm_resource_group.rg.location\n  resource_group_name     = azurerm_resource_group.rg.name\n  automation_account_name = azurerm_automation_account.automation.name\n  log_verbose             = true\n  log_progress            = true\n  description             = \"Quarterly review to integrate lessons learned\"\n  runbook_type            = \"PowerShell\"\n}\n```\nSource: Azure Sentinel - Incident management (https://learn.microsoft.com/azure/sentinel/incident-investigation)"
+            ))
+        else:
+            line_num = self.get_line_number(code, "azurerm_logic_app_workflow") or self.get_line_number(code, "azurerm_automation_account")
+            self.add_finding(Finding(
+                requirement_id="KSI-INR-03",
+                severity=Severity.INFO,
+                title="Incident after-action automation configured",
+                description="Automation workflows configured for incident after-action reporting.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Conduct quarterly reviews to incorporate lessons learned into security procedures.",
+                good_practice=True
+            ))
+    
+    def _check_change_management(self, code: str, file_path: str) -> None:
+        """Check for change management procedure implementation (KSI-CMT-04)."""
+        # Check for resource tags with change tracking
+        has_change_tags = bool(re.search(r"tags\s*=\s*\{[^}]*(changeTicket|changeId|deploymentId|version)", code, re.IGNORECASE))
+        
+        # Check for deployment slots
+        has_deployment_slots = bool(re.search(r"azurerm_(linux|windows)_web_app_slot", code))
+        
+        # Check for Traffic Manager (blue-green deployments)
+        has_traffic_manager = bool(re.search(r"azurerm_traffic_manager_profile", code))
+        
+        # Check for resource locks
+        has_locks = bool(re.search(r"azurerm_management_lock", code))
+        
+        if not has_change_tags and not has_deployment_slots and not has_traffic_manager:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-CMT-04",
+                severity=Severity.MEDIUM,
+                title="Change management procedures not implemented",
+                description="Missing change tracking tags and staged deployment patterns. FedRAMP 20x requires documented change management procedures.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Implement change management in IaC:\n```hcl\n# Resource tags for change tracking\nlocals {\n  change_tags = {\n    changeTicket  = \"CHG-12345\"  # ServiceNow/ADO work item\n    deployedBy    = \"pipeline-name\"\n    deploymentId  = \"${timestamp()}\"\n    version       = \"v1.2.3\"\n    environment   = \"production\"\n    approvedBy    = \"security-team@company.com\"\n  }\n}\n\n# App Service with deployment slots\nresource \"azurerm_linux_web_app\" \"app\" {\n  name                = \"app-${random_id.suffix.hex}\"\n  resource_group_name = azurerm_resource_group.rg.name\n  location            = azurerm_resource_group.rg.location\n  service_plan_id     = azurerm_service_plan.plan.id\n  tags                = local.change_tags\n}\n\nresource \"azurerm_linux_web_app_slot\" \"staging\" {\n  name           = \"staging\"\n  app_service_id = azurerm_linux_web_app.app.id\n  tags           = local.change_tags\n\n  site_config {}\n}\n\n# Traffic Manager for blue-green deployment\nresource \"azurerm_traffic_manager_profile\" \"tm\" {\n  name                   = \"tm-${random_id.suffix.hex}\"\n  resource_group_name    = azurerm_resource_group.rg.name\n  traffic_routing_method = \"Weighted\"\n  tags                   = local.change_tags\n\n  dns_config {\n    relative_name = \"tm-${random_id.suffix.hex}\"\n    ttl           = 60\n  }\n}\n\nresource \"azurerm_traffic_manager_azure_endpoint\" \"blue\" {\n  name               = \"blue\"\n  profile_id         = azurerm_traffic_manager_profile.tm.id\n  weight             = 100  # Current stable\n  target_resource_id = azurerm_linux_web_app.app_blue.id\n}\n\nresource \"azurerm_traffic_manager_azure_endpoint\" \"green\" {\n  name               = \"green\"\n  profile_id         = azurerm_traffic_manager_profile.tm.id\n  weight             = 0  # Ready for cutover\n  target_resource_id = azurerm_linux_web_app.app_green.id\n}\n\n# Resource locks to prevent accidental changes\nresource \"azurerm_management_lock\" \"production_lock\" {\n  name       = \"production-lock\"\n  scope      = azurerm_linux_web_app.app.id\n  lock_level = \"CanNotDelete\"\n  notes      = \"Production resource - requires change management approval\"\n}\n```\nSource: Azure CAF - Change management (https://learn.microsoft.com/azure/cloud-adoption-framework/ready/considerations/development-strategy-development-lifecycle)"
+            ))
+        else:
+            line_num = self.get_line_number(code, "changeTicket") or self.get_line_number(code, "azurerm.*_slot")
+            self.add_finding(Finding(
+                requirement_id="KSI-CMT-04",
+                severity=Severity.INFO,
+                title="Change management procedures implemented",
+                description="Change tracking tags and staged deployment patterns configured for controlled rollouts.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Document change management procedures and integrate with ITSM system for audit trail.",
+                good_practice=True
+            ))
