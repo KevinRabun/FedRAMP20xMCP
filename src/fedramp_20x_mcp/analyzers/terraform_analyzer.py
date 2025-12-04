@@ -92,13 +92,63 @@ class TerraformAnalyzer(BaseAnalyzer):
     
     def _check_diagnostic_settings(self, code: str, file_path: str) -> None:
         """Check if resources have diagnostic settings enabled (KSI-MLA-05)."""
-        # Find Azure resources that should have logging
+        # Find Azure resources that should have logging per FedRAMP AU-12 requirements
+        # Source: Azure Policy FedRAMP compliance (https://learn.microsoft.com/azure/azure-monitor/fundamentals/security-controls-policy)
         loggable_resources = [
+            # Compute
+            r"resource\s+\"azurerm_virtual_machine\"",
+            r"resource\s+\"azurerm_linux_virtual_machine\"",
+            r"resource\s+\"azurerm_windows_virtual_machine\"",
+            r"resource\s+\"azurerm_kubernetes_cluster\"",
+            r"resource\s+\"azurerm_batch_account\"",
+            r"resource\s+\"azurerm_app_service\"",
+            r"resource\s+\"azurerm_linux_web_app\"",
+            r"resource\s+\"azurerm_windows_web_app\"",
+            r"resource\s+\"azurerm_service_plan\"",
+            
+            # Storage & Data
             r"resource\s+\"azurerm_storage_account\"",
             r"resource\s+\"azurerm_mssql_server\"",
+            r"resource\s+\"azurerm_postgresql_server\"",
+            r"resource\s+\"azurerm_mysql_server\"",
+            r"resource\s+\"azurerm_cosmosdb_account\"",
+            r"resource\s+\"azurerm_data_lake_store\"",
+            r"resource\s+\"azurerm_data_lake_analytics_account\"",
+            r"resource\s+\"azurerm_synapse_workspace\"",
+            
+            # Security & Identity
             r"resource\s+\"azurerm_key_vault\"",
-            r"resource\s+\"azurerm_app_service\"",
-            r"resource\s+\"azurerm_kubernetes_cluster\"",
+            r"resource\s+\"azurerm_key_vault_managed_hardware_security_module\"",
+            
+            # Networking
+            r"resource\s+\"azurerm_application_gateway\"",
+            r"resource\s+\"azurerm_firewall\"",
+            r"resource\s+\"azurerm_network_security_group\"",
+            r"resource\s+\"azurerm_public_ip\"",
+            r"resource\s+\"azurerm_lb\"",  # Load Balancer
+            r"resource\s+\"azurerm_virtual_network_gateway\"",
+            r"resource\s+\"azurerm_cdn_profile\"",
+            
+            # Integration & Messaging
+            r"resource\s+\"azurerm_eventhub_namespace\"",
+            r"resource\s+\"azurerm_servicebus_namespace\"",
+            r"resource\s+\"azurerm_logic_app_workflow\"",
+            r"resource\s+\"azurerm_stream_analytics_job\"",
+            r"resource\s+\"azurerm_eventgrid_topic\"",
+            r"resource\s+\"azurerm_api_management\"",
+            
+            # Analytics & AI
+            r"resource\s+\"azurerm_machine_learning_workspace\"",
+            r"resource\s+\"azurerm_cognitive_account\"",
+            r"resource\s+\"azurerm_databricks_workspace\"",
+            
+            # Containers
+            r"resource\s+\"azurerm_container_registry\"",
+            r"resource\s+\"azurerm_container_group\"",
+            
+            # Automation & Management
+            r"resource\s+\"azurerm_automation_account\"",
+            r"resource\s+\"azurerm_recovery_services_vault\"",
         ]
         
         has_loggable_resource = False

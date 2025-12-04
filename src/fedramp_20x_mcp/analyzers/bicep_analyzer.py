@@ -154,13 +154,59 @@ class BicepAnalyzer(BaseAnalyzer):
     
     def _check_diagnostic_settings(self, code: str, file_path: str) -> None:
         """Check if resources have diagnostic settings enabled (KSI-MLA-05)."""
-        # Find Azure resources that should have logging
+        # Find Azure resources that should have logging per FedRAMP AU-12 requirements
+        # Source: Azure Policy FedRAMP compliance (https://learn.microsoft.com/azure/azure-monitor/fundamentals/security-controls-policy)
         loggable_resources = [
+            # Compute
+            r"resource\s+\w+\s+'Microsoft\.Compute/virtualMachines@",
+            r"resource\s+\w+\s+'Microsoft\.ContainerService/managedClusters@",
+            r"resource\s+\w+\s+'Microsoft\.Batch/batchAccounts@",
+            r"resource\s+\w+\s+'Microsoft\.Web/sites@",  # App Service
+            r"resource\s+\w+\s+'Microsoft\.Web/serverFarms@",  # App Service Plan
+            
+            # Storage & Data
             r"resource\s+\w+\s+'Microsoft\.Storage/storageAccounts@",
             r"resource\s+\w+\s+'Microsoft\.Sql/servers@",
+            r"resource\s+\w+\s+'Microsoft\.DBforPostgreSQL/servers@",
+            r"resource\s+\w+\s+'Microsoft\.DBforMySQL/servers@",
+            r"resource\s+\w+\s+'Microsoft\.DocumentDB/databaseAccounts@",  # Cosmos DB
+            r"resource\s+\w+\s+'Microsoft\.DataLakeStore/accounts@",
+            r"resource\s+\w+\s+'Microsoft\.DataLakeAnalytics/accounts@",
+            r"resource\s+\w+\s+'Microsoft\.Synapse/workspaces@",
+            
+            # Security & Identity
             r"resource\s+\w+\s+'Microsoft\.KeyVault/vaults@",
-            r"resource\s+\w+\s+'Microsoft\.Web/sites@",
-            r"resource\s+\w+\s+'Microsoft\.ContainerService/managedClusters@",
+            r"resource\s+\w+\s+'Microsoft\.KeyVault/managedHSMs@",
+            
+            # Networking
+            r"resource\s+\w+\s+'Microsoft\.Network/applicationGateways@",
+            r"resource\s+\w+\s+'Microsoft\.Network/azureFirewalls@",
+            r"resource\s+\w+\s+'Microsoft\.Network/networkSecurityGroups@",
+            r"resource\s+\w+\s+'Microsoft\.Network/publicIPAddresses@",
+            r"resource\s+\w+\s+'Microsoft\.Network/loadBalancers@",
+            r"resource\s+\w+\s+'Microsoft\.Network/virtualNetworkGateways@",
+            r"resource\s+\w+\s+'Microsoft\.Cdn/profiles@",
+            
+            # Integration & Messaging
+            r"resource\s+\w+\s+'Microsoft\.EventHub/namespaces@",
+            r"resource\s+\w+\s+'Microsoft\.ServiceBus/namespaces@",
+            r"resource\s+\w+\s+'Microsoft\.Logic/workflows@",
+            r"resource\s+\w+\s+'Microsoft\.StreamAnalytics/streamingjobs@",
+            r"resource\s+\w+\s+'Microsoft\.EventGrid/topics@",
+            r"resource\s+\w+\s+'Microsoft\.ApiManagement/service@",
+            
+            # Analytics & AI
+            r"resource\s+\w+\s+'Microsoft\.MachineLearningServices/workspaces@",
+            r"resource\s+\w+\s+'Microsoft\.CognitiveServices/accounts@",
+            r"resource\s+\w+\s+'Microsoft\.Databricks/workspaces@",
+            
+            # Containers
+            r"resource\s+\w+\s+'Microsoft\.ContainerRegistry/registries@",
+            r"resource\s+\w+\s+'Microsoft\.ContainerInstance/containerGroups@",
+            
+            # Automation & Management
+            r"resource\s+\w+\s+'Microsoft\.Automation/automationAccounts@",
+            r"resource\s+\w+\s+'Microsoft\.RecoveryServices/vaults@",
         ]
         
         has_loggable_resource = False
