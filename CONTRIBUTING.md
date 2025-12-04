@@ -46,9 +46,12 @@ This project follows a professional and respectful code of conduct. Please be co
    - Add examples if applicable
 
 5. **Submit the pull request**
-   - Provide a clear description of the changes
-   - Reference any related issues
+   - Use the PR template (automatically populated)
+   - Complete all relevant sections of the template
+   - Reference any related issues (use `Fixes #123` or `Relates to #456`)
    - Ensure CI/CD checks pass
+   - Complete the security checklist
+   - Request review from maintainers
 
 ## Development Setup
 
