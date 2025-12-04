@@ -1,0 +1,141 @@
+2025-12-04 11:42:07,956 - src.fedramp_20x_mcp.tools - INFO - Registered 29 tools across 8 modules
+2025-12-04 11:42:07,985 - src.fedramp_20x_mcp.data_loader - INFO - Loaded data from cache
+Total KSIs: 72
+Implemented: 37
+Remaining: 35
+
+
+AFR (8 KSIs):
+  KSI-AFR-04: Vulnerability Detection and Response
+    Document the vulnerability detection and vulnerability response methodology used within the cloud se...
+  KSI-AFR-05: Significant Change Notifications
+    Determine how significant changes will be tracked and how all necessary parties will be notified in ...
+  KSI-AFR-06: Collaborative Continuous Monitoring
+    Maintain a plan and process for providing Ongoing Authorization Reports and Quarterly Reviews for al...
+  KSI-AFR-07: Recommended Secure Configuration
+    Develop secure by default configurations and provide guidance for secure configuration of the cloud ...
+  KSI-AFR-08: FedRAMP Security Inbox
+    Operate a secure inbox to receive critical communication from FedRAMP and other government entities ...
+  KSI-AFR-09: Persistent Validation and Assessment
+    Persistently validate, assess, and report on the effectiveness and status of security decisions and ...
+  KSI-AFR-10: Incident Communications Procedures
+    Integrate FedRAMP's Incident Communications Procedures (ICP) into incident response procedures and p...
+  KSI-AFR-11: Using Cryptographic Modules
+    Ensure that cryptographic modules used to protect potentially sensitive federal customer data are se...
+
+CED (3 KSIs):
+  KSI-CED-02: Role-Specific Education
+    Require and monitor the effectiveness of role-specific training for high risk roles, including at le...
+  KSI-CED-03: Development and Engineering Education
+    Require and monitor the effectiveness of role-specific training provided to development and engineer...
+  KSI-CED-04: Incident Response and Disaster Recovery Education
+    Require and monitor the effectiveness of role-specific training to staff involved with incident resp...
+
+CMT (2 KSIs):
+  KSI-CMT-04: Change Management Procedure
+    Always follow a documented change management procedure.
+  KSI-CMT-05: Unknown
+    
+
+CNA (3 KSIs):
+  KSI-CNA-03: Enforce Traffic Flow
+    Use logical networking and related capabilities to enforce traffic flow controls.
+  KSI-CNA-05: Unwanted Activity
+    Protect against denial of service attacks and other unwanted activity.
+  KSI-CNA-08: Persistent Assessment and Automated Enforcement
+    Use automated services to persistently assess the security posture of all machine-based information ...
+
+IAM (1 KSIs):
+  KSI-IAM-05: Least Privilege
+    Configure identity and access management with measures that always verify each user or device can on...
+
+INR (1 KSIs):
+  KSI-INR-03: Incident After Action Reports
+    Generate after action reports and _regularly_ incorporate lessons learned into operations.
+
+MLA (2 KSIs):
+  KSI-MLA-07: Event Types
+    Maintain a list of information resources and event types that will be monitored, logged, and audited...
+  KSI-MLA-08: Log Data Access
+    Use a least-privileged, role and attribute-based, and just-in-time access authorization model for ac...
+
+PIY (5 KSIs):
+  KSI-PIY-04: CISA Secure By Design
+    Monitor the effectiveness of building security and privacy considerations into the Software Developm...
+  KSI-PIY-05: Evaluate Implementations
+    Document methods used to evaluate _information resource_ implementations.
+  KSI-PIY-06: Security Investment Effectiveness
+    Monitor the effectiveness of the organization's investments in achieving security objectives.
+  KSI-PIY-07: Supply Chain Risk Management
+    Document risk management decisions for software supply chain security.
+  KSI-PIY-08: Executive Support
+    Regularly measure executive support for achieving the organizationΓÇÖs security objectives.
+
+RPL (4 KSIs):
+  KSI-RPL-01: Recovery Objectives
+    Define Recovery Time Objectives (RTO) and Recovery Point Objectives (RPO).
+  KSI-RPL-02: Recovery Plan
+    Develop and maintain a recovery plan that aligns with the defined recovery objectives.
+  KSI-RPL-03: System Backups
+    Perform system backups aligned with recovery objectives.
+  KSI-RPL-04: Recovery Testing
+    _Regularly_ test the capability to recover from incidents and contingencies.
+
+SVC (2 KSIs):
+  KSI-SVC-09: Communication Integrity
+    Persistently validate the authenticity and integrity of communications between _machine-based_ _info...
+  KSI-SVC-10: Data Destruction
+    Remove unwanted federal customer data promptly when requested by an agency in alignment with custome...
+
+TPR (4 KSIs):
+  KSI-TPR-01: Unknown
+    
+  KSI-TPR-02: Unknown
+    
+  KSI-TPR-03: Supply Chain Risk Management
+    Identify and prioritize mitigation of potential supply chain risks.
+  KSI-TPR-04: Supply Chain Risk Monitoring
+    Automatically monitor third party software _information resources_ for upstream vulnerabilities usin...
+
+================================================================================
+IaC ANALYSIS SUITABILITY
+================================================================================
+
+IaC-Suitable KSIs (24):
+  KSI-AFR-07: Recommended Secure Configuration
+  KSI-AFR-08: FedRAMP Security Inbox
+  KSI-AFR-11: Using Cryptographic Modules
+  KSI-CED-04: Incident Response and Disaster Recovery Education
+  KSI-CMT-05: Unknown
+  KSI-CNA-03: Enforce Traffic Flow
+  KSI-CNA-05: Unwanted Activity
+  KSI-IAM-05: Least Privilege
+  KSI-MLA-07: Event Types
+  KSI-MLA-08: Log Data Access
+  KSI-PIY-04: CISA Secure By Design
+  KSI-PIY-05: Evaluate Implementations
+  KSI-PIY-06: Security Investment Effectiveness
+  KSI-PIY-07: Supply Chain Risk Management
+  KSI-PIY-08: Executive Support
+  KSI-RPL-01: Recovery Objectives
+  KSI-RPL-02: Recovery Plan
+  KSI-RPL-03: System Backups
+  KSI-RPL-04: Recovery Testing
+  KSI-SVC-09: Communication Integrity
+  KSI-SVC-10: Data Destruction
+  KSI-TPR-01: Unknown
+  KSI-TPR-02: Unknown
+  KSI-TPR-03: Supply Chain Risk Management
+
+Runtime-Only KSIs (11):
+  KSI-AFR-04: Vulnerability Detection and Response
+  KSI-AFR-05: Significant Change Notifications
+  KSI-AFR-06: Collaborative Continuous Monitoring
+  KSI-AFR-09: Persistent Validation and Assessment
+  KSI-AFR-10: Incident Communications Procedures
+  KSI-CED-02: Role-Specific Education
+  KSI-CED-03: Development and Engineering Education
+  KSI-CMT-04: Change Management Procedure
+  KSI-CNA-08: Persistent Assessment and Automated Enforcement
+  KSI-INR-03: Incident After Action Reports
+  KSI-TPR-04: Supply Chain Risk Monitoring

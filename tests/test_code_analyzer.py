@@ -1451,6 +1451,411 @@ def test_bicep_with_threat_intelligence():
     print(f"✅ Recognized threat intelligence: {good_practices[0].title}")
 
 
+# Phase 6A Tests: Recovery & Infrastructure
+
+def test_bicep_missing_recovery_objectives():
+    """Test detection of missing recovery objectives."""
+    print("\n=== Testing Bicep: Missing Recovery Objectives (KSI-RPL-01) ===")
+    
+    code = """
+    resource vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {
+      name: 'criticalVM'
+      location: location
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "vm.bicep")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-RPL-01" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing recovery objectives"
+    assert findings[0].severity == Severity.HIGH
+    print(f"✅ Detected missing recovery objectives: {findings[0].title}")
+
+
+def test_bicep_with_recovery_objectives():
+    """Test that recovery objectives are recognized."""
+    print("\n=== Testing Bicep: With Recovery Objectives (KSI-RPL-01) ===")
+    
+    code = """
+    resource recoveryVault 'Microsoft.RecoveryServices/vaults@2023-01-01' = {
+      name: 'recovery-vault'
+      location: location
+      sku: { name: 'Standard' }
+      tags: {
+        rto: '4hours'
+        rpo: '1hour'
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "recovery.bicep")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-RPL-01" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize recovery objectives"
+    print(f"✅ Recognized recovery objectives: {good_practices[0].title}")
+
+
+def test_bicep_missing_recovery_plan():
+    """Test detection of missing recovery plan."""
+    print("\n=== Testing Bicep: Missing Recovery Plan (KSI-RPL-02) ===")
+    
+    code = """
+    resource vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {
+      name: 'criticalVM'
+      location: location
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "vm.bicep")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-RPL-02" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing recovery plan"
+    assert findings[0].severity == Severity.HIGH
+    print(f"✅ Detected missing recovery plan: {findings[0].title}")
+
+
+def test_bicep_with_recovery_plan():
+    """Test that recovery plan is recognized."""
+    print("\n=== Testing Bicep: With Recovery Plan (KSI-RPL-02) ===")
+    
+    code = """
+    resource vault 'Microsoft.RecoveryServices/vaults@2023-01-01' = {
+      name: 'vault'
+      location: location
+    }
+    
+    resource recoveryPlan 'Microsoft.RecoveryServices/vaults/replicationRecoveryPlans@2023-01-01' = {
+      parent: vault
+      name: 'dr-plan'
+      properties: {
+        primaryFabricId: 'fabric1'
+        recoveryFabricId: 'fabric2'
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "recovery-plan.bicep")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-RPL-02" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize recovery plan"
+    print(f"✅ Recognized recovery plan: {good_practices[0].title}")
+
+
+def test_bicep_missing_system_backups():
+    """Test detection of missing system backups."""
+    print("\n=== Testing Bicep: Missing System Backups (KSI-RPL-03) ===")
+    
+    code = """
+    resource vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {
+      name: 'criticalVM'
+      location: location
+    }
+    
+    resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
+      name: 'sqlserver'
+      location: location
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "resources.bicep")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-RPL-03" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing system backups"
+    assert findings[0].severity == Severity.HIGH
+    print(f"✅ Detected missing system backups: {findings[0].title}")
+
+
+def test_bicep_with_system_backups():
+    """Test that system backups are recognized."""
+    print("\n=== Testing Bicep: With System Backups (KSI-RPL-03) ===")
+    
+    code = """
+    resource backupVault 'Microsoft.RecoveryServices/vaults@2023-01-01' = {
+      name: 'backup-vault'
+      location: location
+    }
+    
+    resource backupPolicy 'Microsoft.RecoveryServices/vaults/backupPolicies@2023-01-01' = {
+      parent: backupVault
+      name: 'VMBackupPolicy'
+      properties: {
+        backupManagementType: 'AzureIaasVM'
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "backup.bicep")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-RPL-03" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize system backups"
+    print(f"✅ Recognized system backups: {good_practices[0].title}")
+
+
+def test_bicep_missing_recovery_testing():
+    """Test detection of missing recovery testing."""
+    print("\n=== Testing Bicep: Missing Recovery Testing (KSI-RPL-04) ===")
+    
+    code = """
+    resource vault 'Microsoft.RecoveryServices/vaults@2023-01-01' = {
+      name: 'vault'
+      location: location
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "vault.bicep")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-RPL-04" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing recovery testing"
+    assert findings[0].severity == Severity.MEDIUM
+    print(f"✅ Detected missing recovery testing: {findings[0].title}")
+
+
+def test_bicep_with_recovery_testing():
+    """Test that recovery testing automation is recognized."""
+    print("\n=== Testing Bicep: With Recovery Testing (KSI-RPL-04) ===")
+    
+    code = """
+    resource automationAccount 'Microsoft.Automation/automationAccounts@2023-11-01' = {
+      name: 'automation'
+      location: location
+    }
+    
+    resource testRunbook 'Microsoft.Automation/automationAccounts/runbooks@2023-11-01' = {
+      parent: automationAccount
+      name: 'Test-Recovery'
+      properties: {
+        runbookType: 'PowerShell'
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "recovery-test.bicep")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-RPL-04" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize recovery testing"
+    print(f"✅ Recognized recovery testing: {good_practices[0].title}")
+
+
+def test_bicep_missing_traffic_flow():
+    """Test detection of missing traffic flow controls."""
+    print("\n=== Testing Bicep: Missing Traffic Flow (KSI-CNA-03) ===")
+    
+    code = """
+    resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
+      name: 'vnet'
+      location: location
+      properties: {
+        addressSpace: { addressPrefixes: ['10.0.0.0/16'] }
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "vnet.bicep")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-CNA-03" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing traffic flow controls"
+    assert findings[0].severity == Severity.HIGH
+    print(f"✅ Detected missing traffic flow: {findings[0].title}")
+
+
+def test_bicep_with_traffic_flow():
+    """Test that traffic flow controls are recognized."""
+    print("\n=== Testing Bicep: With Traffic Flow (KSI-CNA-03) ===")
+    
+    code = """
+    resource firewall 'Microsoft.Network/azureFirewalls@2023-05-01' = {
+      name: 'firewall'
+      location: location
+    }
+    
+    resource networkWatcher 'Microsoft.Network/networkWatchers@2023-05-01' = {
+      name: 'networkWatcher'
+      location: location
+    }
+    
+    resource flowLog 'Microsoft.Network/networkWatchers/flowLogs@2023-05-01' = {
+      parent: networkWatcher
+      name: 'nsg-flow-log'
+      properties: {
+        enabled: true
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "firewall.bicep")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-CNA-03" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize traffic flow controls"
+    print(f"✅ Recognized traffic flow: {good_practices[0].title}")
+
+
+def test_bicep_missing_ddos_protection():
+    """Test detection of missing DDoS protection."""
+    print("\n=== Testing Bicep: Missing DDoS Protection (KSI-CNA-05) ===")
+    
+    code = """
+    resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
+      name: 'vnet'
+      location: location
+      properties: {
+        addressSpace: { addressPrefixes: ['10.0.0.0/16'] }
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "vnet.bicep")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-CNA-05" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing DDoS protection"
+    assert findings[0].severity == Severity.HIGH
+    print(f"✅ Detected missing DDoS protection: {findings[0].title}")
+
+
+def test_bicep_with_ddos_protection():
+    """Test that DDoS protection is recognized."""
+    print("\n=== Testing Bicep: With DDoS Protection (KSI-CNA-05) ===")
+    
+    code = """
+    resource ddosProtectionPlan 'Microsoft.Network/ddosProtectionPlans@2023-05-01' = {
+      name: 'ddos-plan'
+      location: location
+    }
+    
+    resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
+      name: 'vnet'
+      location: location
+      properties: {
+        enableDdosProtection: true
+        ddosProtectionPlan: { id: ddosProtectionPlan.id }
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "ddos.bicep")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-CNA-05" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize DDoS protection"
+    print(f"✅ Recognized DDoS protection: {good_practices[0].title}")
+
+
+def test_bicep_missing_least_privilege():
+    """Test detection of missing least privilege."""
+    print("\n=== Testing Bicep: Missing Least Privilege (KSI-IAM-05) ===")
+    
+    code = """
+    resource vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {
+      name: 'vm'
+      location: location
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "vm.bicep")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-IAM-05" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing RBAC"
+    assert findings[0].severity == Severity.HIGH
+    print(f"✅ Detected missing least privilege: {findings[0].title}")
+
+
+def test_bicep_with_least_privilege():
+    """Test that least privilege RBAC is recognized."""
+    print("\n=== Testing Bicep: With Least Privilege (KSI-IAM-05) ===")
+    
+    code = """
+    resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+      name: guid(resourceGroup().id)
+      properties: {
+        roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')
+        principalId: principalId
+      }
+    }
+    
+    resource jitPolicy 'Microsoft.Security/jitNetworkAccessPolicies@2020-01-01' = {
+      name: 'jit-policy'
+      location: location
+      properties: {
+        virtualMachines: []
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "rbac.bicep")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-IAM-05" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize least privilege"
+    print(f"✅ Recognized least privilege: {good_practices[0].title}")
+
+
+def test_bicep_missing_cryptographic_modules():
+    """Test detection of missing cryptographic modules."""
+    print("\n=== Testing Bicep: Missing Cryptographic Modules (KSI-AFR-11) ===")
+    
+    code = """
+    resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+      name: 'storage'
+      location: location
+      properties: {
+        minimumTlsVersion: 'TLS1_0'
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "storage.bicep")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-AFR-11" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing FIPS crypto"
+    assert findings[0].severity == Severity.HIGH
+    print(f"✅ Detected missing cryptographic modules: {findings[0].title}")
+
+
+def test_bicep_with_cryptographic_modules():
+    """Test that FIPS-validated crypto is recognized."""
+    print("\n=== Testing Bicep: With Cryptographic Modules (KSI-AFR-11) ===")
+    
+    code = """
+    resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {
+      name: 'keyvault'
+      location: location
+      properties: {
+        sku: {
+          family: 'A'
+          name: 'premium'
+        }
+      }
+    }
+    
+    resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+      name: 'storage'
+      location: location
+      properties: {
+        minimumTlsVersion: 'TLS1_2'
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "crypto.bicep")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-AFR-11" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize FIPS crypto"
+    print(f"✅ Recognized cryptographic modules: {good_practices[0].title}")
+
+
 def run_all_tests():
     """Run all analyzer tests."""
     print("\n" + "="*70)
@@ -1560,6 +1965,38 @@ def run_all_tests():
         # Bicep tests - Phase 5: Threat Intelligence (KSI-AFR-03)
         test_bicep_missing_threat_intelligence,
         test_bicep_with_threat_intelligence,
+        
+        # Bicep tests - Phase 6A: Recovery Objectives (KSI-RPL-01)
+        test_bicep_missing_recovery_objectives,
+        test_bicep_with_recovery_objectives,
+        
+        # Bicep tests - Phase 6A: Recovery Plan (KSI-RPL-02)
+        test_bicep_missing_recovery_plan,
+        test_bicep_with_recovery_plan,
+        
+        # Bicep tests - Phase 6A: System Backups (KSI-RPL-03)
+        test_bicep_missing_system_backups,
+        test_bicep_with_system_backups,
+        
+        # Bicep tests - Phase 6A: Recovery Testing (KSI-RPL-04)
+        test_bicep_missing_recovery_testing,
+        test_bicep_with_recovery_testing,
+        
+        # Bicep tests - Phase 6A: Traffic Flow (KSI-CNA-03)
+        test_bicep_missing_traffic_flow,
+        test_bicep_with_traffic_flow,
+        
+        # Bicep tests - Phase 6A: DDoS Protection (KSI-CNA-05)
+        test_bicep_missing_ddos_protection,
+        test_bicep_with_ddos_protection,
+        
+        # Bicep tests - Phase 6A: Least Privilege (KSI-IAM-05)
+        test_bicep_missing_least_privilege,
+        test_bicep_with_least_privilege,
+        
+        # Bicep tests - Phase 6A: Cryptographic Modules (KSI-AFR-11)
+        test_bicep_missing_cryptographic_modules,
+        test_bicep_with_cryptographic_modules,
     ]
     
     passed = 0

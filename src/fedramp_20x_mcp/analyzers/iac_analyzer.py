@@ -94,6 +94,31 @@ class BicepAnalyzer(BaseAnalyzer):
         # Check for threat intelligence integration (KSI-AFR-03)
         self._check_threat_intelligence(code, file_path)
         
+        # Phase 6A: Core Infrastructure (Recovery, Network, Access, Crypto)
+        # Check for recovery objectives (KSI-RPL-01)
+        self._check_recovery_objectives(code, file_path)
+        
+        # Check for recovery plan (KSI-RPL-02)
+        self._check_recovery_plan(code, file_path)
+        
+        # Check for system backups (KSI-RPL-03)
+        self._check_system_backups(code, file_path)
+        
+        # Check for recovery testing (KSI-RPL-04)
+        self._check_recovery_testing(code, file_path)
+        
+        # Check for traffic flow enforcement (KSI-CNA-03)
+        self._check_traffic_flow(code, file_path)
+        
+        # Check for DDoS protection (KSI-CNA-05)
+        self._check_ddos_protection(code, file_path)
+        
+        # Check for least privilege access (KSI-IAM-05)
+        self._check_least_privilege(code, file_path)
+        
+        # Check for cryptographic modules (KSI-AFR-11)
+        self._check_cryptographic_modules(code, file_path)
+        
         return self.result
     
     def _check_diagnostic_settings(self, code: str, file_path: str) -> None:
@@ -919,6 +944,421 @@ class BicepAnalyzer(BaseAnalyzer):
                 file_path=file_path,
                 line_number=line_num,
                 recommendation="Regularly validate threat intelligence feeds are active and IOCs are being ingested.",
+                good_practice=True
+            ))
+    
+    def _check_recovery_objectives(self, code: str, file_path: str) -> None:
+        """Check for recovery objectives configuration (KSI-RPL-01)."""
+        # Check for Site Recovery or backup vault
+        has_site_recovery = bool(re.search(r"Microsoft\.RecoveryServices/vaults", code))
+        has_backup = bool(re.search(r"Microsoft\.Backup", code))
+        
+        # Check for RTO/RPO configuration in tags or properties
+        has_rto_rpo = bool(re.search(r"(rto|recoveryTimeObjective|rpo|recoveryPointObjective)", code, re.IGNORECASE))
+        
+        if not has_site_recovery and not has_backup:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-RPL-01",
+                severity=Severity.HIGH,
+                title="Recovery objectives not configured",
+                description="Missing Recovery Services Vault or backup configuration. FedRAMP 20x requires defined RTO and RPO for disaster recovery.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure Recovery Services Vault with RTO/RPO:\n```bicep\nresource recoveryVault 'Microsoft.RecoveryServices/vaults@2023-01-01' = {\n  name: 'vault-${uniqueString(resourceGroup().id)}'\n  location: location\n  sku: {\n    name: 'Standard'\n  }\n  properties: {}\n  tags: {\n    rto: '4hours'  // Recovery Time Objective\n    rpo: '1hour'   // Recovery Point Objective\n    fedramp: 'required'\n  }\n}\n\nresource backupPolicy 'Microsoft.RecoveryServices/vaults/backupPolicies@2023-01-01' = {\n  parent: recoveryVault\n  name: 'DefaultPolicy'\n  properties: {\n    backupManagementType: 'AzureIaasVM'\n    schedulePolicy: {\n      schedulePolicyType: 'SimpleSchedulePolicy'\n      scheduleRunFrequency: 'Daily'\n      scheduleRunTimes: ['2023-01-01T02:00:00Z']\n    }\n    retentionPolicy: {\n      retentionPolicyType: 'LongTermRetentionPolicy'\n      dailySchedule: {\n        retentionTimes: ['2023-01-01T02:00:00Z']\n        retentionDuration: {\n          count: 365\n          durationType: 'Days'\n        }\n      }\n    }\n  }\n}\n```\nSource: Azure WAF Reliability - Backup and disaster recovery (https://learn.microsoft.com/azure/well-architected/reliability/backup-and-recovery)"
+            ))
+        elif not has_rto_rpo:
+            line_num = self.get_line_number(code, "RecoveryServices") or self.get_line_number(code, "Backup")
+            self.add_finding(Finding(
+                requirement_id="KSI-RPL-01",
+                severity=Severity.MEDIUM,
+                title="RTO/RPO objectives not documented",
+                description="Recovery infrastructure exists but RTO/RPO not explicitly defined. FedRAMP 20x requires documented recovery objectives.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Document RTO/RPO in resource tags or properties:\n```bicep\ntags: {\n  rto: '4hours'\n  rpo: '1hour'\n  criticalityTier: 'tier1'\n}\n```"
+            ))
+        else:
+            line_num = self.get_line_number(code, "rto") or self.get_line_number(code, "RecoveryServices")
+            self.add_finding(Finding(
+                requirement_id="KSI-RPL-01",
+                severity=Severity.INFO,
+                title="Recovery objectives properly configured",
+                description="RTO/RPO objectives are documented with recovery infrastructure.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Regularly review and test that actual recovery times meet defined RTO/RPO.",
+                good_practice=True
+            ))
+    
+    def _check_recovery_plan(self, code: str, file_path: str) -> None:
+        """Check for recovery plan configuration (KSI-RPL-02)."""
+        # Check for Site Recovery replication
+        has_replication = bool(re.search(r"(replicationFabrics|replicationProtectionContainers|replicatedProtectedItems)", code))
+        
+        # Check for ASR recovery plans (match full path or just the word)
+        has_recovery_plan = bool(re.search(r"(replicationRecoveryPlans|recoveryPlans)", code))
+        
+        # Check for failover configuration
+        has_failover = bool(re.search(r"(failover|replicationPolicy)", code, re.IGNORECASE))
+        
+        if not has_replication and not has_failover and not has_recovery_plan:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-RPL-02",
+                severity=Severity.HIGH,
+                title="No recovery plan configured",
+                description="Missing Site Recovery replication or recovery plan. FedRAMP 20x requires documented and tested recovery procedures.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure Azure Site Recovery replication:\n```bicep\nresource replicationPolicy 'Microsoft.RecoveryServices/vaults/replicationPolicies@2023-01-01' = {\n  parent: recoveryVault\n  name: 'replication-policy'\n  properties: {\n    providerSpecificInput: {\n      instanceType: 'A2A'\n      recoveryPointHistory: 1440  // 24 hours in minutes\n      crashConsistentFrequencyInMinutes: 5\n      appConsistentFrequencyInMinutes: 60\n      multiVmSyncStatus: 'Enable'\n    }\n  }\n}\n\nresource recoveryPlan 'Microsoft.RecoveryServices/vaults/replicationRecoveryPlans@2023-01-01' = {\n  parent: recoveryVault\n  name: 'dr-recovery-plan'\n  properties: {\n    primaryFabricId: primaryFabric.id\n    recoveryFabricId: secondaryFabric.id\n    failoverDeploymentModel: 'ResourceManager'\n    replicationProviders: ['A2A']\n    allowedOperations: ['PlannedFailover', 'UnplannedFailover', 'TestFailover']\n  }\n}\n```\nSource: Azure WAF Reliability - Disaster recovery (https://learn.microsoft.com/azure/well-architected/reliability/disaster-recovery)"
+            ))
+        elif (has_replication or has_failover) and not has_recovery_plan:
+            line_num = self.get_line_number(code, "replicationFabrics") or self.get_line_number(code, "replicationPolicy")
+            self.add_finding(Finding(
+                requirement_id="KSI-RPL-02",
+                severity=Severity.MEDIUM,
+                title="Recovery plan not formally defined",
+                description="Replication configured but no recovery plan resource. FedRAMP 20x requires orchestrated recovery procedures.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Add recovery plan resource to orchestrate failover:\n```bicep\nresource recoveryPlan 'Microsoft.RecoveryServices/vaults/replicationRecoveryPlans@2023-01-01' = {\n  parent: recoveryVault\n  name: 'dr-recovery-plan'\n  properties: {\n    primaryFabricId: primaryFabric.id\n    recoveryFabricId: secondaryFabric.id\n    failoverDeploymentModel: 'ResourceManager'\n  }\n}\n```"
+            ))
+        elif has_recovery_plan:
+            line_num = self.get_line_number(code, "replicationRecoveryPlans") or self.get_line_number(code, "recoveryPlans")
+            self.add_finding(Finding(
+                requirement_id="KSI-RPL-02",
+                severity=Severity.INFO,
+                title="Recovery plan properly configured",
+                description="Site Recovery replication and recovery plans are configured.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Conduct regular DR drills and update recovery plans based on test results.",
+                good_practice=True
+            ))
+    
+    def _check_system_backups(self, code: str, file_path: str) -> None:
+        """Check for system backup configuration (KSI-RPL-03)."""
+        # Check for backup-enabled resources
+        has_backup_vault = bool(re.search(r"Microsoft\.RecoveryServices/vaults", code))
+        has_backup_policy = bool(re.search(r"backupPolicies", code))
+        has_protected_items = bool(re.search(r"protectedItems", code))
+        
+        # Check for backup-relevant resources (VMs, SQL, Storage)
+        has_vms = bool(re.search(r"Microsoft\.Compute/virtualMachines", code))
+        has_sql = bool(re.search(r"Microsoft\.Sql", code))
+        has_storage = bool(re.search(r"Microsoft\.Storage/storageAccounts", code))
+        
+        needs_backup = has_vms or has_sql or has_storage
+        
+        if needs_backup and not has_backup_vault:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-RPL-03",
+                severity=Severity.HIGH,
+                title="System backups not configured",
+                description="Critical resources deployed without backup protection. FedRAMP 20x requires aligned backups to meet RPO.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure Azure Backup for critical resources:\n```bicep\nresource backupVault 'Microsoft.RecoveryServices/vaults@2023-01-01' = {\n  name: 'backup-vault-${uniqueString(resourceGroup().id)}'\n  location: location\n  sku: {\n    name: 'Standard'\n  }\n  properties: {}\n}\n\nresource vmBackupPolicy 'Microsoft.RecoveryServices/vaults/backupPolicies@2023-01-01' = {\n  parent: backupVault\n  name: 'VMBackupPolicy'\n  properties: {\n    backupManagementType: 'AzureIaasVM'\n    schedulePolicy: {\n      schedulePolicyType: 'SimpleSchedulePolicy'\n      scheduleRunFrequency: 'Daily'\n      scheduleRunTimes: ['2023-01-01T02:00:00Z']\n    }\n    retentionPolicy: {\n      retentionPolicyType: 'LongTermRetentionPolicy'\n      dailySchedule: {\n        retentionTimes: ['2023-01-01T02:00:00Z']\n        retentionDuration: {\n          count: 365  // FedRAMP requires 1-year retention\n          durationType: 'Days'\n        }\n      }\n    }\n    instantRpRetentionRangeInDays: 5\n  }\n}\n\n// For SQL databases\nresource sqlLongTermRetention 'Microsoft.Sql/servers/databases/backupLongTermRetentionPolicies@2023-05-01-preview' = {\n  parent: sqlDatabase\n  name: 'default'\n  properties: {\n    weeklyRetention: 'P5W'\n    monthlyRetention: 'P12M'\n    yearlyRetention: 'P10Y'\n    weekOfYear: 1\n  }\n}\n```\nSource: Azure WAF Reliability - Backup strategies (https://learn.microsoft.com/azure/well-architected/reliability/backup-and-recovery)"
+            ))
+        elif needs_backup and not has_backup_policy:
+            line_num = self.get_line_number(code, "RecoveryServices")
+            self.add_finding(Finding(
+                requirement_id="KSI-RPL-03",
+                severity=Severity.MEDIUM,
+                title="Backup policies not configured",
+                description="Backup vault exists but policies not defined. FedRAMP 20x requires backup schedules aligned with RPO.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Define backup policies with appropriate retention:\n```bicep\nresource backupPolicy 'Microsoft.RecoveryServices/vaults/backupPolicies@2023-01-01' = {\n  parent: backupVault\n  name: 'DefaultPolicy'\n  properties: {\n    backupManagementType: 'AzureIaasVM'\n    schedulePolicy: {\n      schedulePolicyType: 'SimpleSchedulePolicy'\n      scheduleRunFrequency: 'Daily'\n      scheduleRunTimes: ['2023-01-01T02:00:00Z']\n    }\n    retentionPolicy: {\n      retentionPolicyType: 'LongTermRetentionPolicy'\n      dailySchedule: {\n        retentionTimes: ['2023-01-01T02:00:00Z']\n        retentionDuration: {\n          count: 365\n          durationType: 'Days'\n        }\n      }\n    }\n  }\n}\n```"
+            ))
+        elif has_backup_vault and has_backup_policy:
+            line_num = self.get_line_number(code, "backupPolicies")
+            self.add_finding(Finding(
+                requirement_id="KSI-RPL-03",
+                severity=Severity.INFO,
+                title="System backups properly configured",
+                description="Backup infrastructure with policies configured for critical resources.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Regularly verify backup jobs complete successfully and test restore procedures.",
+                good_practice=True
+            ))
+    
+    def _check_recovery_testing(self, code: str, file_path: str) -> None:
+        """Check for recovery testing configuration (KSI-RPL-04)."""
+        # Check for test failover or backup test configurations
+        has_test_failover = bool(re.search(r"(testFailover|TestFailover)", code))
+        has_recovery_plan = bool(re.search(r"recoveryPlans", code))
+        
+        # Check for automation accounts or runbooks for testing
+        has_automation = bool(re.search(r"Microsoft\.Automation", code))
+        has_runbooks = bool(re.search(r"(runbooks|testRecovery)", code, re.IGNORECASE))
+        
+        if not has_test_failover and not has_runbooks:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-RPL-04",
+                severity=Severity.MEDIUM,
+                title="Recovery testing not automated",
+                description="No test failover or automated recovery testing configured. FedRAMP 20x requires regular recovery capability validation.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure automated recovery testing:\n```bicep\nresource automationAccount 'Microsoft.Automation/automationAccounts@2023-11-01' = {\n  name: 'automation-${uniqueString(resourceGroup().id)}'\n  location: location\n  properties: {\n    sku: {\n      name: 'Basic'\n    }\n  }\n}\n\nresource recoveryTestRunbook 'Microsoft.Automation/automationAccounts/runbooks@2023-11-01' = {\n  parent: automationAccount\n  name: 'Test-RecoveryPlan'\n  properties: {\n    runbookType: 'PowerShell'\n    logProgress: true\n    logVerbose: true\n    description: 'Automated recovery testing - runs monthly DR drills'\n    publishContentLink: {\n      uri: 'https://your-repo.com/test-recovery.ps1'\n    }\n  }\n}\n\nresource recoveryTestSchedule 'Microsoft.Automation/automationAccounts/schedules@2023-11-01' = {\n  parent: automationAccount\n  name: 'MonthlyRecoveryTest'\n  properties: {\n    frequency: 'Month'\n    interval: 1\n    startTime: '2024-01-01T02:00:00Z'\n    description: 'Monthly DR test schedule'\n  }\n}\n\nresource scheduleRunbookLink 'Microsoft.Automation/automationAccounts/jobSchedules@2023-11-01' = {\n  parent: automationAccount\n  name: guid(recoveryTestRunbook.id, recoveryTestSchedule.id)\n  properties: {\n    runbook: {\n      name: recoveryTestRunbook.name\n    }\n    schedule: {\n      name: recoveryTestSchedule.name\n    }\n  }\n}\n```\nSource: Azure WAF Reliability - Testing (https://learn.microsoft.com/azure/well-architected/reliability/testing-strategy)"
+            ))
+        elif has_recovery_plan and not has_automation:
+            line_num = self.get_line_number(code, "recoveryPlans")
+            self.add_finding(Finding(
+                requirement_id="KSI-RPL-04",
+                severity=Severity.MEDIUM,
+                title="Recovery testing not scheduled",
+                description="Recovery plan exists but no automated testing schedule. FedRAMP 20x requires regular DR drills.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Add automation account with scheduled recovery tests. Configure monthly test failovers to validate RTO/RPO compliance."
+            ))
+        else:
+            line_num = self.get_line_number(code, "runbooks") or self.get_line_number(code, "Automation")
+            self.add_finding(Finding(
+                requirement_id="KSI-RPL-04",
+                severity=Severity.INFO,
+                title="Recovery testing automation configured",
+                description="Automated recovery testing infrastructure is in place.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure test results are documented and recovery plans updated based on findings.",
+                good_practice=True
+            ))
+    
+    def _check_traffic_flow(self, code: str, file_path: str) -> None:
+        """Check for traffic flow enforcement (KSI-CNA-03)."""
+        # Check for NSG flow logs
+        has_nsg_flow_logs = bool(re.search(r"Microsoft\.Network/networkWatchers/flowLogs", code))
+        
+        # Check for Network Watcher
+        has_network_watcher = bool(re.search(r"Microsoft\.Network/networkWatchers", code))
+        
+        # Check for Application Gateway or Azure Firewall
+        has_firewall = bool(re.search(r"(Microsoft\.Network/azureFirewalls|Microsoft\.Network/applicationGateways)", code))
+        
+        # Check for UDRs (User Defined Routes)
+        has_routes = bool(re.search(r"Microsoft\.Network/routeTables", code))
+        
+        if not has_firewall and not has_routes:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-CNA-03",
+                severity=Severity.HIGH,
+                title="Traffic flow controls not enforced",
+                description="Missing Azure Firewall or route tables for traffic control. FedRAMP 20x requires logical networking to enforce traffic flow.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure Azure Firewall with network rules:\n```bicep\nresource firewall 'Microsoft.Network/azureFirewalls@2023-05-01' = {\n  name: 'firewall-${uniqueString(resourceGroup().id)}'\n  location: location\n  properties: {\n    sku: {\n      name: 'AZFW_VNet'\n      tier: 'Standard'\n    }\n    ipConfigurations: [\n      {\n        name: 'firewallIpConfig'\n        properties: {\n          subnet: {\n            id: firewallSubnet.id\n          }\n          publicIPAddress: {\n            id: firewallPublicIp.id\n          }\n        }\n      }\n    ]\n    threatIntelMode: 'Alert'  // Or 'Deny' for FedRAMP\n    firewallPolicy: {\n      id: firewallPolicy.id\n    }\n  }\n}\n\nresource firewallPolicy 'Microsoft.Network/firewallPolicies@2023-05-01' = {\n  name: 'firewallPolicy'\n  location: location\n  properties: {\n    threatIntelMode: 'Alert'\n    sku: {\n      tier: 'Standard'\n    }\n  }\n}\n\nresource routeTable 'Microsoft.Network/routeTables@2023-05-01' = {\n  name: 'route-table'\n  location: location\n  properties: {\n    routes: [\n      {\n        name: 'route-to-firewall'\n        properties: {\n          addressPrefix: '0.0.0.0/0'\n          nextHopType: 'VirtualAppliance'\n          nextHopIpAddress: firewall.properties.ipConfigurations[0].properties.privateIPAddress\n        }\n      }\n    ]\n  }\n}\n```\nSource: Azure WAF Security - Network security (https://learn.microsoft.com/azure/well-architected/security/networking)"
+            ))
+        elif not has_nsg_flow_logs:
+            line_num = self.get_line_number(code, "azureFirewalls") or self.get_line_number(code, "routeTables")
+            self.add_finding(Finding(
+                requirement_id="KSI-CNA-03",
+                severity=Severity.MEDIUM,
+                title="NSG flow logs not enabled",
+                description="Traffic controls exist but flow logging not configured. FedRAMP 20x requires traffic flow monitoring.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Enable NSG Flow Logs:\n```bicep\nresource networkWatcher 'Microsoft.Network/networkWatchers@2023-05-01' = {\n  name: 'networkWatcher-${location}'\n  location: location\n}\n\nresource flowLog 'Microsoft.Network/networkWatchers/flowLogs@2023-05-01' = {\n  parent: networkWatcher\n  name: 'nsg-flow-log'\n  location: location\n  properties: {\n    targetResourceId: nsg.id\n    storageId: storageAccount.id\n    enabled: true\n    retentionPolicy: {\n      days: 365\n      enabled: true\n    }\n    format: {\n      type: 'JSON'\n      version: 2\n    }\n  }\n}\n```"
+            ))
+        else:
+            line_num = self.get_line_number(code, "flowLogs")
+            self.add_finding(Finding(
+                requirement_id="KSI-CNA-03",
+                severity=Severity.INFO,
+                title="Traffic flow controls properly configured",
+                description="Azure Firewall and NSG flow logs enforce and monitor traffic flow.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Regularly review flow logs and firewall rules for unauthorized traffic patterns.",
+                good_practice=True
+            ))
+    
+    def _check_ddos_protection(self, code: str, file_path: str) -> None:
+        """Check for DDoS protection (KSI-CNA-05)."""
+        # Check for DDoS Protection Plan
+        has_ddos_plan = bool(re.search(r"Microsoft\.Network/ddosProtectionPlans", code))
+        
+        # Check for VNets with DDoS enabled
+        vnet_pattern = r"resource\s+\w+\s+'Microsoft\.Network/virtualNetworks@[^']+'\s*=\s*\{"
+        vnet_matches = re.finditer(vnet_pattern, code)
+        
+        has_vnet = False
+        ddos_enabled_on_vnet = False
+        
+        for match in vnet_matches:
+            has_vnet = True
+            # Look ahead in the code after this VNet definition
+            vnet_start = match.end()
+            # Find the closing brace (simplified - assumes balanced braces)
+            vnet_section = code[vnet_start:vnet_start+1000]  # Check next 1000 chars
+            if re.search(r"enableDdosProtection:\s*true", vnet_section):
+                ddos_enabled_on_vnet = True
+                break
+        
+        if has_vnet and not has_ddos_plan:
+            line_num = self.get_line_number(code, "Microsoft.Network/virtualNetworks")
+            self.add_finding(Finding(
+                requirement_id="KSI-CNA-05",
+                severity=Severity.HIGH,
+                title="DDoS Protection not configured",
+                description="Virtual networks deployed without DDoS Protection Plan. FedRAMP 20x requires protection against denial of service attacks.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure Azure DDoS Protection Standard:\n```bicep\nresource ddosProtectionPlan 'Microsoft.Network/ddosProtectionPlans@2023-05-01' = {\n  name: 'ddos-plan-${uniqueString(resourceGroup().id)}'\n  location: location\n  properties: {}\n}\n\nresource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {\n  name: 'vnet-${uniqueString(resourceGroup().id)}'\n  location: location\n  properties: {\n    enableDdosProtection: true\n    ddosProtectionPlan: {\n      id: ddosProtectionPlan.id\n    }\n    addressSpace: {\n      addressPrefixes: ['10.0.0.0/16']\n    }\n    subnets: [\n      {\n        name: 'default'\n        properties: {\n          addressPrefix: '10.0.1.0/24'\n        }\n      }\n    ]\n  }\n}\n```\nSource: Azure WAF Security - DDoS protection (https://learn.microsoft.com/azure/well-architected/security/ddos-protection)\n\nNote: DDoS Protection Standard costs ~$2,944/month but is typically required for FedRAMP compliance."
+            ))
+        elif has_ddos_plan and not ddos_enabled_on_vnet:
+            line_num = self.get_line_number(code, "ddosProtectionPlans")
+            self.add_finding(Finding(
+                requirement_id="KSI-CNA-05",
+                severity=Severity.MEDIUM,
+                title="DDoS Protection Plan not associated with VNets",
+                description="DDoS Protection Plan exists but not enabled on virtual networks.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Enable DDoS protection on VNets:\n```bicep\nproperties: {\n  enableDdosProtection: true\n  ddosProtectionPlan: {\n    id: ddosProtectionPlan.id\n  }\n}\n```"
+            ))
+        elif has_ddos_plan and ddos_enabled_on_vnet:
+            line_num = self.get_line_number(code, "ddosProtectionPlans")
+            self.add_finding(Finding(
+                requirement_id="KSI-CNA-05",
+                severity=Severity.INFO,
+                title="DDoS Protection properly configured",
+                description="Azure DDoS Protection Standard is enabled on virtual networks.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Monitor DDoS metrics and alerts regularly for attack patterns.",
+                good_practice=True
+            ))
+    
+    def _check_least_privilege(self, code: str, file_path: str) -> None:
+        """Check for least privilege access configuration (KSI-IAM-05)."""
+        # Check for RBAC assignments
+        has_rbac = bool(re.search(r"Microsoft\.Authorization/roleAssignments", code))
+        
+        # Check for overly permissive roles (Owner, Contributor at subscription/root scope)
+        has_owner_role = bool(re.search(r"roleDefinitionId:.*'Owner'", code, re.IGNORECASE))
+        has_contributor_root = bool(re.search(r"(roleDefinitionId:.*'Contributor'|roleDefinitionId:.*'/providers/Microsoft.Authorization/roleDefinitions/b24988ac')", code))
+        
+        # Check for custom roles
+        has_custom_roles = bool(re.search(r"Microsoft\.Authorization/roleDefinitions", code))
+        
+        # Check for PIM (Privileged Identity Management)
+        has_pim = bool(re.search(r"(Microsoft\.ManagedIdentity/userAssignedIdentities|eligibleRoleAssignment)", code))
+        
+        # Check for JIT access
+        has_jit = bool(re.search(r"Microsoft\.Security/jitNetworkAccessPolicies", code))
+        
+        if not has_rbac:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-IAM-05",
+                severity=Severity.HIGH,
+                title="RBAC not configured",
+                description="No role assignments defined. FedRAMP 20x requires least privilege access controls.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure RBAC with least privilege roles:\n```bicep\n// Use specific built-in roles instead of Owner/Contributor\nresource readerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {\n  name: guid(resourceGroup().id, principalId, 'Reader')\n  properties: {\n    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')  // Reader\n    principalId: principalId\n    principalType: 'ServicePrincipal'\n  }\n}\n\n// Configure JIT access for privileged operations\nresource jitPolicy 'Microsoft.Security/jitNetworkAccessPolicies@2020-01-01' = {\n  name: 'jit-policy'\n  location: location\n  kind: 'Basic'\n  properties: {\n    virtualMachines: [\n      {\n        id: vm.id\n        ports: [\n          {\n            number: 22\n            protocol: 'TCP'\n            allowedSourceAddressPrefix: '*'\n            maxRequestAccessDuration: 'PT3H'\n          }\n        ]\n      }\n    ]\n  }\n}\n```\nSource: Azure WAF Security - Identity and access management (https://learn.microsoft.com/azure/well-architected/security/identity-access)"
+            ))
+        elif has_owner_role or has_contributor_root:
+            line_num = self.get_line_number(code, "Owner") or self.get_line_number(code, "Contributor")
+            self.add_finding(Finding(
+                requirement_id="KSI-IAM-05",
+                severity=Severity.HIGH,
+                title="Overly permissive roles assigned",
+                description="Owner or Contributor roles assigned. FedRAMP 20x requires least privilege - use specific roles instead.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Replace with specific roles:\n- Instead of 'Owner': Use 'User Access Administrator' + specific resource role\n- Instead of 'Contributor': Use specific roles like 'Virtual Machine Contributor', 'Storage Account Contributor'\n- Implement Azure AD PIM for privileged access\n- Use custom roles with minimal required permissions\n\nExample:\n```bicep\nroleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '9980e02c-c2be-4d73-94e8-173b1dc7cf3c')  // Virtual Machine Contributor\n```"
+            ))
+        elif not has_jit and not has_pim:
+            line_num = self.get_line_number(code, "roleAssignments")
+            self.add_finding(Finding(
+                requirement_id="KSI-IAM-05",
+                severity=Severity.MEDIUM,
+                title="JIT access not configured",
+                description="RBAC configured but no JIT or PIM for privileged access. FedRAMP 20x encourages time-limited privilege escalation.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Implement JIT access for administrative operations. Consider Azure AD PIM for role activations with approval workflows."
+            ))
+        else:
+            line_num = self.get_line_number(code, "jitNetworkAccessPolicies") or self.get_line_number(code, "roleAssignments")
+            self.add_finding(Finding(
+                requirement_id="KSI-IAM-05",
+                severity=Severity.INFO,
+                title="Least privilege access properly configured",
+                description="RBAC with specific roles and JIT/PIM for privileged access.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Regularly review role assignments and access logs to ensure continued compliance with least privilege.",
+                good_practice=True
+            ))
+    
+    def _check_cryptographic_modules(self, code: str, file_path: str) -> None:
+        """Check for FIPS-validated cryptographic modules (KSI-AFR-11)."""
+        # Check for Key Vault with HSM
+        has_key_vault_hsm = bool(re.search(r"(Microsoft\.KeyVault/managedHSMs|sku:\s*\{\s*family:\s*'A'\s*name:\s*'premium')", code))
+        
+        # Check for TLS/SSL configuration
+        has_tls_config = bool(re.search(r"(minTlsVersion|minimumTlsVersion|sslPolicy)", code, re.IGNORECASE))
+        has_tls_12 = bool(re.search(r"(minTlsVersion:\s*'1\.2'|minimumTlsVersion:\s*'TLS1_2')", code))
+        
+        # Check for encryption settings
+        has_encryption = bool(re.search(r"(encryption|customerManagedKey)", code, re.IGNORECASE))
+        
+        # Check for specific FIPS mentions or SQL TDE
+        has_fips = bool(re.search(r"(fips|transparentDataEncryption)", code, re.IGNORECASE))
+        
+        if not has_key_vault_hsm and not has_tls_12:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-11",
+                severity=Severity.HIGH,
+                title="FIPS-validated cryptographic modules not configured",
+                description="Missing Key Vault HSM and TLS 1.2+ enforcement. FedRAMP 20x requires FIPS 140-2/140-3 validated cryptography for federal data.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure Key Vault Premium (HSM-backed) and enforce TLS 1.2+:\n```bicep\nresource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {\n  name: 'kv-${uniqueString(resourceGroup().id)}'\n  location: location\n  properties: {\n    sku: {\n      family: 'A'\n      name: 'premium'  // Uses FIPS 140-2 Level 2 validated HSMs\n    }\n    tenantId: tenant().tenantId\n    enabledForDiskEncryption: true\n    enabledForDeployment: true\n    enabledForTemplateDeployment: true\n    enableRbacAuthorization: true\n    networkAcls: {\n      defaultAction: 'Deny'\n      bypass: 'AzureServices'\n    }\n  }\n}\n\n// For storage accounts, enforce TLS 1.2\nresource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {\n  name: 'st${uniqueString(resourceGroup().id)}'\n  properties: {\n    minimumTlsVersion: 'TLS1_2'\n    supportsHttpsTrafficOnly: true\n    encryption: {\n      requireInfrastructureEncryption: true\n      keySource: 'Microsoft.Keyvault'\n      keyvaultproperties: {\n        keyname: key.name\n        keyvaulturi: keyVault.properties.vaultUri\n      }\n      services: {\n        blob: {\n          enabled: true\n          keyType: 'Account'\n        }\n        file: {\n          enabled: true\n          keyType: 'Account'\n        }\n      }\n    }\n  }\n}\n\n// For SQL, enable TDE with customer-managed keys\nresource sqlTDE 'Microsoft.Sql/servers/databases/transparentDataEncryption@2023-05-01-preview' = {\n  parent: sqlDatabase\n  name: 'current'\n  properties: {\n    state: 'Enabled'\n  }\n}\n\nresource sqlEncryptionProtector 'Microsoft.Sql/servers/encryptionProtector@2023-05-01-preview' = {\n  parent: sqlServer\n  name: 'current'\n  properties: {\n    serverKeyType: 'AzureKeyVault'\n    serverKeyName: '${keyVault.name}_${key.name}_${key.properties.keyUriWithVersion}'\n  }\n}\n```\nSource: Azure Security Benchmark - Data protection (https://learn.microsoft.com/security/benchmark/azure/security-controls-v3-data-protection)\n\nNote: Azure Key Vault Premium uses FIPS 140-2 Level 2 validated HSMs. Managed HSM uses FIPS 140-2 Level 3."
+            ))
+        elif not has_tls_12:
+            line_num = self.get_line_number(code, "KeyVault") or 1
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-11",
+                severity=Severity.HIGH,
+                title="TLS 1.2 not enforced",
+                description="Cryptographic infrastructure exists but TLS 1.2+ not enforced. FedRAMP 20x requires strong transport encryption.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Enforce TLS 1.2+ on all resources:\n```bicep\n// Storage\nminimumTlsVersion: 'TLS1_2'\n\n// App Service\nsiteConfig: {\n  minTlsVersion: '1.2'\n}\n\n// SQL\nminimalTlsVersion: '1.2'\n\n// Azure Firewall / Application Gateway\nsslPolicy: {\n  minProtocolVersion: 'TLSv1_2'\n  cipherSuites: [\n    'TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384'\n    'TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256'\n  ]\n}\n```"
+            ))
+        elif not has_key_vault_hsm:
+            line_num = self.get_line_number(code, "minTlsVersion") or self.get_line_number(code, "minimumTlsVersion")
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-11",
+                severity=Severity.MEDIUM,
+                title="HSM-backed key storage not configured",
+                description="TLS 1.2 enforced but not using Key Vault Premium/Managed HSM. FedRAMP 20x recommends FIPS 140-2 Level 2+ for sensitive keys.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Upgrade to Key Vault Premium for HSM-backed keys:\n```bicep\nsku: {\n  family: 'A'\n  name: 'premium'  // FIPS 140-2 Level 2 HSMs\n}\n```\nFor higher assurance, consider Azure Managed HSM (FIPS 140-2 Level 3)."
+            ))
+        else:
+            line_num = self.get_line_number(code, "premium") or self.get_line_number(code, "managedHSMs")
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-11",
+                severity=Severity.INFO,
+                title="FIPS-validated cryptographic modules configured",
+                description="Key Vault HSM and TLS 1.2+ properly configured for FIPS 140-2 compliance.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Regularly rotate cryptographic keys and review cipher suites for algorithm deprecations.",
                 good_practice=True
             ))
 
