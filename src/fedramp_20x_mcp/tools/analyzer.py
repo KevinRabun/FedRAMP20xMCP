@@ -1,11 +1,11 @@
 """
 Code analysis tools for FedRAMP 20x compliance checking.
 
-Provides MCP tools for analyzing Infrastructure as Code and application code.
+Provides MCP tools for analyzing Infrastructure as Code, application code, and CI/CD pipelines.
 """
 
 from typing import Optional
-from ..analyzers import BicepAnalyzer, TerraformAnalyzer, PythonAnalyzer
+from ..analyzers import BicepAnalyzer, TerraformAnalyzer, PythonAnalyzer, CICDAnalyzer
 
 
 async def analyze_infrastructure_code_impl(
@@ -94,6 +94,49 @@ async def analyze_application_code_impl(
     # Add dependencies info if provided
     if dependencies:
         output["dependencies_checked"] = dependencies
+    
+    # Add formatted recommendations
+    if result.findings:
+        output["pr_comment"] = _format_pr_comment(result, file_path)
+    
+    return output
+
+
+async def analyze_cicd_pipeline_impl(
+    code: str,
+    pipeline_type: str,
+    file_path: Optional[str] = None
+) -> dict:
+    """
+    Analyze CI/CD pipeline configuration for FedRAMP 20x DevSecOps compliance.
+    
+    Args:
+        code: The pipeline configuration content (YAML/JSON)
+        pipeline_type: Type of pipeline ("github-actions", "azure-pipelines", "gitlab-ci", or "generic")
+        file_path: Optional path to the pipeline file
+        
+    Returns:
+        Dictionary containing analysis results with findings and recommendations
+    """
+    if not file_path:
+        if pipeline_type == "github-actions":
+            file_path = ".github/workflows/pipeline.yml"
+        elif pipeline_type == "azure-pipelines":
+            file_path = "azure-pipelines.yml"
+        elif pipeline_type == "gitlab-ci":
+            file_path = ".gitlab-ci.yml"
+        else:
+            file_path = "pipeline.yml"
+    
+    # Use CICDAnalyzer for all pipeline types
+    analyzer = CICDAnalyzer()
+    
+    # Run analysis
+    result = analyzer.analyze(code, file_path)
+    
+    # Format output
+    output = result.to_dict()
+    output["pipeline_type"] = pipeline_type
     
     # Add formatted recommendations
     if result.findings:

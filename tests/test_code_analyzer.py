@@ -15,6 +15,7 @@ from fedramp_20x_mcp.analyzers import (
     BicepAnalyzer,
     TerraformAnalyzer,
     PythonAnalyzer,
+    CICDAnalyzer,
     Severity,
 )
 
@@ -799,6 +800,348 @@ def test_python_secure_session():
     print(f"✅ Recognized secure session: {good_practices[0].title}")
 
 
+# ==============================================================================
+# Phase 4: CI/CD Pipeline Analysis Tests (KSI-CMT-01, CMT-02, CMT-03, AFR-01, AFR-02, CED-01)
+# ==============================================================================
+
+def test_github_missing_pr_triggers():
+    """Test detection of missing PR triggers in GitHub Actions (KSI-CMT-01)."""
+    print("\n=== Testing GitHub Actions: Missing PR Triggers ===")
+    
+    code = """
+name: Deploy
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: ./deploy.sh
+"""
+    
+    analyzer = CICDAnalyzer()
+    result = analyzer.analyze(code, ".github/workflows/deploy.yml")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-CMT-01" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing PR triggers"
+    assert any("pull request" in f.description.lower() for f in findings)
+    print(f"✅ Detected missing PR triggers: {findings[0].title}")
+
+
+def test_github_with_pr_triggers():
+    """Test recognition of PR triggers in GitHub Actions (KSI-CMT-01)."""
+    print("\n=== Testing GitHub Actions: With PR Triggers ===")
+    
+    code = """
+name: CI
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm test
+"""
+    
+    analyzer = CICDAnalyzer()
+    result = analyzer.analyze(code, ".github/workflows/ci.yml")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-CMT-01" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize PR trigger as good practice"
+    print(f"✅ Recognized PR triggers: {good_practices[0].title}")
+
+
+def test_azure_missing_approval_gates():
+    """Test detection of missing approval gates in Azure Pipelines (KSI-CMT-02)."""
+    print("\n=== Testing Azure Pipelines: Missing Approval Gates ===")
+    
+    code = """
+trigger:
+  - main
+
+stages:
+  - stage: Production
+    jobs:
+      - job: Deploy
+        steps:
+          - script: az webapp deploy
+"""
+    
+    analyzer = CICDAnalyzer()
+    result = analyzer.analyze(code, "azure-pipelines.yml")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-CMT-02" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing approval gates"
+    assert any("approval" in f.description.lower() for f in findings)
+    print(f"✅ Detected missing approval gates: {findings[0].title}")
+
+
+def test_github_with_environment_protection():
+    """Test recognition of environment protection rules (KSI-CMT-02)."""
+    print("\n=== Testing GitHub Actions: With Environment Protection ===")
+    
+    code = """
+name: Deploy
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-production:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://prod.example.com
+    steps:
+      - uses: actions/checkout@v3
+      - run: ./deploy.sh
+"""
+    
+    analyzer = CICDAnalyzer()
+    result = analyzer.analyze(code, ".github/workflows/deploy.yml")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-CMT-02" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize environment protection"
+    print(f"✅ Recognized environment protection: {good_practices[0].title}")
+
+
+def test_github_missing_tests():
+    """Test detection of missing test execution in pipeline (KSI-CMT-03)."""
+    print("\n=== Testing GitHub Actions: Missing Tests ===")
+    
+    code = """
+name: Build
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm run build
+      - run: docker build -t myapp .
+"""
+    
+    analyzer = CICDAnalyzer()
+    result = analyzer.analyze(code, ".github/workflows/build.yml")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-CMT-03" and not f.good_practice]
+    assert len(findings) >= 2, "Should detect missing unit tests and security scans"
+    print(f"✅ Detected missing tests: {len(findings)} findings")
+
+
+def test_azure_with_tests():
+    """Test recognition of test execution in pipeline (KSI-CMT-03)."""
+    print("\n=== Testing Azure Pipelines: With Tests ===")
+    
+    code = """
+trigger:
+  - main
+
+stages:
+  - stage: Test
+    jobs:
+      - job: UnitTests
+        steps:
+          - script: pytest tests/ --cov=src
+          - task: PublishTestResults@2
+"""
+    
+    analyzer = CICDAnalyzer()
+    result = analyzer.analyze(code, "azure-pipelines.yml")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-CMT-03" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize test execution"
+    print(f"✅ Recognized test execution: {good_practices[0].title}")
+
+
+def test_github_missing_vulnerability_scan():
+    """Test detection of missing vulnerability scanning (KSI-AFR-01)."""
+    print("\n=== Testing GitHub Actions: Missing Vulnerability Scan ===")
+    
+    code = """
+name: Build
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: docker build -t myapp:${{ github.sha }} .
+      - run: docker push myapp:${{ github.sha }}
+"""
+    
+    analyzer = CICDAnalyzer()
+    result = analyzer.analyze(code, ".github/workflows/build.yml")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-AFR-01" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing vulnerability scanning"
+    assert any("scan" in f.description.lower() for f in findings)
+    print(f"✅ Detected missing vulnerability scan: {findings[0].title}")
+
+
+def test_github_with_trivy_scan():
+    """Test recognition of Trivy vulnerability scanning (KSI-AFR-01)."""
+    print("\n=== Testing GitHub Actions: With Trivy Scan ===")
+    
+    code = """
+name: Security
+on: [push]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build image
+        run: docker build -t myapp:${{ github.sha }} .
+      - name: Scan with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'myapp:${{ github.sha }}'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+"""
+    
+    analyzer = CICDAnalyzer()
+    result = analyzer.analyze(code, ".github/workflows/security.yml")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-AFR-01" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize vulnerability scanning"
+    print(f"✅ Recognized Trivy scanning: {good_practices[0].title}")
+
+
+def test_azure_vulnerabilities_not_blocking():
+    """Test detection of non-blocking vulnerability findings (KSI-AFR-02)."""
+    print("\n=== Testing Azure Pipelines: Vulnerabilities Not Blocking ===")
+    
+    code = """
+trigger:
+  - main
+
+stages:
+  - stage: Security
+    jobs:
+      - job: Scan
+        steps:
+          - script: |
+              trivy image myapp:latest
+              echo "Scan complete"
+"""
+    
+    analyzer = CICDAnalyzer()
+    result = analyzer.analyze(code, "azure-pipelines.yml")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-AFR-02" and not f.good_practice]
+    assert len(findings) > 0, "Should detect non-blocking vulnerabilities"
+    assert any("block" in f.description.lower() or "fail" in f.description.lower() for f in findings)
+    print(f"✅ Detected non-blocking vulnerabilities: {findings[0].title}")
+
+
+def test_github_vulnerability_blocking():
+    """Test recognition of blocking on critical vulnerabilities (KSI-AFR-02)."""
+    print("\n=== Testing GitHub Actions: Vulnerability Blocking ===")
+    
+    code = """
+name: Security
+on: [push]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Scan
+        run: |
+          trivy image myapp:latest --severity CRITICAL,HIGH --exit-code 1
+      - name: Create issue
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'Security vulnerabilities found',
+              labels: ['security', 'priority-high']
+            })
+"""
+    
+    analyzer = CICDAnalyzer()
+    result = analyzer.analyze(code, ".github/workflows/security.yml")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-AFR-02" and f.good_practice]
+    # Should have at least one good practice (either blocking or issue creation)
+    assert len(good_practices) > 0, "Should recognize security remediation measures"
+    print(f"✅ Recognized vulnerability blocking/tracking: {len(good_practices)} good practices")
+
+
+def test_azure_missing_evidence_collection():
+    """Test detection of missing evidence collection (KSI-CED-01)."""
+    print("\n=== Testing Azure Pipelines: Missing Evidence Collection ===")
+    
+    code = """
+trigger:
+  - main
+
+stages:
+  - stage: Test
+    jobs:
+      - job: UnitTests
+        steps:
+          - script: pytest tests/
+          - script: npm test
+"""
+    
+    analyzer = CICDAnalyzer()
+    result = analyzer.analyze(code, "azure-pipelines.yml")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-CED-01" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing evidence collection"
+    assert any("artifact" in f.description.lower() or "evidence" in f.description.lower() for f in findings)
+    print(f"✅ Detected missing evidence collection: {findings[0].title}")
+
+
+def test_github_with_artifact_upload():
+    """Test recognition of artifact upload for evidence (KSI-CED-01)."""
+    print("\n=== Testing GitHub Actions: With Artifact Upload ===")
+    
+    code = """
+name: CI
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: pytest tests/ --cov=src --junit-xml=test-results.xml
+      - uses: actions/upload-artifact@v3
+        with:
+          name: test-results-${{ github.sha }}
+          path: |
+            **/test-results/**
+            **/coverage/**
+          retention-days: 365
+"""
+    
+    analyzer = CICDAnalyzer()
+    result = analyzer.analyze(code, ".github/workflows/ci.yml")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-CED-01" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize evidence collection"
+    print(f"✅ Recognized artifact upload: {good_practices[0].title}")
+
+
 def run_all_tests():
     """Run all analyzer tests."""
     print("\n" + "="*70)
@@ -860,6 +1203,30 @@ def run_all_tests():
         
         # Summary tests
         test_analysis_result_summary,
+        
+        # CI/CD tests - Phase 4: Change Management (KSI-CMT-01)
+        test_github_missing_pr_triggers,
+        test_github_with_pr_triggers,
+        
+        # CI/CD tests - Phase 4: Deployment Procedures (KSI-CMT-02)
+        test_azure_missing_approval_gates,
+        test_github_with_environment_protection,
+        
+        # CI/CD tests - Phase 4: Automated Testing (KSI-CMT-03)
+        test_github_missing_tests,
+        test_azure_with_tests,
+        
+        # CI/CD tests - Phase 4: Vulnerability Scanning (KSI-AFR-01)
+        test_github_missing_vulnerability_scan,
+        test_github_with_trivy_scan,
+        
+        # CI/CD tests - Phase 4: Security Remediation (KSI-AFR-02)
+        test_azure_vulnerabilities_not_blocking,
+        test_github_vulnerability_blocking,
+        
+        # CI/CD tests - Phase 4: Evidence Collection (KSI-CED-01)
+        test_azure_missing_evidence_collection,
+        test_github_with_artifact_upload,
     ]
     
     passed = 0

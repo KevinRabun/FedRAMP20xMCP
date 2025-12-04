@@ -343,7 +343,7 @@ If you only want FedRAMP requirements without Azure integration:
 
 ## Available Tools
 
-The server provides **28 tools** organized into the following categories:
+The server provides **29 tools** organized into the following categories:
 
 **Core Tools (8):** Query requirements, definitions, and KSIs
 **Documentation Tools (3):** Search and retrieve FedRAMP documentation
@@ -352,7 +352,7 @@ The server provides **28 tools** organized into the following categories:
 **Planning Tools (1):** Generate strategic implementation questions
 **Evidence Collection Automation Tools (3):** Infrastructure code, collection code, architecture guidance
 **Implementation Mapping Tools (2):** KSI family matrices and step-by-step implementation checklists
-**Code Analysis Tools (2):** Automated FedRAMP compliance scanning for IaC and application code
+**Code Analysis Tools (3):** Automated FedRAMP compliance scanning for IaC, application code, and CI/CD pipelines
 
 ### get_control
 Get detailed information about a specific FedRAMP requirement or control.
@@ -603,7 +603,7 @@ Generate strategic interview questions for product managers and engineers to fac
 ### analyze_infrastructure_code
 Analyze Infrastructure as Code (IaC) files for FedRAMP 20x compliance issues and provide actionable recommendations.
 
-> **📊 Current Coverage:** Phase 3 complete with 25 KSIs (35% of 72 total). Covers critical infrastructure security, application security (error handling, input validation, secure coding, data classification, privacy controls, service mesh, least privilege, session management). See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for expansion plan to 100% coverage.
+> **📊 Current Coverage:** Phase 4 complete with 31 KSIs (43% of 72 total). Covers critical infrastructure security, application security (error handling, input validation, secure coding, data classification, privacy controls, service mesh, least privilege, session management), and DevSecOps automation (change management, deployment procedures, CI/CD testing, vulnerability scanning, security remediation, evidence collection). See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for expansion plan to 100% coverage.
 
 **Parameters:**
 - `code` (string): The IaC code content to analyze
@@ -649,7 +649,17 @@ Analyze Infrastructure as Code (IaC) files for FedRAMP 20x compliance issues and
 - **KSI-MLA-01**: Centralized logging to SIEM
 - **KSI-MLA-02**: Audit log retention (≥90 days)
 
-> **📈 Next:** Phase 3 will add 8 more KSIs for application security (35% coverage). See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for full 6-phase plan to 100% coverage.
+**Phase 3 - Secure Coding Practices:**
+- **KSI-SVC-01**: Error handling and logging
+- **KSI-SVC-02**: Input validation (SQL injection, command injection, path traversal)
+- **KSI-SVC-07**: Secure coding (avoiding eval/exec, secure random)
+- **KSI-PIY-01**: Data classification tagging
+- **KSI-PIY-03**: Privacy controls (retention, deletion, export)
+- **KSI-CNA-07**: Service mesh security configuration
+- **KSI-IAM-04**: Least privilege access (scoped permissions)
+- **KSI-IAM-07**: Session management (secure cookies, token rotation)
+
+> **📈 Next:** Phase 5 will add 6 more KSIs for Runtime Security & Monitoring (51% coverage). See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for full 6-phase plan to 100% coverage.
 
 **Example usage:**
 ```bicep
@@ -704,7 +714,56 @@ Analyze application code for FedRAMP 20x security compliance issues.
 - **KSI-IAM-04**: Least privilege access
 - **KSI-IAM-07**: Session management and token security
 
-> **📈 Next:** Phase 4 will add 8 more KSIs for DevSecOps automation (43% total coverage). See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for details.
+### analyze_cicd_pipeline
+Analyze CI/CD pipeline configurations for FedRAMP 20x DevSecOps compliance.
+
+**Parameters:**
+- `code` (string): The pipeline configuration content (YAML/JSON)
+- `pipeline_type` (string): Type of pipeline - `"github-actions"`, `"azure-pipelines"`, `"gitlab-ci"`, or `"generic"`
+- `file_path` (string): Path to the pipeline file (for reporting)
+
+**Returns:**
+- **findings**: Array of DevSecOps findings (same structure as code analysis)
+- **summary**: Counts of high/medium/low priority issues and good practices
+- **pr_comment**: Formatted markdown for PR reviews
+- **pipeline_type**: The detected pipeline platform
+
+**Supported Platforms:**
+- **GitHub Actions** (`.github/workflows/*.yml`)
+- **Azure DevOps Pipelines** (`azure-pipelines.yml`)
+- **GitLab CI/CD** (`.gitlab-ci.yml`)
+
+**FedRAMP Requirements Checked (Phase 4):**
+- **KSI-CMT-01**: Change management automation (PR triggers, required reviews, branch protection)
+- **KSI-CMT-02**: Deployment procedures (approval gates, environment protection, rollback capabilities)
+- **KSI-CMT-03**: Automated testing in CI/CD (unit tests, security scans in pipeline)
+- **KSI-AFR-01**: Automated vulnerability scanning (container, IaC, SAST/DAST tools)
+- **KSI-AFR-02**: Security finding remediation (blocking on vulnerabilities, automated issue creation)
+- **KSI-CED-01**: Continuous evidence collection (artifact uploads, test results, retention policies)
+
+> **📈 Next:** Phase 5 will add 6 more KSIs for Runtime Security & Monitoring (51% total coverage). See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for details.
+
+**Example usage:**
+```yaml
+# GitHub Actions workflow that will be flagged for missing security scans
+name: Build
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: docker build -t myapp .
+      - run: docker push myapp:latest
+      # ❌ No vulnerability scanning
+      # ❌ No test execution
+      # ❌ No evidence collection
+```
+
+> **💡 Result:** Analyzer recommends adding Trivy container scanning, unit test execution, security gates, and artifact uploads for compliance evidence.
+
+> **📈 Next:** Phase 5 will add 6 more KSIs for Runtime Security & Monitoring (51% total coverage). See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for details.
 
 **Example usage:**
 ```python

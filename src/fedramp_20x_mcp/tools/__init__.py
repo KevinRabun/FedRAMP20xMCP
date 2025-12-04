@@ -175,4 +175,9 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         """Analyze application code (Python) for FedRAMP 20x security compliance issues."""
         return await analyzer.analyze_application_code_impl(code, language, file_path, dependencies)
     
-    logger.info("Registered 28 tools across 8 modules")
+    @mcp.tool()
+    async def analyze_cicd_pipeline(code: str, pipeline_type: str, file_path: Optional[str] = None) -> dict:
+        """Analyze CI/CD pipeline configuration (GitHub Actions/Azure Pipelines/GitLab CI) for FedRAMP 20x DevSecOps compliance."""
+        return await analyzer.analyze_cicd_pipeline_impl(code, pipeline_type, file_path)
+    
+    logger.info("Registered 29 tools across 8 modules")
