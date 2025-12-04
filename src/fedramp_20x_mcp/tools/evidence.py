@@ -167,8 +167,12 @@ async def get_evidence_collection_code_impl(ksi_id: str, data_loader, get_code_t
     ksi_id = ksi_id.upper()
     language = language.lower()
     
-    if language not in ["python", "csharp", "powershell"]:
-        return f"Language '{language}' not supported. Choose: python, csharp, or powershell"
+    # Normalize javascript to typescript (both use same templates)
+    if language == "javascript":
+        language = "typescript"
+    
+    if language not in ["python", "csharp", "powershell", "java", "typescript"]:
+        return f"Language '{language}' not supported. Choose: python, csharp, powershell, java, or typescript"
     
     # Get the KSI details
     ksi = data_loader.get_ksi(ksi_id)
@@ -203,6 +207,10 @@ This code automates evidence collection for {ksi_id} by:
         result += _get_csharp_evidence_code(ksi_id, family, get_code_template)
     elif language == "powershell":
         result += _get_powershell_evidence_code(ksi_id, family, get_code_template)
+    elif language == "java":
+        result += _get_java_evidence_code(ksi_id, family, get_code_template)
+    elif language == "typescript":
+        result += _get_typescript_evidence_code(ksi_id, family, get_code_template)
     
     result += """
 
@@ -251,6 +259,16 @@ def _get_csharp_evidence_code(ksi_id: str, family: str, get_code_template) -> st
 def _get_powershell_evidence_code(ksi_id: str, family: str, get_code_template) -> str:
     """Generate PowerShell evidence collection code using templates."""
     return get_code_template(family, 'powershell')
+
+
+def _get_java_evidence_code(ksi_id: str, family: str, get_code_template) -> str:
+    """Generate Java evidence collection code using templates."""
+    return get_code_template(family, 'java')
+
+
+def _get_typescript_evidence_code(ksi_id: str, family: str, get_code_template) -> str:
+    """Generate TypeScript evidence collection code using templates."""
+    return get_code_template(family, 'typescript')
 
 
 

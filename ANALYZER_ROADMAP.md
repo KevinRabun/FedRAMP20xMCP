@@ -867,7 +867,7 @@
 analyzers/
   ├── base.py              # Base classes (no changes)
   ├── iac_analyzer.py      # Bicep/Terraform (expand here)
-  ├── app_analyzer.py      # Python (expand here)
+  ├── python_analyzer.py   # Python code analysis
   └── cicd_analyzer.py     # NEW: CI/CD pipeline checks (Phase 4)
 ```
 

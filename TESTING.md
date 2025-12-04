@@ -2,7 +2,7 @@
 
 ## Test Suite Overview
 
-The FedRAMP 20x MCP Server includes comprehensive test coverage across all functionality with **17 test files** validating **28 tools**, 329 requirements, 72 KSIs, 15 prompts, 21 templates, infrastructure code generation, and automated code analysis.
+The FedRAMP 20x MCP Server includes comprehensive test coverage across all functionality with **21 test files** validating **29 tools**, 329 requirements, 72 KSIs, 15 prompts, 23 templates, infrastructure code generation, and automated code analysis **supporting 4 programming languages** (Python, C#, Java, TypeScript/JavaScript).
 
 ## Test Files
 
@@ -392,14 +392,14 @@ $env:PYTHONIOENCODING='utf-8'; python tests/test_code_analyzer.py
 ```
 
 ### 16. test_analyzer_tools.py ⭐ NEW
-**Purpose:** Integration tests for MCP analyzer tools (8 tests)
+**Purpose:** Integration tests for MCP analyzer tools (10 tests - updated for multi-language support)
 
 **Coverage:**
 - ✅ analyze_infrastructure_code tool (Bicep, Terraform)
-- ✅ analyze_application_code tool (Python)
+- ✅ analyze_application_code tool (Python, C#, Java, TypeScript/JavaScript)
 - ✅ PR comment formatting
 - ✅ Unsupported file type handling
-- ✅ Unsupported language handling
+- ✅ Unsupported language handling (all 4 languages validated)
 - ✅ Good practices detection in tool output
 - ✅ Summary calculations validation
 - ✅ FedRAMP requirement ID validation
@@ -449,6 +449,83 @@ TEST RESULTS: 8 passed, 0 failed
 $env:PYTHONIOENCODING='utf-8'; python tests/test_analyzer_tools.py
 ```
 
+### 17. test_csharp_analyzer.py ⭐ NEW
+**Purpose:** Comprehensive tests for C# code analyzer (12 tests)
+
+**Coverage:**
+- ✅ Hardcoded secrets detection (.NET syntax)
+- ✅ [Authorize] attribute authentication
+- ✅ Azure Key Vault with DefaultAzureCredential
+- ✅ BinaryFormatter insecure deserialization
+- ✅ SQL injection detection
+- ✅ Data Protection API for PII encryption
+- ✅ ILogger<T> structured logging
+- ✅ Application Insights telemetry
+- ✅ Model validation with data annotations
+- ✅ Secure cookie/session configuration
+- ✅ Policy-based authorization
+- ✅ XSS prevention with HtmlEncoder
+
+**Frameworks Tested:**
+- ASP.NET Core, Entity Framework, MSAL, Azure SDK for .NET
+
+**Run:**
+```bash
+python tests/test_csharp_analyzer.py
+```
+
+### 18. test_java_analyzer.py ⭐ NEW
+**Purpose:** Comprehensive tests for Java code analyzer (12 tests)
+
+**Coverage:**
+- ✅ Hardcoded secrets detection (Java syntax)
+- ✅ @PreAuthorize annotation authentication
+- ✅ Azure Key Vault with DefaultAzureCredential
+- ✅ ObjectInputStream insecure deserialization
+- ✅ SQL injection detection
+- ✅ AES-GCM encryption for PII
+- ✅ SLF4J structured logging
+- ✅ Application Insights telemetry
+- ✅ Bean Validation (JSR-380)
+- ✅ Spring Session secure configuration
+- ✅ Method-level security
+- ✅ XSS prevention with HtmlUtils
+
+**Frameworks Tested:**
+- Spring Boot, Spring Security, Jakarta EE, Azure SDK for Java
+
+**Run:**
+```bash
+python tests/test_java_analyzer.py
+```
+
+### 19. test_typescript_analyzer.py ⭐ NEW
+**Purpose:** Comprehensive tests for TypeScript/JavaScript code analyzer (12 tests)
+
+**Coverage:**
+- ✅ Hardcoded secrets detection (TS/JS syntax)
+- ✅ JWT middleware authentication
+- ✅ Azure Key Vault with DefaultAzureCredential
+- ✅ eval() dangerous code execution
+- ✅ innerHTML/dangerouslySetInnerHTML XSS
+- ✅ Node.js crypto AES-GCM encryption
+- ✅ Winston/Pino structured logging
+- ✅ Application Insights telemetry
+- ✅ Zod/Joi input validation
+- ✅ express-session secure configuration
+- ✅ Role/permission authorization middleware
+- ✅ Helmet.js security headers
+
+**Frameworks Tested:**
+- Express, NestJS, Next.js, React, Azure SDK for JS
+
+**Run:**
+```bash
+python tests/test_typescript_analyzer.py
+```
+
+### Tool Functional Tests
+
 ### Resource Validation Tests
 
 ### 15. test_prompts.py ⭐ NEW
@@ -472,16 +549,31 @@ python tests/test_prompts.py
 **Coverage:**
 - ✅ 7 Bicep templates (afr, cna, generic, iam, mla, rpl, svc) with syntax validation
 - ✅ 7 Terraform templates (afr, cna, generic, iam, mla, rpl, svc) with syntax validation
-- ✅ 7 code templates (generic_python/csharp/powershell, iam_python/csharp/powershell, mla_python)
+- ✅ 9 code templates (generic_python/csharp/powershell/java/typescript, iam_python/csharp/powershell, mla_python)
 - ✅ get_infrastructure_template for all 7 KSI families × 2 infra types
-- ✅ get_code_template for all 7 KSI families × 3 languages
+- ✅ get_code_template for all 7 KSI families × 5 languages
 - ✅ Content quality validation (syntax markers, comments, documentation)
 - ✅ Fallback behavior (PIY → generic, unimplemented families → generic)
-- ✅ Average sizes: Bicep 1,968 chars, Terraform 1,807 chars, Code 3,703 chars
+- ✅ Average sizes: Bicep 1,968 chars, Terraform 1,807 chars, Code varies by language
 
 **Run:**
 ```bash
 python tests/test_templates.py
+```
+
+### 17. test_new_language_support.py ⭐ NEW
+**Purpose:** Validate Java and TypeScript template integration
+
+**Coverage:**
+- ✅ Java code generation for evidence collection
+- ✅ TypeScript code generation for evidence collection
+- ✅ JavaScript alias mapping to TypeScript
+- ✅ Invalid language rejection
+- ✅ Integration with get_evidence_collection_code tool
+
+**Run:**
+```bash
+python tests/test_new_language_support.py
 ```
 
 ### 7. test_all_tools.py
@@ -571,15 +663,20 @@ All tests passing as of December 3, 2025:
 | test_export_tools.py ⭐ | ✅ PASS | 3 tools, 2 test cases |
 | test_enhancement_tools.py ⭐ | ✅ PASS | 7 tools, 24 test cases |
 | test_implementation_mapping_tools.py ⭐ | ✅ PASS | 2 tools, 24 test cases |
+| test_csharp_analyzer.py ⭐ | ✅ PASS | 12 C# security checks |
+| test_java_analyzer.py ⭐ | ✅ PASS | 12 Java security checks |
+| test_typescript_analyzer.py ⭐ | ✅ PASS | 12 TypeScript/JS security checks |
 | **Resource Validation** |||
 | test_prompts.py ⭐ | ✅ PASS | 15 prompts validated |
-| test_templates.py ⭐ | ✅ PASS | 21 templates validated |
+| test_templates.py ⭐ | ✅ PASS | 23 templates validated |
+| test_new_language_support.py ⭐ | ✅ PASS | Java/TypeScript integration |
 
 **Summary:**
-- ✅ 16/16 test files passing
-- ✅ 26/26 tools functionally tested
+- ✅ 21/21 test files passing
+- ✅ 29/29 tools functionally tested
 - ✅ 15/15 prompts validated
-- ✅ 21/21 templates validated
+- ✅ 23/23 templates validated
+- ✅ 5 programming languages supported (Python, C#, PowerShell, Java, TypeScript/JavaScript)
 - ✅ 100% coverage across all components
 
 ## Test Architecture
@@ -688,7 +785,7 @@ Current coverage: **100%** across all components
 | Enhancement Tools | 100% | All 7 enhancement tools tested |
 | Implementation Mapping Tools | 100% | All 2 implementation mapping tools tested |
 | Evidence Tools | 100% | All 3 evidence automation tools tested |
-| Template System | 100% | All 21 templates validated |
+| Template System | 100% | All 23 templates validated |
 | Prompt System | 100% | All 15 prompts validated |
 
 ### Template Inventory
@@ -705,7 +802,10 @@ Current coverage: **100%** across all components
 - rpl.txt (775 chars - smallest), svc.txt (1,309 chars)
 - Average: 1,807 characters
 
-**Code Templates (7):**
+**Code Templates (9):**
+- generic_python.txt, generic_csharp.txt, generic_powershell.txt, generic_java.txt, generic_typescript.txt
+- iam_python.txt, iam_csharp.txt, iam_powershell.txt
+- mla_python.txt
 - generic_csharp.txt (1,891 chars), generic_powershell.txt (1,513 chars), generic_python.txt (1,722 chars)
 - iam_csharp.txt (4,644 chars), iam_powershell.txt (4,597 chars)
 - iam_python.txt (7,688 chars - largest), mla_python.txt (3,867 chars)
@@ -757,7 +857,7 @@ Current coverage: **100%** across all components
 - Enhancement tools: 24 test cases
 - Implementation mapping tools: 24 test cases
 - Prompts: 4 test functions covering all 15 prompts
-- Templates: 8 test functions covering all 21 templates
+- Templates: 8 test functions covering all 23 templates
 - **Total: 110+ test cases across 16 files**
 
 ### Detailed Test Results
@@ -808,4 +908,4 @@ Current coverage: **100%** across all components
 
 *Last Updated: December 3, 2025*  
 *Status: All 16 test files passing ✅*  
-*Coverage: 26/26 tools + 15/15 prompts + 21/21 templates (100%)*
+*Coverage: 29/29 tools + 15/15 prompts + 23/23 templates (100%)*

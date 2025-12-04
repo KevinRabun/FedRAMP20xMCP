@@ -7,7 +7,10 @@ and CI/CD pipelines to identify FedRAMP 20x compliance issues and provide recomm
 
 from .base import Finding, AnalysisResult, Severity, BaseAnalyzer
 from .iac_analyzer import BicepAnalyzer, TerraformAnalyzer
-from .app_analyzer import PythonAnalyzer
+from .python_analyzer import PythonAnalyzer
+from .csharp_analyzer import CSharpAnalyzer
+from .java_analyzer import JavaAnalyzer
+from .typescript_analyzer import TypeScriptAnalyzer
 from .cicd_analyzer import CICDAnalyzer
 
 __all__ = [
@@ -18,5 +21,8 @@ __all__ = [
     "BicepAnalyzer",
     "TerraformAnalyzer",
     "PythonAnalyzer",
+    "CSharpAnalyzer",
+    "JavaAnalyzer",
+    "TypeScriptAnalyzer",
     "CICDAnalyzer",
 ]

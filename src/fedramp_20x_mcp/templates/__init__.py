@@ -58,7 +58,7 @@ def get_code_template(ksi_family: str, language: str) -> str:
     
     Args:
         ksi_family: KSI family code (iam, mla, afr, cna, rpl, svc)  
-        language: Programming language (python, csharp, powershell)
+        language: Programming language (python, csharp, powershell, java, typescript)
     
     Returns:
         Code template content

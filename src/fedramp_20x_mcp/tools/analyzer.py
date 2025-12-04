@@ -5,7 +5,15 @@ Provides MCP tools for analyzing Infrastructure as Code, application code, and C
 """
 
 from typing import Optional
-from ..analyzers import BicepAnalyzer, TerraformAnalyzer, PythonAnalyzer, CICDAnalyzer
+from ..analyzers import (
+    BicepAnalyzer,
+    TerraformAnalyzer,
+    PythonAnalyzer,
+    CSharpAnalyzer,
+    JavaAnalyzer,
+    TypeScriptAnalyzer,
+    CICDAnalyzer
+)
 
 
 async def analyze_infrastructure_code_impl(
@@ -67,7 +75,7 @@ async def analyze_application_code_impl(
     
     Args:
         code: The application code content to analyze
-        language: Programming language ("python", more to come)
+        language: Programming language ("python", "csharp", "java", "typescript", "javascript")
         file_path: Optional path to the file being analyzed
         dependencies: Optional list of dependencies/imports to check
         
@@ -77,12 +85,20 @@ async def analyze_application_code_impl(
     if not file_path:
         file_path = f"file.{language}"
     
-    # Select appropriate analyzer
-    if language.lower() in ["python", "py"]:
+    # Select appropriate analyzer based on language
+    language_lower = language.lower()
+    
+    if language_lower in ["python", "py"]:
         analyzer = PythonAnalyzer()
+    elif language_lower in ["csharp", "c#", "cs"]:
+        analyzer = CSharpAnalyzer()
+    elif language_lower in ["java"]:
+        analyzer = JavaAnalyzer()
+    elif language_lower in ["typescript", "ts", "javascript", "js"]:
+        analyzer = TypeScriptAnalyzer()
     else:
         return {
-            "error": f"Unsupported language: {language}. Supported languages: python"
+            "error": f"Unsupported language: {language}. Supported languages: python, csharp, java, typescript, javascript"
         }
     
     # Run analysis

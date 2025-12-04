@@ -1,0 +1,337 @@
+## Code Template
+
+```java
+package com.fedramp.evidence;
+
+import com.azure.core.credential.TokenCredential;
+import com.azure.identity.DefaultAzureCredentialBuilder;
+import com.azure.storage.blob.BlobClient;
+import com.azure.storage.blob.BlobContainerClient;
+import com.azure.storage.blob.BlobServiceClient;
+import com.azure.storage.blob.BlobServiceClientBuilder;
+import com.azure.storage.blob.models.BlobHttpHeaders;
+import com.azure.resourcemanager.AzureResourceManager;
+import com.azure.resourcemanager.resources.models.GenericResource;
+import com.microsoft.graph.serviceclient.GraphServiceClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * FedRAMP 20x Evidence Collection - Generic Java Template
+ * 
+ * Collects compliance evidence from Azure resources and stores in Azure Blob Storage.
+ * Uses DefaultAzureCredential for authentication (supports managed identity and local dev).
+ * 
+ * Azure SDK References:
+ * - Azure Identity: https://learn.microsoft.com/java/api/overview/azure/identity-readme
+ * - Azure Storage: https://learn.microsoft.com/java/api/overview/azure/storage-blob-readme
+ * - Azure Resource Manager: https://learn.microsoft.com/java/api/overview/azure/resourcemanager-readme
+ * - Microsoft Graph SDK: https://learn.microsoft.com/graph/sdks/sdks-overview
+ */
+public class EvidenceCollector {
+    
+    private static final Logger logger = LoggerFactory.getLogger(EvidenceCollector.class);
+    private static final String STORAGE_ACCOUNT = "stafedrampevidence";
+    private static final String CONTAINER_NAME = "ksi-evidence";
+    
+    private final TokenCredential credential;
+    private final AzureResourceManager azureResourceManager;
+    private final GraphServiceClient graphClient;
+    private final BlobServiceClient blobServiceClient;
+    
+    public EvidenceCollector() {
+        // Initialize Azure authentication
+        // This supports managed identity in Azure and Azure CLI for local development
+        // Azure WAF Security: https://learn.microsoft.com/azure/well-architected/security/
+        this.credential = new DefaultAzureCredentialBuilder().build();
+        
+        // Initialize Azure Resource Manager client for querying Azure resources
+        this.azureResourceManager = AzureResourceManager
+            .authenticate(credential, null)
+            .withDefaultSubscription();
+        
+        // Initialize Microsoft Graph client for identity and access data
+        this.graphClient = new GraphServiceClient(credential);
+        
+        // Initialize Azure Blob Storage client for evidence storage
+        String storageUrl = String.format("https://%s.blob.core.windows.net", STORAGE_ACCOUNT);
+        this.blobServiceClient = new BlobServiceClientBuilder()
+            .endpoint(storageUrl)
+            .credential(credential)
+            .buildClient();
+        
+        logger.info("Evidence collector initialized successfully");
+    }
+    
+    /**
+     * Collect compliance evidence from Azure resources.
+     * This is a generic template - customize the collection logic for specific KSI requirements.
+     */
+    public Map<String, Object> collectEvidence() {
+        try {
+            logger.info("Starting evidence collection...");
+            
+            Map<String, Object> evidence = new HashMap<>();
+            evidence.put("timestamp", LocalDateTime.now().toString());
+            evidence.put("collection_method", "automated");
+            
+            // Example: Query Azure resources (customize for specific KSI)
+            // Azure Resource Manager API: https://learn.microsoft.com/rest/api/resources/
+            logger.info("Querying Azure resources...");
+            long resourceCount = azureResourceManager.genericResources()
+                .list()
+                .stream()
+                .count();
+            
+            evidence.put("resource_count", resourceCount);
+            evidence.put("subscription_id", azureResourceManager.subscriptionId());
+            
+            // Example: Query Microsoft Graph (for IAM evidence)
+            // Graph API: https://learn.microsoft.com/graph/overview
+            logger.info("Querying Microsoft Graph API...");
+            try {
+                var users = graphClient.users().get();
+                if (users != null && users.getValue() != null) {
+                    evidence.put("user_count", users.getValue().size());
+                }
+            } catch (Exception e) {
+                logger.warn("Unable to query Graph API (may need additional permissions): {}", e.getMessage());
+                evidence.put("graph_api_error", e.getMessage());
+            }
+            
+            logger.info("Evidence collection completed successfully");
+            return evidence;
+            
+        } catch (Exception e) {
+            logger.error("Error collecting evidence: {}", e.getMessage(), e);
+            throw new RuntimeException("Evidence collection failed", e);
+        }
+    }
+    
+    /**
+     * Store evidence in Azure Blob Storage with immutability and metadata.
+     * FRR-ADS requirement: Machine-readable format with proper metadata tagging.
+     * Azure Blob Immutability: https://learn.microsoft.com/azure/storage/blobs/immutable-storage-overview
+     */
+    public void storeEvidence(String ksiId, Map<String, Object> evidence) {
+        try {
+            logger.info("Storing evidence for {}", ksiId);
+            
+            // Get or create container
+            BlobContainerClient containerClient = blobServiceClient
+                .getBlobContainerClient(CONTAINER_NAME);
+            
+            if (!containerClient.exists()) {
+                containerClient.create();
+                logger.info("Created evidence container: {}", CONTAINER_NAME);
+            }
+            
+            // Generate blob name with timestamp
+            String timestamp = LocalDateTime.now()
+                .format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
+            String blobName = String.format("%s/%s-evidence.json", ksiId, timestamp);
+            
+            // Convert evidence to JSON
+            String jsonEvidence = convertToJson(evidence);
+            byte[] evidenceBytes = jsonEvidence.getBytes(StandardCharsets.UTF_8);
+            
+            // Upload to blob storage
+            BlobClient blobClient = containerClient.getBlobClient(blobName);
+            blobClient.upload(
+                new ByteArrayInputStream(evidenceBytes),
+                evidenceBytes.length,
+                true
+            );
+            
+            // Set metadata for Authorization Data Sharing (FRR-ADS)
+            Map<String, String> metadata = new HashMap<>();
+            metadata.put("ksi_id", ksiId);
+            metadata.put("collection_date", LocalDateTime.now().toString());
+            metadata.put("format", "json");
+            metadata.put("compliance_framework", "fedramp-20x");
+            blobClient.setMetadata(metadata);
+            
+            // Set content type
+            BlobHttpHeaders headers = new BlobHttpHeaders()
+                .setContentType("application/json");
+            blobClient.setHttpHeaders(headers);
+            
+            logger.info("Evidence stored successfully: {}", blobName);
+            logger.info("Blob URL: {}", blobClient.getBlobUrl());
+            
+        } catch (Exception e) {
+            logger.error("Error storing evidence: {}", e.getMessage(), e);
+            throw new RuntimeException("Evidence storage failed", e);
+        }
+    }
+    
+    /**
+     * Main execution: collect and store evidence.
+     */
+    public void run(String ksiId) {
+        try {
+            logger.info("=== Starting FedRAMP 20x Evidence Collection ===");
+            logger.info("KSI ID: {}", ksiId);
+            
+            // Collect evidence
+            Map<String, Object> evidence = collectEvidence();
+            
+            // Store evidence
+            storeEvidence(ksiId, evidence);
+            
+            logger.info("=== Evidence Collection Completed Successfully ===");
+            
+        } catch (Exception e) {
+            logger.error("Evidence collection failed: {}", e.getMessage(), e);
+            System.exit(1);
+        }
+    }
+    
+    /**
+     * Convert evidence map to JSON string.
+     * Production code should use a proper JSON library like Jackson or Gson.
+     */
+    private String convertToJson(Map<String, Object> evidence) {
+        // Simple JSON conversion (use Jackson or Gson in production)
+        StringBuilder json = new StringBuilder("{\n");
+        evidence.forEach((key, value) -> {
+            json.append(String.format("  \"%s\": ", key));
+            if (value instanceof String) {
+                json.append(String.format("\"%s\",\n", value));
+            } else {
+                json.append(String.format("%s,\n", value));
+            }
+        });
+        // Remove trailing comma
+        if (json.length() > 2) {
+            json.setLength(json.length() - 2);
+            json.append("\n");
+        }
+        json.append("}");
+        return json.toString();
+    }
+    
+    /**
+     * Main entry point for standalone execution.
+     */
+    public static void main(String[] args) {
+        if (args.length < 1) {
+            System.err.println("Usage: java EvidenceCollector <KSI_ID>");
+            System.exit(1);
+        }
+        
+        String ksiId = args[0];
+        EvidenceCollector collector = new EvidenceCollector();
+        collector.run(ksiId);
+    }
+}
+```
+
+## Maven Dependencies (pom.xml)
+
+```xml
+<dependencies>
+    <!-- Azure Identity for authentication -->
+    <dependency>
+        <groupId>com.azure</groupId>
+        <artifactId>azure-identity</artifactId>
+        <version>1.11.0</version>
+    </dependency>
+    
+    <!-- Azure Storage Blobs for evidence storage -->
+    <dependency>
+        <groupId>com.azure</groupId>
+        <artifactId>azure-storage-blob</artifactId>
+        <version>12.25.0</version>
+    </dependency>
+    
+    <!-- Azure Resource Manager for resource queries -->
+    <dependency>
+        <groupId>com.azure.resourcemanager</groupId>
+        <artifactId>azure-resourcemanager</artifactId>
+        <version>2.36.0</version>
+    </dependency>
+    
+    <!-- Microsoft Graph SDK for identity data -->
+    <dependency>
+        <groupId>com.microsoft.graph</groupId>
+        <artifactId>microsoft-graph</artifactId>
+        <version>6.7.0</version>
+    </dependency>
+    
+    <!-- SLF4J for logging -->
+    <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-simple</artifactId>
+        <version>2.0.9</version>
+    </dependency>
+</dependencies>
+```
+
+## Setup Instructions
+
+### 1. Authentication Setup
+```bash
+# For local development, authenticate with Azure CLI
+az login
+
+# For production, use Managed Identity (no code changes needed)
+# Azure Managed Identity: https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview
+```
+
+### 2. Configure Storage Account
+```bash
+# Set environment variable (optional, or hardcode in class)
+export AZURE_STORAGE_ACCOUNT="stafedrampevidence"
+```
+
+### 3. Grant Permissions
+Required Azure RBAC roles:
+- **Reader** - Query Azure resources
+- **Storage Blob Data Contributor** - Write evidence to blob storage
+- **Directory.Read.All** (Graph API) - Query user/group data for IAM evidence
+
+### 4. Build and Run
+```bash
+# Build with Maven
+mvn clean package
+
+# Run evidence collection
+java -jar target/evidence-collector.jar KSI-XXX-01
+```
+
+## Deployment Options
+
+### Azure Functions (Recommended)
+Deploy as an Azure Function with timer trigger for scheduled collection:
+- Spring Cloud Function support for Java
+- Managed Identity for authentication
+- Application Insights for monitoring
+
+### Azure App Service
+Deploy as a web app with scheduled WebJobs:
+- Uses Java 17+ runtime
+- Managed Identity enabled
+- Auto-scaling configuration
+
+### Azure Container Instances
+Run as containerized workload:
+- Package with Dockerfile
+- Mount secrets via Azure Key Vault
+- Use managed identity for authentication
+
+## References
+
+- **Azure SDK for Java**: https://learn.microsoft.com/java/azure/
+- **Azure Identity Library**: https://learn.microsoft.com/java/api/overview/azure/identity-readme
+- **Azure Storage Blobs**: https://learn.microsoft.com/java/api/overview/azure/storage-blob-readme
+- **Azure Resource Manager**: https://learn.microsoft.com/java/api/overview/azure/resourcemanager-readme
+- **Microsoft Graph SDK**: https://learn.microsoft.com/graph/sdks/sdks-overview
+- **Azure Well-Architected Framework**: https://learn.microsoft.com/azure/well-architected/

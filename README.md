@@ -728,7 +728,7 @@ Analyze application code for FedRAMP 20x security compliance issues.
 
 **Parameters:**
 - `code` (string): The application code content to analyze
-- `language` (string): Programming language - currently supports `"python"`
+- `language` (string): Programming language - `"python"`, `"csharp"`, `"java"`, `"typescript"`, or `"javascript"`
 - `file_path` (string): Path to the file being analyzed (for reporting)
 - `dependencies` (array, optional): List of project dependencies (e.g., `["flask==2.3.0", "requests==2.31.0"]`)
 
@@ -738,8 +738,11 @@ Analyze application code for FedRAMP 20x security compliance issues.
 - **pr_comment**: Formatted markdown for PR reviews
 - **dependencies_checked**: Number of dependencies analyzed
 
-**Supported Languages:**
+**Supported Languages & Frameworks:**
 - **Python**: Flask, Django, FastAPI applications
+- **C#**: ASP.NET Core, Entity Framework, Azure SDK for .NET
+- **Java**: Spring Boot, Spring Security, Jakarta EE, Azure SDK for Java
+- **TypeScript/JavaScript**: Express, NestJS, Next.js, React, Angular, Vue, Azure SDK for JS
 
 **FedRAMP Requirements Checked (Phase 1 + Phase 2):**
 
@@ -871,11 +874,11 @@ Generate Infrastructure as Code templates (Bicep or Terraform) for automated evi
 - RBAC roles and permissions
 
 ### get_evidence_collection_code
-Generate business logic code (Python, C#, or PowerShell) for collecting and storing KSI evidence programmatically.
+Generate business logic code (Python, C#, PowerShell, Java, or TypeScript) for collecting and storing KSI evidence programmatically.
 
 **Parameters:**
 - `ksi_id` (string): The Key Security Indicator identifier (e.g., "KSI-IAM-01")
-- `language` (string): Either "python", "csharp", or "powershell"
+- `language` (string): Either "python", "csharp", "powershell", "java", or "typescript" (also accepts "javascript")
 
 **Returns:** Complete code examples with authentication, evidence collection, and storage
 
@@ -890,6 +893,8 @@ Generate business logic code (Python, C#, or PowerShell) for collecting and stor
 - **Python**: Uses azure-identity, azure-storage-blob, azure-monitor-query, msgraph-sdk
 - **C#**: Uses Azure.Identity, Azure.Storage.Blobs, Azure.Monitor.Query, Microsoft.Graph
 - **PowerShell**: Uses Az.Accounts, Az.Storage, Az.Monitor, Microsoft.Graph modules
+- **Java**: Uses Azure Identity, Azure Storage Blobs, Azure Resource Manager, Microsoft Graph SDK
+- **TypeScript/JavaScript**: Uses @azure/identity, @azure/storage-blob, @azure/arm-resources, @microsoft/microsoft-graph-client
 
 **Example Usage:**
 ```

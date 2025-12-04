@@ -34,7 +34,7 @@ When users ask about OSCAL, clarify it's NOT mentioned in FedRAMP 20x - it's one
 ✅ 1-hour data caching with automatic refresh
 
 ### Current Capabilities
-The server provides 26 MCP tools:
+The server provides 29 MCP tools:
 
 **Core Tools:**
 1. **get_control** - Get specific FedRAMP requirement by ID
@@ -76,9 +76,16 @@ The server provides 26 MCP tools:
 25. **get_ksi_implementation_matrix** - Get comprehensive implementation matrix for all KSIs in a family (complexity, priority, effort estimates, Azure services)
 26. **generate_implementation_checklist** - Generate detailed step-by-step implementation checklist for specific KSI with Azure-focused guidance
 
-**🆕 Code Analysis Tools:**
+**🆕 Code Analysis Tools (Multi-Language Support):**
 27. **analyze_infrastructure_code** - Analyze IaC (Bicep/Terraform) for FedRAMP compliance issues with actionable recommendations
-28. **analyze_application_code** - Analyze application code (Python) for security compliance issues
+28. **analyze_application_code** - Analyze application code (Python, C#, Java, TypeScript/JavaScript) for security compliance issues
+29. **analyze_cicd_pipeline** - Analyze CI/CD pipelines (GitHub Actions, Azure Pipelines, GitLab CI) for DevSecOps compliance
+
+**Supported Languages:**
+- **Python**: Flask, Django, FastAPI
+- **C#/.NET**: ASP.NET Core, Entity Framework, Azure SDK
+- **Java**: Spring Boot, Spring Security, Jakarta EE
+- **TypeScript/JavaScript**: Express, NestJS, Next.js, React, Angular, Vue
 
 **Comprehensive Prompts:**
 1. **initial_assessment_roadmap** - 9-11 month roadmap with budget/team guidance
@@ -103,13 +110,13 @@ The server provides 26 MCP tools:
 **All 4 Phases Refactoring Complete (97.2% reduction):**
 - server.py reduced from 9,810 lines to 270 lines
 - Infrastructure templates in `templates/bicep/` and `templates/terraform/` (13 files)
-- Code templates in `templates/code/` (7 files: Python, C#, PowerShell)
+- Code templates in `templates/code/` (9 files: Python, C#, PowerShell, Java, TypeScript)
 - Template loaders: `get_infrastructure_template(family, type)` and `get_code_template(family, language)` in `templates/__init__.py`
 - Prompt templates in `prompts/` directory (15 files)
 - Prompt loader: `load_prompt(name)` in `prompts/__init__.py`
 - Tool modules in `tools/` directory (8 modules, 29 tools)
 - Tool registration: `register_tools(mcp, data_loader)` in `tools/__init__.py`
-- Code analyzers in `analyzers/` directory (3 modules: base, iac_analyzer, app_analyzer)
+- Code analyzers in `analyzers/` directory (8 modules: base, bicep_analyzer, terraform_analyzer, python_analyzer, csharp_analyzer, java_analyzer, typescript_analyzer, cicd_analyzer)
 
 **Tool Organization:**
 - `tools/requirements.py` - Core requirements tools (3 tools)
@@ -126,7 +133,10 @@ The server provides 26 MCP tools:
 - `analyzers/base.py` - Base classes (Finding, AnalysisResult, Severity, BaseAnalyzer)
 - `analyzers/bicep_analyzer.py` - BicepAnalyzer (55 KSIs across 7 phases) - SPLIT FROM iac_analyzer.py in Phase 6B
 - `analyzers/terraform_analyzer.py` - TerraformAnalyzer (55 KSIs across 7 phases) - SPLIT FROM iac_analyzer.py in Phase 6B
-- `analyzers/app_analyzer.py` - PythonAnalyzer (8 KSIs)
+- `analyzers/python_analyzer.py` - PythonAnalyzer (8 KSIs)
+- `analyzers/csharp_analyzer.py` - CSharpAnalyzer (8 KSIs) - **NEW: Multi-language support**
+- `analyzers/java_analyzer.py` - JavaAnalyzer (8 KSIs) - **NEW: Multi-language support**
+- `analyzers/typescript_analyzer.py` - TypeScriptAnalyzer (8 KSIs) - **NEW: Multi-language support**
 - `analyzers/cicd_analyzer.py` - CICDAnalyzer (6 KSIs)
 - **Phase 1 (8 KSIs - Foundation):** MLA-05, SVC-06, CNA-01, IAM-03, SVC-03, IAM-01, SVC-08, PIY-02
 - **Phase 2 (9 KSIs - Critical Infrastructure):** IAM-02, IAM-06, CNA-02, CNA-04, CNA-06, SVC-04, SVC-05, MLA-01, MLA-02
@@ -219,8 +229,8 @@ The server provides 26 MCP tools:
 - Code templates: `templates/code/` directory (7 templates: Python, C#, PowerShell)
 - Prompt templates: `prompts/` directory (15 prompts)
 - Tool modules: `tools/` directory (8 modules, 29 tools)
-- Tests: `tests/` directory (17 test files)
-- Analyzers: `analyzers/` directory (5 modules: base, bicep_analyzer, terraform_analyzer, app_analyzer, cicd_analyzer)
+- Tests: `tests/` directory (20 test files)
+- Analyzers: `analyzers/` directory (8 modules: base, bicep_analyzer, terraform_analyzer, python_analyzer, csharp_analyzer, java_analyzer, typescript_analyzer, cicd_analyzer)
 
 ### Template & Prompt Management
 - Use `get_infrastructure_template(family, type)` to load infrastructure templates
@@ -246,7 +256,7 @@ The server provides 26 MCP tools:
 - Run all tests before committing: `python tests/test_*.py`
 - Update `TESTING.md` immediately when adding new tests
 
-### Test Organization (17 test files)
+### Test Organization (20 test files)
 **Core Functionality (8 files):**
 - `test_loader.py` - Data loading validation
 - `test_definitions.py` - Definition/KSI lookup
@@ -256,18 +266,18 @@ The server provides 26 MCP tools:
 - `test_evidence_automation.py` - IaC generation
 - `test_code_analyzer.py` - Code analysis engine (96 tests: 13 Phase 1, 18 Phase 3, 12 Phase 4, 12 Phase 5, 16 Phase 6A, 16 Phase 6B, 9 Phase 7)
 - `test_all_tools.py` - Integration testing
-- `test_evidence_automation.py` - IaC generation
-- `test_code_analyzer.py` - Code analysis engine (87 tests: 13 Phase 1, 18 Phase 3, 12 Phase 4, 12 Phase 5, 16 Phase 6A, 16 Phase 6B)
-- `test_all_tools.py` - Integration testing
 
-**Tool Functional Tests (7 files):**
+**Tool Functional Tests (10 files):**
 - `test_requirements_tools.py` - Requirements tools (get_control, list_family_controls, search_requirements)
 - `test_definitions_tools.py` - Definition tools (get_definition, list_definitions, search_definitions)
 - `test_ksi_tools.py` - KSI tools (get_ksi, list_ksi)
 - `test_documentation_tools.py` - Documentation tools (search, get_file, list_files)
 - `test_export_tools.py` - Export tools (excel, csv, ksi_specification)
 - `test_enhancement_tools.py` - 7 enhancement tools (compare, examples, dependencies, etc.)
-- `test_analyzer_tools.py` - Analyzer MCP tools (8 tests)
+- `test_analyzer_tools.py` - Analyzer MCP tools (10 tests)
+- `test_csharp_analyzer.py` - C# analyzer (12 security checks: ASP.NET Core, Entity Framework, Azure SDK)
+- `test_java_analyzer.py` - Java analyzer (12 security checks: Spring Boot, Spring Security, Azure SDK)
+- `test_typescript_analyzer.py` - TypeScript/JS analyzer (12 security checks: Express, NestJS, React, Azure SDK)
 
 **Resource Validation (2 files):**
 - `test_prompts.py` - All 15 prompt templates

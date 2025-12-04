@@ -1,0 +1,592 @@
+"""
+C# application code analyzer for FedRAMP 20x compliance.
+
+Supports C# (.NET) code analysis for security best practices.
+"""
+
+import re
+from typing import Optional
+
+from .base import BaseAnalyzer, Finding, Severity, AnalysisResult
+
+
+class CSharpAnalyzer(BaseAnalyzer):
+    """
+    Analyzer for C# application code.
+    
+    Checks for FedRAMP 20x security compliance in C#/.NET applications.
+    """
+    
+    def analyze(self, code: str, file_path: str) -> AnalysisResult:
+        """
+        Analyze C# code for FedRAMP 20x compliance.
+        
+        Args:
+            code: C# code content
+            file_path: Path to the C# file
+            
+        Returns:
+            AnalysisResult with findings
+        """
+        self.result = AnalysisResult()
+        self.result.files_analyzed = 1
+        
+        # Check for authentication (KSI-IAM-01)
+        self._check_authentication(code, file_path)
+        
+        # Check for hardcoded secrets (KSI-SVC-06)
+        self._check_secrets_management(code, file_path)
+        
+        # Check for vulnerable dependencies (KSI-SVC-08)
+        self._check_dependencies(code, file_path)
+        
+        # Check for PII handling (KSI-PIY-02)
+        self._check_pii_handling(code, file_path)
+        
+        # Check for logging (KSI-MLA-05)
+        self._check_logging(code, file_path)
+        
+        # Phase 2: Application Security
+        self._check_service_account_management(code, file_path)
+        self._check_microservices_security(code, file_path)
+        
+        # Phase 3: Secure Coding Practices
+        self._check_error_handling(code, file_path)
+        self._check_input_validation(code, file_path)
+        self._check_secure_coding(code, file_path)
+        self._check_data_classification(code, file_path)
+        self._check_privacy_controls(code, file_path)
+        self._check_service_mesh(code, file_path)
+        self._check_least_privilege(code, file_path)
+        self._check_session_management(code, file_path)
+        
+        return self.result
+    
+    def _check_authentication(self, code: str, file_path: str) -> None:
+        """Check for proper authentication implementation (KSI-IAM-01)."""
+        # Check for authentication-related usings
+        has_auth_namespace = bool(re.search(
+            r"using\s+(Microsoft\.Identity|Microsoft\.AspNetCore\.Authentication|Microsoft\.AspNetCore\.Authorization|Azure\.Identity)",
+            code
+        ))
+        
+        # Check for authentication attributes
+        has_auth_attribute = bool(re.search(
+            r"\[(Authorize|AllowAnonymous|RequireHttps)\]",
+            code
+        ))
+        
+        # Check for controller or endpoint definitions
+        has_controller = bool(re.search(
+            r"(class\s+\w+\s*:\s*Controller|class\s+\w+\s*:\s*ControllerBase|\[HttpGet\]|\[HttpPost\]|\[Route\()",
+            code
+        ))
+        
+        # Check for minimal API endpoints
+        has_minimal_api = bool(re.search(
+            r"app\.Map(Get|Post|Put|Delete)",
+            code
+        ))
+        
+        if (has_controller or has_minimal_api) and not (has_auth_namespace or has_auth_attribute):
+            line_num = self.get_line_number(code, "Controller") or \
+                       self.get_line_number(code, "app.Map") or \
+                       self.get_line_number(code, "[Http")
+            
+            self.add_finding(Finding(
+                requirement_id="KSI-IAM-01",
+                severity=Severity.HIGH,
+                title="API endpoints without authentication",
+                description="Found controller or API endpoints without [Authorize] attribute. FedRAMP 20x requires authentication for all API endpoints.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Add authentication using Azure AD/Entra ID:\n```csharp\nusing Microsoft.AspNetCore.Authorization;\nusing Microsoft.Identity.Web;\n\n// Add to Program.cs:\nbuilder.Services.AddMicrosoftIdentityWebApiAuthentication(configuration);\nbuilder.Services.AddAuthorization();\n\napp.UseAuthentication();\napp.UseAuthorization();\n\n// Protect controllers:\n[Authorize]\n[ApiController]\n[Route(\"api/[controller]\")]\npublic class DataController : ControllerBase\n{\n    [HttpGet]\n    public IActionResult GetData()\n    {\n        return Ok(new { data = \"secure\" });\n    }\n}\n```\nSource: Azure AD authentication for ASP.NET Core (https://learn.microsoft.com/azure/active-directory/develop/quickstart-web-api-aspnet-core-protect-api)"
+            ))
+        elif has_auth_namespace and has_auth_attribute:
+            line_num = self.get_line_number(code, "[Authorize]") or \
+                       self.get_line_number(code, "Microsoft.Identity")
+            
+            self.add_finding(Finding(
+                requirement_id="KSI-IAM-01",
+                severity=Severity.INFO,
+                title="Authentication properly implemented",
+                description="API endpoints protected with [Authorize] attribute and Azure AD integration.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure JWT token validation is configured and role-based access control (RBAC) is implemented.",
+                good_practice=True
+            ))
+    
+    def _check_secrets_management(self, code: str, file_path: str) -> None:
+        """Check for hardcoded secrets (KSI-SVC-06)."""
+        # Patterns for potential secrets
+        secret_patterns = [
+            (r'(password|Password)\s*=\s*"[^"]{3,}"', "password"),
+            (r'(apiKey|ApiKey|API_KEY)\s*=\s*"[^"]{10,}"', "API key"),
+            (r'(secret|Secret)\s*=\s*"[^"]{10,}"', "secret"),
+            (r'(token|Token)\s*=\s*"[^"]{10,}"', "token"),
+            (r'(connectionString|ConnectionString)\s*=\s*"[^"]{10,}"', "connection string"),
+        ]
+        
+        for pattern, secret_type in secret_patterns:
+            matches = re.finditer(pattern, code, re.IGNORECASE)
+            for match in matches:
+                matched_text = match.group(0)
+                
+                # Skip if it's from configuration or Key Vault
+                if any(x in matched_text for x in ["Configuration[", "GetSecret", "SecretClient", "Environment.GetEnvironmentVariable"]):
+                    continue
+                
+                # Skip common non-secret values
+                if any(x in matched_text.lower() for x in ["example", "test", "dummy", "placeholder", "***", "your-", "enter-"]):
+                    continue
+                
+                line_num = self.get_line_number(code, matched_text)
+                self.add_finding(Finding(
+                    requirement_id="KSI-SVC-06",
+                    severity=Severity.HIGH,
+                    title=f"Potential hardcoded {secret_type} detected",
+                    description=f"Found {secret_type} value in code. FedRAMP 20x requires secrets to be stored in Azure Key Vault.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=matched_text,
+                    recommendation=f"Use Azure Key Vault to store {secret_type}:\n```csharp\nusing Azure.Identity;\nusing Azure.Security.KeyVault.Secrets;\n\nvar keyVaultUrl = new Uri(\"https://your-vault.vault.azure.net\");\nvar credential = new DefaultAzureCredential();\nvar client = new SecretClient(keyVaultUrl, credential);\n\n// Retrieve secret\nKeyVaultSecret secret = await client.GetSecretAsync(\"{secret_type.replace(' ', '-')}\");\nstring secretValue = secret.Value;\n\n// Or use configuration:\nbuilder.Configuration.AddAzureKeyVault(keyVaultUrl, credential);\nstring secretValue = builder.Configuration[\"{secret_type.replace(' ', '-')}\"];\n```\nSource: Azure Key Vault with ASP.NET Core (https://learn.microsoft.com/azure/key-vault/general/tutorial-net-create-vault-azure-web-app)"
+                ))
+        
+        # Check for good practices (Key Vault usage)
+        if re.search(r"using\s+Azure\.Security\.KeyVault\.Secrets", code):
+            if re.search(r"DefaultAzureCredential|ManagedIdentityCredential", code):
+                line_num = self.get_line_number(code, "SecretClient") or self.get_line_number(code, "DefaultAzureCredential")
+                self.add_finding(Finding(
+                    requirement_id="KSI-SVC-06",
+                    severity=Severity.INFO,
+                    title="Azure Key Vault with managed identity configured",
+                    description="Secrets retrieved from Key Vault using DefaultAzureCredential (managed identity).",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Ensure Key Vault access policies grant minimal required permissions to managed identity.",
+                    good_practice=True
+                ))
+    
+    def _check_dependencies(self, code: str, file_path: str) -> None:
+        """Check for potentially vulnerable dependencies (KSI-SVC-08)."""
+        # Check for unsafe deserialization
+        vulnerable_patterns = [
+            (r"BinaryFormatter|SoapFormatter|NetDataContractSerializer|LosFormatter", "Insecure deserialization (use System.Text.Json)"),
+            (r"Process\.Start\([^)]*user", "Command injection risk in Process.Start"),
+            (r"SqlCommand.*CommandText.*\+", "Potential SQL injection (use parameterized queries)"),
+            (r"Response\.Write\([^)]*Request\[", "Cross-site scripting (XSS) risk"),
+        ]
+        
+        for pattern, issue in vulnerable_patterns:
+            if re.search(pattern, code, re.IGNORECASE):
+                line_num = self.get_line_number(code, pattern)
+                self.add_finding(Finding(
+                    requirement_id="KSI-SVC-08",
+                    severity=Severity.HIGH if "injection" in issue.lower() else Severity.MEDIUM,
+                    title=f"Potentially unsafe code pattern: {issue}",
+                    description=f"Using {issue}. FedRAMP 20x requires secure coding practices and vulnerability scanning.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Use secure alternatives:\n- BinaryFormatter → System.Text.Json.JsonSerializer\n- SqlCommand string concat → SqlParameter\n- Response.Write(user input) → HtmlEncoder.Encode()\n\nRun dependency scanning:\n```bash\ndotnet list package --vulnerable\ndotnet tool install --global Microsoft.CST.OAT.VelocityRaptor\n```\nSource: OWASP Top 10 for .NET (https://owasp.org/www-project-top-ten/)"
+                ))
+        
+        # Check for .csproj file (good practice if versions are specified)
+        if file_path.endswith(".csproj"):
+            # Check if PackageReference has Version attribute
+            if re.search(r'<PackageReference.*Version="[\d\.]+"', code):
+                line_num = self.get_line_number(code, "PackageReference")
+                self.add_finding(Finding(
+                    requirement_id="KSI-SVC-08",
+                    severity=Severity.INFO,
+                    title="NuGet packages pinned to specific versions",
+                    description="Dependencies use explicit version specifications for reproducibility.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Regularly update packages and scan for vulnerabilities using 'dotnet list package --vulnerable'.",
+                    good_practice=True
+                ))
+    
+    def _check_pii_handling(self, code: str, file_path: str) -> None:
+        """Check for PII handling (KSI-PIY-02)."""
+        # Check for properties/fields that might contain PII
+        pii_patterns = [
+            (r"(Ssn|SocialSecurityNumber|SSN)", "Social Security Number"),
+            (r"(Email|EmailAddress)", "email address"),
+            (r"(Phone|PhoneNumber|Telephone)", "phone number"),
+            (r"(DateOfBirth|DOB|BirthDate)", "date of birth"),
+            (r"(Address|StreetAddress|HomeAddress)", "physical address"),
+        ]
+        
+        for pattern, pii_type in pii_patterns:
+            matches = re.finditer(r"(public|private|protected)\s+\w+\s+" + pattern, code, re.IGNORECASE)
+            for match in matches:
+                # Check if there's encryption/data protection nearby
+                context_start = max(0, match.start() - 300)
+                context_end = min(len(code), match.end() + 300)
+                context = code[context_start:context_end]
+                
+                has_protection = bool(re.search(r"(Encrypt|Protect|IDataProtector|AES|Hash|Redact)", context, re.IGNORECASE))
+                
+                if not has_protection:
+                    line_num = self.get_line_number(code, match.group(0))
+                    self.add_finding(Finding(
+                        requirement_id="KSI-PIY-02",
+                        severity=Severity.MEDIUM,
+                        title=f"Potential unprotected PII: {pii_type}",
+                        description=f"Property '{match.group(0)}' may contain {pii_type}. FedRAMP 20x requires PII to be encrypted at rest and in transit.",
+                        file_path=file_path,
+                        line_number=line_num,
+                        recommendation=f"Use ASP.NET Core Data Protection API to encrypt {pii_type}:\n```csharp\nusing Microsoft.AspNetCore.DataProtection;\n\npublic class UserService\n{{\n    private readonly IDataProtector _protector;\n    \n    public UserService(IDataProtectionProvider provider)\n    {{\n        _protector = provider.CreateProtector(\"PII.Protection\");\n    }}\n    \n    public string EncryptPII(string piiValue)\n    {{\n        return _protector.Protect(piiValue);\n    }}\n    \n    public string DecryptPII(string encryptedValue)\n    {{\n        return _protector.Unprotect(encryptedValue);\n    }}\n}}\n\n// Store encryption keys in Azure Key Vault\nbuilder.Services.AddDataProtection()\n    .PersistKeysToAzureBlobStorage(blobUri)\n    .ProtectKeysWithAzureKeyVault(keyId, credential);\n```\nSource: ASP.NET Core Data Protection (https://learn.microsoft.com/aspnet/core/security/data-protection/)"
+                    ))
+    
+    def _check_logging(self, code: str, file_path: str) -> None:
+        """Check for proper logging implementation (KSI-MLA-05)."""
+        # Check for logging usage
+        has_logging = bool(re.search(r"(ILogger<|_logger\.|LogInformation|LogError|LogWarning)", code))
+        
+        # Check for Application Insights
+        has_app_insights = bool(re.search(r"(TelemetryClient|AddApplicationInsightsTelemetry)", code))
+        
+        # Check for potentially sensitive data in logs
+        if has_logging:
+            sensitive_in_logs = re.search(
+                r'(LogInformation|LogError|LogWarning).*\(.*\{.*\}.*\)',
+                code
+            )
+            
+            if sensitive_in_logs:
+                # Check if nearby code handles passwords, tokens, etc.
+                context_start = max(0, sensitive_in_logs.start() - 200)
+                context_end = min(len(code), sensitive_in_logs.end() + 200)
+                context = code[context_start:context_end]
+                
+                if re.search(r"(password|token|secret|apikey)", context, re.IGNORECASE):
+                    line_num = self.get_line_number(code, sensitive_in_logs.group(0))
+                    self.add_finding(Finding(
+                        requirement_id="KSI-MLA-05",
+                        severity=Severity.MEDIUM,
+                        title="Potential sensitive data in logs",
+                        description="Logging statement near sensitive data. Ensure secrets are not logged. FedRAMP 20x requires audit logs without exposing sensitive information.",
+                        file_path=file_path,
+                        line_number=line_num,
+                        recommendation="Redact sensitive data before logging:\n```csharp\npublic static string Redact(string sensitive)\n{\n    if (string.IsNullOrEmpty(sensitive) || sensitive.Length < 4)\n        return \"***\";\n    return $\"{sensitive.Substring(0, 2)}***{sensitive.Substring(sensitive.Length - 2)}\";\n}\n\n// Use structured logging with redaction\n_logger.LogInformation(\"User login: {{Email}}\", Redact(userEmail));\n```"
+                    ))
+        
+        if not has_logging:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-05",
+                severity=Severity.MEDIUM,
+                title="No logging implementation detected",
+                description="No ILogger usage found. FedRAMP 20x requires comprehensive audit logging for security events.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Implement structured logging with Application Insights:\n```csharp\n// Program.cs\nbuilder.Logging.AddApplicationInsights();\nbuilder.Services.AddApplicationInsightsTelemetry();\n\n// Controller\npublic class ApiController : ControllerBase\n{\n    private readonly ILogger<ApiController> _logger;\n    \n    public ApiController(ILogger<ApiController> logger)\n    {\n        _logger = logger;\n    }\n    \n    [HttpGet]\n    public IActionResult GetData()\n    {\n        _logger.LogInformation(\"Data access request from {{User}}\", User.Identity?.Name);\n        return Ok();\n    }\n}\n```\nSource: Azure Application Insights for .NET (https://learn.microsoft.com/azure/azure-monitor/app/asp-net-core)"
+            ))
+        elif has_app_insights:
+            line_num = self.get_line_number(code, "ApplicationInsights") or self.get_line_number(code, "TelemetryClient")
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-05",
+                severity=Severity.INFO,
+                title="Application Insights logging configured",
+                description="Application Insights telemetry enabled for centralized logging.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure logs are sent to Log Analytics workspace and connected to Sentinel SIEM.",
+                good_practice=True
+            ))
+    
+    def _check_service_account_management(self, code: str, file_path: str) -> None:
+        """Check for proper service account management (KSI-IAM-02)."""
+        # Check for service principal or managed identity usage
+        has_managed_identity = bool(re.search(r"DefaultAzureCredential|ManagedIdentityCredential|ChainedTokenCredential", code))
+        
+        # Check for hardcoded credentials (anti-pattern)
+        has_hardcoded_creds = bool(re.search(r'ClientSecretCredential.*"[a-zA-Z0-9]{30,}"', code))
+        
+        if has_hardcoded_creds:
+            line_num = self.get_line_number(code, "ClientSecretCredential")
+            self.add_finding(Finding(
+                requirement_id="KSI-IAM-02",
+                severity=Severity.HIGH,
+                title="Hardcoded service principal credentials detected",
+                description="Client secret appears to be hardcoded. FedRAMP 20x requires managed identities for service authentication.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Use managed identities instead of service principals:\n```csharp\n// Remove ClientSecretCredential with hardcoded secret\n// Use DefaultAzureCredential which automatically uses managed identity in Azure\nvar credential = new DefaultAzureCredential();\n\n// Or explicitly use managed identity\nvar credential = new ManagedIdentityCredential();\n\n// Works in Azure App Service, Azure Functions, AKS, VMs with system-assigned identity\n```\nSource: Azure Managed Identities (https://learn.microsoft.com/azure/active-directory/managed-identities-azure-resources/overview)"
+            ))
+        elif has_managed_identity:
+            line_num = self.get_line_number(code, "DefaultAzureCredential") or self.get_line_number(code, "ManagedIdentityCredential")
+            self.add_finding(Finding(
+                requirement_id="KSI-IAM-02",
+                severity=Severity.INFO,
+                title="Managed identity authentication configured",
+                description="Service uses DefaultAzureCredential or ManagedIdentityCredential for passwordless authentication.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure the managed identity has least-privilege RBAC assignments.",
+                good_practice=True
+            ))
+    
+    def _check_microservices_security(self, code: str, file_path: str) -> None:
+        """Check for microservices security patterns (KSI-CNA-07)."""
+        # Check for service-to-service authentication
+        has_dapr = bool(re.search(r"Dapr\.|DaprClient|AddDapr", code))
+        has_http_client = bool(re.search(r"HttpClient|IHttpClientFactory", code))
+        
+        if has_http_client and not has_dapr:
+            # Check if DefaultAzureCredential is used for service calls
+            has_auth_handler = bool(re.search(r"(AddHttpMessageHandler|DelegatingHandler|Bearer.*token)", code, re.IGNORECASE))
+            
+            if not has_auth_handler:
+                line_num = self.get_line_number(code, "HttpClient")
+                self.add_finding(Finding(
+                    requirement_id="KSI-CNA-07",
+                    severity=Severity.MEDIUM,
+                    title="HttpClient without authentication handler",
+                    description="Service-to-service calls should use managed identity and bearer tokens. FedRAMP 20x requires authenticated service communication.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Add authentication to HttpClient:\n```csharp\n// Add Azure AD authentication to HttpClient\nservices.AddHttpClient<IMyService, MyService>(client =>\n{\n    client.BaseAddress = new Uri(\"https://api.example.com\");\n})\n.AddHttpMessageHandler<AuthenticationDelegatingHandler>();\n\n// Implement delegating handler\npublic class AuthenticationDelegatingHandler : DelegatingHandler\n{\n    private readonly TokenCredential _credential;\n    \n    protected override async Task<HttpResponseMessage> SendAsync(\n        HttpRequestMessage request, CancellationToken cancellationToken)\n    {\n        var token = await _credential.GetTokenAsync(\n            new TokenRequestContext(new[] { \"api://your-api/.default\" }));\n        request.Headers.Authorization = \n            new AuthenticationHeaderValue(\"Bearer\", token.Token);\n        return await base.SendAsync(request, cancellationToken);\n    }\n}\n```"
+                ))
+        elif has_dapr:
+            line_num = self.get_line_number(code, "Dapr")
+            self.add_finding(Finding(
+                requirement_id="KSI-CNA-07",
+                severity=Severity.INFO,
+                title="Dapr service mesh configured",
+                description="Using Dapr for service-to-service communication with built-in security.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure Dapr mTLS is enabled and service invocation uses access control policies.",
+                good_practice=True
+            ))
+    
+    def _check_error_handling(self, code: str, file_path: str) -> None:
+        """Check for proper error handling (KSI-SVC-01)."""
+        # Check for empty catch blocks
+        empty_catch = re.search(r"catch\s*\([^)]*\)\s*\{\s*\}", code)
+        
+        if empty_catch:
+            line_num = self.get_line_number(code, empty_catch.group(0))
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-01",
+                severity=Severity.MEDIUM,
+                title="Empty catch block detected",
+                description="Empty catch block swallows exceptions without logging. FedRAMP 20x requires error logging for audit trails.",
+                file_path=file_path,
+                line_number=line_num,
+                code_snippet=empty_catch.group(0),
+                recommendation="Log exceptions and handle appropriately:\n```csharp\ntry\n{\n    // operation\n}\ncatch (Exception ex)\n{\n    _logger.LogError(ex, \"Operation failed: {{Operation}}\", \"operationName\");\n    throw; // or handle gracefully\n}\n```"
+            ))
+        
+        # Check for generic exception catching
+        generic_catch = re.search(r"catch\s*\(\s*Exception\s+\w+\s*\)", code)
+        
+        if generic_catch:
+            # Check if it's near the top-level (acceptable for global error handling)
+            context_before = code[:generic_catch.start()]
+            if "Program" not in context_before and "Startup" not in context_before and "Middleware" not in context_before:
+                line_num = self.get_line_number(code, generic_catch.group(0))
+                self.add_finding(Finding(
+                    requirement_id="KSI-SVC-01",
+                    severity=Severity.LOW,
+                    title="Generic exception handler detected",
+                    description="Catching generic Exception hides specific error types. Consider catching specific exceptions.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Catch specific exceptions when possible:\n```csharp\ntry\n{\n    await database.SaveAsync();\n}\ncatch (DbUpdateException ex)\n{\n    _logger.LogError(ex, \"Database update failed\");\n    return StatusCode(500, \"Database error\");\n}\ncatch (ValidationException ex)\n{\n    _logger.LogWarning(ex, \"Validation failed\");\n    return BadRequest(ex.Message);\n}\n```"
+                ))
+    
+    def _check_input_validation(self, code: str, file_path: str) -> None:
+        """Check for input validation (KSI-SVC-02)."""
+        # Check for data annotations
+        has_validation = bool(re.search(r"\[(Required|StringLength|Range|RegularExpression|MaxLength|MinLength)\]", code))
+        
+        # Check for model binding in controllers
+        has_model_binding = bool(re.search(r"\[FromBody\]|\[FromQuery\]|\[FromRoute\]", code))
+        
+        # Check for model state validation
+        has_model_state_check = bool(re.search(r"ModelState\.IsValid", code))
+        
+        if has_model_binding and not (has_validation or has_model_state_check):
+            line_num = self.get_line_number(code, "[FromBody]") or self.get_line_number(code, "[FromQuery]")
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-02",
+                severity=Severity.MEDIUM,
+                title="Model binding without validation",
+                description="Controller accepts input without validation attributes or ModelState check. FedRAMP 20x requires input validation to prevent injection attacks.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Add data annotations and validate ModelState:\n```csharp\npublic class CreateUserRequest\n{\n    [Required(ErrorMessage = \"Username is required\")]\n    [StringLength(50, MinimumLength = 3)]\n    [RegularExpression(@\"^[a-zA-Z0-9_]+$\", ErrorMessage = \"Invalid characters\")]\n    public string Username { get; set; }\n    \n    [Required]\n    [EmailAddress]\n    public string Email { get; set; }\n}\n\n[HttpPost]\npublic IActionResult CreateUser([FromBody] CreateUserRequest request)\n{\n    if (!ModelState.IsValid)\n    {\n        return BadRequest(ModelState);\n    }\n    // Process validated input\n}\n```\nSource: ASP.NET Core Model Validation (https://learn.microsoft.com/aspnet/core/mvc/models/validation)"
+            ))
+        elif has_validation and has_model_state_check:
+            line_num = self.get_line_number(code, "[Required]") or self.get_line_number(code, "ModelState.IsValid")
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-02",
+                severity=Severity.INFO,
+                title="Input validation properly configured",
+                description="Models use data annotations and controllers validate ModelState.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Consider using FluentValidation for complex validation scenarios.",
+                good_practice=True
+            ))
+    
+    def _check_secure_coding(self, code: str, file_path: str) -> None:
+        """Check for secure coding practices (KSI-SVC-07)."""
+        issues = []
+        
+        # Check for HTTPS redirection
+        if re.search(r"(UseHsts|UseHttpsRedirection)", code):
+            line_num = self.get_line_number(code, "UseHttpsRedirection") or self.get_line_number(code, "UseHsts")
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-07",
+                severity=Severity.INFO,
+                title="HTTPS enforcement configured",
+                description="Application enforces HTTPS with HSTS.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure HSTS max-age is set to at least 1 year (31536000 seconds).",
+                good_practice=True
+            ))
+        elif re.search(r"(WebApplication\.Create|CreateBuilder)", code):
+            line_num = self.get_line_number(code, "WebApplication")
+            issues.append("Missing app.UseHttpsRedirection() and app.UseHsts()")
+        
+        # Check for CORS configuration
+        if re.search(r"UseCors\(.*\*", code):
+            line_num = self.get_line_number(code, "UseCors")
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-07",
+                severity=Severity.MEDIUM,
+                title="Overly permissive CORS policy",
+                description="CORS allows all origins (*). FedRAMP 20x requires restricted cross-origin access.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Restrict CORS to specific origins:\n```csharp\nbuilder.Services.AddCors(options =>\n{\n    options.AddPolicy(\"AllowedOrigins\", policy =>\n    {\n        policy.WithOrigins(\"https://yourdomain.com\")\n              .AllowAnyHeader()\n              .AllowAnyMethod()\n              .AllowCredentials();\n    });\n});\n\napp.UseCors(\"AllowedOrigins\");\n```"
+            ))
+        
+        if issues:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-07",
+                severity=Severity.HIGH,
+                title="Missing security configurations",
+                description=f"Security issues detected: {'; '.join(issues)}",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Add security middleware in Program.cs:\n```csharp\nvar app = builder.Build();\n\nif (!app.Environment.IsDevelopment())\n{\n    app.UseHsts();\n}\n\napp.UseHttpsRedirection();\napp.UseAuthentication();\napp.UseAuthorization();\n```"
+            ))
+    
+    def _check_data_classification(self, code: str, file_path: str) -> None:
+        """Check for data classification attributes (KSI-PIY-01)."""
+        # Check for custom data classification attributes
+        has_classification = bool(re.search(r"\[(Sensitive|Confidential|Internal|Public)Data\]", code))
+        
+        # Check for PII-related properties
+        has_pii_properties = bool(re.search(r"(Email|Phone|SSN|DateOfBirth|Address)", code))
+        
+        if has_pii_properties and not has_classification:
+            line_num = self.get_line_number(code, "Email") or self.get_line_number(code, "Phone")
+            self.add_finding(Finding(
+                requirement_id="KSI-PIY-01",
+                severity=Severity.LOW,
+                title="PII properties without data classification attributes",
+                description="Properties containing PII should be marked with data classification attributes for tracking and compliance.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Create and use data classification attributes:\n```csharp\n[AttributeUsage(AttributeTargets.Property)]\npublic class SensitiveDataAttribute : Attribute\n{\n    public DataClassification Classification { get; set; }\n}\n\npublic enum DataClassification\n{\n    Public,\n    Internal,\n    Confidential,\n    Restricted\n}\n\npublic class User\n{\n    [SensitiveData(Classification = DataClassification.Restricted)]\n    public string SSN { get; set; }\n    \n    [SensitiveData(Classification = DataClassification.Confidential)]\n    public string Email { get; set; }\n}\n```"
+            ))
+    
+    def _check_privacy_controls(self, code: str, file_path: str) -> None:
+        """Check for privacy control implementation (KSI-PIY-03)."""
+        # Check for data anonymization/pseudonymization
+        has_anonymization = bool(re.search(r"(Anonymize|Pseudonymize|Hash|Redact)", code))
+        
+        # Check for consent tracking
+        has_consent = bool(re.search(r"(Consent|UserConsent|PrivacyAgreement)", code))
+        
+        if not has_consent and re.search(r"(User|Customer|Person)", code):
+            line_num = self.get_line_number(code, "class.*User") or self.get_line_number(code, "class.*Customer")
+            if line_num:
+                self.add_finding(Finding(
+                    requirement_id="KSI-PIY-03",
+                    severity=Severity.LOW,
+                    title="User data without consent tracking",
+                    description="User/customer entities should track privacy consent for FedRAMP 20x compliance.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Add consent tracking properties:\n```csharp\npublic class User\n{\n    public bool MarketingConsentGiven { get; set; }\n    public DateTime? ConsentDate { get; set; }\n    public string ConsentVersion { get; set; }\n    public bool DataSharingConsent { get; set; }\n}\n```"
+                ))
+    
+    def _check_service_mesh(self, code: str, file_path: str) -> None:
+        """Check for service mesh security (KSI-CNA-07)."""
+        # Already covered in _check_microservices_security
+        pass
+    
+    def _check_least_privilege(self, code: str, file_path: str) -> None:
+        """Check for least privilege implementation (KSI-IAM-04)."""
+        # Check for role-based authorization
+        has_role_auth = bool(re.search(r'\[Authorize\(Roles\s*=|Policy\s*=', code))
+        
+        # Check for resource-based authorization
+        has_resource_auth = bool(re.search(r"IAuthorizationService|AuthorizeAsync", code))
+        
+        if re.search(r"\[Authorize\]", code) and not (has_role_auth or has_resource_auth):
+            line_num = self.get_line_number(code, "[Authorize]")
+            self.add_finding(Finding(
+                requirement_id="KSI-IAM-04",
+                severity=Severity.MEDIUM,
+                title="Authorization without role or policy checks",
+                description="Using [Authorize] without Roles or Policy allows any authenticated user. FedRAMP 20x requires least-privilege access control.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Implement role-based or policy-based authorization:\n```csharp\n// Role-based\n[Authorize(Roles = \"Admin,Manager\")]\npublic IActionResult DeleteUser(int id) { }\n\n// Policy-based (recommended)\nservices.AddAuthorization(options =>\n{\n    options.AddPolicy(\"CanDeleteUser\", policy =>\n        policy.RequireClaim(\"permission\", \"user.delete\"));\n});\n\n[Authorize(Policy = \"CanDeleteUser\")]\npublic IActionResult DeleteUser(int id) { }\n\n// Resource-based (most granular)\npublic async Task<IActionResult> Edit(int id)\n{\n    var resource = await _repository.GetAsync(id);\n    var authResult = await _authService.AuthorizeAsync(\n        User, resource, \"CanEdit\");\n    if (!authResult.Succeeded)\n        return Forbid();\n}\n```\nSource: ASP.NET Core Authorization (https://learn.microsoft.com/aspnet/core/security/authorization/)"
+            ))
+        elif has_role_auth or has_resource_auth:
+            line_num = self.get_line_number(code, "Policy =") or self.get_line_number(code, "Roles =") or self.get_line_number(code, "AuthorizeAsync")
+            self.add_finding(Finding(
+                requirement_id="KSI-IAM-04",
+                severity=Severity.INFO,
+                title="Least privilege authorization implemented",
+                description="Application uses role-based or policy-based authorization for access control.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Regularly review authorization policies and ensure they follow least privilege principle.",
+                good_practice=True
+            ))
+    
+    def _check_session_management(self, code: str, file_path: str) -> None:
+        """Check for secure session management (KSI-IAM-07)."""
+        # Check for session configuration
+        has_session_config = bool(re.search(r"AddSession|UseSession", code))
+        
+        if has_session_config:
+            # Check for secure cookie settings
+            has_secure_cookies = bool(re.search(r"Cookie\s*=\s*new.*HttpOnly\s*=\s*true.*Secure\s*=\s*true", code, re.DOTALL))
+            
+            if not has_secure_cookies:
+                line_num = self.get_line_number(code, "AddSession") or self.get_line_number(code, "UseSession")
+                self.add_finding(Finding(
+                    requirement_id="KSI-IAM-07",
+                    severity=Severity.MEDIUM,
+                    title="Session cookies without security flags",
+                    description="Session management should use HttpOnly and Secure flags. FedRAMP 20x requires secure session handling.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Configure secure session cookies:\n```csharp\nbuilder.Services.AddSession(options =>\n{\n    options.Cookie.HttpOnly = true;\n    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;\n    options.Cookie.SameSite = SameSiteMode.Strict;\n    options.IdleTimeout = TimeSpan.FromMinutes(20);\n});\n\n// For authentication cookies\nbuilder.Services.ConfigureApplicationCookie(options =>\n{\n    options.Cookie.HttpOnly = true;\n    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;\n    options.Cookie.SameSite = SameSiteMode.Strict;\n    options.ExpireTimeSpan = TimeSpan.FromHours(1);\n    options.SlidingExpiration = true;\n});\n```\nSource: ASP.NET Core Security best practices (https://learn.microsoft.com/aspnet/core/security/)"
+                ))
+            else:
+                line_num = self.get_line_number(code, "HttpOnly")
+                self.add_finding(Finding(
+                    requirement_id="KSI-IAM-07",
+                    severity=Severity.INFO,
+                    title="Secure session management configured",
+                    description="Session cookies use HttpOnly, Secure, and SameSite flags.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Ensure session timeout is configured appropriately (e.g., 20 minutes idle timeout).",
+                    good_practice=True
+                ))

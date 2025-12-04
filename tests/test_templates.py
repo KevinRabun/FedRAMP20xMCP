@@ -72,6 +72,8 @@ def test_load_code_templates():
         "generic_csharp",
         "generic_powershell",
         "generic_python",
+        "generic_java",
+        "generic_typescript",
         "iam_csharp",
         "iam_powershell",
         "iam_python",
@@ -88,6 +90,8 @@ def test_load_code_templates():
                 "python": ["def ", "import ", "class ", "async "],
                 "csharp": ["using ", "namespace ", "class ", "public "],
                 "powershell": ["param", "function ", "$", "Write-"],
+                "java": ["import ", "class ", "public ", "private "],
+                "typescript": ["import ", "class ", "interface ", "async ", "const "],
             }
             
             # Determine language from template name
@@ -97,6 +101,10 @@ def test_load_code_templates():
                 markers = language_markers["csharp"]
             elif "powershell" in template_name:
                 markers = language_markers["powershell"]
+            elif "java" in template_name:
+                markers = language_markers["java"]
+            elif "typescript" in template_name:
+                markers = language_markers["typescript"]
             else:
                 markers = []
             
@@ -109,7 +117,7 @@ def test_load_code_templates():
             print(f"❌ code/{template_name}.txt: {e}")
             raise
     
-    print(f"\n📊 Loaded {len(templates)}/7 code templates")
+    print(f"\n📊 Loaded {len(templates)}/9 code templates")
 
 
 def test_get_infrastructure_template():
@@ -148,7 +156,7 @@ def test_get_code_template():
     print("\n=== Testing get_code_template ===\n")
     
     families = ["IAM", "MLA", "AFR", "CNA", "RPL", "SVC", "PIY"]
-    languages = ["python", "csharp", "powershell"]
+    languages = ["python", "csharp", "powershell", "java", "typescript"]
     
     for language in languages:
         print(f"\nTesting {language}:")
@@ -162,6 +170,8 @@ def test_get_code_template():
                     "python": ["def ", "import ", "class ", "async "],
                     "csharp": ["using ", "namespace ", "class ", "public "],
                     "powershell": ["param", "function ", "$", "Write-"],
+                    "java": ["import ", "class ", "public ", "private "],
+                    "typescript": ["import ", "class ", "interface ", "async ", "const "],
                 }
                 
                 markers = language_markers[language]

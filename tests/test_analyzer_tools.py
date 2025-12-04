@@ -212,12 +212,12 @@ async def test_unsupported_language():
     
     result = await analyze_application_code_impl(
         code="some code",
-        language="javascript",
-        file_path="app.js"
+        language="ruby",  # Ruby is not supported
+        file_path="app.rb"
     )
     
     assert "error" in result, "Should return error for unsupported language"
-    assert "javascript" in result["error"].lower()
+    assert "ruby" in result["error"].lower()
     
     print("✅ Unsupported language handled correctly")
 
