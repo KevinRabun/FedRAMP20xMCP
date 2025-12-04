@@ -124,7 +124,7 @@ The server provides 26 MCP tools:
 
 **Analyzer Organization:**
 - `analyzers/base.py` - Base classes (Finding, AnalysisResult, Severity, BaseAnalyzer)
-- `analyzers/iac_analyzer.py` - BicepAnalyzer, TerraformAnalyzer (23 KSIs)
+- `analyzers/iac_analyzer.py` - BicepAnalyzer, TerraformAnalyzer (31 KSIs)
 - `analyzers/app_analyzer.py` - PythonAnalyzer (8 KSIs)
 - `analyzers/cicd_analyzer.py` - CICDAnalyzer (6 KSIs)
 - **Phase 1 (8 KSIs - Foundation):** MLA-05, SVC-06, CNA-01, IAM-03, SVC-03, IAM-01, SVC-08, PIY-02
@@ -132,7 +132,8 @@ The server provides 26 MCP tools:
 - **Phase 3 (8 KSIs - Secure Coding):** SVC-01, SVC-02, SVC-07, PIY-01, PIY-03, CNA-07, IAM-04, IAM-07
 - **Phase 4 (6 KSIs - DevSecOps Automation):** CMT-01, CMT-02, CMT-03, AFR-01, AFR-02, CED-01
 - **Phase 5 (6 KSIs - Runtime Security & Monitoring):** MLA-03, MLA-04, MLA-06, INR-01, INR-02, AFR-03
-- **Coverage:** 37 KSIs out of 72 (51%) - see ANALYZER_ROADMAP.md for expansion plan
+- **Phase 6A (8 KSIs - Infrastructure Resilience):** RPL-01, RPL-02, RPL-03, RPL-04, CNA-03, CNA-05, IAM-05, AFR-11
+- **Coverage:** 45 KSIs out of 72 (62.5%) - see ANALYZER_ROADMAP.md for expansion plan
 
 ## Development Rules
 

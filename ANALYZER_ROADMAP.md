@@ -1,9 +1,9 @@
 # Code Analyzer Expansion Roadmap
 
-## Current Status: Phase 5 Complete ✅
+## Current Status: Phase 6A Complete ✅
 
-**Coverage:** 37 KSIs out of 72 (51%)
-**Families Covered:** IAM (7/7), MLA (5/8), SVC (8/10), CNA (5/8), PIY (3/8), CMT (3/3), AFR (3/6), CED (1/2), INR (2/2)
+**Coverage:** 45 KSIs out of 72 (62.5%)
+**Families Covered:** IAM (7/7 complete), MLA (5/8), SVC (8/10), CNA (6/8), PIY (3/8), CMT (3/3 complete), AFR (4/6), CED (1/2), INR (2/2 complete), RPL (4/4 complete)
 
 ### Phase 1: Foundation (COMPLETE) ✅
 
@@ -408,24 +408,162 @@
 - Missing `Microsoft.SecurityInsights/dataConnectors` with threat intel
 - Recommends TAXII feeds, IOC matching, threat scores
 
-**Test Coverage:** 12 new tests (55 total) - All passing ✅
+**Test Coverage:** 12 new tests (71 total) - All passing ✅
 
 ---
 
-## Phase 6: Full Coverage 🎯
+## Phase 6A: Infrastructure Resilience & Security (COMPLETE) ✅
 
-**Target:** Add 35 KSIs → 72 total (100% coverage)
-**Focus:** Remaining families (RPL, TPR, remaining AFR, CED, PIY)
-**Effort:** 4-6 weeks
+**Target:** Add 8 KSIs → 45 total (62.5% coverage)
+**Focus:** Disaster recovery, backup, network security, cryptography
+**Completed:** December 2024
+**Priority:** HIGH
+
+### Infrastructure Resilience (8 KSIs) ✅
+
+#### KSI-RPL-01: Recovery Objectives ✅
+**Implementation:**
+- Detects missing Recovery Services Vault or backup configuration
+- Checks for RTO/RPO documentation in resource tags
+- Validates recovery infrastructure for critical resources
+- Reports good practice when RTO/RPO properly documented
+
+**Detection Patterns:**
+- Missing `Microsoft.RecoveryServices/vaults` (Bicep) or `azurerm_recovery_services_vault` (Terraform)
+- Missing RTO/RPO tags on recovery resources
+- Recommends 365-day retention for FedRAMP compliance
+
+#### KSI-RPL-02: Recovery Plans ✅
+**Implementation:**
+- Detects missing Azure Site Recovery replication
+- Checks for recovery plan resources and orchestration
+- Validates replication policies and failover configuration
+- Reports good practice when recovery plans exist
+
+**Detection Patterns:**
+- Missing `Microsoft.RecoveryServices/vaults/replicationRecoveryPlans` (Bicep)
+- Missing `azurerm_site_recovery_replication_policy` (Terraform)
+- Recommends DR drills and recovery plan testing
+
+#### KSI-RPL-03: System Backups ✅
+**Implementation:**
+- Checks for backup vault and policies on critical resources
+- Validates backup configuration for VMs, SQL, Storage
+- Ensures 365-day retention for FedRAMP compliance
+- Reports good practice when backup policies configured
+
+**Detection Patterns:**
+- Critical resources (VMs, SQL, Storage) without backup protection
+- Missing `Microsoft.RecoveryServices/vaults/backupPolicies` (Bicep)
+- Missing `azurerm_backup_policy_vm` (Terraform)
+
+#### KSI-RPL-04: Recovery Testing ✅
+**Implementation:**
+- Detects missing automation for recovery testing
+- Checks for scheduled runbooks for DR drills
+- Validates test failover automation
+- Reports good practice when recovery testing automated
+
+**Detection Patterns:**
+- Missing `Microsoft.Automation/automationAccounts` (Bicep)
+- Missing `azurerm_automation_runbook` with recovery testing (Terraform)
+- Recommends monthly DR drills to validate RTO/RPO
+
+#### KSI-CNA-03: Traffic Flow Enforcement ✅
+**Implementation:**
+- Detects missing Azure Firewall or route tables
+- Checks for NSG flow logs and traffic analytics
+- Validates network segmentation and traffic control
+- Reports good practice when firewall and flow logs configured
+
+**Detection Patterns:**
+- Missing `Microsoft.Network/azureFirewalls` or route tables (Bicep)
+- Missing `azurerm_firewall` or `azurerm_route_table` (Terraform)
+- Missing NSG flow logs for traffic monitoring
+
+#### KSI-CNA-05: DDoS Protection ✅
+**Implementation:**
+- Detects VNets without DDoS Protection Plan
+- Checks for DDoS Standard tier (required for FedRAMP)
+- Validates DDoS enablement on virtual networks
+- Reports good practice when DDoS Protection configured
+
+**Detection Patterns:**
+- VNets without `Microsoft.Network/ddosProtectionPlans` (Bicep)
+- Missing `azurerm_network_ddos_protection_plan` (Terraform)
+- Notes DDoS Protection Standard cost (~$2,944/month)
+
+#### KSI-IAM-05: Least Privilege Access ✅
+**Implementation:**
+- Detects missing or overly permissive RBAC roles
+- Checks for Owner/Contributor role assignments (high risk)
+- Validates JIT access and managed identity usage
+- Reports good practice when least privilege implemented
+
+**Detection Patterns:**
+- Missing RBAC role assignments
+- Owner/Contributor roles assigned to users (HIGH severity)
+- Missing JIT access for privileged operations
+- Recommends specific roles (e.g., Virtual Machine Contributor)
+
+#### KSI-AFR-11: FIPS Cryptographic Modules ✅
+**Implementation:**
+- Detects missing Key Vault Premium (HSM-backed)
+- Checks for TLS 1.2+ enforcement on all resources
+- Validates FIPS 140-2 Level 2/3 cryptography
+- Reports good practice when HSM and TLS 1.2+ configured
+
+**Detection Patterns:**
+- Missing Key Vault Premium SKU (FIPS 140-2 Level 2 HSMs)
+- Missing TLS 1.2 enforcement on Storage, SQL, App Service
+- Missing customer-managed keys for encryption
+- Notes Managed HSM for FIPS 140-2 Level 3
+
+**Test Coverage:** 16 new tests (71 total) - All passing ✅
+**Implementations:** BicepAnalyzer + TerraformAnalyzer complete
+
+---
+
+## Phase 6B: Service Management & Advanced Monitoring 🎯
+
+**Target:** Add 8 KSIs → 53 total (~74% coverage)
+**Focus:** Service integrity, advanced logging, configuration management
+**Effort:** 1-2 weeks
+**Priority:** MEDIUM
+
+### Remaining High-Priority KSIs (8 total)
+
+#### Service Management (2 KSIs)
+- KSI-SVC-09: Service integrity verification
+- KSI-SVC-10: Secure data destruction
+
+#### Advanced Monitoring (2 KSIs)
+- KSI-MLA-07: Log correlation and analysis
+- KSI-MLA-08: Anomaly detection
+
+#### Authorization & Findings (2 KSIs)
+- KSI-AFR-07: Remediation tracking
+- KSI-AFR-08: False positive management
+
+#### Cloud Native Architecture (1 KSI)
+- KSI-CNA-08: Microservices security
+
+#### Incident Response (1 KSI)
+- KSI-INR-03: Incident response automation
+
+#### Configuration Management (1 KSI)
+- KSI-CMT-04: Configuration drift detection
+
+---
+
+## Phase 7: Full Coverage 🎯
+
+**Target:** Add 19 KSIs → 72 total (100% coverage)
+**Focus:** Remaining families (TPR, remaining AFR, CED, PIY, MLA)
+**Effort:** 3-4 weeks
 **Priority:** LOW
 
 ### Remaining Families
-
-#### RPL: Recovery & Planning (4 KSIs)
-- KSI-RPL-01: Backup testing
-- KSI-RPL-02: Disaster recovery plans
-- KSI-RPL-03: Business continuity
-- KSI-RPL-04: Recovery time objectives
 
 #### TPR: Third-Party Risk (4 KSIs)
 - KSI-TPR-01: Vendor security assessment
@@ -433,26 +571,20 @@
 - KSI-TPR-03: Supply chain security
 - KSI-TPR-04: Vendor SLA compliance
 
-#### Additional AFR (9 KSIs)
-- KSI-AFR-04 through KSI-AFR-11: Advanced findings and remediation
+#### Additional AFR (3 KSIs)
+- KSI-AFR-04, AFR-05, AFR-06: Additional findings management
 
-#### Additional CED (3 KSIs)
-- KSI-CED-02 through KSI-CED-04: Evidence delivery automation
+#### Additional CED (1 KSI)
+- KSI-CED-02: Evidence automation enhancement
 
 #### Additional PIY (5 KSIs)
 - KSI-PIY-04 through KSI-PIY-08: Privacy and inventory management
 
-#### Additional CNA (5 KSIs)
-- KSI-CNA-05, KSI-CNA-08: Cloud-native architecture
-
-#### Additional SVC (4 KSIs)
-- KSI-SVC-09, KSI-SVC-10: Service management
-
-#### Additional MLA (5 KSIs)
-- KSI-MLA-07, KSI-MLA-08: Advanced logging/monitoring
+#### Additional MLA (3 KSIs)
+- KSI-MLA-09, MLA-10, MLA-11: Advanced monitoring
 
 #### Additional CMT (2 KSIs)
-- KSI-CMT-04, KSI-CMT-05: Change management automation
+- KSI-CMT-05, CMT-06: Change management automation
 
 ---
 

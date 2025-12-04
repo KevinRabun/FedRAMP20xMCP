@@ -603,7 +603,7 @@ Generate strategic interview questions for product managers and engineers to fac
 ### analyze_infrastructure_code
 Analyze Infrastructure as Code (IaC) files for FedRAMP 20x compliance issues and provide actionable recommendations.
 
-> **📊 Current Coverage:** Phase 5 complete with 37 KSIs (51% of 72 total). Covers critical infrastructure security, application security, DevSecOps automation, and runtime security & monitoring. See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for expansion plan to 100% coverage.
+> **📊 Current Coverage:** Phase 6A complete with 45 KSIs (62.5% of 72 total). Covers infrastructure resilience (disaster recovery, backups, recovery testing), network security (traffic flow, DDoS protection), identity & access (least privilege), and cryptographic controls (FIPS-validated modules). See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for expansion plan to 100% coverage.
 
 **Parameters:**
 - `code` (string): The IaC code content to analyze
@@ -658,6 +658,16 @@ Analyze Infrastructure as Code (IaC) files for FedRAMP 20x compliance issues and
 - **KSI-CNA-07**: Service mesh security configuration
 - **KSI-IAM-04**: Least privilege access (scoped permissions)
 - **KSI-IAM-07**: Session management (secure cookies, token rotation)
+
+**Phase 6A - Infrastructure Resilience & Security:**
+- **KSI-RPL-01**: Recovery objectives (RTO/RPO documentation)
+- **KSI-RPL-02**: Recovery plans (Site Recovery, DR orchestration)
+- **KSI-RPL-03**: System backups (Backup policies, 365-day retention)
+- **KSI-RPL-04**: Recovery testing (Automation, scheduled DR drills)
+- **KSI-CNA-03**: Traffic flow enforcement (Firewall, NSG flow logs, route tables)
+- **KSI-CNA-05**: DDoS protection (DDoS Protection Plan on VNets)
+- **KSI-IAM-05**: Least privilege access (RBAC, JIT access, managed identities)
+- **KSI-AFR-11**: FIPS cryptographic modules (Key Vault Premium, TLS 1.2+)
 
 **Phase 4 - DevSecOps Automation:**
 - **KSI-CMT-01**: Change management (PR triggers, branch protection)
