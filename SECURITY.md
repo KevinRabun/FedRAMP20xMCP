@@ -13,9 +13,11 @@ We release patches for security vulnerabilities. The following versions are curr
 
 **Do not report security vulnerabilities through public GitHub issues.**
 
-If you discover a security vulnerability in the FedRAMP 20x MCP Server, please report it by emailing:
+If you discover a security vulnerability in the FedRAMP 20x MCP Server, please report it using **GitHub's Private Vulnerability Reporting**:
 
-📧 **kevin.rabun@gmail.com**
+🔒 **[Report a vulnerability](https://github.com/KevinRabun/FedRAMP20xMCP/security/advisories/new)**
+
+This ensures your report remains private until we've addressed the issue and published a security advisory.
 
 ### What to Include
 
