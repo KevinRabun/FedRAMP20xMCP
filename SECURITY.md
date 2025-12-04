@@ -15,7 +15,7 @@ We release patches for security vulnerabilities. The following versions are curr
 
 If you discover a security vulnerability in the FedRAMP 20x MCP Server, please report it by emailing:
 
-📧 **[Your email or security contact - to be configured]**
+📧 **kevin.rabun@gmail.com**
 
 ### What to Include
 
