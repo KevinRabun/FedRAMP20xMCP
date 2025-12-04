@@ -550,7 +550,6 @@ Generate strategic interview questions for product managers and engineers to fac
    - Customer Value & Competitive Position
    - Resource Allocation & Prioritization
    - Dependencies & Phasing
-   - Cost-Benefit Analysis
 
 2. **Technical Questions for Engineers** (15 questions):
    - Architecture & Design Decisions
@@ -659,30 +658,26 @@ Get comprehensive architecture guidance for automated evidence collection system
    - Azure Function for scheduled evidence collection
    - Blob storage with basic retention
    - Event Grid for notifications
-   - Estimated ~$100-200/month
 
 2. **single-ksi**: Production architecture for one KSI
    - Dedicated evidence collection infrastructure
    - Azure Functions with monitoring
    - Managed identities for security
    - Sentinel integration
-   - Estimated ~$300-500/month
 
 3. **category**: Enterprise architecture for one KSI category (IAM, MLA, etc.)
    - Category-specific evidence collectors
    - Centralized evidence storage
    - Automated reporting dashboards
    - Integration with Azure Policy
-   - Estimated ~$1,000-2,000/month
 
 4. **all**: Complete enterprise architecture for all 72 KSIs
    - Multi-region evidence collection
    - High-availability design
    - Automated compliance reporting
    - Integration with GRC tools
-   - Estimated ~$5,000-10,000/month
 
-**Example Usage:**
+**Example Usage:****
 ```
 > get_evidence_automation_architecture with scope="all"
 ```
@@ -827,7 +822,7 @@ FedRAMP20xMCP/
 - **Modular Design:** Tools organized into 7 logical modules by functionality
 - **Template System:** Reusable Bicep/Terraform templates for IaC generation
 - **Prompt Templates:** External prompt files for easy updates without code changes
-- **Clean Separation:** 97.2% reduction in main server.py (9,810 → 270 lines)
+- **Clean Separation:** Organized codebase with clear module boundaries
 - **Registration Pattern:** Tools use `*_impl` functions with centralized registration
 
 ## License
