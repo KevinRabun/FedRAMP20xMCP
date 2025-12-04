@@ -250,20 +250,22 @@ python tests/test_enhancement_tools.py
 python tests/test_implementation_mapping_tools.py
 ```
 
-### 15. test_code_analyzer.py ⭐ NEW
-**Purpose:** Comprehensive tests for code analysis engine (14 functional tests)
+### 15. test_code_analyzer.py ⭐ PHASE 3 COMPLETE
+**Purpose:** Comprehensive tests for code analysis engine (31 functional tests)
 
-**Coverage:**
-- ✅ BicepAnalyzer: Missing diagnostic settings, hardcoded passwords, network security
-- ✅ TerraformAnalyzer: Missing diagnostic settings, hardcoded connection strings
-- ✅ PythonAnalyzer: Missing authentication, hardcoded secrets, unsafe dependencies, PII handling
-- ✅ Good practices detection (Key Vault, authentication, pinned dependencies)
+**Coverage (25 KSIs - 35%):**
+- ✅ Phase 1 (8 KSIs): Foundation checks - diagnostics, secrets, network security, authentication, dependencies, PII
+- ✅ Phase 2 (9 KSIs): Critical infrastructure - MFA, PIM, container security, immutable infrastructure, backups, patches
+- ✅ Phase 3 (8 KSIs): Secure coding - error handling, input validation, secure coding, data classification, privacy, service mesh, least privilege, sessions
+- ✅ Good practices detection across all phases
 - ✅ AnalysisResult summary calculations
 
 **What It Tests:**
+
+**Phase 1 Tests (8 KSIs - Foundation):**
 1. **Bicep Analysis:**
    - Detects missing diagnostic settings (KSI-MLA-05)
-   - Recognizes properly configured diagnostics
+   - Recognizes properly configured diagnostics (good practice)
    - Detects hardcoded passwords (KSI-SVC-06)
    - Detects missing network security groups (KSI-CNA-01)
 
@@ -271,28 +273,65 @@ python tests/test_implementation_mapping_tools.py
    - Detects missing diagnostic settings (KSI-MLA-05)
    - Detects hardcoded connection strings with passwords (KSI-SVC-06)
 
-3. **Python Analysis:**
+3. **Python Analysis - Phase 1:**
    - Detects missing authentication decorators (KSI-IAM-01)
-   - Recognizes proper authentication implementation
+   - Recognizes proper authentication implementation (good practice)
    - Detects hardcoded API keys (KSI-SVC-06)
-   - Recognizes Azure Key Vault usage
+   - Recognizes Azure Key Vault usage (good practice)
    - Detects unsafe dependencies (pickle) (KSI-SVC-08)
    - Detects unencrypted PII (SSN, email) (KSI-PIY-02)
-   - Recognizes pinned dependencies
+   - Recognizes pinned dependencies (good practice)
 
-4. **Result Validation:**
-   - Summary counts match finding arrays
-   - Severity levels correctly assigned
-   - Good practices properly flagged
+**Phase 3 Tests (18 tests - Secure Coding Practices):**
+
+4. **Error Handling (KSI-SVC-01):**
+   - test_python_bare_except: Detects bare `except:` clauses (MEDIUM severity)
+   - test_python_proper_error_handling: Recognizes proper exception handling with logging (good practice)
+
+5. **Input Validation (KSI-SVC-02):**
+   - test_python_sql_injection: Detects SQL injection via f-strings in queries (HIGH severity)
+   - test_python_parameterized_query: Recognizes parameterized queries (good practice)
+   - test_python_command_injection: Detects command injection via shell=True (HIGH severity)
+
+6. **Secure Coding (KSI-SVC-07):**
+   - test_python_eval_usage: Detects eval()/exec() usage (HIGH severity, 2 findings)
+   - test_python_insecure_random: Detects insecure random module usage (MEDIUM severity)
+   - test_python_secure_random: Recognizes secrets module usage (good practice)
+
+7. **Data Classification (KSI-PIY-01):**
+   - test_python_missing_data_classification: Detects PII without classification tags (MEDIUM severity)
+   - test_python_with_data_classification: Recognizes @dataclass with classification (good practice)
+
+8. **Privacy Controls (KSI-PIY-03):**
+   - test_python_missing_retention_policy: Detects missing data retention policies (LOW severity)
+   - test_python_missing_deletion_capability: Detects UserService without deletion methods (MEDIUM severity)
+
+9. **Service Mesh (KSI-CNA-07):**
+   - test_python_service_mesh_missing_mtls: Detects permissive mTLS mode in Istio (HIGH severity)
+
+10. **Least Privilege (KSI-IAM-04):**
+    - test_python_wildcard_permissions: Detects scope='*' in role assignments (HIGH severity)
+    - test_python_scoped_permissions: Recognizes scoped role assignments (good practice)
+
+11. **Session Management (KSI-IAM-07):**
+    - test_python_insecure_session: Detects insecure cookie configuration (HIGH severity)
+    - test_python_secure_session: Recognizes secure session with timeout/cookies (good practice)
+
+12. **Result Validation:**
+    - Summary counts match finding arrays
+    - Severity levels correctly assigned
+    - Good practices properly flagged
 
 **Example Output:**
 ```
-✅ Testing Bicep: Missing Diagnostic Settings - PASSED
-✅ Testing Bicep: With Diagnostic Settings - PASSED
-✅ Testing Bicep: Hardcoded Password - PASSED
-✅ Testing Python: Key Vault Usage - PASSED
-✅ Testing Python: Unencrypted PII - PASSED
-TEST RESULTS: 14 passed, 0 failed
+✅ Testing Python: Bare Except Detection - PASSED
+✅ Testing Python: SQL Injection Detection - PASSED
+✅ Testing Python: Parameterized Queries - PASSED
+✅ Testing Python: Eval/Exec Detection - PASSED
+✅ Testing Python: Secure Random Usage - PASSED
+✅ Testing Python: Wildcard Permissions Detection - PASSED
+✅ Testing Python: Secure Session Configuration - PASSED
+TEST RESULTS: 31 passed, 0 failed
 ```
 
 **Run:**

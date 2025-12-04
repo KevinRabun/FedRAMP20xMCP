@@ -448,7 +448,7 @@ class PythonAnalyzer(BaseAnalyzer):
         
         # Check for proper error logging
         has_try_except = bool(re.search(r"try:\s*\n.*?except", code, re.DOTALL))
-        has_error_logging = bool(re.search(r"logger\.(error|exception|critical)", code))
+        has_error_logging = bool(re.search(r"(logger|logging)\.(error|exception|critical)", code))
         
         if has_try_except and not has_error_logging:
             line_num = self.get_line_number(code, "except")
@@ -481,7 +481,7 @@ class PythonAnalyzer(BaseAnalyzer):
         # Check for SQL injection risks
         sql_patterns = [
             r"execute\(['\"].*%s.*['\"].*%",  # String formatting in SQL
-            r"execute\(f['\"].*{.*}.*['\"]",  # F-strings in SQL
+            r"query\s*=\s*f['\"]SELECT.*{.*}",  # F-string assigned to query variable
             r"cursor\.execute\([^)]*\+[^)]*\)",  # String concatenation in SQL
         ]
         
@@ -499,6 +499,20 @@ class PythonAnalyzer(BaseAnalyzer):
                     recommendation="Use parameterized queries:\n```python\n# Bad - SQL injection risk\nquery = f\"SELECT * FROM users WHERE id = {user_id}\"  # Vulnerable!\ncursor.execute(query)\n\n# Good - Parameterized query\nquery = \"SELECT * FROM users WHERE id = %s\"\ncursor.execute(query, (user_id,))  # Safe\n\n# Or use ORM\nUser.objects.filter(id=user_id)  # SQLAlchemy/Django ORM\n```\nSource: OWASP SQL Injection Prevention (https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html)"
                 ))
                 break
+        
+        # Check for parameterized queries (good practice)
+        if re.search(r"execute\([^)]*,\s*\([^)]*\)\)", code):  # execute(query, (param,))
+            line_num = self.get_line_number(code, "execute")
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-02",
+                severity=Severity.INFO,
+                title="Parameterized queries implemented",
+                description="SQL queries use parameterized statements to prevent injection attacks.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Continue using parameterized queries for all database operations.",
+                good_practice=True
+            ))
         
         # Check for command injection risks
         command_patterns = [
@@ -589,12 +603,12 @@ class PythonAnalyzer(BaseAnalyzer):
         
         # Check for insecure random number generation
         if re.search(r"import random\s|from random import", code):
-            # Check if it's used for security purposes
-            if re.search(r"random\.(choice|randint|random|shuffle).*(?:password|token|secret|key|session)", code, re.IGNORECASE):
+            # Check if it's used (assume security purpose if random imported)
+            if re.search(r"random\.(choice|randint|random|shuffle|choices)", code):
                 line_num = self.get_line_number(code, "random")
                 self.add_finding(Finding(
                     requirement_id="KSI-SVC-07",
-                    severity=Severity.HIGH,
+                    severity=Severity.MEDIUM,
                     title="Insecure random number generator for security",
                     description="Python's 'random' module is not cryptographically secure. For security-sensitive operations (tokens, passwords, etc.), use 'secrets' module.",
                     file_path=file_path,
@@ -690,6 +704,22 @@ class PythonAnalyzer(BaseAnalyzer):
         # Check for data export capabilities (GDPR/privacy right)
         has_export = bool(re.search(r"def\s+(export_user|download_user|get_user_data)", code, re.IGNORECASE))
         
+        # Check if this is a service class that should have deletion
+        has_user_service = bool(re.search(r"class\s+\w*User\w*Service", code))
+        has_get_or_update = bool(re.search(r"def\s+(get_user|update_user|create_user)", code))
+        
+        if has_user_service and has_get_or_update and not has_deletion:
+            line_num = self.get_line_number(code, "class")
+            self.add_finding(Finding(
+                requirement_id="KSI-PIY-03",
+                severity=Severity.MEDIUM,
+                title="User service missing data deletion capability",
+                description="Service manages user data but doesn't provide deletion methods. FedRAMP 20x and GDPR require data deletion capabilities (right to erasure).",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Implement secure user data deletion:\n```python\nclass UserService:\n    def get_user(self, user_id): ...\n    def update_user(self, user_id, data): ...\n    \n    async def delete_user(self, user_id: str, reason: str) -> None:\n        \"\"\"Delete user and all associated data (GDPR right to erasure)\"\"\"\n        # 1. Export for audit trail\n        await self.export_user_data(user_id)\n        \n        # 2. Delete from all related tables\n        await db.execute('DELETE FROM user_sessions WHERE user_id = %s', (user_id,))\n        await db.execute('DELETE FROM user_data WHERE user_id = %s', (user_id,))\n        await db.execute('DELETE FROM users WHERE id = %s', (user_id,))\n        \n        # 3. Log deletion\n        logger.info(f'User {user_id} deleted', extra={'reason': reason})\n```"
+            ))
+        
         if not has_retention and re.search(r"(user|customer|person|individual)", code, re.IGNORECASE):
             line_num = 1
             self.add_finding(Finding(
@@ -780,8 +810,8 @@ class PythonAnalyzer(BaseAnalyzer):
         
         if has_iam_operations:
             # Check for wildcard permissions (anti-pattern)
-            if re.search(r"['\"]actions['\"]:\s*\[['\"]?\*['\"]?\]|permissions.*\*", code):
-                line_num = self.get_line_number(code, "actions") or self.get_line_number(code, "*")
+            if re.search(r"['\"]actions['\"]:\s*\[['\"]?\*['\"]?\]|permissions.*\*|scope\s*=\s*['\"]?\*['\"]?", code):
+                line_num = self.get_line_number(code, "actions") or self.get_line_number(code, "scope") or self.get_line_number(code, "*")
                 self.add_finding(Finding(
                     requirement_id="KSI-IAM-04",
                     severity=Severity.HIGH,
@@ -826,15 +856,16 @@ class PythonAnalyzer(BaseAnalyzer):
             issues = []
             
             # Check for session timeout
-            has_timeout = bool(re.search(r"(timeout|expire|max_age|ttl)", code, re.IGNORECASE))
+            has_timeout = bool(re.search(r"(timeout|expire|max_age|ttl|SESSION_LIFETIME|PERMANENT_SESSION_LIFETIME)", code, re.IGNORECASE))
             if not has_timeout:
                 issues.append("No session timeout configured")
             
-            # Check for secure cookie flags
-            if re.search(r"set_cookie|Cookie", code):
-                has_secure = bool(re.search(r"secure\s*=\s*True", code, re.IGNORECASE))
-                has_httponly = bool(re.search(r"httponly\s*=\s*True", code, re.IGNORECASE))
-                has_samesite = bool(re.search(r"samesite", code, re.IGNORECASE))
+            # Check for secure cookie flags - match both set_cookie and Flask config
+            has_cookie_config = bool(re.search(r"set_cookie|Cookie|SESSION_COOKIE", code))
+            if has_cookie_config:
+                has_secure = bool(re.search(r"secure\s*=\s*True|SESSION_COOKIE_SECURE.*=\s*True", code, re.IGNORECASE))
+                has_httponly = bool(re.search(r"httponly\s*=\s*True|SESSION_COOKIE_HTTPONLY.*=\s*True", code, re.IGNORECASE))
+                has_samesite = bool(re.search(r"samesite|SESSION_COOKIE_SAMESITE", code, re.IGNORECASE))
                 
                 if not has_secure:
                     issues.append("Cookies without 'secure' flag")
@@ -843,9 +874,10 @@ class PythonAnalyzer(BaseAnalyzer):
                 if not has_samesite:
                     issues.append("Cookies without 'SameSite' attribute")
             
-            # Check for token rotation
+            # Check for token rotation (only if using JWT/tokens)
+            uses_jwt = bool(re.search(r"\bjwt\b|\btoken\b", code, re.IGNORECASE))
             has_rotation = bool(re.search(r"(rotate|refresh|renew).*token", code, re.IGNORECASE))
-            if not has_rotation and re.search(r"jwt|token", code, re.IGNORECASE):
+            if uses_jwt and not has_rotation:
                 issues.append("No token rotation mechanism")
             
             if issues:
