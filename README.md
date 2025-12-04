@@ -85,6 +85,26 @@ uv pip install -e .
 2. Try using `python3` instead of `python`
 3. Or use the full path to python.exe in `.vscode/mcp.json`
 
+## Security
+
+**Vulnerability Disclosure:** If you discover a security vulnerability, please see our [Security Policy](SECURITY.md) for responsible disclosure procedures (KSI-PIY-03).
+
+**Audit Logging:** All MCP server operations are logged to stderr for audit purposes (KSI-MLA-05):
+```python
+# Logs include timestamps, operation types, and outcomes
+2025-12-04 10:30:15 - fedramp_20x_mcp.data_loader - INFO - Loading FedRAMP controls from cache
+2025-12-04 10:30:16 - fedramp_20x_mcp.tools - INFO - Tool invoked: get_control(FRR-ADS-01)
+```
+
+**Security Features:**
+- ✅ No authentication required (local development tool)
+- ✅ No Federal Customer Data handling
+- ✅ HTTPS-only connections to GitHub
+- ✅ 1-hour cache TTL reduces external requests
+- ✅ All dependencies use minimum secure versions
+
+For complete security documentation, see [SECURITY.md](SECURITY.md).
+
 ## Usage
 
 ### With VS Code and GitHub Copilot
@@ -825,9 +845,21 @@ FedRAMP20xMCP/
 - **Clean Separation:** Organized codebase with clear module boundaries
 - **Registration Pattern:** Tools use `*_impl` functions with centralized registration
 
+## Security
+
+For security vulnerability reporting and security best practices, see [SECURITY.md](SECURITY.md).
+
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
+- Development setup and testing
+- Security scanning requirements
+- Dependency management guidelines
+- Pull request process
+
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+MIT License - See [LICENSE](LICENSE) file for details.
 
 This project is open source and contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 

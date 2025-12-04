@@ -82,6 +82,48 @@ pytest tests/test_loader.py
 pytest --cov=src --cov-report=html
 ```
 
+### Security Scanning
+
+Before submitting pull requests, run security checks:
+
+```bash
+# Scan dependencies for known vulnerabilities (KSI-SVC-08)
+pip install safety
+safety check --json
+
+# Scan code for security issues (KSI-SVC-08)
+pip install bandit
+bandit -r src/
+
+# Update dependencies (check for security updates)
+pip list --outdated
+```
+
+**Required Security Practices:**
+- ✅ Keep dependencies at minimum secure versions (see `pyproject.toml`)
+- ✅ Run `safety check` before commits to detect vulnerable dependencies
+- ✅ Run `bandit` to identify security issues in code
+- ✅ Review dependency licenses for compliance
+- ✅ Never commit secrets, API keys, or sensitive data
+
+### Dependency Management
+
+**Adding New Dependencies (KSI-SVC-07):**
+1. Verify the package is actively maintained (recent commits/releases)
+2. Check for known security vulnerabilities using `safety check`
+3. Review the package license (must be compatible with MIT)
+4. Add with minimum secure version: `package>=X.Y.Z`
+5. Document why the dependency is needed
+6. Update `pyproject.toml` dependencies list
+7. Test thoroughly before submitting PR
+
+**Updating Dependencies:**
+1. Check release notes for breaking changes
+2. Update version constraint in `pyproject.toml`
+3. Run full test suite: `pytest`
+4. Run security scans: `safety check` and `bandit -r src/`
+5. Update documentation if behavior changes
+
 ### Testing with MCP Inspector
 
 ```bash
