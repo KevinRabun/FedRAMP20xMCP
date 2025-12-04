@@ -84,6 +84,10 @@ class TerraformAnalyzer(BaseAnalyzer):
         self._check_incident_after_action(code, file_path)    # KSI-INR-03
         self._check_change_management(code, file_path)        # KSI-CMT-04
         
+        # Phase 7: Supply Chain and Policy Requirements
+        self._check_supply_chain_security(code, file_path)    # KSI-TPR-03
+        self._check_third_party_monitoring(code, file_path)   # KSI-TPR-04
+        
         return self.result
     
     def _check_diagnostic_settings(self, code: str, file_path: str) -> None:
@@ -1609,3 +1613,126 @@ class TerraformAnalyzer(BaseAnalyzer):
                 good_practice=True
             ))
 
+
+    def _check_supply_chain_security(self, code: str, file_path: str) -> None:
+        """Check for supply chain security controls (KSI-TPR-03)."""
+        # Check for Azure Container Registry (ACR) with security features
+        has_acr = bool(re.search(r"azurerm_container_registry\"", code))
+        
+        if has_acr:
+            # Check for trusted image policies
+            has_trust_policy = bool(re.search(r"trust_policy\s*{[^}]*enabled\s*=\s*true", code, re.DOTALL))
+            
+            # Check for quarantine policy
+            has_quarantine = bool(re.search(r"quarantine_policy_enabled\s*=\s*true", code))
+            
+            # Check for private network access
+            has_private_endpoint = bool(re.search(r"(azurerm_private_endpoint|public_network_access_enabled\s*=\s*false)", code))
+            
+            # Check for retention policy (auto-cleanup)
+            has_retention = bool(re.search(r"retention_policy\s*{", code))
+            
+            issues = []
+            if not has_trust_policy:
+                issues.append("No content trust/image signing configured")
+            if not has_quarantine:
+                issues.append("No quarantine policy for unscanned images")
+            if not has_private_endpoint:
+                issues.append("Registry exposed to public network")
+            
+            if issues:
+                line_num = self.get_line_number(code, "azurerm_container_registry")
+                self.add_finding(Finding(
+                    requirement_id="KSI-TPR-03",
+                    severity=Severity.HIGH,
+                    title="Container registry missing supply chain security controls",
+                    description=f"ACR security issues: {'; '.join(issues)}. FedRAMP 20x requires supply chain risk mitigation.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Implement ACR supply chain security:\n```hcl\nresource \"azurerm_container_registry\" \"acr\" {\n  name                = \"acr${random_id.suffix.hex}\"\n  resource_group_name = azurerm_resource_group.rg.name\n  location            = azurerm_resource_group.rg.location\n  sku                 = \"Premium\"  # Required for trust policies\n  \n  public_network_access_enabled = false  # Private endpoints only\n  quarantine_policy_enabled     = true   # Quarantine unscanned images\n  \n  trust_policy {\n    enabled = true  # Content trust / image signing (Notary)\n  }\n  \n  retention_policy {\n    days    = 30\n    enabled = true  # Automatic cleanup of untagged images\n  }\n  \n  network_rule_set {\n    default_action = \"Deny\"\n  }\n}\n\n# Private endpoint for secure access\nresource \"azurerm_private_endpoint\" \"acr_pe\" {\n  name                = \"pe-acr\"\n  location            = azurerm_resource_group.rg.location\n  resource_group_name = azurerm_resource_group.rg.name\n  subnet_id           = azurerm_subnet.private.id\n  \n  private_service_connection {\n    name                           = \"acr-connection\"\n    private_connection_resource_id = azurerm_container_registry.acr.id\n    is_manual_connection           = false\n    subresource_names              = [\"registry\"]\n  }\n}\n```\nSource: ACR security best practices (https://learn.microsoft.com/azure/container-registry/container-registry-best-practices)"
+                ))
+            else:
+                line_num = self.get_line_number(code, "azurerm_container_registry")
+                self.add_finding(Finding(
+                    requirement_id="KSI-TPR-03",
+                    severity=Severity.INFO,
+                    title="Supply chain security controls configured",
+                    description="Container registry has image signing, quarantine, and private access configured.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Ensure image signing is enforced in deployment pipelines and SBOM generation is enabled.",
+                    good_practice=True
+                ))
+        
+        # Check for AKS with supply chain security
+        if re.search(r"azurerm_kubernetes_cluster\"", code):
+            # Check for image cleaner
+            has_image_cleaner = bool(re.search(r"image_cleaner_enabled\s*=\s*true", code))
+            
+            # Check for workload identity
+            has_workload_identity = bool(re.search(r"workload_identity_enabled\s*=\s*true", code))
+            
+            # Check for Azure Policy addon
+            has_policy_addon = bool(re.search(r"azure_policy_enabled\s*=\s*true", code))
+            
+            # Check for Defender for Containers
+            has_defender = bool(re.search(r"microsoft_defender\s*{[^}]*enabled\s*=\s*true", code, re.DOTALL))
+            
+            if not has_policy_addon:
+                line_num = self.get_line_number(code, "azurerm_kubernetes_cluster")
+                self.add_finding(Finding(
+                    requirement_id="KSI-TPR-03",
+                    severity=Severity.MEDIUM,
+                    title="AKS cluster missing Azure Policy addon for supply chain enforcement",
+                    description="Azure Policy addon can enforce trusted container registries and image policies. FedRAMP 20x requires supply chain risk controls.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Enable Azure Policy addon:\n```hcl\nresource \"azurerm_kubernetes_cluster\" \"aks\" {\n  name                = \"aks-${random_id.suffix.hex}\"\n  location            = azurerm_resource_group.rg.location\n  resource_group_name = azurerm_resource_group.rg.name\n  dns_prefix          = \"aks\"\n  \n  azure_policy_enabled = true  # Enforce trusted registries\n  workload_identity_enabled = true  # Secure pod identity\n  \n  image_cleaner_enabled = true  # Remove vulnerable images\n  image_cleaner_interval_hours = 24\n  \n  microsoft_defender {\n    log_analytics_workspace_id = azurerm_log_analytics_workspace.law.id\n    enabled = true\n  }\n  \n  default_node_pool {\n    name = \"default\"\n    node_count = 3\n    vm_size = \"Standard_D2s_v3\"\n  }\n  \n  identity {\n    type = \"SystemAssigned\"\n  }\n}\n```\nSource: AKS security (https://learn.microsoft.com/azure/aks/use-azure-policy)"
+                ))
+    
+    def _check_third_party_monitoring(self, code: str, file_path: str) -> None:
+        """Check for third-party software monitoring (KSI-TPR-04)."""
+        # Check for Log Analytics workspace (for security alerts)
+        has_log_analytics = bool(re.search(r"azurerm_log_analytics_workspace\"", code))
+        
+        # Check for Sentinel (SIEM for security monitoring)
+        has_sentinel = bool(re.search(r"azurerm_sentinel", code))
+        
+        # Check for Application Insights (runtime monitoring)
+        has_app_insights = bool(re.search(r"azurerm_application_insights\"", code))
+        
+        # Check for Defender for Cloud
+        has_defender = bool(re.search(r"azurerm_security_center", code))
+        
+        # Check for automation accounts with vulnerability monitoring
+        has_automation = bool(re.search(r"azurerm_automation_account\"", code))
+        
+        # Check for diagnostic settings
+        has_diagnostics = bool(re.search(r"azurerm_monitor_diagnostic_setting\"", code))
+        
+        # Check for security monitoring setup: (LogAnalytics OR Sentinel) AND Diagnostics OR Defender OR Automation
+        has_security_monitoring = ((has_log_analytics or has_sentinel) and has_diagnostics) or has_defender or has_automation or (has_sentinel and has_automation)
+        
+        if not has_security_monitoring:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-TPR-04",
+                severity=Severity.MEDIUM,
+                title="Third-party software monitoring not configured",
+                description="No automated monitoring for third-party dependencies, vulnerabilities, or security advisories. FedRAMP 20x requires continuous monitoring of third-party information resources.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Implement third-party monitoring:\n```hcl\n# Log Analytics workspace for security monitoring\nresource \"azurerm_log_analytics_workspace\" \"law\" {\n  name                = \"law-security\"\n  location            = azurerm_resource_group.rg.location\n  resource_group_name = azurerm_resource_group.rg.name\n  sku                 = \"PerGB2018\"\n  retention_in_days   = 90\n}\n\n# Sentinel for SIEM\nresource \"azurerm_sentinel_log_analytics_workspace_onboarding\" \"sentinel\" {\n  workspace_id = azurerm_log_analytics_workspace.law.id\n}\n\n# Defender for Cloud\nresource \"azurerm_security_center_subscription_pricing\" \"vm\" {\n  tier          = \"Standard\"\n  resource_type = \"VirtualMachines\"\n}\n\nresource \"azurerm_security_center_subscription_pricing\" \"containers\" {\n  tier          = \"Standard\"\n  resource_type = \"Containers\"  # Includes dependency scanning\n}\n\n# Automation account for vulnerability monitoring\nresource \"azurerm_automation_account\" \"aa\" {\n  name                = \"aa-vuln-monitoring\"\n  location            = azurerm_resource_group.rg.location\n  resource_group_name = azurerm_resource_group.rg.name\n  sku_name            = \"Basic\"\n}\n\n# Runbook to monitor third-party advisories\nresource \"azurerm_automation_runbook\" \"vuln_check\" {\n  name                    = \"Check-ThirdPartyAdvisories\"\n  location                = azurerm_resource_group.rg.location\n  resource_group_name     = azurerm_resource_group.rg.name\n  automation_account_name = azurerm_automation_account.aa.name\n  log_verbose             = true\n  log_progress            = true\n  description             = \"Monitor third-party software for security advisories\"\n  runbook_type            = \"PowerShell\"\n  \n  publish_content_link {\n    uri = \"https://raw.githubusercontent.com/example/runbook.ps1\"\n  }\n}\n\n# Schedule daily vulnerability checks\nresource \"azurerm_automation_schedule\" \"daily\" {\n  name                    = \"Daily-Vuln-Check\"\n  resource_group_name     = azurerm_resource_group.rg.name\n  automation_account_name = azurerm_automation_account.aa.name\n  frequency               = \"Day\"\n  interval                = 1\n  start_time              = \"2024-01-01T02:00:00Z\"\n  timezone                = \"UTC\"\n}\n```\nNote: Use GitHub Advanced Security, Dependabot, or Snyk in CI/CD pipelines for comprehensive dependency scanning.\nSource: Defender for DevOps (https://learn.microsoft.com/azure/defender-for-cloud/defender-for-devops-introduction)"
+            ))
+        elif has_defender or has_automation or has_sentinel:
+            line_num = self.get_line_number(code, "azurerm_security_center") or self.get_line_number(code, "azurerm_automation_account") or self.get_line_number(code, "azurerm_sentinel")
+            self.add_finding(Finding(
+                requirement_id="KSI-TPR-04",
+                severity=Severity.INFO,
+                title="Third-party software monitoring configured",
+                description="Automated monitoring for dependencies and security advisories is configured.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure monitoring covers: 1) NVD/CVE feeds, 2) Vendor security advisories, 3) SBOM validation, 4) License compliance.",
+                good_practice=True
+            ))

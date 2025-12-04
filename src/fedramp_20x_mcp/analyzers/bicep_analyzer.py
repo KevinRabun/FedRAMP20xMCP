@@ -143,6 +143,13 @@ class BicepAnalyzer(BaseAnalyzer):
         # Check for change management (KSI-CMT-04)
         self._check_change_management(code, file_path)
         
+        # Phase 7: Supply Chain and Policy Requirements
+        # Check for supply chain security (KSI-TPR-03)
+        self._check_supply_chain_security(code, file_path)
+        
+        # Check for third-party monitoring (KSI-TPR-04)
+        self._check_third_party_monitoring(code, file_path)
+        
         return self.result
     
     def _check_diagnostic_settings(self, code: str, file_path: str) -> None:
@@ -1729,4 +1736,122 @@ class BicepAnalyzer(BaseAnalyzer):
                 good_practice=True
             ))
 
-
+
+    def _check_supply_chain_security(self, code: str, file_path: str) -> None:
+        """Check for supply chain security controls (KSI-TPR-03)."""
+        # Check for Azure Container Registry (ACR) with security features
+        has_acr = bool(re.search(r"Microsoft\.ContainerRegistry/registries", code))
+        
+        if has_acr:
+            # Check for trusted image policies
+            has_trust_policy = bool(re.search(r"trustPolicy.*status.*enabled", code, re.IGNORECASE | re.DOTALL))
+            
+            # Check for quarantine policy
+            has_quarantine = bool(re.search(r"quarantinePolicy.*status.*enabled", code, re.IGNORECASE | re.DOTALL))
+            
+            # Check for content trust / image signing (Notation/Cosign)
+            has_content_trust = bool(re.search(r"(policies.*trust|contentTrust|notation|cosign)", code, re.IGNORECASE | re.DOTALL))
+            
+            # Check for private endpoints (supply chain security)
+            has_private_endpoint = bool(re.search(r"(privateEndpoint|publicNetworkAccess.*Disabled)", code, re.DOTALL))
+            
+            issues = []
+            if not has_trust_policy and not has_content_trust:
+                issues.append("No image signing/trust policy configured")
+            if not has_quarantine:
+                issues.append("No quarantine policy for untrusted images")
+            if not has_private_endpoint:
+                issues.append("Registry exposed to public network")
+            
+            if issues:
+                line_num = self.get_line_number(code, "Microsoft.ContainerRegistry/registries")
+                self.add_finding(Finding(
+                    requirement_id="KSI-TPR-03",
+                    severity=Severity.HIGH,
+                    title="Container registry missing supply chain security controls",
+                    description=f"ACR security issues: {'; '.join(issues)}. FedRAMP 20x requires supply chain risk mitigation.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Implement ACR supply chain security:\n```bicep\nresource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = {\n  name: 'acr${uniqueString(resourceGroup().id)}'\n  location: location\n  sku: {\n    name: 'Premium'  // Required for trust policies\n  }\n  properties: {\n    publicNetworkAccess: 'Disabled'  // Private endpoints only\n    networkRuleBypassOptions: 'AzureServices'\n    policies: {\n      quarantinePolicy: {\n        status: 'enabled'  // Quarantine unscanned images\n      }\n      trustPolicy: {\n        type: 'Notary'  // Content trust / image signing\n        status: 'enabled'\n      }\n      retentionPolicy: {\n        days: 30\n        status: 'enabled'  // Automatic cleanup of untagged images\n      }\n    }\n  }\n}\n\n// Private endpoint for secure access\nresource acrPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-07-01' = {\n  name: 'pe-acr'\n  location: location\n  properties: {\n    subnet: {\n      id: subnet.id\n    }\n    privateLinkServiceConnections: [\n      {\n        name: 'acr-connection'\n        properties: {\n          privateLinkServiceId: acr.id\n          groupIds: ['registry']\n        }\n      }\n    ]\n  }\n}\n```\nSource: ACR security best practices (https://learn.microsoft.com/azure/container-registry/container-registry-best-practices)"
+                ))
+            else:
+                line_num = self.get_line_number(code, "Microsoft.ContainerRegistry/registries")
+                self.add_finding(Finding(
+                    requirement_id="KSI-TPR-03",
+                    severity=Severity.INFO,
+                    title="Supply chain security controls configured",
+                    description="Container registry has image signing, quarantine, and private access configured.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Ensure image signing is enforced in deployment pipelines and SBOM generation is enabled.",
+                    good_practice=True
+                ))
+        
+        # Check for managed cluster (AKS) with supply chain security
+        if re.search(r"Microsoft\.ContainerService/managedClusters", code):
+            # Check for image cleaner (remove vulnerable images)
+            has_image_cleaner = bool(re.search(r"imageCleanerEnabled.*true", code))
+            
+            # Check for workload identity (secure pod identity)
+            has_workload_identity = bool(re.search(r"workloadIdentity.*enabled.*true", code, re.IGNORECASE | re.DOTALL))
+            
+            # Check for Azure Policy addon (enforce trusted registries)
+            has_policy_addon = bool(re.search(r"azurePolicyEnabled.*true", code))
+            
+            if not has_policy_addon:
+                line_num = self.get_line_number(code, "Microsoft.ContainerService/managedClusters")
+                self.add_finding(Finding(
+                    requirement_id="KSI-TPR-03",
+                    severity=Severity.MEDIUM,
+                    title="AKS cluster missing Azure Policy addon for supply chain enforcement",
+                    description="Azure Policy addon can enforce trusted container registries and image policies. FedRAMP 20x requires supply chain risk controls.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Enable Azure Policy addon:\n```bicep\nresource aks 'Microsoft.ContainerService/managedClusters@2023-05-01' = {\n  properties: {\n    addonProfiles: {\n      azurepolicy: {\n        enabled: true  // Enforce trusted registries\n        config: {\n          version: 'v2'\n        }\n      }\n    }\n    securityProfile: {\n      workloadIdentity: {\n        enabled: true  // Secure pod identity\n      }\n      imageCleaner: {\n        enabled: true  // Remove vulnerable images\n        intervalHours: 24\n      }\n    }\n  }\n}\n```\nSource: AKS security (https://learn.microsoft.com/azure/aks/use-azure-policy)"
+                ))
+    
+    def _check_third_party_monitoring(self, code: str, file_path: str) -> None:
+        """Check for third-party software monitoring (KSI-TPR-04)."""
+        # Check for Defender for DevOps (dependency scanning)
+        has_defender_devops = bool(re.search(r"Microsoft\.Security", code))
+        
+        # Check for automation accounts with vulnerability monitoring runbooks
+        has_vuln_monitoring = bool(re.search(r"Microsoft\.Automation", code))
+        
+        # Check for Log Analytics workspace (for security alerts)
+        has_log_analytics = bool(re.search(r"Microsoft\.OperationalInsights/workspaces", code))
+        
+        # Check for Application Insights (runtime monitoring)
+        has_app_insights = bool(re.search(r"Microsoft\.Insights/(components|workbooks)", code))
+        
+        # Check for diagnostic settings sending to SIEM
+        has_diagnostics = bool(re.search(r"Microsoft\.Insights/diagnosticSettings", code))
+        
+        # Has security monitoring if: (LogAnalytics AND diagnostics) OR (Defender OR Automation)
+        has_security_monitoring = (has_log_analytics and has_diagnostics) or has_defender_devops or has_vuln_monitoring
+        
+        if not has_security_monitoring:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-TPR-04",
+                severity=Severity.MEDIUM,
+                title="Third-party software monitoring not configured",
+                description="No automated monitoring for third-party dependencies, vulnerabilities, or security advisories. FedRAMP 20x requires continuous monitoring of third-party information resources.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Implement third-party monitoring:\n```bicep\n// Log Analytics workspace for security monitoring\nresource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {\n  name: 'law-security'\n  location: location\n  properties: {\n    sku: {\n      name: 'PerGB2018'\n    }\n    retentionInDays: 90\n  }\n}\n\n// Defender for Cloud (includes dependency scanning)\nresource defenderPricing 'Microsoft.Security/pricings@2023-01-01' = {\n  name: 'VirtualMachines'\n  properties: {\n    pricingTier: 'Standard'  // Enable Defender for Cloud\n  }\n}\n\n// Automation account for vulnerability monitoring\nresource automationAccount 'Microsoft.Automation/automationAccounts@2022-08-08' = {\n  name: 'aa-vuln-monitoring'\n  location: location\n  properties: {\n    sku: {\n      name: 'Basic'\n    }\n  }\n}\n\n// Runbook to check third-party advisories\nresource vulnerabilityMonitoringRunbook 'Microsoft.Automation/automationAccounts/runbooks@2022-08-08' = {\n  parent: automationAccount\n  name: 'Check-ThirdPartyAdvisories'\n  location: location\n  properties: {\n    runbookType: 'PowerShell'\n    logProgress: true\n    logVerbose: true\n    description: 'Monitor third-party software for security advisories (NVD, vendor feeds)'\n    publishContentLink: {\n      uri: 'https://raw.githubusercontent.com/example/runbook.ps1'\n    }\n  }\n}\n\n// Schedule daily vulnerability checks\nresource schedule 'Microsoft.Automation/automationAccounts/schedules@2022-08-08' = {\n  parent: automationAccount\n  name: 'Daily-Vuln-Check'\n  properties: {\n    frequency: 'Day'\n    interval: 1\n    startTime: '2024-01-01T02:00:00Z'\n    timeZone: 'UTC'\n  }\n}\n```\nNote: Use GitHub Advanced Security, Dependabot, or Snyk in CI/CD pipelines for comprehensive dependency scanning.\nSource: Defender for DevOps (https://learn.microsoft.com/azure/defender-for-cloud/defender-for-devops-introduction)"
+            ))
+        else:
+            line_num = self.get_line_number(code, "Microsoft.Security") or self.get_line_number(code, "Microsoft.Automation")
+            self.add_finding(Finding(
+                requirement_id="KSI-TPR-04",
+                severity=Severity.INFO,
+                title="Third-party software monitoring configured",
+                description="Automated monitoring for dependencies and security advisories is configured.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure monitoring covers: 1) NVD/CVE feeds, 2) Vendor security advisories, 3) SBOM validation, 4) License compliance.",
+                good_practice=True
+            ))
+
+

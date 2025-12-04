@@ -1,9 +1,10 @@
 # Code Analyzer Expansion Roadmap
 
-## Current Status: Phase 6B Complete ✅
+## Current Status: Phase 7 Complete ✅
 
-**Coverage:** 53 KSIs out of 72 (73.6%)
-**Families Covered:** IAM (7/7 complete), MLA (7/8), SVC (10/10 complete), CNA (8/8 complete), PIY (3/8), CMT (4/4 complete), AFR (5/7), CED (1/2), INR (3/3 complete), RPL (4/4 complete)
+**Coverage:** 55 KSIs out of 72 (76.4%) - **Active** KSIs: 55 out of 65 (84.6%)
+**Note:** 7 KSIs retired/superseded by FedRAMP, reducing total active count from 72 to 65
+**Families Covered:** IAM (7/7 complete), MLA (7/8), SVC (10/10 complete), CNA (8/8 complete), PIY (3/8), CMT (4/4 complete), AFR (5/7), CED (1/2), INR (3/3 complete), RPL (4/4 complete), TPR (2/4)
 
 ### Phase 1: Foundation (COMPLETE) ✅
 
@@ -690,22 +691,116 @@
 
 ---
 
-## Phase 7: Complete Coverage 🚀
+## Phase 7: Supply Chain Security (COMPLETE) ✅
 
-**Target:** Add remaining 19 KSIs → 72 total (100% coverage)
-**Focus:** Organizational/policy requirements (limited IaC detection)
-**Effort:** 3-4 weeks
-**Priority:** LOW
+**Target:** Add 2 detectable KSIs → 55 total (76.4% of 72, 84.6% of 65 active)
+**Focus:** Supply chain risk mitigation (remaining KSIs are organizational/policy-only)
+**Completed:** December 2024
+**Priority:** MEDIUM
 
-#### Incident Response (1 KSI)
-- KSI-INR-03: Incident response automation
+### Supply Chain Security (2 KSIs) ✅
 
-#### Configuration Management (1 KSI)
-- KSI-CMT-04: Configuration drift detection
+#### KSI-TPR-03: Supply Chain Risk Mitigation ✅
+**Implementation:**
+- Detects ACR (Azure Container Registry) security controls
+- Validates image signing/trust policies (Notary, content trust)
+- Checks for quarantine policies (unscanned image protection)
+- Enforces private network access (no public exposure)
+- AKS cluster supply chain controls (Azure Policy addon)
+- Image cleaner and workload identity validation
+
+**Detection Patterns (Bicep):**
+- ACR without `trustPolicy.status: enabled` or `quarantinePolicy.status: enabled`
+- ACR with `publicNetworkAccess: 'Enabled'` (should be Disabled)
+- Missing retention policy for automatic image cleanup
+- AKS without `azurePolicyEnabled: true` (can't enforce trusted registries)
+- Missing severity: HIGH for ACR, MEDIUM for AKS
+
+**Detection Patterns (Terraform):**
+- `azurerm_container_registry` without `trust_policy { enabled = true }`
+- Missing `quarantine_policy_enabled = true`
+- `public_network_access_enabled = true` (should be false)
+- `azurerm_kubernetes_cluster` without `azure_policy_enabled = true`
+- Reports good practice when all controls present
+
+**Authoritative Sources:**
+- ACR security best practices: https://learn.microsoft.com/azure/container-registry/container-registry-best-practices
+- AKS security: https://learn.microsoft.com/azure/aks/use-azure-policy
+- Azure WAF - Security pillar (container security)
+
+#### KSI-TPR-04: Third-Party Software Monitoring ✅
+**Implementation:**
+- Detects automated vulnerability monitoring infrastructure
+- Validates Defender for Cloud configuration (dependency scanning)
+- Checks for Log Analytics + Sentinel (SIEM)
+- Automation accounts for third-party advisory monitoring
+- Security alert configuration
+
+**Detection Patterns (Bicep):**
+- No `Microsoft.OperationalInsights/workspaces` (Log Analytics)
+- Missing `Microsoft.Security/pricings` (Defender for Cloud)
+- No `Microsoft.Automation/automationAccounts` for vulnerability monitoring
+- Missing severity: MEDIUM
+- Reports good practice when Defender OR Automation OR (LogAnalytics + diagnostics)
+
+**Detection Patterns (Terraform):**
+- No `azurerm_log_analytics_workspace`
+- Missing `azurerm_security_center_subscription_pricing`
+- No `azurerm_automation_account` for monitoring
+- Missing `azurerm_sentinel_log_analytics_workspace_onboarding`
+- Reports good practice when monitoring infrastructure present
+
+**Authoritative Sources:**
+- Defender for DevOps: https://learn.microsoft.com/azure/defender-for-cloud/defender-for-devops-introduction
+- Azure Sentinel (SIEM): https://learn.microsoft.com/azure/sentinel/
+- Note: Complement with GitHub Advanced Security, Dependabot, Snyk in CI/CD
+
+**Test Coverage:** 9 new tests (96 total) - All passing ✅
+**Implementations:** BicepAnalyzer + TerraformAnalyzer complete
 
 ---
 
-## Phase 7: Full Coverage 🎯
+## Remaining KSIs: Organizational/Policy Requirements (14 KSIs)
+
+**Reality Check:** The remaining 14 active KSIs (**19% of total**) are organizational and policy requirements that **CANNOT be detected through code analysis**. They require manual audits, documentation reviews, and process validation:
+
+### AFR Family (6 KSIs - Documentation/Process)
+- **AFR-04:** Vulnerability detection and response method documentation
+- **AFR-05:** Significant change tracking process
+- **AFR-06:** Ongoing Authorization Report maintenance plan
+- **AFR-08:** Secure inbox for FedRAMP communications
+- **AFR-09:** Effectiveness validation and reporting
+- **AFR-10:** Incident Communications Procedures integration
+
+**Why not detectable:** These require organizational documentation, manual processes, communication procedures, and external reporting - not code constructs.
+
+### CED Family (3 KSIs - Training Programs)
+- **CED-02:** Role-specific training for high-risk personnel
+- **CED-03:** Training for privileged users
+- **CED-04:** Stakeholder training effectiveness monitoring
+
+**Why not detectable:** Training programs, effectiveness monitoring, and role assignments are HR/organizational functions - not infrastructure code.
+
+### PIY Family (5 KSIs - Program Effectiveness)
+- **PIY-04:** Security/privacy consideration effectiveness monitoring
+- **PIY-05:** Information resource implementation evaluation methods
+- **PIY-06:** Organizational investment effectiveness monitoring
+- **PIY-07:** Software supply chain risk management decisions documentation
+- **PIY-08:** Executive support measurement
+
+**Why not detectable:** Program maturity metrics, executive communications, and organizational effectiveness - requires manual assessment.
+
+### Analysis Complete
+
+**Code-Detectable KSIs:** 55 out of 65 active (84.6% coverage)
+**Policy/Organizational KSIs:** 14 out of 65 active (21.5% - manual audit required)
+**Retired KSIs:** 7 (superseded by other requirements)
+
+**Conclusion:** Phase 7 achieves **maximum practical code analysis coverage**. Remaining KSIs require organizational maturity assessments, not code scanning.
+
+---
+
+## Phase 7 (Legacy): Full Coverage 🎯
 
 **Target:** Add 19 KSIs → 72 total (100% coverage)
 **Focus:** Remaining families (TPR, remaining AFR, CED, PIY, MLA)

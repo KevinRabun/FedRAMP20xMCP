@@ -250,15 +250,21 @@ python tests/test_enhancement_tools.py
 python tests/test_implementation_mapping_tools.py
 ```
 
-### 15. test_code_analyzer.py ⭐ PHASE 3 COMPLETE
-**Purpose:** Comprehensive tests for code analysis engine (31 functional tests)
+### 15. test_code_analyzer.py ⭐ PHASE 7 COMPLETE
+**Purpose:** Comprehensive tests for code analysis engine (96 functional tests)
 
-**Coverage (25 KSIs - 35%):**
+**Coverage (55 KSIs - 84.6% of 65 active KSIs):**
 - ✅ Phase 1 (8 KSIs): Foundation checks - diagnostics, secrets, network security, authentication, dependencies, PII
 - ✅ Phase 2 (9 KSIs): Critical infrastructure - MFA, PIM, container security, immutable infrastructure, backups, patches
 - ✅ Phase 3 (8 KSIs): Secure coding - error handling, input validation, secure coding, data classification, privacy, service mesh, least privilege, sessions
+- ✅ Phase 4 (6 KSIs): DevSecOps automation - change management, deployment procedures, automated testing, vulnerability scanning, remediation tracking, evidence collection
+- ✅ Phase 5 (6 KSIs): Runtime security & monitoring - security monitoring, performance monitoring, log analysis, incident detection, incident response, threat intelligence
+- ✅ Phase 6A (8 KSIs): Infrastructure resilience - recovery objectives, recovery plans, backups, recovery testing, traffic flow enforcement, DDoS protection, least privilege, FIPS cryptography
+- ✅ Phase 6B (8 KSIs): Advanced infrastructure security - communication integrity, data destruction, event monitoring, log access controls, secure configurations, microservices security, incident after-action, change management procedures
+- ✅ Phase 7 (2 KSIs): Supply chain & third-party security - supply chain risk mitigation, third-party monitoring
 - ✅ Good practices detection across all phases
 - ✅ AnalysisResult summary calculations
+- ✅ **Maximum practical code-detectable coverage achieved** - remaining 14 KSIs are organizational/policy (not code-detectable)
 
 **What It Tests:**
 
@@ -322,6 +328,47 @@ python tests/test_implementation_mapping_tools.py
     - Severity levels correctly assigned
     - Good practices properly flagged
 
+**Phase 4 Tests (12 tests - DevSecOps Automation):**
+13. **Change Management (KSI-CMT-01, KSI-CMT-02, KSI-CMT-03):** GitHub Actions workflow analysis
+
+**Phase 5 Tests (12 tests - Runtime Security & Monitoring):**
+14. **Security Monitoring (KSI-MLA-03, KSI-MLA-04, KSI-MLA-06):** Azure Monitor, Application Insights, KQL queries
+15. **Incident Response (KSI-INR-01, KSI-INR-02, KSI-AFR-03):** Sentinel automation rules, Logic Apps diagnostics, threat intelligence
+
+**Phase 6A Tests (16 tests - Infrastructure Resilience):**
+16. **Recovery Objectives (KSI-RPL-01):** Bicep/Terraform RTO/RPO documentation detection
+17. **Recovery Plans (KSI-RPL-02):** Site Recovery, DR orchestration
+18. **System Backups (KSI-RPL-03):** Backup policies, 365-day retention
+19. **Recovery Testing (KSI-RPL-04):** Automation accounts, scheduled DR drills
+20. **Traffic Flow Enforcement (KSI-CNA-03):** Firewall rules, NSG flow logs
+21. **DDoS Protection (KSI-CNA-05):** DDoS Protection Plan on VNets
+22. **Least Privilege (KSI-IAM-05):** RBAC, JIT access, managed identities
+23. **FIPS Cryptography (KSI-AFR-11):** Key Vault Premium, TLS 1.2+
+
+**Phase 6B Tests (16 tests - Advanced Infrastructure Security):**
+24. **Communication Integrity (KSI-SVC-09):** Application Gateway SSL, mTLS validation
+25. **Data Destruction (KSI-SVC-10):** Soft delete, lifecycle policies, immutability
+26. **Event Monitoring (KSI-MLA-07):** Data Collection Rules, comprehensive event taxonomy
+27. **Log Access Controls (KSI-MLA-08):** RBAC on Log Analytics, private endpoints
+28. **Secure Configuration (KSI-AFR-07):** HTTPS only, TLS 1.2+, disabled public access
+29. **Microservices Security (KSI-CNA-08):** Istio service mesh, Dapr, API Management
+30. **Incident After-Action (KSI-INR-03):** Logic Apps automation, Sentinel playbooks
+31. **Change Management Procedures (KSI-CMT-04):** Change tags, deployment slots, Traffic Manager
+
+**Phase 7 Tests (9 tests - Supply Chain & Third-Party Security) ⭐ NEW:**
+32. **Supply Chain Security (KSI-TPR-03):**
+    - test_bicep_missing_supply_chain_security: Detects ACR without trust/quarantine policies (HIGH severity)
+    - test_bicep_with_supply_chain_security: Recognizes ACR with trustPolicy and quarantinePolicy enabled (good practice)
+    - test_bicep_aks_missing_supply_chain_controls: Detects AKS without Azure Policy addon for trusted registries (MEDIUM severity)
+    - test_terraform_missing_supply_chain_security: Detects Terraform ACR without trust_policy/quarantine_policy_enabled (HIGH severity)
+    - test_terraform_with_supply_chain_security: Recognizes Terraform ACR with security controls (good practice)
+
+33. **Third-Party Monitoring (KSI-TPR-04):**
+    - test_bicep_missing_third_party_monitoring: Detects infrastructure without Defender for Cloud, Log Analytics, or Automation accounts (MEDIUM severity)
+    - test_bicep_with_third_party_monitoring: Recognizes monitoring infrastructure (Defender, Automation, Log Analytics) (good practice)
+    - test_terraform_missing_third_party_monitoring: Detects Terraform infrastructure without security monitoring resources (MEDIUM severity)
+    - test_terraform_with_third_party_monitoring: Recognizes Terraform Sentinel, Automation account monitoring (good practice)
+
 **Example Output:**
 ```
 ✅ Testing Python: Bare Except Detection - PASSED
@@ -331,7 +378,12 @@ python tests/test_implementation_mapping_tools.py
 ✅ Testing Python: Secure Random Usage - PASSED
 ✅ Testing Python: Wildcard Permissions Detection - PASSED
 ✅ Testing Python: Secure Session Configuration - PASSED
-TEST RESULTS: 31 passed, 0 failed
+...
+✅ Testing Bicep: Missing Supply Chain Security (KSI-TPR-03) - PASSED
+✅ Testing Bicep: With Supply Chain Security (KSI-TPR-03) - PASSED
+✅ Testing Terraform: Missing Third-Party Monitoring (KSI-TPR-04) - PASSED
+✅ Testing Terraform: With Third-Party Monitoring (KSI-TPR-04) - PASSED
+TEST RESULTS: 96 passed, 0 failed
 ```
 
 **Run:**

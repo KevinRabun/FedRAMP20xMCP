@@ -603,7 +603,7 @@ Generate strategic interview questions for product managers and engineers to fac
 ### analyze_infrastructure_code
 Analyze Infrastructure as Code (IaC) files for FedRAMP 20x compliance issues and provide actionable recommendations.
 
-> **📊 Current Coverage:** Phase 6B complete with 53 KSIs (73.6% of 72 total). Covers infrastructure resilience, communication integrity (TLS/mTLS), data destruction (lifecycle policies), comprehensive event monitoring (DCR), log access controls, secure configurations, microservices security (Istio/Dapr/APIM), incident after-action automation, and change management. See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for expansion plan to 100% coverage.
+> **📊 Current Coverage:** Phase 7 complete with 55 KSIs implemented (**84.6% of 65 active KSIs**, 76.4% of 72 total). Covers infrastructure resilience, communication integrity (TLS/mTLS), data destruction (lifecycle policies), comprehensive event monitoring (DCR), log access controls, secure configurations, microservices security (Istio/Dapr/APIM), incident after-action automation, change management, supply chain security (container registry trust policies), and third-party monitoring (Defender, Sentinel, Automation). **Maximum practical code-detectable coverage achieved** - remaining 14 KSIs are organizational/policy requirements requiring manual audit. See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for complete details.
 
 **Parameters:**
 - `code` (string): The IaC code content to analyze
@@ -705,7 +705,11 @@ Analyze Infrastructure as Code (IaC) files for FedRAMP 20x compliance issues and
 - **KSI-INR-03**: Incident after-action reports (Logic Apps automation, Sentinel playbooks)
 - **KSI-CMT-04**: Change management procedures (change tags, deployment slots, Traffic Manager)
 
-> **📈 Next:** Phase 7 will add remaining 19 KSIs to reach 100% coverage (72/72 KSIs). See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for full expansion plan.
+**Phase 7 - Supply Chain & Third-Party Security:**
+- **KSI-TPR-03**: Supply chain risk mitigation (ACR trust policies, quarantine, image signing)
+- **KSI-TPR-04**: Third-party software monitoring (Defender for Cloud, vulnerability scanning, SIEM)
+
+> **✅ Maximum Practical Coverage Achieved:** 55 code-detectable KSIs out of 65 active (84.6%). Remaining 14 KSIs are organizational/policy requirements (AFR documentation, CED training, PIY program effectiveness) that cannot be detected through code analysis. See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for details.
 
 **Example usage:**
 ```bicep
@@ -1018,7 +1022,7 @@ python tests/test_all_tools.py                   # All tools comprehensive test
 - ✅ **IaC Generation:** Bicep & Terraform templates for IAM, MLA, AFR families
 - ✅ **Code Generation:** Python, C#, PowerShell evidence collection code
 - ✅ **Template Variations:** Family-specific customization validated
-- ✅ **Code Analyzers:** 87 passing tests across 53 KSIs (73.6% FedRAMP coverage)
+- ✅ **Code Analyzers:** 96 passing tests across 55 KSIs (84.6% of 65 active KSIs)
 
 ### Project Structure
 

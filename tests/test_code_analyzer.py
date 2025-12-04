@@ -2302,6 +2302,283 @@ def test_bicep_with_change_management():
     print(f"✅ Recognized change management: {good_practices[0].title}")
 
 
+# ============================================================================
+# Phase 7 Tests: Supply Chain Security (KSI-TPR-03, KSI-TPR-04)
+# ============================================================================
+
+def test_bicep_missing_supply_chain_security():
+    """Test detection of missing supply chain security controls in Bicep ACR."""
+    print("\n=== Testing Bicep: Missing Supply Chain Security (KSI-TPR-03) ===")
+    
+    code = """
+    resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = {
+      name: 'myacr'
+      location: location
+      sku: {
+        name: 'Standard'
+      }
+      properties: {
+        adminUserEnabled: false
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "acr.bicep")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-TPR-03" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing supply chain controls"
+    assert findings[0].severity == Severity.HIGH
+    print(f"✅ Detected missing supply chain security: {findings[0].title}")
+    print(f"   Description: {findings[0].description[:80]}...")
+
+
+def test_bicep_with_supply_chain_security():
+    """Test recognition of supply chain security controls in Bicep ACR."""
+    print("\n=== Testing Bicep: With Supply Chain Security (KSI-TPR-03) ===")
+    
+    code = """
+    resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = {
+      name: 'myacr'
+      location: location
+      sku: {
+        name: 'Premium'
+      }
+      properties: {
+        publicNetworkAccess: 'Disabled'
+        policies: {
+          quarantinePolicy: {
+            status: 'enabled'
+          }
+          trustPolicy: {
+            type: 'Notary'
+            status: 'enabled'
+          }
+          retentionPolicy: {
+            days: 30
+            status: 'enabled'
+          }
+        }
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "acr-secure.bicep")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-TPR-03" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize supply chain security"
+    print(f"✅ Recognized supply chain security: {good_practices[0].title}")
+
+
+def test_bicep_aks_missing_supply_chain_controls():
+    """Test detection of missing supply chain controls in Bicep AKS."""
+    print("\n=== Testing Bicep: AKS Missing Supply Chain Controls (KSI-TPR-03) ===")
+    
+    code = """
+    resource aks 'Microsoft.ContainerService/managedClusters@2023-05-01' = {
+      name: 'myaks'
+      location: location
+      properties: {
+        dnsPrefix: 'myaks'
+        agentPoolProfiles: [
+          {
+            name: 'default'
+            count: 3
+            vmSize: 'Standard_D2s_v3'
+          }
+        ]
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "aks.bicep")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-TPR-03" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing Azure Policy addon"
+    assert findings[0].severity == Severity.MEDIUM
+    print(f"✅ Detected missing AKS supply chain controls: {findings[0].title}")
+
+
+def test_bicep_missing_third_party_monitoring():
+    """Test detection of missing third-party monitoring in Bicep."""
+    print("\n=== Testing Bicep: Missing Third-Party Monitoring (KSI-TPR-04) ===")
+    
+    code = """
+    resource vnet 'Microsoft.Network/virtualNetworks@2023-04-01' = {
+      name: 'myvnet'
+      location: location
+      properties: {
+        addressSpace: {
+          addressPrefixes: ['10.0.0.0/16']
+        }
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "basic.bicep")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-TPR-04" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing third-party monitoring"
+    assert findings[0].severity == Severity.MEDIUM
+    print(f"✅ Detected missing third-party monitoring: {findings[0].title}")
+
+
+def test_bicep_with_third_party_monitoring():
+    """Test recognition of third-party monitoring in Bicep."""
+    print("\n=== Testing Bicep: With Third-Party Monitoring (KSI-TPR-04) ===")
+    
+    code = """
+    resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+      name: 'law-security'
+      location: location
+      properties: {
+        sku: {
+          name: 'PerGB2018'
+        }
+        retentionInDays: 90
+      }
+    }
+    
+    resource defenderPricing 'Microsoft.Security/pricings@2023-01-01' = {
+      name: 'VirtualMachines'
+      properties: {
+        pricingTier: 'Standard'
+      }
+    }
+    
+    resource automationAccount 'Microsoft.Automation/automationAccounts@2022-08-08' = {
+      name: 'aa-vuln-monitoring'
+      location: location
+      properties: {
+        sku: {
+          name: 'Basic'
+        }
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "monitoring.bicep")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-TPR-04" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize third-party monitoring"
+    print(f"✅ Recognized third-party monitoring: {good_practices[0].title}")
+
+
+def test_terraform_missing_supply_chain_security():
+    """Test detection of missing supply chain security controls in Terraform ACR."""
+    print("\n=== Testing Terraform: Missing Supply Chain Security (KSI-TPR-03) ===")
+    
+    code = """
+    resource "azurerm_container_registry" "acr" {
+      name                = "myacr"
+      resource_group_name = azurerm_resource_group.rg.name
+      location            = azurerm_resource_group.rg.location
+      sku                 = "Standard"
+      admin_enabled       = false
+    }
+    """
+    
+    analyzer = TerraformAnalyzer()
+    result = analyzer.analyze(code, "acr.tf")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-TPR-03" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing supply chain controls"
+    assert findings[0].severity == Severity.HIGH
+    print(f"✅ Detected missing supply chain security: {findings[0].title}")
+
+
+def test_terraform_with_supply_chain_security():
+    """Test recognition of supply chain security controls in Terraform ACR."""
+    print("\n=== Testing Terraform: With Supply Chain Security (KSI-TPR-03) ===")
+    
+    code = """
+    resource "azurerm_container_registry" "acr" {
+      name                = "myacr"
+      resource_group_name = azurerm_resource_group.rg.name
+      location            = azurerm_resource_group.rg.location
+      sku                 = "Premium"
+      
+      public_network_access_enabled = false
+      quarantine_policy_enabled     = true
+      
+      trust_policy {
+        enabled = true
+      }
+      
+      retention_policy {
+        days    = 30
+        enabled = true
+      }
+    }
+    """
+    
+    analyzer = TerraformAnalyzer()
+    result = analyzer.analyze(code, "acr-secure.tf")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-TPR-03" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize supply chain security"
+    print(f"✅ Recognized supply chain security: {good_practices[0].title}")
+
+
+def test_terraform_missing_third_party_monitoring():
+    """Test detection of missing third-party monitoring in Terraform."""
+    print("\n=== Testing Terraform: Missing Third-Party Monitoring (KSI-TPR-04) ===")
+    
+    code = """
+    resource "azurerm_virtual_network" "vnet" {
+      name                = "myvnet"
+      address_space       = ["10.0.0.0/16"]
+      location            = azurerm_resource_group.rg.location
+      resource_group_name = azurerm_resource_group.rg.name
+    }
+    """
+    
+    analyzer = TerraformAnalyzer()
+    result = analyzer.analyze(code, "basic.tf")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-TPR-04" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing third-party monitoring"
+    assert findings[0].severity == Severity.MEDIUM
+    print(f"✅ Detected missing third-party monitoring: {findings[0].title}")
+
+
+def test_terraform_with_third_party_monitoring():
+    """Test recognition of third-party monitoring in Terraform."""
+    print("\n=== Testing Terraform: With Third-Party Monitoring (KSI-TPR-04) ===")
+    
+    code = """
+    resource "azurerm_log_analytics_workspace" "law" {
+      name                = "law-security"
+      location            = azurerm_resource_group.rg.location
+      resource_group_name = azurerm_resource_group.rg.name
+      sku                 = "PerGB2018"
+      retention_in_days   = 90
+    }
+    
+    resource "azurerm_sentinel_log_analytics_workspace_onboarding" "sentinel" {
+      workspace_id = azurerm_log_analytics_workspace.law.id
+    }
+    
+    resource "azurerm_automation_account" "aa" {
+      name                = "aa-vuln-monitoring"
+      location            = azurerm_resource_group.rg.location
+      resource_group_name = azurerm_resource_group.rg.name
+      sku_name            = "Basic"
+    }
+    """
+    
+    analyzer = TerraformAnalyzer()
+    result = analyzer.analyze(code, "monitoring.tf")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-TPR-04" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize third-party monitoring"
+    print(f"✅ Recognized third-party monitoring: {good_practices[0].title}")
+
+
 def run_all_tests():
     """Run all analyzer tests."""
     print("\n" + "="*70)
@@ -2475,6 +2752,23 @@ def run_all_tests():
         # Bicep tests - Phase 6B: Change Management (KSI-CMT-04)
         test_bicep_missing_change_management,
         test_bicep_with_change_management,
+        
+        # Bicep tests - Phase 7: Supply Chain Security (KSI-TPR-03)
+        test_bicep_missing_supply_chain_security,
+        test_bicep_with_supply_chain_security,
+        test_bicep_aks_missing_supply_chain_controls,
+        
+        # Bicep tests - Phase 7: Third-Party Monitoring (KSI-TPR-04)
+        test_bicep_missing_third_party_monitoring,
+        test_bicep_with_third_party_monitoring,
+        
+        # Terraform tests - Phase 7: Supply Chain Security (KSI-TPR-03)
+        test_terraform_missing_supply_chain_security,
+        test_terraform_with_supply_chain_security,
+        
+        # Terraform tests - Phase 7: Third-Party Monitoring (KSI-TPR-04)
+        test_terraform_missing_third_party_monitoring,
+        test_terraform_with_third_party_monitoring,
     ]
     
     passed = 0
