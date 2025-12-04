@@ -1,7 +1,7 @@
 """
 Comprehensive test runner for all FedRAMP 20x MCP Server tests.
 
-This script runs all 15 test files in the correct order and provides
+This script runs all 17 test files in the correct order and provides
 a complete summary of test results.
 """
 
@@ -92,6 +92,7 @@ def main():
         ("test_implementation_questions.py", "Core Functionality"),
         ("test_tool_registration.py", "Core Functionality"),
         ("test_evidence_automation.py", "Core Functionality"),
+        ("test_code_analyzer.py", "Core Functionality"),
         ("test_all_tools.py", "Core Functionality"),
         
         # Tool functional tests
@@ -101,6 +102,7 @@ def main():
         ("test_documentation_tools.py", "Tool Functional Tests"),
         ("test_export_tools.py", "Tool Functional Tests"),
         ("test_enhancement_tools.py", "Tool Functional Tests"),
+        ("test_analyzer_tools.py", "Tool Functional Tests"),
         
         # Resource validation
         ("test_prompts.py", "Resource Validation"),

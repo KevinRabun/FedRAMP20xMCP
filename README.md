@@ -343,7 +343,7 @@ If you only want FedRAMP requirements without Azure integration:
 
 ## Available Tools
 
-The server provides **26 tools** organized into the following categories:
+The server provides **28 tools** organized into the following categories:
 
 **Core Tools (8):** Query requirements, definitions, and KSIs
 **Documentation Tools (3):** Search and retrieve FedRAMP documentation
@@ -352,6 +352,7 @@ The server provides **26 tools** organized into the following categories:
 **Planning Tools (1):** Generate strategic implementation questions
 **Evidence Collection Automation Tools (3):** Infrastructure code, collection code, architecture guidance
 **Implementation Mapping Tools (2):** KSI family matrices and step-by-step implementation checklists
+**Code Analysis Tools (2):** Automated FedRAMP compliance scanning for IaC and application code
 
 ### get_control
 Get detailed information about a specific FedRAMP requirement or control.
@@ -598,6 +599,100 @@ Generate strategic interview questions for product managers and engineers to fac
 - Red Flags (5 warning signs to watch for)
 - Next Steps (9-phase implementation approach)
 - Recommended Resources (Microsoft docs, FedRAMP resources, community)
+
+### analyze_infrastructure_code
+Analyze Infrastructure as Code (IaC) files for FedRAMP 20x compliance issues and provide actionable recommendations.
+
+**Parameters:**
+- `code` (string): The IaC code content to analyze
+- `file_type` (string): Type of IaC file - `"bicep"` or `"terraform"`
+- `file_path` (string): Path to the file being analyzed (for reporting)
+- `context` (string, optional): Additional context about the code (e.g., PR description)
+
+**Returns:**
+- **findings**: Array of compliance findings with:
+  - `requirement_id`: FedRAMP requirement (e.g., KSI-MLA-05, KSI-SVC-06)
+  - `severity`: high/medium/low
+  - `title`: Finding summary
+  - `description`: Detailed issue description
+  - `file_path`: Location of the issue
+  - `line_number`: Approximate line number (if detected)
+  - `code_snippet`: Relevant code excerpt
+  - `recommendation`: Step-by-step fix with code examples
+  - `good_practice`: Boolean indicating if this is a positive finding
+- **summary**: Counts of high/medium/low priority issues and good practices
+- **pr_comment**: Formatted markdown suitable for GitHub/ADO PR comments
+
+**Supported IaC Languages:**
+- **Bicep**: Azure Resource Manager templates
+- **Terraform**: Azure RM provider resources
+
+**FedRAMP Requirements Checked:**
+- **KSI-MLA-05**: Diagnostic logging/audit logging
+- **KSI-SVC-06**: Key Vault secrets management
+- **KSI-CNA-01**: Network Security Groups
+- **KSI-IAM-03**: RBAC role assignments
+- **KSI-SVC-03**: Encryption configuration
+
+**Example usage:**
+```bicep
+// This Bicep code will be flagged for missing diagnostic settings
+resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: 'mystorageaccount'
+  location: location
+  properties: {
+    // Missing: diagnostic settings for KSI-MLA-05
+  }
+}
+```
+
+### analyze_application_code
+Analyze application code for FedRAMP 20x security compliance issues.
+
+**Parameters:**
+- `code` (string): The application code content to analyze
+- `language` (string): Programming language - currently supports `"python"`
+- `file_path` (string): Path to the file being analyzed (for reporting)
+- `dependencies` (array, optional): List of project dependencies (e.g., `["flask==2.3.0", "requests==2.31.0"]`)
+
+**Returns:**
+- **findings**: Array of security findings (same structure as infrastructure analysis)
+- **summary**: Counts of high/medium/low priority issues and good practices
+- **pr_comment**: Formatted markdown for PR reviews
+- **dependencies_checked**: Number of dependencies analyzed
+
+**Supported Languages:**
+- **Python**: Flask, Django, FastAPI applications
+
+**FedRAMP Requirements Checked:**
+- **KSI-IAM-01**: API authentication and authorization
+- **KSI-SVC-06**: Secrets management (hardcoded passwords, API keys)
+- **KSI-SVC-08**: Dependency security (vulnerable libraries, unsafe functions)
+- **KSI-PIY-02**: PII handling and encryption (SSN, email, phone, DOB, address)
+- **KSI-MLA-05**: Diagnostic logging configuration
+
+**Example usage:**
+```python
+# This Python code will be flagged for multiple issues
+from flask import Flask
+
+app = Flask(__name__)
+API_KEY = "sk-1234567890abcdef"  # KSI-SVC-06: Hardcoded secret
+
+@app.route('/api/users')  # KSI-IAM-01: Missing authentication
+def get_users():
+    users = [
+        {'name': 'Alice', 'ssn': '123-45-6789'},  # KSI-PIY-02: Unencrypted PII
+    ]
+    return {'users': users}
+```
+
+**Automated PR Review Workflow:**
+1. Code submitted via PR (GitHub/Azure DevOps)
+2. Analyzer tools examine IaC and application code
+3. Findings generated with FedRAMP requirement citations
+4. PR comment posted with compliance review
+5. Developers address issues before merge
 
 **Purpose:** Help teams think deeply about implementation considerations, trade-offs, and success criteria before committing resources. Questions are designed to facilitate planning sessions, design reviews, and stakeholder alignment.
 

@@ -2,7 +2,7 @@
 
 ## Test Suite Overview
 
-The FedRAMP 20x MCP Server includes comprehensive test coverage across all functionality with 15 test files validating 24 tools, 329 requirements, 72 KSIs, 15 prompts, 21 templates, and infrastructure code generation.
+The FedRAMP 20x MCP Server includes comprehensive test coverage across all functionality with **17 test files** validating **28 tools**, 329 requirements, 72 KSIs, 15 prompts, 21 templates, infrastructure code generation, and automated code analysis.
 
 ## Test Files
 
@@ -67,7 +67,7 @@ python tests/test_implementation_questions.py
 **Purpose:** Validates modular tool architecture
 
 **Coverage:**
-- ✅ 24 tools registered across 7 modules
+- ✅ 28 tools registered across 8 modules
 - ✅ All tool modules import successfully
 - ✅ All `*_impl` functions exist
 - ✅ Module structure integrity
@@ -248,6 +248,114 @@ python tests/test_enhancement_tools.py
 **Run:**
 ```bash
 python tests/test_implementation_mapping_tools.py
+```
+
+### 15. test_code_analyzer.py ⭐ NEW
+**Purpose:** Comprehensive tests for code analysis engine (14 functional tests)
+
+**Coverage:**
+- ✅ BicepAnalyzer: Missing diagnostic settings, hardcoded passwords, network security
+- ✅ TerraformAnalyzer: Missing diagnostic settings, hardcoded connection strings
+- ✅ PythonAnalyzer: Missing authentication, hardcoded secrets, unsafe dependencies, PII handling
+- ✅ Good practices detection (Key Vault, authentication, pinned dependencies)
+- ✅ AnalysisResult summary calculations
+
+**What It Tests:**
+1. **Bicep Analysis:**
+   - Detects missing diagnostic settings (KSI-MLA-05)
+   - Recognizes properly configured diagnostics
+   - Detects hardcoded passwords (KSI-SVC-06)
+   - Detects missing network security groups (KSI-CNA-01)
+
+2. **Terraform Analysis:**
+   - Detects missing diagnostic settings (KSI-MLA-05)
+   - Detects hardcoded connection strings with passwords (KSI-SVC-06)
+
+3. **Python Analysis:**
+   - Detects missing authentication decorators (KSI-IAM-01)
+   - Recognizes proper authentication implementation
+   - Detects hardcoded API keys (KSI-SVC-06)
+   - Recognizes Azure Key Vault usage
+   - Detects unsafe dependencies (pickle) (KSI-SVC-08)
+   - Detects unencrypted PII (SSN, email) (KSI-PIY-02)
+   - Recognizes pinned dependencies
+
+4. **Result Validation:**
+   - Summary counts match finding arrays
+   - Severity levels correctly assigned
+   - Good practices properly flagged
+
+**Example Output:**
+```
+✅ Testing Bicep: Missing Diagnostic Settings - PASSED
+✅ Testing Bicep: With Diagnostic Settings - PASSED
+✅ Testing Bicep: Hardcoded Password - PASSED
+✅ Testing Python: Key Vault Usage - PASSED
+✅ Testing Python: Unencrypted PII - PASSED
+TEST RESULTS: 14 passed, 0 failed
+```
+
+**Run:**
+```bash
+$env:PYTHONIOENCODING='utf-8'; python tests/test_code_analyzer.py
+```
+
+### 16. test_analyzer_tools.py ⭐ NEW
+**Purpose:** Integration tests for MCP analyzer tools (8 tests)
+
+**Coverage:**
+- ✅ analyze_infrastructure_code tool (Bicep, Terraform)
+- ✅ analyze_application_code tool (Python)
+- ✅ PR comment formatting
+- ✅ Unsupported file type handling
+- ✅ Unsupported language handling
+- ✅ Good practices detection in tool output
+- ✅ Summary calculations validation
+- ✅ FedRAMP requirement ID validation
+
+**What It Tests:**
+1. **Tool Structure:**
+   - Returns proper JSON structure (findings, summary, pr_comment)
+   - Findings include requirement IDs (KSI-*)
+   - Findings have severity, recommendation fields
+   - Files analyzed count is accurate
+
+2. **PR Comment Format:**
+   - Contains required headers ("FedRAMP 20x Compliance Review")
+   - Includes file path and summary
+   - Lists requirement IDs (KSI-*)
+   - Highlights severity levels and good practices
+
+3. **Error Handling:**
+   - Unsupported file types return error messages
+   - Unsupported languages handled gracefully
+   - Error messages include type/language name
+
+4. **Detection Validation:**
+   - Bicep analysis detects hardcoded secrets
+   - Terraform analysis detects logging issues
+   - Python analysis detects authentication/secrets/logging issues
+   - Good practices properly detected and reported
+
+**Example Output:**
+```
+=== Testing Bicep Analysis Tool ===
+✅ Tool returned 2 findings with proper structure
+   Requirements: KSI-MLA-05, KSI-SVC-06
+
+=== Testing Python Analysis Tool ===
+✅ Python analysis detected 3 findings
+   Security issues: ['KSI-IAM-01', 'KSI-SVC-06', 'KSI-MLA-05']
+
+=== Testing Good Practices Detection ===
+✅ Detected 1 good practices
+
+TEST RESULTS: 8 passed, 0 failed
+```
+
+**Run:**
+```bash
+$env:PYTHONIOENCODING='utf-8'; python tests/test_analyzer_tools.py
 ```
 
 ### Resource Validation Tests

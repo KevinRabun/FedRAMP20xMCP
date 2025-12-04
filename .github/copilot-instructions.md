@@ -76,6 +76,10 @@ The server provides 26 MCP tools:
 25. **get_ksi_implementation_matrix** - Get comprehensive implementation matrix for all KSIs in a family (complexity, priority, effort estimates, Azure services)
 26. **generate_implementation_checklist** - Generate detailed step-by-step implementation checklist for specific KSI with Azure-focused guidance
 
+**🆕 Code Analysis Tools:**
+27. **analyze_infrastructure_code** - Analyze IaC (Bicep/Terraform) for FedRAMP compliance issues with actionable recommendations
+28. **analyze_application_code** - Analyze application code (Python) for security compliance issues
+
 **Comprehensive Prompts:**
 1. **initial_assessment_roadmap** - 9-11 month roadmap with budget/team guidance
 2. **quarterly_review_checklist** - FRR-CCM-QR checklist for all 72 KSIs
@@ -103,8 +107,9 @@ The server provides 26 MCP tools:
 - Template loaders: `get_infrastructure_template(family, type)` and `get_code_template(family, language)` in `templates/__init__.py`
 - Prompt templates in `prompts/` directory (15 files)
 - Prompt loader: `load_prompt(name)` in `prompts/__init__.py`
-- Tool modules in `tools/` directory (7 modules, 26 tools)
+- Tool modules in `tools/` directory (8 modules, 28 tools)
 - Tool registration: `register_tools(mcp, data_loader)` in `tools/__init__.py`
+- Code analyzers in `analyzers/` directory (3 modules: base, iac_analyzer, app_analyzer)
 
 **Tool Organization:**
 - `tools/requirements.py` - Core requirements tools (3 tools)
@@ -114,7 +119,14 @@ The server provides 26 MCP tools:
 - `tools/export.py` - Data export tools (3 tools)
 - `tools/enhancements.py` - Implementation guidance tools (9 tools: 7 enhancement + 2 implementation mapping)
 - `tools/evidence.py` - Evidence automation tools (3 tools)
+- `tools/analyzer.py` - Code analysis tools (2 tools)
 - Each module has `*_impl` functions, registered via wrappers in `tools/__init__.py`
+
+**Analyzer Organization:**
+- `analyzers/base.py` - Base classes (Finding, AnalysisResult, Severity, BaseAnalyzer)
+- `analyzers/iac_analyzer.py` - BicepAnalyzer, TerraformAnalyzer
+- `analyzers/app_analyzer.py` - PythonAnalyzer
+- Detects 10 FedRAMP requirements: KSI-MLA-05, KSI-SVC-06, KSI-CNA-01, KSI-IAM-03, KSI-SVC-03, KSI-IAM-01, KSI-SVC-08, KSI-PIY-02
 
 ## Development Rules
 
@@ -223,23 +235,25 @@ The server provides 26 MCP tools:
 - Run all tests before committing: `python tests/test_*.py`
 - Update `TESTING.md` immediately when adding new tests
 
-### Test Organization (15 test files)
-**Core Functionality (7 files):**
+### Test Organization (17 test files)
+**Core Functionality (8 files):**
 - `test_loader.py` - Data loading validation
 - `test_definitions.py` - Definition/KSI lookup
 - `test_docs_integration.py` - Documentation loading
 - `test_implementation_questions.py` - Question generation
 - `test_tool_registration.py` - Architecture validation
 - `test_evidence_automation.py` - IaC generation
+- `test_code_analyzer.py` - Code analysis engine (14 tests)
 - `test_all_tools.py` - Integration testing
 
-**Tool Functional Tests (6 files):**
+**Tool Functional Tests (7 files):**
 - `test_requirements_tools.py` - Requirements tools (get_control, list_family_controls, search_requirements)
 - `test_definitions_tools.py` - Definition tools (get_definition, list_definitions, search_definitions)
 - `test_ksi_tools.py` - KSI tools (get_ksi, list_ksi)
 - `test_documentation_tools.py` - Documentation tools (search, get_file, list_files)
 - `test_export_tools.py` - Export tools (excel, csv, ksi_specification)
 - `test_enhancement_tools.py` - 7 enhancement tools (compare, examples, dependencies, etc.)
+- `test_analyzer_tools.py` - Analyzer MCP tools (8 tests)
 
 **Resource Validation (2 files):**
 - `test_prompts.py` - All 15 prompt templates

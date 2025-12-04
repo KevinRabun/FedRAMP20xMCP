@@ -24,7 +24,7 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         data_loader: The data loader instance for accessing FedRAMP data
     """
     # Import all tool modules
-    from . import requirements, definitions, ksi, documentation, export, enhancements, evidence
+    from . import requirements, definitions, ksi, documentation, export, enhancements, evidence, analyzer
     from ..templates import get_infrastructure_template, get_code_template
     
     # Requirements tools
@@ -164,4 +164,15 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         """Provide comprehensive architecture guidance for automated evidence collection."""
         return await evidence.get_evidence_automation_architecture_impl(data_loader, ksi_category)
     
-    logger.info("Registered 26 tools across 7 modules")
+    # Code analyzer tools
+    @mcp.tool()
+    async def analyze_infrastructure_code(code: str, file_type: str, file_path: str = None, context: str = None) -> dict:
+        """Analyze Infrastructure as Code (Bicep/Terraform) for FedRAMP 20x compliance issues."""
+        return await analyzer.analyze_infrastructure_code_impl(code, file_type, file_path, context)
+    
+    @mcp.tool()
+    async def analyze_application_code(code: str, language: str, file_path: str = None, dependencies: list[str] = None) -> dict:
+        """Analyze application code (Python) for FedRAMP 20x security compliance issues."""
+        return await analyzer.analyze_application_code_impl(code, language, file_path, dependencies)
+    
+    logger.info("Registered 28 tools across 8 modules")
