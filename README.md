@@ -603,6 +603,8 @@ Generate strategic interview questions for product managers and engineers to fac
 ### analyze_infrastructure_code
 Analyze Infrastructure as Code (IaC) files for FedRAMP 20x compliance issues and provide actionable recommendations.
 
+> **📊 Current Coverage:** Phase 1 foundation with 8 KSIs (11% of 72 total). See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for expansion plan to 100% coverage.
+
 **Parameters:**
 - `code` (string): The IaC code content to analyze
 - `file_type` (string): Type of IaC file - `"bicep"` or `"terraform"`
@@ -627,12 +629,14 @@ Analyze Infrastructure as Code (IaC) files for FedRAMP 20x compliance issues and
 - **Bicep**: Azure Resource Manager templates
 - **Terraform**: Azure RM provider resources
 
-**FedRAMP Requirements Checked:**
+**FedRAMP Requirements Checked (Phase 1 - Foundation):**
 - **KSI-MLA-05**: Diagnostic logging/audit logging
 - **KSI-SVC-06**: Key Vault secrets management
 - **KSI-CNA-01**: Network Security Groups
 - **KSI-IAM-03**: RBAC role assignments
 - **KSI-SVC-03**: Encryption configuration
+
+> **📈 Expansion Plan:** Phase 2 will add 9 more KSIs (IAM-02, IAM-06, CNA-02, CNA-04, CNA-06, SVC-04, SVC-05, MLA-01, MLA-02) for 24% coverage. See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for details.
 
 **Example usage:**
 ```bicep
@@ -664,12 +668,14 @@ Analyze application code for FedRAMP 20x security compliance issues.
 **Supported Languages:**
 - **Python**: Flask, Django, FastAPI applications
 
-**FedRAMP Requirements Checked:**
+**FedRAMP Requirements Checked (Phase 1 - Foundation):**
 - **KSI-IAM-01**: API authentication and authorization
 - **KSI-SVC-06**: Secrets management (hardcoded passwords, API keys)
 - **KSI-SVC-08**: Dependency security (vulnerable libraries, unsafe functions)
 - **KSI-PIY-02**: PII handling and encryption (SSN, email, phone, DOB, address)
 - **KSI-MLA-05**: Diagnostic logging configuration
+
+> **📈 Expansion Plan:** Phase 3 will add 8 more application security KSIs (SVC-01, SVC-02, SVC-07, PIY-01, PIY-03, CNA-03, IAM-05, CNA-07) for enhanced secure coding checks. See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for details.
 
 **Example usage:**
 ```python

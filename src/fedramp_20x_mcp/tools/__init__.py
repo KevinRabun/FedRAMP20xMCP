@@ -6,7 +6,7 @@ Each submodule contains related tools that are registered with the MCP server.
 """
 import json
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
@@ -166,12 +166,12 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
     
     # Code analyzer tools
     @mcp.tool()
-    async def analyze_infrastructure_code(code: str, file_type: str, file_path: str = None, context: str = None) -> dict:
+    async def analyze_infrastructure_code(code: str, file_type: str, file_path: Optional[str] = None, context: Optional[str] = None) -> dict:
         """Analyze Infrastructure as Code (Bicep/Terraform) for FedRAMP 20x compliance issues."""
         return await analyzer.analyze_infrastructure_code_impl(code, file_type, file_path, context)
     
     @mcp.tool()
-    async def analyze_application_code(code: str, language: str, file_path: str = None, dependencies: list[str] = None) -> dict:
+    async def analyze_application_code(code: str, language: str, file_path: Optional[str] = None, dependencies: Optional[list[str]] = None) -> dict:
         """Analyze application code (Python) for FedRAMP 20x security compliance issues."""
         return await analyzer.analyze_application_code_impl(code, language, file_path, dependencies)
     
