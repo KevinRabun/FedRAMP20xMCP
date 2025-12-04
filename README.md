@@ -603,7 +603,7 @@ Generate strategic interview questions for product managers and engineers to fac
 ### analyze_infrastructure_code
 Analyze Infrastructure as Code (IaC) files for FedRAMP 20x compliance issues and provide actionable recommendations.
 
-> **📊 Current Coverage:** Phase 4 complete with 31 KSIs (43% of 72 total). Covers critical infrastructure security, application security (error handling, input validation, secure coding, data classification, privacy controls, service mesh, least privilege, session management), and DevSecOps automation (change management, deployment procedures, CI/CD testing, vulnerability scanning, security remediation, evidence collection). See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for expansion plan to 100% coverage.
+> **📊 Current Coverage:** Phase 5 complete with 37 KSIs (51% of 72 total). Covers critical infrastructure security, application security, DevSecOps automation, and runtime security & monitoring. See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for expansion plan to 100% coverage.
 
 **Parameters:**
 - `code` (string): The IaC code content to analyze
@@ -629,7 +629,7 @@ Analyze Infrastructure as Code (IaC) files for FedRAMP 20x compliance issues and
 - **Bicep**: Azure Resource Manager templates
 - **Terraform**: Azure RM provider resources
 
-**FedRAMP Requirements Checked (Phase 1 + Phase 2):**
+**FedRAMP Requirements Checked (Phases 1-5):**
 
 **Phase 1 - Foundation:**
 - **KSI-MLA-05**: Diagnostic logging/audit logging
@@ -649,7 +649,7 @@ Analyze Infrastructure as Code (IaC) files for FedRAMP 20x compliance issues and
 - **KSI-MLA-01**: Centralized logging to SIEM
 - **KSI-MLA-02**: Audit log retention (≥90 days)
 
-**Phase 3 - Secure Coding Practices:**
+**Phase 3 - Secure Coding:**
 - **KSI-SVC-01**: Error handling and logging
 - **KSI-SVC-02**: Input validation (SQL injection, command injection, path traversal)
 - **KSI-SVC-07**: Secure coding (avoiding eval/exec, secure random)
@@ -659,7 +659,23 @@ Analyze Infrastructure as Code (IaC) files for FedRAMP 20x compliance issues and
 - **KSI-IAM-04**: Least privilege access (scoped permissions)
 - **KSI-IAM-07**: Session management (secure cookies, token rotation)
 
-> **📈 Next:** Phase 5 will add 6 more KSIs for Runtime Security & Monitoring (51% coverage). See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for full 6-phase plan to 100% coverage.
+**Phase 4 - DevSecOps Automation:**
+- **KSI-CMT-01**: Change management (PR triggers, branch protection)
+- **KSI-CMT-02**: Deployment procedures (approval gates, environments)
+- **KSI-CMT-03**: Automated testing in CI/CD
+- **KSI-AFR-01**: Vulnerability scanning (Trivy, Dependabot, Snyk)
+- **KSI-AFR-02**: Security remediation tracking
+- **KSI-CED-01**: Evidence collection and artifact retention
+
+**Phase 5 - Runtime Security & Monitoring:**
+- **KSI-MLA-03**: Security monitoring and alerting (Azure Monitor, Application Insights, alert rules)
+- **KSI-MLA-04**: Performance monitoring (Application Insights, autoscale, anomaly detection)
+- **KSI-MLA-06**: Log analysis automation (KQL queries, Sentinel analytics rules)
+- **KSI-INR-01**: Incident detection (Sentinel automation rules, incident creation)
+- **KSI-INR-02**: Incident response logging (diagnostic settings on Logic Apps)
+- **KSI-AFR-03**: Threat intelligence integration (Defender for Cloud, threat intel feeds)
+
+> **📈 Next:** Phase 6 will add remaining 35 KSIs to reach 100% coverage. See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for full 6-phase plan.
 
 **Example usage:**
 ```bicep

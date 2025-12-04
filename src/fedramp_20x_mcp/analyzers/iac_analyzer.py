@@ -75,6 +75,25 @@ class BicepAnalyzer(BaseAnalyzer):
         # Check for log retention (KSI-MLA-02)
         self._check_log_retention(code, file_path)
         
+        # Phase 5: Runtime Security & Monitoring
+        # Check for security monitoring alerts (KSI-MLA-03)
+        self._check_security_monitoring(code, file_path)
+        
+        # Check for performance monitoring (KSI-MLA-04)
+        self._check_performance_monitoring(code, file_path)
+        
+        # Check for log analysis automation (KSI-MLA-06)
+        self._check_log_analysis(code, file_path)
+        
+        # Check for incident detection (KSI-INR-01)
+        self._check_incident_detection(code, file_path)
+        
+        # Check for incident response logging (KSI-INR-02)
+        self._check_incident_response_logging(code, file_path)
+        
+        # Check for threat intelligence integration (KSI-AFR-03)
+        self._check_threat_intelligence(code, file_path)
+        
         return self.result
     
     def _check_diagnostic_settings(self, code: str, file_path: str) -> None:
@@ -614,6 +633,294 @@ class BicepAnalyzer(BaseAnalyzer):
                     line_number=line_num,
                     recommendation="Enable immutable storage:\n```bicep\nproperties: {\n  immutableStorageWithVersioning: { enabled: true }\n}\n```"
                 ))
+    
+    def _check_security_monitoring(self, code: str, file_path: str) -> None:
+        """Check for security monitoring and alert configuration (KSI-MLA-03)."""
+        # Check for Application Insights
+        has_app_insights = bool(re.search(r"Microsoft\.Insights/components", code))
+        
+        # Check for Azure Monitor metric alerts
+        has_metric_alerts = bool(re.search(r"Microsoft\.Insights/metricAlerts", code))
+        
+        # Check for Log Analytics workspace
+        has_log_analytics = bool(re.search(r"Microsoft\.OperationalInsights/workspaces", code))
+        
+        # Check for alert rules
+        has_alert_rules = bool(re.search(r"(alertRules|scheduledQueryRules)", code))
+        
+        if not has_app_insights and not has_log_analytics:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-03",
+                severity=Severity.HIGH,
+                title="Missing security monitoring configuration",
+                description="No Application Insights or Log Analytics workspace configured. FedRAMP 20x requires real-time security monitoring and alerting.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure monitoring infrastructure:\n```bicep\nresource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {\n  name: 'law-${workloadName}'\n  location: location\n  properties: {\n    sku: { name: 'PerGB2018' }\n    retentionInDays: 90\n  }\n}\n\nresource appInsights 'Microsoft.Insights/components@2020-02-02' = {\n  name: 'appi-${workloadName}'\n  location: location\n  kind: 'web'\n  properties: {\n    Application_Type: 'web'\n    WorkspaceResourceId: logAnalytics.id\n  }\n}\n```\nSource: Azure WAF - Reliability (https://learn.microsoft.com/azure/well-architected/reliability/monitoring-alerting-strategy)"
+            ))
+        elif (has_app_insights or has_log_analytics) and not has_alert_rules and not has_metric_alerts:
+            line_num = self.get_line_number(code, "Insights") or self.get_line_number(code, "OperationalInsights")
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-03",
+                severity=Severity.MEDIUM,
+                title="Monitoring configured but no alert rules defined",
+                description="Monitoring workspace exists but no alert rules are configured. FedRAMP 20x requires security alerts for anomalous activities.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Add security alert rules:\n```bicep\nresource securityAlert 'Microsoft.Insights/scheduledQueryRules@2022-06-15' = {\n  name: 'alert-security-${workloadName}'\n  location: location\n  properties: {\n    displayName: 'Security Event Alert'\n    severity: 1  // Critical\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT5M'\n    scopes: [logAnalytics.id]\n    criteria: {\n      allOf: [\n        {\n          query: 'SecurityEvent | where EventID == 4625 | summarize count() by bin(TimeGenerated, 5m)'\n          threshold: 10\n          operator: 'GreaterThan'\n        }\n      ]\n    }\n  }\n}\n```"
+            ))
+        else:
+            line_num = self.get_line_number(code, "alertRules") or self.get_line_number(code, "metricAlerts")
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-03",
+                severity=Severity.INFO,
+                title="Security monitoring and alerting configured",
+                description="Application monitoring and alert rules are properly configured.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure alert rules cover security events, failed authentication, and anomalous behavior.",
+                good_practice=True
+            ))
+    
+    def _check_performance_monitoring(self, code: str, file_path: str) -> None:
+        """Check for performance monitoring configuration (KSI-MLA-04)."""
+        # Check for Application Insights
+        has_app_insights = bool(re.search(r"Microsoft\.Insights/components", code))
+        
+        # Check for autoscale settings
+        has_autoscale = bool(re.search(r"Microsoft\.Insights/autoscalesettings", code))
+        
+        # Check for performance thresholds in resources
+        has_performance_config = bool(re.search(r"(cpu|memory|throughput).*threshold", code, re.IGNORECASE))
+        
+        # Check for scalable resources (App Service, AKS, VMSS)
+        has_scalable_resources = bool(re.search(r"(Microsoft\.Web/serverfarms|Microsoft\.ContainerService/managedClusters|Microsoft\.Compute/virtualMachineScaleSets)", code))
+        
+        if has_scalable_resources and not has_app_insights:
+            line_num = self.get_line_number(code, "serverfarms") or self.get_line_number(code, "managedClusters")
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-04",
+                severity=Severity.MEDIUM,
+                title="Scalable resources without performance monitoring",
+                description="Resources configured for scaling but Application Insights not configured. FedRAMP 20x requires performance monitoring to detect anomalies.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Add Application Insights:\n```bicep\nresource appInsights 'Microsoft.Insights/components@2020-02-02' = {\n  name: 'appi-${workloadName}'\n  location: location\n  kind: 'web'\n  properties: {\n    Application_Type: 'web'\n    WorkspaceResourceId: logAnalytics.id\n  }\n}\n\n// Connect to App Service\nresource appService 'Microsoft.Web/sites@2022-03-01' existing = {\n  name: appServiceName\n}\n\nresource appSettings 'Microsoft.Web/sites/config@2022-03-01' = {\n  parent: appService\n  name: 'appsettings'\n  properties: {\n    APPINSIGHTS_INSTRUMENTATIONKEY: appInsights.properties.InstrumentationKey\n    APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.properties.ConnectionString\n  }\n}\n```"
+            ))
+        elif has_app_insights:
+            # App Insights configured - check if autoscale would be beneficial
+            if has_scalable_resources and not has_autoscale:
+                # Optional suggestion, but still recognize App Insights as good practice
+                line_num = self.get_line_number(code, "Insights/components")
+                self.add_finding(Finding(
+                    requirement_id="KSI-MLA-04",
+                    severity=Severity.INFO,
+                    title="Performance monitoring configured",
+                    description="Application Insights configured for performance monitoring.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Ensure performance baselines and anomaly detection are configured. Consider adding autoscale rules for scalable resources.",
+                    good_practice=True
+                ))
+            else:
+                line_num = self.get_line_number(code, "Insights/components")
+                self.add_finding(Finding(
+                    requirement_id="KSI-MLA-04",
+                    severity=Severity.INFO,
+                    title="Performance monitoring configured",
+                    description="Application Insights configured for performance monitoring.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Ensure performance baselines and anomaly detection are configured.",
+                    good_practice=True
+                ))
+    
+    def _check_log_analysis(self, code: str, file_path: str) -> None:
+        """Check for log analysis automation (KSI-MLA-06)."""
+        # Check for Log Analytics workspace
+        has_log_analytics = bool(re.search(r"Microsoft\.OperationalInsights/workspaces", code))
+        
+        # Check for saved searches / queries
+        has_saved_queries = bool(re.search(r"(savedSearches|queries)", code))
+        
+        # Check for Sentinel (SIEM)
+        has_sentinel = bool(re.search(r"Microsoft\.SecurityInsights", code))
+        
+        # Check for analytics rules
+        has_analytics_rules = bool(re.search(r"(analyticsRules|alertRules)", code))
+        
+        if not has_log_analytics and not has_sentinel:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-06",
+                severity=Severity.HIGH,
+                title="No log analysis infrastructure configured",
+                description="Missing Log Analytics workspace or Sentinel. FedRAMP 20x requires automated log analysis and correlation for threat detection.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure Log Analytics and Sentinel:\n```bicep\nresource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {\n  name: 'law-security-${workloadName}'\n  location: location\n  properties: {\n    sku: { name: 'PerGB2018' }\n    retentionInDays: 90\n    features: {\n      enableLogAccessUsingOnlyResourcePermissions: true\n    }\n  }\n}\n\nresource sentinel 'Microsoft.OperationsManagement/solutions@2015-11-01-preview' = {\n  name: 'SecurityInsights(${logAnalytics.name})'\n  location: location\n  plan: {\n    name: 'SecurityInsights(${logAnalytics.name})'\n    product: 'OMSGallery/SecurityInsights'\n    publisher: 'Microsoft'\n    promotionCode: ''\n  }\n  properties: {\n    workspaceResourceId: logAnalytics.id\n  }\n}\n```\nSource: Azure Security Benchmark - Logging and threat detection (https://learn.microsoft.com/security/benchmark/azure/security-controls-v3-logging-threat-detection)"
+            ))
+        elif (has_log_analytics or has_sentinel) and not has_analytics_rules:
+            line_num = self.get_line_number(code, "OperationalInsights") or self.get_line_number(code, "SecurityInsights")
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-06",
+                severity=Severity.MEDIUM,
+                title="Log analysis workspace without automated analytics",
+                description="Log Analytics/Sentinel configured but no analytics rules defined. FedRAMP 20x requires automated threat detection through KQL queries.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Add Sentinel analytics rules:\n```bicep\nresource analyticsRule 'Microsoft.SecurityInsights/alertRules@2023-02-01' = {\n  scope: logAnalytics\n  name: guid('analytics-rule-failed-login')\n  kind: 'Scheduled'\n  properties: {\n    displayName: 'Multiple Failed Login Attempts'\n    description: 'Detects multiple failed login attempts from same IP'\n    severity: 'High'\n    enabled: true\n    query: '''\n      SigninLogs\n      | where ResultType != 0\n      | summarize FailedAttempts = count() by IPAddress, bin(TimeGenerated, 5m)\n      | where FailedAttempts > 5\n    '''\n    queryFrequency: 'PT5M'\n    queryPeriod: 'PT5M'\n    triggerOperator: 'GreaterThan'\n    triggerThreshold: 0\n    tactics: ['InitialAccess']\n  }\n}\n```"
+            ))
+        else:
+            line_num = self.get_line_number(code, "analyticsRules") or self.get_line_number(code, "SecurityInsights")
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-06",
+                severity=Severity.INFO,
+                title="Log analysis automation configured",
+                description="Automated log analysis and threat detection rules are configured.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Regularly review and update analytics rules based on threat landscape.",
+                good_practice=True
+            ))
+    
+    def _check_incident_detection(self, code: str, file_path: str) -> None:
+        """Check for incident detection automation (KSI-INR-01)."""
+        # Check for Sentinel
+        has_sentinel = bool(re.search(r"Microsoft\.SecurityInsights", code))
+        
+        # Check for automation rules
+        has_automation_rules = bool(re.search(r"automationRules", code))
+        
+        # Check for Logic Apps for incident response
+        has_logic_apps = bool(re.search(r"Microsoft\.Logic/workflows", code))
+        
+        # Check for playbooks
+        has_playbooks = bool(re.search(r"(playbook|incident.*response)", code, re.IGNORECASE))
+        
+        if not has_sentinel:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-INR-01",
+                severity=Severity.HIGH,
+                title="No incident detection system configured",
+                description="Microsoft Sentinel not configured. FedRAMP 20x requires automated incident detection and classification.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure Sentinel for incident detection:\n```bicep\n// First ensure Log Analytics workspace exists\nresource sentinel 'Microsoft.OperationsManagement/solutions@2015-11-01-preview' = {\n  name: 'SecurityInsights(${logAnalytics.name})'\n  location: location\n  plan: {\n    name: 'SecurityInsights(${logAnalytics.name})'\n    product: 'OMSGallery/SecurityInsights'\n    publisher: 'Microsoft'\n  }\n  properties: {\n    workspaceResourceId: logAnalytics.id\n  }\n}\n\n// Add analytics rule for automatic incident creation\nresource incidentRule 'Microsoft.SecurityInsights/alertRules@2023-02-01' = {\n  scope: logAnalytics\n  name: guid('incident-creation-rule')\n  kind: 'Scheduled'\n  properties: {\n    displayName: 'Security Incident Auto-Creation'\n    enabled: true\n    incidentConfiguration: {\n      createIncident: true\n      groupingConfiguration: {\n        enabled: true\n        reopenClosedIncident: false\n        lookbackDuration: 'PT5H'\n        matchingMethod: 'AllEntities'\n      }\n    }\n    query: 'SecurityAlert | where AlertSeverity in (\"High\", \"Medium\")'\n    queryFrequency: 'PT5M'\n    queryPeriod: 'PT5M'\n    severity: 'High'\n    triggerOperator: 'GreaterThan'\n    triggerThreshold: 0\n  }\n}\n```"
+            ))
+        elif has_sentinel and not has_automation_rules:
+            line_num = self.get_line_number(code, "SecurityInsights")
+            self.add_finding(Finding(
+                requirement_id="KSI-INR-01",
+                severity=Severity.MEDIUM,
+                title="Incident detection without automation rules",
+                description="Sentinel configured but no automation rules for incident handling. FedRAMP 20x requires automated incident triage and classification.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Add automation rules:\n```bicep\nresource automationRule 'Microsoft.SecurityInsights/automationRules@2023-02-01' = {\n  scope: logAnalytics\n  name: guid('automation-severity-classification')\n  properties: {\n    displayName: 'Auto-classify incident severity'\n    order: 1\n    triggeringLogic: {\n      isEnabled: true\n      triggersOn: 'Incidents'\n      triggersWhen: 'Created'\n    }\n    actions: [\n      {\n        order: 1\n        actionType: 'ModifyProperties'\n        actionConfiguration: {\n          severity: 'High'\n          status: 'New'\n          owner: {\n            objectId: securityTeamObjectId\n          }\n        }\n      }\n    ]\n  }\n}\n```"
+            ))
+        else:
+            line_num = self.get_line_number(code, "automationRules") or self.get_line_number(code, "SecurityInsights")
+            self.add_finding(Finding(
+                requirement_id="KSI-INR-01",
+                severity=Severity.INFO,
+                title="Automated incident detection configured",
+                description="Sentinel with automation rules configured for incident detection and classification.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure automation rules cover all critical security events.",
+                good_practice=True
+            ))
+    
+    def _check_incident_response_logging(self, code: str, file_path: str) -> None:
+        """Check for incident response logging configuration (KSI-INR-02)."""
+        # Check for Sentinel
+        has_sentinel = bool(re.search(r"Microsoft\.SecurityInsights", code))
+        
+        # Check for Log Analytics workspace
+        has_log_analytics = bool(re.search(r"Microsoft\.OperationalInsights/workspaces", code))
+        
+        # Check for Logic Apps (for response automation)
+        has_logic_apps = bool(re.search(r"Microsoft\.Logic/workflows", code))
+        
+        # Check for diagnostic settings on Sentinel/Logic Apps
+        # Look for diagnosticSettings resource that references Logic Apps or has scope: logicApp
+        has_response_logging = bool(re.search(r"(diagnosticSettings|Microsoft\.Insights/diagnosticSettings)", code) and 
+                                    (re.search(r"scope:.*logicApp|scope:.*Logic", code) or 
+                                     re.search(r"SecurityInsights", code)))
+        
+        if has_sentinel or has_logic_apps:
+            if not has_response_logging:
+                line_num = self.get_line_number(code, "Logic/workflows") or self.get_line_number(code, "SecurityInsights")
+                self.add_finding(Finding(
+                    requirement_id="KSI-INR-02",
+                    severity=Severity.MEDIUM,
+                    title="Incident response actions not logged",
+                    description="Incident response automation exists but actions are not logged. FedRAMP 20x requires all incident response activities to be logged for audit.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Enable diagnostic logging on Logic Apps:\n```bicep\nresource logicAppDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {\n  scope: incidentResponseLogicApp\n  name: 'diag-incident-response'\n  properties: {\n    workspaceId: logAnalytics.id\n    logs: [\n      {\n        category: 'WorkflowRuntime'\n        enabled: true\n        retentionPolicy: {\n          enabled: true\n          days: 365  // FedRAMP requires 1-year retention\n        }\n      }\n    ]\n    metrics: [\n      {\n        category: 'AllMetrics'\n        enabled: true\n      }\n    ]\n  }\n}\n```\nSource: FedRAMP 20x Incident Response Logging (FRR-INR)"
+                ))
+            else:
+                line_num = self.get_line_number(code, "diagnosticSettings")
+                self.add_finding(Finding(
+                    requirement_id="KSI-INR-02",
+                    severity=Severity.INFO,
+                    title="Incident response logging configured",
+                    description="Diagnostic logging enabled for incident response actions.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Ensure logs include all response actions, timestamps, and outcome.",
+                    good_practice=True
+                ))
+    
+    def _check_threat_intelligence(self, code: str, file_path: str) -> None:
+        """Check for threat intelligence integration (KSI-AFR-03)."""
+        # Check for Sentinel
+        has_sentinel = bool(re.search(r"Microsoft\.SecurityInsights", code))
+        
+        # Check for threat intelligence connectors
+        has_ti_connectors = bool(re.search(r"(dataConnectors|threatIntelligence)", code))
+        
+        # Check for Defender for Cloud
+        has_defender = bool(re.search(r"Microsoft\.Security/(pricings|securityContacts)", code))
+        
+        if not has_sentinel and not has_defender:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-03",
+                severity=Severity.HIGH,
+                title="No threat intelligence integration configured",
+                description="Missing Sentinel or Defender for Cloud. FedRAMP 20x requires threat intelligence feeds for proactive threat detection.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure Defender for Cloud and Sentinel:\n```bicep\n// Enable Defender for Cloud\nresource defenderPricing 'Microsoft.Security/pricings@2023-01-01' = {\n  name: 'VirtualMachines'\n  properties: {\n    pricingTier: 'Standard'\n  }\n}\n\nresource defenderServers 'Microsoft.Security/pricings@2023-01-01' = {\n  name: 'AppServices'\n  properties: {\n    pricingTier: 'Standard'\n  }\n}\n\n// Configure Sentinel threat intelligence\nresource tiConnector 'Microsoft.SecurityInsights/dataConnectors@2023-02-01' = {\n  scope: logAnalytics\n  name: guid('ti-connector')\n  kind: 'ThreatIntelligence'\n  properties: {\n    dataTypes: {\n      indicators: {\n        state: 'Enabled'\n      }\n    }\n    tenantId: tenant().tenantId\n  }\n}\n```\nSource: Azure Security Benchmark - Threat protection (https://learn.microsoft.com/security/benchmark/azure/security-controls-v3-posture-vulnerability-management)"
+            ))
+        elif has_sentinel and not has_ti_connectors:
+            line_num = self.get_line_number(code, "SecurityInsights")
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-03",
+                severity=Severity.MEDIUM,
+                title="Threat intelligence feeds not configured",
+                description="Sentinel deployed but threat intelligence connectors not configured. FedRAMP 20x requires external threat intelligence for IOC matching.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Add threat intelligence data connectors:\n```bicep\nresource tiConnector 'Microsoft.SecurityInsights/dataConnectors@2023-02-01' = {\n  scope: logAnalytics\n  name: guid('ti-taxii-connector')\n  kind: 'ThreatIntelligenceTaxii'\n  properties: {\n    dataTypes: {\n      taxiiClient: {\n        state: 'Enabled'\n      }\n    }\n    friendlyName: 'Threat Intelligence TAXII'\n    taxiiServer: 'https://your-taxii-server.com'\n    collectionId: 'your-collection-id'\n    pollingFrequency: 'OnceADay'\n    tenantId: tenant().tenantId\n  }\n}\n```"
+            ))
+        else:
+            line_num = self.get_line_number(code, "dataConnectors") or self.get_line_number(code, "Security/pricings")
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-03",
+                severity=Severity.INFO,
+                title="Threat intelligence integration configured",
+                description="Threat intelligence feeds and connectors are properly configured.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Regularly validate threat intelligence feeds are active and IOCs are being ingested.",
+                good_practice=True
+            ))
 
 
 class TerraformAnalyzer(BaseAnalyzer):
@@ -662,6 +969,14 @@ class TerraformAnalyzer(BaseAnalyzer):
         self._check_patch_management(code, file_path)
         self._check_centralized_logging(code, file_path)
         self._check_log_retention(code, file_path)
+        
+        # Phase 5: Runtime Security & Monitoring
+        self._check_security_monitoring(code, file_path)      # KSI-MLA-03
+        self._check_performance_monitoring(code, file_path)   # KSI-MLA-04
+        self._check_log_analysis(code, file_path)            # KSI-MLA-06
+        self._check_incident_detection(code, file_path)       # KSI-INR-01
+        self._check_incident_response_logging(code, file_path) # KSI-INR-02
+        self._check_threat_intelligence(code, file_path)      # KSI-AFR-03
         
         return self.result
     
@@ -1190,4 +1505,278 @@ class TerraformAnalyzer(BaseAnalyzer):
                     line_number=line_num,
                     recommendation="Enable immutable storage:\n```hcl\nblob_properties {\n  versioning_enabled = true\n}\n```"
                 ))
+    
+    def _check_security_monitoring(self, code: str, file_path: str) -> None:
+        """Check for security monitoring and alert configuration (KSI-MLA-03)."""
+        # Check for Application Insights
+        has_app_insights = bool(re.search(r"azurerm_application_insights\"", code))
+        
+        # Check for Azure Monitor metric alerts
+        has_metric_alerts = bool(re.search(r"azurerm_monitor_metric_alert\"", code))
+        
+        # Check for Log Analytics workspace
+        has_log_analytics = bool(re.search(r"azurerm_log_analytics_workspace\"", code))
+        
+        # Check for alert rules
+        has_alert_rules = bool(re.search(r"(azurerm_monitor_.*_alert|azurerm_log_analytics.*alert)", code))
+        
+        if not has_app_insights and not has_log_analytics:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-03",
+                severity=Severity.HIGH,
+                title="Missing security monitoring configuration",
+                description="No Application Insights or Log Analytics workspace configured. FedRAMP 20x requires real-time security monitoring and alerting.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure monitoring infrastructure:\n```hcl\nresource \"azurerm_log_analytics_workspace\" \"main\" {\n  name                = \"law-${var.workload_name}\"\n  location            = var.location\n  resource_group_name = azurerm_resource_group.main.name\n  sku                 = \"PerGB2018\"\n  retention_in_days   = 90\n}\n\nresource \"azurerm_application_insights\" \"main\" {\n  name                = \"appi-${var.workload_name}\"\n  location            = var.location\n  resource_group_name = azurerm_resource_group.main.name\n  application_type    = \"web\"\n  workspace_id        = azurerm_log_analytics_workspace.main.id\n}\n```\nSource: Azure WAF - Reliability (https://learn.microsoft.com/azure/well-architected/reliability/monitoring-alerting-strategy)"
+            ))
+        elif (has_app_insights or has_log_analytics) and not has_alert_rules and not has_metric_alerts:
+            line_num = self.get_line_number(code, "azurerm_application_insights") or self.get_line_number(code, "azurerm_log_analytics_workspace")
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-03",
+                severity=Severity.MEDIUM,
+                title="Monitoring configured but no alert rules defined",
+                description="Monitoring workspace exists but no alert rules are configured. FedRAMP 20x requires security alerts for anomalous activities.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Add security alert rules:\n```hcl\nresource \"azurerm_monitor_scheduled_query_rules_alert_v2\" \"security\" {\n  name                = \"alert-security-${var.workload_name}\"\n  location            = var.location\n  resource_group_name = azurerm_resource_group.main.name\n  \n  evaluation_frequency = \"PT5M\"\n  window_duration      = \"PT5M\"\n  scopes               = [azurerm_log_analytics_workspace.main.id]\n  severity             = 1\n  \n  criteria {\n    query                   = <<-QUERY\n      SecurityEvent\n      | where EventID == 4625\n      | summarize count() by bin(TimeGenerated, 5m)\n    QUERY\n    threshold               = 10\n    operator                = \"GreaterThan\"\n  }\n}\n```"
+            ))
+        else:
+            line_num = self.get_line_number(code, "azurerm_monitor") or self.get_line_number(code, "azurerm_application_insights")
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-03",
+                severity=Severity.INFO,
+                title="Security monitoring and alerting configured",
+                description="Application monitoring and alert rules are properly configured.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure alert rules cover security events, failed authentication, and anomalous behavior.",
+                good_practice=True
+            ))
+    
+    def _check_performance_monitoring(self, code: str, file_path: str) -> None:
+        """Check for performance monitoring configuration (KSI-MLA-04)."""
+        # Check for Application Insights
+        has_app_insights = bool(re.search(r"azurerm_application_insights\"", code))
+        
+        # Check for autoscale settings
+        has_autoscale = bool(re.search(r"azurerm_monitor_autoscale_setting\"", code))
+        
+        # Check for scalable resources (App Service Plan, AKS, VMSS)
+        has_scalable_resources = bool(re.search(r"(azurerm_service_plan|azurerm_kubernetes_cluster|azurerm_(linux|windows)_virtual_machine_scale_set)", code))
+        
+        if has_scalable_resources and not has_app_insights:
+            line_num = self.get_line_number(code, "azurerm_service_plan") or self.get_line_number(code, "azurerm_kubernetes_cluster")
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-04",
+                severity=Severity.MEDIUM,
+                title="Scalable resources without performance monitoring",
+                description="Resources configured for scaling but Application Insights not configured. FedRAMP 20x requires performance monitoring to detect anomalies.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Add Application Insights:\n```hcl\nresource \"azurerm_application_insights\" \"main\" {\n  name                = \"appi-${var.workload_name}\"\n  location            = var.location\n  resource_group_name = azurerm_resource_group.main.name\n  application_type    = \"web\"\n  workspace_id        = azurerm_log_analytics_workspace.main.id\n}\n\nresource \"azurerm_linux_web_app\" \"main\" {\n  # ... other config\n  \n  app_settings = {\n    \"APPINSIGHTS_INSTRUMENTATIONKEY\"             = azurerm_application_insights.main.instrumentation_key\n    \"APPLICATIONINSIGHTS_CONNECTION_STRING\"      = azurerm_application_insights.main.connection_string\n    \"ApplicationInsightsAgent_EXTENSION_VERSION\" = \"~3\"\n  }\n}\n```"
+            ))
+        elif has_scalable_resources and not has_autoscale:
+            line_num = self.get_line_number(code, "azurerm_service_plan") or self.get_line_number(code, "azurerm_kubernetes_cluster")
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-04",
+                severity=Severity.LOW,
+                title="No autoscale settings configured",
+                description="Scalable resources exist but autoscale rules not configured. Consider adding autoscale for performance optimization.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure autoscale settings:\n```hcl\nresource \"azurerm_monitor_autoscale_setting\" \"main\" {\n  name                = \"autoscale-${var.workload_name}\"\n  resource_group_name = azurerm_resource_group.main.name\n  location            = var.location\n  target_resource_id  = azurerm_service_plan.main.id\n  \n  profile {\n    name = \"Auto scale based on CPU\"\n    \n    capacity {\n      default = 2\n      minimum = 1\n      maximum = 10\n    }\n    \n    rule {\n      metric_trigger {\n        metric_name        = \"CpuPercentage\"\n        metric_resource_id = azurerm_service_plan.main.id\n        operator           = \"GreaterThan\"\n        threshold          = 70\n        time_aggregation   = \"Average\"\n        time_window        = \"PT5M\"\n        time_grain         = \"PT1M\"\n      }\n      \n      scale_action {\n        direction = \"Increase\"\n        type      = \"ChangeCount\"\n        value     = \"1\"\n        cooldown  = \"PT5M\"\n      }\n    }\n  }\n}\n```"
+            ))
+        elif has_app_insights:
+            line_num = self.get_line_number(code, "azurerm_application_insights")
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-04",
+                severity=Severity.INFO,
+                title="Performance monitoring configured",
+                description="Application Insights configured for performance monitoring.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure performance baselines and anomaly detection are configured.",
+                good_practice=True
+            ))
+    
+    def _check_log_analysis(self, code: str, file_path: str) -> None:
+        """Check for log analysis automation (KSI-MLA-06)."""
+        # Check for Log Analytics workspace
+        has_log_analytics = bool(re.search(r"azurerm_log_analytics_workspace\"", code))
+        
+        # Check for saved queries
+        has_saved_queries = bool(re.search(r"azurerm_log_analytics_saved_search\"", code))
+        
+        # Check for Sentinel
+        has_sentinel = bool(re.search(r"azurerm_sentinel", code))
+        
+        # Check for analytics rules
+        has_analytics_rules = bool(re.search(r"azurerm_sentinel_alert_rule", code))
+        
+        if not has_log_analytics and not has_sentinel:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-06",
+                severity=Severity.HIGH,
+                title="No log analysis infrastructure configured",
+                description="Missing Log Analytics workspace or Sentinel. FedRAMP 20x requires automated log analysis and correlation for threat detection.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure Log Analytics and Sentinel:\n```hcl\nresource \"azurerm_log_analytics_workspace\" \"security\" {\n  name                = \"law-security-${var.workload_name}\"\n  location            = var.location\n  resource_group_name = azurerm_resource_group.main.name\n  sku                 = \"PerGB2018\"\n  retention_in_days   = 90\n}\n\nresource \"azurerm_log_analytics_solution\" \"sentinel\" {\n  solution_name         = \"SecurityInsights\"\n  location              = var.location\n  resource_group_name   = azurerm_resource_group.main.name\n  workspace_resource_id = azurerm_log_analytics_workspace.security.id\n  workspace_name        = azurerm_log_analytics_workspace.security.name\n  \n  plan {\n    publisher = \"Microsoft\"\n    product   = \"OMSGallery/SecurityInsights\"\n  }\n}\n```\nSource: Azure Security Benchmark - Logging and threat detection (https://learn.microsoft.com/security/benchmark/azure/security-controls-v3-logging-threat-detection)"
+            ))
+        elif (has_log_analytics or has_sentinel) and not has_analytics_rules:
+            line_num = self.get_line_number(code, "azurerm_log_analytics_workspace") or self.get_line_number(code, "azurerm_sentinel")
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-06",
+                severity=Severity.MEDIUM,
+                title="Log analysis workspace without automated analytics",
+                description="Log Analytics/Sentinel configured but no analytics rules defined. FedRAMP 20x requires automated threat detection through KQL queries.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Add Sentinel analytics rules:\n```hcl\nresource \"azurerm_sentinel_alert_rule_scheduled\" \"failed_login\" {\n  name                       = \"Multiple Failed Login Attempts\"\n  log_analytics_workspace_id = azurerm_log_analytics_solution.sentinel.workspace_resource_id\n  display_name               = \"Multiple Failed Login Attempts\"\n  description                = \"Detects multiple failed login attempts from same IP\"\n  severity                   = \"High\"\n  enabled                    = true\n  \n  query = <<QUERY\n    SigninLogs\n    | where ResultType != 0\n    | summarize FailedAttempts = count() by IPAddress, bin(TimeGenerated, 5m)\n    | where FailedAttempts > 5\n  QUERY\n  \n  query_frequency            = \"PT5M\"\n  query_period               = \"PT5M\"\n  trigger_operator           = \"GreaterThan\"\n  trigger_threshold          = 0\n  \n  tactics = [\"InitialAccess\"]\n}\n```"
+            ))
+        else:
+            line_num = self.get_line_number(code, "azurerm_sentinel_alert_rule") or self.get_line_number(code, "azurerm_sentinel")
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-06",
+                severity=Severity.INFO,
+                title="Log analysis automation configured",
+                description="Automated log analysis and threat detection rules are configured.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Regularly review and update analytics rules based on threat landscape.",
+                good_practice=True
+            ))
+    
+    def _check_incident_detection(self, code: str, file_path: str) -> None:
+        """Check for incident detection automation (KSI-INR-01)."""
+        # Check for Sentinel
+        has_sentinel = bool(re.search(r"azurerm_sentinel", code))
+        
+        # Check for automation rules
+        has_automation_rules = bool(re.search(r"azurerm_sentinel_automation_rule\"", code))
+        
+        # Check for Logic Apps for incident response
+        has_logic_apps = bool(re.search(r"azurerm_logic_app_workflow\"", code))
+        
+        if not has_sentinel:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-INR-01",
+                severity=Severity.HIGH,
+                title="No incident detection system configured",
+                description="Microsoft Sentinel not configured. FedRAMP 20x requires automated incident detection and classification.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure Sentinel for incident detection:\n```hcl\nresource \"azurerm_log_analytics_solution\" \"sentinel\" {\n  solution_name         = \"SecurityInsights\"\n  location              = var.location\n  resource_group_name   = azurerm_resource_group.main.name\n  workspace_resource_id = azurerm_log_analytics_workspace.main.id\n  workspace_name        = azurerm_log_analytics_workspace.main.name\n  \n  plan {\n    publisher = \"Microsoft\"\n    product   = \"OMSGallery/SecurityInsights\"\n  }\n}\n\n# Add analytics rule with incident creation\nresource \"azurerm_sentinel_alert_rule_scheduled\" \"incident_rule\" {\n  name                       = \"Security Incident Auto-Creation\"\n  log_analytics_workspace_id = azurerm_log_analytics_solution.sentinel.workspace_resource_id\n  display_name               = \"Security Incident Auto-Creation\"\n  enabled                    = true\n  severity                   = \"High\"\n  \n  query = \"SecurityAlert | where AlertSeverity in ('High', 'Medium')\"\n  query_frequency            = \"PT5M\"\n  query_period               = \"PT5M\"\n  trigger_operator           = \"GreaterThan\"\n  trigger_threshold          = 0\n  \n  incident_configuration {\n    create_incident = true\n    \n    grouping {\n      enabled                 = true\n      reopen_closed_incidents = false\n      lookback_duration       = \"PT5H\"\n      entity_matching_method  = \"AllEntities\"\n    }\n  }\n}\n```"
+            ))
+        elif has_sentinel and not has_automation_rules:
+            line_num = self.get_line_number(code, "azurerm_sentinel")
+            self.add_finding(Finding(
+                requirement_id="KSI-INR-01",
+                severity=Severity.MEDIUM,
+                title="Incident detection without automation rules",
+                description="Sentinel configured but no automation rules for incident handling. FedRAMP 20x requires automated incident triage and classification.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Add automation rules:\n```hcl\nresource \"azurerm_sentinel_automation_rule\" \"severity_classification\" {\n  name                       = \"Auto-classify incident severity\"\n  log_analytics_workspace_id = azurerm_log_analytics_solution.sentinel.workspace_resource_id\n  display_name               = \"Auto-classify incident severity\"\n  order                      = 1\n  enabled                    = true\n  \n  triggers_on  = \"Incidents\"\n  triggers_when = \"Created\"\n  \n  action_incident {\n    order  = 1\n    status = \"New\"\n    severity = \"High\"\n  }\n}\n```"
+            ))
+        else:
+            line_num = self.get_line_number(code, "azurerm_sentinel_automation_rule") or self.get_line_number(code, "azurerm_sentinel")
+            self.add_finding(Finding(
+                requirement_id="KSI-INR-01",
+                severity=Severity.INFO,
+                title="Automated incident detection configured",
+                description="Sentinel with automation rules configured for incident detection and classification.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure automation rules cover all critical security events.",
+                good_practice=True
+            ))
+    
+    def _check_incident_response_logging(self, code: str, file_path: str) -> None:
+        """Check for incident response logging configuration (KSI-INR-02)."""
+        # Check for Sentinel
+        has_sentinel = bool(re.search(r"azurerm_sentinel", code))
+        
+        # Check for Log Analytics workspace
+        has_log_analytics = bool(re.search(r"azurerm_log_analytics_workspace\"", code))
+        
+        # Check for Logic Apps (for response automation)
+        has_logic_apps = bool(re.search(r"azurerm_logic_app_workflow\"", code))
+        
+        # Check for diagnostic settings on Logic Apps
+        has_response_logging = bool(re.search(r"azurerm_monitor_diagnostic_setting.*logic", code, re.IGNORECASE))
+        
+        if (has_sentinel or has_logic_apps) and not has_response_logging:
+            line_num = self.get_line_number(code, "azurerm_logic_app_workflow") or self.get_line_number(code, "azurerm_sentinel")
+            self.add_finding(Finding(
+                requirement_id="KSI-INR-02",
+                severity=Severity.MEDIUM,
+                title="Incident response actions not logged",
+                description="Incident response automation exists but actions are not logged. FedRAMP 20x requires all incident response activities to be logged for audit.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Enable diagnostic logging on Logic Apps:\n```hcl\nresource \"azurerm_monitor_diagnostic_setting\" \"logic_app\" {\n  name               = \"diag-incident-response\"\n  target_resource_id = azurerm_logic_app_workflow.incident_response.id\n  log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id\n  \n  enabled_log {\n    category = \"WorkflowRuntime\"\n    \n    retention_policy {\n      enabled = true\n      days    = 365  # FedRAMP requires 1-year retention\n    }\n  }\n  \n  metric {\n    category = \"AllMetrics\"\n    enabled  = true\n  }\n}\n```\nSource: FedRAMP 20x Incident Response Logging (FRR-INR)"
+            ))
+        elif has_response_logging:
+            line_num = self.get_line_number(code, "azurerm_monitor_diagnostic_setting")
+            self.add_finding(Finding(
+                requirement_id="KSI-INR-02",
+                severity=Severity.INFO,
+                title="Incident response logging configured",
+                description="Diagnostic logging enabled for incident response actions.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure logs include all response actions, timestamps, and outcome.",
+                good_practice=True
+            ))
+    
+    def _check_threat_intelligence(self, code: str, file_path: str) -> None:
+        """Check for threat intelligence integration (KSI-AFR-03)."""
+        # Check for Sentinel
+        has_sentinel = bool(re.search(r"azurerm_sentinel", code))
+        
+        # Check for threat intelligence connectors
+        has_ti_connectors = bool(re.search(r"azurerm_sentinel_data_connector.*threat", code, re.IGNORECASE))
+        
+        # Check for Security Center (Defender for Cloud)
+        has_defender = bool(re.search(r"azurerm_security_center", code))
+        
+        if not has_sentinel and not has_defender:
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-03",
+                severity=Severity.HIGH,
+                title="No threat intelligence integration configured",
+                description="Missing Sentinel or Defender for Cloud. FedRAMP 20x requires threat intelligence feeds for proactive threat detection.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure Defender for Cloud and Sentinel:\n```hcl\n# Enable Defender for Cloud\nresource \"azurerm_security_center_subscription_pricing\" \"vms\" {\n  tier          = \"Standard\"\n  resource_type = \"VirtualMachines\"\n}\n\nresource \"azurerm_security_center_subscription_pricing\" \"app_services\" {\n  tier          = \"Standard\"\n  resource_type = \"AppServices\"\n}\n\n# Configure Sentinel threat intelligence\nresource \"azurerm_sentinel_data_connector_threat_intelligence\" \"ti\" {\n  name                       = \"ThreatIntelligence\"\n  log_analytics_workspace_id = azurerm_log_analytics_solution.sentinel.workspace_resource_id\n}\n```\nSource: Azure Security Benchmark - Threat protection (https://learn.microsoft.com/security/benchmark/azure/security-controls-v3-posture-vulnerability-management)"
+            ))
+        elif has_sentinel and not has_ti_connectors:
+            line_num = self.get_line_number(code, "azurerm_sentinel")
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-03",
+                severity=Severity.MEDIUM,
+                title="Threat intelligence feeds not configured",
+                description="Sentinel deployed but threat intelligence connectors not configured. FedRAMP 20x requires external threat intelligence for IOC matching.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Add threat intelligence data connectors:\n```hcl\nresource \"azurerm_sentinel_data_connector_threat_intelligence_taxii\" \"taxii\" {\n  name                       = \"ThreatIntelligenceTAXII\"\n  log_analytics_workspace_id = azurerm_log_analytics_solution.sentinel.workspace_resource_id\n  display_name               = \"Threat Intelligence TAXII\"\n  api_root_url               = \"https://your-taxii-server.com/taxii2/\"\n  collection_id              = \"your-collection-id\"\n  polling_frequency          = \"OnceADay\"\n}\n```"
+            ))
+        else:
+            line_num = self.get_line_number(code, "azurerm_sentinel_data_connector") or self.get_line_number(code, "azurerm_security_center")
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-03",
+                severity=Severity.INFO,
+                title="Threat intelligence integration configured",
+                description="Threat intelligence feeds and connectors are properly configured.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Regularly validate threat intelligence feeds are active and IOCs are being ingested.",
+                good_practice=True
+            ))
 

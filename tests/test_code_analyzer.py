@@ -1142,6 +1142,315 @@ jobs:
     print(f"✅ Recognized artifact upload: {good_practices[0].title}")
 
 
+# =============================================================================
+# PHASE 5: Runtime Security & Monitoring Tests (KSI-MLA-03, MLA-04, MLA-06, INR-01, INR-02, AFR-03)
+# =============================================================================
+
+def test_bicep_missing_security_monitoring():
+    """Test detection of missing security monitoring infrastructure."""
+    print("\n=== Testing Bicep: Missing Security Monitoring (KSI-MLA-03) ===")
+    
+    code = """
+    resource appService 'Microsoft.Web/sites@2022-03-01' = {
+      name: 'my-app-service'
+      location: location
+      properties: {
+        serverFarmId: appServicePlan.id
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "app.bicep")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-MLA-03" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing monitoring infrastructure"
+    assert findings[0].severity == Severity.HIGH
+    print(f"✅ Detected missing monitoring: {findings[0].title}")
+
+
+def test_bicep_with_security_monitoring():
+    """Test that complete monitoring setup is recognized."""
+    print("\n=== Testing Bicep: With Security Monitoring (KSI-MLA-03) ===")
+    
+    code = """
+    resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+      name: 'law-security'
+      location: location
+    }
+    
+    resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
+      name: 'appi-main'
+      kind: 'web'
+      properties: {
+        WorkspaceResourceId: logAnalytics.id
+      }
+    }
+    
+    resource alertRule 'Microsoft.Insights/scheduledQueryRules@2022-06-15' = {
+      name: 'alert-security'
+      properties: {
+        enabled: true
+        severity: 1
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "monitoring.bicep")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-MLA-03" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize monitoring setup"
+    print(f"✅ Recognized monitoring: {good_practices[0].title}")
+
+
+def test_bicep_missing_performance_monitoring():
+    """Test detection of scalable resources without performance monitoring."""
+    print("\n=== Testing Bicep: Missing Performance Monitoring (KSI-MLA-04) ===")
+    
+    code = """
+    resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
+      name: 'asp-main'
+      location: location
+      sku: {
+        name: 'P1v2'
+        capacity: 3
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "app-plan.bicep")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-MLA-04" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing performance monitoring"
+    assert findings[0].severity == Severity.MEDIUM
+    print(f"✅ Detected missing App Insights: {findings[0].title}")
+
+
+def test_bicep_with_performance_monitoring():
+    """Test that Application Insights is recognized."""
+    print("\n=== Testing Bicep: With Performance Monitoring (KSI-MLA-04) ===")
+    
+    code = """
+    resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
+      name: 'asp-main'
+      location: location
+      sku: { name: 'P1v2' }
+    }
+    
+    resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
+      name: 'appi-main'
+      kind: 'web'
+      properties: {
+        Application_Type: 'web'
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "monitoring.bicep")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-MLA-04" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize App Insights"
+    print(f"✅ Recognized App Insights: {good_practices[0].title}")
+
+
+def test_bicep_missing_log_analysis():
+    """Test detection of missing log analysis infrastructure."""
+    print("\n=== Testing Bicep: Missing Log Analysis (KSI-MLA-06) ===")
+    
+    code = """
+    resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+      name: 'mystorage'
+      location: location
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "storage.bicep")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-MLA-06" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing log analysis"
+    assert findings[0].severity == Severity.HIGH
+    print(f"✅ Detected missing log analysis: {findings[0].title}")
+
+
+def test_bicep_with_log_analysis():
+    """Test that Sentinel analytics rules are recognized."""
+    print("\n=== Testing Bicep: With Log Analysis (KSI-MLA-06) ===")
+    
+    code = """
+    resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+      name: 'law-security'
+      location: location
+    }
+    
+    resource analyticsRule 'Microsoft.SecurityInsights/alertRules@2023-02-01' = {
+      scope: logAnalytics
+      kind: 'Scheduled'
+      properties: {
+        displayName: 'Failed Login Detection'
+        enabled: true
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "sentinel.bicep")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-MLA-06" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize analytics rules"
+    print(f"✅ Recognized log analysis: {good_practices[0].title}")
+
+
+def test_bicep_missing_incident_detection():
+    """Test detection of missing incident detection system."""
+    print("\n=== Testing Bicep: Missing Incident Detection (KSI-INR-01) ===")
+    
+    code = """
+    resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+      name: 'law-security'
+      location: location
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "monitoring.bicep")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-INR-01" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing Sentinel"
+    assert findings[0].severity == Severity.HIGH
+    print(f"✅ Detected missing Sentinel: {findings[0].title}")
+
+
+def test_bicep_with_incident_detection():
+    """Test that Sentinel with automation rules is recognized."""
+    print("\n=== Testing Bicep: With Incident Detection (KSI-INR-01) ===")
+    
+    code = """
+    resource sentinel 'Microsoft.OperationsManagement/solutions@2015-11-01-preview' = {
+      name: 'SecurityInsights'
+      properties: {
+        workspaceResourceId: logAnalytics.id
+      }
+    }
+    
+    resource automationRule 'Microsoft.SecurityInsights/automationRules@2023-02-01' = {
+      scope: logAnalytics
+      properties: {
+        displayName: 'Auto-classify incidents'
+        order: 1
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "sentinel.bicep")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-INR-01" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize incident detection"
+    print(f"✅ Recognized incident detection: {good_practices[0].title}")
+
+
+def test_bicep_missing_incident_logging():
+    """Test detection of missing incident response logging."""
+    print("\n=== Testing Bicep: Missing Incident Response Logging (KSI-INR-02) ===")
+    
+    code = """
+    resource logicApp 'Microsoft.Logic/workflows@2019-05-01' = {
+      name: 'incident-response'
+      location: location
+      properties: {
+        definition: {
+          triggers: { }
+        }
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "response.bicep")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-INR-02" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing diagnostic logging"
+    assert findings[0].severity == Severity.MEDIUM
+    print(f"✅ Detected missing response logging: {findings[0].title}")
+
+
+def test_bicep_with_incident_logging():
+    """Test that diagnostic logging on Logic Apps is recognized."""
+    print("\n=== Testing Bicep: With Incident Response Logging (KSI-INR-02) ===")
+    
+    code = """
+    resource logicApp 'Microsoft.Logic/workflows@2019-05-01' = {
+      name: 'incident-response'
+      location: location
+    }
+    
+    resource diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+      scope: logicApp
+      name: 'diag-incident-response'
+      properties: {
+        logs: [ { category: 'WorkflowRuntime' } ]
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "response.bicep")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-INR-02" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize response logging"
+    print(f"✅ Recognized response logging: {good_practices[0].title}")
+
+
+def test_bicep_missing_threat_intelligence():
+    """Test detection of missing threat intelligence integration."""
+    print("\n=== Testing Bicep: Missing Threat Intelligence (KSI-AFR-03) ===")
+    
+    code = """
+    resource appService 'Microsoft.Web/sites@2022-03-01' = {
+      name: 'my-app'
+      location: location
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "app.bicep")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-AFR-03" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing threat intelligence"
+    assert findings[0].severity == Severity.HIGH
+    print(f"✅ Detected missing threat intel: {findings[0].title}")
+
+
+def test_bicep_with_threat_intelligence():
+    """Test that threat intelligence connectors are recognized."""
+    print("\n=== Testing Bicep: With Threat Intelligence (KSI-AFR-03) ===")
+    
+    code = """
+    resource defenderPricing 'Microsoft.Security/pricings@2023-01-01' = {
+      name: 'VirtualMachines'
+      properties: { pricingTier: 'Standard' }
+    }
+    
+    resource tiConnector 'Microsoft.SecurityInsights/dataConnectors@2023-02-01' = {
+      kind: 'ThreatIntelligence'
+      properties: {
+        dataTypes: { indicators: { state: 'Enabled' } }
+      }
+    }
+    """
+    
+    analyzer = BicepAnalyzer()
+    result = analyzer.analyze(code, "threat-intel.bicep")
+    
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-AFR-03" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize threat intelligence"
+    print(f"✅ Recognized threat intelligence: {good_practices[0].title}")
+
+
 def run_all_tests():
     """Run all analyzer tests."""
     print("\n" + "="*70)
@@ -1227,6 +1536,30 @@ def run_all_tests():
         # CI/CD tests - Phase 4: Evidence Collection (KSI-CED-01)
         test_azure_missing_evidence_collection,
         test_github_with_artifact_upload,
+        
+        # Bicep tests - Phase 5: Security Monitoring (KSI-MLA-03)
+        test_bicep_missing_security_monitoring,
+        test_bicep_with_security_monitoring,
+        
+        # Bicep tests - Phase 5: Performance Monitoring (KSI-MLA-04)
+        test_bicep_missing_performance_monitoring,
+        test_bicep_with_performance_monitoring,
+        
+        # Bicep tests - Phase 5: Log Analysis (KSI-MLA-06)
+        test_bicep_missing_log_analysis,
+        test_bicep_with_log_analysis,
+        
+        # Bicep tests - Phase 5: Incident Detection (KSI-INR-01)
+        test_bicep_missing_incident_detection,
+        test_bicep_with_incident_detection,
+        
+        # Bicep tests - Phase 5: Incident Response Logging (KSI-INR-02)
+        test_bicep_missing_incident_logging,
+        test_bicep_with_incident_logging,
+        
+        # Bicep tests - Phase 5: Threat Intelligence (KSI-AFR-03)
+        test_bicep_missing_threat_intelligence,
+        test_bicep_with_threat_intelligence,
     ]
     
     passed = 0

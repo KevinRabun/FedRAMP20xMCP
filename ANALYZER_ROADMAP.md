@@ -1,9 +1,9 @@
 # Code Analyzer Expansion Roadmap
 
-## Current Status: Phase 3 Complete ✅
+## Current Status: Phase 5 Complete ✅
 
-**Coverage:** 25 KSIs out of 72 (35%)
-**Families Covered:** IAM (6/7), MLA (3/8), SVC (8/10), CNA (5/8), PIY (3/8)
+**Coverage:** 37 KSIs out of 72 (51%)
+**Families Covered:** IAM (7/7), MLA (5/8), SVC (8/10), CNA (5/8), PIY (3/8), CMT (3/3), AFR (3/6), CED (1/2), INR (2/2)
 
 ### Phase 1: Foundation (COMPLETE) ✅
 
@@ -328,44 +328,87 @@
 
 ---
 
-## Phase 5: Runtime Security & Monitoring 🔍
+## Phase 5: Runtime Security & Monitoring (COMPLETE) ✅
 
 **Target:** Add 6 KSIs → 37 total (51% coverage)
 **Focus:** Runtime detection, incident response
-**Effort:** 2-3 weeks
+**Completed:** December 2024
 **Priority:** MEDIUM
 
-### Runtime Monitoring (6 KSIs)
+### Runtime Monitoring (6 KSIs) ✅
 
-#### KSI-MLA-03: Security Monitoring Alerts
-- Alert rules configured
-- Security alerts sent to SIEM
-- Alert thresholds defined
+#### KSI-MLA-03: Security Monitoring Alerts ✅
+**Implementation:**
+- Detects missing Application Insights or Log Analytics workspace
+- Checks for Azure Monitor alert rules and scheduled query rules
+- Validates SIEM integration and alert thresholds
+- Reports good practice when monitoring + alerts configured
 
-#### KSI-MLA-04: Performance Monitoring
-- Application Insights configured
-- Performance baselines set
-- Anomaly detection enabled
+**Detection Patterns:**
+- Missing `Microsoft.Insights/components` or `Microsoft.OperationalInsights/workspaces`
+- Missing `Microsoft.Insights/scheduledQueryRules` or `metricAlerts`
+- Recommends security alert rules for failed logins, anomalies
 
-#### KSI-MLA-06: Log Analysis Automation
-- KQL queries for threat detection
-- Automated log parsing
-- Correlation rules defined
+#### KSI-MLA-04: Performance Monitoring ✅
+**Implementation:**
+- Checks for Application Insights on scalable resources
+- Validates autoscale settings on App Service Plans, AKS, VMSS
+- Recommends performance baselines and anomaly detection
+- Reports good practice when App Insights configured
 
-#### KSI-INR-01: Incident Detection
-- Sentinel analytics rules
-- Incident auto-creation
-- Severity classification
+**Detection Patterns:**
+- Scalable resources (`Microsoft.Web/serverfarms`, AKS, VMSS) without App Insights
+- Missing `Microsoft.Insights/autoscalesettings` for performance optimization
 
-#### KSI-INR-02: Incident Response Logging
-- All incidents logged
-- Response actions tracked
-- Post-mortem documentation
+#### KSI-MLA-06: Log Analysis Automation ✅
+**Implementation:**
+- Detects missing Log Analytics workspace or Sentinel
+- Checks for Sentinel analytics rules (scheduled, fusion)
+- Validates KQL queries for threat detection
+- Reports good practice when analytics rules exist
 
-#### KSI-AFR-03: Threat Intelligence Integration
-- Threat intel feeds configured
-- IOC matching enabled
-- Threat scores calculated
+**Detection Patterns:**
+- Missing `Microsoft.OperationalInsights/workspaces` or Sentinel solution
+- Missing `Microsoft.SecurityInsights/alertRules`
+- Recommends KQL queries for failed logins, anomalous activity
+
+#### KSI-INR-01: Incident Detection ✅
+**Implementation:**
+- Detects missing Sentinel for incident detection
+- Checks for automation rules for incident triage
+- Validates incident auto-creation and severity classification
+- Reports good practice when automation rules configured
+
+**Detection Patterns:**
+- Missing `Microsoft.SecurityInsights` (Sentinel)
+- Missing `Microsoft.SecurityInsights/automationRules`
+- Recommends incident creation rules, severity classification
+
+#### KSI-INR-02: Incident Response Logging ✅
+**Implementation:**
+- Checks for diagnostic logging on Logic Apps (incident response)
+- Validates response action logging for audit purposes
+- Ensures 365-day retention for FedRAMP compliance
+- Reports good practice when diagnostic settings exist
+
+**Detection Patterns:**
+- Logic Apps without diagnostic settings
+- Missing `Microsoft.Insights/diagnosticSettings` with `scope: logicApp`
+- Recommends WorkflowRuntime logging with 1-year retention
+
+#### KSI-AFR-03: Threat Intelligence Integration ✅
+**Implementation:**
+- Detects missing Defender for Cloud or Sentinel
+- Checks for threat intelligence data connectors
+- Validates IOC matching and threat feeds
+- Reports good practice when threat intel configured
+
+**Detection Patterns:**
+- Missing `Microsoft.Security/pricings` (Defender for Cloud)
+- Missing `Microsoft.SecurityInsights/dataConnectors` with threat intel
+- Recommends TAXII feeds, IOC matching, threat scores
+
+**Test Coverage:** 12 new tests (55 total) - All passing ✅
 
 ---
 
