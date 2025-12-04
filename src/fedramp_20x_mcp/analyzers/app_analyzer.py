@@ -50,6 +50,16 @@ class PythonAnalyzer(BaseAnalyzer):
         self._check_service_account_management(code, file_path)
         self._check_microservices_security(code, file_path)
         
+        # Phase 3: Secure Coding Practices
+        self._check_error_handling(code, file_path)
+        self._check_input_validation(code, file_path)
+        self._check_secure_coding(code, file_path)
+        self._check_data_classification(code, file_path)
+        self._check_privacy_controls(code, file_path)
+        self._check_service_mesh(code, file_path)
+        self._check_least_privilege(code, file_path)
+        self._check_session_management(code, file_path)
+        
         return self.result
     
     def _check_authentication(self, code: str, file_path: str) -> None:
@@ -402,5 +412,462 @@ class PythonAnalyzer(BaseAnalyzer):
                     file_path=file_path,
                     line_number=line_num,
                     recommendation="Ensure all inter-service calls use mutual TLS and token validation.",
+                    good_practice=True
+                ))
+    
+    # Phase 3: Secure Coding Practices Methods
+    
+    def _check_error_handling(self, code: str, file_path: str) -> None:
+        """Check for proper error handling practices (KSI-SVC-01)."""
+        # Check for bare except clauses (anti-pattern)
+        if re.search(r"except\s*:", code):
+            line_num = self.get_line_number(code, "except:")
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-01",
+                severity=Severity.MEDIUM,
+                title="Bare except clause detected",
+                description="Bare 'except:' catches all exceptions including system exits. This can hide bugs and make debugging difficult. FedRAMP 20x requires proper error handling.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Use specific exception types:\n```python\n# Bad\ntry:\n    risky_operation()\nexcept:  # Too broad\n    pass\n\n# Good\ntry:\n    risky_operation()\nexcept (ValueError, KeyError) as e:\n    logger.error(f'Operation failed: {type(e).__name__}')\n    raise\n```"
+            ))
+        
+        # Check for sensitive data in exception messages
+        sensitive_in_errors = re.search(r"raise\s+\w+Exception\([^)]*(?:password|token|secret|key|credential)", code, re.IGNORECASE)
+        if sensitive_in_errors:
+            line_num = self.get_line_number(code, "raise")
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-01",
+                severity=Severity.HIGH,
+                title="Sensitive data in exception message",
+                description="Exception messages may contain sensitive information (passwords, tokens, etc.) that could be logged or displayed to users.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Sanitize exception messages:\n```python\n# Bad\nraise ValueError(f'Failed to authenticate with password: {password}')\n\n# Good\nraise ValueError('Authentication failed - check credentials')\nlogger.error('Auth failed', extra={'user_id': user_id})  # Log safely\n```"
+            ))
+        
+        # Check for proper error logging
+        has_try_except = bool(re.search(r"try:\s*\n.*?except", code, re.DOTALL))
+        has_error_logging = bool(re.search(r"logger\.(error|exception|critical)", code))
+        
+        if has_try_except and not has_error_logging:
+            line_num = self.get_line_number(code, "except")
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-01",
+                severity=Severity.LOW,
+                title="Exception handling without logging",
+                description="Exceptions are caught but not logged. FedRAMP 20x requires error logging for security monitoring.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Log exceptions for monitoring:\n```python\nimport logging\nlogger = logging.getLogger(__name__)\n\ntry:\n    operation()\nexcept SpecificError as e:\n    logger.exception('Operation failed')  # Includes stack trace\n    raise  # Re-raise after logging\n```"
+            ))
+        elif has_error_logging:
+            line_num = self.get_line_number(code, "logger.error") or self.get_line_number(code, "logger.exception")
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-01",
+                severity=Severity.INFO,
+                title="Proper error logging implemented",
+                description="Exceptions are being logged for monitoring and debugging.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure error logs don't contain sensitive data.",
+                good_practice=True
+            ))
+    
+    def _check_input_validation(self, code: str, file_path: str) -> None:
+        """Check for input validation and injection prevention (KSI-SVC-02)."""
+        issues = []
+        
+        # Check for SQL injection risks
+        sql_patterns = [
+            r"execute\(['\"].*%s.*['\"].*%",  # String formatting in SQL
+            r"execute\(f['\"].*{.*}.*['\"]",  # F-strings in SQL
+            r"cursor\.execute\([^)]*\+[^)]*\)",  # String concatenation in SQL
+        ]
+        
+        for pattern in sql_patterns:
+            if re.search(pattern, code):
+                issues.append("SQL injection risk detected (string formatting/concatenation in queries)")
+                line_num = self.get_line_number(code, "execute")
+                self.add_finding(Finding(
+                    requirement_id="KSI-SVC-02",
+                    severity=Severity.HIGH,
+                    title="SQL injection vulnerability",
+                    description="SQL queries constructed with string formatting or concatenation are vulnerable to SQL injection attacks. FedRAMP 20x requires parameterized queries.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Use parameterized queries:\n```python\n# Bad - SQL injection risk\nquery = f\"SELECT * FROM users WHERE id = {user_id}\"  # Vulnerable!\ncursor.execute(query)\n\n# Good - Parameterized query\nquery = \"SELECT * FROM users WHERE id = %s\"\ncursor.execute(query, (user_id,))  # Safe\n\n# Or use ORM\nUser.objects.filter(id=user_id)  # SQLAlchemy/Django ORM\n```\nSource: OWASP SQL Injection Prevention (https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html)"
+                ))
+                break
+        
+        # Check for command injection risks
+        command_patterns = [
+            r"os\.system\([^)]*\+",  # String concatenation in os.system
+            r"subprocess\.(call|run|Popen)\([^)]*\+",  # String concatenation in subprocess
+            r"subprocess\.(call|run|Popen)\(f['\"]",  # F-strings in subprocess
+        ]
+        
+        for pattern in command_patterns:
+            if re.search(pattern, code):
+                issues.append("Command injection risk detected")
+                line_num = self.get_line_number(code, "os.system") or self.get_line_number(code, "subprocess")
+                self.add_finding(Finding(
+                    requirement_id="KSI-SVC-02",
+                    severity=Severity.HIGH,
+                    title="Command injection vulnerability",
+                    description="Shell commands constructed with user input are vulnerable to command injection attacks.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Use subprocess with list arguments:\n```python\n# Bad - Command injection risk\nos.system(f'ls {user_input}')  # Vulnerable!\n\n# Good - Safe subprocess usage\nimport subprocess\nimport shlex\nsubprocess.run(['ls', user_input], check=True)  # Safe - no shell\n\n# If shell needed, sanitize input\nsafe_input = shlex.quote(user_input)\nsubprocess.run(f'ls {safe_input}', shell=True)  # Safer\n```"
+                ))
+                break
+        
+        # Check for path traversal risks
+        if re.search(r"open\([^)]*\+|open\(f['\"].*{", code):
+            issues.append("Path traversal risk detected")
+            line_num = self.get_line_number(code, "open(")
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-02",
+                severity=Severity.MEDIUM,
+                title="Path traversal vulnerability",
+                description="File paths constructed from user input without validation can lead to unauthorized file access.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Validate and sanitize file paths:\n```python\nimport os\nfrom pathlib import Path\n\n# Bad\nfile_path = f'/data/{user_filename}'  # Vulnerable to ../../../etc/passwd\n\n# Good - Validate and resolve\nbase_dir = Path('/data')\nuser_path = Path(user_filename)\nfull_path = (base_dir / user_path).resolve()\n\nif not str(full_path).startswith(str(base_dir)):\n    raise ValueError('Invalid file path')\n\nwith open(full_path, 'r') as f:\n    content = f.read()\n```"
+            ))
+        
+        # Check for input validation on API endpoints
+        if re.search(r"@(app\.route|router\.(get|post|put|delete))", code):
+            has_validation = bool(re.search(r"(pydantic|marshmallow|validator|validate_|isinstance\()", code))
+            
+            if not has_validation:
+                line_num = self.get_line_number(code, "@app.route") or self.get_line_number(code, "@router")
+                self.add_finding(Finding(
+                    requirement_id="KSI-SVC-02",
+                    severity=Severity.MEDIUM,
+                    title="API endpoint without input validation",
+                    description="API endpoints should validate all input data. FedRAMP 20x requires input validation to prevent injection attacks.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Implement input validation:\n```python\nfrom pydantic import BaseModel, validator, constr\n\nclass UserInput(BaseModel):\n    username: constr(min_length=3, max_length=50, regex=r'^[a-zA-Z0-9_]+$')\n    email: constr(regex=r'^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$')\n    age: int\n    \n    @validator('age')\n    def validate_age(cls, v):\n        if not 0 <= v <= 150:\n            raise ValueError('Invalid age')\n        return v\n\n@app.post('/users')\ndef create_user(user: UserInput):  # FastAPI auto-validates\n    return {'user': user.dict()}\n```\nSource: OWASP Input Validation (https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html)"
+                ))
+            else:
+                line_num = self.get_line_number(code, "pydantic") or self.get_line_number(code, "validator")
+                self.add_finding(Finding(
+                    requirement_id="KSI-SVC-02",
+                    severity=Severity.INFO,
+                    title="Input validation implemented",
+                    description="API endpoints include input validation using validation framework.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Ensure all endpoints have comprehensive validation.",
+                    good_practice=True
+                ))
+    
+    def _check_secure_coding(self, code: str, file_path: str) -> None:
+        """Check for secure coding practices (KSI-SVC-07)."""
+        # Check for unsafe functions
+        unsafe_functions = [
+            (r"\beval\(", "eval() executes arbitrary code - major security risk"),
+            (r"\bexec\(", "exec() executes arbitrary code - major security risk"),
+            (r"\b__import__\(", "__import__() with user input can import malicious modules"),
+            (r"\bcompile\(", "compile() with user input can execute arbitrary code"),
+        ]
+        
+        for pattern, description in unsafe_functions:
+            if re.search(pattern, code):
+                line_num = self.get_line_number(code, pattern.replace("\\b", "").replace("\\(", ""))
+                self.add_finding(Finding(
+                    requirement_id="KSI-SVC-07",
+                    severity=Severity.HIGH,
+                    title=f"Unsafe function detected: {pattern.replace(chr(92)+'b', '').replace(chr(92)+'(', '')}",
+                    description=f"{description}. FedRAMP 20x prohibits unsafe code execution.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Avoid unsafe functions:\n```python\n# Bad\nuser_code = request.form['code']\neval(user_code)  # NEVER do this!\n\n# Good - Use safe alternatives\nimport ast\ntry:\n    parsed = ast.literal_eval(user_input)  # Only evaluates literals\nexcept (ValueError, SyntaxError):\n    raise ValueError('Invalid input')\n\n# Or use a safe parser for specific use cases\nimport json\ndata = json.loads(user_input)  # Safe for JSON\n```"
+                ))
+        
+        # Check for insecure random number generation
+        if re.search(r"import random\s|from random import", code):
+            # Check if it's used for security purposes
+            if re.search(r"random\.(choice|randint|random|shuffle).*(?:password|token|secret|key|session)", code, re.IGNORECASE):
+                line_num = self.get_line_number(code, "random")
+                self.add_finding(Finding(
+                    requirement_id="KSI-SVC-07",
+                    severity=Severity.HIGH,
+                    title="Insecure random number generator for security",
+                    description="Python's 'random' module is not cryptographically secure. For security-sensitive operations (tokens, passwords, etc.), use 'secrets' module.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Use cryptographically secure randomness:\n```python\n# Bad\nimport random\ntoken = ''.join(random.choice('abc123') for _ in range(32))  # Not secure!\n\n# Good\nimport secrets\ntoken = secrets.token_urlsafe(32)  # Cryptographically secure\nsession_id = secrets.token_hex(16)\nrandom_choice = secrets.choice(['a', 'b', 'c'])\n```\nSource: Python secrets module (https://docs.python.org/3/library/secrets.html)"
+                ))
+        
+        # Check for secure randomness usage (good practice)
+        if re.search(r"import secrets|from secrets import", code):
+            line_num = self.get_line_number(code, "secrets")
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-07",
+                severity=Severity.INFO,
+                title="Cryptographically secure random generation",
+                description="Code uses 'secrets' module for secure random number generation.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Continue using secrets module for security-sensitive operations.",
+                good_practice=True
+            ))
+        
+        # Check for hardcoded credentials (overlap with SVC-06 but worth double-checking)
+        if re.search(r"(?:password|pwd|passwd)\s*=\s*['\"][^'\"]+['\"]", code, re.IGNORECASE):
+            line_num = self.get_line_number(code, "password")
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-07",
+                severity=Severity.HIGH,
+                title="Hardcoded password detected",
+                description="Passwords should never be hardcoded in source code.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Use environment variables or Azure Key Vault for credentials."
+            ))
+    
+    def _check_data_classification(self, code: str, file_path: str) -> None:
+        """Check for data classification and tagging (KSI-PIY-01)."""
+        # Check for PII fields without classification tags
+        pii_patterns = [
+            r"(?:first_?name|last_?name|full_?name|username)",
+            r"(?:email|e_?mail)",
+            r"(?:phone|telephone|mobile)",
+            r"(?:ssn|social_?security)",
+            r"(?:address|street|city|zip|postal)",
+            r"(?:dob|date_?of_?birth|birthday)",
+            r"(?:credit_?card|card_?number)",
+        ]
+        
+        has_pii_fields = False
+        for pattern in pii_patterns:
+            if re.search(pattern, code, re.IGNORECASE):
+                has_pii_fields = True
+                break
+        
+        if has_pii_fields:
+            # Check for classification markers
+            has_classification = bool(re.search(r"(classification|sensitivity|data_class|pii_level|confidential)", code, re.IGNORECASE))
+            
+            if not has_classification:
+                line_num = self.get_line_number(code, "class") or 1
+                self.add_finding(Finding(
+                    requirement_id="KSI-PIY-01",
+                    severity=Severity.MEDIUM,
+                    title="PII fields without classification tags",
+                    description="Code contains PII fields but lacks data classification metadata. FedRAMP 20x requires data classification for sensitive information.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Add data classification metadata:\n```python\nfrom enum import Enum\nfrom dataclasses import dataclass, field\n\nclass DataClassification(Enum):\n    PUBLIC = 'public'\n    INTERNAL = 'internal'\n    CONFIDENTIAL = 'confidential'\n    RESTRICTED = 'restricted'  # For PII, PHI, etc.\n\n@dataclass\nclass User:\n    username: str = field(metadata={'classification': DataClassification.INTERNAL})\n    email: str = field(metadata={'classification': DataClassification.CONFIDENTIAL})\n    ssn: str = field(metadata={'classification': DataClassification.RESTRICTED})\n    \n    def __post_init__(self):\n        # Validate classification-based access controls\n        for field_name, field_obj in self.__dataclass_fields__.items():\n            classification = field_obj.metadata.get('classification')\n            if classification == DataClassification.RESTRICTED:\n                # Apply additional security controls\n                pass\n```\nSource: NIST data classification guidance"
+                ))
+            else:
+                line_num = self.get_line_number(code, "classification") or self.get_line_number(code, "sensitivity")
+                self.add_finding(Finding(
+                    requirement_id="KSI-PIY-01",
+                    severity=Severity.INFO,
+                    title="Data classification implemented",
+                    description="Code includes data classification metadata for sensitive fields.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Ensure classification drives access control and encryption decisions.",
+                    good_practice=True
+                ))
+    
+    def _check_privacy_controls(self, code: str, file_path: str) -> None:
+        """Check for privacy controls implementation (KSI-PIY-03)."""
+        # Check for data retention policies
+        has_retention = bool(re.search(r"(retention|expire|ttl|time_to_live|delete_after)", code, re.IGNORECASE))
+        
+        # Check for user data deletion capabilities
+        has_deletion = bool(re.search(r"def\s+(delete_user|remove_user|purge_user|erase_user)", code, re.IGNORECASE))
+        
+        # Check for user consent mechanisms
+        has_consent = bool(re.search(r"(consent|opt_in|agree|accept_terms|gdpr|privacy_policy)", code, re.IGNORECASE))
+        
+        # Check for data export capabilities (GDPR/privacy right)
+        has_export = bool(re.search(r"def\s+(export_user|download_user|get_user_data)", code, re.IGNORECASE))
+        
+        if not has_retention and re.search(r"(user|customer|person|individual)", code, re.IGNORECASE):
+            line_num = 1
+            self.add_finding(Finding(
+                requirement_id="KSI-PIY-03",
+                severity=Severity.LOW,
+                title="No data retention policy detected",
+                description="Code handles user data but doesn't implement retention policies. FedRAMP 20x requires data lifecycle management.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Implement data retention:\n```python\nfrom datetime import datetime, timedelta\n\nclass UserData:\n    created_at: datetime\n    retention_days: int = 365  # 1 year retention\n    \n    @property\n    def should_be_deleted(self) -> bool:\n        expiry = self.created_at + timedelta(days=self.retention_days)\n        return datetime.now() > expiry\n    \n    async def cleanup_expired_data(self):\n        \"\"\"Automated cleanup job\"\"\"\n        expired = [u for u in users if u.should_be_deleted]\n        for user in expired:\n            await user.secure_delete()\n```"
+            ))
+        
+        if has_deletion and has_export:
+            line_num = self.get_line_number(code, "delete_user") or self.get_line_number(code, "export_user")
+            self.add_finding(Finding(
+                requirement_id="KSI-PIY-03",
+                severity=Severity.INFO,
+                title="Privacy rights implemented (deletion and export)",
+                description="Code implements user data deletion and export capabilities for privacy compliance.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure deletion is secure (overwrite, not just soft delete) and export includes all user data.",
+                good_practice=True
+            ))
+        
+        # Check for secure deletion (not just soft delete)
+        if re.search(r"\.delete\(\)|DELETE FROM", code):
+            has_secure_delete = bool(re.search(r"(overwrite|shred|secure_delete|wipe)", code, re.IGNORECASE))
+            
+            if not has_secure_delete:
+                line_num = self.get_line_number(code, "delete")
+                self.add_finding(Finding(
+                    requirement_id="KSI-PIY-03",
+                    severity=Severity.MEDIUM,
+                    title="Data deletion without secure overwrite",
+                    description="Simple delete operations may not fully remove sensitive data. FedRAMP 20x requires secure data disposal for sensitive information.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Implement secure deletion for sensitive data:\n```python\nimport os\n\ndef secure_delete_file(filepath: str):\n    \"\"\"Overwrite file before deletion\"\"\"\n    if os.path.exists(filepath):\n        size = os.path.getsize(filepath)\n        # Overwrite with random data\n        with open(filepath, 'wb') as f:\n            f.write(os.urandom(size))\n        os.remove(filepath)\n\n# For database records\nasync def secure_delete_user(user_id: str):\n    # 1. Export for audit trail\n    await export_user_data(user_id)\n    # 2. Overwrite sensitive fields\n    await db.execute(\n        'UPDATE users SET email = %s, ssn = %s WHERE id = %s',\n        ('deleted@example.com', '000-00-0000', user_id)\n    )\n    # 3. Then delete\n    await db.execute('DELETE FROM users WHERE id = %s', (user_id,))\n```"
+                ))
+    
+    def _check_service_mesh(self, code: str, file_path: str) -> None:
+        """Check for service mesh configuration (KSI-CNA-07)."""
+        # Check for Istio or Linkerd imports/configuration
+        has_service_mesh = bool(re.search(r"(istio|linkerd|consul|envoy)", code, re.IGNORECASE))
+        
+        if has_service_mesh:
+            # Check for mTLS configuration
+            has_mtls = bool(re.search(r"(mtls|mutual_tls|peer_authentication)", code, re.IGNORECASE))
+            
+            # Check for authorization policies
+            has_authz = bool(re.search(r"(authorization_policy|rbac|access_control)", code, re.IGNORECASE))
+            
+            issues = []
+            if not has_mtls:
+                issues.append("mTLS not configured")
+            if not has_authz:
+                issues.append("Authorization policies not defined")
+            
+            if issues:
+                line_num = self.get_line_number(code, "istio") or self.get_line_number(code, "linkerd")
+                self.add_finding(Finding(
+                    requirement_id="KSI-CNA-07",
+                    severity=Severity.HIGH,
+                    title="Service mesh security controls missing",
+                    description=f"Service mesh configuration incomplete: {', '.join(issues)}. FedRAMP 20x requires secure service-to-service communication.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Configure service mesh security:\n```yaml\n# Istio PeerAuthentication for mTLS\napiVersion: security.istio.io/v1beta1\nkind: PeerAuthentication\nmetadata:\n  name: default\n  namespace: production\nspec:\n  mtls:\n    mode: STRICT  # Require mTLS for all services\n\n---\n# Istio AuthorizationPolicy\napiVersion: security.istio.io/v1beta1\nkind: AuthorizationPolicy\nmetadata:\n  name: service-access\nspec:\n  action: ALLOW\n  rules:\n  - from:\n    - source:\n        principals: [\"cluster.local/ns/production/sa/frontend\"]\n    to:\n    - operation:\n        methods: [\"GET\", \"POST\"]\n        paths: [\"/api/*\"]\n```\nSource: Istio security best practices (https://istio.io/latest/docs/concepts/security/)"
+                ))
+            else:
+                line_num = self.get_line_number(code, "mtls") or self.get_line_number(code, "authorization_policy")
+                self.add_finding(Finding(
+                    requirement_id="KSI-CNA-07",
+                    severity=Severity.INFO,
+                    title="Service mesh security configured",
+                    description="Service mesh includes mTLS and authorization policies.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Regularly review and update authorization policies.",
+                    good_practice=True
+                ))
+    
+    def _check_least_privilege(self, code: str, file_path: str) -> None:
+        """Check for least privilege access patterns (KSI-IAM-04)."""
+        # Check for Azure IAM operations
+        has_iam_operations = bool(re.search(r"(RoleAssignment|role_definition|assign_role|grant)", code, re.IGNORECASE))
+        
+        if has_iam_operations:
+            # Check for wildcard permissions (anti-pattern)
+            if re.search(r"['\"]actions['\"]:\s*\[['\"]?\*['\"]?\]|permissions.*\*", code):
+                line_num = self.get_line_number(code, "actions") or self.get_line_number(code, "*")
+                self.add_finding(Finding(
+                    requirement_id="KSI-IAM-04",
+                    severity=Severity.HIGH,
+                    title="Wildcard permissions detected",
+                    description="IAM permissions use wildcard (*) which grants excessive access. FedRAMP 20x requires least privilege access.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Use specific permissions:\n```python\n# Bad\ncustom_role = {\n    'actions': ['*'],  # Too broad!\n    'dataActions': ['*']\n}\n\n# Good - Specific permissions only\ncustom_role = {\n    'actions': [\n        'Microsoft.Storage/storageAccounts/read',\n        'Microsoft.Storage/storageAccounts/listKeys/action'\n    ],\n    'dataActions': [\n        'Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read'\n    ]\n}\n```\nSource: Azure RBAC best practices (https://learn.microsoft.com/azure/role-based-access-control/best-practices)"
+                ))
+            
+            # Check for scope limitation
+            if not re.search(r"scope\s*=|subscription|resource_group", code):
+                line_num = self.get_line_number(code, "role")
+                self.add_finding(Finding(
+                    requirement_id="KSI-IAM-04",
+                    severity=Severity.MEDIUM,
+                    title="Role assignment without explicit scope",
+                    description="Role assignments should be scoped to specific resources, not subscription-wide.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Limit scope to minimum required:\n```python\n# Bad - Subscription-wide\nrole_assignment = authorization_client.role_assignments.create(\n    scope=f'/subscriptions/{subscription_id}',  # Too broad\n    role_definition_id=role_id,\n    principal_id=principal_id\n)\n\n# Good - Resource-specific\nrole_assignment = authorization_client.role_assignments.create(\n    scope=f'/subscriptions/{subscription_id}/resourceGroups/{rg}/providers/Microsoft.Storage/storageAccounts/{account}',\n    role_definition_id=role_id,\n    principal_id=principal_id\n)\n```"
+                ))
+            else:
+                line_num = self.get_line_number(code, "scope")
+                self.add_finding(Finding(
+                    requirement_id="KSI-IAM-04",
+                    severity=Severity.INFO,
+                    title="Scoped role assignments implemented",
+                    description="Role assignments include explicit scope limitation.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Regularly audit and review role assignments.",
+                    good_practice=True
+                ))
+    
+    def _check_session_management(self, code: str, file_path: str) -> None:
+        """Check for secure session management (KSI-IAM-07)."""
+        # Check for session/token usage
+        has_sessions = bool(re.search(r"(session|token|jwt|cookie)", code, re.IGNORECASE))
+        
+        if has_sessions:
+            issues = []
+            
+            # Check for session timeout
+            has_timeout = bool(re.search(r"(timeout|expire|max_age|ttl)", code, re.IGNORECASE))
+            if not has_timeout:
+                issues.append("No session timeout configured")
+            
+            # Check for secure cookie flags
+            if re.search(r"set_cookie|Cookie", code):
+                has_secure = bool(re.search(r"secure\s*=\s*True", code, re.IGNORECASE))
+                has_httponly = bool(re.search(r"httponly\s*=\s*True", code, re.IGNORECASE))
+                has_samesite = bool(re.search(r"samesite", code, re.IGNORECASE))
+                
+                if not has_secure:
+                    issues.append("Cookies without 'secure' flag")
+                if not has_httponly:
+                    issues.append("Cookies without 'httpOnly' flag")
+                if not has_samesite:
+                    issues.append("Cookies without 'SameSite' attribute")
+            
+            # Check for token rotation
+            has_rotation = bool(re.search(r"(rotate|refresh|renew).*token", code, re.IGNORECASE))
+            if not has_rotation and re.search(r"jwt|token", code, re.IGNORECASE):
+                issues.append("No token rotation mechanism")
+            
+            if issues:
+                line_num = self.get_line_number(code, "session") or self.get_line_number(code, "token")
+                self.add_finding(Finding(
+                    requirement_id="KSI-IAM-07",
+                    severity=Severity.HIGH,
+                    title="Insecure session management",
+                    description=f"Session management issues: {', '.join(issues)}. FedRAMP 20x requires secure session handling.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Implement secure session management:\n```python\nfrom flask import Flask, session\nfrom datetime import timedelta\n\napp = Flask(__name__)\napp.config.update(\n    SECRET_KEY=os.environ['SECRET_KEY'],  # From Key Vault\n    SESSION_COOKIE_SECURE=True,  # HTTPS only\n    SESSION_COOKIE_HTTPONLY=True,  # No JavaScript access\n    SESSION_COOKIE_SAMESITE='Lax',  # CSRF protection\n    PERMANENT_SESSION_LIFETIME=timedelta(minutes=30)  # 30-min timeout\n)\n\n# JWT with rotation\nimport jwt\nfrom datetime import datetime, timedelta\n\ndef create_token(user_id: str) -> dict:\n    access_token = jwt.encode({\n        'user_id': user_id,\n        'exp': datetime.utcnow() + timedelta(minutes=15),  # Short-lived\n        'type': 'access'\n    }, SECRET_KEY)\n    \n    refresh_token = jwt.encode({\n        'user_id': user_id,\n        'exp': datetime.utcnow() + timedelta(days=7),  # Longer-lived\n        'type': 'refresh'\n    }, SECRET_KEY)\n    \n    return {'access': access_token, 'refresh': refresh_token}\n```\nSource: OWASP Session Management (https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html)"
+                ))
+            else:
+                line_num = self.get_line_number(code, "secure=True") or self.get_line_number(code, "timeout")
+                self.add_finding(Finding(
+                    requirement_id="KSI-IAM-07",
+                    severity=Severity.INFO,
+                    title="Secure session management implemented",
+                    description="Session configuration includes timeout, secure cookies, and token rotation.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Monitor session activity for suspicious patterns.",
                     good_practice=True
                 ))

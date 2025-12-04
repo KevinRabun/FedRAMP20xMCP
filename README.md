@@ -603,7 +603,7 @@ Generate strategic interview questions for product managers and engineers to fac
 ### analyze_infrastructure_code
 Analyze Infrastructure as Code (IaC) files for FedRAMP 20x compliance issues and provide actionable recommendations.
 
-> **📊 Current Coverage:** Phase 2 complete with 17 KSIs (24% of 72 total). Covers critical infrastructure security including MFA, PIM, container security, immutable infrastructure, backups, patch management, and centralized logging. See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for expansion plan to 100% coverage.
+> **📊 Current Coverage:** Phase 3 complete with 25 KSIs (35% of 72 total). Covers critical infrastructure security, application security (error handling, input validation, secure coding, data classification, privacy controls, service mesh, least privilege, session management). See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for expansion plan to 100% coverage.
 
 **Parameters:**
 - `code` (string): The IaC code content to analyze
@@ -694,7 +694,17 @@ Analyze application code for FedRAMP 20x security compliance issues.
 - **KSI-IAM-05**: Service account management (Managed Identity vs hardcoded credentials)
 - **KSI-CNA-03**: Microservices security (service-to-service auth, mTLS, rate limiting)
 
-> **📈 Next:** Phase 3 will add 6 more application security KSIs (SVC-01, SVC-02, SVC-07, PIY-01, PIY-03, CNA-07) for comprehensive secure coding checks (35% total coverage). See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for details.
+**Phase 3 - Secure Coding Practices:**
+- **KSI-SVC-01**: Error handling and logging
+- **KSI-SVC-02**: Input validation (SQL/command injection prevention)
+- **KSI-SVC-07**: Secure coding (no eval/exec, secure random)
+- **KSI-PIY-01**: Data classification and tagging
+- **KSI-PIY-03**: Privacy controls (retention, deletion, export)
+- **KSI-CNA-07**: Service mesh security (Istio/Linkerd)
+- **KSI-IAM-04**: Least privilege access
+- **KSI-IAM-07**: Session management and token security
+
+> **📈 Next:** Phase 4 will add 8 more KSIs for DevSecOps automation (43% total coverage). See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for details.
 
 **Example usage:**
 ```python

@@ -1,9 +1,9 @@
 # Code Analyzer Expansion Roadmap
 
-## Current Status: Phase 2 Complete ✅
+## Current Status: Phase 3 Complete ✅
 
-**Coverage:** 17 KSIs out of 72 (24%)
-**Families Covered:** IAM (4/7), MLA (3/8), SVC (5/10), CNA (4/8), PIY (1/8)
+**Coverage:** 25 KSIs out of 72 (35%)
+**Families Covered:** IAM (6/7), MLA (3/8), SVC (8/10), CNA (5/8), PIY (3/8)
 
 ### Phase 1: Foundation (COMPLETE) ✅
 
@@ -164,47 +164,119 @@
 
 ---
 
-## Phase 3: Application Security 📱 🎯 NEXT
+## Phase 3: Application Security (COMPLETE) ✅
 
 **Target:** Add 8 KSIs → 25 total (35% coverage)
-**Focus:** Secure coding practices, input validation
-**Effort:** 2-3 weeks
+**Focus:** Secure coding practices, input validation, data privacy
+**Completed:** December 2024
 **Priority:** HIGH
 
 ### App Code Additions (8 KSIs)
 
-#### KSI-SVC-01: Error Handling and Logging
-- Proper exception handling
-- No sensitive data in error messages
-- Errors logged to monitoring system
+#### KSI-SVC-01: Error Handling and Logging ✅
+**Implementation (Python):**
+- Detects bare `except:` clauses (should use specific exceptions)
+- Validates error logging (should log to monitoring system)
+- Checks for sensitive data in error messages
 
-#### KSI-SVC-02: Input Validation
-- Validate all user inputs
-- Parameterized queries (SQL injection prevention)
-- XSS prevention in output
+**Detection Patterns:**
+- `except:` without exception type (MEDIUM severity)
+- Missing logging in exception handlers
+- Password/token/key in error messages (HIGH severity)
+- Reports good practice when proper error handling detected
 
-#### KSI-SVC-07: Secure Coding Practices
-- No use of unsafe functions (eval, exec)
-- Secure random number generation
-- Memory safety checks
+#### KSI-SVC-02: Input Validation ✅
+**Implementation (Python):**
+- SQL injection detection (string concatenation in SQL)
+- Command injection detection (shell=True with user input)
+- Path traversal prevention (os.path.join with user input)
+- API input validation (Pydantic/Marshmallow schemas)
 
-#### KSI-PIY-01: Data Inventory and Classification
-- Data classification tags in code
-- Sensitive data marked appropriately
-- Data handling follows classification
+**Detection Patterns:**
+- `.format()` or f-strings in SQL queries (HIGH severity)
+- `subprocess` with `shell=True` and user input (HIGH severity)
+- Unvalidated path operations (MEDIUM severity)
+- Missing input validation schemas on API endpoints (MEDIUM severity)
+- Reports good practice when parameterized queries/validation detected
 
-#### KSI-PIY-03: Privacy Controls Implementation
-- Data retention policies in code
+#### KSI-SVC-07: Secure Coding Practices ✅
+**Implementation (Python):**
+- Detects use of `eval()` or `exec()` (code injection risk)
+- Validates secure random number generation (secrets vs random module)
+- Checks for unsafe deserialization (pickle)
+- Detects hardcoded passwords in code
+
+**Detection Patterns:**
+- `eval(` or `exec(` usage (HIGH severity)
+- `import random` for security purposes (should use secrets module - MEDIUM)
+- `pickle.loads()` with untrusted data (HIGH severity)
+- `password = "..."` hardcoded (HIGH severity)
+- Reports good practice when `secrets` module used
+
+#### KSI-PIY-01: Data Inventory and Classification ✅
+**Implementation (Python):**
+- Detects PII handling without classification tags
+- Validates data classification metadata
+- Checks for proper data handling based on classification
+
+**Detection Patterns:**
+- PII variables (ssn, email, name) without `@dataclass` or classification decorators (MEDIUM)
+- Missing data classification tags on models
+- Reports good practice when classification metadata present
+
+#### KSI-PIY-03: Privacy Controls Implementation ✅
+**Implementation (Python):**
+- Data retention policy validation
 - User consent mechanisms
-- Data export/deletion capabilities
+- Data export/deletion capabilities (GDPR compliance)
 
-#### KSI-CNA-07: Service Mesh Configuration
-- Istio/Linkerd configuration security
-- mTLS enabled
-- Authorization policies defined
+**Detection Patterns:**
+- Database models without `retention_days` or TTL configuration (LOW severity)
+- Missing deletion methods for user data (MEDIUM severity)
+- Missing data export functionality (MEDIUM severity)
+- Reports good practice when privacy controls implemented
 
-#### KSI-IAM-04: Least Privilege Access (Python)
-- Minimal permissions in IAM calls
+#### KSI-CNA-07: Service Mesh Configuration ✅
+**Implementation (Python):**
+- Istio/Linkerd configuration security validation
+- mTLS enforcement in service mesh
+- Authorization policies validation
+
+**Detection Patterns:**
+- Istio/Linkerd config without `STRICT` mTLS mode (HIGH severity)
+- Missing authorization policies (MEDIUM severity)
+- Permissive network policies (LOW severity)
+- Reports good practice when proper service mesh security detected
+
+#### KSI-IAM-04: Least Privilege Access ✅
+**Implementation (Python):**
+- Detects wildcard permissions in Azure SDK calls
+- Validates scope limitation in RBAC assignments
+- Checks for overly broad role definitions
+
+**Detection Patterns:**
+- `scope='*'` in role assignments (HIGH severity)
+- Wildcard resource access (e.g., `storage_account='*'`) (HIGH severity)
+- Missing scope limitation on privileged operations (MEDIUM severity)
+- Reports good practice when least privilege enforced
+
+#### KSI-IAM-07: Session Management ✅
+**Implementation (Python):**
+- Session timeout validation (Flask/Django)
+- Secure cookie configuration (httponly, secure, samesite)
+- Token rotation enforcement (JWT refresh)
+
+**Detection Patterns:**
+- Missing session timeout configuration (MEDIUM severity)
+- Cookies without `httponly=True, secure=True, samesite='Strict'` (HIGH severity)
+- Missing JWT refresh token logic (MEDIUM severity)
+- Reports good practice when secure session management detected
+
+**Test Coverage:** All Phase 1 + Phase 2 tests (14) continue passing with Phase 3 additions.
+
+---
+
+## Phase 4: DevSecOps Automation 🤖
 - No wildcard permissions
 - Scope limited to necessary resources
 
