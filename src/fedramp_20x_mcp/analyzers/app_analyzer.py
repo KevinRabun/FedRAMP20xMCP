@@ -46,6 +46,10 @@ class PythonAnalyzer(BaseAnalyzer):
         # Check for logging (KSI-MLA-05)
         self._check_logging(code, file_path)
         
+        # Phase 2: Application Security
+        self._check_service_account_management(code, file_path)
+        self._check_microservices_security(code, file_path)
+        
         return self.result
     
     def _check_authentication(self, code: str, file_path: str) -> None:
@@ -281,4 +285,122 @@ class PythonAnalyzer(BaseAnalyzer):
                     file_path=file_path,
                     line_number=line_num,
                     recommendation="Add logging to track security events:\n```python\nimport logging\nfrom opencensus.ext.azure.log_exporter import AzureLogHandler\n\nlogger = logging.getLogger(__name__)\nlogger.addHandler(AzureLogHandler(\n    connection_string='InstrumentationKey=your-key'\n))\n\nlogger.info('User authenticated', extra={'user_id': user_id})\nlogger.warning('Failed login attempt', extra={'ip': request.remote_addr})\n```\nSource: Azure Monitor best practices (https://learn.microsoft.com/azure/azure-monitor/logs/data-platform-logs)"
+                ))
+    
+    # Phase 2: Application Security Methods
+    
+    def _check_service_account_management(self, code: str, file_path: str) -> None:
+        """Check for service account and credential management (KSI-IAM-05)."""
+        # Check for hardcoded credentials (anti-pattern)
+        credential_patterns = [
+            r"password\s*=\s*['\"][^'\"]+['\"]",
+            r"api_key\s*=\s*['\"][^'\"]+['\"]",
+            r"secret\s*=\s*['\"][^'\"]+['\"]",
+            r"connection_string\s*=\s*['\"].*password=[^'\"]+['\"]",
+        ]
+        
+        for pattern in credential_patterns:
+            if re.search(pattern, code, re.IGNORECASE):
+                line_num = self.get_line_number(code, pattern.split("=")[0])
+                self.add_finding(Finding(
+                    requirement_id="KSI-IAM-05",
+                    severity=Severity.HIGH,
+                    title="Hardcoded credentials detected",
+                    description="Credentials should NEVER be hardcoded in source code. FedRAMP 20x requires secure credential management using Azure Key Vault or Managed Identity.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Use Azure Managed Identity or Key Vault:\n```python\nfrom azure.identity import DefaultAzureCredential\nfrom azure.keyvault.secrets import SecretClient\n\n# Option 1: Managed Identity (recommended)\ncredential = DefaultAzureCredential()\nclient = SomeClient(credential=credential)\n\n# Option 2: Key Vault for secrets\nkey_vault_url = os.environ['KEY_VAULT_URL']\nsecret_client = SecretClient(vault_url=key_vault_url, credential=credential)\napi_key = secret_client.get_secret('api-key').value\n```\nSource: Azure Managed Identity (https://learn.microsoft.com/entra/identity/managed-identities-azure-resources/)"
+                ))
+                break
+        
+        # Check for proper credential management (good practice)
+        has_managed_identity = bool(re.search(r"from\s+azure\.identity\s+import\s+(DefaultAzureCredential|ManagedIdentityCredential)", code))
+        has_key_vault = bool(re.search(r"from\s+azure\.keyvault", code))
+        
+        if has_managed_identity or has_key_vault:
+            line_num = self.get_line_number(code, "azure.identity") or \
+                       self.get_line_number(code, "azure.keyvault")
+            self.add_finding(Finding(
+                requirement_id="KSI-IAM-05",
+                severity=Severity.INFO,
+                title="Secure credential management implemented",
+                description="Application uses Azure Managed Identity or Key Vault for credential management.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure Managed Identity is assigned appropriate RBAC roles with least privilege.",
+                good_practice=True
+            ))
+        else:
+            # Check for environment variable usage (acceptable but not ideal)
+            if re.search(r"os\.environ\[|os\.getenv\(", code):
+                line_num = self.get_line_number(code, "os.environ")
+                self.add_finding(Finding(
+                    requirement_id="KSI-IAM-05",
+                    severity=Severity.LOW,
+                    title="Environment variables used for credentials",
+                    description="Environment variables are better than hardcoded values but Managed Identity is preferred for Azure resources.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Consider migrating to Azure Managed Identity for better security and credential rotation."
+                ))
+    
+    def _check_microservices_security(self, code: str, file_path: str) -> None:
+        """Check for microservices security patterns (KSI-CNA-03)."""
+        # Check if this appears to be a microservice (has HTTP client/server code)
+        has_http_client = bool(re.search(r"import\s+(requests|httpx|aiohttp)|from\s+(requests|httpx|aiohttp)", code))
+        has_http_server = bool(re.search(r"from\s+(flask|fastapi|django|starlette)", code))
+        
+        if has_http_client or has_http_server:
+            issues = []
+            
+            # Check for service-to-service authentication
+            has_service_auth = bool(re.search(
+                r"DefaultAzureCredential|ClientSecretCredential|bearer.*token|Authorization.*Bearer",
+                code,
+                re.IGNORECASE
+            ))
+            
+            if not has_service_auth:
+                issues.append("No service-to-service authentication detected (OAuth/JWT required)")
+            
+            # Check for mTLS/certificate validation
+            if has_http_client:
+                # Check for verify=False (anti-pattern)
+                if re.search(r"verify\s*=\s*False", code):
+                    issues.append("SSL verification disabled (verify=False) - security risk")
+                
+                # Check for proper certificate handling
+                has_mtls = bool(re.search(r"cert\s*=|client_cert|ssl_context", code))
+                if not has_mtls:
+                    issues.append("mTLS/client certificates not configured for service-to-service calls")
+            
+            # Check for API rate limiting (server-side)
+            if has_http_server:
+                has_rate_limiting = bool(re.search(r"limiter|ratelimit|throttle", code, re.IGNORECASE))
+                if not has_rate_limiting:
+                    issues.append("No rate limiting detected for API endpoints")
+            
+            if issues:
+                line_num = self.get_line_number(code, "import")
+                self.add_finding(Finding(
+                    requirement_id="KSI-CNA-03",
+                    severity=Severity.HIGH,
+                    title="Microservices security controls missing",
+                    description=f"Service communication security issues: {', '.join(issues)}. FedRAMP 20x requires secure service-to-service communication.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Implement microservices security:\n```python\n# Service-to-service authentication\nfrom azure.identity import DefaultAzureCredential\n\ncredential = DefaultAzureCredential()\ntoken = credential.get_token('https://yourapiscope/.default')\n\n# HTTPS with certificate validation\nimport requests\nresponse = requests.get(\n    'https://service-b.example.com/api',\n    headers={'Authorization': f'Bearer {token.token}'},\n    verify=True,  # Always verify SSL\n    cert=('/path/to/client.crt', '/path/to/client.key')  # mTLS\n)\n\n# Rate limiting (FastAPI example)\nfrom slowapi import Limiter\nlimiter = Limiter(key_func=lambda: request.headers.get('X-Forwarded-For'))\n\n@app.get('/api/endpoint')\n@limiter.limit('100/minute')\ndef endpoint():\n    pass\n```\nSource: Azure service-to-service auth (https://learn.microsoft.com/entra/identity/managed-identities-azure-resources/how-to-use-vm-token)"
+                ))
+            else:
+                line_num = self.get_line_number(code, "DefaultAzureCredential") or \
+                           self.get_line_number(code, "import")
+                self.add_finding(Finding(
+                    requirement_id="KSI-CNA-03",
+                    severity=Severity.INFO,
+                    title="Microservices security controls configured",
+                    description="Service communication includes authentication and security controls.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Ensure all inter-service calls use mutual TLS and token validation.",
+                    good_practice=True
                 ))

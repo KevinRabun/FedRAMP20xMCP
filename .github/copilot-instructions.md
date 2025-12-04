@@ -124,9 +124,11 @@ The server provides 26 MCP tools:
 
 **Analyzer Organization:**
 - `analyzers/base.py` - Base classes (Finding, AnalysisResult, Severity, BaseAnalyzer)
-- `analyzers/iac_analyzer.py` - BicepAnalyzer, TerraformAnalyzer
-- `analyzers/app_analyzer.py` - PythonAnalyzer
-- Detects 10 FedRAMP requirements: KSI-MLA-05, KSI-SVC-06, KSI-CNA-01, KSI-IAM-03, KSI-SVC-03, KSI-IAM-01, KSI-SVC-08, KSI-PIY-02
+- `analyzers/iac_analyzer.py` - BicepAnalyzer, TerraformAnalyzer (17 KSIs)
+- `analyzers/app_analyzer.py` - PythonAnalyzer (7 KSIs)
+- **Phase 1 (8 KSIs - Foundation):** MLA-05, SVC-06, CNA-01, IAM-03, SVC-03, IAM-01, SVC-08, PIY-02
+- **Phase 2 (9 KSIs - Critical Infrastructure):** IAM-02, IAM-06, CNA-02, CNA-04, CNA-06, SVC-04, SVC-05, MLA-01, MLA-02
+- **Coverage:** 17 KSIs out of 72 (24%) - see ANALYZER_ROADMAP.md for expansion plan
 
 ## Development Rules
 

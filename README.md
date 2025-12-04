@@ -603,7 +603,7 @@ Generate strategic interview questions for product managers and engineers to fac
 ### analyze_infrastructure_code
 Analyze Infrastructure as Code (IaC) files for FedRAMP 20x compliance issues and provide actionable recommendations.
 
-> **📊 Current Coverage:** Phase 1 foundation with 8 KSIs (11% of 72 total). See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for expansion plan to 100% coverage.
+> **📊 Current Coverage:** Phase 2 complete with 17 KSIs (24% of 72 total). Covers critical infrastructure security including MFA, PIM, container security, immutable infrastructure, backups, patch management, and centralized logging. See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for expansion plan to 100% coverage.
 
 **Parameters:**
 - `code` (string): The IaC code content to analyze
@@ -629,14 +629,27 @@ Analyze Infrastructure as Code (IaC) files for FedRAMP 20x compliance issues and
 - **Bicep**: Azure Resource Manager templates
 - **Terraform**: Azure RM provider resources
 
-**FedRAMP Requirements Checked (Phase 1 - Foundation):**
+**FedRAMP Requirements Checked (Phase 1 + Phase 2):**
+
+**Phase 1 - Foundation:**
 - **KSI-MLA-05**: Diagnostic logging/audit logging
 - **KSI-SVC-06**: Key Vault secrets management
 - **KSI-CNA-01**: Network Security Groups
 - **KSI-IAM-03**: RBAC role assignments
 - **KSI-SVC-03**: Encryption configuration
 
-> **📈 Expansion Plan:** Phase 2 will add 9 more KSIs (IAM-02, IAM-06, CNA-02, CNA-04, CNA-06, SVC-04, SVC-05, MLA-01, MLA-02) for 24% coverage. See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for details.
+**Phase 2 - Critical Infrastructure:**
+- **KSI-IAM-02**: Multi-Factor Authentication enforcement
+- **KSI-IAM-06**: Privileged Identity Management (PIM) and JIT access
+- **KSI-CNA-02**: Container security and isolation
+- **KSI-CNA-04**: Immutable infrastructure and resource locks
+- **KSI-CNA-06**: API Gateway security policies
+- **KSI-SVC-04**: Backup and recovery configuration
+- **KSI-SVC-05**: Automated patch management
+- **KSI-MLA-01**: Centralized logging to SIEM
+- **KSI-MLA-02**: Audit log retention (≥90 days)
+
+> **📈 Next:** Phase 3 will add 8 more KSIs for application security (35% coverage). See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for full 6-phase plan to 100% coverage.
 
 **Example usage:**
 ```bicep
@@ -668,14 +681,20 @@ Analyze application code for FedRAMP 20x security compliance issues.
 **Supported Languages:**
 - **Python**: Flask, Django, FastAPI applications
 
-**FedRAMP Requirements Checked (Phase 1 - Foundation):**
+**FedRAMP Requirements Checked (Phase 1 + Phase 2):**
+
+**Phase 1 - Foundation:**
 - **KSI-IAM-01**: API authentication and authorization
 - **KSI-SVC-06**: Secrets management (hardcoded passwords, API keys)
 - **KSI-SVC-08**: Dependency security (vulnerable libraries, unsafe functions)
 - **KSI-PIY-02**: PII handling and encryption (SSN, email, phone, DOB, address)
 - **KSI-MLA-05**: Diagnostic logging configuration
 
-> **📈 Expansion Plan:** Phase 3 will add 8 more application security KSIs (SVC-01, SVC-02, SVC-07, PIY-01, PIY-03, CNA-03, IAM-05, CNA-07) for enhanced secure coding checks. See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for details.
+**Phase 2 - Application Security:**
+- **KSI-IAM-05**: Service account management (Managed Identity vs hardcoded credentials)
+- **KSI-CNA-03**: Microservices security (service-to-service auth, mTLS, rate limiting)
+
+> **📈 Next:** Phase 3 will add 6 more application security KSIs (SVC-01, SVC-02, SVC-07, PIY-01, PIY-03, CNA-07) for comprehensive secure coding checks (35% total coverage). See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for details.
 
 **Example usage:**
 ```python

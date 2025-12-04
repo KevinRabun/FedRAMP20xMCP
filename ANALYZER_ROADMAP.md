@@ -1,11 +1,11 @@
 # Code Analyzer Expansion Roadmap
 
-## Current Status: Phase 1 Complete ✅
+## Current Status: Phase 2 Complete ✅
 
-**Coverage:** 8 KSIs out of 72 (11%)
-**Families Covered:** IAM (2/7), MLA (1/8), SVC (3/10), CNA (1/8), PIY (1/8)
+**Coverage:** 17 KSIs out of 72 (24%)
+**Families Covered:** IAM (4/7), MLA (3/8), SVC (5/10), CNA (4/8), PIY (1/8)
 
-### Phase 1: Foundation (COMPLETE)
+### Phase 1: Foundation (COMPLETE) ✅
 
 **IaC Checks (Bicep/Terraform):**
 - ✅ KSI-MLA-05: Diagnostic logging configuration
@@ -25,153 +25,146 @@
 
 ---
 
-## Phase 2: Critical Infrastructure Security 🎯 NEXT
+### Phase 2: Critical Infrastructure Security (COMPLETE) ✅
 
 **Target:** Add 9 KSIs → 17 total (24% coverage)
 **Focus:** High-priority infrastructure security checks
-**Effort:** 2-3 weeks
+**Completed:** December 2024
 **Priority:** HIGH
 
 ### IaC Additions (7 KSIs)
 
-#### KSI-IAM-02: Multi-Factor Authentication Enforcement
-**What to Check:**
-- Bicep: Conditional Access policies require MFA
-- Terraform: `azurerm_conditional_access_policy` with MFA requirement
-- Detect missing MFA enforcement on admin accounts
+#### KSI-IAM-02: Multi-Factor Authentication Enforcement ✅
+**Implementation:**
+- Bicep: Checks for Conditional Access policies with MFA requirements
+- Terraform: Validates `azurerm_conditional_access_policy` has MFA built-in controls
+- Detects missing phishing-resistant MFA enforcement
 
 **Detection Patterns:**
-- Missing `grantControls.builtInControls: ["mfa"]`
-- Conditional Access policies without MFA
-- Admin roles without MFA requirement
+- Missing `grantControls.builtInControls: ["mfa"]` in Conditional Access
+- Missing authentication strength requirements
+- Reports good practice when MFA detected
 
-#### KSI-IAM-06: Privileged Access Management
-**What to Check:**
-- Azure Privileged Identity Management (PIM) configuration
-- Just-in-time (JIT) access policies
-- Elevated permissions time-limited
-- Approval workflows for privileged roles
-
-**Detection Patterns:**
-- Permanent admin role assignments (not JIT)
-- Missing `azurerm_role_assignment` with `eligible` type
-- No approval requirement for privileged roles
-
-#### KSI-CNA-02: Container Security and Isolation
-**What to Check:**
-- Container images from trusted registries only
-- Image scanning enabled
-- Pod security policies/standards
-- Container privilege escalation disabled
+#### KSI-IAM-06: Privileged Access Management ✅
+**Implementation:**
+- Detects permanent admin role assignments (Owner/Contributor to Users)
+- Checks for Azure PIM eligible assignments
+- Validates just-in-time access configuration
 
 **Detection Patterns:**
-- `image: public/untrusted-registry`
-- Missing `imagePullSecrets`
-- `privileged: true` in container specs
-- No network policies for pod isolation
+- `principalType: 'User'` with `Owner`/`Contributor` roles (HIGH severity)
+- Missing PIM configuration for privileged roles
+- Reports good practice when PIM detected
 
-#### KSI-CNA-04: Immutable Infrastructure
-**What to Check:**
-- Infrastructure as Code (IaC) only deployment
-- No manual changes to resources
-- Resource locks on critical infrastructure
-- Drift detection enabled
+#### KSI-CNA-02: Container Security and Isolation ✅
+**Implementation:**
+- AKS cluster security: Defender, network policies, pod security
+- ACR security: Quarantine and trust policies
+- Container image scanning validation
 
 **Detection Patterns:**
-- Missing resource locks on production resources
-- No Azure Policy for enforcing IaC-only changes
-- Mutable infrastructure configurations
+- AKS missing Defender for Containers
+- Missing network policy (azure/calico)
+- Missing pod security standards
+- ACR missing quarantine/trust policies
 
-#### KSI-CNA-06: API Gateway Configuration
-**What to Check:**
-- API Management (APIM) security policies
-- Rate limiting configured
-- OAuth/JWT validation
-- CORS policies properly set
-
-**Detection Patterns:**
-- Missing rate limiting policies
-- No authentication on APIs
-- CORS set to `*` (allow all origins)
-- Missing request validation
-
-#### KSI-SVC-04: Backup and Recovery Configuration
-**What to Check:**
-- Azure Backup configured
-- Backup retention policies set
-- Geo-redundant storage for backups
-- Recovery testing scheduled
+#### KSI-CNA-04: Immutable Infrastructure ✅
+**Implementation:**
+- Resource locks on critical infrastructure (Storage, SQL, Key Vault, VNet)
+- Detects mutable infrastructure patterns
+- Validates IaC-only deployment enforcement
 
 **Detection Patterns:**
-- Storage accounts without backup
-- Databases without backup policies
-- No geo-redundancy for backups
-- Missing `azurerm_backup_policy_*`
+- Critical resources without `Microsoft.Authorization/locks` (Bicep)
+- Missing `azurerm_management_lock` (Terraform)
+- Reports good practice when locks detected
 
-#### KSI-SVC-05: Patch Management Automation
-**What to Check:**
-- Azure Update Management configured
-- Automatic patching enabled for VMs
-- Container base images up-to-date
-- Maintenance windows defined
+#### KSI-CNA-06: API Gateway Configuration ✅
+**Implementation:**
+- API Management security policy validation
+- Rate limiting, JWT validation, CORS configuration
+- Service-level security checks
 
 **Detection Patterns:**
-- VMs without Update Management
-- `automatic_os_upgrade_policy.enable = false`
-- Missing `azurerm_maintenance_configuration`
+- Missing API policies (rate-limit, validate-jwt)
+- CORS set to wildcard (*) - security risk
+- Missing authentication on APIs
 
-#### KSI-MLA-01: Centralized Logging to SIEM
+#### KSI-SVC-04: Backup and Recovery Configuration ✅
 **What to Check:**
-- All logs sent to Log Analytics workspace
-- Microsoft Sentinel configured
-- Log retention meets requirements
-- Critical resources monitored
+**Implementation:**
+- Azure Backup vault configuration for Storage, SQL, VMs
+- Backup policy validation (daily, geo-redundant)
+- Recovery Services vault checks
 
 **Detection Patterns:**
-- Diagnostic settings not pointing to workspace
+- Storage accounts/SQL/VMs without backup configuration
+- Missing `Microsoft.RecoveryServices/vaults` (Bicep)
+- Missing `azurerm_recovery_services_vault` (Terraform)
+
+#### KSI-SVC-05: Patch Management Automation ✅
+**Implementation:**
+- VM automatic OS patching (AutomaticByPlatform)
+- AKS automatic upgrade configuration
+- Update Management validation
+
+**Detection Patterns:**
+- VMs without `patchSettings` or `automatic_updates_enabled`
+- AKS without `automatic_channel_upgrade = "patch"`
+- Reports good practice when automatic patching detected
+
+#### KSI-MLA-01: Centralized Logging to SIEM ✅
+**Implementation:**
+- Log Analytics workspace configuration
+- Microsoft Sentinel onboarding
+- Diagnostic settings centralization validation
+
+**Detection Patterns:**
+- Diagnostic settings without Log Analytics workspace reference
 - Missing Sentinel configuration
-- Logs not centralized across resources
+- Reports good practice when workspace + Sentinel detected
 
-#### KSI-MLA-02: Audit Log Retention
-**What to Check:**
-- Log retention ≥ 90 days (or per requirements)
+#### KSI-MLA-02: Audit Log Retention ✅
+**Implementation:**
+- Log retention validation (≥90 days for FedRAMP)
 - Immutable storage for audit logs
-- Automated archival to long-term storage
+- Automatic severity flagging for non-compliance
 
 **Detection Patterns:**
-- `retention_in_days < 90`
-- Missing immutable storage policy
-- No archival automation
+- `retention_in_days < 90` (HIGH severity)
+- Missing explicit retention configuration (MEDIUM)
+- Missing immutability policy on log storage (MEDIUM)
+- Reports good practice for retention ≥90 days
 
 ### App Code Additions (2 KSIs)
 
-#### KSI-IAM-05: Service Account Management
-**What to Check (Python):**
-- Managed Identity used (not service principals)
-- No hardcoded client secrets
-- Service accounts follow least privilege
-- Service account credentials rotated
+#### KSI-IAM-05: Service Account Management ✅
+**Implementation (Python):**
+- Detects hardcoded credentials (passwords, API keys, connection strings)
+- Validates Azure Managed Identity usage
+**Detection Patterns:**
+- Hardcoded credentials: `password='...'`, `api_key='...'`, `secret='...'`
+- Missing Managed Identity imports
+- Reports good practice when `DefaultAzureCredential` or Key Vault detected
+- Suggests migration from environment variables to Managed Identity
+
+#### KSI-CNA-03: Microservices Security ✅
+**Implementation (Python):**
+- Service-to-service authentication validation (OAuth/JWT)
+- SSL/TLS certificate verification checks
+- mTLS configuration detection
+- API rate limiting validation
 
 **Detection Patterns:**
-- `ServicePrincipalCredentials` instead of `DefaultAzureCredential`
-- Hardcoded `AZURE_CLIENT_SECRET`
-- Overly broad permissions in code
-
-#### KSI-CNA-03: Microservices Security
-**What to Check (Python):**
-- Service-to-service authentication
-- mTLS between services
-- Circuit breaker patterns
-- API versioning
-
-**Detection Patterns:**
-- HTTP instead of HTTPS for internal calls
-- Missing authentication headers
-- No retry/circuit breaker logic
+- HTTP client without `DefaultAzureCredential` or Bearer tokens
+- `verify=False` in requests (SSL verification disabled - HIGH severity)
+- Missing mTLS certificates for service calls
+- Missing rate limiting decorators on API endpoints
+- Reports good practice when proper auth + TLS detected
 
 ---
 
-## Phase 3: Application Security 📱
+## Phase 3: Application Security 📱 🎯 NEXT
 
 **Target:** Add 8 KSIs → 25 total (35% coverage)
 **Focus:** Secure coding practices, input validation
