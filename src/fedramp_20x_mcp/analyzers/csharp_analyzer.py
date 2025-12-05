@@ -1168,7 +1168,7 @@ class CSharpAnalyzer(BaseAnalyzer):
                 line_num = self.get_line_number(code, match.group(0))
                 self.add_finding(Finding(
                     requirement_id="KSI-CMT-01",
-                    severity=Severity.MEDIUM,
+                    severity=Severity.HIGH,
                     title=f"Hardcoded {config_type} configuration",
                     description=f"Configuration value hardcoded in source. FedRAMP 20x requires externalized configuration.",
                     file_path=file_path,
@@ -1206,7 +1206,7 @@ class CSharpAnalyzer(BaseAnalyzer):
         """Check for version control enforcement (KSI-CMT-02)."""
         # Check for direct production deployment (anti-pattern)
         direct_deploy_patterns = [
-            r'Process\.Start.*git\s+push.*production',
+            r'Process\.Start\s*\(\s*["\']git["\'].*production',
             r'ProcessStartInfo.*deploy.*production',
         ]
         
@@ -1267,7 +1267,7 @@ class CSharpAnalyzer(BaseAnalyzer):
         is_test_file = bool(re.search(r'Tests?\.cs$', file_path))
         
         if not is_test_file and not has_test_framework:
-            if re.search(r'(Controllers|Services|Repositories)', file_path, re.IGNORECASE):
+            if re.search(r'(Controllers|Services|Repositories)', file_path, re.IGNORECASE) or re.search(r'(class\s+\w+Service|public\s+class\s+\w+Service)', code):
                 self.add_finding(Finding(
                     requirement_id="KSI-CMT-03",
                     severity=Severity.MEDIUM,
@@ -1293,8 +1293,9 @@ class CSharpAnalyzer(BaseAnalyzer):
     
     def _check_audit_logging(self, code: str, file_path: str) -> None:
         """Check for audit logging of security events (KSI-AFR-01)."""
+        # Check for actual authentication logic (not just [Authorize] attributes)
         has_auth_code = bool(re.search(
-            r'(Authenticate|Login|SignIn|Authorize|ClaimsPrincipal)',
+            r'(Authenticate\s*\(|Login\s*\(|SignIn\s*\(|ClaimsPrincipal\s+\w+)',
             code,
             re.IGNORECASE
         ))
@@ -1400,9 +1401,8 @@ class CSharpAnalyzer(BaseAnalyzer):
         
         # Check for local key generation
         key_generation = bool(re.search(
-            r'(Aes\.Create|RSA\.Create|RNGCryptoServiceProvider)(?!.*KeyVault)',
-            code,
-            re.DOTALL
+            r'(Aes\.Create|AesManaged|RSA\.Create|RNGCryptoServiceProvider|GenerateKey\s*\()',
+            code
         ))
         
         if key_generation:

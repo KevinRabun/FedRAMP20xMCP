@@ -37,7 +37,7 @@ def test_hardcoded_secrets_detection():
     
     assert len(result.findings) >= 1
     assert any("secret" in f.description.lower() or "password" in f.description.lower() for f in result.findings)
-    print("✓ Hardcoded secrets detection test passed")
+    print("[PASS] Hardcoded secrets detection test passed")
 
 
 def test_authorize_attribute_detection():
@@ -67,7 +67,7 @@ def test_authorize_attribute_detection():
     high_severity_auth = [f for f in auth_findings if f.severity == Severity.HIGH]
     
     assert len(high_severity_auth) == 0 or len(auth_findings) == 0
-    print("✓ [Authorize] attribute detection test passed")
+    print("[PASS] [Authorize] attribute detection test passed")
 
 
 def test_key_vault_usage():
@@ -103,7 +103,7 @@ def test_key_vault_usage():
     # May have informational findings but no high severity
     high_severity = [f for f in secret_findings if f.severity == Severity.HIGH]
     assert len(high_severity) == 0
-    print("✓ Key Vault usage test passed")
+    print("[PASS] Key Vault usage test passed")
 
 
 def test_binary_formatter_detection():
@@ -130,7 +130,7 @@ def test_binary_formatter_detection():
     assert len(result.findings) >= 1
     assert any("binaryformatter" in f.description.lower() or "deserialization" in f.description.lower() 
                for f in result.findings)
-    print("✓ BinaryFormatter detection test passed")
+    print("[PASS] BinaryFormatter detection test passed")
 
 
 def test_sql_injection_detection():
@@ -158,7 +158,7 @@ def test_sql_injection_detection():
     
     # Analyzer should flag this dangerous pattern
     assert result.files_analyzed == 1
-    print("✓ SQL injection detection test passed")
+    print("[PASS] SQL injection detection test passed")
 
 
 def test_data_protection_api():
@@ -197,7 +197,7 @@ def test_data_protection_api():
     high_severity = [f for f in pii_findings if f.severity == Severity.HIGH]
     
     assert len(high_severity) == 0
-    print("✓ Data Protection API test passed")
+    print("[PASS] Data Protection API test passed")
 
 
 def test_ilogger_usage():
@@ -240,7 +240,7 @@ def test_ilogger_usage():
     high_severity = [f for f in logging_findings if f.severity == Severity.HIGH]
     
     assert len(high_severity) == 0
-    print("✓ ILogger usage test passed")
+    print("[PASS] ILogger usage test passed")
 
 
 def test_application_insights():
@@ -279,7 +279,7 @@ def test_application_insights():
     # May have recommendations but no high severity issues
     high_severity = [f for f in monitoring_findings if f.severity == Severity.HIGH]
     assert len(high_severity) == 0
-    print("✓ Application Insights test passed")
+    print("[PASS] Application Insights test passed")
 
 
 def test_model_validation():
@@ -327,7 +327,7 @@ def test_model_validation():
     high_severity = [f for f in validation_findings if f.severity == Severity.HIGH]
     
     assert len(high_severity) == 0
-    print("✓ Model validation test passed")
+    print("[PASS] Model validation test passed")
 
 
 def test_secure_session_configuration():
@@ -362,7 +362,7 @@ def test_secure_session_configuration():
     high_severity = [f for f in session_findings if f.severity == Severity.HIGH]
     
     assert len(high_severity) == 0
-    print("✓ Secure session configuration test passed")
+    print("[PASS] Secure session configuration test passed")
 
 
 def test_authorization_policies():
@@ -409,7 +409,7 @@ def test_authorization_policies():
     high_severity = [f for f in authz_findings if f.severity == Severity.HIGH]
     
     assert len(high_severity) == 0
-    print("✓ Authorization policies test passed")
+    print("[PASS] Authorization policies test passed")
 
 
 def test_xss_prevention():
@@ -448,7 +448,7 @@ def test_xss_prevention():
     # May have recommendations but no high severity issues
     high_severity = [f for f in xss_findings if f.severity == Severity.HIGH]
     assert len(high_severity) == 0
-    print("✓ XSS prevention test passed")
+    print("[PASS] XSS prevention test passed")
 
 
 def test_service_account_hardcoded_password():
@@ -473,7 +473,7 @@ def test_service_account_hardcoded_password():
     findings = [f for f in result.findings if f.requirement_id in ["KSI-IAM-05", "KSI-SVC-06", "KSI-IAM-02"] and not f.good_practice]
     assert len(findings) > 0, "Should detect hardcoded password"
     assert findings[0].severity == Severity.HIGH
-    print("✓ Service account hardcoded password detection test passed")
+    print("[PASS] Service account hardcoded password detection test passed")
 
 
 def test_service_account_managed_identity():
@@ -503,7 +503,7 @@ def test_service_account_managed_identity():
     # Accept either KSI-IAM-05, KSI-IAM-02, or KSI-SVC-06
     good_practices = [f for f in result.findings if f.requirement_id in ["KSI-IAM-05", "KSI-SVC-06", "KSI-IAM-02"] and f.good_practice]
     assert len(good_practices) > 0, "Should recognize Managed Identity usage"
-    print("✓ Service account Managed Identity recognition test passed")
+    print("[PASS] Service account Managed Identity recognition test passed")
 
 
 def test_microservices_ssl_verification_disabled():
@@ -534,11 +534,11 @@ def test_microservices_ssl_verification_disabled():
     findings = [f for f in result.findings if f.requirement_id in ["KSI-CNA-03", "KSI-CNA-07"] and not f.good_practice]
     # Note: C# analyzer may not detect ServerCertificateCustomValidationCallback pattern yet, or may report as MEDIUM
     if len(findings) == 0:
-        print("✓ Microservices SSL verification disabled detection test skipped (pattern not yet implemented)")
+        print("[PASS] Microservices SSL verification disabled detection test skipped (pattern not yet implemented)")
     else:
         # Accept HIGH or MEDIUM severity
         assert findings[0].severity in [Severity.HIGH, Severity.MEDIUM]
-        print("✓ Microservices SSL verification disabled detection test passed")
+        print("[PASS] Microservices SSL verification disabled detection test passed")
 
 
 def test_microservices_missing_auth():
@@ -564,7 +564,7 @@ def test_microservices_missing_auth():
     # Accept either KSI-CNA-03 or KSI-CNA-07
     findings = [f for f in result.findings if f.requirement_id in ["KSI-CNA-03", "KSI-CNA-07"] and not f.good_practice]
     assert len(findings) > 0, "Should detect missing service authentication"
-    print("✓ Microservices missing auth detection test passed")
+    print("[PASS] Microservices missing auth detection test passed")
 
 
 def test_microservices_proper_auth():
@@ -606,9 +606,9 @@ def test_microservices_proper_auth():
     # Accept either KSI-CNA-03 or KSI-CNA-07
     good_practices = [f for f in result.findings if f.requirement_id in ["KSI-CNA-03", "KSI-CNA-07"] and f.good_practice]
     if len(good_practices) == 0:
-        print("✓ Microservices proper auth recognition test skipped (pattern not yet detected as good practice)")
+        print("[PASS] Microservices proper auth recognition test skipped (pattern not yet detected as good practice)")
     else:
-        print("✓ Microservices proper auth recognition test passed")
+        print("[PASS] Microservices proper auth recognition test passed")
 
 
 def test_microservices_mtls_configuration():
@@ -636,9 +636,9 @@ def test_microservices_mtls_configuration():
     # Accept either KSI-CNA-03 or KSI-CNA-07
     good_practices = [f for f in result.findings if f.requirement_id in ["KSI-CNA-03", "KSI-CNA-07"] and f.good_practice]
     if len(good_practices) == 0:
-        print("✓ Microservices mTLS configuration recognition test skipped (pattern not yet detected)")
+        print("[PASS] Microservices mTLS configuration recognition test skipped (pattern not yet detected)")
     else:
-        print("✓ Microservices mTLS configuration recognition test passed")
+        print("[PASS] Microservices mTLS configuration recognition test passed")
 
 
 # ============================================================================
@@ -669,9 +669,9 @@ def test_bare_catch_detection():
     
     findings = [f for f in result.findings if f.requirement_id == "KSI-SVC-01" and not f.good_practice]
     if len(findings) == 0:
-        print("✓ Bare catch detection test skipped (pattern not yet fully implemented)")
+        print("[PASS] Bare catch detection test skipped (pattern not yet fully implemented)")
     else:
-        print("✓ Bare catch detection test passed")
+        print("[PASS] Bare catch detection test passed")
 
 
 def test_proper_error_handling_logging():
@@ -708,9 +708,9 @@ def test_proper_error_handling_logging():
     
     good_practices = [f for f in result.findings if f.requirement_id == "KSI-SVC-01" and f.good_practice]
     if len(good_practices) == 0:
-        print("✓ Proper error handling recognition test skipped (pattern not yet detected)")
+        print("[PASS] Proper error handling recognition test skipped (pattern not yet detected)")
     else:
-        print("✓ Proper error handling recognition test passed")
+        print("[PASS] Proper error handling recognition test passed")
 
 
 def test_sql_injection_string_concat():
@@ -737,9 +737,9 @@ def test_sql_injection_string_concat():
     
     findings = [f for f in result.findings if f.requirement_id == "KSI-SVC-02" and "injection" in f.title.lower()]
     if len(findings) == 0:
-        print("✓ SQL injection string concat detection test skipped (pattern not yet fully implemented)")
+        print("[PASS] SQL injection string concat detection test skipped (pattern not yet fully implemented)")
     else:
-        print("✓ SQL injection string concat detection test passed")
+        print("[PASS] SQL injection string concat detection test passed")
 
 
 def test_parameterized_sql_queries():
@@ -767,9 +767,9 @@ def test_parameterized_sql_queries():
     
     good_practices = [f for f in result.findings if f.requirement_id == "KSI-SVC-02" and f.good_practice]
     if len(good_practices) == 0:
-        print("✓ Parameterized SQL queries recognition test skipped (pattern not yet detected)")
+        print("[PASS] Parameterized SQL queries recognition test skipped (pattern not yet detected)")
     else:
-        print("✓ Parameterized SQL queries recognition test passed")
+        print("[PASS] Parameterized SQL queries recognition test passed")
 
 
 def test_command_injection_detection():
@@ -800,9 +800,9 @@ def test_command_injection_detection():
     
     findings = [f for f in result.findings if f.requirement_id == "KSI-SVC-02" and "command" in f.title.lower()]
     if len(findings) == 0:
-        print("✓ Command injection detection test skipped (pattern not yet fully implemented)")
+        print("[PASS] Command injection detection test skipped (pattern not yet fully implemented)")
     else:
-        print("✓ Command injection detection test passed")
+        print("[PASS] Command injection detection test passed")
 
 
 def test_insecure_deserialization():
@@ -828,9 +828,9 @@ def test_insecure_deserialization():
     
     findings = [f for f in result.findings if f.requirement_id in ["KSI-SVC-07", "KSI-SVC-08"] and "BinaryFormatter" in f.title]
     if len(findings) == 0:
-        print("✓ Insecure deserialization detection test skipped (pattern not yet fully implemented)")
+        print("[PASS] Insecure deserialization detection test skipped (pattern not yet fully implemented)")
     else:
-        print("✓ Insecure deserialization detection test passed")
+        print("[PASS] Insecure deserialization detection test passed")
 
 
 def test_secure_serialization():
@@ -856,9 +856,9 @@ def test_secure_serialization():
     
     good_practices = [f for f in result.findings if f.requirement_id in ["KSI-SVC-07", "KSI-SVC-08"] and f.good_practice]
     if len(good_practices) == 0:
-        print("✓ Secure serialization recognition test skipped (pattern not yet detected)")
+        print("[PASS] Secure serialization recognition test skipped (pattern not yet detected)")
     else:
-        print("✓ Secure serialization recognition test passed")
+        print("[PASS] Secure serialization recognition test passed")
 
 
 def test_missing_data_classification():
@@ -878,9 +878,9 @@ def test_missing_data_classification():
     
     findings = [f for f in result.findings if f.requirement_id == "KSI-PIY-01" and not f.good_practice]
     if len(findings) == 0:
-        print("✓ Missing data classification detection test skipped (pattern not yet fully implemented)")
+        print("[PASS] Missing data classification detection test skipped (pattern not yet fully implemented)")
     else:
-        print("✓ Missing data classification detection test passed")
+        print("[PASS] Missing data classification detection test passed")
 
 
 def test_with_data_classification():
@@ -906,9 +906,9 @@ def test_with_data_classification():
     
     good_practices = [f for f in result.findings if f.requirement_id == "KSI-PIY-01" and f.good_practice]
     if len(good_practices) == 0:
-        print("✓ Data classification recognition test skipped (pattern not yet detected)")
+        print("[PASS] Data classification recognition test skipped (pattern not yet detected)")
     else:
-        print("✓ Data classification recognition test passed")
+        print("[PASS] Data classification recognition test passed")
 
 
 def test_missing_retention_policy():
@@ -928,9 +928,9 @@ def test_missing_retention_policy():
     
     findings = [f for f in result.findings if f.requirement_id == "KSI-PIY-03" and "retention" in f.title.lower()]
     if len(findings) == 0:
-        print("✓ Missing retention policy detection test skipped (pattern not yet fully implemented)")
+        print("[PASS] Missing retention policy detection test skipped (pattern not yet fully implemented)")
     else:
-        print("✓ Missing retention policy detection test passed")
+        print("[PASS] Missing retention policy detection test passed")
 
 
 def test_missing_secure_deletion():
@@ -957,9 +957,9 @@ def test_missing_secure_deletion():
     
     findings = [f for f in result.findings if f.requirement_id == "KSI-PIY-03" and "deletion" in f.title.lower()]
     if len(findings) == 0:
-        print("✓ Missing secure deletion detection test skipped (pattern not yet fully implemented)")
+        print("[PASS] Missing secure deletion detection test skipped (pattern not yet fully implemented)")
     else:
-        print("✓ Missing secure deletion detection test passed")
+        print("[PASS] Missing secure deletion detection test passed")
 
 
 def test_privacy_rights_implemented():
@@ -992,9 +992,9 @@ def test_privacy_rights_implemented():
     
     good_practices = [f for f in result.findings if f.requirement_id == "KSI-PIY-03" and f.good_practice]
     if len(good_practices) == 0:
-        print("✓ Privacy rights implementation recognition test skipped (pattern not yet detected)")
+        print("[PASS] Privacy rights implementation recognition test skipped (pattern not yet detected)")
     else:
-        print("✓ Privacy rights implementation recognition test passed")
+        print("[PASS] Privacy rights implementation recognition test passed")
 
 
 def test_service_mesh_missing_mtls():
@@ -1015,9 +1015,9 @@ def test_service_mesh_missing_mtls():
     
     findings = [f for f in result.findings if f.requirement_id == "KSI-CNA-07" and not f.good_practice]
     if len(findings) == 0:
-        print("✓ Service mesh mTLS detection test skipped (pattern not yet fully implemented)")
+        print("[PASS] Service mesh mTLS detection test skipped (pattern not yet fully implemented)")
     else:
-        print("✓ Service mesh mTLS detection test passed")
+        print("[PASS] Service mesh mTLS detection test passed")
 
 
 def test_wildcard_permissions_detection():
@@ -1046,9 +1046,9 @@ def test_wildcard_permissions_detection():
     
     findings = [f for f in result.findings if f.requirement_id == "KSI-IAM-04" and "wildcard" in f.title.lower()]
     if len(findings) == 0:
-        print("✓ Wildcard permissions detection test skipped (pattern not yet fully implemented)")
+        print("[PASS] Wildcard permissions detection test skipped (pattern not yet fully implemented)")
     else:
-        print("✓ Wildcard permissions detection test passed")
+        print("[PASS] Wildcard permissions detection test passed")
 
 
 def test_scoped_rbac_permissions():
@@ -1080,9 +1080,9 @@ def test_scoped_rbac_permissions():
     
     good_practices = [f for f in result.findings if f.requirement_id == "KSI-IAM-04" and f.good_practice]
     if len(good_practices) == 0:
-        print("✓ Scoped RBAC permissions recognition test skipped (pattern not yet detected)")
+        print("[PASS] Scoped RBAC permissions recognition test skipped (pattern not yet detected)")
     else:
-        print("✓ Scoped RBAC permissions recognition test passed")
+        print("[PASS] Scoped RBAC permissions recognition test passed")
 
 
 def test_insecure_session_cookies():
@@ -1108,9 +1108,9 @@ def test_insecure_session_cookies():
     
     findings = [f for f in result.findings if f.requirement_id == "KSI-IAM-07" and not f.good_practice]
     if len(findings) == 0:
-        print("✓ Insecure session cookies detection test skipped (pattern not yet fully implemented)")
+        print("[PASS] Insecure session cookies detection test skipped (pattern not yet fully implemented)")
     else:
-        print("✓ Insecure session cookies detection test passed")
+        print("[PASS] Insecure session cookies detection test passed")
 
 
 def test_secure_session_management():
@@ -1138,9 +1138,9 @@ def test_secure_session_management():
     
     good_practices = [f for f in result.findings if f.requirement_id == "KSI-IAM-07" and f.good_practice]
     if len(good_practices) == 0:
-        print("✓ Secure session management recognition test skipped (pattern not yet detected)")
+        print("[PASS] Secure session management recognition test skipped (pattern not yet detected)")
     else:
-        print("✓ Secure session management recognition test passed")
+        print("[PASS] Secure session management recognition test passed")
 
 
 def test_insecure_random_generation():
@@ -1166,9 +1166,9 @@ def test_insecure_random_generation():
     
     findings = [f for f in result.findings if f.requirement_id == "KSI-SVC-07" and "random" in f.title.lower()]
     if len(findings) == 0:
-        print("✓ Insecure random generation detection test skipped (pattern not yet fully implemented)")
+        print("[PASS] Insecure random generation detection test skipped (pattern not yet fully implemented)")
     else:
-        print("✓ Insecure random generation detection test passed")
+        print("[PASS] Insecure random generation detection test passed")
 
 
 def test_missing_security_monitoring():
@@ -1196,7 +1196,7 @@ def test_missing_security_monitoring():
     elif findings[0].severity != Severity.HIGH:
         print(f"✗ Missing security monitoring test failed: wrong severity {findings[0].severity}")
     else:
-        print("✓ Missing security monitoring detection test passed")
+        print("[PASS] Missing security monitoring detection test passed")
 
 
 def test_security_monitoring_implemented():
@@ -1227,7 +1227,7 @@ def test_security_monitoring_implemented():
     if not findings:
         print("skipped (security monitoring implementation detection not fully implemented)")
     else:
-        print("✓ Security monitoring implementation test passed")
+        print("[PASS] Security monitoring implementation test passed")
 
 
 def test_missing_anomaly_detection():
@@ -1253,7 +1253,7 @@ def test_missing_anomaly_detection():
     elif findings[0].severity not in [Severity.MEDIUM, Severity.HIGH]:
         print(f"✗ Missing anomaly detection test failed: wrong severity {findings[0].severity}")
     else:
-        print("✓ Missing anomaly detection test passed")
+        print("[PASS] Missing anomaly detection test passed")
 
 
 def test_anomaly_detection_configured():
@@ -1279,7 +1279,7 @@ def test_anomaly_detection_configured():
     if not findings:
         print("skipped (anomaly detection implementation detection not fully implemented)")
     else:
-        print("✓ Anomaly detection configuration test passed")
+        print("[PASS] Anomaly detection configuration test passed")
 
 
 def test_missing_performance_monitoring():
@@ -1305,7 +1305,7 @@ def test_missing_performance_monitoring():
     elif findings[0].severity != Severity.HIGH:
         print(f"✗ Missing performance monitoring test failed: wrong severity {findings[0].severity}")
     else:
-        print("✓ Missing performance monitoring detection test passed")
+        print("[PASS] Missing performance monitoring detection test passed")
 
 
 def test_performance_monitoring_implemented():
@@ -1346,7 +1346,7 @@ def test_performance_monitoring_implemented():
     if not findings:
         print("skipped (performance monitoring implementation detection not fully implemented)")
     else:
-        print("✓ Performance monitoring implementation test passed")
+        print("[PASS] Performance monitoring implementation test passed")
 
 
 def test_missing_incident_response():
@@ -1372,7 +1372,7 @@ def test_missing_incident_response():
     elif findings[0].severity != Severity.HIGH:
         print(f"✗ Missing incident response test failed: wrong severity {findings[0].severity}")
     else:
-        print("✓ Missing incident response detection test passed")
+        print("[PASS] Missing incident response detection test passed")
 
 
 def test_incident_response_configured():
@@ -1414,7 +1414,7 @@ def test_incident_response_configured():
     if not findings:
         print("skipped (incident response implementation detection not fully implemented)")
     else:
-        print("✓ Incident response configuration test passed")
+        print("[PASS] Incident response configuration test passed")
 
 
 # ============================================================================
@@ -1447,7 +1447,7 @@ def test_missing_configuration_management():
     elif findings[0].severity != Severity.HIGH:
         print(f"✗ Missing configuration management test failed: wrong severity {findings[0].severity}")
     else:
-        print("✓ Missing configuration management detection test passed")
+        print("[PASS] Missing configuration management detection test passed")
 
 
 def test_configuration_management_implemented():
@@ -1482,7 +1482,7 @@ def test_configuration_management_implemented():
     if not findings:
         print("skipped (configuration management implementation detection not fully implemented)")
     else:
-        print("✓ Configuration management implementation test passed")
+        print("[PASS] Configuration management implementation test passed")
 
 
 def test_missing_version_control_enforcement():
@@ -1509,7 +1509,7 @@ def test_missing_version_control_enforcement():
     elif findings[0].severity != Severity.HIGH:
         print(f"✗ Missing version control enforcement test failed: wrong severity {findings[0].severity}")
     else:
-        print("✓ Missing version control enforcement detection test passed")
+        print("[PASS] Missing version control enforcement detection test passed")
 
 
 def test_version_control_enforcement_implemented():
@@ -1534,7 +1534,7 @@ def test_version_control_enforcement_implemented():
     if findings and not findings[0].good_practice:
         print("✗ Version control enforcement test failed: false positive")
     else:
-        print("✓ Version control enforcement implementation test passed")
+        print("[PASS] Version control enforcement implementation test passed")
 
 
 def test_missing_automated_testing():
@@ -1559,7 +1559,7 @@ def test_missing_automated_testing():
     elif findings[0].severity != Severity.MEDIUM:
         print(f"✗ Missing automated testing test failed: wrong severity {findings[0].severity}")
     else:
-        print("✓ Missing automated testing detection test passed")
+        print("[PASS] Missing automated testing detection test passed")
 
 
 def test_automated_testing_implemented():
@@ -1595,7 +1595,7 @@ def test_automated_testing_implemented():
     if not findings:
         print("skipped (automated testing implementation detection not fully implemented)")
     else:
-        print("✓ Automated testing implementation test passed")
+        print("[PASS] Automated testing implementation test passed")
 
 
 def test_missing_audit_logging():
@@ -1630,7 +1630,7 @@ def test_missing_audit_logging():
     elif findings[0].severity != Severity.HIGH:
         print(f"✗ Missing audit logging test failed: wrong severity {findings[0].severity}")
     else:
-        print("✓ Missing audit logging detection test passed")
+        print("[PASS] Missing audit logging detection test passed")
 
 
 def test_audit_logging_implemented():
@@ -1665,7 +1665,7 @@ def test_audit_logging_implemented():
     if not findings:
         print("skipped (audit logging implementation detection not fully implemented)")
     else:
-        print("✓ Audit logging implementation test passed")
+        print("[PASS] Audit logging implementation test passed")
 
 
 def test_missing_log_integrity():
@@ -1693,7 +1693,7 @@ def test_missing_log_integrity():
     elif findings[0].severity != Severity.HIGH:
         print(f"✗ Missing log integrity test failed: wrong severity {findings[0].severity}")
     else:
-        print("✓ Missing log integrity detection test passed")
+        print("[PASS] Missing log integrity detection test passed")
 
 
 def test_log_integrity_implemented():
@@ -1722,7 +1722,7 @@ def test_log_integrity_implemented():
     if not findings:
         print("skipped (log integrity implementation detection not fully implemented)")
     else:
-        print("✓ Log integrity implementation test passed")
+        print("[PASS] Log integrity implementation test passed")
 
 
 def test_missing_key_management():
@@ -1754,7 +1754,7 @@ def test_missing_key_management():
     elif findings[0].severity != Severity.HIGH:
         print(f"✗ Missing key management test failed: wrong severity {findings[0].severity}")
     else:
-        print("✓ Missing key management detection test passed")
+        print("[PASS] Missing key management detection test passed")
 
 
 def test_key_management_implemented():
@@ -1792,7 +1792,7 @@ def test_key_management_implemented():
     if not findings:
         print("skipped (key management implementation detection not fully implemented)")
     else:
-        print("✓ Key management implementation test passed")
+        print("[PASS] Key management implementation test passed")
 
 
 def run_all_tests():
@@ -1874,3 +1874,4 @@ def run_all_tests():
 
 if __name__ == "__main__":
     run_all_tests()
+
