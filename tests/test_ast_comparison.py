@@ -11,12 +11,12 @@ from pathlib import Path
 # Add src directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from fedramp_20x_mcp.analyzers.csharp_analyzer import CSharpAnalyzer
+from fedramp_20x_mcp.analyzers.csharp_analyzer_old import CSharpAnalyzer as CSharpAnalyzerV1
 try:
-    from fedramp_20x_mcp.analyzers.csharp_analyzer_v2 import CSharpAnalyzerV2, TREE_SITTER_AVAILABLE
+    from fedramp_20x_mcp.analyzers.csharp_analyzer import CSharpAnalyzer, TREE_SITTER_AVAILABLE
 except ImportError:
     TREE_SITTER_AVAILABLE = False
-    CSharpAnalyzerV2 = None
+    CSharpAnalyzer = None
 
 
 def test_false_positive_in_comments():
@@ -53,9 +53,9 @@ def test_false_positive_in_comments():
         print(f"  ❌ FALSE POSITIVE: Flagged password in comment")
     
     # AST analyzer
-    if TREE_SITTER_AVAILABLE and CSharpAnalyzerV2:
+    if TREE_SITTER_AVAILABLE and CSharpAnalyzer:
         print("\nAST ANALYZER (v2):")
-        analyzer_v2 = CSharpAnalyzerV2()
+        analyzer_v2 = CSharpAnalyzer()
         result_v2 = analyzer_v2.analyze(code, "test.cs")
         secret_findings_v2 = [f for f in result_v2.findings if f.requirement_id == "KSI-SVC-06" and not f.good_practice]
         print(f"  Found {len(secret_findings_v2)} issue(s)")
@@ -107,9 +107,9 @@ def test_controller_inheritance():
     print(f"  Found {len(auth_issues_v1)} authentication issue(s)")
     
     # AST analyzer
-    if TREE_SITTER_AVAILABLE and CSharpAnalyzerV2:
+    if TREE_SITTER_AVAILABLE and CSharpAnalyzer:
         print("\nAST ANALYZER (v2):")
-        analyzer_v2 = CSharpAnalyzerV2()
+        analyzer_v2 = CSharpAnalyzer()
         result_v2 = analyzer_v2.analyze(code, "test.cs")
         auth_issues_v2 = [f for f in result_v2.findings if f.requirement_id == "KSI-IAM-01" and not f.good_practice]
         good_practices_v2 = [f for f in result_v2.findings if f.requirement_id == "KSI-IAM-01" and f.good_practice]
@@ -171,9 +171,9 @@ def test_configuration_vs_hardcoded():
     print(f"  Found {len(secret_good_v1)} good practice(s)")
     
     # AST analyzer
-    if TREE_SITTER_AVAILABLE and CSharpAnalyzerV2:
+    if TREE_SITTER_AVAILABLE and CSharpAnalyzer:
         print("\nAST ANALYZER (v2):")
-        analyzer_v2 = CSharpAnalyzerV2()
+        analyzer_v2 = CSharpAnalyzer()
         result_v2 = analyzer_v2.analyze(code, "test.cs")
         secret_issues_v2 = [f for f in result_v2.findings if f.requirement_id == "KSI-SVC-06" and not f.good_practice]
         secret_good_v2 = [f for f in result_v2.findings if f.requirement_id == "KSI-SVC-06" and f.good_practice]
@@ -221,9 +221,9 @@ def test_method_level_authorization():
     print()
     
     # AST analyzer
-    if TREE_SITTER_AVAILABLE and CSharpAnalyzerV2:
+    if TREE_SITTER_AVAILABLE and CSharpAnalyzer:
         print("AST ANALYZER (v2):")
-        analyzer_v2 = CSharpAnalyzerV2()
+        analyzer_v2 = CSharpAnalyzer()
         result_v2 = analyzer_v2.analyze(code, "test.cs")
         auth_issues = [f for f in result_v2.findings if f.requirement_id == "KSI-IAM-01" and not f.good_practice]
         auth_good = [f for f in result_v2.findings if f.requirement_id == "KSI-IAM-02" and f.good_practice]
@@ -290,3 +290,4 @@ if __name__ == "__main__":
     test_configuration_vs_hardcoded()
     test_method_level_authorization()
     print_summary()
+

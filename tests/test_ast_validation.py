@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from fedramp_20x_mcp.analyzers.csharp_analyzer_v2 import CSharpAnalyzerV2
+from fedramp_20x_mcp.analyzers.csharp_analyzer import CSharpAnalyzer
 from fedramp_20x_mcp.analyzers.base import Severity
 
 def test_1_hardcoded_secrets():
@@ -18,7 +18,7 @@ def test_1_hardcoded_secrets():
         private string connectionString = "Server=myserver;Database=mydb;User Id=admin;Password=SuperSecret123!;";
     }
     '''
-    analyzer = CSharpAnalyzerV2()
+    analyzer = CSharpAnalyzer()
     result = analyzer.analyze(code, "test.cs")
     secret_findings = [f for f in result.findings if not f.good_practice and "secret" in f.description.lower() or "password" in f.description.lower()]
     assert len(secret_findings) >= 1, f"Expected secret finding, got {len(secret_findings)}"
@@ -39,7 +39,7 @@ def test_2_authorize_attribute():
         public IActionResult GetSecureData() => Ok("data");
     }
     '''
-    analyzer = CSharpAnalyzerV2()
+    analyzer = CSharpAnalyzer()
     result = analyzer.analyze(code, "test.cs")
     auth_findings = [f for f in result.findings if "authentication" in f.description.lower() or "authentication" in f.title.lower()]
     high_severity_auth = [f for f in auth_findings if f.severity == Severity.HIGH and not f.good_practice]
@@ -61,7 +61,7 @@ def test_3_key_vault_usage():
         }
     }
     '''
-    analyzer = CSharpAnalyzerV2()
+    analyzer = CSharpAnalyzer()
     result = analyzer.analyze(code, "test.cs")
     good_practices = [f for f in result.findings if f.good_practice and "key vault" in f.description.lower()]
     assert len(good_practices) >= 1, f"Expected Key Vault good practice, got {len(good_practices)}"
@@ -80,7 +80,7 @@ def test_4_missing_authentication():
         public IActionResult GetData() => Ok("data");
     }
     '''
-    analyzer = CSharpAnalyzerV2()
+    analyzer = CSharpAnalyzer()
     result = analyzer.analyze(code, "test.cs")
     auth_issues = [f for f in result.findings if not f.good_practice and ("authentication" in f.description.lower() or "authorize" in f.description.lower())]
     assert len(auth_issues) >= 1, f"Expected auth issue, got {len(auth_issues)}"
@@ -101,7 +101,7 @@ def test_5_configuration_secrets():
         }
     }
     '''
-    analyzer = CSharpAnalyzerV2()
+    analyzer = CSharpAnalyzer()
     result = analyzer.analyze(code, "test.cs")
     secret_issues = [f for f in result.findings if not f.good_practice and ("secret" in f.description.lower() or "password" in f.description.lower() or "api key" in f.description.lower())]
     # Should NOT flag configuration retrieval as hardcoded
@@ -129,3 +129,4 @@ if __name__ == "__main__":
     except AssertionError as e:
         print(f"\n❌ Test failed: {e}")
         sys.exit(1)
+
