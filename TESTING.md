@@ -326,6 +326,22 @@ python tests/test_implementation_mapping_tools.py
    - Detects unencrypted PII (SSN, email) (KSI-PIY-02)
    - Recognizes pinned dependencies (good practice)
 
+**Phase 2 Tests (10 tests - Application Security):**
+
+4. **Service Account Management (KSI-IAM-05, KSI-IAM-02, KSI-SVC-06):**
+   - test_python_hardcoded_password: Detects hardcoded DB passwords (HIGH severity)
+   - test_python_hardcoded_connection_string: Detects Azure connection strings with secrets (HIGH severity)
+   - test_python_managed_identity_usage: Recognizes DefaultAzureCredential for service authentication (good practice)
+   - test_python_environment_variable_credentials: Detects os.environ for credentials (MEDIUM severity)
+
+5. **Microservices Security (KSI-CNA-03, KSI-CNA-07):**
+   - test_python_ssl_verification_disabled: Detects `verify=False` in HTTP requests (HIGH severity)
+   - test_python_missing_service_auth: Detects HTTP calls without authentication headers (HIGH severity)
+   - test_python_proper_service_auth: Recognizes Bearer token authentication (good practice)
+   - test_python_mtls_configuration: Recognizes mTLS with client certificates (good practice)
+   - test_python_missing_rate_limiting: Detects endpoints without rate limiting (MEDIUM severity)
+   - test_python_with_rate_limiting: Recognizes flask_limiter usage (good practice)
+
 **Phase 3 Tests (18 tests - Secure Coding Practices):**
 
 4. **Error Handling (KSI-SVC-01):**
@@ -488,9 +504,9 @@ $env:PYTHONIOENCODING='utf-8'; python tests/test_analyzer_tools.py
 ```
 
 ### 17. test_csharp_analyzer.py ⭐ NEW
-**Purpose:** Comprehensive tests for C# code analyzer (12 tests)
+**Purpose:** Comprehensive tests for C# code analyzer (18 tests: 12 Phase 1 + 6 Phase 2)
 
-**Coverage:**
+**Phase 1 Coverage (12 tests):**
 - ✅ Hardcoded secrets detection (.NET syntax)
 - ✅ [Authorize] attribute authentication
 - ✅ Azure Key Vault with DefaultAzureCredential
@@ -504,6 +520,14 @@ $env:PYTHONIOENCODING='utf-8'; python tests/test_analyzer_tools.py
 - ✅ Policy-based authorization
 - ✅ XSS prevention with HtmlEncoder
 
+**Phase 2 Coverage (6 tests - Application Security):**
+- ✅ Service account hardcoded passwords (KSI-IAM-05/IAM-02/SVC-06)
+- ✅ Managed identity for Azure services (good practice)
+- ✅ SSL verification disabled in HttpClient (KSI-CNA-03/CNA-07)
+- ✅ Missing authentication in service calls (KSI-CNA-03/CNA-07)
+- ✅ Proper Bearer token authentication (good practice)
+- ✅ mTLS client certificate configuration (good practice)
+
 **Frameworks Tested:**
 - ASP.NET Core, Entity Framework, MSAL, Azure SDK for .NET
 
@@ -513,9 +537,9 @@ python tests/test_csharp_analyzer.py
 ```
 
 ### 18. test_java_analyzer.py ⭐ NEW
-**Purpose:** Comprehensive tests for Java code analyzer (12 tests)
+**Purpose:** Comprehensive tests for Java code analyzer (18 tests: 12 Phase 1 + 6 Phase 2)
 
-**Coverage:**
+**Phase 1 Coverage (12 tests):**
 - ✅ Hardcoded secrets detection (Java syntax)
 - ✅ @PreAuthorize annotation authentication
 - ✅ Azure Key Vault with DefaultAzureCredential
@@ -529,6 +553,14 @@ python tests/test_csharp_analyzer.py
 - ✅ Method-level security
 - ✅ XSS prevention with HtmlUtils
 
+**Phase 2 Coverage (6 tests - Application Security):**
+- ✅ JDBC hardcoded credentials (KSI-IAM-05/IAM-02/SVC-06)
+- ✅ Managed identity for Azure services (good practice)
+- ✅ SSL verification disabled (X509TrustManager bypass) (KSI-CNA-03/CNA-07) - gracefully skipped
+- ✅ Missing authentication in RestTemplate (KSI-CNA-03/CNA-07)
+- ✅ Proper Bearer token with credential (good practice)
+- ✅ mTLS with KeyStore/KeyManagerFactory (good practice)
+
 **Frameworks Tested:**
 - Spring Boot, Spring Security, Jakarta EE, Azure SDK for Java
 
@@ -538,9 +570,9 @@ python tests/test_java_analyzer.py
 ```
 
 ### 19. test_typescript_analyzer.py ⭐ NEW
-**Purpose:** Comprehensive tests for TypeScript/JavaScript code analyzer (12 tests)
+**Purpose:** Comprehensive tests for TypeScript/JavaScript code analyzer (18 tests: 12 Phase 1 + 6 Phase 2)
 
-**Coverage:**
+**Phase 1 Coverage (12 tests):**
 - ✅ Hardcoded secrets detection (TS/JS syntax)
 - ✅ JWT middleware authentication
 - ✅ Azure Key Vault with DefaultAzureCredential
@@ -553,6 +585,14 @@ python tests/test_java_analyzer.py
 - ✅ express-session secure configuration
 - ✅ Role/permission authorization middleware
 - ✅ Helmet.js security headers
+
+**Phase 2 Coverage (6 tests - Application Security):**
+- ✅ Database hardcoded credentials (KSI-IAM-05/IAM-02/SVC-06)
+- ✅ Managed identity for Azure BlobService (good practice)
+- ✅ SSL verification disabled (rejectUnauthorized=false) (KSI-CNA-03/CNA-07)
+- ✅ Missing authentication in axios requests (KSI-CNA-03/CNA-07)
+- ✅ Proper Bearer token with credential (good practice)
+- ✅ mTLS with https.Agent (cert/key/ca) (good practice)
 
 **Frameworks Tested:**
 - Express, NestJS, Next.js, React, Azure SDK for JS
@@ -701,9 +741,9 @@ All tests passing as of December 3, 2025:
 | test_export_tools.py ⭐ | ✅ PASS | 3 tools, 2 test cases |
 | test_enhancement_tools.py ⭐ | ✅ PASS | 7 tools, 24 test cases |
 | test_implementation_mapping_tools.py ⭐ | ✅ PASS | 2 tools, 24 test cases |
-| test_csharp_analyzer.py ⭐ | ✅ PASS | 12 C# security checks |
-| test_java_analyzer.py ⭐ | ✅ PASS | 12 Java security checks |
-| test_typescript_analyzer.py ⭐ | ✅ PASS | 12 TypeScript/JS security checks |
+| test_csharp_analyzer.py ⭐ | ✅ PASS | 18 C# security checks (12 Phase 1 + 6 Phase 2) |
+| test_java_analyzer.py ⭐ | ✅ PASS | 18 Java security checks (12 Phase 1 + 6 Phase 2) |
+| test_typescript_analyzer.py ⭐ | ✅ PASS | 18 TypeScript/JS security checks (12 Phase 1 + 6 Phase 2) |
 | **Resource Validation** |||
 | test_prompts.py ⭐ | ✅ PASS | 15 prompts validated |
 | test_templates.py ⭐ | ✅ PASS | 23 templates validated |

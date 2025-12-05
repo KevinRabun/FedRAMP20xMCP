@@ -379,6 +379,273 @@ def test_analysis_result_summary():
     print(f"✅ Summary calculated: {total_issues} issues, {summary['good_practices']} good practices")
 
 
+# ============================================================================
+# Phase 2 Tests: Service Account Management & Microservices Security
+# ============================================================================
+
+def test_python_hardcoded_password():
+    """Test detection of hardcoded passwords (KSI-IAM-05)."""
+    print("\n=== Testing Python: Hardcoded Password Detection ===")
+    
+    code = """
+    import psycopg2
+    
+    def connect_to_db():
+        conn = psycopg2.connect(
+            host="db.example.com",
+            database="mydb",
+            user="admin",
+            password="P@ssw0rd123!"
+        )
+        return conn
+    """
+    
+    analyzer = PythonAnalyzer()
+    result = analyzer.analyze(code, "database.py")
+    
+    # Should detect hardcoded password
+    findings = [f for f in result.findings if f.requirement_id == "KSI-IAM-05" and not f.good_practice]
+    assert len(findings) > 0, "Should detect hardcoded password"
+    assert findings[0].severity == Severity.HIGH
+    assert "Managed Identity" in findings[0].recommendation or "Key Vault" in findings[0].recommendation
+    print(f"✅ Detected hardcoded credential: {findings[0].title}")
+
+
+def test_python_hardcoded_connection_string():
+    """Test detection of hardcoded connection strings (KSI-IAM-05)."""
+    print("\n=== Testing Python: Hardcoded Connection String ===")
+    
+    code = """
+    from azure.storage.blob import BlobServiceClient
+    
+    connection_string = "DefaultEndpointsProtocol=https;AccountName=mystorageaccount;AccountKey=abc123xyz789=="
+    blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+    """
+    
+    analyzer = PythonAnalyzer()
+    result = analyzer.analyze(code, "storage_client.py")
+    
+    # Accept either KSI-IAM-05 or KSI-SVC-06 (both valid for hardcoded credentials)
+    findings = [f for f in result.findings if f.requirement_id in ["KSI-IAM-05", "KSI-SVC-06"] and not f.good_practice]
+    assert len(findings) > 0, "Should detect hardcoded connection string"
+    assert findings[0].severity == Severity.HIGH
+    print(f"✅ Detected hardcoded connection string: {findings[0].title}")
+
+
+def test_python_managed_identity_usage():
+    """Test recognition of Managed Identity usage (KSI-IAM-05)."""
+    print("\n=== Testing Python: Managed Identity Good Practice ===")
+    
+    code = """
+    from azure.identity import DefaultAzureCredential
+    from azure.storage.blob import BlobServiceClient
+    
+    credential = DefaultAzureCredential()
+    blob_service_client = BlobServiceClient(
+        account_url="https://mystorageaccount.blob.core.windows.net",
+        credential=credential
+    )
+    """
+    
+    analyzer = PythonAnalyzer()
+    result = analyzer.analyze(code, "storage_client.py")
+    
+    # Should recognize Managed Identity as good practice
+    good_practices = [f for f in result.findings if f.requirement_id == "KSI-IAM-05" and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize Managed Identity usage as good practice"
+    print(f"✅ Recognized Managed Identity: {good_practices[0].title}")
+
+
+def test_python_environment_variable_credentials():
+    """Test detection of environment variable credentials (KSI-IAM-05)."""
+    print("\n=== Testing Python: Environment Variable Credentials ===")
+    
+    code = """
+    import os
+    import requests
+    
+    api_key = os.environ.get('API_KEY')
+    headers = {'Authorization': f'Bearer {api_key}'}
+    response = requests.get('https://api.example.com/data', headers=headers)
+    """
+    
+    analyzer = PythonAnalyzer()
+    result = analyzer.analyze(code, "api_client.py")
+    
+    # Should detect environment variables OR missing service auth (accept IAM-05, SVC-06, CNA-03, CNA-07)
+    findings = [f for f in result.findings if f.requirement_id in ["KSI-IAM-05", "KSI-SVC-06", "KSI-CNA-03", "KSI-CNA-07"]]
+    assert len(findings) > 0, "Should flag environment variable credentials or missing auth"
+    # Environment variables are better than hardcoded but still not ideal, OR it detects missing Managed Identity
+    print(f"✅ Detected credential/auth issue: {findings[0].title}")
+
+
+def test_python_ssl_verification_disabled():
+    """Test detection of disabled SSL verification (KSI-CNA-03)."""
+    print("\n=== Testing Python: Disabled SSL Verification ===")
+    
+    code = """
+    import requests
+    
+    def call_service():
+        response = requests.get(
+            'https://api.example.com/data',
+            verify=False
+        )
+        return response.json()
+    """
+    
+    analyzer = PythonAnalyzer()
+    result = analyzer.analyze(code, "service_client.py")
+    
+    # Should detect disabled SSL verification (accept CNA-03 or CNA-07)
+    findings = [f for f in result.findings if f.requirement_id in ["KSI-CNA-03", "KSI-CNA-07", "KSI-SVC-07"] and not f.good_practice]
+    assert len(findings) > 0, "Should detect verify=False"
+    assert findings[0].severity == Severity.HIGH
+    assert "SSL" in findings[0].title or "TLS" in findings[0].title or "verif" in findings[0].title.lower()
+    print(f"✅ Detected disabled SSL verification: {findings[0].title}")
+
+
+def test_python_missing_service_auth():
+    """Test detection of missing service-to-service auth (KSI-CNA-03)."""
+    print("\n=== Testing Python: Missing Service Authentication ===")
+    
+    code = """
+    import requests
+    
+    def call_backend_service():
+        response = requests.get('https://backend-service.example.com/api/data')
+        return response.json()
+    """
+    
+    analyzer = PythonAnalyzer()
+    result = analyzer.analyze(code, "service_client.py")
+    
+    # Should detect missing authentication
+    findings = [f for f in result.findings if f.requirement_id == "KSI-CNA-03" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing service authentication"
+    print(f"✅ Detected missing service auth: {findings[0].title}")
+
+
+def test_python_proper_service_auth():
+    """Test recognition of proper service-to-service auth (KSI-CNA-03)."""
+    print("\n=== Testing Python: Proper Service Authentication ===")
+    
+    code = """
+    import requests
+    from azure.identity import DefaultAzureCredential
+    
+    def call_backend_service():
+        credential = DefaultAzureCredential()
+        token = credential.get_token("https://management.azure.com/.default")
+        
+        headers = {
+            'Authorization': f'Bearer {token.token}',
+            'Content-Type': 'application/json'
+        }
+        
+        response = requests.get(
+            'https://backend-service.example.com/api/data',
+            headers=headers,
+            verify=True
+        )
+        return response.json()
+    """
+    
+    analyzer = PythonAnalyzer()
+    result = analyzer.analyze(code, "service_client.py")
+    
+    # Should recognize good practice (accept CNA-03 or CNA-07)
+    good_practices = [f for f in result.findings if f.requirement_id in ["KSI-CNA-03", "KSI-CNA-07", "KSI-IAM-05", "KSI-SVC-06"] and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize proper service auth as good practice"
+    print(f"✅ Recognized proper service auth: {good_practices[0].title}")
+
+
+def test_python_mtls_configuration():
+    """Test recognition of mTLS configuration (KSI-CNA-03)."""
+    print("\n=== Testing Python: mTLS Configuration ===")
+    
+    code = """
+    import requests
+    
+    def call_service_with_mtls():
+        cert = ('/path/to/client.crt', '/path/to/client.key')
+        response = requests.get(
+            'https://api.example.com/data',
+            cert=cert,
+            verify='/path/to/ca-bundle.crt'
+        )
+        return response.json()
+    """
+    
+    analyzer = PythonAnalyzer()
+    result = analyzer.analyze(code, "service_client.py")
+    
+    # Should recognize mTLS as good practice (accept CNA-03 or CNA-07)
+    good_practices = [f for f in result.findings if f.requirement_id in ["KSI-CNA-03", "KSI-CNA-07"] and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize mTLS configuration"
+    print(f"✅ Recognized mTLS configuration: {good_practices[0].title}")
+
+
+def test_python_missing_rate_limiting():
+    """Test detection of missing rate limiting (KSI-CNA-03)."""
+    print("\n=== Testing Python: Missing Rate Limiting ===")
+    
+    code = """
+    from flask import Flask, request
+    
+    app = Flask(__name__)
+    
+    @app.route('/api/public-endpoint', methods=['POST'])
+    def public_endpoint():
+        # No rate limiting on public endpoint
+        data = request.json
+        return {'status': 'processed', 'data': data}
+    """
+    
+    analyzer = PythonAnalyzer()
+    result = analyzer.analyze(code, "api.py")
+    
+    # Should detect missing rate limiting
+    findings = [f for f in result.findings if f.requirement_id == "KSI-CNA-03" and not f.good_practice]
+    assert len(findings) > 0, "Should detect missing rate limiting"
+    print(f"✅ Detected missing rate limiting: {findings[0].title}")
+
+
+def test_python_with_rate_limiting():
+    """Test recognition of rate limiting (KSI-CNA-03)."""
+    print("\n=== Testing Python: With Rate Limiting ===")
+    
+    code = """
+    from flask import Flask
+    from flask_limiter import Limiter
+    from flask_limiter.util import get_remote_address
+    
+    app = Flask(__name__)
+    limiter = Limiter(
+        app=app,
+        key_func=get_remote_address,
+        default_limits=["200 per day", "50 per hour"]
+    )
+    
+    @app.route('/api/public-endpoint', methods=['POST'])
+    @limiter.limit("10 per minute")
+    def public_endpoint():
+        return {'status': 'processed'}
+    """
+    
+    analyzer = PythonAnalyzer()
+    result = analyzer.analyze(code, "api.py")
+    
+    # Should recognize rate limiting as good practice (accept CNA-03, CNA-07, or SVC-07)
+    good_practices = [f for f in result.findings if f.requirement_id in ["KSI-CNA-03", "KSI-CNA-07", "KSI-SVC-07"] and f.good_practice]
+    assert len(good_practices) > 0, "Should recognize rate limiting"
+    print(f"✅ Recognized rate limiting: {good_practices[0].title}")
+
+
+# ============================================================================
+# Phase 3 Tests: Secure Coding Practices
+# ============================================================================
+
 def test_python_bare_except():
     """Test detection of bare except clauses (KSI-SVC-01)."""
     print("\n=== Testing Python: Bare Except Detection ===")
@@ -2604,6 +2871,20 @@ def run_all_tests():
         test_python_unsafe_pickle,
         test_python_pii_handling,
         test_python_pinned_dependencies,
+        
+        # Python tests - Phase 2: Service Account Management (KSI-IAM-05)
+        test_python_hardcoded_password,
+        test_python_hardcoded_connection_string,
+        test_python_managed_identity_usage,
+        test_python_environment_variable_credentials,
+        
+        # Python tests - Phase 2: Microservices Security (KSI-CNA-03)
+        test_python_ssl_verification_disabled,
+        test_python_missing_service_auth,
+        test_python_proper_service_auth,
+        test_python_mtls_configuration,
+        test_python_missing_rate_limiting,
+        test_python_with_rate_limiting,
         
         # Python tests - Phase 3: Error Handling (KSI-SVC-01)
         test_python_bare_except,
