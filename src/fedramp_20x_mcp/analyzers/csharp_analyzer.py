@@ -95,6 +95,7 @@ class CSharpAnalyzer(BaseAnalyzer):
             self._check_authorization_ast(code, file_path, classes)
             self._check_error_handling_ast(code, file_path, self.tree.root_node)  # Tier 1.1: AST-enhanced
             self._check_input_validation_ast(code, file_path, classes)  # Tier 1.2: AST-enhanced
+            self._check_secure_coding_practices_ast(code, file_path, self.tree.root_node)  # Tier 1.3: AST-enhanced
             
         else:
             # Fallback to regex-based analysis
@@ -103,6 +104,7 @@ class CSharpAnalyzer(BaseAnalyzer):
             self._check_secrets_management_regex(code, file_path)
             self._check_error_handling(code, file_path)  # Use regex fallback
             self._check_input_validation(code, file_path)  # Use regex fallback
+            self._check_secure_coding(code, file_path)  # Use regex fallback
         
         # Continue with other checks (can be enhanced incrementally)
         self._check_dependencies(code, file_path)
@@ -900,6 +902,185 @@ class CSharpAnalyzer(BaseAnalyzer):
                     recommendation="Consider using FluentValidation for complex validation scenarios requiring business logic.",
                     good_practice=True
                 ))
+    
+    def _extract_middleware_pipeline(self, tree_node) -> List[Dict]:
+        """
+        Extract middleware configuration from Configure or Program.cs startup code.
+        Returns list of middleware call info: {name, line_number, arguments}
+        """
+        middleware_calls = []
+        
+        def visit(node):
+            # Look for invocation_expression nodes like app.UseHttpsRedirection()
+            if node.type == "invocation_expression":
+                # Check if it's a member access (app.Use...)
+                for child in node.children:
+                    if child.type == "member_access_expression":
+                        # Get the method name
+                        method_name = None
+                        for member_child in child.children:
+                            if member_child.type == "identifier":
+                                method_name = self.code_bytes[member_child.start_byte:member_child.end_byte].decode('utf8')
+                        
+                        if method_name and method_name.startswith("Use"):
+                            line_number = self.get_line_number(self.code_bytes.decode('utf8'), method_name)
+                            
+                            # Extract arguments if present
+                            arguments = []
+                            arg_list_node = next((c for c in node.children if c.type == "argument_list"), None)
+                            if arg_list_node:
+                                for arg in arg_list_node.children:
+                                    if arg.type == "argument":
+                                        arg_text = self.code_bytes[arg.start_byte:arg.end_byte].decode('utf8')
+                                        arguments.append(arg_text)
+                            
+                            middleware_calls.append({
+                                "name": method_name,
+                                "line_number": line_number,
+                                "arguments": arguments
+                            })
+            
+            # Recursively visit children
+            for child in node.children:
+                visit(child)
+        
+        visit(tree_node)
+        return middleware_calls
+    
+    def _check_middleware_ordering(self, middleware_calls: List[Dict]) -> List[str]:
+        """
+        Check if middleware is in correct security order.
+        Returns list of ordering issues found.
+        """
+        issues = []
+        
+        # Build middleware sequence
+        middleware_sequence = [m["name"] for m in middleware_calls]
+        
+        # Security-critical ordering rules
+        # 1. UseAuthentication must come before UseAuthorization
+        auth_index = next((i for i, m in enumerate(middleware_sequence) if m == "UseAuthentication"), -1)
+        authz_index = next((i for i, m in enumerate(middleware_sequence) if m == "UseAuthorization"), -1)
+        
+        if authz_index != -1 and auth_index == -1:
+            issues.append("UseAuthorization present but UseAuthentication is missing")
+        elif auth_index != -1 and authz_index != -1 and auth_index > authz_index:
+            issues.append("UseAuthentication must be called before UseAuthorization")
+        
+        # 2. UseHttpsRedirection should come early
+        https_index = next((i for i, m in enumerate(middleware_sequence) if m == "UseHttpsRedirection"), -1)
+        if https_index == -1:
+            issues.append("UseHttpsRedirection is missing")
+        elif https_index > 5:  # Should be in first few middleware
+            issues.append("UseHttpsRedirection should be called earlier in the pipeline")
+        
+        # 3. UseHsts should be present for production
+        hsts_index = next((i for i, m in enumerate(middleware_sequence) if m == "UseHsts"), -1)
+        if hsts_index == -1:
+            issues.append("UseHsts is missing (should be conditional on !Development)")
+        
+        return issues
+    
+    def _analyze_cors_policy(self, code: str, middleware_calls: List[Dict]) -> Dict:
+        """
+        Analyze CORS configuration for security issues.
+        Returns dict with {has_cors, is_permissive, policy_name, line_number}
+        """
+        cors_info = {
+            "has_cors": False,
+            "is_permissive": False,
+            "policy_name": None,
+            "line_number": None
+        }
+        
+        # Check for UseCors calls
+        cors_calls = [m for m in middleware_calls if m["name"] == "UseCors"]
+        if cors_calls:
+            cors_info["has_cors"] = True
+            cors_call = cors_calls[0]
+            cors_info["line_number"] = cors_call["line_number"]
+            
+            if cors_call["arguments"]:
+                policy_arg = cors_call["arguments"][0]
+                cors_info["policy_name"] = policy_arg.strip('"')
+        
+        # Check for permissive CORS patterns in code
+        # AllowAnyOrigin, WithOrigins("*"), etc.
+        if re.search(r"AllowAnyOrigin\(\)", code):
+            cors_info["is_permissive"] = True
+        elif re.search(r'WithOrigins\s*\(\s*["\']?\*["\']?\s*\)', code):
+            cors_info["is_permissive"] = True
+        elif re.search(r"UseCors\s*\(\s*[\"']?\*[\"']?", code):
+            cors_info["is_permissive"] = True
+        
+        return cors_info
+    
+    def _check_secure_coding_practices_ast(self, code: str, file_path: str, tree_node) -> None:
+        """
+        AST-enhanced check for secure coding practices (KSI-SVC-07).
+        
+        Tier 1.3 enhancements:
+        - Semantic middleware pipeline extraction and ordering validation
+        - CORS policy configuration analysis
+        - Security header detection with configuration details
+        - Middleware argument parsing for policy validation
+        """
+        # Extract middleware pipeline
+        middleware_calls = self._extract_middleware_pipeline(tree_node)
+        
+        if not middleware_calls:
+            # No middleware configuration found - might be in a different file
+            # Don't report as error since this could be a model/service file
+            return
+        
+        # Check middleware ordering
+        ordering_issues = self._check_middleware_ordering(middleware_calls)
+        
+        if ordering_issues:
+            # Report ordering issues as HIGH severity
+            line_num = middleware_calls[0]["line_number"] if middleware_calls else 1
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-07",
+                severity=Severity.HIGH,
+                title="Incorrect security middleware ordering",
+                description=f"Security middleware configuration issues detected: {'; '.join(ordering_issues)}. FedRAMP 20x requires proper security middleware ordering per Azure WAF Security pillar.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Configure middleware in correct security order:\n```csharp\nvar app = builder.Build();\n\n// 1. HTTPS redirection (early in pipeline)\nif (!app.Environment.IsDevelopment())\n{\n    app.UseHsts();  // HTTP Strict Transport Security\n}\napp.UseHttpsRedirection();\n\n// 2. Static files (if needed)\napp.UseStaticFiles();\n\n// 3. Routing\napp.UseRouting();\n\n// 4. CORS (before auth)\napp.UseCors(\"AllowedOrigins\");\n\n// 5. Authentication (MUST come before Authorization)\napp.UseAuthentication();\n\n// 6. Authorization\napp.UseAuthorization();\n\n// 7. Endpoints\napp.MapControllers();\n```\nSource: Azure WAF Security - ASP.NET Core Security (https://learn.microsoft.com/aspnet/core/security/)"
+            ))
+        
+        # Analyze CORS configuration
+        cors_info = self._analyze_cors_policy(code, middleware_calls)
+        
+        if cors_info["is_permissive"]:
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-07",
+                severity=Severity.MEDIUM,
+                title="Overly permissive CORS policy",
+                description="CORS configuration allows any origin (*) or uses AllowAnyOrigin(). FedRAMP 20x requires restricted cross-origin access per Azure Security Benchmark.",
+                file_path=file_path,
+                line_number=cors_info["line_number"],
+                recommendation="Restrict CORS to specific trusted origins:\n```csharp\nbuilder.Services.AddCors(options =>\n{\n    options.AddPolicy(\"AllowedOrigins\", policy =>\n    {\n        policy.WithOrigins(\n                \"https://yourdomain.com\",\n                \"https://app.yourdomain.com\"\n            )\n            .AllowAnyHeader()\n            .AllowAnyMethod()\n            .AllowCredentials();  // Required for auth cookies\n    });\n});\n\napp.UseCors(\"AllowedOrigins\");\n```\nSource: Azure Security Benchmark - CORS Configuration (https://learn.microsoft.com/azure/security/fundamentals/network-best-practices)"
+            ))
+        
+        # Check for proper HTTPS enforcement (good practice)
+        has_https_redirect = any(m["name"] == "UseHttpsRedirection" for m in middleware_calls)
+        has_hsts = any(m["name"] == "UseHsts" for m in middleware_calls)
+        has_auth = any(m["name"] == "UseAuthentication" for m in middleware_calls)
+        has_authz = any(m["name"] == "UseAuthorization" for m in middleware_calls)
+        
+        if has_https_redirect and has_hsts and has_auth and has_authz and not ordering_issues:
+            line_num = middleware_calls[0]["line_number"]
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-07",
+                severity=Severity.INFO,
+                title="Security middleware properly configured",
+                description="Application has proper HTTPS enforcement, HSTS, authentication, and authorization middleware in correct order.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure HSTS max-age is set to at least 1 year (31536000 seconds) per Azure WAF recommendations.",
+                good_practice=True
+            ))
     
     # ========================================================================
     # Regex Fallback Methods (when AST not available)

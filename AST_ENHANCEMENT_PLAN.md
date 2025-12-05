@@ -12,87 +12,51 @@
 
 ## Priority Tier 1: High Value + Straightforward (Start Here) ✅
 
-### 1. Error Handling (KSI-SVC-01) - **HIGHEST PRIORITY**
-**Current Regex Approach:**
-- Detects `catch () {}` empty blocks
-- Detects generic `catch (Exception e)` usage
-- Cannot analyze exception propagation or context
+### 1. Error Handling (KSI-SVC-01) - ✅ **COMPLETE** (SHA: 336b327)
+**Status:** IMPLEMENTED (8 AST-enhanced tests passing)
 
-**AST Enhancement Value:** 🟢 **VERY HIGH**
-- Extract all try-catch-finally blocks with structure
-- Analyze exception types and catch block content
-- Detect rethrow patterns (`throw;` vs `throw ex;`)
-- Track exception flow across methods
-- Verify logging calls within catch blocks
+**Implementation Summary:**
+- Added `_extract_try_catch_blocks()` for semantic try-catch extraction
+- Added `_analyze_catch_block_content()` for exception handling analysis
+- Implemented `_check_error_handling_ast()` with comprehensive detection
+- Created test_ast_error_handling.py with 8 test scenarios
 
-**Implementation Complexity:** 🟡 Medium
-- Need try-catch statement extraction
-- Need block content analysis
-- Need method call detection (logging)
+**Detection Capabilities:**
+- Empty catch blocks (HIGH severity)
+- Generic Exception catching without specific handling (MEDIUM severity)
+- Exception swallowing without logging (MEDIUM severity)
+- Proper exception handling with logging (INFO good practice)
 
-**Example AST Queries:**
-```python
-def _extract_try_catch_blocks(self, tree):
-    """Extract all try-catch-finally statements."""
-    query = self.ts_lang.query("""
-        (try_statement
-          body: (block) @try_body
-          (catch_clause
-            declaration: (catch_declaration
-              type: (identifier) @exception_type
-              name: (identifier)? @exception_var
-            )
-            body: (block) @catch_body
-          )*
-          (finally_clause)? @finally
-        )
-    """)
-    return query.captures(tree.root_node)
-```
-
-**Estimated Impact:** Reduce false positives by 60%, add 5 new detection patterns
+**Commit:** feat(analyzer): Implement Tier 1.1 AST-enhanced error handling (SHA: 336b327)
+**Tests:** 64/64 C# analyzer tests passing (no regressions)
+**Pushed:** December 5, 2025
 
 ---
 
-### 2. Input Validation (KSI-SVC-02) - **SECOND PRIORITY**
-**Current Regex Approach:**
-- Detects data annotation attributes `[Required]`, `[StringLength]`
-- Detects model binding `[FromBody]`, `[FromQuery]`
-- Detects `ModelState.IsValid` checks
-- Cannot verify validation coverage or parameter usage
+### 2. Input Validation (KSI-SVC-02) - ✅ **COMPLETE** (SHA: a87d532)
+**Status:** IMPLEMENTED (8 AST-enhanced tests passing)
 
-**AST Enhancement Value:** 🟢 **VERY HIGH**
-- Extract all controller methods with parameters
-- Verify each parameter has validation attributes
-- Track parameter usage to detect missing validation
-- Analyze ModelState.IsValid placement in control flow
-- Detect custom validation logic
+**Implementation Summary:**
+- Added `_extract_controller_methods_with_params()` for semantic controller method analysis
+- Added `_check_class_has_validation_attributes()` for model validation detection
+- Implemented `_check_input_validation_ast()` with AST-based validation analysis
+- Fixed `_extract_parameters()` to extract both parameter type and name correctly
+- Created test_ast_input_validation.py with 8 test scenarios
 
-**Implementation Complexity:** 🟡 Medium
-- Need method parameter extraction
-- Need attribute parsing on parameters
-- Need control flow analysis for ModelState checks
+**Detection Capabilities:**
+- Unvalidated controller parameters (HIGH severity)
+- Missing ModelState.IsValid checks (MEDIUM severity)
+- Proper validation with ModelState (INFO good practice)
+- Supports FromBody, FromQuery, FromRoute, FromForm parameter binding
+- Validates both inline parameter attributes and model class property attributes
 
-**Example AST Queries:**
-```python
-def _extract_controller_methods_with_params(self, tree):
-    """Get all controller methods and their parameters."""
-    query = self.ts_lang.query("""
-        (method_declaration
-          (attribute_list (attribute name: (identifier) @attr_name))? @attrs
-          type: (_) @return_type
-          name: (identifier) @method_name
-          parameters: (parameter_list) @params
-          body: (block) @body
-        ) @method
-    """)
-```
-
-**Estimated Impact:** Improve validation coverage detection by 75%
+**Commit:** feat(analyzer): Implement Tier 1.2 AST-enhanced input validation (SHA: a87d532)
+**Tests:** 72/72 tests passing (64 existing + 8 new input validation tests)
+**Pushed:** December 5, 2025
 
 ---
 
-### 3. Secure Coding Practices (KSI-SVC-07) - **THIRD PRIORITY**
+### 3. Secure Coding Practices (KSI-SVC-07) - **NEXT PRIORITY**
 **Current Regex Approach:**
 - Detects `UseHttpsRedirection`, `UseHsts`
 - Detects `UseCors` with wildcard `*`
