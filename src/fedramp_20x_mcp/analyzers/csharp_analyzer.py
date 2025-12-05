@@ -97,6 +97,7 @@ class CSharpAnalyzer(BaseAnalyzer):
             self._check_input_validation_ast(code, file_path, classes)  # Tier 1.2: AST-enhanced
             self._check_secure_coding_practices_ast(code, file_path, self.tree.root_node)  # Tier 1.3: AST-enhanced
             self._check_least_privilege_authorization_ast(code, file_path, classes)  # Tier 2.1: AST-enhanced
+            self._check_session_management_ast(code, file_path, self.tree.root_node)  # Tier 2.2: AST-enhanced
             
         else:
             # Fallback to regex-based analysis
@@ -1277,6 +1278,173 @@ class CSharpAnalyzer(BaseAnalyzer):
                             recommendation="Consider using policy-based authorization for complex scenarios: https://learn.microsoft.com/aspnet/core/security/authorization/policies",
                             good_practice=True
                         ))
+    
+    # ========================================================================
+    # Tier 2.2: Session Management (KSI-IAM-07) - AST-enhanced
+    # ========================================================================
+    
+    def _extract_cookie_options(self, node) -> Dict[str, Any]:
+        """Extract cookie configuration options from AST node.
+        
+        Parses lambda expressions like:
+        options => { options.Cookie.HttpOnly = true; ... }
+        
+        And object initializers like:
+        new CookieOptions { HttpOnly = true, ... }
+        """
+        cookie_config = {
+            "HttpOnly": None,
+            "Secure": None,
+            "SecurePolicy": None,
+            "SameSite": None,
+            "IdleTimeout": None,
+            "ExpireTimeSpan": None,
+        }
+        
+        def visit(n):
+            # Look for assignment expressions
+            if n.type == "assignment_expression":
+                # Extract left side (property name)
+                left_node = n.child_by_field_name("left")
+                right_node = n.child_by_field_name("right")
+                
+                if left_node and right_node:
+                    left_text = self.code_bytes[left_node.start_byte:left_node.end_byte].decode('utf8')
+                    right_text = self.code_bytes[right_node.start_byte:right_node.end_byte].decode('utf8')
+                    
+                    # Check for Cookie properties - order matters! Check specific properties before general ones
+                    if "SecurePolicy" in left_text:  # Check SecurePolicy BEFORE Secure
+                        cookie_config["SecurePolicy"] = right_text
+                    elif "SameSite" in left_text:
+                        cookie_config["SameSite"] = right_text
+                    elif "HttpOnly" in left_text:
+                        cookie_config["HttpOnly"] = "true" in right_text.lower()
+                    elif "Secure" in left_text and "SecurePolicy" not in left_text:  # Only match plain Secure, not SecurePolicy
+                        cookie_config["Secure"] = "true" in right_text.lower()
+                    elif "IdleTimeout" in left_text:
+                        cookie_config["IdleTimeout"] = right_text
+                    elif "ExpireTimeSpan" in left_text:
+                        cookie_config["ExpireTimeSpan"] = right_text
+            
+            for child in n.children:
+                visit(child)
+        
+        visit(node)
+        return cookie_config
+    
+    def _check_session_management_ast(self, code: str, file_path: str, root_node) -> None:
+        """AST-enhanced session management check (KSI-IAM-07).
+        
+        Analyzes cookie configuration objects for:
+        - AddSession() with lambda configuration
+        - ConfigureApplicationCookie() with lambda configuration
+        - Cookie security flags: HttpOnly, Secure/SecurePolicy, SameSite
+        - Session timeout configuration
+        """
+        session_configs = []
+        
+        def find_session_methods(node):
+            """Find AddSession and ConfigureApplicationCookie invocations."""
+            if node.type == "invocation_expression":
+                # Get the method being called
+                method_node = node.child_by_field_name("function")
+                if method_node:
+                    method_text = self.code_bytes[method_node.start_byte:method_node.end_byte].decode('utf8')
+                    
+                    if "AddSession" in method_text or "ConfigureApplicationCookie" in method_text:
+                        # Found session configuration - extract arguments
+                        args_node = node.child_by_field_name("arguments")
+                        if args_node:
+                            session_configs.append({
+                                "method": method_text,
+                                "line": node.start_point[0] + 1,  # tree-sitter uses 0-based indexing
+                                "args_node": args_node
+                            })
+            
+            for child in node.children:
+                find_session_methods(child)
+        
+        find_session_methods(root_node)
+        
+        # Analyze each session configuration
+        for config in session_configs:
+            cookie_options = self._extract_cookie_options(config["args_node"])
+            
+            # Check for security issues
+            issues = []
+            
+            # Issue 1: HttpOnly not set to true
+            if cookie_options["HttpOnly"] is False:
+                issues.append("HttpOnly is set to false (should be true)")
+            elif cookie_options["HttpOnly"] is None:
+                issues.append("HttpOnly flag not explicitly configured")
+            
+            # Issue 2: Secure/SecurePolicy not properly configured
+            if cookie_options["Secure"] is False:
+                issues.append("Secure is set to false (should be true)")
+            elif cookie_options["SecurePolicy"]:
+                if "None" in cookie_options["SecurePolicy"]:
+                    issues.append("SecurePolicy is set to None (should be Always)")
+                elif "Always" not in cookie_options["SecurePolicy"] and "Required" not in cookie_options["SecurePolicy"]:
+                    issues.append("SecurePolicy not set to Always or Required")
+            elif cookie_options["Secure"] is None and cookie_options["SecurePolicy"] is None:
+                issues.append("Secure/SecurePolicy flag not explicitly configured")
+            
+            # Issue 3: SameSite not configured or set incorrectly
+            if cookie_options["SameSite"]:
+                if "None" in cookie_options["SameSite"]:
+                    issues.append("SameSite is set to None (should be Strict or Lax)")
+            else:
+                issues.append("SameSite flag not explicitly configured")
+            
+            # Issue 4: No timeout configuration
+            if cookie_options["IdleTimeout"] is None and cookie_options["ExpireTimeSpan"] is None:
+                issues.append("Session timeout not configured")
+            
+            if issues:
+                # Report security issue
+                self.add_finding(Finding(
+                    requirement_id="KSI-IAM-07",
+                    severity=Severity.HIGH,
+                    title="Insecure session cookie configuration",
+                    description=f"Session configuration in {config['method']} has security issues: {'; '.join(issues)}. FedRAMP 20x requires secure session handling with HttpOnly, Secure, SameSite flags and appropriate timeout.",
+                    file_path=file_path,
+                    line_number=config["line"],
+                    recommendation="""Configure secure session cookies per FedRAMP 20x requirements:
+```csharp
+// For session cookies
+builder.Services.AddSession(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.IdleTimeout = TimeSpan.FromMinutes(20);
+});
+
+// For authentication cookies
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.ExpireTimeSpan = TimeSpan.FromHours(1);
+    options.SlidingExpiration = true;
+});
+```
+Source: ASP.NET Core Security (https://learn.microsoft.com/aspnet/core/security/), Azure WAF Security pillar (https://learn.microsoft.com/azure/well-architected/security/)"""
+                ))
+            else:
+                # All security flags properly configured - good practice
+                self.add_finding(Finding(
+                    requirement_id="KSI-IAM-07",
+                    severity=Severity.INFO,
+                    title="Secure session management configured",
+                    description=f"Session configuration in {config['method']} properly implements security flags (HttpOnly, Secure/SecurePolicy, SameSite) and timeout. Follows FedRAMP 20x session management requirements.",
+                    file_path=file_path,
+                    line_number=config["line"],
+                    recommendation="Verify session timeout aligns with organizational security policy (typically 15-30 minutes for idle timeout).",
+                    good_practice=True
+                ))
     
     # ========================================================================
     # Regex Fallback Methods (when AST not available)
