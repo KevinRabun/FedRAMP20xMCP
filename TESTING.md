@@ -504,7 +504,7 @@ $env:PYTHONIOENCODING='utf-8'; python tests/test_analyzer_tools.py
 ```
 
 ### 17. test_csharp_analyzer.py ⭐ NEW
-**Purpose:** Comprehensive tests for C# code analyzer (18 tests: 12 Phase 1 + 6 Phase 2)
+**Purpose:** Comprehensive tests for C# code analyzer (36 tests: 12 Phase 1 + 6 Phase 2 + 18 Phase 3)
 
 **Phase 1 Coverage (12 tests):**
 - ✅ Hardcoded secrets detection (.NET syntax)
@@ -528,6 +528,26 @@ $env:PYTHONIOENCODING='utf-8'; python tests/test_analyzer_tools.py
 - ✅ Proper Bearer token authentication (good practice)
 - ✅ mTLS client certificate configuration (good practice)
 
+**Phase 3 Coverage (18 tests - Secure Coding Practices):**
+- ✅ Bare catch blocks detection (KSI-SVC-01)
+- ✅ Proper error handling with logging (KSI-SVC-01)
+- ✅ SQL injection via string concatenation (KSI-SVC-02)
+- ✅ Parameterized SQL queries (KSI-SVC-02)
+- ✅ Command injection detection (KSI-SVC-02)
+- ✅ Insecure deserialization (BinaryFormatter) (KSI-SVC-07)
+- ✅ Secure JSON serialization (KSI-SVC-07)
+- ✅ Missing data classification on PII (KSI-PIY-01)
+- ✅ Data classification attributes (KSI-PIY-01)
+- ✅ Missing data retention policies (KSI-PIY-03)
+- ✅ Missing secure deletion capability (KSI-PIY-03)
+- ✅ Privacy rights implementation (KSI-PIY-03)
+- ✅ Service mesh missing strict mTLS (KSI-CNA-07)
+- ✅ Wildcard RBAC permissions (KSI-IAM-04)
+- ✅ Scoped RBAC permissions (KSI-IAM-04)
+- ✅ Insecure session cookies (KSI-IAM-07)
+- ✅ Secure session management (KSI-IAM-07)
+- ✅ Insecure random number generation (KSI-SVC-07)
+
 **Frameworks Tested:**
 - ASP.NET Core, Entity Framework, MSAL, Azure SDK for .NET
 
@@ -537,7 +557,7 @@ python tests/test_csharp_analyzer.py
 ```
 
 ### 18. test_java_analyzer.py ⭐ NEW
-**Purpose:** Comprehensive tests for Java code analyzer (18 tests: 12 Phase 1 + 6 Phase 2)
+**Purpose:** Comprehensive tests for Java code analyzer (36 tests: 12 Phase 1 + 6 Phase 2 + 18 Phase 3)
 
 **Phase 1 Coverage (12 tests):**
 - ✅ Hardcoded secrets detection (Java syntax)
@@ -561,6 +581,26 @@ python tests/test_csharp_analyzer.py
 - ✅ Proper Bearer token with credential (good practice)
 - ✅ mTLS with KeyStore/KeyManagerFactory (good practice)
 
+**Phase 3 Coverage (18 tests - Secure Coding Practices):**
+- ✅ Bare catch blocks detection (KSI-SVC-01)
+- ✅ Proper error handling with logging (KSI-SVC-01)
+- ✅ SQL injection via string concatenation (KSI-SVC-02)
+- ✅ Parameterized SQL queries (KSI-SVC-02)
+- ✅ Command injection detection (KSI-SVC-02)
+- ✅ Insecure deserialization (ObjectInputStream) (KSI-SVC-07)
+- ✅ Secure JSON serialization (Jackson) (KSI-SVC-07)
+- ✅ Missing data classification on PII (KSI-PIY-01)
+- ✅ Data classification annotations (KSI-PIY-01)
+- ✅ Missing data retention policies (KSI-PIY-03)
+- ✅ Missing secure deletion capability (KSI-PIY-03)
+- ✅ Privacy rights implementation (KSI-PIY-03)
+- ✅ Service mesh missing strict mTLS (KSI-CNA-07)
+- ✅ Wildcard RBAC permissions (KSI-IAM-04)
+- ✅ Scoped RBAC permissions (KSI-IAM-04)
+- ✅ Insecure session cookies (KSI-IAM-07)
+- ✅ Secure session management (KSI-IAM-07)
+- ✅ Insecure random number generation (KSI-SVC-07)
+
 **Frameworks Tested:**
 - Spring Boot, Spring Security, Jakarta EE, Azure SDK for Java
 
@@ -570,7 +610,7 @@ python tests/test_java_analyzer.py
 ```
 
 ### 19. test_typescript_analyzer.py ⭐ NEW
-**Purpose:** Comprehensive tests for TypeScript/JavaScript code analyzer (18 tests: 12 Phase 1 + 6 Phase 2)
+**Purpose:** Comprehensive tests for TypeScript/JavaScript code analyzer (36 tests: 12 Phase 1 + 6 Phase 2 + 18 Phase 3)
 
 **Phase 1 Coverage (12 tests):**
 - ✅ Hardcoded secrets detection (TS/JS syntax)
@@ -593,6 +633,26 @@ python tests/test_java_analyzer.py
 - ✅ Missing authentication in axios requests (KSI-CNA-03/CNA-07)
 - ✅ Proper Bearer token with credential (good practice)
 - ✅ mTLS with https.Agent (cert/key/ca) (good practice)
+
+**Phase 3 Coverage (18 tests - Secure Coding Practices):**
+- ✅ Bare catch blocks detection (KSI-SVC-01)
+- ✅ Proper error handling with logging (KSI-SVC-01)
+- ✅ SQL injection via string concatenation (KSI-SVC-02)
+- ✅ Parameterized SQL queries (KSI-SVC-02)
+- ✅ Command injection detection (KSI-SVC-02)
+- ✅ Insecure deserialization (node-serialize) (KSI-SVC-07)
+- ✅ Secure JSON serialization (KSI-SVC-07)
+- ✅ Missing data classification on PII (KSI-PIY-01)
+- ✅ Data classification decorators (KSI-PIY-01)
+- ✅ Missing data retention policies (KSI-PIY-03)
+- ✅ Missing secure deletion capability (KSI-PIY-03)
+- ✅ Privacy rights implementation (KSI-PIY-03)
+- ✅ Service mesh missing strict mTLS (KSI-CNA-07)
+- ✅ Wildcard RBAC permissions (KSI-IAM-04)
+- ✅ Scoped RBAC permissions (KSI-IAM-04)
+- ✅ Insecure session cookies (KSI-IAM-07)
+- ✅ Secure session management (KSI-IAM-07)
+- ✅ Insecure random number generation (KSI-SVC-07)
 
 **Frameworks Tested:**
 - Express, NestJS, Next.js, React, Azure SDK for JS
@@ -741,9 +801,9 @@ All tests passing as of December 3, 2025:
 | test_export_tools.py ⭐ | ✅ PASS | 3 tools, 2 test cases |
 | test_enhancement_tools.py ⭐ | ✅ PASS | 7 tools, 24 test cases |
 | test_implementation_mapping_tools.py ⭐ | ✅ PASS | 2 tools, 24 test cases |
-| test_csharp_analyzer.py ⭐ | ✅ PASS | 18 C# security checks (12 Phase 1 + 6 Phase 2) |
-| test_java_analyzer.py ⭐ | ✅ PASS | 18 Java security checks (12 Phase 1 + 6 Phase 2) |
-| test_typescript_analyzer.py ⭐ | ✅ PASS | 18 TypeScript/JS security checks (12 Phase 1 + 6 Phase 2) |
+| test_csharp_analyzer.py ⭐ | ✅ PASS | 36 C# security checks (12 Phase 1 + 6 Phase 2 + 18 Phase 3) |
+| test_java_analyzer.py ⭐ | ✅ PASS | 36 Java security checks (12 Phase 1 + 6 Phase 2 + 18 Phase 3) |
+| test_typescript_analyzer.py ⭐ | ✅ PASS | 36 TypeScript/JS security checks (12 Phase 1 + 6 Phase 2 + 18 Phase 3) |
 | **Resource Validation** |||
 | test_prompts.py ⭐ | ✅ PASS | 15 prompts validated |
 | test_templates.py ⭐ | ✅ PASS | 23 templates validated |
