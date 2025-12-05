@@ -30,7 +30,7 @@ async def test_new_languages():
     assert len(result) > 1000, "Java template too short"
     assert "java" in result.lower(), "Java template missing language marker"
     assert "Azure SDK" in result or "azure" in result.lower(), "Java template missing Azure references"
-    print(f"✅ Java template: {len(result)} chars")
+    print(f"[OK] Java template: {len(result)} chars")
     
     # Test TypeScript
     print("Testing TypeScript template...")
@@ -43,7 +43,7 @@ async def test_new_languages():
     assert len(result) > 1000, "TypeScript template too short"
     assert "typescript" in result.lower() or "javascript" in result.lower(), "TypeScript template missing language marker"
     assert "Azure SDK" in result or "azure" in result.lower(), "TypeScript template missing Azure references"
-    print(f"✅ TypeScript template: {len(result)} chars")
+    print(f"[OK] TypeScript template: {len(result)} chars")
     
     # Test JavaScript alias (should map to TypeScript)
     print("Testing JavaScript alias...")
@@ -54,7 +54,7 @@ async def test_new_languages():
         'javascript'
     )
     assert len(result) > 1000, "JavaScript template too short"
-    print(f"✅ JavaScript alias works: {len(result)} chars")
+    print(f"[OK] JavaScript alias works: {len(result)} chars")
     
     # Test invalid language
     print("Testing invalid language...")
@@ -65,7 +65,7 @@ async def test_new_languages():
         'ruby'
     )
     assert "not supported" in result, "Should reject unsupported language"
-    print(f"✅ Invalid language properly rejected")
+    print(f"[OK] Invalid language properly rejected")
     
     print("\n=== All Language Tests Passed ===\n")
 

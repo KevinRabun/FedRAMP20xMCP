@@ -37,7 +37,7 @@ async def test_get_control():
             
             if control_id == "INVALID-ID":
                 assert "not found" in result.lower(), "Should return not found message"
-                print(f"✓ Correctly handled invalid ID")
+                print(f"[PASS] Correctly handled invalid ID")
             else:
                 assert len(result) > 0, "Result should not be empty"
                 assert control_id in result or control_id.lower() in result.lower(), \
@@ -51,7 +51,7 @@ async def test_get_control():
                     len(result) > 50  # Has substantial content
                 )
                 assert has_structure, "Should have structured output"
-                print(f"✓ Retrieved {len(result)} characters")
+                print(f"[PASS] Retrieved {len(result)} characters")
                 
                 # Check for key sections
                 if "Definition:" in result:
@@ -62,10 +62,10 @@ async def test_get_control():
                     print(f"  Contains: References")
                     
         except Exception as e:
-            print(f"✗ Failed: {e}")
+            print(f"[FAIL] Failed: {e}")
             raise
     
-    print("\n✅ get_control tests passed!")
+    print("\n[OK] get_control tests passed!")
 
 
 async def test_list_family_controls():
@@ -95,23 +95,23 @@ async def test_list_family_controls():
             if family == "INVALID":
                 assert "No requirements found" in result or "not found" in result.lower(), \
                     "Should handle invalid family gracefully"
-                print(f"✓ Correctly handled invalid family")
+                print(f"[PASS] Correctly handled invalid family")
             else:
                 assert len(result) > 0, "Result should not be empty"
                 assert family in result, f"Result should mention family {family}"
                 
                 # Count items in result
                 item_count = result.count(f"{family}-")
-                print(f"✓ Found {item_count} items in family {family}")
+                print(f"[PASS] Found {item_count} items in family {family}")
                 
                 if min_expected > 0 and item_count < min_expected:
                     print(f"  Note: Expected at least {min_expected}, got {item_count}")
                     
         except Exception as e:
-            print(f"✗ Failed: {e}")
+            print(f"[FAIL] Failed: {e}")
             raise
     
-    print("\n✅ list_family_controls tests passed!")
+    print("\n[OK] list_family_controls tests passed!")
 
 
 async def test_search_requirements():
@@ -143,20 +143,20 @@ async def test_search_requirements():
             if min_matches == 0:
                 assert ("No requirements found" in result or "0 requirement" in result.lower()), \
                     "Should indicate no matches"
-                print(f"✓ Correctly returned no matches")
+                print(f"[PASS] Correctly returned no matches")
             else:
                 # Count matches
                 match_count = result.count("**ID:**") + result.count("- **")
-                print(f"✓ Found {match_count} matches")
+                print(f"[PASS] Found {match_count} matches")
                 
                 if match_count < min_matches:
                     print(f"  Note: Expected at least {min_matches}, got {match_count}")
                     
         except Exception as e:
-            print(f"✗ Failed: {e}")
+            print(f"[FAIL] Failed: {e}")
             raise
     
-    print("\n✅ search_requirements tests passed!")
+    print("\n[OK] search_requirements tests passed!")
 
 
 async def main():
@@ -167,14 +167,14 @@ async def main():
         await test_search_requirements()
         
         print("\n" + "=" * 80)
-        print("✅ ALL REQUIREMENTS TOOLS TESTS PASSED!")
+        print("[OK] ALL REQUIREMENTS TOOLS TESTS PASSED!")
         print("=" * 80)
         
     except AssertionError as e:
-        print(f"\n✗ Test failed: {e}")
+        print(f"\n[FAIL] Test failed: {e}")
         exit(1)
     except Exception as e:
-        print(f"\n✗ Unexpected error: {e}")
+        print(f"\n[FAIL] Unexpected error: {e}")
         import traceback
         traceback.print_exc()
         exit(1)

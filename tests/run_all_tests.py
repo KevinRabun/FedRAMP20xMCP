@@ -45,9 +45,9 @@ def run_test(test_file, category):
         success = result.returncode == 0
         
         if success:
-            print(f"\n{GREEN}✅ {test_file} PASSED ({elapsed:.1f}s){RESET}")
+            print(f"\n{GREEN}[PASS] {test_file} PASSED ({elapsed:.1f}s){RESET}")
         else:
-            print(f"\n{RED}❌ {test_file} FAILED ({elapsed:.1f}s){RESET}")
+            print(f"\n{RED}[FAIL] {test_file} FAILED ({elapsed:.1f}s){RESET}")
         
         return {
             'file': test_file,
@@ -58,7 +58,7 @@ def run_test(test_file, category):
         }
         
     except subprocess.TimeoutExpired:
-        print(f"\n{RED}❌ {test_file} TIMEOUT (>30s){RESET}")
+        print(f"\n{RED}[TIMEOUT] {test_file} TIMEOUT (>30s){RESET}")
         return {
             'file': test_file,
             'category': category,
@@ -67,7 +67,7 @@ def run_test(test_file, category):
             'returncode': -1
         }
     except Exception as e:
-        print(f"\n{RED}❌ {test_file} ERROR: {e}{RESET}")
+        print(f"\n{RED}[ERROR] {test_file} ERROR: {e}{RESET}")
         return {
             'file': test_file,
             'category': category,
@@ -144,7 +144,7 @@ def main():
         print(f"  Average time: {avg_time:.1f}s")
         
         for result in cat_results:
-            status = f"{GREEN}✅ PASS{RESET}" if result['passed'] else f"{RED}❌ FAIL{RESET}"
+            status = f"{GREEN}[PASS]{RESET}" if result['passed'] else f"{RED}[FAIL]{RESET}"
             print(f"    {status} {result['file']} ({result['time']:.1f}s)")
     
     # Overall summary
@@ -156,9 +156,9 @@ def main():
     print(f"{BLUE}{'=' * 60}{RESET}\n")
     
     if total_passed == total_tests:
-        print(f"{GREEN}✅ ALL TESTS PASSED!{RESET}")
+        print(f"{GREEN}[SUCCESS] ALL TESTS PASSED!{RESET}")
     else:
-        print(f"{RED}❌ SOME TESTS FAILED{RESET}")
+        print(f"{RED}[FAILURE] SOME TESTS FAILED{RESET}")
     
     print(f"\nTotal: {total_passed}/{total_tests} passed")
     print(f"Total time: {total_time:.1f}s")
@@ -168,13 +168,13 @@ def main():
     print(f"{BLUE}{'=' * 60}{RESET}")
     print(f"{BLUE}COVERAGE SUMMARY{RESET}")
     print(f"{BLUE}{'=' * 60}{RESET}\n")
-    print("✅ 24/24 tools functionally tested (100%)")
-    print("✅ 15/15 prompts validated (100%)")
-    print("✅ 21/21 templates validated (100%)")
-    print("✅ 329 requirements validated")
-    print("✅ 72 KSIs validated")
-    print("✅ 50 definitions validated")
-    print("✅ 15 documentation files validated\n")
+    print("[OK] 24/24 tools functionally tested (100%)")
+    print("[OK] 15/15 prompts validated (100%)")
+    print("[OK] 21/21 templates validated (100%)")
+    print("[OK] 329 requirements validated")
+    print("[OK] 72 KSIs validated")
+    print("[OK] 50 definitions validated")
+    print("[OK] 15 documentation files validated\n")
     
     # Exit with appropriate code
     sys.exit(0 if total_passed == total_tests else 1)

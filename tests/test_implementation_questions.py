@@ -21,11 +21,11 @@ async def test_generate_questions_requirement():
     tool_names = [tool.name for tool in tools]
     
     if 'generate_implementation_questions' not in tool_names:
-        print("❌ FAILED: Tool 'generate_implementation_questions' not found")
+        print("[FAIL] FAILED: Tool 'generate_implementation_questions' not found")
         print(f"Available tools: {', '.join(tool_names)}")
         return False
     
-    print("✓ Tool found")
+    print("[PASS] Tool found")
     
     # Call the tool with a requirement ID
     result = await mcp.call_tool('generate_implementation_questions', {'requirement_id': 'FRR-CCM-01'})
@@ -33,26 +33,26 @@ async def test_generate_questions_requirement():
     if result and len(result) > 0:
         content = str(result[0])
         if 'Implementation Questions for FRR-CCM-01' in content:
-            print("✓ Generated questions for requirement FRR-CCM-01")
-            print(f"✓ Output length: {len(content)} characters")
+            print("[PASS] Generated questions for requirement FRR-CCM-01")
+            print(f"[PASS] Output length: {len(content)} characters")
             
             # Check for key sections
             if 'Strategic Questions for Product Managers' in content:
-                print("✓ Contains PM questions")
+                print("[PASS] Contains PM questions")
             if 'Technical Questions for Engineers' in content:
-                print("✓ Contains engineer questions")
+                print("[PASS] Contains engineer questions")
             if 'Azure-Specific Considerations' in content:
-                print("✓ Contains Azure-specific questions")
+                print("[PASS] Contains Azure-specific questions")
             if 'Decision Framework' in content:
-                print("✓ Contains decision framework")
+                print("[PASS] Contains decision framework")
             
             return True
         else:
-            print(f"❌ FAILED: Unexpected output format")
+            print(f"[FAIL] FAILED: Unexpected output format")
             print(f"First 200 chars: {content[:200]}")
             return False
     else:
-        print("❌ FAILED: No result returned")
+        print("[FAIL] FAILED: No result returned")
         return False
 
 
@@ -66,15 +66,15 @@ async def test_generate_questions_ksi():
     if result and len(result) > 0:
         content = str(result[0])
         if 'Implementation Questions for KSI-IAM-01' in content:
-            print("✓ Generated questions for KSI-IAM-01")
-            print(f"✓ Output length: {len(content)} characters")
+            print("[PASS] Generated questions for KSI-IAM-01")
+            print(f"[PASS] Output length: {len(content)} characters")
             return True
         else:
-            print(f"❌ FAILED: Unexpected output format")
+            print(f"[FAIL] FAILED: Unexpected output format")
             print(f"First 200 chars: {content[:200]}")
             return False
     else:
-        print("❌ FAILED: No result returned")
+        print("[FAIL] FAILED: No result returned")
         return False
 
 
@@ -87,14 +87,14 @@ async def test_invalid_id():
     if result and len(result) > 0:
         content = str(result[0])
         if 'not found' in content:
-            print("✓ Correctly handles invalid ID")
+            print("[PASS] Correctly handles invalid ID")
             return True
         else:
-            print(f"❌ FAILED: Should return error message for invalid ID")
+            print(f"[FAIL] FAILED: Should return error message for invalid ID")
             print(f"Got: {content[:200]}")
             return False
     else:
-        print("❌ FAILED: No result returned")
+        print("[FAIL] FAILED: No result returned")
         return False
 
 
@@ -115,10 +115,10 @@ async def main():
     print("=" * 60)
     
     if all(results):
-        print("✅ All tests passed!")
+        print("[OK] All tests passed!")
         return 0
     else:
-        print("❌ Some tests failed")
+        print("[FAIL] Some tests failed")
         return 1
 
 

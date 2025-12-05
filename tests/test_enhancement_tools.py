@@ -53,7 +53,7 @@ async def test_compare_with_rev4():
             )
             assert has_comparison, "Should discuss Rev 4/5 vs 20x changes"
             
-            print(f"✓ Generated comparison ({len(result)} characters)")
+            print(f"[PASS] Generated comparison ({len(result)} characters)")
             
             # Check for structure
             has_headers = "#" in result
@@ -69,10 +69,10 @@ async def test_compare_with_rev4():
                 print(f"  Contains: {', '.join(details)}")
                 
         except Exception as e:
-            print(f"✗ Failed: {e}")
+            print(f"[FAIL] Failed: {e}")
             raise
     
-    print("\n✅ compare_with_rev4 tests passed!")
+    print("\n[OK] compare_with_rev4 tests passed!")
 
 
 async def test_get_implementation_examples():
@@ -106,9 +106,9 @@ async def test_get_implementation_examples():
                     len(result) < 500  # Less comprehensive response
                 )
                 if has_not_found:
-                    print(f"✓ Correctly handled invalid requirement")
+                    print(f"[PASS] Correctly handled invalid requirement")
                 else:
-                    print(f"✓ Provided general guidance ({len(result)} characters)")
+                    print(f"[PASS] Provided general guidance ({len(result)} characters)")
             else:
                 assert len(result) > 300, "Should provide substantial examples"
                 
@@ -119,7 +119,7 @@ async def test_get_implementation_examples():
                 
                 assert has_examples, "Should contain implementation examples"
                 
-                print(f"✓ Generated examples ({len(result)} characters)")
+                print(f"[PASS] Generated examples ({len(result)} characters)")
                 
                 details = []
                 if has_code:
@@ -131,10 +131,10 @@ async def test_get_implementation_examples():
                     print(f"  Contains: {', '.join(details)}")
                 
         except Exception as e:
-            print(f"✗ Failed: {e}")
+            print(f"[FAIL] Failed: {e}")
             raise
     
-    print("\n✅ get_implementation_examples tests passed!")
+    print("\n[OK] get_implementation_examples tests passed!")
 
 
 async def test_check_requirement_dependencies():
@@ -168,16 +168,16 @@ async def test_check_requirement_dependencies():
                 "require" in result.lower()
             )
             
-            print(f"✓ Analyzed dependencies ({len(result)} characters)")
+            print(f"[PASS] Analyzed dependencies ({len(result)} characters)")
             
             if has_dependencies:
                 print(f"  Contains: Dependency information")
                 
         except Exception as e:
-            print(f"✗ Failed: {e}")
+            print(f"[FAIL] Failed: {e}")
             raise
     
-    print("\n✅ check_requirement_dependencies tests passed!")
+    print("\n[OK] check_requirement_dependencies tests passed!")
 
 
 async def test_estimate_implementation_effort():
@@ -215,16 +215,16 @@ async def test_estimate_implementation_effort():
             
             assert has_estimate, "Should contain effort estimation"
             
-            print(f"✓ Generated estimate ({len(result)} characters)")
+            print(f"[PASS] Generated estimate ({len(result)} characters)")
             
             if "hour" in result.lower() or "day" in result.lower():
                 print(f"  Contains: Time estimates")
                 
         except Exception as e:
-            print(f"✗ Failed: {e}")
+            print(f"[FAIL] Failed: {e}")
             raise
     
-    print("\n✅ estimate_implementation_effort tests passed!")
+    print("\n[OK] estimate_implementation_effort tests passed!")
 
 
 async def test_get_cloud_native_guidance():
@@ -259,16 +259,16 @@ async def test_get_cloud_native_guidance():
                 "kubernetes" in result.lower()
             )
             
-            print(f"✓ Generated guidance ({len(result)} characters)")
+            print(f"[PASS] Generated guidance ({len(result)} characters)")
             
             if has_cloud:
                 print(f"  Contains: Cloud-native guidance")
                 
         except Exception as e:
-            print(f"✗ Failed: {e}")
+            print(f"[FAIL] Failed: {e}")
             raise
     
-    print("\n✅ get_cloud_native_guidance tests passed!")
+    print("\n[OK] get_cloud_native_guidance tests passed!")
 
 
 async def test_validate_architecture():
@@ -303,16 +303,16 @@ async def test_validate_architecture():
                 "compliant" in result.lower()
             )
             
-            print(f"✓ Generated validation ({len(result)} characters)")
+            print(f"[PASS] Generated validation ({len(result)} characters)")
             
             if has_validation:
                 print(f"  Contains: Validation guidance")
                 
         except Exception as e:
-            print(f"✗ Failed: {e}")
+            print(f"[FAIL] Failed: {e}")
             raise
     
-    print("\n✅ validate_architecture tests passed!")
+    print("\n[OK] validate_architecture tests passed!")
 
 
 async def test_generate_implementation_questions():
@@ -349,17 +349,17 @@ async def test_generate_implementation_questions():
             
             assert has_questions, "Should contain questions"
             
-            print(f"✓ Generated questions ({len(result)} characters)")
+            print(f"[PASS] Generated questions ({len(result)} characters)")
             
             question_count = result.count("?")
             if question_count > 0:
                 print(f"  Contains: {question_count} questions")
                 
         except Exception as e:
-            print(f"✗ Failed: {e}")
+            print(f"[FAIL] Failed: {e}")
             raise
     
-    print("\n✅ generate_implementation_questions tests passed!")
+    print("\n[OK] generate_implementation_questions tests passed!")
 
 
 async def main():
@@ -374,14 +374,14 @@ async def main():
         await test_generate_implementation_questions()
         
         print("\n" + "=" * 80)
-        print("✅ ALL ENHANCEMENT TOOLS TESTS PASSED!")
+        print("[OK] ALL ENHANCEMENT TOOLS TESTS PASSED!")
         print("=" * 80)
         
     except AssertionError as e:
-        print(f"\n✗ Test failed: {e}")
+        print(f"\n[FAIL] Test failed: {e}")
         exit(1)
     except Exception as e:
-        print(f"\n✗ Unexpected error: {e}")
+        print(f"\n[FAIL] Unexpected error: {e}")
         import traceback
         traceback.print_exc()
         exit(1)

@@ -32,16 +32,16 @@ async def test_export_functions_available():
         assert hasattr(export, 'export_to_csv'), "export_to_csv should exist"
         assert hasattr(export, 'generate_ksi_specification'), "generate_ksi_specification should exist"
         
-        print("✓ All export functions available")
+        print("[PASS] All export functions available")
         print("  - export_to_excel")
         print("  - export_to_csv")
         print("  - generate_ksi_specification")
         
     except Exception as e:
-        print(f"✗ Failed: {e}")
+        print(f"[FAIL] Failed: {e}")
         raise
     
-    print("\n✅ Export tools availability test passed!")
+    print("\n[OK] Export tools availability test passed!")
 
 
 async def test_export_types():
@@ -59,9 +59,9 @@ async def test_export_types():
     
     print("\n[Documentation] Supported export types:")
     for export_type in export_types:
-        print(f"  ✓ {export_type}")
+        print(f"  [PASS] {export_type}")
     
-    print("\n✅ Export types documented!")
+    print("\n[OK] Export types documented!")
 
 
 async def main():
@@ -71,14 +71,14 @@ async def main():
         await test_export_types()
         
         print("\n" + "=" * 80)
-        print("✅ ALL EXPORT TOOLS TESTS PASSED!")
+        print("[OK] ALL EXPORT TOOLS TESTS PASSED!")
         print("=" * 80)
         
     except AssertionError as e:
-        print(f"\n✗ Test failed: {e}")
+        print(f"\n[FAIL] Test failed: {e}")
         exit(1)
     except Exception as e:
-        print(f"\n✗ Unexpected error: {e}")
+        print(f"\n[FAIL] Unexpected error: {e}")
         import traceback
         traceback.print_exc()
         exit(1)

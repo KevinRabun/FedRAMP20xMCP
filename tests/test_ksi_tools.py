@@ -37,12 +37,12 @@ async def test_get_ksi():
             
             if ksi_id == "INVALID-KSI-99":
                 assert "not found" in result.lower(), "Should return not found message"
-                print(f"✓ Correctly handled invalid ID")
+                print(f"[PASS] Correctly handled invalid ID")
             else:
                 assert len(result) > 0, "Result should not be empty"
                 assert ksi_id in result, f"Result should contain {ksi_id}"
                 assert "KSI:" in result or "Key Security Indicator:" in result, "Should have KSI header"
-                print(f"✓ Retrieved {len(result)} characters")
+                print(f"[PASS] Retrieved {len(result)} characters")
                 
                 # Check for key sections
                 has_description = "Description:" in result or "Requirement:" in result
@@ -61,10 +61,10 @@ async def test_get_ksi():
                     print(f"  Contains: {', '.join(details)}")
                     
         except Exception as e:
-            print(f"✗ Failed: {e}")
+            print(f"[FAIL] Failed: {e}")
             raise
     
-    print("\n✅ get_ksi tests passed!")
+    print("\n[OK] get_ksi tests passed!")
 
 
 async def test_list_ksi():
@@ -86,14 +86,14 @@ async def test_list_ksi():
         
         # Count KSIs
         ksi_count = result.count("KSI-")
-        print(f"✓ Found {ksi_count} KSIs")
+        print(f"[PASS] Found {ksi_count} KSIs")
         assert ksi_count >= 60, f"Expected at least 60 KSIs, found {ksi_count}"
         
     except Exception as e:
-        print(f"✗ Failed: {e}")
+        print(f"[FAIL] Failed: {e}")
         raise
     
-    print("\n✅ list_ksi tests passed!")
+    print("\n[OK] list_ksi tests passed!")
 
 
 async def test_ksi_families():
@@ -125,16 +125,16 @@ async def test_ksi_families():
         
         if has_family:
             count = result.count(family_tag)
-            print(f"✓ {family_code}: Found {count} KSI(s)")
+            print(f"[PASS] {family_code}: Found {count} KSI(s)")
         else:
             print(f"  {family_code}: Not found (may not exist in data)")
     
     # Verify we have a substantial number of KSIs total
     total_ksis = result.count("KSI-")
     assert total_ksis >= 60, f"Expected at least 60 total KSIs, found {total_ksis}"
-    print(f"\n✓ Total: {total_ksis} KSIs across all families")
+    print(f"\n[PASS] Total: {total_ksis} KSIs across all families")
     
-    print("\n✅ KSI family coverage test passed!")
+    print("\n[OK] KSI family coverage test passed!")
 
 
 async def main():
@@ -145,14 +145,14 @@ async def main():
         await test_ksi_families()
         
         print("\n" + "=" * 80)
-        print("✅ ALL KSI TOOLS TESTS PASSED!")
+        print("[OK] ALL KSI TOOLS TESTS PASSED!")
         print("=" * 80)
         
     except AssertionError as e:
-        print(f"\n✗ Test failed: {e}")
+        print(f"\n[FAIL] Test failed: {e}")
         exit(1)
     except Exception as e:
-        print(f"\n✗ Unexpected error: {e}")
+        print(f"\n[FAIL] Unexpected error: {e}")
         import traceback
         traceback.print_exc()
         exit(1)

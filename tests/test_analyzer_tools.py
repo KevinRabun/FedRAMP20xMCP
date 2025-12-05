@@ -59,7 +59,7 @@ async def test_bicep_analysis_tool():
     assert "FedRAMP 20x Compliance Review" in pr_comment, "PR comment should have header"
     assert "KSI-" in pr_comment, "PR comment should include requirement IDs"
     
-    print(f"✅ Tool returned {len(findings)} findings with proper structure")
+    print(f"[OK] Tool returned {len(findings)} findings with proper structure")
     print(f"   Requirements: {', '.join([f['requirement_id'] for f in findings[:3]])}")
 
 
@@ -91,7 +91,7 @@ async def test_terraform_analysis_tool():
     ksi_mla_findings = [f for f in findings if f["requirement_id"] == "KSI-MLA-05"]
     assert len(ksi_mla_findings) > 0, "Should detect KSI-MLA-05 (logging) issue"
     
-    print(f"✅ Terraform analysis detected {len(findings)} findings")
+    print(f"[OK] Terraform analysis detected {len(findings)} findings")
 
 
 async def test_python_analysis_tool():
@@ -133,7 +133,7 @@ async def test_python_analysis_tool():
     ksi_iam_findings = [f for f in findings if f["requirement_id"] == "KSI-IAM-01"]
     assert len(ksi_iam_findings) > 0, "Should detect KSI-IAM-01 (auth) issue"
     
-    print(f"✅ Python analysis detected {len(findings)} findings")
+    print(f"[OK] Python analysis detected {len(findings)} findings")
     print(f"   Security issues: {[f['requirement_id'] for f in findings if not f['good_practice']]}")
 
 
@@ -166,7 +166,7 @@ async def test_pr_comment_formatting():
     
     # Verify required elements
     required_elements = [
-        "## 🔒 FedRAMP 20x Compliance Review",
+        "FedRAMP 20x Compliance Review",  # Title text (emoji may vary based on encoding)
         "**File:**",
         "network.bicep",
         "**Summary:**",
@@ -180,13 +180,13 @@ async def test_pr_comment_formatting():
     
     # Should have severity indicators if issues found
     if result["summary"]["high_priority"] > 0:
-        assert "High Priority" in pr_comment or "⚠️" in pr_comment
+        assert "High Priority" in pr_comment or "[WARN]" in pr_comment
     
     # Should have good practices section if any detected
     if result["summary"]["good_practices"] > 0:
-        assert "Good Practices" in pr_comment or "✅" in pr_comment
+        assert "Good Practices" in pr_comment or "[OK]" in pr_comment
     
-    print("✅ PR comment formatting validated")
+    print("[OK] PR comment formatting validated")
     print(f"   Length: {len(pr_comment)} characters")
 
 
@@ -203,7 +203,7 @@ async def test_unsupported_file_type():
     assert "error" in result, "Should return error for unsupported type"
     assert "cloudformation" in result["error"].lower()
     
-    print("✅ Unsupported file type handled correctly")
+    print("[OK] Unsupported file type handled correctly")
 
 
 async def test_unsupported_language():
@@ -219,7 +219,7 @@ async def test_unsupported_language():
     assert "error" in result, "Should return error for unsupported language"
     assert "ruby" in result["error"].lower()
     
-    print("✅ Unsupported language handled correctly")
+    print("[OK] Unsupported language handled correctly")
 
 
 async def test_good_practices_detection():
@@ -250,9 +250,9 @@ async def test_good_practices_detection():
     
     # PR comment should highlight good practices
     pr_comment = result["pr_comment"]
-    assert "Good Practices" in pr_comment or "✅" in pr_comment
+    assert "Good Practices" in pr_comment or "[OK]" in pr_comment
     
-    print(f"✅ Detected {len(good_practices)} good practices")
+    print(f"[OK] Detected {len(good_practices)} good practices")
 
 
 async def test_summary_calculations():
@@ -288,7 +288,7 @@ async def test_summary_calculations():
     assert summary["low_priority"] == low_count
     assert summary["good_practices"] == good_count
     
-    print(f"✅ Summary calculations correct: {high_count}H/{medium_count}M/{low_count}L, {good_count} good practices")
+    print(f"[OK] Summary calculations correct: {high_count}H/{medium_count}M/{low_count}L, {good_count} good practices")
 
 
 async def run_all_tests():
@@ -316,11 +316,11 @@ async def run_all_tests():
             await test()
             passed += 1
         except AssertionError as e:
-            print(f"❌ FAILED: {test.__name__}")
+            print(f"[FAIL] FAILED: {test.__name__}")
             print(f"   Error: {e}")
             failed += 1
         except Exception as e:
-            print(f"❌ ERROR in {test.__name__}: {e}")
+            print(f"[FAIL] ERROR in {test.__name__}: {e}")
             failed += 1
     
     print("\n" + "="*70)
@@ -328,10 +328,10 @@ async def run_all_tests():
     print("="*70)
     
     if failed > 0:
-        print("\n❌ Some tests failed!")
+        print("\n[FAIL] Some tests failed!")
         return False
     else:
-        print("\n✅ All tests passed!")
+        print("\n[OK] All tests passed!")
         return True
 
 

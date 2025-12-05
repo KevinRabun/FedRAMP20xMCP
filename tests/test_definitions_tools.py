@@ -41,13 +41,13 @@ async def test_get_definition():
                     "not found" in result.lower()
                 )
                 assert has_not_found, "Should return no definition message"
-                print(f"✓ Correctly handled invalid term")
+                print(f"[PASS] Correctly handled invalid term")
             else:
                 assert len(result) > 0, "Result should not be empty"
                 # More flexible check since output format may vary
                 has_content = len(result) > 30 or "FRD-" in result
                 assert has_content, "Should have definition content"
-                print(f"✓ Retrieved {len(result)} characters")
+                print(f"[PASS] Retrieved {len(result)} characters")
                 
                 # Check for key sections
                 if "Also known as:" in result:
@@ -58,10 +58,10 @@ async def test_get_definition():
                     print(f"  Contains: References")
                     
         except Exception as e:
-            print(f"✗ Failed: {e}")
+            print(f"[FAIL] Failed: {e}")
             raise
     
-    print("\n✅ get_definition tests passed!")
+    print("\n[OK] get_definition tests passed!")
 
 
 async def test_list_definitions():
@@ -83,19 +83,19 @@ async def test_list_definitions():
         
         # Count definitions
         def_count = result.count("FRD-ALL-")
-        print(f"✓ Found {def_count} definitions")
+        print(f"[PASS] Found {def_count} definitions")
         assert def_count >= 50, f"Expected at least 50 definitions, got {def_count}"
         
         # Check structure
         assert "Federal Customer Data" in result or "Cloud Service" in result, \
             "Should contain actual definition terms"
-        print(f"✓ Definitions properly formatted")
+        print(f"[PASS] Definitions properly formatted")
         
     except Exception as e:
-        print(f"✗ Failed: {e}")
+        print(f"[FAIL] Failed: {e}")
         raise
     
-    print("\n✅ list_definitions tests passed!")
+    print("\n[OK] list_definitions tests passed!")
 
 
 async def test_search_definitions():
@@ -126,20 +126,20 @@ async def test_search_definitions():
             if min_matches == 0:
                 assert ("No definitions found" in result or "0 definition" in result.lower()), \
                     "Should indicate no matches"
-                print(f"✓ Correctly returned no matches")
+                print(f"[PASS] Correctly returned no matches")
             else:
                 # Count matches
                 match_count = result.count("FRD-ALL-")
-                print(f"✓ Found {match_count} matches")
+                print(f"[PASS] Found {match_count} matches")
                 
                 if match_count < min_matches:
                     print(f"  Note: Expected at least {min_matches}, got {match_count}")
                     
         except Exception as e:
-            print(f"✗ Failed: {e}")
+            print(f"[FAIL] Failed: {e}")
             raise
     
-    print("\n✅ search_definitions tests passed!")
+    print("\n[OK] search_definitions tests passed!")
 
 
 async def main():
@@ -150,14 +150,14 @@ async def main():
         await test_search_definitions()
         
         print("\n" + "=" * 80)
-        print("✅ ALL DEFINITIONS TOOLS TESTS PASSED!")
+        print("[OK] ALL DEFINITIONS TOOLS TESTS PASSED!")
         print("=" * 80)
         
     except AssertionError as e:
-        print(f"\n✗ Test failed: {e}")
+        print(f"\n[FAIL] Test failed: {e}")
         exit(1)
     except Exception as e:
-        print(f"\n✗ Unexpected error: {e}")
+        print(f"\n[FAIL] Unexpected error: {e}")
         import traceback
         traceback.print_exc()
         exit(1)

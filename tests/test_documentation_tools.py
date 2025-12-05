@@ -44,24 +44,24 @@ async def test_search_documentation():
                     "did not match" in result.lower()
                 )
                 if has_no_matches:
-                    print(f"✓ Correctly returned no/minimal matches")
+                    print(f"[PASS] Correctly returned no/minimal matches")
                 else:
-                    print(f"✓ Returned result (may have some matches)")
+                    print(f"[PASS] Returned result (may have some matches)")
             else:
                 # Check if we got meaningful results
                 has_content = len(result) > 100
                 assert has_content, "Result should have substantial content for this query"
-                print(f"✓ Found documentation ({len(result)} characters)")
+                print(f"[PASS] Found documentation ({len(result)} characters)")
                 
                 # Check for structure
                 if "**File:**" in result or "**Section:**" in result:
                     print(f"  Contains: Structured results with file references")
                     
         except Exception as e:
-            print(f"✗ Failed: {e}")
+            print(f"[FAIL] Failed: {e}")
             raise
     
-    print("\n✅ search_documentation tests passed!")
+    print("\n[OK] search_documentation tests passed!")
 
 
 async def test_get_documentation_file():
@@ -109,7 +109,7 @@ async def test_get_documentation_file():
                 len(result) > 500
             )
             assert has_markdown, "Should contain markdown content"
-            print(f"✓ Retrieved {len(result)} characters")
+            print(f"[PASS] Retrieved {len(result)} characters")
             
             # Check structure
             if "# " in result:
@@ -118,7 +118,7 @@ async def test_get_documentation_file():
                 print(f"  Contains: Code blocks")
                 
         except Exception as e:
-            print(f"✗ Failed: {e}")
+            print(f"[FAIL] Failed: {e}")
             raise
     
     # Test invalid file
@@ -127,12 +127,12 @@ async def test_get_documentation_file():
         result = await get_documentation_file_impl("nonexistent.md", loader)
         assert "not found" in result.lower() or "no file" in result.lower(), \
             "Should return not found message"
-        print(f"✓ Correctly handled invalid file")
+        print(f"[PASS] Correctly handled invalid file")
     except Exception as e:
-        print(f"✗ Failed: {e}")
+        print(f"[FAIL] Failed: {e}")
         raise
     
-    print("\n✅ get_documentation_file tests passed!")
+    print("\n[OK] get_documentation_file tests passed!")
 
 
 async def test_list_documentation_files():
@@ -155,7 +155,7 @@ async def test_list_documentation_files():
         
         # Count files
         file_count = result.count('.md')
-        print(f"✓ Found {file_count} documentation files")
+        print(f"[PASS] Found {file_count} documentation files")
         assert file_count >= 10, f"Expected at least 10 files, got {file_count}"
         
         # Check for common documentation topics
@@ -166,13 +166,13 @@ async def test_list_documentation_files():
             "assessment" in result.lower()
         )
         if has_structure:
-            print(f"✓ Contains expected documentation topics")
+            print(f"[PASS] Contains expected documentation topics")
         
     except Exception as e:
-        print(f"✗ Failed: {e}")
+        print(f"[FAIL] Failed: {e}")
         raise
     
-    print("\n✅ list_documentation_files tests passed!")
+    print("\n[OK] list_documentation_files tests passed!")
 
 
 async def test_documentation_integration():
@@ -185,12 +185,12 @@ async def test_documentation_integration():
     loader = get_data_loader()
     await loader.load_data()
     
-    print("\n[Workflow] List files → Get file → Search within file...")
+    print("\n[Workflow] List files -> Get file -> Search within file...")
     
     # 1. List files
     file_list = await list_documentation_files_impl(loader)
     assert len(file_list) > 0
-    print("✓ Step 1: Listed files")
+    print("[PASS] Step 1: Listed files")
     
     # 2. Extract first filename
     filename = None
@@ -204,18 +204,18 @@ async def test_documentation_integration():
         # 3. Get that file
         file_content = await get_documentation_file_impl(filename, loader)
         assert len(file_content) > 0
-        print(f"✓ Step 2: Retrieved file '{filename}'")
+        print(f"[PASS] Step 2: Retrieved file '{filename}'")
         
         # 4. Search for content that should be in docs
         search_result = await search_documentation_impl("authorization", loader)
         assert len(search_result) > 0
-        print("✓ Step 3: Searched documentation")
+        print("[PASS] Step 3: Searched documentation")
         
-        print("\n✓ Documentation tools work together correctly")
+        print("\n[PASS] Documentation tools work together correctly")
     else:
         print("  Note: Could not extract filename, skipping integration test")
     
-    print("\n✅ Documentation integration test passed!")
+    print("\n[OK] Documentation integration test passed!")
 
 
 async def main():
@@ -227,14 +227,14 @@ async def main():
         await test_documentation_integration()
         
         print("\n" + "=" * 80)
-        print("✅ ALL DOCUMENTATION TOOLS TESTS PASSED!")
+        print("[OK] ALL DOCUMENTATION TOOLS TESTS PASSED!")
         print("=" * 80)
         
     except AssertionError as e:
-        print(f"\n✗ Test failed: {e}")
+        print(f"\n[FAIL] Test failed: {e}")
         exit(1)
     except Exception as e:
-        print(f"\n✗ Unexpected error: {e}")
+        print(f"\n[FAIL] Unexpected error: {e}")
         import traceback
         traceback.print_exc()
         exit(1)

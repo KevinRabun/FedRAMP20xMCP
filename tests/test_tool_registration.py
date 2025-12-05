@@ -71,11 +71,11 @@ def test_tool_registration():
         assert "get_evidence_collection_code" in tool_names
         assert "get_evidence_automation_architecture" in tool_names
         
-        print(f"✓ All 24 tools registered successfully")
+        print(f"[PASS] All 24 tools registered successfully")
         print(f"  Registered tools: {', '.join(sorted(tool_names))}")
     else:
         # If internal structure is different, just verify no exceptions occurred
-        print("✓ Tool registration completed without errors")
+        print("[PASS] Tool registration completed without errors")
         print("  (Note: Could not verify tool count due to FastMCP internal structure)")
 
 
@@ -124,8 +124,8 @@ def test_tool_modules_import():
     assert hasattr(evidence, 'get_evidence_collection_code_impl')
     assert hasattr(evidence, 'get_evidence_automation_architecture_impl')
     
-    print("✓ All tool modules imported successfully")
-    print("✓ All tool implementation functions exist")
+    print("[PASS] All tool modules imported successfully")
+    print("[PASS] All tool implementation functions exist")
 
 
 if __name__ == "__main__":
@@ -137,12 +137,12 @@ if __name__ == "__main__":
         test_tool_registration()
         test_tool_modules_import()
         print("\n" + "=" * 80)
-        print("✓ All tool registration tests passed!")
+        print("[PASS] All tool registration tests passed!")
     except AssertionError as e:
-        print(f"\n✗ Test failed: {e}")
+        print(f"\n[FAIL] Test failed: {e}")
         exit(1)
     except Exception as e:
-        print(f"\n✗ Unexpected error: {e}")
+        print(f"\n[FAIL] Unexpected error: {e}")
         import traceback
         traceback.print_exc()
         exit(1)

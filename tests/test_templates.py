@@ -33,12 +33,12 @@ def test_load_bicep_templates():
             assert "param" in content or "resource" in content or "module" in content, \
                 f"{template_name}: Missing Bicep keywords"
             
-            print(f"✅ bicep/{template_name}.txt: {len(content)} chars")
+            print(f"[OK] bicep/{template_name}.txt: {len(content)} chars")
         except Exception as e:
-            print(f"❌ bicep/{template_name}.txt: {e}")
+            print(f"[FAIL] bicep/{template_name}.txt: {e}")
             raise
     
-    print(f"\n📊 Loaded {len(templates)}/7 Bicep templates")
+    print(f"\n[DATA] Loaded {len(templates)}/7 Bicep templates")
 
 
 def test_load_terraform_templates():
@@ -56,12 +56,12 @@ def test_load_terraform_templates():
             assert "resource" in content or "provider" in content or "variable" in content, \
                 f"{template_name}: Missing Terraform keywords"
             
-            print(f"✅ terraform/{template_name}.txt: {len(content)} chars")
+            print(f"[OK] terraform/{template_name}.txt: {len(content)} chars")
         except Exception as e:
-            print(f"❌ terraform/{template_name}.txt: {e}")
+            print(f"[FAIL] terraform/{template_name}.txt: {e}")
             raise
     
-    print(f"\n📊 Loaded {len(templates)}/7 Terraform templates")
+    print(f"\n[DATA] Loaded {len(templates)}/7 Terraform templates")
 
 
 def test_load_code_templates():
@@ -112,12 +112,12 @@ def test_load_code_templates():
                 has_marker = any(marker in content for marker in markers)
                 assert has_marker, f"{template_name}: Missing language-specific markers"
             
-            print(f"✅ code/{template_name}.txt: {len(content)} chars")
+            print(f"[OK] code/{template_name}.txt: {len(content)} chars")
         except Exception as e:
-            print(f"❌ code/{template_name}.txt: {e}")
+            print(f"[FAIL] code/{template_name}.txt: {e}")
             raise
     
-    print(f"\n📊 Loaded {len(templates)}/9 code templates")
+    print(f"\n[DATA] Loaded {len(templates)}/9 code templates")
 
 
 def test_get_infrastructure_template():
@@ -142,12 +142,12 @@ def test_get_infrastructure_template():
                 
                 # PIY should fall back to generic since no specific template exists
                 if family == "PIY":
-                    print(f"✅ {family} ({infra_type}): {len(content)} chars (using generic fallback)")
+                    print(f"[OK] {family} ({infra_type}): {len(content)} chars (using generic fallback)")
                 else:
-                    print(f"✅ {family} ({infra_type}): {len(content)} chars")
+                    print(f"[OK] {family} ({infra_type}): {len(content)} chars")
                     
             except Exception as e:
-                print(f"❌ {family} ({infra_type}): {e}")
+                print(f"[FAIL] {family} ({infra_type}): {e}")
                 raise
 
 
@@ -180,14 +180,14 @@ def test_get_code_template():
                 
                 # Check if using specific or generic template
                 if family in ["IAM", "MLA"] and language == "python":
-                    print(f"✅ {family} ({language}): {len(content)} chars (family-specific)")
+                    print(f"[OK] {family} ({language}): {len(content)} chars (family-specific)")
                 elif family == "IAM" and language in ["csharp", "powershell"]:
-                    print(f"✅ {family} ({language}): {len(content)} chars (family-specific)")
+                    print(f"[OK] {family} ({language}): {len(content)} chars (family-specific)")
                 else:
-                    print(f"✅ {family} ({language}): {len(content)} chars (using generic)")
+                    print(f"[OK] {family} ({language}): {len(content)} chars (using generic)")
                     
             except Exception as e:
-                print(f"❌ {family} ({language}): {e}")
+                print(f"[FAIL] {family} ({language}): {e}")
                 raise
 
 
@@ -211,7 +211,7 @@ def test_template_content_quality():
         assert "//" in content or "/*" in content, \
             f"{family}: Missing comments/documentation"
         
-        print(f"✅ {family}: Has params, resources, and documentation")
+        print(f"[OK] {family}: Has params, resources, and documentation")
     
     # Test Terraform templates
     print("\nTerraform templates:")
@@ -229,7 +229,7 @@ def test_template_content_quality():
         # Should have comments
         assert "#" in content, f"{family}: Missing comments"
         
-        print(f"✅ {family}: Has provider/resource, variables, and comments")
+        print(f"[OK] {family}: Has provider/resource, variables, and comments")
     
     # Test code templates
     print("\nCode templates:")
@@ -237,19 +237,19 @@ def test_template_content_quality():
     assert "import" in content, "iam_python: Missing imports"
     assert "def " in content or "class " in content, "iam_python: Missing functions/classes"
     assert "#" in content or '"""' in content, "iam_python: Missing comments/docstrings"
-    print(f"✅ iam_python: Has imports, functions/classes, and documentation")
+    print(f"[OK] iam_python: Has imports, functions/classes, and documentation")
     
     content = load_template("code", "iam_csharp")
     assert "using" in content, "iam_csharp: Missing using statements"
     assert "class " in content or "public " in content, "iam_csharp: Missing classes/methods"
     assert "//" in content or "/*" in content, "iam_csharp: Missing comments"
-    print(f"✅ iam_csharp: Has using statements, classes, and documentation")
+    print(f"[OK] iam_csharp: Has using statements, classes, and documentation")
     
     content = load_template("code", "iam_powershell")
     assert "param" in content or "function" in content, "iam_powershell: Missing functions"
     assert "$" in content, "iam_powershell: Missing PowerShell variables"
     assert "#" in content or "<#" in content, "iam_powershell: Missing comments"
-    print(f"✅ iam_powershell: Has functions, variables, and documentation")
+    print(f"[OK] iam_powershell: Has functions, variables, and documentation")
 
 
 def test_template_sizes():
@@ -289,11 +289,11 @@ def test_template_sizes():
         avg_size = sum(sizes) / len(sizes)
         min_size = min(sizes)
         max_size = max(sizes)
-        print(f"📊 {category.capitalize()} templates:")
+        print(f"[DATA] {category.capitalize()} templates:")
         print(f"   Average: {avg_size:.0f} chars")
         print(f"   Range: {min_size}-{max_size} chars")
     
-    print(f"\n✅ All templates within reasonable size ranges")
+    print(f"\n[OK] All templates within reasonable size ranges")
 
 
 def test_fallback_behavior():
@@ -304,23 +304,23 @@ def test_fallback_behavior():
     bicep_piy = get_infrastructure_template("PIY", "bicep")
     bicep_generic = load_template("bicep", "generic")
     assert bicep_piy == bicep_generic, "PIY should fallback to generic Bicep"
-    print("✅ PIY Bicep falls back to generic")
+    print("[OK] PIY Bicep falls back to generic")
     
     terraform_piy = get_infrastructure_template("PIY", "terraform")
     terraform_generic = load_template("terraform", "generic")
     assert terraform_piy == terraform_generic, "PIY should fallback to generic Terraform"
-    print("✅ PIY Terraform falls back to generic")
+    print("[OK] PIY Terraform falls back to generic")
     
     # Test code fallback (AFR has no specific code templates)
     code_afr_python = get_code_template("AFR", "python")
     code_generic_python = load_template("code", "generic_python")
     assert code_afr_python == code_generic_python, "AFR Python should fallback to generic"
-    print("✅ AFR Python falls back to generic")
+    print("[OK] AFR Python falls back to generic")
     
     code_cna_csharp = get_code_template("CNA", "csharp")
     code_generic_csharp = load_template("code", "generic_csharp")
     assert code_cna_csharp == code_generic_csharp, "CNA C# should fallback to generic"
-    print("✅ CNA C# falls back to generic")
+    print("[OK] CNA C# falls back to generic")
 
 
 if __name__ == "__main__":
@@ -339,7 +339,7 @@ if __name__ == "__main__":
         test_fallback_behavior()
         
         print("\n" + "=" * 60)
-        print("✅ ALL TEMPLATE TESTS PASSED")
+        print("[OK] ALL TEMPLATE TESTS PASSED")
         print("=" * 60)
     except AssertionError as e:
         print(f"\n[FAIL] TEST FAILED: {e}")

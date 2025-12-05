@@ -42,7 +42,7 @@ async def main():
     disclaimer = get_coverage_disclaimer()
     print(disclaimer)
     
-    print("\n✅ All audit tool tests completed!")
+    print("\n[OK] All audit tool tests completed!")
 
 
 if __name__ == "__main__":

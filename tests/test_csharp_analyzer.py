@@ -1192,9 +1192,9 @@ def test_missing_security_monitoring():
     
     findings = [f for f in result.findings if f.requirement_id == "KSI-MLA-03"]
     if not findings:
-        print("✗ Missing security monitoring test failed: no findings")
+        print("[FAIL] Missing security monitoring test failed: no findings")
     elif findings[0].severity != Severity.HIGH:
-        print(f"✗ Missing security monitoring test failed: wrong severity {findings[0].severity}")
+        print(f"[FAIL] Missing security monitoring test failed: wrong severity {findings[0].severity}")
     else:
         print("[PASS] Missing security monitoring detection test passed")
 
@@ -1251,7 +1251,7 @@ def test_missing_anomaly_detection():
     if not findings:
         print("skipped (anomaly detection check not fully implemented)")
     elif findings[0].severity not in [Severity.MEDIUM, Severity.HIGH]:
-        print(f"✗ Missing anomaly detection test failed: wrong severity {findings[0].severity}")
+        print(f"[FAIL] Missing anomaly detection test failed: wrong severity {findings[0].severity}")
     else:
         print("[PASS] Missing anomaly detection test passed")
 
@@ -1301,9 +1301,9 @@ def test_missing_performance_monitoring():
     
     findings = [f for f in result.findings if f.requirement_id == "KSI-MLA-06"]
     if not findings:
-        print("✗ Missing performance monitoring test failed: no findings")
+        print("[FAIL] Missing performance monitoring test failed: no findings")
     elif findings[0].severity != Severity.HIGH:
-        print(f"✗ Missing performance monitoring test failed: wrong severity {findings[0].severity}")
+        print(f"[FAIL] Missing performance monitoring test failed: wrong severity {findings[0].severity}")
     else:
         print("[PASS] Missing performance monitoring detection test passed")
 
@@ -1368,9 +1368,9 @@ def test_missing_incident_response():
     
     findings = [f for f in result.findings if f.requirement_id == "KSI-INR-01"]
     if not findings:
-        print("✗ Missing incident response test failed: no findings")
+        print("[FAIL] Missing incident response test failed: no findings")
     elif findings[0].severity != Severity.HIGH:
-        print(f"✗ Missing incident response test failed: wrong severity {findings[0].severity}")
+        print(f"[FAIL] Missing incident response test failed: wrong severity {findings[0].severity}")
     else:
         print("[PASS] Missing incident response detection test passed")
 
@@ -1443,9 +1443,9 @@ def test_missing_configuration_management():
     
     findings = [f for f in result.findings if f.requirement_id == "KSI-CMT-01"]
     if not findings:
-        print("✗ Missing configuration management test failed: no findings")
+        print("[FAIL] Missing configuration management test failed: no findings")
     elif findings[0].severity != Severity.HIGH:
-        print(f"✗ Missing configuration management test failed: wrong severity {findings[0].severity}")
+        print(f"[FAIL] Missing configuration management test failed: wrong severity {findings[0].severity}")
     else:
         print("[PASS] Missing configuration management detection test passed")
 
@@ -1505,9 +1505,9 @@ def test_missing_version_control_enforcement():
     
     findings = [f for f in result.findings if f.requirement_id == "KSI-CMT-02"]
     if not findings:
-        print("✗ Missing version control enforcement test failed: no findings")
+        print("[FAIL] Missing version control enforcement test failed: no findings")
     elif findings[0].severity != Severity.HIGH:
-        print(f"✗ Missing version control enforcement test failed: wrong severity {findings[0].severity}")
+        print(f"[FAIL] Missing version control enforcement test failed: wrong severity {findings[0].severity}")
     else:
         print("[PASS] Missing version control enforcement detection test passed")
 
@@ -1532,7 +1532,7 @@ def test_version_control_enforcement_implemented():
     
     findings = [f for f in result.findings if f.requirement_id == "KSI-CMT-02"]
     if findings and not findings[0].good_practice:
-        print("✗ Version control enforcement test failed: false positive")
+        print("[FAIL] Version control enforcement test failed: false positive")
     else:
         print("[PASS] Version control enforcement implementation test passed")
 
@@ -1555,9 +1555,9 @@ def test_missing_automated_testing():
     
     findings = [f for f in result.findings if f.requirement_id == "KSI-CMT-03"]
     if not findings:
-        print("✗ Missing automated testing test failed: no findings")
+        print("[FAIL] Missing automated testing test failed: no findings")
     elif findings[0].severity != Severity.MEDIUM:
-        print(f"✗ Missing automated testing test failed: wrong severity {findings[0].severity}")
+        print(f"[FAIL] Missing automated testing test failed: wrong severity {findings[0].severity}")
     else:
         print("[PASS] Missing automated testing detection test passed")
 
@@ -1626,9 +1626,9 @@ def test_missing_audit_logging():
     
     findings = [f for f in result.findings if f.requirement_id == "KSI-AFR-01"]
     if not findings:
-        print("✗ Missing audit logging test failed: no findings")
+        print("[FAIL] Missing audit logging test failed: no findings")
     elif findings[0].severity != Severity.HIGH:
-        print(f"✗ Missing audit logging test failed: wrong severity {findings[0].severity}")
+        print(f"[FAIL] Missing audit logging test failed: wrong severity {findings[0].severity}")
     else:
         print("[PASS] Missing audit logging detection test passed")
 
@@ -1689,9 +1689,9 @@ def test_missing_log_integrity():
     
     findings = [f for f in result.findings if f.requirement_id == "KSI-AFR-02"]
     if not findings:
-        print("✗ Missing log integrity test failed: no findings")
+        print("[FAIL] Missing log integrity test failed: no findings")
     elif findings[0].severity != Severity.HIGH:
-        print(f"✗ Missing log integrity test failed: wrong severity {findings[0].severity}")
+        print(f"[FAIL] Missing log integrity test failed: wrong severity {findings[0].severity}")
     else:
         print("[PASS] Missing log integrity detection test passed")
 
@@ -1750,9 +1750,9 @@ def test_missing_key_management():
     
     findings = [f for f in result.findings if f.requirement_id == "KSI-CED-01"]
     if not findings:
-        print("✗ Missing key management test failed: no findings")
+        print("[FAIL] Missing key management test failed: no findings")
     elif findings[0].severity != Severity.HIGH:
-        print(f"✗ Missing key management test failed: wrong severity {findings[0].severity}")
+        print(f"[FAIL] Missing key management test failed: wrong severity {findings[0].severity}")
     else:
         print("[PASS] Missing key management detection test passed")
 

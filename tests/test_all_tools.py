@@ -19,10 +19,10 @@ async def test_all_tools():
     print("\n[1/9] Loading data...")
     try:
         await loader.load_data()
-        print("✓ Data loaded successfully")
+        print("[PASS] Data loaded successfully")
     except Exception as e:
         if "rate limit" in str(e).lower() or "Failed to fetch" in str(e):
-            print(f"⚠ Skipping test due to GitHub API rate limit or network issue")
+            print(f"[WARN] Skipping test due to GitHub API rate limit or network issue")
             print(f"  This is expected in CI environments with frequent runs")
             return True  # Pass the test - this is not a code issue
         raise  # Re-raise if it's a different error
@@ -31,50 +31,50 @@ async def test_all_tools():
     print("\n[2/9] Testing get_control...")
     control = loader.get_control("FRD-ALL-01")
     if control and "term" in control:
-        print(f"✓ Found control: {control['term']}")
+        print(f"[PASS] Found control: {control['term']}")
     else:
-        print("✗ Failed to get control")
+        print("[FAIL] Failed to get control")
     
     # Test get_family_controls
     print("\n[3/9] Testing get_family_controls...")
     frd_controls = loader.get_family_controls("FRD")
-    print(f"✓ Found {len(frd_controls)} FRD requirements")
+    print(f"[PASS] Found {len(frd_controls)} FRD requirements")
     
     # Test search_controls
     print("\n[4/9] Testing search_controls...")
     search_results = loader.search_controls("cloud service")
-    print(f"✓ Found {len(search_results)} matches for 'cloud service'")
+    print(f"[PASS] Found {len(search_results)} matches for 'cloud service'")
     
     # Test get_definition
     print("\n[5/9] Testing get_definition...")
     definition = loader.get_definition("Federal Customer Data")
     if definition and "definition" in definition:
-        print(f"✓ Found definition: {definition['definition'][:60]}...")
+        print(f"[PASS] Found definition: {definition['definition'][:60]}...")
     else:
-        print("✗ Failed to get definition")
+        print("[FAIL] Failed to get definition")
     
     # Test list_all_definitions
     print("\n[6/9] Testing list_all_definitions...")
     all_defs = loader.list_all_definitions()
-    print(f"✓ Found {len(all_defs)} total definitions")
+    print(f"[PASS] Found {len(all_defs)} total definitions")
     
     # Test search_definitions
     print("\n[7/9] Testing search_definitions...")
     def_results = loader.search_definitions("federal")
-    print(f"✓ Found {len(def_results)} definitions matching 'federal'")
+    print(f"[PASS] Found {len(def_results)} definitions matching 'federal'")
     
     # Test get_ksi
     print("\n[8/9] Testing get_ksi...")
     ksi = loader.get_ksi("KSI-AFR-01")
     if ksi and "name" in ksi:
-        print(f"✓ Found KSI: {ksi['name']}")
+        print(f"[PASS] Found KSI: {ksi['name']}")
     else:
-        print("✗ Failed to get KSI")
+        print("[FAIL] Failed to get KSI")
     
     # Test list_all_ksi
     print("\n[9/9] Testing list_all_ksi...")
     all_ksi = loader.list_all_ksi()
-    print(f"✓ Found {len(all_ksi)} total Key Security Indicators")
+    print(f"[PASS] Found {len(all_ksi)} total Key Security Indicators")
     
     # Summary
     print("\n" + "=" * 80)
@@ -94,7 +94,7 @@ async def test_all_tools():
                     if r.get('document') == doc_name])
         print(f"  {doc_name:4s} - {doc.get('name', 'Unknown'):40s} ({count:3d} items)")
     
-    print("\n✓ All tests passed!")
+    print("\n[PASS] All tests passed!")
     return True
 
 if __name__ == "__main__":
@@ -102,7 +102,7 @@ if __name__ == "__main__":
         result = asyncio.run(test_all_tools())
         sys.exit(0 if result else 1)
     except Exception as e:
-        print(f"\n✗ Error: {e}")
+        print(f"\n[FAIL] Error: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)

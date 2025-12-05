@@ -50,7 +50,7 @@ def test_false_positive_in_comments():
     secret_findings_v1 = [f for f in result_v1.findings if f.requirement_id == "KSI-SVC-06" and not f.good_practice]
     print(f"  Found {len(secret_findings_v1)} issue(s)")
     if secret_findings_v1:
-        print(f"  ❌ FALSE POSITIVE: Flagged password in comment")
+        print(f"  [FAIL] FALSE POSITIVE: Flagged password in comment")
     
     # AST analyzer
     if TREE_SITTER_AVAILABLE and CSharpAnalyzer:
@@ -60,11 +60,11 @@ def test_false_positive_in_comments():
         secret_findings_v2 = [f for f in result_v2.findings if f.requirement_id == "KSI-SVC-06" and not f.good_practice]
         print(f"  Found {len(secret_findings_v2)} issue(s)")
         if not secret_findings_v2:
-            print(f"  ✅ CORRECT: Ignored password in comment")
+            print(f"  [OK] CORRECT: Ignored password in comment")
         
-        print(f"\n📊 Improvement: {len(secret_findings_v1) - len(secret_findings_v2)} false positive(s) eliminated")
+        print(f"\n[DATA] Improvement: {len(secret_findings_v1) - len(secret_findings_v2)} false positive(s) eliminated")
     else:
-        print("\n⚠️  AST analyzer not available (install tree-sitter)")
+        print("\n[WARN]  AST analyzer not available (install tree-sitter)")
 
 
 def test_controller_inheritance():
@@ -117,11 +117,11 @@ def test_controller_inheritance():
         print(f"  Found {len(good_practices_v2)} good practice(s)")
         
         if len(good_practices_v2) > 0:
-            print(f"  ✅ CORRECT: Recognized properly secured controller")
+            print(f"  [OK] CORRECT: Recognized properly secured controller")
         
-        print(f"\n📊 AST understands: class inheritance, attribute scope, method-level security")
+        print(f"\n[DATA] AST understands: class inheritance, attribute scope, method-level security")
     else:
-        print("\n⚠️  AST analyzer not available")
+        print("\n[WARN]  AST analyzer not available")
 
 
 def test_configuration_vs_hardcoded():
@@ -132,10 +132,10 @@ def test_configuration_vs_hardcoded():
     
     public class ConfigExample
     {
-        // ❌ BAD: Hardcoded secret
+        // [FAIL] BAD: Hardcoded secret
         private const string ApiKey = "sk-1234567890abcdefghijklmnopqrstuvwxyz";
         
-        // ✅ GOOD: From configuration
+        // [OK] GOOD: From configuration
         private readonly string _connectionString;
         
         public ConfigExample(IConfiguration config)
@@ -143,7 +143,7 @@ def test_configuration_vs_hardcoded():
             _connectionString = config["Database:ConnectionString"];
         }
         
-        // ✅ GOOD: From Key Vault
+        // [OK] GOOD: From Key Vault
         public async Task<string> GetApiKeyAsync()
         {
             var client = new SecretClient(
@@ -181,11 +181,11 @@ def test_configuration_vs_hardcoded():
         print(f"  Found {len(secret_good_v2)} good practice(s)")
         
         if len(secret_issues_v2) == 1 and len(secret_good_v2) >= 1:
-            print(f"  ✅ CORRECT: Identified hardcoded secret and Key Vault usage")
+            print(f"  [OK] CORRECT: Identified hardcoded secret and Key Vault usage")
         
-        print(f"\n📊 AST understands: variable scope, assignment context, secure sources")
+        print(f"\n[DATA] AST understands: variable scope, assignment context, secure sources")
     else:
-        print("\n⚠️  AST analyzer not available")
+        print("\n[WARN]  AST analyzer not available")
 
 
 def test_method_level_authorization():
@@ -198,16 +198,16 @@ def test_method_level_authorization():
     [Route("api/[controller]")]
     public class MixedSecurityController : ControllerBase
     {
-        // ❌ BAD: No authorization
+        // [FAIL] BAD: No authorization
         [HttpGet("public")]
         public IActionResult GetPublicData() => Ok();
         
-        // ✅ GOOD: Requires authentication
+        // [OK] GOOD: Requires authentication
         [HttpGet("secure")]
         [Authorize]
         public IActionResult GetSecureData() => Ok();
         
-        // ✅ GOOD: Requires specific role
+        // [OK] GOOD: Requires specific role
         [HttpPost("admin")]
         [Authorize(Roles = "Admin")]
         public IActionResult AdminAction() => Ok();
@@ -232,13 +232,13 @@ def test_method_level_authorization():
         print(f"  Found {len(auth_good)} properly secured method(s)")
         
         if len(auth_issues) == 1:
-            print(f"  ✅ CORRECT: Identified GetPublicData() as unprotected")
+            print(f"  [OK] CORRECT: Identified GetPublicData() as unprotected")
             for finding in auth_issues:
                 print(f"     Methods without auth: {finding.description.split(':')[1] if ':' in finding.description else finding.description}")
         
-        print(f"\n📊 AST capability: Per-method security analysis, not just class-level")
+        print(f"\n[DATA] AST capability: Per-method security analysis, not just class-level")
     else:
-        print("⚠️  AST analyzer not available")
+        print("[WARN]  AST analyzer not available")
 
 
 def print_summary():
@@ -247,27 +247,27 @@ def print_summary():
     print("SUMMARY: AST-Based Analysis Improvements")
     print("="*70)
     print()
-    print("✅ Semantic Understanding:")
+    print("[OK] Semantic Understanding:")
     print("   - Ignores comments and string literals appropriately")
     print("   - Understands class inheritance (Controller, ControllerBase)")
     print("   - Recognizes attribute scope (class vs method level)")
     print()
-    print("✅ Higher Precision:")
+    print("[OK] Higher Precision:")
     print("   - Distinguishes hardcoded values from configuration retrieval")
     print("   - Identifies actual code vs documentation examples")
     print("   - Tracks variable context and data flow")
     print()
-    print("✅ Fewer False Positives:")
+    print("[OK] Fewer False Positives:")
     print("   - Doesn't flag commented-out bad examples")
     print("   - Understands when secrets come from Key Vault/Configuration")
     print("   - Recognizes test/placeholder values in context")
     print()
-    print("✅ Better Coverage:")
+    print("[OK] Better Coverage:")
     print("   - Analyzes each method individually")
     print("   - Understands complex authorization scenarios")
     print("   - Detects mixed security patterns in same class")
     print()
-    print("📈 Next Steps:")
+    print("[EMOJI] Next Steps:")
     print("   1. Install tree-sitter: pip install tree-sitter tree-sitter-c-sharp")
     print("   2. Review results above and compare analyzers")
     print("   3. Decide to adopt AST-based approach")
@@ -281,7 +281,7 @@ if __name__ == "__main__":
     print("="*70)
     
     if not TREE_SITTER_AVAILABLE:
-        print("\n⚠️  tree-sitter not installed. Install with:")
+        print("\n[WARN]  tree-sitter not installed. Install with:")
         print("   pip install tree-sitter tree-sitter-c-sharp")
         print("\nRunning regex analyzer only for comparison...")
     

@@ -48,18 +48,18 @@ def test_load_all_prompts():
                 'chars': char_count,
                 'lines': line_count
             })
-            print(f"✅ {prompt_name}: {char_count} chars, {line_count} lines")
+            print(f"[OK] {prompt_name}: {char_count} chars, {line_count} lines")
         except Exception as e:
             results.append({
                 'name': prompt_name,
                 'loaded': False,
                 'error': str(e)
             })
-            print(f"❌ {prompt_name}: {e}")
+            print(f"[FAIL] {prompt_name}: {e}")
     
     # Summary
     loaded_count = sum(1 for r in results if r['loaded'])
-    print(f"\n📊 Loaded {loaded_count}/{len(prompts)} prompts")
+    print(f"\n[DATA] Loaded {loaded_count}/{len(prompts)} prompts")
     
     # All should load
     assert loaded_count == len(prompts), f"Expected all {len(prompts)} prompts to load, but only {loaded_count} loaded"
@@ -163,9 +163,9 @@ def test_prompt_content_structure():
                 missing_keywords.append(keyword)
         
         if missing_keywords:
-            print(f"⚠️  {prompt_name}: Missing keywords: {missing_keywords}")
+            print(f"[WARN]  {prompt_name}: Missing keywords: {missing_keywords}")
         else:
-            print(f"✅ {prompt_name}: All {len(test_case['expected_keywords'])} keywords found, {len(content)} chars")
+            print(f"[OK] {prompt_name}: All {len(test_case['expected_keywords'])} keywords found, {len(content)} chars")
         
         # Don't fail on missing keywords, just warn
         # Some prompts may use alternate terminology
@@ -178,20 +178,20 @@ def test_get_prompt_with_default():
     # Test with valid prompt
     content = get_prompt("initial_assessment_roadmap")
     assert len(content) > 0
-    print(f"✅ Valid prompt: {len(content)} chars")
+    print(f"[OK] Valid prompt: {len(content)} chars")
     
     # Test with invalid prompt and default
     default_text = "Default prompt text"
     content = get_prompt("nonexistent_prompt", default=default_text)
     assert content == default_text
-    print(f"✅ Invalid prompt with default: '{content}'")
+    print(f"[OK] Invalid prompt with default: '{content}'")
     
     # Test with invalid prompt and no default (should raise)
     try:
         get_prompt("nonexistent_prompt")
         assert False, "Should have raised FileNotFoundError"
     except FileNotFoundError:
-        print(f"✅ Invalid prompt without default: Raised FileNotFoundError as expected")
+        print(f"[OK] Invalid prompt without default: Raised FileNotFoundError as expected")
 
 
 def test_prompt_sizes():
@@ -230,11 +230,11 @@ def test_prompt_sizes():
     min_size = min(sizes)
     max_size = max(sizes)
     
-    print(f"📊 Prompt sizes:")
+    print(f"[DATA] Prompt sizes:")
     print(f"   Average: {avg_size:.0f} chars")
     print(f"   Min: {min_size} chars")
     print(f"   Max: {max_size} chars")
-    print(f"✅ All prompts within reasonable size ranges")
+    print(f"[OK] All prompts within reasonable size ranges")
 
 
 if __name__ == "__main__":
@@ -249,7 +249,7 @@ if __name__ == "__main__":
         test_prompt_sizes()
         
         print("\n" + "=" * 60)
-        print("✅ ALL PROMPT TESTS PASSED")
+        print("[OK] ALL PROMPT TESTS PASSED")
         print("=" * 60)
     except AssertionError as e:
         print(f"\n[FAIL] TEST FAILED: {e}")

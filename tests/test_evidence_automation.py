@@ -37,10 +37,10 @@ async def test_infrastructure_code_generation():
         assert len(bicep_result) > 0, "Bicep template is empty"
         assert "resource" in bicep_result.lower() or "param" in bicep_result.lower(), "Doesn't look like Bicep code"
         assert "IAM" in bicep_result or "Identity" in bicep_result, "KSI-IAM content missing"
-        print(f"✓ Generated Bicep template ({len(bicep_result)} characters)")
+        print(f"[PASS] Generated Bicep template ({len(bicep_result)} characters)")
         print(f"  Contains: resource definitions, parameters, deployment instructions")
     except Exception as e:
-        print(f"✗ Failed: {e}")
+        print(f"[FAIL] Failed: {e}")
         raise
     
     # Test 2: Generate Terraform template for MLA KSI
@@ -55,10 +55,10 @@ async def test_infrastructure_code_generation():
         assert len(terraform_result) > 0, "Terraform template is empty"
         assert "resource" in terraform_result.lower() or "variable" in terraform_result.lower(), "Doesn't look like Terraform code"
         assert "MLA" in terraform_result or "Monitoring" in terraform_result or "Logging" in terraform_result, "KSI-MLA content missing"
-        print(f"✓ Generated Terraform template ({len(terraform_result)} characters)")
+        print(f"[PASS] Generated Terraform template ({len(terraform_result)} characters)")
         print(f"  Contains: resource blocks, variables, provider configuration")
     except Exception as e:
-        print(f"✗ Failed: {e}")
+        print(f"[FAIL] Failed: {e}")
         raise
     
     # Test 3: Generate Python evidence collection code
@@ -73,10 +73,10 @@ async def test_infrastructure_code_generation():
         assert len(python_result) > 0, "Python code is empty"
         assert "import" in python_result or "def " in python_result or "async def " in python_result, "Doesn't look like Python code"
         assert "azure" in python_result.lower() or "credential" in python_result.lower(), "Azure SDK code missing"
-        print(f"✓ Generated Python code ({len(python_result)} characters)")
+        print(f"[PASS] Generated Python code ({len(python_result)} characters)")
         print(f"  Contains: imports, authentication, evidence collection logic")
     except Exception as e:
-        print(f"✗ Failed: {e}")
+        print(f"[FAIL] Failed: {e}")
         raise
     
     # Test 4: Generate C# evidence collection code
@@ -91,10 +91,10 @@ async def test_infrastructure_code_generation():
         assert len(csharp_result) > 0, "C# code is empty"
         assert "using" in csharp_result or "namespace" in csharp_result or "class" in csharp_result, "Doesn't look like C# code"
         assert "Azure" in csharp_result, "Azure SDK code missing"
-        print(f"✓ Generated C# code ({len(csharp_result)} characters)")
+        print(f"[PASS] Generated C# code ({len(csharp_result)} characters)")
         print(f"  Contains: using statements, classes, async methods")
     except Exception as e:
-        print(f"✗ Failed: {e}")
+        print(f"[FAIL] Failed: {e}")
         raise
     
     # Test 5: Generate PowerShell evidence collection code
@@ -109,10 +109,10 @@ async def test_infrastructure_code_generation():
         assert len(powershell_result) > 0, "PowerShell code is empty"
         assert "$" in powershell_result or "param" in powershell_result.lower() or "function" in powershell_result.lower(), "Doesn't look like PowerShell code"
         assert "Az." in powershell_result or "Connect-Az" in powershell_result, "Azure PowerShell code missing"
-        print(f"✓ Generated PowerShell code ({len(powershell_result)} characters)")
+        print(f"[PASS] Generated PowerShell code ({len(powershell_result)} characters)")
         print(f"  Contains: cmdlets, parameters, Azure modules")
     except Exception as e:
-        print(f"✗ Failed: {e}")
+        print(f"[FAIL] Failed: {e}")
         raise
     
     # Test 6: Generate architecture guidance
@@ -125,22 +125,22 @@ async def test_infrastructure_code_generation():
         assert len(arch_result) > 0, "Architecture guidance is empty"
         assert "architecture" in arch_result.lower(), "Architecture content missing"
         assert "azure" in arch_result.lower() or "component" in arch_result.lower(), "Technical architecture missing"
-        print(f"✓ Generated architecture guidance ({len(arch_result)} characters)")
+        print(f"[PASS] Generated architecture guidance ({len(arch_result)} characters)")
         print(f"  Contains: components, data flow, security, scaling")
     except Exception as e:
-        print(f"✗ Failed: {e}")
+        print(f"[FAIL] Failed: {e}")
         raise
     
     print("\n" + "=" * 80)
     print("RESULTS")
     print("=" * 80)
-    print("✓ Bicep template generation works")
-    print("✓ Terraform template generation works")
-    print("✓ Python code generation works")
-    print("✓ C# code generation works")
-    print("✓ PowerShell code generation works")
-    print("✓ Architecture guidance generation works")
-    print("\n✅ All evidence automation tools passed!")
+    print("[PASS] Bicep template generation works")
+    print("[PASS] Terraform template generation works")
+    print("[PASS] Python code generation works")
+    print("[PASS] C# code generation works")
+    print("[PASS] PowerShell code generation works")
+    print("[PASS] Architecture guidance generation works")
+    print("\n[OK] All evidence automation tools passed!")
 
 
 async def test_template_variations():
@@ -173,9 +173,9 @@ async def test_template_variations():
                 "bicep"
             )
             templates[family] = result
-            print(f"✓ Generated {len(result)} characters")
+            print(f"[PASS] Generated {len(result)} characters")
         except Exception as e:
-            print(f"✗ Failed: {e}")
+            print(f"[FAIL] Failed: {e}")
             raise
     
     # Verify templates are different (not just generic)
@@ -187,21 +187,21 @@ async def test_template_variations():
     if "IAM" in templates:
         assert any(keyword in templates["IAM"] for keyword in ["identity", "Entra", "role", "RBAC", "permission"]), \
             "IAM template should contain identity-related content"
-        print("✓ IAM template contains identity-specific resources")
+        print("[PASS] IAM template contains identity-specific resources")
     
     # Check MLA template has monitoring-related content
     if "MLA" in templates:
         assert any(keyword in templates["MLA"] for keyword in ["Monitor", "Log", "Analytics", "diagnostic", "alert"]), \
             "MLA template should contain monitoring-related content"
-        print("✓ MLA template contains monitoring-specific resources")
+        print("[PASS] MLA template contains monitoring-specific resources")
     
     # Check AFR template has audit-related content
     if "AFR" in templates:
         assert any(keyword in templates["AFR"] for keyword in ["audit", "storage", "immutab", "retention", "compliance"]), \
             "AFR template should contain audit-related content"
-        print("✓ AFR template contains audit-specific resources")
+        print("[PASS] AFR template contains audit-specific resources")
     
-    print("\n✅ Template variations test passed!")
+    print("\n[OK] Template variations test passed!")
 
 
 async def main():
@@ -211,14 +211,14 @@ async def main():
         await test_template_variations()
         
         print("\n" + "=" * 80)
-        print("✅ ALL EVIDENCE AUTOMATION TESTS PASSED!")
+        print("[OK] ALL EVIDENCE AUTOMATION TESTS PASSED!")
         print("=" * 80)
         
     except AssertionError as e:
-        print(f"\n✗ Test failed: {e}")
+        print(f"\n[FAIL] Test failed: {e}")
         exit(1)
     except Exception as e:
-        print(f"\n✗ Unexpected error: {e}")
+        print(f"\n[FAIL] Unexpected error: {e}")
         import traceback
         traceback.print_exc()
         exit(1)

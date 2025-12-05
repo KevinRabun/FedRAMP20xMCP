@@ -17,7 +17,7 @@ async def test_docs():
     # Load documentation
     docs = await loader.load_documentation()
     
-    print(f"\n✓ Loaded {len(docs)} documentation files")
+    print(f"\n[PASS] Loaded {len(docs)} documentation files")
     print("\nAvailable files:")
     for filename in sorted(docs.keys()):
         size = len(docs[filename])
@@ -27,7 +27,7 @@ async def test_docs():
     print("\n" + "-" * 50)
     print("Testing search for 'Key Security Indicator'...")
     results = loader.search_documentation("Key Security Indicator")
-    print(f"✓ Found {len(results)} matches")
+    print(f"[PASS] Found {len(results)} matches")
     
     if results:
         print(f"\nFirst match in {results[0]['filename']}:")
@@ -39,15 +39,15 @@ async def test_docs():
     content = loader.get_documentation_file("overview.md")
     if content:
         lines = content.split('\n')
-        print(f"✓ Retrieved file with {len(lines)} lines")
+        print(f"[PASS] Retrieved file with {len(lines)} lines")
         print(f"\nFirst 5 lines:")
         for line in lines[:5]:
             print(f"  {line}")
     else:
-        print("✗ File not found")
+        print("[FAIL] File not found")
     
     print("\n" + "-" * 50)
-    print("✓ All tests passed!")
+    print("[PASS] All tests passed!")
 
 if __name__ == "__main__":
     asyncio.run(test_docs())
