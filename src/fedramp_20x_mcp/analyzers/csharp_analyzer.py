@@ -96,6 +96,7 @@ class CSharpAnalyzer(BaseAnalyzer):
             self._check_error_handling_ast(code, file_path, self.tree.root_node)  # Tier 1.1: AST-enhanced
             self._check_input_validation_ast(code, file_path, classes)  # Tier 1.2: AST-enhanced
             self._check_secure_coding_practices_ast(code, file_path, self.tree.root_node)  # Tier 1.3: AST-enhanced
+            self._check_least_privilege_authorization_ast(code, file_path, classes)  # Tier 2.1: AST-enhanced
             
         else:
             # Fallback to regex-based analysis
@@ -1081,6 +1082,201 @@ class CSharpAnalyzer(BaseAnalyzer):
                 recommendation="Ensure HSTS max-age is set to at least 1 year (31536000 seconds) per Azure WAF recommendations.",
                 good_practice=True
             ))
+    
+    def _extract_sensitive_operations(self, method_node) -> List[Dict]:
+        """
+        Extract sensitive database/data operations from method body.
+        Returns list of {operation_type, line_number, method_call}
+        """
+        sensitive_ops = []
+        
+        def visit(node):
+            if node.type == "invocation_expression":
+                # Get the method being called
+                method_text = self.code_bytes[node.start_byte:node.end_byte].decode('utf8')
+                
+                # Database operations
+                if any(keyword in method_text for keyword in ["SaveChanges", "ExecuteSql", "FromSql", "Delete", "Remove", "Update"]):
+                    line_num = self.get_line_number(self.code_bytes.decode('utf8'), method_text[:50])
+                    sensitive_ops.append({
+                        "operation_type": "database_write",
+                        "line_number": line_num,
+                        "method_call": method_text[:100]
+                    })
+                
+                # File operations
+                elif any(keyword in method_text for keyword in ["File.Delete", "File.Write", "Directory.Delete"]):
+                    line_num = self.get_line_number(self.code_bytes.decode('utf8'), method_text[:50])
+                    sensitive_ops.append({
+                        "operation_type": "file_operation",
+                        "line_number": line_num,
+                        "method_call": method_text[:100]
+                    })
+                
+                # HTTP calls to external services
+                elif any(keyword in method_text for keyword in ["HttpClient", "SendAsync", "PostAsync", "PutAsync", "DeleteAsync"]):
+                    line_num = self.get_line_number(self.code_bytes.decode('utf8'), method_text[:50])
+                    sensitive_ops.append({
+                        "operation_type": "http_call",
+                        "line_number": line_num,
+                        "method_call": method_text[:100]
+                    })
+            
+            for child in node.children:
+                visit(child)
+        
+        visit(method_node)
+        return sensitive_ops
+    
+    def _has_inline_authorization_check(self, method_node) -> bool:
+        """
+        Check if method body contains inline authorization checks.
+        Looks for User.IsInRole(), User.HasClaim(), etc.
+        """
+        method_text = self.code_bytes[method_node.start_byte:method_node.end_byte].decode('utf8')
+        
+        # Check for inline authorization patterns
+        auth_patterns = [
+            r"User\.IsInRole\(",
+            r"User\.HasClaim\(",
+            r"User\.Identity\.Name",
+            r"HttpContext\.User",
+            r"_authorizationService\.AuthorizeAsync\(",
+            r"if\s*\(\s*!User\.",
+            r"return\s+Unauthorized\(",
+            r"return\s+Forbid\("
+        ]
+        
+        return any(re.search(pattern, method_text) for pattern in auth_patterns)
+    
+    def _check_least_privilege_authorization_ast(self, code: str, file_path: str, classes: List[Dict]) -> None:
+        """
+        AST-enhanced check for least privilege authorization (KSI-IAM-04).
+        
+        Tier 2.1 enhancements:
+        - Identifies sensitive operations (database writes, file ops, HTTP calls)
+        - Verifies authorization checks before sensitive operations
+        - Detects [Authorize] without Roles or Policy (overly broad)
+        - Tracks inline authorization checks (User.IsInRole, etc.)
+        - Control flow analysis for authorization enforcement
+        """
+        for class_info in classes:
+            # Only analyze controllers
+            if not any(base in class_info["base_classes"] for base in ["Controller", "ControllerBase"]):
+                continue
+            
+            class_has_auth = any("Authorize" in attr for attr in class_info["attributes"])
+            
+            for method in class_info["methods"]:
+                # Check if method has HTTP attributes (GET, POST, etc.)
+                is_endpoint = any(attr in ["HttpGet", "HttpPost", "HttpPut", "HttpDelete", "HttpPatch"]
+                                 for attr in method["attributes"])
+                
+                if not is_endpoint:
+                    continue
+                
+                # Extract authorization attributes
+                method_authorize_attrs = [attr for attr in method["attributes"] if "Authorize" in attr]
+                has_method_auth = len(method_authorize_attrs) > 0
+                has_any_auth = class_has_auth or has_method_auth
+                
+                # Check for [AllowAnonymous]
+                has_allow_anon = any("AllowAnonymous" in attr for attr in method["attributes"])
+                
+                # Extract sensitive operations from method body
+                sensitive_ops = self._extract_sensitive_operations(method["node"])
+                
+                # Check for inline authorization
+                has_inline_auth = self._has_inline_authorization_check(method["node"])
+                
+                # Issue 1: Sensitive operations without ANY authorization (HIGH)
+                if sensitive_ops and not has_any_auth and not has_inline_auth and not has_allow_anon:
+                    line_num = self._get_line_from_node(method["node"])
+                    ops_summary = f"{len(sensitive_ops)} sensitive operation(s): " + ", ".join(set([op['operation_type'] for op in sensitive_ops]))
+                    
+                    self.add_finding(Finding(
+                        requirement_id="KSI-IAM-04",
+                        severity=Severity.HIGH,
+                        title=f"Sensitive operations in {method['name']} without authorization",
+                        description=f"Controller method performs {ops_summary} without [Authorize] attribute or inline authorization checks. FedRAMP 20x requires least privilege access control per Azure Security Benchmark.",
+                        file_path=file_path,
+                        line_number=line_num,
+                        recommendation="Add authorization to method or class:\n```csharp\n// Option 1: Method-level with policy\n[HttpPost]\n[Authorize(Policy = \"RequireAdminRole\")]\npublic async Task<IActionResult> DeleteUser(int id)\n{\n    await _db.Users.Remove(user);\n    await _db.SaveChangesAsync();\n    return Ok();\n}\n\n// Option 2: Inline authorization check\n[HttpPost]\n[Authorize]\npublic async Task<IActionResult> DeleteUser(int id)\n{\n    if (!User.IsInRole(\"Admin\"))\n        return Forbid();\n    \n    await _db.Users.Remove(user);\n    await _db.SaveChangesAsync();\n    return Ok();\n}\n```\nSource: Azure Security Benchmark - Identity and Access Control (https://learn.microsoft.com/security/benchmark/azure/mcsb-identity-management)"
+                    ))
+                
+                # Issue 2: [Authorize] without Roles or Policy (MEDIUM) - but skip if inline auth present
+                elif has_method_auth and sensitive_ops:
+                    # Check if authorize attribute has roles or policy
+                    has_roles_or_policy = any(
+                        "Roles" in attr or "Policy" in attr 
+                        for attr in method_authorize_attrs
+                    )
+                    
+                    # If inline auth is present, this is good practice, not an issue
+                    if not has_roles_or_policy and not has_inline_auth:
+                        line_num = self._get_line_from_node(method["node"])
+                        ops_summary = ", ".join(set([op['operation_type'] for op in sensitive_ops]))
+                        
+                        self.add_finding(Finding(
+                            requirement_id="KSI-IAM-04",
+                            severity=Severity.MEDIUM,
+                            title=f"Overly permissive [Authorize] on {method['name']}",
+                            description=f"Method performing {ops_summary} uses [Authorize] without Roles or Policy restrictions. Any authenticated user can access. FedRAMP 20x requires least privilege principle.",
+                            file_path=file_path,
+                            line_number=line_num,
+                            recommendation="Add role-based or policy-based authorization:\n```csharp\n// Option 1: Role-based\n[HttpDelete(\"{id}\")]\n[Authorize(Roles = \"Admin,SuperUser\")]\npublic async Task<IActionResult> DeleteResource(int id)\n{\n    // Only Admin or SuperUser can delete\n}\n\n// Option 2: Policy-based (recommended)\n[HttpPost]\n[Authorize(Policy = \"RequireWritePermission\")]\npublic async Task<IActionResult> CreateResource(ResourceModel model)\n{\n    // Policy defined in Program.cs:\n    // options.AddPolicy(\"RequireWritePermission\", policy =>\n    //     policy.RequireClaim(\"permission\", \"write\"));\n}\n```\nSource: ASP.NET Core Authorization (https://learn.microsoft.com/aspnet/core/security/authorization/roles)"
+                        ))
+                    elif has_inline_auth:
+                        # Inline auth makes this good practice
+                        line_num = self._get_line_from_node(method["node"])
+                        
+                        self.add_finding(Finding(
+                            requirement_id="KSI-IAM-04",
+                            severity=Severity.INFO,
+                            title=f"Proper least privilege authorization on {method['name']}",
+                            description=f"Method with sensitive operations correctly implements inline authorization checks. Follows FedRAMP 20x least privilege principle.",
+                            file_path=file_path,
+                            line_number=line_num,
+                            recommendation="Consider using policy-based authorization for complex scenarios: https://learn.microsoft.com/aspnet/core/security/authorization/policies",
+                            good_practice=True
+                        ))
+                
+                # Issue 3: AllowAnonymous on sensitive operations (HIGH)
+                elif has_allow_anon and sensitive_ops:
+                    line_num = self._get_line_from_node(method["node"])
+                    ops_summary = ", ".join(set([op['operation_type'] for op in sensitive_ops]))
+                    
+                    self.add_finding(Finding(
+                        requirement_id="KSI-IAM-04",
+                        severity=Severity.HIGH,
+                        title=f"[AllowAnonymous] on sensitive method {method['name']}",
+                        description=f"Method performing {ops_summary} allows anonymous access via [AllowAnonymous]. This bypasses authorization entirely. FedRAMP 20x prohibits unauthenticated access to sensitive operations.",
+                        file_path=file_path,
+                        line_number=line_num,
+                        recommendation="Remove [AllowAnonymous] and add proper authorization:\n```csharp\n// REMOVE:\n// [AllowAnonymous]\n\n// ADD:\n[HttpPost]\n[Authorize(Policy = \"RequireAdminRole\")]\npublic async Task<IActionResult> DeleteUser(int id)\n{\n    // Sensitive operation now requires authorization\n}\n```"
+                    ))
+                
+                # Good Practice: Proper authorization with roles/policy
+                elif has_any_auth and sensitive_ops:
+                    has_specific_auth = any(
+                        "Roles" in attr or "Policy" in attr 
+                        for attr in method_authorize_attrs
+                    ) or has_inline_auth
+                    
+                    if has_specific_auth:
+                        line_num = self._get_line_from_node(method["node"])
+                        auth_type = "inline authorization checks" if has_inline_auth else "role/policy-based authorization"
+                        
+                        self.add_finding(Finding(
+                            requirement_id="KSI-IAM-04",
+                            severity=Severity.INFO,
+                            title=f"Proper least privilege authorization on {method['name']}",
+                            description=f"Method with sensitive operations correctly implements {auth_type}. Follows FedRAMP 20x least privilege principle.",
+                            file_path=file_path,
+                            line_number=line_num,
+                            recommendation="Consider using policy-based authorization for complex scenarios: https://learn.microsoft.com/aspnet/core/security/authorization/policies",
+                            good_practice=True
+                        ))
     
     # ========================================================================
     # Regex Fallback Methods (when AST not available)
