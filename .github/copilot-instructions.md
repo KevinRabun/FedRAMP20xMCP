@@ -46,6 +46,13 @@ When users ask about OSCAL, clarify it's NOT mentioned in FedRAMP 20x - it's one
   - Logging configuration validation
   - HTTPS/HSTS settings verification
   - Production vs development environment differentiation
+✅ **Cross-Method Data Flow Tracking** (Dec 2024):
+  - Sensitive data propagation detection across variables
+  - Indirect PII exposure through return values
+  - Sensitive data in logging statement detection
+  - Method call graph analysis for data flow
+  - Variable assignment tracking with propagation paths
+  - Detects 10+ sensitive identifier patterns (SSN, password, token, etc.)
 
 ### Current Capabilities
 The server provides 31 MCP tools:

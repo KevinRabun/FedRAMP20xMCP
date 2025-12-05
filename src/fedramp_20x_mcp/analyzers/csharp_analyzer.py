@@ -40,6 +40,38 @@ class CodeContext:
             self.attributes = []
 
 
+@dataclass
+class DataFlowNode:
+    """Represents a node in the data flow graph."""
+    name: str
+    node_type: str  # 'variable', 'parameter', 'property', 'method', 'return'
+    is_sensitive: bool
+    sensitivity_type: Optional[str] = None  # 'pii', 'password', 'token', 'secret'
+    declared_in: Optional[str] = None  # class or method name
+    line_number: Optional[int] = None
+    propagated_from: List[str] = None  # Track where sensitivity came from
+    
+    def __post_init__(self):
+        if self.propagated_from is None:
+            self.propagated_from = []
+
+
+@dataclass
+class MethodSignature:
+    """Represents a method signature for call graph analysis."""
+    class_name: str
+    method_name: str
+    parameters: List[Dict]
+    return_type: Optional[str]
+    has_sensitive_data: bool = False
+    sensitive_params: Set[str] = None
+    returns_sensitive: bool = False
+    
+    def __post_init__(self):
+        if self.sensitive_params is None:
+            self.sensitive_params = set()
+
+
 class CSharpAnalyzer(BaseAnalyzer):
     """
     Enhanced C# analyzer using Abstract Syntax Tree parsing.
@@ -101,6 +133,9 @@ class CSharpAnalyzer(BaseAnalyzer):
             self._check_least_privilege_authorization_ast(code, file_path, classes)  # Tier 2.1: AST-enhanced
             self._check_session_management_ast(code, file_path, self.tree.root_node)  # Tier 2.2: AST-enhanced
             self._check_logging_implementation_ast(code, file_path, self.tree.root_node)  # Tier 2.3: AST-enhanced
+            
+            # Data flow analysis (cross-method tracking)
+            self._check_data_flow_violations(code, file_path, classes)
             
         else:
             # Fallback to regex-based analysis
@@ -397,6 +432,293 @@ class CSharpAnalyzer(BaseAnalyzer):
                 })
         
         return issues
+    
+    # ========================================================================
+    # Data Flow Tracking Infrastructure
+    # ========================================================================
+    
+    def _identify_sensitive_identifiers(self) -> Set[str]:
+        """Identify sensitive data patterns in identifiers."""
+        sensitive_patterns = {
+            'ssn', 'social_security', 'socialsecurity', 'social_security_number',
+            'password', 'pwd', 'passwd', 'passphrase',
+            'token', 'access_token', 'refresh_token', 'bearer_token', 'jwt',
+            'secret', 'api_key', 'apikey', 'api_secret', 'client_secret',
+            'credit_card', 'creditcard', 'card_number', 'cvv', 'cvc',
+            'pin', 'personal_identification_number',
+            'email', 'email_address', 'phone', 'phone_number', 'telephone',
+            'address', 'street_address', 'home_address',
+            'date_of_birth', 'dateofbirth', 'dob', 'birth_date',
+            'license', 'drivers_license', 'passport',
+            'credential', 'credentials'
+        }
+        return sensitive_patterns
+    
+    def _is_sensitive_identifier(self, name: str) -> Tuple[bool, Optional[str]]:
+        """Check if an identifier name suggests sensitive data."""
+        if not name:
+            return (False, None)
+        
+        name_lower = name.lower()
+        sensitive_patterns = self._identify_sensitive_identifiers()
+        
+        for pattern in sensitive_patterns:
+            if pattern in name_lower:
+                # Determine sensitivity type
+                if any(p in name_lower for p in ['ssn', 'social_security', 'credit_card', 'dob', 'birth', 'passport']):
+                    return (True, 'pii')
+                elif any(p in name_lower for p in ['password', 'pwd', 'passwd']):
+                    return (True, 'password')
+                elif any(p in name_lower for p in ['token', 'jwt', 'bearer']):
+                    return (True, 'token')
+                elif any(p in name_lower for p in ['secret', 'api_key', 'credential']):
+                    return (True, 'secret')
+                else:
+                    return (True, 'pii')
+        
+        return (False, None)
+    
+    def _build_method_call_graph(self, classes: List[Dict]) -> Dict[str, MethodSignature]:
+        """Build a call graph of methods for data flow analysis."""
+        method_signatures = {}
+        
+        for class_info in classes:
+            class_name = class_info.get('name', 'Unknown')
+            
+            for method in class_info.get('methods', []):
+                method_name = method.get('name')
+                if not method_name:
+                    continue
+                
+                # Analyze parameters for sensitive data
+                sensitive_params = set()
+                for param in method.get('parameters', []):
+                    param_name = param.get('name', '')
+                    is_sensitive, sensitivity_type = self._is_sensitive_identifier(param_name)
+                    if is_sensitive:
+                        sensitive_params.add(param_name)
+                
+                # Check return type and method body for sensitive data
+                return_type = method.get('return_type')
+                returns_sensitive = False
+                
+                # Analyze method body for return statements with sensitive data
+                if method.get('node'):
+                    returns_sensitive = self._method_returns_sensitive_data(method['node'])
+                
+                signature = MethodSignature(
+                    class_name=class_name,
+                    method_name=method_name,
+                    parameters=method.get('parameters', []),
+                    return_type=return_type,
+                    has_sensitive_data=len(sensitive_params) > 0 or returns_sensitive,
+                    sensitive_params=sensitive_params,
+                    returns_sensitive=returns_sensitive
+                )
+                
+                key = f"{class_name}.{method_name}"
+                method_signatures[key] = signature
+        
+        return method_signatures
+    
+    def _method_returns_sensitive_data(self, method_node: Node) -> bool:
+        """Check if a method returns sensitive data by analyzing return statements."""
+        if not method_node:
+            return False
+        
+        method_text = self.code_bytes[method_node.start_byte:method_node.end_byte].decode('utf8')
+        
+        # Look for return statements
+        return_matches = re.finditer(r'return\s+([^;]+);', method_text)
+        
+        for match in return_matches:
+            returned_expr = match.group(1).strip()
+            
+            # Check if returned expression contains sensitive identifiers
+            is_sensitive, _ = self._is_sensitive_identifier(returned_expr)
+            if is_sensitive:
+                return True
+            
+            # Check for property access like user.Password, customer.SSN
+            if '.' in returned_expr:
+                parts = returned_expr.split('.')
+                for part in parts:
+                    is_sensitive, _ = self._is_sensitive_identifier(part)
+                    if is_sensitive:
+                        return True
+        
+        return False
+    
+    def _track_data_flow_in_method(self, method_node: Node, method_name: str) -> List[DataFlowNode]:
+        """Track data flow within a method to detect sensitive data propagation."""
+        flow_nodes = []
+        
+        if not method_node:
+            return flow_nodes
+        
+        method_text = self.code_bytes[method_node.start_byte:method_node.end_byte].decode('utf8')
+        
+        # Track variable assignments
+        assignment_pattern = r'(\w+)\s*=\s*([^;]+);'
+        for match in re.finditer(assignment_pattern, method_text):
+            var_name = match.group(1)
+            assigned_value = match.group(2).strip()
+            
+            # Check if variable itself is sensitive
+            is_sensitive_var, sensitivity_type = self._is_sensitive_identifier(var_name)
+            
+            # Check if assigned value is sensitive
+            is_sensitive_val, val_sensitivity_type = self._is_sensitive_identifier(assigned_value)
+            
+            # Check for method calls that might return sensitive data
+            propagated_from = []
+            if '(' in assigned_value:  # Likely a method call
+                method_call_match = re.search(r'(\w+)\s*\(', assigned_value)
+                if method_call_match:
+                    called_method = method_call_match.group(1)
+                    is_called_sensitive, _ = self._is_sensitive_identifier(called_method)
+                    if is_called_sensitive:
+                        propagated_from.append(called_method)
+            
+            # Check for property access
+            if '.' in assigned_value:
+                for part in assigned_value.split('.'):
+                    part_clean = re.sub(r'[^\w]', '', part)
+                    is_part_sensitive, _ = self._is_sensitive_identifier(part_clean)
+                    if is_part_sensitive:
+                        propagated_from.append(part_clean)
+            
+            if is_sensitive_var or is_sensitive_val or propagated_from:
+                line_num = method_text[:match.start()].count('\n') + 1
+                flow_node = DataFlowNode(
+                    name=var_name,
+                    node_type='variable',
+                    is_sensitive=is_sensitive_var or is_sensitive_val or bool(propagated_from),
+                    sensitivity_type=sensitivity_type or val_sensitivity_type,
+                    declared_in=method_name,
+                    line_number=line_num,
+                    propagated_from=propagated_from
+                )
+                flow_nodes.append(flow_node)
+        
+        return flow_nodes
+    
+    def _check_data_flow_violations(self, code: str, file_path: str, classes: List[Dict]) -> None:
+        """Check for data flow violations - sensitive data exposure through indirect paths."""
+        # Build method call graph
+        method_signatures = self._build_method_call_graph(classes)
+        
+        for class_info in classes:
+            class_name = class_info.get('name', 'Unknown')
+            
+            for method in class_info.get('methods', []):
+                method_name = method.get('name')
+                if not method_name:
+                    continue
+                
+                # Track data flow within method
+                flow_nodes = self._track_data_flow_in_method(method['node'], method_name)
+                
+                # Check for sensitive data being logged, returned, or exposed
+                for flow_node in flow_nodes:
+                    if not flow_node.is_sensitive:
+                        continue
+                    
+                    # Check if sensitive variable is logged
+                    if method.get('node'):
+                        method_text = self.code_bytes[method['node'].start_byte:method['node'].end_byte].decode('utf8')
+                        
+                        # Check for logging of sensitive variable
+                        log_pattern = rf'(Log\w+|_logger\.\w+)\([^)]*{re.escape(flow_node.name)}[^)]*\)'
+                        log_match = re.search(log_pattern, method_text)
+                        
+                        if log_match:
+                            # Check if there's redaction
+                            context_start = max(0, log_match.start() - 100)
+                            context_end = min(len(method_text), log_match.end() + 100)
+                            context = method_text[context_start:context_end]
+                            
+                            has_redaction = bool(re.search(r'(Redact|Mask|Sanitize|Hash|Encrypt)\s*\(', context))
+                            
+                            if not has_redaction:
+                                line_num = method_text[:log_match.start()].count('\n') + self._get_line_from_node(method['node'])
+                                
+                                propagation_msg = ""
+                                if flow_node.propagated_from:
+                                    propagation_msg = f" (propagated from {', '.join(flow_node.propagated_from)})"
+                                
+                                self.add_finding(Finding(
+                                    requirement_id="KSI-PIY-02",
+                                    severity=Severity.HIGH,
+                                    title=f"Sensitive data logged without redaction",
+                                    description=f"Variable '{flow_node.name}' contains {flow_node.sensitivity_type or 'sensitive'} data and is logged without redaction{propagation_msg}. FedRAMP 20x requires PII protection.",
+                                    file_path=file_path,
+                                    line_number=line_num,
+                                    recommendation=f"""Redact sensitive data before logging:
+```csharp
+// Add redaction helper
+public static class SensitiveDataRedactor
+{{
+    public static string RedactPII(string value)
+    {{
+        if (string.IsNullOrEmpty(value)) return value;
+        return value.Length > 4 ? new string('*', value.Length - 4) + value.Substring(value.Length - 4) : "****";
+    }}
+}}
+
+// In {class_name}.{method_name}:
+_logger.LogInformation("Processing data: {{RedactedValue}}", 
+    SensitiveDataRedactor.RedactPII({flow_node.name}));
+```
+Source: Azure Well-Architected Framework Security (https://learn.microsoft.com/azure/well-architected/security/design-privacy)"""
+                                ))
+                        
+                        # Check if sensitive variable is returned without encryption
+                        return_pattern = rf'return\s+[^;]*{re.escape(flow_node.name)}[^;]*;'
+                        return_match = re.search(return_pattern, method_text)
+                        
+                        if return_match:
+                            # Check if there's encryption in the return path
+                            has_encryption = bool(re.search(r'(Encrypt|Protect|IDataProtector)\s*\(', return_match.group(0)))
+                            
+                            # Check if this is a public API method (has [HttpGet/Post/etc] or is public)
+                            is_public_api = any(attr in method.get('attributes', []) 
+                                              for attr in ['HttpGet', 'HttpPost', 'HttpPut', 'HttpDelete', 'HttpPatch'])
+                            
+                            if not has_encryption and is_public_api:
+                                line_num = method_text[:return_match.start()].count('\n') + self._get_line_from_node(method['node'])
+                                
+                                self.add_finding(Finding(
+                                    requirement_id="KSI-PIY-02",
+                                    severity=Severity.HIGH,
+                                    title=f"Sensitive data returned from API without encryption",
+                                    description=f"Method '{method_name}' returns {flow_node.sensitivity_type or 'sensitive'} data ('{flow_node.name}') without encryption. FedRAMP 20x requires PII protection.",
+                                    file_path=file_path,
+                                    line_number=line_num,
+                                    recommendation=f"""Encrypt sensitive data before returning from API:
+```csharp
+using Microsoft.AspNetCore.DataProtection;
+
+public class {class_name}
+{{
+    private readonly IDataProtectionProvider _dataProtection;
+    
+    public {class_name}(IDataProtectionProvider dataProtection)
+    {{
+        _dataProtection = dataProtection;
+    }}
+    
+    [HttpGet]
+    public IActionResult {method_name}()
+    {{
+        var protector = _dataProtection.CreateProtector("SensitiveDataProtection");
+        var encryptedValue = protector.Protect({flow_node.name});
+        return Ok(new {{ EncryptedData = encryptedValue }});
+    }}
+}}
+```
+Source: ASP.NET Core Data Protection (https://learn.microsoft.com/aspnet/core/security/data-protection/)"""
+                                ))
     
     def _extract_usings(self, root_node: Node) -> Set[str]:
         """Extract all using directives from the AST."""
