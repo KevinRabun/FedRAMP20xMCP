@@ -2,7 +2,7 @@
 
 ## Test Suite Overview
 
-The FedRAMP 20x MCP Server includes comprehensive test coverage across all functionality with **21 test files** validating **29 tools**, 329 requirements, 72 KSIs, 15 prompts, 23 templates, infrastructure code generation, and automated code analysis **supporting 4 programming languages** (Python, C#, Java, TypeScript/JavaScript).
+The FedRAMP 20x MCP Server includes comprehensive test coverage across all functionality with **21 test files** validating **31 tools**, 329 requirements, 72 KSIs, 15 prompts, 23 templates, infrastructure code generation, and automated code analysis **supporting 4 programming languages** (Python, C#, Java, TypeScript/JavaScript).
 
 ## Test Files
 
@@ -67,7 +67,7 @@ python tests/test_implementation_questions.py
 **Purpose:** Validates modular tool architecture
 
 **Coverage:**
-- ✅ 28 tools registered across 8 modules
+- ✅ 31 tools registered across 9 modules
 - ✅ All tool modules import successfully
 - ✅ All `*_impl` functions exist
 - ✅ Module structure integrity
@@ -117,6 +117,44 @@ python tests/test_tool_registration.py
 **Run:**
 ```bash
 python tests/test_evidence_automation.py
+```
+
+### 7. test_audit_tools.py ⭐ NEW
+**Purpose:** Tests KSI coverage audit and transparency tools
+
+**Coverage:**
+- ✅ get_ksi_coverage_summary_impl (overall coverage statistics)
+- ✅ get_ksi_coverage_status_impl (per-KSI coverage details)
+- ✅ get_coverage_disclaimer (automatic disclaimer text)
+- ✅ Invalid KSI ID handling
+
+**What It Tests:**
+1. **Coverage Summary:** Validates summary includes all statistics (72 total KSIs, 76.4% infrastructure, 11.1% application)
+2. **KSI Status:** Validates per-KSI coverage shows all analyzer types (Bicep, Terraform, Python, C#, Java, TypeScript)
+3. **Error Handling:** Validates appropriate error messages for invalid KSI IDs
+4. **Disclaimer Text:** Validates disclaimer includes 3PAO warning and coverage statistics
+
+**Example Output:**
+```
+TEST 1: Coverage Summary
+# FedRAMP 20x KSI Coverage Summary
+- **Total KSIs:** 72
+- **Infrastructure Coverage (Bicep/Terraform):** 55 KSIs (76.4%)
+- **Application Coverage (Python/C#/Java/TS):** 8 KSIs (11.1%)
+
+TEST 2: Specific KSI Status (KSI-IAM-01)
+# Coverage Status: KSI-IAM-01
+**Title:** Phishing-Resistant MFA
+- **Bicep IaC:** ✅ Covered
+- **Python:** ✅ Covered
+...
+
+✅ All audit tool tests completed!
+```
+
+**Run:**
+```bash
+python tests/test_audit_tools.py
 ```
 
 ### Tool Functional Tests

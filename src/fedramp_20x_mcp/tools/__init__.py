@@ -24,7 +24,7 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         data_loader: The data loader instance for accessing FedRAMP data
     """
     # Import all tool modules
-    from . import requirements, definitions, ksi, documentation, export, enhancements, evidence, analyzer
+    from . import requirements, definitions, ksi, documentation, export, enhancements, evidence, analyzer, audit
     from ..templates import get_infrastructure_template, get_code_template
     
     # Requirements tools
@@ -106,12 +106,14 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
     @mcp.tool()
     async def compare_with_rev4(requirement_area: str) -> str:
         """Compare FedRAMP 20x requirements to Rev 4/Rev 5 to understand changes."""
-        return await enhancements.compare_with_rev4_impl(requirement_area, data_loader)
+        result = await enhancements.compare_with_rev4_impl(requirement_area, data_loader)
+        return result + audit.get_coverage_disclaimer()
     
     @mcp.tool()
     async def get_implementation_examples(requirement_id: str) -> str:
         """Get practical implementation examples for a requirement."""
-        return await enhancements.get_implementation_examples_impl(requirement_id, data_loader)
+        result = await enhancements.get_implementation_examples_impl(requirement_id, data_loader)
+        return result + audit.get_coverage_disclaimer()
     
     @mcp.tool()
     async def check_requirement_dependencies(requirement_id: str) -> str:
@@ -126,12 +128,14 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
     @mcp.tool()
     async def get_cloud_native_guidance(technology: str) -> str:
         """Get cloud-native specific guidance for implementing FedRAMP 20x."""
-        return await enhancements.get_cloud_native_guidance_impl(technology, data_loader)
+        result = await enhancements.get_cloud_native_guidance_impl(technology, data_loader)
+        return result + audit.get_coverage_disclaimer()
     
     @mcp.tool()
     async def validate_architecture(architecture_description: str) -> str:
         """Validate a cloud architecture against FedRAMP 20x requirements."""
-        return await enhancements.validate_architecture_impl(architecture_description, data_loader)
+        result = await enhancements.validate_architecture_impl(architecture_description, data_loader)
+        return result + audit.get_coverage_disclaimer()
     
     @mcp.tool()
     async def generate_implementation_questions(requirement_id: str) -> str:
@@ -152,17 +156,20 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
     @mcp.tool()
     async def get_infrastructure_code_for_ksi(ksi_id: str, infrastructure_type: str = "bicep") -> str:
         """Generate infrastructure code templates for automating KSI evidence collection."""
-        return await evidence.get_infrastructure_code_for_ksi_impl(ksi_id, data_loader, get_infrastructure_template, infrastructure_type)
+        result = await evidence.get_infrastructure_code_for_ksi_impl(ksi_id, data_loader, get_infrastructure_template, infrastructure_type)
+        return result + audit.get_coverage_disclaimer()
     
     @mcp.tool()
     async def get_evidence_collection_code(ksi_id: str, language: str = "python") -> str:
         """Provide code examples for collecting KSI evidence programmatically."""
-        return await evidence.get_evidence_collection_code_impl(ksi_id, data_loader, get_code_template, language)
+        result = await evidence.get_evidence_collection_code_impl(ksi_id, data_loader, get_code_template, language)
+        return result + audit.get_coverage_disclaimer()
     
     @mcp.tool()
     async def get_evidence_automation_architecture(ksi_category: str = "all") -> str:
         """Provide comprehensive architecture guidance for automated evidence collection."""
-        return await evidence.get_evidence_automation_architecture_impl(data_loader, ksi_category)
+        result = await evidence.get_evidence_automation_architecture_impl(data_loader, ksi_category)
+        return result + audit.get_coverage_disclaimer()
     
     # Code analyzer tools
     @mcp.tool()
@@ -180,4 +187,29 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         """Analyze CI/CD pipeline configuration (GitHub Actions/Azure Pipelines/GitLab CI) for FedRAMP 20x DevSecOps compliance."""
         return await analyzer.analyze_cicd_pipeline_impl(code, pipeline_type, file_path)
     
-    logger.info("Registered 29 tools across 8 modules")
+    # KSI Coverage Audit tools
+    @mcp.tool()
+    async def get_ksi_coverage_summary() -> str:
+        """
+        Get a summary of KSI analyzer coverage and recommendation quality assessment.
+        
+        Shows which KSIs have analyzer coverage, what limitations exist, and important
+        disclaimers about recommendation validation. Use this to understand the scope
+        and limitations of automated compliance checking.
+        """
+        return await audit.get_ksi_coverage_summary_impl(data_loader)
+    
+    @mcp.tool()
+    async def get_ksi_coverage_status(ksi_id: str) -> str:
+        """
+        Check if a specific KSI has analyzer coverage and what the limitations are.
+        
+        Args:
+            ksi_id: The KSI identifier (e.g., "KSI-MLA-05")
+        
+        Returns detailed coverage information including which analyzers support this KSI,
+        whether it's process-based or technical, and important limitations of the coverage.
+        """
+        return await audit.get_ksi_coverage_status_impl(ksi_id, data_loader)
+    
+    logger.info("Registered 31 tools across 9 modules")

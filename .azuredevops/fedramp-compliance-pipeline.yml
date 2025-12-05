@@ -1,0 +1,377 @@
+# Azure DevOps Pipeline for FedRAMP 20x Compliance Checks
+# This pipeline analyzes infrastructure and application code for FedRAMP 20x compliance
+
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+  paths:
+    include:
+      - '**/*.py'
+      - '**/*.bicep'
+      - '**/*.tf'
+      - '**/*.cs'
+      - '**/*.java'
+      - '**/*.ts'
+      - '**/*.js'
+
+pr:
+  branches:
+    include:
+      - main
+      - develop
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  pythonVersion: '3.10'
+
+stages:
+- stage: SecurityAnalysis
+  displayName: 'FedRAMP 20x Security Analysis'
+  jobs:
+  
+  - job: AnalyzeInfrastructure
+    displayName: 'Analyze Infrastructure Code'
+    steps:
+    - task: UsePythonVersion@0
+      displayName: 'Use Python $(pythonVersion)'
+      inputs:
+        versionSpec: '$(pythonVersion)'
+    
+    - script: |
+        pip install fedramp-20x-mcp
+      displayName: 'Install FedRAMP 20x MCP'
+    
+    - task: PythonScript@0
+      displayName: 'Analyze Bicep Files'
+      inputs:
+        scriptSource: 'inline'
+        script: |
+          import sys
+          from pathlib import Path
+          from fedramp_20x_mcp.analyzers.bicep_analyzer import BicepAnalyzer
+          
+          analyzer = BicepAnalyzer()
+          all_findings = []
+          high_count = 0
+          medium_count = 0
+          
+          print("🔍 Scanning for Bicep files...")
+          bicep_files = list(Path('.').rglob('*.bicep'))
+          print(f"Found {len(bicep_files)} Bicep files")
+          
+          for bicep_file in bicep_files:
+              print(f"\n📄 Analyzing {bicep_file}...")
+              try:
+                  content = bicep_file.read_text()
+                  result = analyzer.analyze(content, str(bicep_file))
+                  
+                  all_findings.extend(result.findings)
+                  high_count += result.summary['high']
+                  medium_count += result.summary['medium']
+                  
+                  if result.findings:
+                      print(f"  ⚠️  Found {len(result.findings)} issues")
+                  else:
+                      print(f"  ✅ No issues found")
+              except Exception as e:
+                  print(f"  ❌ Error: {e}")
+          
+          # Generate report
+          report = f"# FedRAMP 20x Bicep Analysis Report\n\n"
+          report += f"**Total Issues:** {len(all_findings)}\n"
+          report += f"**High Priority:** {high_count}\n"
+          report += f"**Medium Priority:** {medium_count}\n\n"
+          
+          if all_findings:
+              report += "## Findings\n\n"
+              for finding in all_findings:
+                  severity_icon = "🔴" if finding.severity == "high" else "🟡"
+                  report += f"{severity_icon} **{finding.requirement_id}**: {finding.message}\n"
+                  report += f"- File: `{finding.file_path}` (Line {finding.line_number})\n"
+                  report += f"- Recommendation: {finding.recommendation}\n\n"
+          
+          # Save report
+          with open('bicep-compliance-report.md', 'w') as f:
+              f.write(report)
+          
+          print(f"\n📊 Analysis Complete:")
+          print(f"   Total Issues: {len(all_findings)}")
+          print(f"   High Priority: {high_count}")
+          print(f"   Medium Priority: {medium_count}")
+          
+          # Set pipeline variables
+          print(f"##vso[task.setvariable variable=BicepHighCount;isOutput=true]{high_count}")
+          print(f"##vso[task.setvariable variable=BicepMediumCount;isOutput=true]{medium_count}")
+          
+          # Fail build if high priority issues
+          if high_count > 0:
+              print(f"\n❌ Build failed: {high_count} high-priority compliance issues found")
+              sys.exit(1)
+          else:
+              print("\n✅ No high-priority issues found")
+      continueOnError: false
+      name: analyzeBicep
+    
+    - task: PythonScript@0
+      displayName: 'Analyze Terraform Files'
+      inputs:
+        scriptSource: 'inline'
+        script: |
+          import sys
+          from pathlib import Path
+          from fedramp_20x_mcp.analyzers.terraform_analyzer import TerraformAnalyzer
+          
+          analyzer = TerraformAnalyzer()
+          all_findings = []
+          high_count = 0
+          
+          print("🔍 Scanning for Terraform files...")
+          tf_files = list(Path('.').rglob('*.tf'))
+          print(f"Found {len(tf_files)} Terraform files")
+          
+          for tf_file in tf_files:
+              print(f"\n📄 Analyzing {tf_file}...")
+              try:
+                  content = tf_file.read_text()
+                  result = analyzer.analyze(content, str(tf_file))
+                  all_findings.extend(result.findings)
+                  high_count += result.summary['high']
+                  
+                  if result.findings:
+                      print(f"  ⚠️  Found {len(result.findings)} issues")
+                  else:
+                      print(f"  ✅ No issues found")
+              except Exception as e:
+                  print(f"  ❌ Error: {e}")
+          
+          # Generate report
+          report = f"# FedRAMP 20x Terraform Analysis Report\n\n"
+          report += f"**Total Issues:** {len(all_findings)}\n"
+          report += f"**High Priority:** {high_count}\n\n"
+          
+          if all_findings:
+              report += "## Findings\n\n"
+              for finding in all_findings:
+                  severity_icon = "🔴" if finding.severity == "high" else "🟡"
+                  report += f"{severity_icon} **{finding.requirement_id}**: {finding.message}\n"
+                  report += f"- File: `{finding.file_path}` (Line {finding.line_number})\n\n"
+          
+          with open('terraform-compliance-report.md', 'w') as f:
+              f.write(report)
+          
+          print(f"##vso[task.setvariable variable=TerraformHighCount;isOutput=true]{high_count}")
+          
+          if high_count > 0:
+              print(f"\n❌ Build failed: {high_count} high-priority issues found")
+              sys.exit(1)
+      continueOnError: false
+      name: analyzeTerraform
+    
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Infrastructure Reports'
+      condition: always()
+      inputs:
+        pathToPublish: '$(System.DefaultWorkingDirectory)'
+        artifactName: 'infrastructure-compliance-reports'
+        publishLocation: 'Container'
+        includeRootFolder: false
+        artifactType: 'Container'
+        parallel: true
+        parallelCount: 8
+        continueOnError: true
+        # Only include markdown reports
+        contents: |
+          **/*-compliance-report.md
+  
+  - job: AnalyzeApplicationCode
+    displayName: 'Analyze Application Code'
+    steps:
+    - task: UsePythonVersion@0
+      displayName: 'Use Python $(pythonVersion)'
+      inputs:
+        versionSpec: '$(pythonVersion)'
+    
+    - script: |
+        pip install fedramp-20x-mcp
+      displayName: 'Install FedRAMP 20x MCP'
+    
+    - task: PythonScript@0
+      displayName: 'Analyze Python Application Code'
+      inputs:
+        scriptSource: 'inline'
+        script: |
+          import sys
+          from pathlib import Path
+          from fedramp_20x_mcp.analyzers.python_analyzer import PythonAnalyzer
+          
+          analyzer = PythonAnalyzer()
+          all_findings = []
+          high_count = 0
+          
+          print("🔍 Scanning for Python files...")
+          py_files = [f for f in Path('.').rglob('*.py') 
+                      if not any(x in str(f) for x in ['test_', 'venv', '.venv', '__pycache__'])]
+          print(f"Found {len(py_files)} Python files to analyze")
+          
+          for py_file in py_files:
+              print(f"\n📄 Analyzing {py_file}...")
+              try:
+                  content = py_file.read_text()
+                  result = analyzer.analyze(content, str(py_file), [])
+                  all_findings.extend(result.findings)
+                  high_count += result.summary['high']
+                  
+                  if result.findings:
+                      print(f"  ⚠️  Found {len(result.findings)} security issues")
+                  else:
+                      print(f"  ✅ No issues found")
+              except Exception as e:
+                  print(f"  ❌ Error: {e}")
+          
+          # Generate detailed report
+          report = f"# FedRAMP 20x Python Security Analysis\n\n"
+          report += f"**Files Analyzed:** {len(py_files)}\n"
+          report += f"**Security Issues:** {len(all_findings)}\n"
+          report += f"**High Priority:** {high_count}\n\n"
+          
+          if all_findings:
+              # Group by KSI requirement
+              by_ksi = {}
+              for finding in all_findings:
+                  ksi = finding.requirement_id
+                  if ksi not in by_ksi:
+                      by_ksi[ksi] = []
+                  by_ksi[ksi].append(finding)
+              
+              report += "## Security Findings by Requirement\n\n"
+              for ksi, findings in by_ksi.items():
+                  report += f"### {ksi} ({len(findings)} issues)\n\n"
+                  for finding in findings:
+                      report += f"- 🔴 {finding.message}\n"
+                      report += f"  - File: `{finding.file_path}:{finding.line_number}`\n"
+                      report += f"  - Fix: {finding.recommendation}\n\n"
+          
+          with open('python-security-report.md', 'w') as f:
+              f.write(report)
+          
+          print(f"##vso[task.setvariable variable=PythonHighCount;isOutput=true]{high_count}")
+          
+          if high_count > 0:
+              print(f"\n❌ Build failed: {high_count} high-priority security issues")
+              sys.exit(1)
+          else:
+              print("\n✅ No high-priority security issues found")
+      continueOnError: false
+      name: analyzePython
+    
+    - task: PythonScript@0
+      displayName: 'Analyze C# Application Code'
+      inputs:
+        scriptSource: 'inline'
+        script: |
+          import sys
+          from pathlib import Path
+          from fedramp_20x_mcp.analyzers.csharp_analyzer import CSharpAnalyzer
+          
+          analyzer = CSharpAnalyzer()
+          all_findings = []
+          high_count = 0
+          
+          print("🔍 Scanning for C# files...")
+          cs_files = [f for f in Path('.').rglob('*.cs') 
+                      if not any(x in str(f) for x in ['obj/', 'bin/'])]
+          
+          if not cs_files:
+              print("No C# files found, skipping analysis")
+              sys.exit(0)
+          
+          print(f"Found {len(cs_files)} C# files to analyze")
+          
+          for cs_file in cs_files:
+              print(f"\n📄 Analyzing {cs_file}...")
+              try:
+                  content = cs_file.read_text()
+                  result = analyzer.analyze(content, str(cs_file), [])
+                  all_findings.extend(result.findings)
+                  high_count += result.summary['high']
+                  
+                  if result.findings:
+                      print(f"  ⚠️  Found {len(result.findings)} security issues")
+              except Exception as e:
+                  print(f"  ❌ Error: {e}")
+          
+          if all_findings:
+              report = f"# FedRAMP 20x C# Security Analysis\n\n"
+              report += f"**Security Issues:** {len(all_findings)}\n\n"
+              
+              for finding in all_findings:
+                  report += f"🔴 **{finding.requirement_id}**: {finding.message}\n"
+                  report += f"- {finding.file_path}:{finding.line_number}\n\n"
+              
+              with open('csharp-security-report.md', 'w') as f:
+                  f.write(report)
+              
+              if high_count > 0:
+                  sys.exit(1)
+      continueOnError: true
+      name: analyzeCSharp
+    
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Application Reports'
+      condition: always()
+      inputs:
+        pathToPublish: '$(System.DefaultWorkingDirectory)'
+        artifactName: 'application-security-reports'
+        publishLocation: 'Container'
+        contents: |
+          **/*-security-report.md
+
+- stage: ReportResults
+  displayName: 'Generate Compliance Report'
+  dependsOn: SecurityAnalysis
+  condition: always()
+  jobs:
+  - job: ConsolidateReports
+    displayName: 'Consolidate Analysis Reports'
+    steps:
+    - task: DownloadBuildArtifacts@1
+      displayName: 'Download Infrastructure Reports'
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'infrastructure-compliance-reports'
+        downloadPath: '$(System.ArtifactsDirectory)'
+    
+    - task: DownloadBuildArtifacts@1
+      displayName: 'Download Application Reports'
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'application-security-reports'
+        downloadPath: '$(System.ArtifactsDirectory)'
+    
+    - script: |
+        echo "## 🔒 FedRAMP 20x Compliance Analysis Summary" > compliance-summary.md
+        echo "" >> compliance-summary.md
+        echo "**Build:** $(Build.BuildNumber)" >> compliance-summary.md
+        echo "**Date:** $(date)" >> compliance-summary.md
+        echo "" >> compliance-summary.md
+        
+        # Combine all reports
+        cat $(System.ArtifactsDirectory)/**/*.md >> compliance-summary.md
+        
+        echo "" >> compliance-summary.md
+        echo "---" >> compliance-summary.md
+        echo "📚 [FedRAMP 20x Documentation](https://github.com/FedRAMP/docs)" >> compliance-summary.md
+      displayName: 'Create Summary Report'
+    
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Final Report'
+      inputs:
+        pathToPublish: 'compliance-summary.md'
+        artifactName: 'fedramp-compliance-summary'
+        publishLocation: 'Container'

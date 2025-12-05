@@ -1,0 +1,188 @@
+# FedRAMP 20x Compliance Pre-commit Hook Configuration
+# This file configures pre-commit hooks to check code for FedRAMP compliance
+# before allowing commits to proceed.
+#
+# Installation:
+#   1. Install pre-commit: pip install pre-commit
+#   2. Install the git hook: pre-commit install
+#   3. (Optional) Run on all files: pre-commit run --all-files
+#
+# Usage:
+#   - Hooks run automatically on 'git commit'
+#   - Failed checks prevent the commit
+#   - Fix issues and try committing again
+
+repos:
+  # FedRAMP 20x Compliance Checks
+  - repo: local
+    hooks:
+      # Python Security Analysis
+      - id: fedramp-python
+        name: FedRAMP Python Security Check
+        description: Analyze Python code for FedRAMP 20x compliance issues
+        entry: python -c "
+          import sys;
+          from pathlib import Path;
+          from fedramp_20x_mcp.analyzers.python_analyzer import PythonAnalyzer;
+          analyzer = PythonAnalyzer();
+          errors = [];
+          for f in sys.argv[1:]:
+              content = Path(f).read_text();
+              result = analyzer.analyze(content, f, []);
+              if result.summary['high'] > 0:
+                  errors.append(f);
+                  print(f'❌ {f}: {result.summary[\"high\"]} high-priority issues');
+          sys.exit(1 if errors else 0)
+          "
+        language: python
+        types: [python]
+        pass_filenames: true
+        stages: [commit]
+      
+      # C# Security Analysis
+      - id: fedramp-csharp
+        name: FedRAMP C# Security Check
+        description: Analyze C# code for FedRAMP 20x compliance issues
+        entry: python -c "
+          import sys;
+          from pathlib import Path;
+          from fedramp_20x_mcp.analyzers.csharp_analyzer import CSharpAnalyzer;
+          analyzer = CSharpAnalyzer();
+          errors = [];
+          for f in sys.argv[1:]:
+              content = Path(f).read_text();
+              result = analyzer.analyze(content, f, []);
+              if result.summary['high'] > 0:
+                  errors.append(f);
+                  print(f'❌ {f}: {result.summary[\"high\"]} high-priority issues');
+          sys.exit(1 if errors else 0)
+          "
+        language: python
+        types: [c#]
+        pass_filenames: true
+        stages: [commit]
+      
+      # Java Security Analysis
+      - id: fedramp-java
+        name: FedRAMP Java Security Check
+        description: Analyze Java code for FedRAMP 20x compliance issues
+        entry: python -c "
+          import sys;
+          from pathlib import Path;
+          from fedramp_20x_mcp.analyzers.java_analyzer import JavaAnalyzer;
+          analyzer = JavaAnalyzer();
+          errors = [];
+          for f in sys.argv[1:]:
+              content = Path(f).read_text();
+              result = analyzer.analyze(content, f, []);
+              if result.summary['high'] > 0:
+                  errors.append(f);
+                  print(f'❌ {f}: {result.summary[\"high\"]} high-priority issues');
+          sys.exit(1 if errors else 0)
+          "
+        language: python
+        types: [java]
+        pass_filenames: true
+        stages: [commit]
+      
+      # TypeScript/JavaScript Security Analysis
+      - id: fedramp-typescript
+        name: FedRAMP TypeScript/JS Security Check
+        description: Analyze TypeScript/JavaScript code for FedRAMP 20x compliance
+        entry: python -c "
+          import sys;
+          from pathlib import Path;
+          from fedramp_20x_mcp.analyzers.typescript_analyzer import TypeScriptAnalyzer;
+          analyzer = TypeScriptAnalyzer();
+          errors = [];
+          for f in sys.argv[1:]:
+              content = Path(f).read_text();
+              result = analyzer.analyze(content, f, []);
+              if result.summary['high'] > 0:
+                  errors.append(f);
+                  print(f'❌ {f}: {result.summary[\"high\"]} high-priority issues');
+          sys.exit(1 if errors else 0)
+          "
+        language: python
+        types: [ts, tsx, javascript, jsx]
+        pass_filenames: true
+        stages: [commit]
+      
+      # Bicep Infrastructure Analysis
+      - id: fedramp-bicep
+        name: FedRAMP Bicep Compliance Check
+        description: Analyze Bicep infrastructure code for FedRAMP 20x compliance
+        entry: python -c "
+          import sys;
+          from pathlib import Path;
+          from fedramp_20x_mcp.analyzers.bicep_analyzer import BicepAnalyzer;
+          analyzer = BicepAnalyzer();
+          errors = [];
+          for f in sys.argv[1:]:
+              content = Path(f).read_text();
+              result = analyzer.analyze(content, f);
+              if result.summary['high'] > 0:
+                  errors.append(f);
+                  print(f'❌ {f}: {result.summary[\"high\"]} high-priority issues');
+          sys.exit(1 if errors else 0)
+          "
+        language: python
+        files: \.bicep$
+        pass_filenames: true
+        stages: [commit]
+      
+      # Terraform Infrastructure Analysis
+      - id: fedramp-terraform
+        name: FedRAMP Terraform Compliance Check
+        description: Analyze Terraform infrastructure code for FedRAMP 20x compliance
+        entry: python -c "
+          import sys;
+          from pathlib import Path;
+          from fedramp_20x_mcp.analyzers.terraform_analyzer import TerraformAnalyzer;
+          analyzer = TerraformAnalyzer();
+          errors = [];
+          for f in sys.argv[1:]:
+              content = Path(f).read_text();
+              result = analyzer.analyze(content, f);
+              if result.summary['high'] > 0:
+                  errors.append(f);
+                  print(f'❌ {f}: {result.summary[\"high\"]} high-priority issues');
+          sys.exit(1 if errors else 0)
+          "
+        language: python
+        files: \.tf$
+        pass_filenames: true
+        stages: [commit]
+
+# Optional: Additional security checks using standard tools
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-yaml
+        name: Validate YAML Files
+      - id: check-json
+        name: Validate JSON Files
+      - id: detect-private-key
+        name: Detect Private Keys
+      - id: check-added-large-files
+        name: Check for Large Files
+        args: ['--maxkb=500']
+      - id: trailing-whitespace
+        name: Remove Trailing Whitespace
+      - id: end-of-file-fixer
+        name: Fix End of Files
+
+# Configuration Options
+# Uncomment and customize as needed:
+#
+# default_language_version:
+#   python: python3.10
+#
+# fail_fast: false  # Set to true to stop on first failure
+#
+# exclude: |
+#   (?x)^(
+#       tests/.*|
+#       vendor/.*|
+#       .*\.min\.js
+#   )$

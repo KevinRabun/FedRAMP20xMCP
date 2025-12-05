@@ -1,0 +1,347 @@
+name: FedRAMP 20x Compliance Check
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - '**.py'
+      - '**.bicep'
+      - '**.tf'
+      - '**.cs'
+      - '**.java'
+      - '**.ts'
+      - '**.js'
+      - '.github/workflows/fedramp-compliance-check.yml'
+  workflow_dispatch:
+
+jobs:
+  analyze-infrastructure:
+    name: Analyze Infrastructure Code
+    runs-on: ubuntu-latest
+    if: |
+      contains(github.event.pull_request.changed_files, '.bicep') ||
+      contains(github.event.pull_request.changed_files, '.tf') ||
+      github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Install FedRAMP 20x MCP
+        run: |
+          pip install fedramp-20x-mcp
+      
+      - name: Analyze Bicep Files
+        id: analyze-bicep
+        run: |
+          python - <<'EOF'
+          import os
+          import sys
+          import json
+          from pathlib import Path
+          from fedramp_20x_mcp.analyzers.bicep_analyzer import BicepAnalyzer
+          
+          analyzer = BicepAnalyzer()
+          all_findings = []
+          high_count = 0
+          medium_count = 0
+          
+          # Find all .bicep files
+          for bicep_file in Path('.').rglob('*.bicep'):
+              if '.bicep' in str(bicep_file):
+                  print(f"Analyzing {bicep_file}...")
+                  try:
+                      content = bicep_file.read_text()
+                      result = analyzer.analyze(content, str(bicep_file))
+                      
+                      all_findings.extend(result.findings)
+                      high_count += result.summary['high']
+                      medium_count += result.summary['medium']
+                      
+                      if result.findings:
+                          print(f"  Found {len(result.findings)} issues")
+                  except Exception as e:
+                      print(f"  Error: {e}")
+          
+          # Generate summary
+          if all_findings:
+              summary = f"## 🔒 FedRAMP 20x Bicep Analysis\n\n"
+              summary += f"**Found {len(all_findings)} issues:** {high_count} high, {medium_count} medium priority\n\n"
+              
+              for finding in all_findings[:10]:  # Limit to first 10
+                  icon = "🔴" if finding.severity == "high" else "🟡"
+                  summary += f"{icon} **{finding.requirement_id}**: {finding.message}\n"
+                  summary += f"   - File: `{finding.file_path}` (Line {finding.line_number})\n\n"
+              
+              if len(all_findings) > 10:
+                  summary += f"\n...and {len(all_findings) - 10} more issues\n"
+              
+              # Write to output file
+              with open('bicep-analysis.md', 'w') as f:
+                  f.write(summary)
+              
+              # Set GitHub output
+              print(f"HIGH_COUNT={high_count}")
+              print(f"MEDIUM_COUNT={medium_count}")
+              
+              # Exit with error if high priority issues found
+              if high_count > 0:
+                  sys.exit(1)
+          else:
+              print("✅ No compliance issues found in Bicep files")
+          EOF
+        continue-on-error: true
+      
+      - name: Analyze Terraform Files
+        id: analyze-terraform
+        run: |
+          python - <<'EOF'
+          import os
+          import sys
+          import json
+          from pathlib import Path
+          from fedramp_20x_mcp.analyzers.terraform_analyzer import TerraformAnalyzer
+          
+          analyzer = TerraformAnalyzer()
+          all_findings = []
+          high_count = 0
+          medium_count = 0
+          
+          # Find all .tf files
+          for tf_file in Path('.').rglob('*.tf'):
+              if '.tf' in str(tf_file):
+                  print(f"Analyzing {tf_file}...")
+                  try:
+                      content = tf_file.read_text()
+                      result = analyzer.analyze(content, str(tf_file))
+                      
+                      all_findings.extend(result.findings)
+                      high_count += result.summary['high']
+                      medium_count += result.summary['medium']
+                      
+                      if result.findings:
+                          print(f"  Found {len(result.findings)} issues")
+                  except Exception as e:
+                      print(f"  Error: {e}")
+          
+          # Generate summary
+          if all_findings:
+              summary = f"## 🔒 FedRAMP 20x Terraform Analysis\n\n"
+              summary += f"**Found {len(all_findings)} issues:** {high_count} high, {medium_count} medium priority\n\n"
+              
+              for finding in all_findings[:10]:
+                  icon = "🔴" if finding.severity == "high" else "🟡"
+                  summary += f"{icon} **{finding.requirement_id}**: {finding.message}\n"
+                  summary += f"   - File: `{finding.file_path}` (Line {finding.line_number})\n\n"
+              
+              if len(all_findings) > 10:
+                  summary += f"\n...and {len(all_findings) - 10} more issues\n"
+              
+              with open('terraform-analysis.md', 'w') as f:
+                  f.write(summary)
+              
+              if high_count > 0:
+                  sys.exit(1)
+          else:
+              print("✅ No compliance issues found in Terraform files")
+          EOF
+        continue-on-error: true
+      
+      - name: Upload Infrastructure Analysis
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: infrastructure-analysis
+          path: |
+            bicep-analysis.md
+            terraform-analysis.md
+          if-no-files-found: ignore
+
+  analyze-application-code:
+    name: Analyze Application Code
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Install FedRAMP 20x MCP
+        run: |
+          pip install fedramp-20x-mcp
+      
+      - name: Analyze Python Files
+        id: analyze-python
+        run: |
+          python - <<'EOF'
+          import os
+          import sys
+          from pathlib import Path
+          from fedramp_20x_mcp.analyzers.python_analyzer import PythonAnalyzer
+          
+          analyzer = PythonAnalyzer()
+          all_findings = []
+          high_count = 0
+          
+          # Find all .py files (excluding tests and venv)
+          for py_file in Path('.').rglob('*.py'):
+              if any(x in str(py_file) for x in ['test_', 'venv', '.venv', '__pycache__']):
+                  continue
+              
+              print(f"Analyzing {py_file}...")
+              try:
+                  content = py_file.read_text()
+                  result = analyzer.analyze(content, str(py_file), [])
+                  
+                  all_findings.extend(result.findings)
+                  high_count += result.summary['high']
+                  
+                  if result.findings:
+                      print(f"  Found {len(result.findings)} issues")
+              except Exception as e:
+                  print(f"  Error: {e}")
+          
+          if all_findings:
+              summary = f"## 🔒 FedRAMP 20x Python Analysis\n\n"
+              summary += f"**Found {len(all_findings)} security issues**\n\n"
+              
+              for finding in all_findings[:10]:
+                  icon = "🔴" if finding.severity == "high" else "🟡"
+                  summary += f"{icon} **{finding.requirement_id}**: {finding.message}\n"
+                  summary += f"   - File: `{finding.file_path}` (Line {finding.line_number})\n\n"
+              
+              with open('python-analysis.md', 'w') as f:
+                  f.write(summary)
+              
+              if high_count > 0:
+                  sys.exit(1)
+          else:
+              print("✅ No compliance issues found in Python files")
+          EOF
+        continue-on-error: true
+      
+      - name: Analyze C# Files
+        id: analyze-csharp
+        run: |
+          python - <<'EOF'
+          import sys
+          from pathlib import Path
+          from fedramp_20x_mcp.analyzers.csharp_analyzer import CSharpAnalyzer
+          
+          analyzer = CSharpAnalyzer()
+          all_findings = []
+          high_count = 0
+          
+          for cs_file in Path('.').rglob('*.cs'):
+              if any(x in str(cs_file) for x in ['obj/', 'bin/']):
+                  continue
+              
+              print(f"Analyzing {cs_file}...")
+              try:
+                  content = cs_file.read_text()
+                  result = analyzer.analyze(content, str(cs_file), [])
+                  all_findings.extend(result.findings)
+                  high_count += result.summary['high']
+              except Exception as e:
+                  print(f"  Error: {e}")
+          
+          if all_findings:
+              summary = f"## 🔒 FedRAMP 20x C# Analysis\n\n"
+              summary += f"**Found {len(all_findings)} security issues**\n\n"
+              
+              for finding in all_findings[:10]:
+                  icon = "🔴" if finding.severity == "high" else "🟡"
+                  summary += f"{icon} **{finding.requirement_id}**: {finding.message}\n"
+                  summary += f"   - {finding.file_path}:{finding.line_number}\n\n"
+              
+              with open('csharp-analysis.md', 'w') as f:
+                  f.write(summary)
+              
+              if high_count > 0:
+                  sys.exit(1)
+          else:
+              print("✅ No compliance issues found in C# files")
+          EOF
+        continue-on-error: true
+      
+      - name: Upload Application Analysis
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: application-analysis
+          path: |
+            python-analysis.md
+            csharp-analysis.md
+          if-no-files-found: ignore
+
+  comment-pr:
+    name: Post PR Comment
+    runs-on: ubuntu-latest
+    needs: [analyze-infrastructure, analyze-application-code]
+    if: always() && github.event_name == 'pull_request'
+    
+    steps:
+      - name: Download Analysis Results
+        uses: actions/download-artifact@v4
+        with:
+          path: analysis-results
+      
+      - name: Create PR Comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            let comment = '## 🔒 FedRAMP 20x Compliance Analysis Results\n\n';
+            
+            // Read all analysis files
+            const resultsDir = 'analysis-results';
+            const files = [
+              'infrastructure-analysis/bicep-analysis.md',
+              'infrastructure-analysis/terraform-analysis.md',
+              'application-analysis/python-analysis.md',
+              'application-analysis/csharp-analysis.md'
+            ];
+            
+            let foundIssues = false;
+            for (const file of files) {
+              const filePath = path.join(resultsDir, file);
+              if (fs.existsSync(filePath)) {
+                comment += fs.readFileSync(filePath, 'utf8') + '\n\n';
+                foundIssues = true;
+              }
+            }
+            
+            if (!foundIssues) {
+              comment += '✅ **No compliance issues found!**\n\n';
+              comment += 'All analyzed files meet FedRAMP 20x security requirements.\n';
+            } else {
+              comment += '\n---\n';
+              comment += '**Next Steps:**\n';
+              comment += '1. Review high-priority issues first\n';
+              comment += '2. Update code to address security findings\n';
+              comment += '3. Re-run analysis after fixes\n\n';
+              comment += '📚 [View FedRAMP 20x Documentation](https://github.com/FedRAMP/docs)\n';
+            }
+            
+            // Post comment
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
