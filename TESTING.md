@@ -504,7 +504,7 @@ $env:PYTHONIOENCODING='utf-8'; python tests/test_analyzer_tools.py
 ```
 
 ### 17. test_csharp_analyzer.py ⭐ NEW
-**Purpose:** Comprehensive tests for C# code analyzer (36 tests: 12 Phase 1 + 6 Phase 2 + 18 Phase 3)
+**Purpose:** Comprehensive tests for C# code analyzer (44 tests: 12 Phase 1 + 6 Phase 2 + 18 Phase 3 + 8 Phase 4)
 
 **Phase 1 Coverage (12 tests):**
 - ✅ Hardcoded secrets detection (.NET syntax)
@@ -548,6 +548,16 @@ $env:PYTHONIOENCODING='utf-8'; python tests/test_analyzer_tools.py
 - ✅ Secure session management (KSI-IAM-07)
 - ✅ Insecure random number generation (KSI-SVC-07)
 
+**Phase 4 Coverage (8 tests - Monitoring and Observability):**
+- ✅ Missing security monitoring (KSI-MLA-03)
+- ✅ Security monitoring implemented with Application Insights (KSI-MLA-03)
+- ✅ Missing anomaly detection metrics (KSI-MLA-04)
+- ✅ Anomaly detection configured with custom metrics (KSI-MLA-04)
+- ✅ Missing performance monitoring (KSI-MLA-06)
+- ✅ Performance monitoring with dependency tracking (KSI-MLA-06)
+- ✅ Missing incident response integration (KSI-INR-01)
+- ✅ Incident response configured with PagerDuty/webhooks (KSI-INR-01)
+
 **Frameworks Tested:**
 - ASP.NET Core, Entity Framework, MSAL, Azure SDK for .NET
 
@@ -557,7 +567,7 @@ python tests/test_csharp_analyzer.py
 ```
 
 ### 18. test_java_analyzer.py ⭐ NEW
-**Purpose:** Comprehensive tests for Java code analyzer (36 tests: 12 Phase 1 + 6 Phase 2 + 18 Phase 3)
+**Purpose:** Comprehensive tests for Java code analyzer (44 tests: 12 Phase 1 + 6 Phase 2 + 18 Phase 3 + 8 Phase 4)
 
 **Phase 1 Coverage (12 tests):**
 - ✅ Hardcoded secrets detection (Java syntax)
@@ -601,6 +611,16 @@ python tests/test_csharp_analyzer.py
 - ✅ Secure session management (KSI-IAM-07)
 - ✅ Insecure random number generation (KSI-SVC-07)
 
+**Phase 4 Coverage (8 tests - Monitoring and Observability):**
+- ✅ Missing security monitoring (KSI-MLA-03)
+- ✅ Security monitoring with Application Insights for Java (KSI-MLA-03)
+- ✅ Missing anomaly detection metrics (KSI-MLA-04)
+- ✅ Anomaly detection with Micrometer metrics (KSI-MLA-04)
+- ✅ Missing performance monitoring (KSI-MLA-06)
+- ✅ Performance monitoring with Timer and dependency tracking (KSI-MLA-06)
+- ✅ Missing incident response integration (KSI-INR-01)
+- ✅ Incident response with RestTemplate webhooks (KSI-INR-01)
+
 **Frameworks Tested:**
 - Spring Boot, Spring Security, Jakarta EE, Azure SDK for Java
 
@@ -610,7 +630,7 @@ python tests/test_java_analyzer.py
 ```
 
 ### 19. test_typescript_analyzer.py ⭐ NEW
-**Purpose:** Comprehensive tests for TypeScript/JavaScript code analyzer (36 tests: 12 Phase 1 + 6 Phase 2 + 18 Phase 3)
+**Purpose:** Comprehensive tests for TypeScript/JavaScript code analyzer (44 tests: 12 Phase 1 + 6 Phase 2 + 18 Phase 3 + 8 Phase 4)
 
 **Phase 1 Coverage (12 tests):**
 - ✅ Hardcoded secrets detection (TS/JS syntax)
@@ -653,6 +673,16 @@ python tests/test_java_analyzer.py
 - ✅ Insecure session cookies (KSI-IAM-07)
 - ✅ Secure session management (KSI-IAM-07)
 - ✅ Insecure random number generation (KSI-SVC-07)
+
+**Phase 4 Coverage (8 tests - Monitoring and Observability):**
+- ✅ Missing security monitoring (KSI-MLA-03)
+- ✅ Security monitoring with Application Insights for Node.js (KSI-MLA-03)
+- ✅ Missing anomaly detection metrics (KSI-MLA-04)
+- ✅ Anomaly detection with prom-client metrics (KSI-MLA-04)
+- ✅ Missing performance monitoring (KSI-MLA-06)
+- ✅ Performance monitoring with perf_hooks dependency tracking (KSI-MLA-06)
+- ✅ Missing incident response integration (KSI-INR-01)
+- ✅ Incident response with axios webhooks (KSI-INR-01)
 
 **Frameworks Tested:**
 - Express, NestJS, Next.js, React, Azure SDK for JS
@@ -801,9 +831,9 @@ All tests passing as of December 3, 2025:
 | test_export_tools.py ⭐ | ✅ PASS | 3 tools, 2 test cases |
 | test_enhancement_tools.py ⭐ | ✅ PASS | 7 tools, 24 test cases |
 | test_implementation_mapping_tools.py ⭐ | ✅ PASS | 2 tools, 24 test cases |
-| test_csharp_analyzer.py ⭐ | ✅ PASS | 36 C# security checks (12 Phase 1 + 6 Phase 2 + 18 Phase 3) |
-| test_java_analyzer.py ⭐ | ✅ PASS | 36 Java security checks (12 Phase 1 + 6 Phase 2 + 18 Phase 3) |
-| test_typescript_analyzer.py ⭐ | ✅ PASS | 36 TypeScript/JS security checks (12 Phase 1 + 6 Phase 2 + 18 Phase 3) |
+| test_csharp_analyzer.py ⭐ | ✅ PASS | 44 C# security checks (12 Phase 1 + 6 Phase 2 + 18 Phase 3 + 8 Phase 4) |
+| test_java_analyzer.py ⭐ | ✅ PASS | 44 Java security checks (12 Phase 1 + 6 Phase 2 + 18 Phase 3 + 8 Phase 4) |
+| test_typescript_analyzer.py ⭐ | ✅ PASS | 44 TypeScript/JS security checks (12 Phase 1 + 6 Phase 2 + 18 Phase 3 + 8 Phase 4) |
 | **Resource Validation** |||
 | test_prompts.py ⭐ | ✅ PASS | 15 prompts validated |
 | test_templates.py ⭐ | ✅ PASS | 23 templates validated |

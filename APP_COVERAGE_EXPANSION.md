@@ -1,14 +1,15 @@
 # Application Code Coverage Expansion Plan
 
 ## Current State
-- **Application Coverage:** 18 KSIs (25.0%) across Python, C#, Java, TypeScript ✅ **Updated: Phase 3 Complete**
+- **Application Coverage:** 22 KSIs (30.6%) across Python, C#, Java, TypeScript ✅ **Updated: Phase 4 Complete**
 - **Infrastructure Coverage:** 55 KSIs (76.4%)
 - **Phase 1 (8 KSIs):** IAM-01, SVC-06, SVC-08, PIY-02, MLA-05, SVC-03, IAM-03, CNA-01
 - **Phase 2 (2 KSIs):** IAM-05, CNA-03 ✅ **COMPLETE**
 - **Phase 3 (8 KSIs):** SVC-01, SVC-02, SVC-07, PIY-01, PIY-03, CNA-07, IAM-04, IAM-07 ✅ **COMPLETE**
+- **Phase 4 (4 KSIs):** MLA-03, MLA-04, MLA-06, INR-01 ✅ **COMPLETE**
 
 ## Goal
-**Target:** Increase application coverage from 18 to 30+ KSIs (42% coverage)
+**Target:** Increase application coverage from 22 to 30+ KSIs (42% coverage)
 **Focus:** Security-critical KSIs that apply to all application languages
 
 ---
@@ -70,17 +71,108 @@ All 8 KSIs from ANALYZER_ROADMAP.md Phase 3:
 - ✅ KSI-IAM-07: Session Management
 
 **Test Coverage:**
-- Python: 36 tests (12 Phase 1 + 6 Phase 2 + 18 Phase 3)
-- C#: 36 tests (12 Phase 1 + 6 Phase 2 + 18 Phase 3)
-- Java: 36 tests (12 Phase 1 + 6 Phase 2 + 18 Phase 3)
-- TypeScript: 36 tests (12 Phase 1 + 6 Phase 2 + 18 Phase 3)
-- **Total:** 144 tests covering 18 KSIs
+- Python: 44 tests (12 Phase 1 + 6 Phase 2 + 18 Phase 3 + 8 Phase 4)
+- C#: 44 tests (12 Phase 1 + 6 Phase 2 + 18 Phase 3 + 8 Phase 4)
+- Java: 44 tests (12 Phase 1 + 6 Phase 2 + 18 Phase 3 + 8 Phase 4)
+- TypeScript: 44 tests (12 Phase 1 + 6 Phase 2 + 18 Phase 3 + 8 Phase 4)
+- **Total:** 176 tests covering 22 KSIs
+
+---
+
+## Phase 4 Expansion: Monitoring and Observability (4 KSIs) ✅ COMPLETE
+
+**Status:** ✅ **ALL COMPLETE** - Implemented in all 4 languages with 8 tests each (32 total tests)
+
+All 4 KSIs for real-time security monitoring and incident response:
+- ✅ KSI-MLA-03: Security Event Monitoring
+- ✅ KSI-MLA-04: Anomaly Detection
+- ✅ KSI-MLA-06: Performance Monitoring
+- ✅ KSI-INR-01: Incident Response Integration
+
+### KSI-MLA-03: Security Event Monitoring ✅ IMPLEMENTED
+**Why:** Real-time tracking of authentication, authorization, and security events
+**Status:** ✅ **COMPLETE** - Implemented in all 4 analyzers
+**Applicable:** All 4 languages
+
+**Detection Patterns:**
+- ✅ Application Insights / monitoring framework presence
+- ✅ Security event tracking (authentication, authorization failures)
+- ✅ Structured logging for security-relevant events
+- ✅ Custom telemetry for audit trails
+
+**Implementation Details:**
+- Python: `_check_security_monitoring()` in python_analyzer.py
+- C#: `_check_security_monitoring()` in csharp_analyzer.py  
+- Java: `_check_security_monitoring()` in java_analyzer.py
+- TypeScript: `_check_security_monitoring()` in typescript_analyzer.py
+- Provides Azure Monitor Application Insights recommendations
+
+### KSI-MLA-04: Anomaly Detection ✅ IMPLEMENTED
+**Why:** Baseline-based detection of unusual behavior patterns
+**Status:** ✅ **COMPLETE** - Implemented in all 4 analyzers
+**Applicable:** All 4 languages
+
+**Detection Patterns:**
+- ✅ Custom metrics tracking (login attempts, API calls, data access volume)
+- ✅ Application Insights Smart Detection configuration
+- ✅ Micrometer/Prometheus metrics for baseline establishment
+- ✅ Alert rules for anomaly thresholds
+
+**Implementation Details:**
+- Python: `_check_anomaly_detection()` in python_analyzer.py
+- C#: `_check_anomaly_detection()` in csharp_analyzer.py
+- Java: `_check_anomaly_detection()` in java_analyzer.py
+- TypeScript: `_check_anomaly_detection()` in typescript_analyzer.py
+- Recommends Smart Detection enablement in Azure Portal
+
+### KSI-MLA-06: Performance Monitoring ✅ IMPLEMENTED
+**Why:** Track request rates, response times, resource utilization, and dependencies
+**Status:** ✅ **COMPLETE** - Implemented in all 4 analyzers
+**Applicable:** All 4 languages
+
+**Detection Patterns:**
+- ✅ Dependency tracking (database calls, external APIs)
+- ✅ Request/response time instrumentation
+- ✅ Performance counters and metrics
+- ✅ Resource utilization monitoring
+
+**Implementation Details:**
+- Python: `_check_performance_monitoring()` in python_analyzer.py
+- C#: `_check_performance_monitoring()` in csharp_analyzer.py
+- Java: `_check_performance_monitoring()` in java_analyzer.py
+- TypeScript: `_check_performance_monitoring()` in typescript_analyzer.py
+- Comprehensive dependency tracking recommendations
+
+### KSI-INR-01: Incident Response Integration ✅ IMPLEMENTED
+**Why:** Automated alerting and incident creation for security events
+**Status:** ✅ **COMPLETE** - Implemented in all 4 analyzers
+**Applicable:** All 4 languages
+
+**Detection Patterns:**
+- ✅ PagerDuty / ServiceNow / webhook integrations
+- ✅ Automated incident triggering on critical errors
+- ✅ Alert rules connected to error handlers
+- ✅ Security exception → incident response workflow
+
+**Implementation Details:**
+- Python: `_check_incident_response()` in python_analyzer.py
+- C#: `_check_incident_response()` in csharp_analyzer.py
+- Java: `_check_incident_response()` in java_analyzer.py
+- TypeScript: `_check_incident_response()` in typescript_analyzer.py
+- Azure Monitor Action Groups integration guidance
+
+**Test Coverage (Phase 4):**
+- Python: 8 tests (2 per KSI: missing + implemented)
+- C#: 8 tests (2 per KSI: missing + implemented)
+- Java: 8 tests (2 per KSI: missing + implemented)
+- TypeScript: 8 tests (2 per KSI: missing + implemented)
+- **Total:** 32 new tests for Phase 4
 
 ---
 
 ## Additional High-Value Application KSIs
 
-### Phase 4 Application Expansion: Runtime Security (6 KSIs)
+### Phase 5 Application Expansion: Runtime Security (3 KSIs)
 
 #### KSI-CMT-01: Configuration Management
 **Applicable:** All 4 languages

@@ -60,6 +60,12 @@ class TypeScriptAnalyzer(BaseAnalyzer):
         self._check_least_privilege(code, file_path)
         self._check_session_management(code, file_path)
         
+        # Phase 4: Monitoring and Observability
+        self._check_security_monitoring(code, file_path)
+        self._check_anomaly_detection(code, file_path)
+        self._check_performance_monitoring(code, file_path)
+        self._check_incident_response(code, file_path)
+        
         return self.result
     
     def _check_authentication(self, code: str, file_path: str) -> None:
@@ -580,3 +586,198 @@ class TypeScriptAnalyzer(BaseAnalyzer):
                     recommendation="Ensure session timeout is configured appropriately (e.g., 20 minutes idle timeout).",
                     good_practice=True
                 ))
+    
+    def _check_security_monitoring(self, code: str, file_path: str) -> None:
+        """Check for security event monitoring (KSI-MLA-03)."""
+        # Check for Application Insights or monitoring libraries
+        has_monitoring = bool(re.search(
+            r"(applicationinsights|@azure/monitor|winston|pino|bunyan)",
+            code,
+            re.IGNORECASE
+        ))
+        
+        if has_monitoring:
+            # Check for security event tracking
+            has_security_tracking = bool(re.search(
+                r"(trackEvent|trackException|logger\.(warn|error|info)|console\.(warn|error))",
+                code
+            ))
+            
+            if not has_security_tracking:
+                line_num = self.get_line_number(code, "applicationinsights") or self.get_line_number(code, "winston")
+                self.add_finding(Finding(
+                    requirement_id="KSI-MLA-03",
+                    severity=Severity.MEDIUM,
+                    title="Limited security event tracking",
+                    description="Monitoring framework is configured but not actively tracking security events. FedRAMP 20x requires comprehensive security monitoring.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Track security-relevant events:\n```typescript\nimport * as appInsights from 'applicationinsights';\nimport winston from 'winston';\n\nclass SecurityMonitor {\n  private client: appInsights.TelemetryClient;\n  private logger: winston.Logger;\n  \n  constructor() {\n    appInsights.setup(process.env.APPINSIGHTS_CONNECTION_STRING).start();\n    this.client = appInsights.defaultClient;\n    \n    this.logger = winston.createLogger({\n      transports: [\n        new winston.transports.Console(),\n        new winston.transports.File({ filename: 'security.log' })\n      ]\n    });\n  }\n  \n  trackAuthenticationEvent(username: string, success: boolean, ipAddress: string): void {\n    const properties = {\n      username,\n      success: String(success),\n      ipAddress,\n      eventType: 'Authentication'\n    };\n    \n    this.client.trackEvent({ name: 'SecurityEvent', properties });\n    this.logger.warn(`Authentication attempt: ${username} from ${ipAddress} - ${success ? 'Success' : 'Failed'}`);\n  }\n  \n  trackAuthorizationFailure(username: string, resource: string): void {\n    this.client.trackEvent({\n      name: 'AuthorizationDenied',\n      properties: { username, resource }\n    });\n    this.logger.warn(`Authorization denied: ${username} attempted to access ${resource}`);\n  }\n}\n```\nSource: Application Insights for Node.js (https://learn.microsoft.com/azure/azure-monitor/app/nodejs)"
+                ))
+            else:
+                line_num = self.get_line_number(code, "trackEvent") or self.get_line_number(code, "logger.warn")
+                self.add_finding(Finding(
+                    requirement_id="KSI-MLA-03",
+                    severity=Severity.INFO,
+                    title="Security monitoring implemented",
+                    description="Application tracks security events using monitoring framework.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Ensure all authentication, authorization, and data access events are logged.",
+                    good_practice=True
+                ))
+        else:
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-03",
+                severity=Severity.HIGH,
+                title="No security monitoring framework detected",
+                description="Application does not appear to use Application Insights or structured logging. FedRAMP 20x requires comprehensive security event monitoring.",
+                file_path=file_path,
+                recommendation="Implement Application Insights:\n```typescript\nimport * as appInsights from 'applicationinsights';\n\n// Initialize Application Insights\nappInsights.setup(process.env.APPINSIGHTS_CONNECTION_STRING)\n  .setAutoDependencyCorrelation(true)\n  .setAutoCollectRequests(true)\n  .setAutoCollectPerformance(true)\n  .setAutoCollectExceptions(true)\n  .setAutoCollectDependencies(true)\n  .setAutoCollectConsole(true)\n  .setUseDiskRetryCaching(true)\n  .start();\n```\nSource: Azure Monitor overview (https://learn.microsoft.com/azure/azure-monitor/overview)"
+            ))
+    
+    def _check_anomaly_detection(self, code: str, file_path: str) -> None:
+        """Check for anomaly detection configuration (KSI-MLA-04)."""
+        # Check for metrics tracking
+        has_metrics = bool(re.search(
+            r"(trackMetric|prom-client|@opentelemetry/metrics)",
+            code
+        ))
+        
+        if has_metrics:
+            # Check for custom metrics
+            has_custom_metrics = bool(re.search(
+                r"(trackMetric|Counter|Gauge|Histogram)",
+                code
+            ))
+            
+            if not has_custom_metrics:
+                line_num = self.get_line_number(code, "prom-client")
+                self.add_finding(Finding(
+                    requirement_id="KSI-MLA-04",
+                    severity=Severity.MEDIUM,
+                    title="No custom metrics for anomaly detection",
+                    description="Metrics framework is configured but not tracking custom metrics for anomaly detection. FedRAMP 20x requires baseline-based anomaly detection.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Track custom metrics for anomaly detection:\n```typescript\nimport * as appInsights from 'applicationinsights';\nimport { Counter, Histogram } from 'prom-client';\n\nclass MetricsTracker {\n  private client: appInsights.TelemetryClient;\n  private loginAttempts: Counter;\n  private apiResponseTime: Histogram;\n  \n  constructor() {\n    this.client = appInsights.defaultClient;\n    \n    this.loginAttempts = new Counter({\n      name: 'security_login_attempts_total',\n      help: 'Total number of login attempts',\n      labelNames: ['ip_address', 'result']\n    });\n    \n    this.apiResponseTime = new Histogram({\n      name: 'api_response_time_seconds',\n      help: 'API response time in seconds',\n      labelNames: ['endpoint', 'method']\n    });\n  }\n  \n  trackLoginAttempt(ipAddress: string, success: boolean): void {\n    this.loginAttempts.inc({ ip_address: ipAddress, result: success ? 'success' : 'failed' });\n    this.client.trackMetric({ name: 'LoginAttempts', value: 1, properties: { ipAddress } });\n  }\n  \n  trackApiCallRate(endpoint: string, count: number): void {\n    this.client.trackMetric({ name: 'APICallRate', value: count, properties: { endpoint } });\n  }\n  \n  trackDataAccessVolume(username: string, bytes: number): void {\n    this.client.trackMetric({ name: 'DataAccessVolume', value: bytes, properties: { username } });\n  }\n}\n```\nEnable Smart Detection in Azure Portal for Application Insights.\n\nSource: Application Insights Smart Detection (https://learn.microsoft.com/azure/azure-monitor/alerts/proactive-diagnostics)"
+                ))
+            else:
+                line_num = self.get_line_number(code, "trackMetric") or self.get_line_number(code, "Counter")
+                self.add_finding(Finding(
+                    requirement_id="KSI-MLA-04",
+                    severity=Severity.INFO,
+                    title="Metrics tracking configured",
+                    description="Application tracks custom metrics that can be used for anomaly detection.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Ensure Smart Detection is enabled in Azure Application Insights for automated anomaly detection.",
+                    good_practice=True
+                ))
+        else:
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-04",
+                severity=Severity.HIGH,
+                title="No anomaly detection framework",
+                description="Application does not track metrics for anomaly detection. FedRAMP 20x requires baseline-based anomaly detection.",
+                file_path=file_path,
+                recommendation="Implement metrics tracking with Application Insights (see KSI-MLA-03 recommendation)."
+            ))
+    
+    def _check_performance_monitoring(self, code: str, file_path: str) -> None:
+        """Check for performance monitoring (KSI-MLA-06)."""
+        # Check for performance tracking
+        has_perf_monitoring = bool(re.search(
+            r"(applicationinsights|trackDependency|performance\.(now|measure)|perf_hooks)",
+            code
+        ))
+        
+        if has_perf_monitoring:
+            # Check for dependency tracking
+            has_dependency_tracking = bool(re.search(
+                r"(trackDependency|measure|PerformanceObserver)",
+                code
+            ))
+            
+            if not has_dependency_tracking:
+                line_num = self.get_line_number(code, "applicationinsights") or self.get_line_number(code, "performance")
+                self.add_finding(Finding(
+                    requirement_id="KSI-MLA-06",
+                    severity=Severity.MEDIUM,
+                    title="Limited performance monitoring",
+                    description="Application has monitoring but doesn't track dependencies (database calls, external APIs). FedRAMP 20x requires comprehensive performance monitoring.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Track dependencies for performance monitoring:\n```typescript\nimport * as appInsights from 'applicationinsights';\nimport { performance } from 'perf_hooks';\n\nclass PerformanceMonitor {\n  private client: appInsights.TelemetryClient;\n  \n  constructor() {\n    this.client = appInsights.defaultClient;\n  }\n  \n  async trackDependency<T>(\n    dependencyName: string,\n    target: string,\n    operation: () => Promise<T>\n  ): Promise<T> {\n    const startTime = new Date();\n    const startMark = performance.now();\n    let success = false;\n    \n    try {\n      const result = await operation();\n      success = true;\n      return result;\n    } catch (error) {\n      throw error;\n    } finally {\n      const duration = performance.now() - startMark;\n      \n      this.client.trackDependency({\n        dependencyTypeName: dependencyName,\n        target,\n        name: dependencyName,\n        data: target,\n        duration,\n        success,\n        resultCode: success ? 200 : 500,\n        time: startTime\n      });\n    }\n  }\n}\n\n// Usage\nconst monitor = new PerformanceMonitor();\nconst users = await monitor.trackDependency(\n  'Database',\n  'UserTable',\n  async () => await db.collection('users').find().toArray()\n);\n```\nSource: Application Insights dependency tracking (https://learn.microsoft.com/azure/azure-monitor/app/nodejs#track-dependencies)"
+                ))
+            else:
+                line_num = self.get_line_number(code, "trackDependency") or self.get_line_number(code, "measure")
+                self.add_finding(Finding(
+                    requirement_id="KSI-MLA-06",
+                    severity=Severity.INFO,
+                    title="Comprehensive performance monitoring",
+                    description="Application tracks dependencies and performance metrics.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Ensure monitoring covers all critical dependencies and set up alerts for performance degradation.",
+                    good_practice=True
+                ))
+        else:
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-06",
+                severity=Severity.HIGH,
+                title="No performance monitoring detected",
+                description="Application does not implement performance monitoring. FedRAMP 20x requires tracking of request rates, response times, and resource utilization.",
+                file_path=file_path,
+                recommendation="Implement Application Insights for performance monitoring (see KSI-MLA-03 recommendation)."
+            ))
+    
+    def _check_incident_response(self, code: str, file_path: str) -> None:
+        """Check for automated incident response integration (KSI-INR-01)."""
+        # Check for incident response integrations
+        has_incident_integration = bool(re.search(
+            r"(pagerduty|servicenow|opsgenie|webhook|axios|fetch|node-fetch)",
+            code,
+            re.IGNORECASE
+        ))
+        
+        if has_incident_integration:
+            # Check for error handling with alerting
+            has_alert_on_error = bool(re.search(
+                r"(trackException|logger\.error|console\.error).*(?:.*\n.*){0,5}.*(?:axios\.post|fetch|\.send)",
+                code,
+                re.DOTALL
+            ))
+            
+            if not has_alert_on_error:
+                line_num = self.get_line_number(code, "pagerduty") or self.get_line_number(code, "axios")
+                self.add_finding(Finding(
+                    requirement_id="KSI-INR-01",
+                    severity=Severity.MEDIUM,
+                    title="Incident response integration not connected to errors",
+                    description="Incident response tools are referenced but not integrated with error handling. FedRAMP 20x requires automated incident response.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Integrate incident response with error handling:\n```typescript\nimport axios from 'axios';\nimport winston from 'winston';\n\nclass IncidentResponseService {\n  private logger: winston.Logger;\n  private webhookUrl: string;\n  \n  constructor(webhookUrl: string) {\n    this.webhookUrl = webhookUrl;\n    this.logger = winston.createLogger({\n      transports: [new winston.transports.Console()]\n    });\n  }\n  \n  async triggerIncident(\n    error: Error,\n    severity: 'critical' | 'error' | 'warning',\n    context: Record<string, string>\n  ): Promise<void> {\n    const incident = {\n      routing_key: this.webhookUrl,\n      event_action: 'trigger',\n      payload: {\n        summary: error.message,\n        severity,\n        source: process.env.HOSTNAME || 'unknown',\n        timestamp: new Date().toISOString(),\n        custom_details: context\n      }\n    };\n    \n    try {\n      await axios.post('https://events.pagerduty.com/v2/enqueue', incident);\n      this.logger.info(`Incident triggered: ${error.constructor.name}`);\n    } catch (alertError) {\n      this.logger.error('Failed to trigger incident', alertError);\n    }\n  }\n}\n\n// Usage in error handler\napp.use((err: Error, req: Request, res: Response, next: NextFunction) => {\n  if (err.name === 'SecurityError') {\n    logger.error('Security breach detected', err);\n    incidentResponse.triggerIncident(err, 'critical', {\n      user: req.user?.username || 'anonymous',\n      ip: req.ip,\n      path: req.path\n    });\n  }\n  res.status(500).json({ error: 'Internal server error' });\n});\n```\nSource: Azure Monitor Action Groups (https://learn.microsoft.com/azure/azure-monitor/alerts/action-groups)"
+                ))
+            else:
+                line_num = self.get_line_number(code, "axios.post") or self.get_line_number(code, "trackException")
+                self.add_finding(Finding(
+                    requirement_id="KSI-INR-01",
+                    severity=Severity.INFO,
+                    title="Automated incident response configured",
+                    description="Application integrates incident response tools with error handling.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Ensure incident response covers all critical errors and security events.",
+                    good_practice=True
+                ))
+        else:
+            self.add_finding(Finding(
+                requirement_id="KSI-INR-01",
+                severity=Severity.HIGH,
+                title="No incident response integration",
+                description="Application does not integrate with incident response tools. FedRAMP 20x requires automated incident response for security events.",
+                file_path=file_path,
+                recommendation="Integrate with incident response system:\n1. Use Azure Monitor Action Groups for alerts\n2. Configure webhooks to PagerDuty, ServiceNow, or similar\n3. Implement automated alerting for critical errors\n\nSource: Azure Monitor alerting (https://learn.microsoft.com/azure/azure-monitor/alerts/alerts-overview)"
+            ))

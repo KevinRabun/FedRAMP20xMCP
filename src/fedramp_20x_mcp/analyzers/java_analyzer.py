@@ -60,6 +60,12 @@ class JavaAnalyzer(BaseAnalyzer):
         self._check_least_privilege(code, file_path)
         self._check_session_management(code, file_path)
         
+        # Phase 4: Monitoring and Observability
+        self._check_security_monitoring(code, file_path)
+        self._check_anomaly_detection(code, file_path)
+        self._check_performance_monitoring(code, file_path)
+        self._check_incident_response(code, file_path)
+        
         return self.result
     
     def _check_authentication(self, code: str, file_path: str) -> None:
@@ -582,3 +588,197 @@ class JavaAnalyzer(BaseAnalyzer):
                     recommendation="Ensure session timeout is configured appropriately (e.g., 20 minutes idle timeout).",
                     good_practice=True
                 ))
+    
+    def _check_security_monitoring(self, code: str, file_path: str) -> None:
+        """Check for security event monitoring (KSI-MLA-03)."""
+        # Check for Application Insights for Java
+        has_monitoring = bool(re.search(
+            r"(com\.microsoft\.applicationinsights|io\.micrometer|org\.slf4j\.Logger)",
+            code
+        ))
+        
+        if has_monitoring:
+            # Check for security event logging
+            has_security_logging = bool(re.search(
+                r"(logger\.(warn|error|info)|trackEvent|trackException)",
+                code
+            ))
+            
+            if not has_security_logging:
+                line_num = self.get_line_number(code, "applicationinsights") or self.get_line_number(code, "Logger")
+                self.add_finding(Finding(
+                    requirement_id="KSI-MLA-03",
+                    severity=Severity.MEDIUM,
+                    title="Limited security event tracking",
+                    description="Monitoring framework is configured but not actively tracking security events. FedRAMP 20x requires comprehensive security monitoring.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Track security-relevant events:\n```java\nimport com.microsoft.applicationinsights.TelemetryClient;\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\n\n@Service\npublic class SecurityMonitor {\n    private static final Logger logger = LoggerFactory.getLogger(SecurityMonitor.class);\n    private final TelemetryClient telemetryClient;\n    \n    public void trackAuthenticationEvent(String username, boolean success, String ipAddress) {\n        Map<String, String> properties = new HashMap<>();\n        properties.put(\"Username\", username);\n        properties.put(\"Success\", String.valueOf(success));\n        properties.put(\"IPAddress\", ipAddress);\n        properties.put(\"EventType\", \"Authentication\");\n        \n        telemetryClient.trackEvent(\"SecurityEvent\", properties, null);\n        logger.warn(\"Authentication attempt: {} from {} - {}\",\n            username, ipAddress, success ? \"Success\" : \"Failed\");\n    }\n    \n    public void trackAuthorizationFailure(String username, String resource) {\n        Map<String, String> properties = new HashMap<>();\n        properties.put(\"Username\", username);\n        properties.put(\"Resource\", resource);\n        \n        telemetryClient.trackEvent(\"AuthorizationDenied\", properties, null);\n        logger.warn(\"Authorization denied: {} attempted to access {}\",\n            username, resource);\n    }\n}\n```\nSource: Application Insights for Java (https://learn.microsoft.com/azure/azure-monitor/app/java-in-process-agent)"
+                ))
+            else:
+                line_num = self.get_line_number(code, "trackEvent") or self.get_line_number(code, "logger.warn")
+                self.add_finding(Finding(
+                    requirement_id="KSI-MLA-03",
+                    severity=Severity.INFO,
+                    title="Security monitoring implemented",
+                    description="Application tracks security events using monitoring framework.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Ensure all authentication, authorization, and data access events are logged.",
+                    good_practice=True
+                ))
+        else:
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-03",
+                severity=Severity.HIGH,
+                title="No security monitoring framework detected",
+                description="Application does not appear to use Application Insights or structured logging. FedRAMP 20x requires comprehensive security event monitoring.",
+                file_path=file_path,
+                recommendation="Implement Application Insights for Java:\n```xml\n<!-- pom.xml -->\n<dependency>\n    <groupId>com.microsoft.azure</groupId>\n    <artifactId>applicationinsights-spring-boot-starter</artifactId>\n    <version>3.4.19</version>\n</dependency>\n```\n\n```yaml\n# application.yml\nazure:\n  application-insights:\n    instrumentation-key: ${APPINSIGHTS_INSTRUMENTATIONKEY}\n```\nSource: Azure Monitor Java overview (https://learn.microsoft.com/azure/azure-monitor/app/java-get-started)"
+            ))
+    
+    def _check_anomaly_detection(self, code: str, file_path: str) -> None:
+        """Check for anomaly detection configuration (KSI-MLA-04)."""
+        # Check for metrics tracking
+        has_metrics = bool(re.search(
+            r"(MeterRegistry|Counter|Timer|Gauge|trackMetric)",
+            code
+        ))
+        
+        if has_metrics:
+            # Check for custom metrics
+            has_custom_metrics = bool(re.search(
+                r"(counter\(|timer\(|gauge\(|trackMetric)",
+                code
+            ))
+            
+            if not has_custom_metrics:
+                line_num = self.get_line_number(code, "MeterRegistry")
+                self.add_finding(Finding(
+                    requirement_id="KSI-MLA-04",
+                    severity=Severity.MEDIUM,
+                    title="No custom metrics for anomaly detection",
+                    description="Metrics framework is configured but not tracking custom metrics for anomaly detection. FedRAMP 20x requires baseline-based anomaly detection.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Track custom metrics for anomaly detection:\n```java\nimport io.micrometer.core.instrument.MeterRegistry;\nimport io.micrometer.core.instrument.Counter;\nimport io.micrometer.core.instrument.Timer;\n\n@Service\npublic class MetricsTracker {\n    private final MeterRegistry registry;\n    private final Counter loginAttempts;\n    private final Timer apiResponseTime;\n    \n    public MetricsTracker(MeterRegistry registry) {\n        this.registry = registry;\n        this.loginAttempts = Counter.builder(\"security.login.attempts\")\n            .tag(\"type\", \"authentication\")\n            .register(registry);\n        this.apiResponseTime = Timer.builder(\"api.response.time\")\n            .tag(\"type\", \"performance\")\n            .register(registry);\n    }\n    \n    public void trackLoginAttempt(String ipAddress) {\n        Counter.builder(\"security.login.attempts\")\n            .tag(\"ip\", ipAddress)\n            .register(registry)\n            .increment();\n    }\n    \n    public void trackDataAccessVolume(String username, long bytes) {\n        registry.counter(\"security.data.access\",\n            \"user\", username).increment(bytes);\n    }\n}\n```\nEnable Smart Detection in Azure Portal for Application Insights.\n\nSource: Micrometer metrics (https://micrometer.io/docs/concepts)"
+                ))
+            else:
+                line_num = self.get_line_number(code, "counter(") or self.get_line_number(code, "trackMetric")
+                self.add_finding(Finding(
+                    requirement_id="KSI-MLA-04",
+                    severity=Severity.INFO,
+                    title="Metrics tracking configured",
+                    description="Application tracks custom metrics that can be used for anomaly detection.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Ensure Smart Detection is enabled in Azure Application Insights for automated anomaly detection.",
+                    good_practice=True
+                ))
+        else:
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-04",
+                severity=Severity.HIGH,
+                title="No anomaly detection framework",
+                description="Application does not track metrics for anomaly detection. FedRAMP 20x requires baseline-based anomaly detection.",
+                file_path=file_path,
+                recommendation="Implement Micrometer with Application Insights (see KSI-MLA-03 recommendation)."
+            ))
+    
+    def _check_performance_monitoring(self, code: str, file_path: str) -> None:
+        """Check for performance monitoring (KSI-MLA-06)."""
+        # Check for performance tracking
+        has_perf_monitoring = bool(re.search(
+            r"(MeterRegistry|Timer|trackDependency|@Timed|StopWatch)",
+            code
+        ))
+        
+        if has_perf_monitoring:
+            # Check for dependency tracking
+            has_dependency_tracking = bool(re.search(
+                r"(trackDependency|@Timed|Timer\.record)",
+                code
+            ))
+            
+            if not has_dependency_tracking:
+                line_num = self.get_line_number(code, "MeterRegistry") or self.get_line_number(code, "StopWatch")
+                self.add_finding(Finding(
+                    requirement_id="KSI-MLA-06",
+                    severity=Severity.MEDIUM,
+                    title="Limited performance monitoring",
+                    description="Application has monitoring but doesn't track dependencies (database calls, external APIs). FedRAMP 20x requires comprehensive performance monitoring.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Track dependencies for performance monitoring:\n```java\nimport io.micrometer.core.instrument.MeterRegistry;\nimport io.micrometer.core.instrument.Timer;\n\n@Service\npublic class PerformanceMonitor {\n    private final MeterRegistry registry;\n    \n    public <T> T trackDependency(String dependencyName, String target, Supplier<T> operation) {\n        Timer.Sample sample = Timer.start(registry);\n        boolean success = false;\n        \n        try {\n            T result = operation.get();\n            success = true;\n            return result;\n        } finally {\n            sample.stop(Timer.builder(\"dependency.call\")\n                .tag(\"dependency\", dependencyName)\n                .tag(\"target\", target)\n                .tag(\"success\", String.valueOf(success))\n                .register(registry));\n        }\n    }\n}\n\n// Usage\n@Service\npublic class UserService {\n    private final PerformanceMonitor monitor;\n    private final UserRepository repository;\n    \n    public List<User> getUsers() {\n        return monitor.trackDependency(\"Database\", \"UserRepository\",\n            () -> repository.findAll());\n    }\n}\n```\nSource: Spring Boot Actuator metrics (https://docs.spring.io/spring-boot/reference/actuator/metrics.html)"
+                ))
+            else:
+                line_num = self.get_line_number(code, "@Timed") or self.get_line_number(code, "trackDependency")
+                self.add_finding(Finding(
+                    requirement_id="KSI-MLA-06",
+                    severity=Severity.INFO,
+                    title="Comprehensive performance monitoring",
+                    description="Application tracks dependencies and performance metrics.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Ensure monitoring covers all critical dependencies and set up alerts for performance degradation.",
+                    good_practice=True
+                ))
+        else:
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-06",
+                severity=Severity.HIGH,
+                title="No performance monitoring detected",
+                description="Application does not implement performance monitoring. FedRAMP 20x requires tracking of request rates, response times, and resource utilization.",
+                file_path=file_path,
+                recommendation="Implement Micrometer for performance monitoring (see KSI-MLA-03 recommendation)."
+            ))
+    
+    def _check_incident_response(self, code: str, file_path: str) -> None:
+        """Check for automated incident response integration (KSI-INR-01)."""
+        # Check for incident response integrations
+        has_incident_integration = bool(re.search(
+            r"(PagerDuty|ServiceNow|Opsgenie|webhook|RestTemplate|WebClient)",
+            code,
+            re.IGNORECASE
+        ))
+        
+        if has_incident_integration:
+            # Check for error handling with alerting
+            has_alert_on_error = bool(re.search(
+                r"(logger\.error|trackException).*(?:.*\n.*){0,5}.*(?:postForEntity|post|exchange)",
+                code,
+                re.DOTALL
+            ))
+            
+            if not has_alert_on_error:
+                line_num = self.get_line_number(code, "PagerDuty") or self.get_line_number(code, "RestTemplate")
+                self.add_finding(Finding(
+                    requirement_id="KSI-INR-01",
+                    severity=Severity.MEDIUM,
+                    title="Incident response integration not connected to errors",
+                    description="Incident response tools are referenced but not integrated with error handling. FedRAMP 20x requires automated incident response.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Integrate incident response with error handling:\n```java\nimport org.springframework.web.client.RestTemplate;\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\n\n@Service\npublic class IncidentResponseService {\n    private static final Logger logger = LoggerFactory.getLogger(IncidentResponseService.class);\n    private final RestTemplate restTemplate;\n    \n    @Value(\"${pagerduty.integration.key}\")\n    private String integrationKey;\n    \n    public void triggerIncident(Exception ex, String severity, Map<String, String> context) {\n        Map<String, Object> incident = Map.of(\n            \"routing_key\", integrationKey,\n            \"event_action\", \"trigger\",\n            \"payload\", Map.of(\n                \"summary\", ex.getMessage(),\n                \"severity\", severity,\n                \"source\", InetAddress.getLocalHost().getHostName(),\n                \"timestamp\", Instant.now().toString(),\n                \"custom_details\", context\n            )\n        );\n        \n        try {\n            restTemplate.postForEntity(\n                \"https://events.pagerduty.com/v2/enqueue\",\n                incident,\n                String.class\n            );\n            logger.info(\"Incident triggered: {}\", ex.getClass().getSimpleName());\n        } catch (Exception alertEx) {\n            logger.error(\"Failed to trigger incident\", alertEx);\n        }\n    }\n}\n\n// Usage in exception handler\n@ControllerAdvice\npublic class GlobalExceptionHandler {\n    private final IncidentResponseService incidentResponse;\n    \n    @ExceptionHandler(SecurityException.class)\n    public ResponseEntity<String> handleSecurityException(SecurityException ex, HttpServletRequest request) {\n        logger.error(\"Security breach detected\", ex);\n        incidentResponse.triggerIncident(ex, \"critical\", Map.of(\n            \"user\", request.getUserPrincipal().getName(),\n            \"ip\", request.getRemoteAddr()\n        ));\n        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(\"Access denied\");\n    }\n}\n```\nSource: Azure Monitor Action Groups (https://learn.microsoft.com/azure/azure-monitor/alerts/action-groups)"
+                ))
+            else:
+                line_num = self.get_line_number(code, "postForEntity") or self.get_line_number(code, "logger.error")
+                self.add_finding(Finding(
+                    requirement_id="KSI-INR-01",
+                    severity=Severity.INFO,
+                    title="Automated incident response configured",
+                    description="Application integrates incident response tools with error handling.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Ensure incident response covers all critical errors and security events.",
+                    good_practice=True
+                ))
+        else:
+            self.add_finding(Finding(
+                requirement_id="KSI-INR-01",
+                severity=Severity.HIGH,
+                title="No incident response integration",
+                description="Application does not integrate with incident response tools. FedRAMP 20x requires automated incident response for security events.",
+                file_path=file_path,
+                recommendation="Integrate with incident response system:\n1. Use Azure Monitor Action Groups for alerts\n2. Configure webhooks to PagerDuty, ServiceNow, or similar\n3. Implement automated alerting for critical errors\n\nSource: Azure Monitor alerting (https://learn.microsoft.com/azure/azure-monitor/alerts/alerts-overview)"
+            ))

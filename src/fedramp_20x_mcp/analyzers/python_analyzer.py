@@ -60,6 +60,12 @@ class PythonAnalyzer(BaseAnalyzer):
         self._check_least_privilege(code, file_path)
         self._check_session_management(code, file_path)
         
+        # Phase 4: Monitoring & Observability
+        self._check_security_monitoring(code, file_path)
+        self._check_anomaly_detection(code, file_path)
+        self._check_performance_monitoring(code, file_path)
+        self._check_incident_response(code, file_path)
+        
         return self.result
     
     def _check_authentication(self, code: str, file_path: str) -> None:
@@ -902,4 +908,194 @@ class PythonAnalyzer(BaseAnalyzer):
                     line_number=line_num,
                     recommendation="Monitor session activity for suspicious patterns.",
                     good_practice=True
+                ))
+    
+    # =========================================================================
+    # Phase 4: Monitoring & Observability
+    # =========================================================================
+    
+    def _check_security_monitoring(self, code: str, file_path: str) -> None:
+        """Check for security monitoring and alerting (KSI-MLA-03)."""
+        # Check for monitoring framework imports
+        has_app_insights = bool(re.search(r"from\s+applicationinsights|from\s+opencensus\.ext\.azure|import\s+applicationinsights", code))
+        has_prometheus = bool(re.search(r"from\s+prometheus_client|import\s+prometheus_client", code))
+        has_azure_monitor = bool(re.search(r"from\s+azure\.monitor|AzureMonitor", code))
+        
+        has_monitoring = has_app_insights or has_prometheus or has_azure_monitor
+        
+        if not has_monitoring:
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-03",
+                severity=Severity.HIGH,
+                title="Missing security monitoring integration",
+                description="No Application Insights, Azure Monitor, or Prometheus integration detected. FedRAMP 20x requires real-time security monitoring.",
+                file_path=file_path,
+                line_number=1,
+                recommendation="Integrate Application Insights for security monitoring:\n```python\nfrom applicationinsights import TelemetryClient\nfrom applicationinsights.requests import WSGIApplication\nimport logging\n\n# Initialize Application Insights\ntc = TelemetryClient(instrumentation_key=os.environ['APPINSIGHTS_KEY'])\n\n# Track custom security events\ndef track_security_event(event_name: str, properties: dict):\n    tc.track_event(event_name, properties)\n    tc.flush()\n\n# Example: Track authentication events\ndef login(username: str):\n    try:\n        user = authenticate(username)\n        track_security_event('UserLogin', {\n            'username': username,\n            'success': True,\n            'timestamp': datetime.utcnow().isoformat()\n        })\n        return user\n    except AuthenticationError as e:\n        track_security_event('UserLoginFailed', {\n            'username': username,\n            'success': False,\n            'error': str(e)\n        })\n        raise\n\n# Flask integration\nfrom flask import Flask\napp = Flask(__name__)\napp.wsgi_app = WSGIApplication(instrumentation_key=os.environ['APPINSIGHTS_KEY'], app=app.wsgi_app)\n```\nSource: Azure Application Insights (https://learn.microsoft.com/azure/azure-monitor/app/app-insights-overview)"
+            ))
+        else:
+            # Check for security event tracking
+            has_custom_events = bool(re.search(r"track_(event|metric|trace)|log_security|security_event", code, re.IGNORECASE))
+            has_auth_logging = bool(re.search(r"track.*auth|log.*login|audit.*access", code, re.IGNORECASE))
+            
+            if has_custom_events and has_auth_logging:
+                line_num = self.get_line_number(code, "track_event") or self.get_line_number(code, "TelemetryClient")
+                self.add_finding(Finding(
+                    requirement_id="KSI-MLA-03",
+                    severity=Severity.INFO,
+                    title="Security monitoring implemented",
+                    description="Application Insights/Azure Monitor integrated with custom security event tracking.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Ensure monitoring covers: authentication, authorization, data access, configuration changes, and error conditions.",
+                    good_practice=True
+                ))
+            else:
+                line_num = self.get_line_number(code, "applicationinsights") or self.get_line_number(code, "prometheus")
+                self.add_finding(Finding(
+                    requirement_id="KSI-MLA-03",
+                    severity=Severity.MEDIUM,
+                    title="Limited security event tracking",
+                    description="Monitoring framework present but missing comprehensive security event tracking.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Add custom tracking for authentication, authorization failures, data access, and suspicious patterns."
+                ))
+    
+    def _check_anomaly_detection(self, code: str, file_path: str) -> None:
+        """Check for anomaly detection configuration (KSI-MLA-04)."""
+        # Check for anomaly detection or smart detection configuration
+        has_smart_detection = bool(re.search(r"smart.?detection|anomaly.?detection|adaptive.?sampling", code, re.IGNORECASE))
+        has_baseline_metrics = bool(re.search(r"baseline|threshold|metric.*alert|custom.*metric", code, re.IGNORECASE))
+        has_auth_anomalies = bool(re.search(r"(unusual|suspicious|anomalous).*(login|auth|access)", code, re.IGNORECASE))
+        
+        # Check for Application Insights with smart detection APIs
+        has_app_insights_config = bool(re.search(r"TelemetryConfiguration|ApplicationInsightsConfig", code))
+        
+        if not (has_smart_detection or has_baseline_metrics or has_auth_anomalies):
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-04",
+                severity=Severity.MEDIUM,
+                title="Missing anomaly detection",
+                description="No anomaly detection or smart detection configuration found. FedRAMP 20x recommends automated anomaly detection.",
+                file_path=file_path,
+                line_number=1,
+                recommendation="Configure Application Insights Smart Detection and custom metrics:\n```python\nfrom applicationinsights import TelemetryClient\nfrom collections import Counter\nfrom datetime import datetime, timedelta\n\ntc = TelemetryClient()\n\n# Track authentication patterns for anomaly detection\nclass AuthAnomalyDetector:\n    def __init__(self):\n        self.login_attempts = Counter()\n        self.baseline_threshold = 5  # Normal login attempts per hour\n    \n    def track_login(self, user_id: str, ip_address: str, success: bool):\n        key = f\"{user_id}:{ip_address}\"\n        self.login_attempts[key] += 1\n        \n        # Custom metric for Application Insights\n        tc.track_metric('LoginAttempts', 1, properties={\n            'user_id': user_id,\n            'ip': ip_address,\n            'success': success\n        })\n        \n        # Detect anomalies\n        if self.login_attempts[key] > self.baseline_threshold:\n            tc.track_event('AnomalousLoginPattern', {\n                'user_id': user_id,\n                'ip': ip_address,\n                'attempts': self.login_attempts[key],\n                'threshold': self.baseline_threshold,\n                'severity': 'high'\n            })\n        \n        tc.flush()\n\n# Track performance anomalies\ndef track_request_duration(endpoint: str, duration_ms: float):\n    tc.track_metric('RequestDuration', duration_ms, properties={\n        'endpoint': endpoint\n    })\n    \n    # Alert on performance degradation\n    if duration_ms > 5000:  # 5 second threshold\n        tc.track_event('PerformanceDegradation', {\n            'endpoint': endpoint,\n            'duration_ms': duration_ms,\n            'severity': 'medium'\n        })\n```\nSource: Azure Monitor Smart Detection (https://learn.microsoft.com/azure/azure-monitor/app/proactive-diagnostics)"
+            ))
+        else:
+            line_num = self.get_line_number(code, "anomaly") or self.get_line_number(code, "baseline") or self.get_line_number(code, "threshold")
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-04",
+                severity=Severity.INFO,
+                title="Anomaly detection configured",
+                description="Smart detection or custom anomaly detection logic implemented.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure anomaly detection covers: authentication patterns, performance degradation, resource usage spikes, and API abuse.",
+                good_practice=True
+            ))
+    
+    def _check_performance_monitoring(self, code: str, file_path: str) -> None:
+        """Check for performance monitoring (KSI-MLA-06)."""
+        # Check for performance monitoring patterns
+        has_timing = bool(re.search(r"(time\.|perf_counter|timeit|@timed|duration|elapsed)", code))
+        has_profiling = bool(re.search(r"(cProfile|profile|line_profiler|memory_profiler)", code))
+        has_request_tracking = bool(re.search(r"track_(request|dependency)|request.*duration|response.*time", code, re.IGNORECASE))
+        has_db_monitoring = bool(re.search(r"(sql.*duration|query.*time|db.*performance|slow.*query)", code, re.IGNORECASE))
+        has_resource_monitoring = bool(re.search(r"(cpu|memory|disk).*(usage|utilization|monitor)", code, re.IGNORECASE))
+        
+        has_monitoring = has_timing or has_request_tracking or has_db_monitoring or has_resource_monitoring
+        
+        if not has_monitoring:
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-06",
+                severity=Severity.MEDIUM,
+                title="Missing performance monitoring",
+                description="No performance monitoring detected. FedRAMP 20x requires performance baseline tracking to detect attacks.",
+                file_path=file_path,
+                line_number=1,
+                recommendation="Implement comprehensive performance monitoring:\n```python\nimport time\nimport psutil\nfrom applicationinsights import TelemetryClient\nfrom functools import wraps\n\ntc = TelemetryClient()\n\n# Request duration tracking\ndef track_performance(operation_name: str):\n    def decorator(func):\n        @wraps(func)\n        def wrapper(*args, **kwargs):\n            start = time.perf_counter()\n            try:\n                result = func(*args, **kwargs)\n                duration_ms = (time.perf_counter() - start) * 1000\n                \n                # Track in Application Insights\n                tc.track_metric('OperationDuration', duration_ms, properties={\n                    'operation': operation_name,\n                    'success': True\n                })\n                \n                # Alert on slow operations\n                if duration_ms > 1000:\n                    tc.track_event('SlowOperation', {\n                        'operation': operation_name,\n                        'duration_ms': duration_ms\n                    })\n                \n                return result\n            except Exception as e:\n                duration_ms = (time.perf_counter() - start) * 1000\n                tc.track_metric('OperationDuration', duration_ms, properties={\n                    'operation': operation_name,\n                    'success': False,\n                    'error': str(e)\n                })\n                raise\n            finally:\n                tc.flush()\n        return wrapper\n    return decorator\n\n# Resource utilization monitoring\ndef track_resource_usage():\n    cpu_percent = psutil.cpu_percent(interval=1)\n    memory = psutil.virtual_memory()\n    disk = psutil.disk_usage('/')\n    \n    tc.track_metric('CPUUsage', cpu_percent)\n    tc.track_metric('MemoryUsage', memory.percent)\n    tc.track_metric('DiskUsage', disk.percent)\n    \n    # Alert on high resource usage\n    if cpu_percent > 80 or memory.percent > 80:\n        tc.track_event('HighResourceUsage', {\n            'cpu': cpu_percent,\n            'memory': memory.percent,\n            'severity': 'high'\n        })\n\n# Database query monitoring\n@track_performance('database_query')\ndef execute_query(query: str):\n    # Your database logic here\n    pass\n```\nSource: Azure Monitor Performance (https://learn.microsoft.com/azure/azure-monitor/app/performance)"
+            ))
+        else:
+            issues = []
+            if not has_request_tracking:
+                issues.append("HTTP request/response times")
+            if not has_db_monitoring:
+                issues.append("Database query performance")
+            if not has_resource_monitoring:
+                issues.append("CPU/memory utilization")
+            
+            if issues:
+                line_num = self.get_line_number(code, "time.") or self.get_line_number(code, "track_")
+                self.add_finding(Finding(
+                    requirement_id="KSI-MLA-06",
+                    severity=Severity.LOW,
+                    title="Incomplete performance monitoring",
+                    description=f"Performance monitoring present but missing: {', '.join(issues)}.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation=f"Add monitoring for: {', '.join(issues)}."
+                ))
+            else:
+                line_num = self.get_line_number(code, "track_request") or self.get_line_number(code, "duration")
+                self.add_finding(Finding(
+                    requirement_id="KSI-MLA-06",
+                    severity=Severity.INFO,
+                    title="Comprehensive performance monitoring",
+                    description="Request tracking, database monitoring, and resource utilization tracking implemented.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Set performance baselines and alerts for anomalies that may indicate attacks.",
+                    good_practice=True
+                ))
+    
+    def _check_incident_response(self, code: str, file_path: str) -> None:
+        """Check for incident response automation (KSI-INR-01)."""
+        # Check for incident response integrations
+        has_pagerduty = bool(re.search(r"pagerduty|pypd", code, re.IGNORECASE))
+        has_servicenow = bool(re.search(r"servicenow|pysnow", code, re.IGNORECASE))
+        has_webhooks = bool(re.search(r"webhook|http.*post.*alert|incident.*notification", code, re.IGNORECASE))
+        has_azure_alerts = bool(re.search(r"azure.*alert|action.*group|alert.*rule", code, re.IGNORECASE))
+        has_email_alerts = bool(re.search(r"send.*email|smtp|alert.*email", code, re.IGNORECASE))
+        has_slack = bool(re.search(r"slack|slack_sdk", code, re.IGNORECASE))
+        
+        has_integration = has_pagerduty or has_servicenow or has_webhooks or has_azure_alerts or has_slack
+        
+        if not has_integration:
+            self.add_finding(Finding(
+                requirement_id="KSI-INR-01",
+                severity=Severity.MEDIUM,
+                title="Missing incident response automation",
+                description="No incident response system integration (PagerDuty, ServiceNow, webhooks). FedRAMP 20x requires automated incident response.",
+                file_path=file_path,
+                line_number=1,
+                recommendation="Integrate with incident response system:\n```python\nimport requests\nimport json\nfrom datetime import datetime\nfrom enum import Enum\n\nclass IncidentSeverity(Enum):\n    CRITICAL = 'critical'\n    HIGH = 'high'\n    MEDIUM = 'medium'\n    LOW = 'low'\n\ndef create_incident(title: str, description: str, severity: IncidentSeverity):\n    \"\"\"Create incident in PagerDuty/ServiceNow via webhook.\"\"\"\n    webhook_url = os.environ['INCIDENT_WEBHOOK_URL']\n    \n    payload = {\n        'title': title,\n        'description': description,\n        'severity': severity.value,\n        'timestamp': datetime.utcnow().isoformat(),\n        'source': 'application',\n        'service': os.environ.get('SERVICE_NAME', 'unknown')\n    }\n    \n    try:\n        response = requests.post(\n            webhook_url,\n            json=payload,\n            headers={'Content-Type': 'application/json'},\n            timeout=10\n        )\n        response.raise_for_status()\n        return response.json()\n    except Exception as e:\n        # Log but don't fail - incident creation shouldn't break app\n        logger.error(f\"Failed to create incident: {e}\")\n        return None\n\n# Example: Auto-create incident on security event\ndef handle_security_event(event_type: str, details: dict):\n    if event_type == 'multiple_failed_logins':\n        create_incident(\n            title=f\"Suspicious Login Activity: {details['user_id']}\",\n            description=f\"Multiple failed login attempts detected. IP: {details['ip']}, Attempts: {details['count']}\",\n            severity=IncidentSeverity.HIGH\n        )\n    elif event_type == 'sql_injection_attempt':\n        create_incident(\n            title=f\"SQL Injection Attempt Blocked\",\n            description=f\"Potential SQL injection detected. Endpoint: {details['endpoint']}, IP: {details['ip']}\",\n            severity=IncidentSeverity.CRITICAL\n        )\n\n# Azure Monitor Action Group integration\nfrom azure.mgmt.monitor import MonitorManagementClient\nfrom azure.identity import DefaultAzureCredential\n\ndef configure_action_group():\n    credential = DefaultAzureCredential()\n    monitor_client = MonitorManagementClient(credential, subscription_id)\n    \n    # Create action group for critical alerts\n    action_group = {\n        'location': 'global',\n        'group_short_name': 'SecOps',\n        'enabled': True,\n        'webhook_receivers': [{\n            'name': 'incident_webhook',\n            'service_uri': os.environ['INCIDENT_WEBHOOK_URL']\n        }]\n    }\n```\nSource: Azure Monitor Action Groups (https://learn.microsoft.com/azure/azure-monitor/alerts/action-groups)"
+            ))
+        else:
+            # Check for critical event handling
+            has_critical_alerts = bool(re.search(r"(critical|emergency|p0|sev0|severity.*1)", code, re.IGNORECASE))
+            has_auto_escalation = bool(re.search(r"escalate|escalation|on-call", code, re.IGNORECASE))
+            
+            if has_critical_alerts or has_auto_escalation:
+                line_num = self.get_line_number(code, "pagerduty") or self.get_line_number(code, "webhook") or self.get_line_number(code, "incident")
+                self.add_finding(Finding(
+                    requirement_id="KSI-INR-01",
+                    severity=Severity.INFO,
+                    title="Incident response automation configured",
+                    description="Incident response system integration with automated alerting for critical events.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Ensure incident automation covers: authentication failures, authorization violations, data breaches, and system anomalies.",
+                    good_practice=True
+                ))
+            else:
+                line_num = self.get_line_number(code, "webhook") or self.get_line_number(code, "alert")
+                self.add_finding(Finding(
+                    requirement_id="KSI-INR-01",
+                    severity=Severity.LOW,
+                    title="Basic incident notification configured",
+                    description="Incident notification present but may lack severity-based auto-escalation.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Implement severity-based escalation for critical security events."
                 ))

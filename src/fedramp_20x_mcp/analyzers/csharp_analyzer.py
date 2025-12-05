@@ -60,6 +60,12 @@ class CSharpAnalyzer(BaseAnalyzer):
         self._check_least_privilege(code, file_path)
         self._check_session_management(code, file_path)
         
+        # Phase 4: Monitoring and Observability
+        self._check_security_monitoring(code, file_path)
+        self._check_anomaly_detection(code, file_path)
+        self._check_performance_monitoring(code, file_path)
+        self._check_incident_response(code, file_path)
+        
         return self.result
     
     def _check_authentication(self, code: str, file_path: str) -> None:
@@ -590,3 +596,185 @@ class CSharpAnalyzer(BaseAnalyzer):
                     recommendation="Ensure session timeout is configured appropriately (e.g., 20 minutes idle timeout).",
                     good_practice=True
                 ))
+    
+    def _check_security_monitoring(self, code: str, file_path: str) -> None:
+        """Check for security event monitoring (KSI-MLA-03)."""
+        # Check for Application Insights telemetry
+        has_app_insights = bool(re.search(r"(Microsoft\.ApplicationInsights|TelemetryClient|ILogger)", code))
+        
+        if has_app_insights:
+            # Check for security event tracking
+            has_security_tracking = bool(re.search(
+                r"(TrackEvent|TrackException|TrackTrace|LogWarning|LogError|LogCritical)",
+                code
+            ))
+            
+            if not has_security_tracking:
+                line_num = self.get_line_number(code, "ApplicationInsights") or self.get_line_number(code, "ILogger")
+                self.add_finding(Finding(
+                    requirement_id="KSI-MLA-03",
+                    severity=Severity.MEDIUM,
+                    title="Limited security event tracking",
+                    description="Application Insights or ILogger is configured but not actively tracking security events. FedRAMP 20x requires comprehensive security monitoring.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Track security-relevant events:\n```csharp\nusing Microsoft.ApplicationInsights;\nusing Microsoft.Extensions.Logging;\n\npublic class SecurityMonitor\n{\n    private readonly TelemetryClient _telemetry;\n    private readonly ILogger<SecurityMonitor> _logger;\n    \n    public void TrackAuthenticationEvent(string username, bool success, string ipAddress)\n    {\n        var properties = new Dictionary<string, string>\n        {\n            { \"Username\", username },\n            { \"Success\", success.ToString() },\n            { \"IPAddress\", ipAddress },\n            { \"EventType\", \"Authentication\" }\n        };\n        \n        _telemetry.TrackEvent(\"SecurityEvent\", properties);\n        _logger.LogWarning(\"Authentication attempt: {Username} from {IP} - {Result}\",\n            username, ipAddress, success ? \"Success\" : \"Failed\");\n    }\n    \n    public void TrackAuthorizationFailure(string username, string resource)\n    {\n        _telemetry.TrackEvent(\"AuthorizationDenied\", new Dictionary<string, string>\n        {\n            { \"Username\", username },\n            { \"Resource\", resource }\n        });\n        _logger.LogWarning(\"Authorization denied: {Username} attempted to access {Resource}\",\n            username, resource);\n    }\n}\n```\nSource: Azure Monitor Application Insights (https://learn.microsoft.com/azure/azure-monitor/app/api-custom-events-metrics)"
+                ))
+            else:
+                line_num = self.get_line_number(code, "TrackEvent") or self.get_line_number(code, "LogWarning")
+                self.add_finding(Finding(
+                    requirement_id="KSI-MLA-03",
+                    severity=Severity.INFO,
+                    title="Security monitoring implemented",
+                    description="Application tracks security events using Application Insights or ILogger.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Ensure all authentication, authorization, and data access events are logged.",
+                    good_practice=True
+                ))
+        else:
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-03",
+                severity=Severity.HIGH,
+                title="No security monitoring framework detected",
+                description="Application does not appear to use Application Insights or structured logging. FedRAMP 20x requires comprehensive security event monitoring.",
+                file_path=file_path,
+                recommendation="Implement Application Insights:\n```csharp\n// Program.cs\nbuilder.Services.AddApplicationInsightsTelemetry(options =>\n{\n    options.ConnectionString = builder.Configuration[\"ApplicationInsights:ConnectionString\"];\n});\n\n// Add structured logging\nbuilder.Logging.AddApplicationInsights();\nbuilder.Logging.AddConsole();\nbuilder.Logging.AddAzureWebAppDiagnostics();\n```\nSource: Azure Monitor overview (https://learn.microsoft.com/azure/azure-monitor/overview)"
+            ))
+    
+    def _check_anomaly_detection(self, code: str, file_path: str) -> None:
+        """Check for anomaly detection configuration (KSI-MLA-04)."""
+        # Check for Application Insights smart detection
+        has_app_insights = bool(re.search(r"Microsoft\.ApplicationInsights", code))
+        
+        if has_app_insights:
+            # Check for metrics tracking
+            has_metrics = bool(re.search(r"(TrackMetric|GetMetric|TelemetryClient)", code))
+            
+            if not has_metrics:
+                line_num = self.get_line_number(code, "ApplicationInsights")
+                self.add_finding(Finding(
+                    requirement_id="KSI-MLA-04",
+                    severity=Severity.MEDIUM,
+                    title="No custom metrics for anomaly detection",
+                    description="Application Insights is configured but not tracking custom metrics for anomaly detection. FedRAMP 20x requires baseline-based anomaly detection.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Track custom metrics for anomaly detection:\n```csharp\npublic class MetricsTracker\n{\n    private readonly TelemetryClient _telemetry;\n    \n    public void TrackLoginAttempts(int count, string ipAddress)\n    {\n        _telemetry.GetMetric(\"LoginAttempts\", \"IPAddress\").TrackValue(count, ipAddress);\n    }\n    \n    public void TrackApiCallRate(int count, string endpoint)\n    {\n        _telemetry.GetMetric(\"APICallRate\", \"Endpoint\").TrackValue(count, endpoint);\n    }\n    \n    public void TrackDataAccessVolume(long bytes, string username)\n    {\n        _telemetry.GetMetric(\"DataAccessVolume\", \"User\").TrackValue(bytes, username);\n    }\n}\n```\nEnable Smart Detection in Azure Portal:\n1. Navigate to Application Insights resource\n2. Go to Smart Detection settings\n3. Enable anomaly detection alerts\n\nSource: Application Insights Smart Detection (https://learn.microsoft.com/azure/azure-monitor/alerts/proactive-diagnostics)"
+                ))
+            else:
+                line_num = self.get_line_number(code, "TrackMetric") or self.get_line_number(code, "GetMetric")
+                self.add_finding(Finding(
+                    requirement_id="KSI-MLA-04",
+                    severity=Severity.INFO,
+                    title="Metrics tracking configured",
+                    description="Application tracks custom metrics that can be used for anomaly detection.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Ensure Smart Detection is enabled in Azure Application Insights for automated anomaly detection.",
+                    good_practice=True
+                ))
+        else:
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-04",
+                severity=Severity.HIGH,
+                title="No anomaly detection framework",
+                description="Application does not use Application Insights for anomaly detection. FedRAMP 20x requires baseline-based anomaly detection.",
+                file_path=file_path,
+                recommendation="Implement Application Insights with Smart Detection (see KSI-MLA-03 recommendation)."
+            ))
+    
+    def _check_performance_monitoring(self, code: str, file_path: str) -> None:
+        """Check for performance monitoring (KSI-MLA-06)."""
+        # Check for performance tracking
+        has_perf_monitoring = bool(re.search(
+            r"(ApplicationInsights|ILogger|TrackDependency|TrackRequest|Stopwatch)",
+            code
+        ))
+        
+        if has_perf_monitoring:
+            # Check for dependency tracking
+            has_dependency_tracking = bool(re.search(r"TrackDependency", code))
+            
+            if not has_dependency_tracking:
+                line_num = self.get_line_number(code, "ApplicationInsights") or self.get_line_number(code, "Stopwatch")
+                self.add_finding(Finding(
+                    requirement_id="KSI-MLA-06",
+                    severity=Severity.MEDIUM,
+                    title="Limited performance monitoring",
+                    description="Application has monitoring but doesn't track dependencies (database calls, external APIs). FedRAMP 20x requires comprehensive performance monitoring.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Track dependencies for performance monitoring:\n```csharp\npublic class PerformanceMonitor\n{\n    private readonly TelemetryClient _telemetry;\n    \n    public async Task<T> TrackDependencyAsync<T>(string dependencyName, string target, Func<Task<T>> operation)\n    {\n        var startTime = DateTime.UtcNow;\n        var timer = Stopwatch.StartNew();\n        bool success = false;\n        \n        try\n        {\n            var result = await operation();\n            success = true;\n            return result;\n        }\n        finally\n        {\n            timer.Stop();\n            _telemetry.TrackDependency(\n                dependencyTypeName: dependencyName,\n                target: target,\n                dependencyName: dependencyName,\n                data: target,\n                startTime: startTime,\n                duration: timer.Elapsed,\n                resultCode: success ? \"200\" : \"500\",\n                success: success\n            );\n        }\n    }\n}\n\n// Usage\nawait _monitor.TrackDependencyAsync(\"SQL\", \"UserDatabase\",\n    async () => await _dbContext.Users.ToListAsync());\n```\nSource: Application Insights dependency tracking (https://learn.microsoft.com/azure/azure-monitor/app/asp-net-dependencies)"
+                ))
+            else:
+                line_num = self.get_line_number(code, "TrackDependency")
+                self.add_finding(Finding(
+                    requirement_id="KSI-MLA-06",
+                    severity=Severity.INFO,
+                    title="Comprehensive performance monitoring",
+                    description="Application tracks dependencies and performance metrics.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Ensure monitoring covers all critical dependencies and set up alerts for performance degradation.",
+                    good_practice=True
+                ))
+        else:
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-06",
+                severity=Severity.HIGH,
+                title="No performance monitoring detected",
+                description="Application does not implement performance monitoring. FedRAMP 20x requires tracking of request rates, response times, and resource utilization.",
+                file_path=file_path,
+                recommendation="Implement Application Insights for performance monitoring (see KSI-MLA-03 recommendation)."
+            ))
+    
+    def _check_incident_response(self, code: str, file_path: str) -> None:
+        """Check for automated incident response integration (KSI-INR-01)."""
+        # Check for incident response integrations
+        has_incident_integration = bool(re.search(
+            r"(PagerDuty|ServiceNow|Opsgenie|webhook|Alert|Notification|SendGrid|Twilio)",
+            code,
+            re.IGNORECASE
+        ))
+        
+        if has_incident_integration:
+            # Check for error handling with alerting
+            has_alert_on_error = bool(re.search(
+                r"(TrackException|LogError|LogCritical).*(?:.*\n.*){0,5}.*(?:SendAsync|PostAsync|Alert|Notify)",
+                code,
+                re.DOTALL
+            ))
+            
+            if not has_alert_on_error:
+                line_num = self.get_line_number(code, "PagerDuty") or self.get_line_number(code, "webhook")
+                self.add_finding(Finding(
+                    requirement_id="KSI-INR-01",
+                    severity=Severity.MEDIUM,
+                    title="Incident response integration not connected to errors",
+                    description="Incident response tools are referenced but not integrated with error handling. FedRAMP 20x requires automated incident response.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Integrate incident response with error handling:\n```csharp\npublic class IncidentResponseService\n{\n    private readonly HttpClient _client;\n    private readonly ILogger<IncidentResponseService> _logger;\n    private readonly string _webhookUrl;\n    \n    public async Task TriggerIncidentAsync(Exception ex, string severity, Dictionary<string, string> context)\n    {\n        var incident = new\n        {\n            routing_key = _webhookUrl,\n            event_action = \"trigger\",\n            payload = new\n            {\n                summary = ex.Message,\n                severity = severity,\n                source = Environment.MachineName,\n                timestamp = DateTime.UtcNow,\n                custom_details = context\n            }\n        };\n        \n        try\n        {\n            var response = await _client.PostAsJsonAsync(\n                \"https://events.pagerduty.com/v2/enqueue\",\n                incident\n            );\n            response.EnsureSuccessStatusCode();\n            _logger.LogInformation(\"Incident triggered: {ExceptionType}\", ex.GetType().Name);\n        }\n        catch (Exception alertEx)\n        {\n            _logger.LogError(alertEx, \"Failed to trigger incident\");\n        }\n    }\n}\n\n// Usage in exception handler\ncatch (SecurityException ex)\n{\n    _logger.LogCritical(ex, \"Security breach detected\");\n    await _incidentResponse.TriggerIncidentAsync(ex, \"critical\", new Dictionary<string, string>\n    {\n        { \"user\", User.Identity.Name },\n        { \"ip\", HttpContext.Connection.RemoteIpAddress.ToString() }\n    });\n}\n```\nSource: Azure Monitor Action Groups (https://learn.microsoft.com/azure/azure-monitor/alerts/action-groups)"
+                ))
+            else:
+                line_num = self.get_line_number(code, "TrackException") or self.get_line_number(code, "PostAsync")
+                self.add_finding(Finding(
+                    requirement_id="KSI-INR-01",
+                    severity=Severity.INFO,
+                    title="Automated incident response configured",
+                    description="Application integrates incident response tools with error handling.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Ensure incident response covers all critical errors and security events.",
+                    good_practice=True
+                ))
+        else:
+            self.add_finding(Finding(
+                requirement_id="KSI-INR-01",
+                severity=Severity.HIGH,
+                title="No incident response integration",
+                description="Application does not integrate with incident response tools. FedRAMP 20x requires automated incident response for security events.",
+                file_path=file_path,
+                recommendation="Integrate with incident response system:\n1. Use Azure Monitor Action Groups for alerts\n2. Configure webhooks to PagerDuty, ServiceNow, or similar\n3. Implement automated alerting for critical errors\n\nSource: Azure Monitor alerting (https://learn.microsoft.com/azure/azure-monitor/alerts/alerts-overview)"
+            ))
