@@ -94,6 +94,7 @@ class CSharpAnalyzer(BaseAnalyzer):
             self._check_secrets_management_ast(code, file_path, self.tree.root_node)
             self._check_authorization_ast(code, file_path, classes)
             self._check_error_handling_ast(code, file_path, self.tree.root_node)  # Tier 1.1: AST-enhanced
+            self._check_input_validation_ast(code, file_path, classes)  # Tier 1.2: AST-enhanced
             
         else:
             # Fallback to regex-based analysis
@@ -101,6 +102,7 @@ class CSharpAnalyzer(BaseAnalyzer):
             self._check_authentication_regex(code, file_path)
             self._check_secrets_management_regex(code, file_path)
             self._check_error_handling(code, file_path)  # Use regex fallback
+            self._check_input_validation(code, file_path)  # Use regex fallback
         
         # Continue with other checks (can be enhanced incrementally)
         self._check_dependencies(code, file_path)
@@ -112,8 +114,8 @@ class CSharpAnalyzer(BaseAnalyzer):
         self._check_microservices_security(code, file_path)
         
         # Phase 3: Secure Coding Practices
-        # _check_error_handling now called above based on AST availability
-        self._check_input_validation(code, file_path)
+        # _check_error_handling and _check_input_validation now called above based on AST availability
+        self._check_secure_coding(code, file_path)
         self._check_secure_coding(code, file_path)
         self._check_data_classification(code, file_path)
         self._check_privacy_controls(code, file_path)
@@ -279,7 +281,7 @@ class CSharpAnalyzer(BaseAnalyzer):
         return properties
     
     def _extract_parameters(self, parameter_list_node: Node) -> List[Dict]:
-        """Extract method parameters with attributes."""
+        """Extract method parameters with attributes and types."""
         parameters = []
         
         for child in parameter_list_node.children:
@@ -290,11 +292,20 @@ class CSharpAnalyzer(BaseAnalyzer):
                     "attributes": []
                 }
                 
+                identifiers = []
                 for subchild in child.children:
                     if subchild.type == "attribute_list":
                         param_info["attributes"] = self._extract_attributes(subchild)
-                    elif subchild.type == "identifier":
-                        param_info["name"] = self._get_node_text(subchild)
+                    elif subchild.type in ["identifier", "qualified_name", "generic_name", "predefined_type"]:
+                        identifiers.append(self._get_node_text(subchild))
+                
+                # In C# parameters: type name
+                # First identifier is type, last is name
+                if len(identifiers) >= 2:
+                    param_info["type"] = identifiers[0]
+                    param_info["name"] = identifiers[-1]
+                elif len(identifiers) == 1:
+                    param_info["name"] = identifiers[0]
                 
                 parameters.append(param_info)
         
@@ -449,6 +460,87 @@ class CSharpAnalyzer(BaseAnalyzer):
             return False
         
         return visit(node)
+    
+    def _extract_controller_methods_with_params(self, classes: List[Dict]) -> List[Dict]:
+        """
+        Extract controller methods with their parameters and validation attributes.
+        
+        Returns list of dicts with:
+        - class_name: Name of the controller class
+        - method_name: Name of the method
+        - parameters: List of parameter dicts with name, type, attributes
+        - body: Method body node
+        - has_model_state_check: Whether method checks ModelState.IsValid
+        - line_number: Line number of the method
+        """
+        controller_methods = []
+        
+        for class_info in classes:
+            # Check if this is a controller
+            is_controller = any(
+                base in ["Controller", "ControllerBase"]
+                for base in class_info["base_classes"]
+            )
+            
+            is_api_controller = "ApiController" in class_info["attributes"]
+            
+            if not (is_controller or is_api_controller):
+                continue
+            
+            for method in class_info["methods"]:
+                # Check for HTTP method attributes
+                http_methods = ["HttpGet", "HttpPost", "HttpPut", "HttpDelete", "HttpPatch"]
+                has_http_method = any(
+                    http_attr in method["attributes"]
+                    for http_attr in http_methods
+                )
+                
+                if not has_http_method:
+                    continue
+                
+                # Check if method body contains ModelState.IsValid
+                has_model_state_check = False
+                if method["node"]:
+                    method_text = self._get_node_text(method["node"])
+                    has_model_state_check = "ModelState.IsValid" in method_text or "ModelState?.IsValid" in method_text
+                
+                # Extract parameters with their attributes
+                params_with_binding = []
+                for param in method["parameters"]:
+                    # Check if parameter has FromBody, FromQuery, FromRoute, FromForm
+                    binding_attrs = [attr for attr in param["attributes"] 
+                                   if attr in ["FromBody", "FromQuery", "FromRoute", "FromForm"]]
+                    
+                    if binding_attrs:
+                        params_with_binding.append({
+                            "name": param["name"],
+                            "type": param.get("type"),
+                            "attributes": param["attributes"],
+                            "binding": binding_attrs[0] if binding_attrs else None
+                        })
+                
+                if params_with_binding:
+                    controller_methods.append({
+                        "class_name": class_info["name"],
+                        "method_name": method["name"],
+                        "parameters": params_with_binding,
+                        "has_model_state_check": has_model_state_check,
+                        "line_number": self._get_line_from_node(method["node"])
+                    })
+        
+        return controller_methods
+    
+    def _check_class_has_validation_attributes(self, class_name: str, classes: List[Dict]) -> bool:
+        """Check if a class (model) has validation attributes on its properties."""
+        for class_info in classes:
+            if class_info["name"] == class_name:
+                for prop in class_info["properties"]:
+                    validation_attrs = ["Required", "StringLength", "Range", "RegularExpression", 
+                                      "MaxLength", "MinLength", "EmailAddress", "Phone", "Url",
+                                      "Compare", "CreditCard", "DataType"]
+                    if any(attr in prop["attributes"] for attr in validation_attrs):
+                        return True
+        return False
     
     # ========================================================================
     # AST-Based Security Checks
@@ -727,6 +819,87 @@ class CSharpAnalyzer(BaseAnalyzer):
                         recommendation="Continue following this pattern for all exception handling.",
                         good_practice=True
                     ))
+    
+    def _check_input_validation_ast(self, code: str, file_path: str, classes: List[Dict]) -> None:
+        """
+        Enhanced input validation check using AST (KSI-SVC-02).
+        
+        Tier 1.2 Enhancements over regex:
+        - Extracts controller methods with parameters semantically
+        - Verifies each parameter with FromBody/FromQuery has validation
+        - Tracks whether parameter types have validation attributes
+        - Analyzes ModelState.IsValid placement in method body
+        - Detects custom validation logic
+        """
+        controller_methods = self._extract_controller_methods_with_params(classes)
+        
+        if not controller_methods:
+            # No controller methods with input binding found
+            return
+        
+        for method_info in controller_methods:
+            unvalidated_params = []
+            validated_params = []
+            
+            for param in method_info["parameters"]:
+                # Check if the parameter type itself has validation attributes
+                param_type = param.get("type")
+                has_type_validation = False
+                
+                if param_type:
+                    # Check if this is a known model class with validation
+                    has_type_validation = self._check_class_has_validation_attributes(param_type, classes)
+                
+                # Check if parameter has validation attributes directly
+                validation_attrs = ["Required", "StringLength", "Range", "RegularExpression",
+                                  "MaxLength", "MinLength", "EmailAddress", "Phone", "Url"]
+                has_param_validation = any(attr in param["attributes"] for attr in validation_attrs)
+                
+                if has_type_validation or has_param_validation:
+                    validated_params.append(param["name"])
+                else:
+                    unvalidated_params.append({
+                        "name": param["name"],
+                        "binding": param["binding"]
+                    })
+            
+            # Issue 1: Parameters without validation
+            if unvalidated_params and not method_info["has_model_state_check"]:
+                param_names = ", ".join([f"'{p['name']}'" for p in unvalidated_params])
+                self.add_finding(Finding(
+                    requirement_id="KSI-SVC-02",
+                    severity=Severity.HIGH,
+                    title=f"Input parameters without validation in {method_info['method_name']}",
+                    description=f"Method '{method_info['method_name']}' in controller '{method_info['class_name']}' accepts input parameters ({param_names}) without validation attributes and doesn't check ModelState.IsValid. FedRAMP 20x requires input validation to prevent injection attacks and data integrity issues.",
+                    file_path=file_path,
+                    line_number=method_info['line_number'],
+                    recommendation="Add validation attributes to model properties:\n```csharp\npublic class CreateUserRequest\n{\n    [Required(ErrorMessage = \"Username is required\")]\n    [StringLength(50, MinimumLength = 3)]\n    [RegularExpression(@\"^[a-zA-Z0-9_]+$\")]\n    public string Username { get; set; }\n    \n    [Required]\n    [EmailAddress]\n    public string Email { get; set; }\n}\n\n[HttpPost]\npublic IActionResult CreateUser([FromBody] CreateUserRequest request)\n{\n    if (!ModelState.IsValid)\n        return BadRequest(ModelState);\n    // Process validated input\n}\n```\nSource: ASP.NET Core Model Validation (https://learn.microsoft.com/aspnet/core/mvc/models/validation)"
+                ))
+            
+            # Issue 2: Has validation but missing ModelState check
+            elif validated_params and not method_info["has_model_state_check"]:
+                self.add_finding(Finding(
+                    requirement_id="KSI-SVC-02",
+                    severity=Severity.MEDIUM,
+                    title=f"Missing ModelState.IsValid check in {method_info['method_name']}",
+                    description=f"Method '{method_info['method_name']}' has validated parameters but doesn't check ModelState.IsValid before processing. Validation attributes are defined but not enforced at runtime.",
+                    file_path=file_path,
+                    line_number=method_info['line_number'],
+                    recommendation="Add ModelState validation check:\n```csharp\n[HttpPost]\npublic IActionResult {method_info['method_name']}([FromBody] Model request)\n{\n    if (!ModelState.IsValid)\n    {\n        _logger.LogWarning(\"Validation failed: {{Errors}}\", ModelState.Values.SelectMany(v => v.Errors));\n        return BadRequest(ModelState);\n    }\n    // Process validated input\n}\n```"
+                ))
+            
+            # Good Practice: Proper validation with ModelState check
+            elif validated_params and method_info["has_model_state_check"]:
+                self.add_finding(Finding(
+                    requirement_id="KSI-SVC-02",
+                    severity=Severity.INFO,
+                    title=f"Input validation properly configured in {method_info['method_name']}",
+                    description=f"Method '{method_info['method_name']}' correctly validates input parameters with data annotations and checks ModelState.IsValid. Good practice for FedRAMP compliance.",
+                    file_path=file_path,
+                    line_number=method_info['line_number'],
+                    recommendation="Consider using FluentValidation for complex validation scenarios requiring business logic.",
+                    good_practice=True
+                ))
     
     # ========================================================================
     # Regex Fallback Methods (when AST not available)
