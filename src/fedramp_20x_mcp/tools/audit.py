@@ -41,9 +41,14 @@ BICEP_COVERAGE = [
 
 TERRAFORM_COVERAGE = BICEP_COVERAGE  # Same as Bicep
 
+# Phase 1 (8 KSIs) + Phase 2 (2 KSIs) = 10 KSIs
 PYTHON_COVERAGE = [
+    # Phase 1: Foundation
     "KSI-MLA-05", "KSI-SVC-06", "KSI-CNA-01", "KSI-IAM-03",
-    "KSI-SVC-03", "KSI-IAM-01", "KSI-SVC-08", "KSI-PIY-02"
+    "KSI-SVC-03", "KSI-IAM-01", "KSI-SVC-08", "KSI-PIY-02",
+    # Phase 2: Application Security
+    "KSI-IAM-05",  # Service Account Management
+    "KSI-CNA-03",  # Microservices Security
 ]
 
 CSHARP_COVERAGE = PYTHON_COVERAGE

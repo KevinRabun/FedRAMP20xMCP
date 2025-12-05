@@ -15,13 +15,14 @@
 - ✅ KSI-IAM-03: RBAC role assignments
 - ✅ KSI-SVC-03: Encryption configuration
 
-**App Code Checks (Python):**
+**App Code Checks (Python/C#/Java/TypeScript):**
 - ✅ KSI-IAM-01: API authentication
 - ✅ KSI-SVC-06: Secrets management (hardcoded keys)
 - ✅ KSI-SVC-08: Dependency security (vulnerable libraries)
 - ✅ KSI-PIY-02: PII handling and encryption
 - ✅ KSI-MLA-05: Diagnostic logging
 
+**Phase 1 Coverage:** 8 KSIs (11.1%) - Python/C#/Java/TypeScript
 **Test Coverage:** 22 tests passing (14 analyzer + 8 tool tests)
 
 ---
@@ -139,8 +140,10 @@
 
 ### App Code Additions (2 KSIs)
 
+**Phase 2 Coverage:** 10 KSIs (13.9%) - Python/C#/Java/TypeScript
+
 #### KSI-IAM-05: Service Account Management ✅
-**Implementation (Python):**
+**Implementation (Python/C#/Java/TypeScript):**
 - Detects hardcoded credentials (passwords, API keys, connection strings)
 - Validates Azure Managed Identity usage
 **Detection Patterns:**
@@ -150,7 +153,7 @@
 - Suggests migration from environment variables to Managed Identity
 
 #### KSI-CNA-03: Microservices Security ✅
-**Implementation (Python):**
+**Implementation (Python/C#/Java/TypeScript):**
 - Service-to-service authentication validation (OAuth/JWT)
 - SSL/TLS certificate verification checks
 - mTLS configuration detection
