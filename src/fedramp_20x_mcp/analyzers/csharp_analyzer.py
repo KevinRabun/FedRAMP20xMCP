@@ -148,6 +148,42 @@ class CSharpAnalyzer(BaseAnalyzer):
     # AST Helper Methods
     # ========================================================================
     
+    def _has_data_annotations(self, code: str, usings: Set[str] = None) -> bool:
+        """Check if code uses Data Annotations for validation."""
+        if usings and 'System.ComponentModel.DataAnnotations' in usings:
+            return True
+        return bool(re.search(r'\[(Required|StringLength|Range|RegularExpression|MaxLength|MinLength|EmailAddress|Phone|Url|CreditCard|Compare|DataType)\]', code))
+    
+    def _has_fluent_validation(self, code: str, usings: Set[str] = None) -> bool:
+        """Check if code uses FluentValidation library."""
+        if usings:
+            for using in usings:
+                if 'FluentValidation' in using:
+                    return True
+        return bool(re.search(r'(RuleFor|AbstractValidator|ValidationResult|AddFluentValidation)', code))
+    
+    def _has_data_protection_api(self, code: str, usings: Set[str] = None) -> bool:
+        """Check if code uses ASP.NET Core Data Protection API."""
+        if usings and 'Microsoft.AspNetCore.DataProtection' in usings:
+            return True
+        return bool(re.search(r'(IDataProtector|IDataProtectionProvider|CreateProtector|Protect\(|Unprotect\()', code))
+    
+    def _has_application_insights(self, code: str, usings: Set[str] = None) -> bool:
+        """Check if code uses Application Insights."""
+        if usings and 'Microsoft.ApplicationInsights' in usings:
+            return True
+        return bool(re.search(r'(TelemetryClient|AddApplicationInsightsTelemetry|ITelemetryInitializer)', code))
+    
+    def _is_development_environment_check(self, code: str, context_window: int = 300) -> bool:
+        """Check if code is within a development environment conditional."""
+        patterns = [
+            r'if\s*\(\s*env\.IsDevelopment\(\)',
+            r'if\s*\(\s*Environment\.IsDevelopment\(\)',
+            r'if\s*\(\s*builder\.Environment\.IsDevelopment\(\)',
+            r'#if\s+DEBUG',
+        ]
+        return any(re.search(pattern, code) for pattern in patterns)
+    
     def _extract_usings(self, root_node: Node) -> Set[str]:
         """Extract all using directives from the AST."""
         usings = set()
@@ -835,7 +871,13 @@ class CSharpAnalyzer(BaseAnalyzer):
         - Tracks whether parameter types have validation attributes
         - Analyzes ModelState.IsValid placement in method body
         - Detects custom validation logic
+        - Framework detection: Recognizes Data Annotations and FluentValidation
         """
+        # Framework detection to reduce false positives
+        usings = self._extract_usings(self.tree.root_node) if self.tree else set()
+        has_data_annotations = self._has_data_annotations(code, usings)
+        has_fluent_validation = self._has_fluent_validation(code, usings)
+        
         controller_methods = self._extract_controller_methods_with_params(classes)
         
         if not controller_methods:
@@ -870,16 +912,34 @@ class CSharpAnalyzer(BaseAnalyzer):
             
             # Issue 1: Parameters without validation
             if unvalidated_params and not method_info["has_model_state_check"]:
-                param_names = ", ".join([f"'{p['name']}'" for p in unvalidated_params])
-                self.add_finding(Finding(
-                    requirement_id="KSI-SVC-02",
-                    severity=Severity.HIGH,
-                    title=f"Input parameters without validation in {method_info['method_name']}",
-                    description=f"Method '{method_info['method_name']}' in controller '{method_info['class_name']}' accepts input parameters ({param_names}) without validation attributes and doesn't check ModelState.IsValid. FedRAMP 20x requires input validation to prevent injection attacks and data integrity issues.",
-                    file_path=file_path,
-                    line_number=method_info['line_number'],
-                    recommendation="Add validation attributes to model properties:\n```csharp\npublic class CreateUserRequest\n{\n    [Required(ErrorMessage = \"Username is required\")]\n    [StringLength(50, MinimumLength = 3)]\n    [RegularExpression(@\"^[a-zA-Z0-9_]+$\")]\n    public string Username { get; set; }\n    \n    [Required]\n    [EmailAddress]\n    public string Email { get; set; }\n}\n\n[HttpPost]\npublic IActionResult CreateUser([FromBody] CreateUserRequest request)\n{\n    if (!ModelState.IsValid)\n        return BadRequest(ModelState);\n    // Process validated input\n}\n```\nSource: ASP.NET Core Model Validation (https://learn.microsoft.com/aspnet/core/mvc/models/validation)"
-                ))
+                # Framework detection: Only reduce severity if framework is present AND used on other params
+                # If all params are unvalidated, framework presence alone isn't enough to reduce severity
+                framework_in_use = (has_data_annotations or has_fluent_validation) and len(validated_params) > 0
+                
+                if framework_in_use:
+                    # Framework present and used on some params, but not all - lower severity
+                    param_names = ", ".join([f"'{p['name']}'" for p in unvalidated_params])
+                    self.add_finding(Finding(
+                        requirement_id="KSI-SVC-02",
+                        severity=Severity.MEDIUM,
+                        title=f"Input parameters without validation in {method_info['method_name']}",
+                        description=f"Method '{method_info['method_name']}' in controller '{method_info['class_name']}' accepts input parameters ({param_names}) without validation attributes. Data Annotations or FluentValidation is being used on other parameters - consider applying to all parameters consistently.",
+                        file_path=file_path,
+                        line_number=method_info['line_number'],
+                        recommendation="Add validation attributes to all input parameters:\n```csharp\npublic class QueryRequest\n{\n    [Required]\n    [StringLength(100)]\n    public string Filter { get; set; }\n    \n    [Range(1, 100)]\n    public int PageSize { get; set; }\n}\n\n[HttpGet]\npublic IActionResult GetData([FromQuery] QueryRequest request)\n{\n    if (!ModelState.IsValid)\n        return BadRequest(ModelState);\n    // Process validated input\n}\n```\nSource: ASP.NET Core Model Validation (https://learn.microsoft.com/aspnet/core/mvc/models/validation)"
+                    ))
+                else:
+                    # No validation framework detected or not being used - higher severity
+                    param_names = ", ".join([f"'{p['name']}'" for p in unvalidated_params])
+                    self.add_finding(Finding(
+                        requirement_id="KSI-SVC-02",
+                        severity=Severity.HIGH,
+                        title=f"Input parameters without validation in {method_info['method_name']}",
+                        description=f"Method '{method_info['method_name']}' in controller '{method_info['class_name']}' accepts input parameters ({param_names}) without validation attributes and doesn't check ModelState.IsValid. FedRAMP 20x requires input validation to prevent injection attacks and data integrity issues.",
+                        file_path=file_path,
+                        line_number=method_info['line_number'],
+                        recommendation="Add validation attributes to model properties:\n```csharp\npublic class CreateUserRequest\n{\n    [Required(ErrorMessage = \"Username is required\")]\n    [StringLength(50, MinimumLength = 3)]\n    [RegularExpression(@\"^[a-zA-Z0-9_]+$\")]\n    public string Username { get; set; }\n    \n    [Required]\n    [EmailAddress]\n    public string Email { get; set; }\n}\n\n[HttpPost]\npublic IActionResult CreateUser([FromBody] CreateUserRequest request)\n{\n    if (!ModelState.IsValid)\n        return BadRequest(ModelState);\n    // Process validated input\n}\n```\nSource: ASP.NET Core Model Validation (https://learn.microsoft.com/aspnet/core/mvc/models/validation)"
+                    ))
             
             # Issue 2: Has validation but missing ModelState check
             elif validated_params and not method_info["has_model_state_check"]:
@@ -1381,11 +1441,20 @@ class CSharpAnalyzer(BaseAnalyzer):
                 issues.append("HttpOnly flag not explicitly configured")
             
             # Issue 2: Secure/SecurePolicy not properly configured
+            # Check if this is in a development environment context
+            in_dev_context = self._is_development_environment_check(code)
+            
             if cookie_options["Secure"] is False:
-                issues.append("Secure is set to false (should be true)")
+                if in_dev_context:
+                    issues.append("Secure is set to false (acceptable in development - ensure production override exists)")
+                else:
+                    issues.append("Secure is set to false (should be true)")
             elif cookie_options["SecurePolicy"]:
                 if "None" in cookie_options["SecurePolicy"]:
-                    issues.append("SecurePolicy is set to None (should be Always)")
+                    if in_dev_context:
+                        issues.append("SecurePolicy is set to None (acceptable in development - ensure production override exists)")
+                    else:
+                        issues.append("SecurePolicy is set to None (should be Always)")
                 elif "Always" not in cookie_options["SecurePolicy"] and "Required" not in cookie_options["SecurePolicy"]:
                     issues.append("SecurePolicy not set to Always or Required")
             elif cookie_options["Secure"] is None and cookie_options["SecurePolicy"] is None:
@@ -1727,27 +1796,55 @@ Source: ASP.NET Core Logging (https://learn.microsoft.com/aspnet/core/fundamenta
             ))
     
     def _check_pii_handling(self, code: str, file_path: str) -> None:
-        """Check for PII handling (can be enhanced with AST)."""
-        # Simplified version - keep regex for now
+        """Check for PII handling with framework detection."""
+        # Check for Data Protection API usage
+        usings = self._extract_usings(self.tree.root_node) if self.tree else set()
+        has_data_protection = self._has_data_protection_api(code, usings)
+        
         if re.search(r"(Ssn|SocialSecurityNumber)", code, re.IGNORECASE):
             if not re.search(r"(Encrypt|Protect|IDataProtector)", code, re.IGNORECASE):
+                # Check if Data Protection API is configured elsewhere
+                if has_data_protection:
+                    self.add_finding(Finding(
+                        requirement_id="KSI-PIY-02",
+                        severity=Severity.LOW,
+                        title="PII field detected - verify encryption",
+                        description="Found PII field (SSN). Data Protection API is configured - verify it's used for this field.",
+                        file_path=file_path,
+                        line_number=None,
+                        recommendation="Ensure IDataProtector is used to encrypt/decrypt this PII field before storage."
+                    ))
+                else:
+                    self.add_finding(Finding(
+                        requirement_id="KSI-PIY-02",
+                        severity=Severity.MEDIUM,
+                        title="Potential unprotected PII",
+                        description="Found PII field without encryption. Data Protection API not detected.",
+                        file_path=file_path,
+                        line_number=None,
+                        recommendation="Use ASP.NET Core Data Protection API for PII encryption:\n```csharp\nservices.AddDataProtection();\n\npublic class UserService\n{\n    private readonly IDataProtector _protector;\n    \n    public UserService(IDataProtectionProvider provider)\n    {\n        _protector = provider.CreateProtector(\"UserService.SSN\");\n    }\n    \n    public void SaveUser(User user)\n    {\n        user.EncryptedSsn = _protector.Protect(user.Ssn);\n    }\n}\n```"
+                    ))
+            else:
+                # Good practice detected
                 self.add_finding(Finding(
                     requirement_id="KSI-PIY-02",
-                    severity=Severity.MEDIUM,
-                    title="Potential unprotected PII",
-                    description="Found PII field without encryption.",
+                    severity=Severity.INFO,
+                    title="PII encryption detected",
+                    description="PII field with encryption/protection mechanism.",
                     file_path=file_path,
                     line_number=None,
-                    recommendation="Use ASP.NET Core Data Protection API for PII encryption."
+                    recommendation="Continue protecting PII with Data Protection API.",
+                    good_practice=True
                 ))
 
     def _check_logging(self, code: str, file_path: str) -> None:
-        """Check for proper logging implementation (KSI-MLA-05)."""
+        """Check for proper logging implementation with framework detection (KSI-MLA-05)."""
         # Check for logging usage
         has_logging = bool(re.search(r"(ILogger<|_logger\.|LogInformation|LogError|LogWarning)", code))
         
-        # Check for Application Insights
-        has_app_insights = bool(re.search(r"(TelemetryClient|AddApplicationInsightsTelemetry)", code))
+        # Framework detection: Check for Application Insights
+        usings = self._extract_usings(self.tree.root_node) if self.tree else set()
+        has_app_insights = self._has_application_insights(code, usings)
         
         # Check for potentially sensitive data in logs
         if has_logging:

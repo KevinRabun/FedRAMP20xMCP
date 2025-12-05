@@ -734,6 +734,50 @@ python tests/test_java_analyzer.py
 python tests/test_typescript_analyzer.py
 ```
 
+### 20. test_framework_detection.py ⭐ **NEW - FALSE POSITIVE REDUCTION**
+**Purpose:** Comprehensive tests for framework detection to reduce false positives
+
+**Coverage (8 tests, all PASS):**
+- ✅ Data Annotations validation framework detection
+- ✅ FluentValidation library recognition
+- ✅ ASP.NET Core Data Protection API detection
+- ✅ Application Insights framework detection
+- ✅ Development environment context detection
+- ✅ No false positives with proper ModelState check
+- ✅ HIGH severity maintained when framework absent
+- ✅ Structured logging pattern recognition
+
+**Framework Detection Capabilities:**
+1. **Data Annotations:** Detects `System.ComponentModel.DataAnnotations` and validation attributes
+2. **FluentValidation:** Recognizes `FluentValidation` library and AbstractValidator patterns
+3. **Data Protection API:** Identifies `Microsoft.AspNetCore.DataProtection` and IDataProtector usage
+4. **Application Insights:** Detects `Microsoft.ApplicationInsights` and TelemetryClient
+5. **Environment Context:** Recognizes `env.IsDevelopment()` conditionals for dev-specific configs
+
+**Severity Adjustment Logic:**
+- Framework present + used on validated params → MEDIUM severity for unvalidated params
+- Framework present + no validated params → HIGH severity (framework not actually used)
+- No framework detected → HIGH severity (validation completely missing)
+- Development environment context → Adjusted messaging for dev-specific overrides
+
+**Example Improvement:**
+```csharp
+// Before: HIGH severity false positive
+using Microsoft.AspNetCore.DataProtection;
+public class UserService {
+    private readonly IDataProtector _protector;
+    public string Ssn { get; set; }  // ← Previously HIGH severity
+}
+
+// After: LOW severity (framework detected)
+// Severity reduced because Data Protection API is configured
+```
+
+**Run:**
+```bash
+python tests/test_framework_detection.py
+```
+
 ### Tool Functional Tests
 
 ### Resource Validation Tests

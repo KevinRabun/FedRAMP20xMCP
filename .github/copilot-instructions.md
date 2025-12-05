@@ -32,6 +32,13 @@ When users ask about OSCAL, clarify it's NOT mentioned in FedRAMP 20x - it's one
 ✅ Add 6 enhancement tools (comparison, examples, dependencies, effort estimation, cloud-native guidance, architecture validation)
 ✅ Add 8 comprehensive prompts (roadmap, quarterly review, API design, KSI priorities, vendor evaluation, documentation, migration, audit prep)
 ✅ 1-hour data caching with automatic refresh
+✅ **Framework Detection for False Positive Reduction** (Dec 2024):
+  - Data Annotations validation framework detection
+  - FluentValidation library recognition
+  - ASP.NET Core Data Protection API detection
+  - Application Insights framework detection
+  - Environment-specific configuration handling (dev vs prod)
+  - Smart severity adjustment based on framework usage
 
 ### Current Capabilities
 The server provides 31 MCP tools:
