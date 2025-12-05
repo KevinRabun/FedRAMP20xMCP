@@ -7,7 +7,7 @@ tracks data flow for higher precision analysis.
 """
 
 import re
-from typing import Optional, List, Dict, Set, Tuple
+from typing import Optional, List, Dict, Set, Tuple, Any
 from dataclasses import dataclass
 
 try:
@@ -98,6 +98,7 @@ class CSharpAnalyzer(BaseAnalyzer):
             self._check_secure_coding_practices_ast(code, file_path, self.tree.root_node)  # Tier 1.3: AST-enhanced
             self._check_least_privilege_authorization_ast(code, file_path, classes)  # Tier 2.1: AST-enhanced
             self._check_session_management_ast(code, file_path, self.tree.root_node)  # Tier 2.2: AST-enhanced
+            self._check_logging_implementation_ast(code, file_path, self.tree.root_node)  # Tier 2.3: AST-enhanced
             
         else:
             # Fallback to regex-based analysis
@@ -1445,6 +1446,221 @@ Source: ASP.NET Core Security (https://learn.microsoft.com/aspnet/core/security/
                     recommendation="Verify session timeout aligns with organizational security policy (typically 15-30 minutes for idle timeout).",
                     good_practice=True
                 ))
+    
+    # ========================================================================
+    # Tier 2.3: Logging Implementation (KSI-MLA-05) - AST-enhanced
+    # ========================================================================
+    
+    def _extract_log_arguments(self, node) -> list:
+        """Extract arguments from logging invocation.
+        
+        Returns list of argument texts being logged.
+        """
+        arguments = []
+        
+        def visit(n):
+            if n.type == "argument":
+                arg_text = self.code_bytes[n.start_byte:n.end_byte].decode('utf8')
+                arguments.append(arg_text.strip())
+            
+            for child in n.children:
+                visit(child)
+        
+        visit(node)
+        return arguments
+    
+    def _contains_sensitive_data(self, text: str) -> tuple:
+        """Check if text contains sensitive data patterns.
+        
+        Returns: (has_sensitive, sensitive_type)
+        """
+        sensitive_patterns = {
+            "password": r'\b(password|pwd|passwd)\b',
+            "token": r'\b(token|bearer|jwt)\b',
+            "secret": r'\b(secret|apikey|api_key)\b',
+            "credential": r'\b(credential|cred)\b',
+            "ssn": r'\b(ssn|social.?security)\b',
+            "credit_card": r'\b(card|credit.?card|cc)\b',
+        }
+        
+        for sensitive_type, pattern in sensitive_patterns.items():
+            if re.search(pattern, text, re.IGNORECASE):
+                return (True, sensitive_type)
+        
+        return (False, None)
+    
+    def _has_redaction_function(self, text: str) -> bool:
+        """Check if text uses redaction/masking function."""
+        redaction_patterns = [
+            r'Redact\s*\(',
+            r'Mask\s*\(',
+            r'Sanitize\s*\(',
+            r'Hash\s*\(',
+            r'Encrypt\s*\(',
+            r'\.Substring\(',  # Common redaction pattern
+        ]
+        
+        for pattern in redaction_patterns:
+            if re.search(pattern, text):
+                return True
+        
+        return False
+    
+    def _check_logging_implementation_ast(self, code: str, file_path: str, root_node) -> None:
+        """AST-enhanced logging implementation check (KSI-MLA-05).
+        
+        Analyzes:
+        - Logging invocations and their arguments
+        - Sensitive data in log statements
+        - Redaction function usage
+        - Structured logging patterns
+        """
+        log_invocations = []
+        has_logger_field = False
+        has_app_insights = False
+        
+        def find_logging(node):
+            """Find logging invocations and logger fields."""
+            nonlocal has_logger_field, has_app_insights
+            
+            if node.type == "field_declaration":
+                field_text = self.code_bytes[node.start_byte:node.end_byte].decode('utf8')
+                if "ILogger<" in field_text or "_logger" in field_text:
+                    has_logger_field = True
+                if "TelemetryClient" in field_text or "ApplicationInsights" in field_text:
+                    has_app_insights = True
+            
+            if node.type == "invocation_expression":
+                method_node = node.child_by_field_name("function")
+                if method_node:
+                    method_text = self.code_bytes[method_node.start_byte:method_node.end_byte].decode('utf8')
+                    
+                    # Check for logging methods
+                    logging_methods = [
+                        "LogInformation", "LogWarning", "LogError", "LogCritical", "LogDebug", "LogTrace",
+                        "TrackEvent", "TrackException", "TrackTrace"
+                    ]
+                    
+                    if any(method in method_text for method in logging_methods):
+                        args_node = node.child_by_field_name("arguments")
+                        arguments = self._extract_log_arguments(args_node) if args_node else []
+                        
+                        log_invocations.append({
+                            "method": method_text,
+                            "line": node.start_point[0] + 1,
+                            "arguments": arguments,
+                            "node": node
+                        })
+            
+            for child in node.children:
+                find_logging(child)
+        
+        find_logging(root_node)
+        
+        # Analyze logging invocations for sensitive data
+        for log_call in log_invocations:
+            # Combine all arguments for analysis
+            all_args_text = " ".join(log_call["arguments"])
+            
+            has_sensitive, sensitive_type = self._contains_sensitive_data(all_args_text)
+            has_redaction = self._has_redaction_function(all_args_text)
+            
+            if has_sensitive and not has_redaction:
+                # HIGH severity: Logging sensitive data without redaction
+                self.add_finding(Finding(
+                    requirement_id="KSI-MLA-05",
+                    severity=Severity.HIGH,
+                    title=f"Sensitive data ({sensitive_type}) in logs without redaction",
+                    description=f"Logging statement contains {sensitive_type} without redaction. FedRAMP 20x requires audit logs without exposing sensitive information (PII, credentials, secrets).",
+                    file_path=file_path,
+                    line_number=log_call["line"],
+                    recommendation="""Redact sensitive data before logging:
+```csharp
+// Redaction helper
+public static class LogRedaction
+{
+    public static string RedactEmail(string email) =>
+        string.IsNullOrEmpty(email) ? "***" : $"{email[..2]}***@{email.Split('@')[1]}";
+    
+    public static string RedactSensitive(string value) =>
+        string.IsNullOrEmpty(value) || value.Length < 4 ? "***" : $"{value[..2]}***{value[^2..]}";
+}
+
+// Use structured logging with redaction
+_logger.LogInformation("User action: {{Email}}, Result: {{Status}}", 
+    LogRedaction.RedactEmail(user.Email), result.Status);
+```
+Source: Azure Monitor best practices (https://learn.microsoft.com/azure/azure-monitor/best-practices-logs), Azure WAF Security pillar (https://learn.microsoft.com/azure/well-architected/security/)"""
+                ))
+            elif has_sensitive and has_redaction:
+                # Good practice: Sensitive data with redaction
+                self.add_finding(Finding(
+                    requirement_id="KSI-MLA-05",
+                    severity=Severity.INFO,
+                    title="Proper sensitive data redaction in logs",
+                    description=f"Logging statement properly redacts {sensitive_type}. Follows FedRAMP 20x secure logging requirements.",
+                    file_path=file_path,
+                    line_number=log_call["line"],
+                    recommendation="Continue using redaction for all sensitive data in logs.",
+                    good_practice=True
+                ))
+        
+        # Check if logging is implemented at all
+        if not has_logger_field and not log_invocations:
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-05",
+                severity=Severity.MEDIUM,
+                title="No logging implementation detected",
+                description="No ILogger usage found in class. FedRAMP 20x requires comprehensive audit logging for security events, access attempts, and system changes.",
+                file_path=file_path,
+                line_number=1,
+                recommendation="""Implement structured logging with dependency injection:
+```csharp
+using Microsoft.Extensions.Logging;
+
+public class MyController : ControllerBase
+{
+    private readonly ILogger<MyController> _logger;
+    
+    public MyController(ILogger<MyController> logger)
+    {
+        _logger = logger;
+    }
+    
+    [HttpPost]
+    public IActionResult CreateResource(Resource resource)
+    {
+        _logger.LogInformation("Resource creation attempt: {{User}}, {{ResourceType}}", 
+            User.Identity?.Name, resource.Type);
+        
+        try
+        {
+            var result = _service.Create(resource);
+            _logger.LogInformation("Resource created: {{Id}}", result.Id);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Resource creation failed: {{ResourceType}}", resource.Type);
+            throw;
+        }
+    }
+}
+```
+Source: ASP.NET Core Logging (https://learn.microsoft.com/aspnet/core/fundamentals/logging), Azure Application Insights (https://learn.microsoft.com/azure/azure-monitor/app/asp-net-core)"""
+            ))
+        elif has_app_insights:
+            # Good practice: Application Insights configured
+            self.add_finding(Finding(
+                requirement_id="KSI-MLA-05",
+                severity=Severity.INFO,
+                title="Application Insights telemetry configured",
+                description="Application Insights integration detected. Provides centralized logging to Azure Monitor. Follows FedRAMP 20x centralized logging requirements.",
+                file_path=file_path,
+                line_number=1,
+                recommendation="Ensure Application Insights is connected to Log Analytics workspace and integrated with Microsoft Sentinel for SIEM compliance.",
+                good_practice=True
+            ))
     
     # ========================================================================
     # Regex Fallback Methods (when AST not available)
