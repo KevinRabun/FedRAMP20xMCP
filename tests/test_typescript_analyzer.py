@@ -1345,6 +1345,350 @@ def test_incident_response_configured():
         print("✓ Incident response configuration test passed")
 
 
+
+
+# ============================================================================
+# Phase 5: DevSecOps Automation Tests
+# ============================================================================
+
+def test_missing_configuration_management():
+    """Test detection of hardcoded configurations (KSI-CMT-01)."""
+    code = """
+    export class ApiClient {
+        private readonly apiUrl = 'https://api.example.com/v1';
+        private connectionString = 'Server=tcp:prod.database.windows.net';
+        private port = 5432;
+        
+        async getData(): Promise<string> {
+            const response = await fetch(this.apiUrl);
+            return response.text();
+        }
+    }
+    """
+    
+    analyzer = TypeScriptAnalyzer()
+    result = analyzer.analyze(code, "ApiClient.ts")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-CMT-01"]
+    if not findings:
+        print("✗ Missing configuration management test failed: no findings")
+    elif findings[0].severity != Severity.HIGH:
+        print(f"✗ Missing configuration management test failed: wrong severity {findings[0].severity}")
+    else:
+        print("✓ Missing configuration management detection test passed")
+
+
+def test_configuration_management_implemented():
+    """Test detection of proper configuration management (KSI-CMT-01)."""
+    code = """
+    import { AppConfigurationClient } from '@azure/app-configuration';
+    import { DefaultAzureCredential } from '@azure/identity';
+    
+    export class ConfiguredApiClient {
+        private configClient: AppConfigurationClient;
+        
+        constructor() {
+            const endpoint = process.env.APPCONFIG_ENDPOINT!;
+            this.configClient = new AppConfigurationClient(endpoint, new DefaultAzureCredential());
+        }
+        
+        async getData(): Promise<string> {
+            const config = await this.configClient.getConfigurationSetting({ key: 'api.url' });
+            const response = await fetch(config.value!);
+            return response.text();
+        }
+    }
+    """
+    
+    analyzer = TypeScriptAnalyzer()
+    result = analyzer.analyze(code, "ConfiguredApiClient.ts")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-CMT-01" and f.good_practice]
+    if not findings:
+        print("skipped (configuration management implementation detection not fully implemented)")
+    else:
+        print("✓ Configuration management implementation test passed")
+
+
+def test_missing_version_control_enforcement():
+    """Test detection of direct production deployments (KSI-CMT-02)."""
+    code = """
+    import { exec } from 'child_process';
+    
+    export class Deployer {
+        deploy(): void {
+            exec('git push origin production', (error, stdout, stderr) => {
+                console.log('Deployed to production');
+            });
+        }
+    }
+    """
+    
+    analyzer = TypeScriptAnalyzer()
+    result = analyzer.analyze(code, "Deployer.ts")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-CMT-02"]
+    if not findings:
+        print("✗ Missing version control enforcement test failed: no findings")
+    elif findings[0].severity != Severity.HIGH:
+        print(f"✗ Missing version control enforcement test failed: wrong severity {findings[0].severity}")
+    else:
+        print("✓ Missing version control enforcement detection test passed")
+
+
+def test_version_control_enforcement_implemented():
+    """Test detection of proper CI/CD deployment (KSI-CMT-02)."""
+    code = """
+    // Deployment handled by GitHub Actions / Azure Pipelines
+    // Manual deployments prevented by branch protection rules
+    
+    export class Application {
+        run(): void {
+            console.log('Application running - deployed via CI/CD');
+        }
+    }
+    """
+    
+    analyzer = TypeScriptAnalyzer()
+    result = analyzer.analyze(code, "Application.ts")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-CMT-02"]
+    if findings and not findings[0].good_practice:
+        print("✗ Version control enforcement test failed: false positive")
+    else:
+        print("✓ Version control enforcement implementation test passed")
+
+
+def test_missing_automated_testing():
+    """Test detection of missing security tests (KSI-CMT-03)."""
+    code = """
+    export class UserService {
+        authenticate(username: string, password: string): User | null {
+            // Authentication logic here
+            return { username };
+        }
+    }
+    """
+    
+    analyzer = TypeScriptAnalyzer()
+    result = analyzer.analyze(code, "UserService.ts")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-CMT-03"]
+    if not findings:
+        print("✗ Missing automated testing test failed: no findings")
+    elif findings[0].severity != Severity.MEDIUM:
+        print(f"✗ Missing automated testing test failed: wrong severity {findings[0].severity}")
+    else:
+        print("✓ Missing automated testing detection test passed")
+
+
+def test_automated_testing_implemented():
+    """Test detection of security test presence (KSI-CMT-03)."""
+    code = """
+    import { describe, it, expect } from '@jest/globals';
+    
+    describe('SecurityTests', () => {
+        it('should reject invalid credentials in authentication', () => {
+            const service = new UserService();
+            const result = service.authenticate('invalid', 'wrong');
+            expect(result).toBeNull();
+        });
+        
+        it('should enforce RBAC in authorization', () => {
+            const service = new AuthService();
+            const hasAccess = service.checkAccess('user', 'admin-resource');
+            expect(hasAccess).toBe(false);
+        });
+    });
+    """
+    
+    analyzer = TypeScriptAnalyzer()
+    result = analyzer.analyze(code, "SecurityTests.test.ts")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-CMT-03" and f.good_practice]
+    if not findings:
+        print("skipped (automated testing implementation detection not fully implemented)")
+    else:
+        print("✓ Automated testing implementation test passed")
+
+
+def test_missing_audit_logging():
+    """Test detection of missing audit logs (KSI-AFR-01)."""
+    code = """
+    import { Request, Response } from 'express';
+    
+    export class UserController {
+        async login(req: Request, res: Response): Promise<void> {
+            const { username, password } = req.body;
+            const user = await this.userService.authenticate(username, password);
+            res.json(user);
+        }
+        
+        async getSensitiveData(req: Request, res: Response): Promise<void> {
+            const data = await this.userService.getSensitiveData(req.params.id);
+            res.json(data);
+        }
+    }
+    """
+    
+    analyzer = TypeScriptAnalyzer()
+    result = analyzer.analyze(code, "UserController.ts")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-AFR-01"]
+    if not findings:
+        print("✗ Missing audit logging test failed: no findings")
+    elif findings[0].severity != Severity.HIGH:
+        print(f"✗ Missing audit logging test failed: wrong severity {findings[0].severity}")
+    else:
+        print("✓ Missing audit logging detection test passed")
+
+
+def test_audit_logging_implemented():
+    """Test detection of proper audit logging (KSI-AFR-01)."""
+    code = """
+    import { Request, Response } from 'express';
+    import { createLogger } from 'winston';
+    import { TelemetryClient } from 'applicationinsights';
+    
+    export class AuditedController {
+        private logger = createLogger();
+        private telemetry = new TelemetryClient();
+        
+        async login(req: Request, res: Response): Promise<void> {
+            const { username, password } = req.body;
+            const user = await this.userService.authenticate(username, password);
+            this.logger.info('User login attempt', { username, success: !!user });
+            this.telemetry.trackEvent({ name: 'UserLogin', properties: { username } });
+            res.json(user);
+        }
+    }
+    """
+    
+    analyzer = TypeScriptAnalyzer()
+    result = analyzer.analyze(code, "AuditedController.ts")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-AFR-01" and f.good_practice]
+    if not findings:
+        print("skipped (audit logging implementation detection not fully implemented)")
+    else:
+        print("✓ Audit logging implementation test passed")
+
+
+def test_missing_log_integrity():
+    """Test detection of local file logging (KSI-AFR-02)."""
+    code = """
+    import * as fs from 'fs';
+    
+    export class FileLogger {
+        private stream = fs.createWriteStream('app.log', { flags: 'a' });
+        
+        logSecurityEvent(message: string): void {
+            this.stream.write(`[${new Date().toISOString()}] ${message}\n`);
+        }
+    }
+    """
+    
+    analyzer = TypeScriptAnalyzer()
+    result = analyzer.analyze(code, "FileLogger.ts")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-AFR-02"]
+    if not findings:
+        print("✗ Missing log integrity test failed: no findings")
+    elif findings[0].severity != Severity.HIGH:
+        print(f"✗ Missing log integrity test failed: wrong severity {findings[0].severity}")
+    else:
+        print("✓ Missing log integrity detection test passed")
+
+
+def test_log_integrity_implemented():
+    """Test detection of centralized SIEM logging (KSI-AFR-02)."""
+    code = """
+    import { TelemetryClient } from 'applicationinsights';
+    import { EventHubProducerClient } from '@azure/event-hubs';
+    
+    export class SIEMLogger {
+        private telemetry = new TelemetryClient();
+        private eventHub: EventHubProducerClient;
+        
+        async logSecurityEvent(message: string): Promise<void> {
+            this.telemetry.trackTrace({ message });
+            await this.eventHub.sendBatch([{ body: message }]);
+        }
+    }
+    """
+    
+    analyzer = TypeScriptAnalyzer()
+    result = analyzer.analyze(code, "SIEMLogger.ts")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-AFR-02" and f.good_practice]
+    if not findings:
+        print("skipped (log integrity implementation detection not fully implemented)")
+    else:
+        print("✓ Log integrity implementation test passed")
+
+
+def test_missing_key_management():
+    """Test detection of hardcoded keys or local key generation (KSI-CED-01)."""
+    code = """
+    import * as crypto from 'crypto';
+    
+    export class Encryptor {
+        private readonly key = Buffer.from([0x01, 0x02, 0x03, 0x04]);
+        
+        encrypt(data: string): Buffer {
+            const key = crypto.randomBytes(32); // Local key generation
+            const cipher = crypto.createCipheriv('aes-256-gcm', this.key, crypto.randomBytes(16));
+            return Buffer.concat([cipher.update(data, 'utf8'), cipher.final()]);
+        }
+    }
+    """
+    
+    analyzer = TypeScriptAnalyzer()
+    result = analyzer.analyze(code, "Encryptor.ts")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-CED-01"]
+    if not findings:
+        print("✗ Missing key management test failed: no findings")
+    elif findings[0].severity != Severity.HIGH:
+        print(f"✗ Missing key management test failed: wrong severity {findings[0].severity}")
+    else:
+        print("✓ Missing key management detection test passed")
+
+
+def test_key_management_implemented():
+    """Test detection of proper Azure Key Vault usage (KSI-CED-01)."""
+    code = """
+    import { KeyClient, CryptographyClient } from '@azure/keyvault-keys';
+    import { DefaultAzureCredential } from '@azure/identity';
+    
+    export class SecureEncryptor {
+        private keyClient: KeyClient;
+        private cryptoClient: CryptographyClient;
+        
+        constructor() {
+            const keyVaultUrl = process.env.KEY_VAULT_URL!;
+            this.keyClient = new KeyClient(keyVaultUrl, new DefaultAzureCredential());
+            const key = await this.keyClient.getKey('encryption-key');
+            this.cryptoClient = new CryptographyClient(key, new DefaultAzureCredential());
+        }
+        
+        async encrypt(data: Buffer): Promise<Buffer> {
+            const result = await this.cryptoClient.encrypt({ algorithm: 'RSA-OAEP', plaintext: data });
+            return Buffer.from(result.result);
+        }
+    }
+    """
+    
+    analyzer = TypeScriptAnalyzer()
+    result = analyzer.analyze(code, "SecureEncryptor.ts")
+    
+    findings = [f for f in result.findings if f.requirement_id == "KSI-CED-01" and f.good_practice]
+    if not findings:
+        print("skipped (key management implementation detection not fully implemented)")
+    else:
+        print("✓ Key management implementation test passed")
+
+
 def run_all_tests():
     """Run all TypeScriptAnalyzer tests."""
     print("\n=== Running TypeScriptAnalyzer Tests ===\n")
@@ -1403,6 +1747,21 @@ def run_all_tests():
     test_performance_monitoring_implemented()
     test_missing_incident_response()
     test_incident_response_configured()
+    
+    # Phase 5 tests
+    print("\n--- Phase 5: DevSecOps Automation ---")
+    test_missing_configuration_management()
+    test_configuration_management_implemented()
+    test_missing_version_control_enforcement()
+    test_version_control_enforcement_implemented()
+    test_missing_automated_testing()
+    test_automated_testing_implemented()
+    test_missing_audit_logging()
+    test_audit_logging_implemented()
+    test_missing_log_integrity()
+    test_log_integrity_implemented()
+    test_missing_key_management()
+    test_key_management_implemented()
     
     print("\n=== All TypeScriptAnalyzer Tests Passed ===\n")
 

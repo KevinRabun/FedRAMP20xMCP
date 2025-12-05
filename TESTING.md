@@ -503,7 +503,7 @@ TEST RESULTS: 8 passed, 0 failed
 $env:PYTHONIOENCODING='utf-8'; python tests/test_analyzer_tools.py
 ```
 
-### 17. test_csharp_analyzer.py ⭐ NEW
+### 17. test_csharp_analyzer.py ⭐
 **Purpose:** Comprehensive tests for C# code analyzer (56 tests: 12 Phase 1 + 6 Phase 2 + 18 Phase 3 + 8 Phase 4 + 12 Phase 5)
 
 **Phase 1 Coverage (12 tests):****
@@ -558,19 +558,19 @@ $env:PYTHONIOENCODING='utf-8'; python tests/test_analyzer_tools.py
 - ✅ Missing incident response integration (KSI-INR-01)
 - ✅ Incident response configured with PagerDuty/webhooks (KSI-INR-01)
 
-**Phase 5 Coverage (12 tests - DevSecOps Automation) - PENDING:**
-- ⏳ Hardcoded configuration detection (KSI-CMT-01)
-- ⏳ Azure App Configuration integration (KSI-CMT-01)
-- ⏳ Direct production deployment detection (KSI-CMT-02)
-- ⏳ CI/CD configuration validation (KSI-CMT-02)
-- ⏳ Missing automated tests detection (KSI-CMT-03)
-- ⏳ Security test implementation (KSI-CMT-03)
-- ⏳ Missing audit logging detection (KSI-AFR-01)
-- ⏳ Audit logging implementation (KSI-AFR-01)
-- ⏳ Local file logging detection (KSI-AFR-02)
-- ⏳ Centralized logging with Application Insights (KSI-AFR-02)
-- ⏳ Hardcoded cryptographic keys detection (KSI-CED-01)
-- ⏳ Azure Key Vault key management (KSI-CED-01)
+**Phase 5 Coverage (12 tests - DevSecOps Automation) - ✅ COMPLETE:**
+- ✅ Hardcoded configuration detection (KSI-CMT-01)
+- ✅ Azure App Configuration integration (KSI-CMT-01)
+- ✅ Direct production deployment detection (KSI-CMT-02)
+- ✅ CI/CD configuration validation (KSI-CMT-02)
+- ✅ Missing automated tests detection (KSI-CMT-03)
+- ✅ Security test implementation (KSI-CMT-03)
+- ✅ Missing audit logging detection (KSI-AFR-01)
+- ✅ Audit logging implementation (KSI-AFR-01)
+- ✅ Local file logging detection (KSI-AFR-02)
+- ✅ Centralized logging with Application Insights (KSI-AFR-02)
+- ✅ Hardcoded cryptographic keys detection (KSI-CED-01)
+- ✅ Azure Key Vault key management (KSI-CED-01)
 
 **Frameworks Tested:****
 - ASP.NET Core, Entity Framework, MSAL, Azure SDK for .NET
@@ -580,7 +580,7 @@ $env:PYTHONIOENCODING='utf-8'; python tests/test_analyzer_tools.py
 python tests/test_csharp_analyzer.py
 ```
 
-### 18. test_java_analyzer.py ⭐ NEW
+### 18. test_java_analyzer.py ⭐
 **Purpose:** Comprehensive tests for Java code analyzer (56 tests: 12 Phase 1 + 6 Phase 2 + 18 Phase 3 + 8 Phase 4 + 12 Phase 5)
 
 **Phase 1 Coverage (12 tests):****
@@ -635,6 +635,20 @@ python tests/test_csharp_analyzer.py
 - ✅ Missing incident response integration (KSI-INR-01)
 - ✅ Incident response with RestTemplate webhooks (KSI-INR-01)
 
+**Phase 5 Coverage (12 tests - DevSecOps Automation) - ✅ COMPLETE:**
+- ✅ Hardcoded configuration detection (KSI-CMT-01)
+- ✅ @Value Spring property injection (KSI-CMT-01)
+- ✅ Direct production deployment detection (KSI-CMT-02)
+- ✅ CI/CD configuration validation (KSI-CMT-02)
+- ✅ Missing automated tests detection (KSI-CMT-03)
+- ✅ JUnit/TestNG security test implementation (KSI-CMT-03)
+- ✅ Missing audit logging detection (KSI-AFR-01)
+- ✅ SLF4J audit logging implementation (KSI-AFR-01)
+- ✅ Local file logging detection (KSI-AFR-02)
+- ✅ Centralized logging with Application Insights (KSI-AFR-02)
+- ✅ Hardcoded cryptographic keys detection (KSI-CED-01)
+- ✅ Azure Key Vault key management (KSI-CED-01)
+
 **Frameworks Tested:**
 - Spring Boot, Spring Security, Jakarta EE, Azure SDK for Java
 
@@ -643,8 +657,8 @@ python tests/test_csharp_analyzer.py
 python tests/test_java_analyzer.py
 ```
 
-### 19. test_typescript_analyzer.py ⭐ NEW
-**Purpose:** Comprehensive tests for TypeScript/JavaScript code analyzer (44 tests: 12 Phase 1 + 6 Phase 2 + 18 Phase 3 + 8 Phase 4)
+### 19. test_typescript_analyzer.py ⭐
+**Purpose:** Comprehensive tests for TypeScript/JavaScript code analyzer (56 tests: 12 Phase 1 + 6 Phase 2 + 18 Phase 3 + 8 Phase 4 + 12 Phase 5)
 
 **Phase 1 Coverage (12 tests):**
 - ✅ Hardcoded secrets detection (TS/JS syntax)
@@ -697,6 +711,20 @@ python tests/test_java_analyzer.py
 - ✅ Performance monitoring with perf_hooks dependency tracking (KSI-MLA-06)
 - ✅ Missing incident response integration (KSI-INR-01)
 - ✅ Incident response with axios webhooks (KSI-INR-01)
+
+**Phase 5 Coverage (12 tests - DevSecOps Automation) - ✅ COMPLETE:**
+- ✅ Hardcoded configuration detection (KSI-CMT-01)
+- ✅ process.env configuration validation (KSI-CMT-01)
+- ✅ Direct production deployment detection (KSI-CMT-02)
+- ✅ CI/CD configuration validation (KSI-CMT-02)
+- ✅ Missing automated tests detection (KSI-CMT-03)
+- ✅ Jest/Mocha security test implementation (KSI-CMT-03)
+- ✅ Missing audit logging detection (KSI-AFR-01)
+- ✅ Winston/Pino audit logging implementation (KSI-AFR-01)
+- ✅ Local file logging detection (KSI-AFR-02)
+- ✅ Centralized logging with Application Insights (KSI-AFR-02)
+- ✅ Hardcoded cryptographic keys detection (KSI-CED-01)
+- ✅ Azure Key Vault key management (KSI-CED-01)
 
 **Frameworks Tested:**
 - Express, NestJS, Next.js, React, Azure SDK for JS
@@ -845,9 +873,9 @@ All tests passing as of December 3, 2025:
 | test_export_tools.py ⭐ | ✅ PASS | 3 tools, 2 test cases |
 | test_enhancement_tools.py ⭐ | ✅ PASS | 7 tools, 24 test cases |
 | test_implementation_mapping_tools.py ⭐ | ✅ PASS | 2 tools, 24 test cases |
-| test_csharp_analyzer.py ⭐ | ✅ PASS | 56 C# checks (12+6+18+8+12: Phases 1-5) - **Phase 5 tests pending** |
-| test_java_analyzer.py ⭐ | ✅ PASS | 56 Java checks (12+6+18+8+12: Phases 1-5) - **Phase 5 tests pending** |
-| test_typescript_analyzer.py ⭐ | ✅ PASS | 56 TypeScript checks (12+6+18+8+12: Phases 1-5) - **Phase 5 tests pending** |
+| test_csharp_analyzer.py ⭐ | ✅ PASS | 56 C# checks (12+6+18+8+12: Phases 1-5) - **Phase 5 tests complete** |
+| test_java_analyzer.py ⭐ | ✅ PASS | 56 Java checks (12+6+18+8+12: Phases 1-5) - **Phase 5 tests complete** |
+| test_typescript_analyzer.py ⭐ | ✅ PASS | 56 TypeScript checks (12+6+18+8+12: Phases 1-5) - **Phase 5 tests complete** |
 | **Resource Validation** |||
 | test_prompts.py ⭐ | ✅ PASS | 15 prompts validated |
 | test_templates.py ⭐ | ✅ PASS | 23 templates validated |

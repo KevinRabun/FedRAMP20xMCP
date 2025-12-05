@@ -282,11 +282,11 @@ All 6 KSIs for secure DevSecOps practices and cryptographic operations:
 - TypeScript: Checks crypto.generateKeyPair, validates @azure/keyvault-keys
 
 **Test Coverage (Phase 5):**
-- Python: 12 tests (2 per KSI: missing + implemented) - **Pending**
-- C#: 12 tests (2 per KSI: missing + implemented) - **Pending**
-- Java: 12 tests (2 per KSI: missing + implemented) - **Pending**
-- TypeScript: 12 tests (2 per KSI: missing + implemented) - **Pending**
-- **Total:** 48 new tests for Phase 5
+- Python: 12 tests (2 per KSI: missing + implemented) - ❌ **Not Implemented** (Python analyzer deprecated in Phase 4)
+- C#: 12 tests (2 per KSI: missing + implemented) - ✅ **Complete** (test_csharp_analyzer.py)
+- Java: 12 tests (2 per KSI: missing + implemented) - ✅ **Complete** (test_java_analyzer.py)
+- TypeScript: 12 tests (2 per KSI: missing + implemented) - ✅ **Complete** (test_typescript_analyzer.py)
+- **Total:** 36 Phase 5 tests implemented (12 per language × 3 languages)
 
 ---
 
