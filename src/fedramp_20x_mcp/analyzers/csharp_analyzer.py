@@ -93,12 +93,14 @@ class CSharpAnalyzer(BaseAnalyzer):
             self._check_authentication_ast(code, file_path, usings, classes)
             self._check_secrets_management_ast(code, file_path, self.tree.root_node)
             self._check_authorization_ast(code, file_path, classes)
+            self._check_error_handling_ast(code, file_path, self.tree.root_node)  # Tier 1.1: AST-enhanced
             
         else:
             # Fallback to regex-based analysis
             print(f"Warning: AST parsing not available, using regex fallback for {file_path}")
             self._check_authentication_regex(code, file_path)
             self._check_secrets_management_regex(code, file_path)
+            self._check_error_handling(code, file_path)  # Use regex fallback
         
         # Continue with other checks (can be enhanced incrementally)
         self._check_dependencies(code, file_path)
@@ -110,7 +112,7 @@ class CSharpAnalyzer(BaseAnalyzer):
         self._check_microservices_security(code, file_path)
         
         # Phase 3: Secure Coding Practices
-        self._check_error_handling(code, file_path)
+        # _check_error_handling now called above based on AST availability
         self._check_input_validation(code, file_path)
         self._check_secure_coding(code, file_path)
         self._check_data_classification(code, file_path)
@@ -335,6 +337,119 @@ class CSharpAnalyzer(BaseAnalyzer):
             current = current.parent
         return False
     
+    def _extract_try_catch_blocks(self, root_node: Node) -> List[Dict]:
+        """
+        Extract all try-catch-finally blocks with structure analysis.
+        
+        Returns list of dicts with:
+        - try_body: try block node
+        - catch_clauses: list of catch clause dicts with exception_type, exception_var, body
+        - finally_clause: finally block node (if present)
+        - has_logging: whether any catch block contains logging calls
+        - has_rethrow: whether any catch contains throw/throw ex
+        - node: the try_statement node
+        """
+        try_blocks = []
+        
+        def visit(node: Node):
+            if node.type == "try_statement":
+                block_info = {
+                    "try_body": None,
+                    "catch_clauses": [],
+                    "finally_clause": None,
+                    "has_logging": False,
+                    "has_rethrow": False,
+                    "node": node,
+                    "line_number": node.start_point[0] + 1
+                }
+                
+                for child in node.children:
+                    if child.type == "block" and block_info["try_body"] is None:
+                        # First block is the try body
+                        block_info["try_body"] = child
+                    elif child.type == "catch_clause":
+                        catch_info = self._parse_catch_clause(child)
+                        block_info["catch_clauses"].append(catch_info)
+                        
+                        # Check for logging in catch body
+                        if catch_info["body"]:
+                            catch_text = self._get_node_text(catch_info["body"])
+                            if any(log_pattern in catch_text for log_pattern in ["Log", "logger", "_logger", "ILogger"]):
+                                block_info["has_logging"] = True
+                            if "throw" in catch_text:
+                                block_info["has_rethrow"] = True
+                    elif child.type == "finally_clause":
+                        block_info["finally_clause"] = child
+                
+                try_blocks.append(block_info)
+            
+            for child in node.children:
+                visit(child)
+        
+        visit(root_node)
+        return try_blocks
+    
+    def _parse_catch_clause(self, catch_node: Node) -> Dict:
+        """Parse a catch clause to extract exception type, variable, and body."""
+        catch_info = {
+            "exception_type": None,
+            "exception_var": None,
+            "body": None,
+            "is_empty": False,
+            "node": catch_node
+        }
+        
+        for child in catch_node.children:
+            if child.type == "catch_declaration":
+                # Extract exception type and variable name
+                # catch_declaration contains: '(' type identifier ')'
+                identifiers = []
+                for decl_child in child.children:
+                    if decl_child.type in ["identifier", "qualified_name", "generic_name"]:
+                        identifiers.append(self._get_node_text(decl_child))
+                
+                # First is the type, second (if present) is the variable name
+                if len(identifiers) >= 1:
+                    catch_info["exception_type"] = identifiers[0]
+                if len(identifiers) >= 2:
+                    catch_info["exception_var"] = identifiers[1]
+            elif child.type == "block":
+                catch_info["body"] = child
+                body_text = self._get_node_text(child).strip()
+                
+                # Check if empty: only braces, whitespace, or comments
+                # Remove comments and check if anything substantial remains
+                import re
+                # Remove single-line comments
+                without_line_comments = re.sub(r'//.*?$', '', body_text, flags=re.MULTILINE)
+                # Remove multi-line comments
+                without_comments = re.sub(r'/\*.*?\*/', '', without_line_comments, flags=re.DOTALL)
+                # Remove whitespace
+                cleaned = without_comments.strip().replace('\n', '').replace('\r', '').replace(' ', '')
+                
+                # Empty if only braces remain
+                catch_info["is_empty"] = cleaned == "{}" or cleaned == ""
+        
+        return catch_info
+    
+    def _contains_method_call(self, node: Node, method_names: List[str]) -> bool:
+        """Check if a node contains any method call matching the given names."""
+        def visit(n: Node):
+            if n.type == "invocation_expression":
+                # Get the method name from the invocation
+                for child in n.children:
+                    if child.type in ["identifier", "member_access_expression"]:
+                        method_text = self._get_node_text(child)
+                        if any(name in method_text for name in method_names):
+                            return True
+            
+            for child in n.children:
+                if visit(child):
+                    return True
+            return False
+        
+        return visit(node)
+    
     # ========================================================================
     # AST-Based Security Checks
     # ========================================================================
@@ -525,6 +640,93 @@ class CSharpAnalyzer(BaseAnalyzer):
                             recommendation="Ensure authorization policies are defined in Program.cs with proper role/claims requirements.",
                             good_practice=True
                         ))
+    
+    def _check_error_handling_ast(self, code: str, file_path: str, root_node: Node) -> None:
+        """
+        Enhanced error handling check using AST (KSI-SVC-01).
+        
+        Tier 1.1 Enhancements over regex:
+        - Extracts try-catch-finally block structure semantically
+        - Analyzes exception types (generic vs specific)
+        - Detects empty catch blocks accurately
+        - Verifies logging calls within catch blocks
+        - Detects rethrow patterns (throw vs throw ex)
+        - Understands exception flow context
+        """
+        try_blocks = self._extract_try_catch_blocks(root_node)
+        
+        if not try_blocks:
+            # No error handling found - this may or may not be an issue depending on context
+            return
+        
+        for block in try_blocks:
+            for catch_clause in block["catch_clauses"]:
+                # Issue 1: Empty catch blocks (swallow exceptions)
+                if catch_clause["is_empty"]:
+                    self.add_finding(Finding(
+                        requirement_id="KSI-SVC-01",
+                        severity=Severity.HIGH,
+                        title="Empty catch block swallows exceptions",
+                        description=f"Empty catch block at line {block['line_number']} silently swallows exceptions without logging or handling. FedRAMP 20x requires error logging for audit trails and incident response.",
+                        file_path=file_path,
+                        line_number=block['line_number'],
+                        code_snippet=self._get_node_text(catch_clause["node"]),
+                        recommendation="Add logging and appropriate error handling:\n```csharp\ntry\n{\n    await _service.ProcessDataAsync();\n}\ncatch (Exception ex)\n{\n    _logger.LogError(ex, \"Data processing failed: {{Operation}}\", \"ProcessData\");\n    throw; // or handle gracefully with return\n}\n```\nSource: Azure WAF Operational Excellence (https://learn.microsoft.com/azure/well-architected/operational-excellence/)"
+                    ))
+                    continue
+                
+                # Issue 2: Catch block without logging
+                if catch_clause["body"] and not self._contains_method_call(catch_clause["body"], ["Log", "logger", "_logger"]):
+                    # Check if it at least rethrows
+                    has_throw = "throw" in self._get_node_text(catch_clause["body"])
+                    
+                    severity = Severity.MEDIUM if has_throw else Severity.HIGH
+                    self.add_finding(Finding(
+                        requirement_id="KSI-SVC-01",
+                        severity=severity,
+                        title="Exception caught without logging",
+                        description=f"Catch block at line {block['line_number']} handles exception type '{catch_clause['exception_type']}' without logging. {'Exception is rethrown but audit trail is incomplete.' if has_throw else 'No logging or rethrowing detected.'} FedRAMP 20x requires comprehensive error logging.",
+                        file_path=file_path,
+                        line_number=block['line_number'],
+                        code_snippet=self._get_node_text(catch_clause["node"])[:200],
+                        recommendation="Add structured logging before handling:\n```csharp\ncatch (DbUpdateException ex)\n{\n    _logger.LogError(ex, \"Database update failed for {{Entity}}\", entityName);\n    return StatusCode(500, new { error = \"Database error occurred\" });\n}\n```"
+                    ))
+                
+                # Issue 3: Generic Exception catch (too broad)
+                if catch_clause["exception_type"] == "Exception":
+                    # Check if this is in a top-level handler (acceptable there)
+                    node_text = self._get_node_text(block["node"])
+                    parent_context = self._get_node_text(block["node"].parent) if block["node"].parent else ""
+                    
+                    is_global_handler = any(keyword in parent_context for keyword in ["Program", "Startup", "Middleware", "ExceptionHandler"])
+                    
+                    if not is_global_handler:
+                        # Generic exception catch in business logic
+                        has_logging = self._contains_method_call(catch_clause["body"], ["Log", "logger"])
+                        
+                        self.add_finding(Finding(
+                            requirement_id="KSI-SVC-01",
+                            severity=Severity.LOW,
+                            title="Generic exception handler in business logic",
+                            description=f"Catch block at line {block['line_number']} catches generic 'Exception' type. While {'it includes logging, ' if has_logging else ''}catching specific exception types improves error handling precision and debugging.",
+                            file_path=file_path,
+                            line_number=block['line_number'],
+                            recommendation="Catch specific exceptions when possible:\n```csharp\ntry\n{\n    await _database.SaveAsync();\n}\ncatch (DbUpdateConcurrencyException ex)\n{\n    _logger.LogWarning(ex, \"Concurrency conflict detected\");\n    return Conflict(\"Resource was modified by another user\");\n}\ncatch (DbUpdateException ex)\n{\n    _logger.LogError(ex, \"Database update failed\");\n    return StatusCode(500, \"Database error\");\n}\n```"
+                        ))
+                
+                # Good Practice: Proper error handling with logging and specific exception
+                if (catch_clause["exception_type"] and catch_clause["exception_type"] != "Exception" and
+                    self._contains_method_call(catch_clause["body"], ["Log", "logger"])):
+                    self.add_finding(Finding(
+                        requirement_id="KSI-SVC-01",
+                        severity=Severity.INFO,
+                        title=f"Proper error handling for {catch_clause['exception_type']}",
+                        description=f"Catch block at line {block['line_number']} correctly handles specific exception type '{catch_clause['exception_type']}' with logging. Good practice for FedRAMP audit requirements.",
+                        file_path=file_path,
+                        line_number=block['line_number'],
+                        recommendation="Continue following this pattern for all exception handling.",
+                        good_practice=True
+                    ))
     
     # ========================================================================
     # Regex Fallback Methods (when AST not available)
