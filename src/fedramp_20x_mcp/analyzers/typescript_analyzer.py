@@ -66,6 +66,14 @@ class TypeScriptAnalyzer(BaseAnalyzer):
         self._check_performance_monitoring(code, file_path)
         self._check_incident_response(code, file_path)
         
+        # Phase 5: DevSecOps Automation
+        self._check_configuration_management(code, file_path)
+        self._check_version_control(code, file_path)
+        self._check_automated_testing(code, file_path)
+        self._check_audit_logging(code, file_path)
+        self._check_log_integrity(code, file_path)
+        self._check_key_management(code, file_path)
+        
         return self.result
     
     def _check_authentication(self, code: str, file_path: str) -> None:
@@ -781,3 +789,297 @@ class TypeScriptAnalyzer(BaseAnalyzer):
                 file_path=file_path,
                 recommendation="Integrate with incident response system:\n1. Use Azure Monitor Action Groups for alerts\n2. Configure webhooks to PagerDuty, ServiceNow, or similar\n3. Implement automated alerting for critical errors\n\nSource: Azure Monitor alerting (https://learn.microsoft.com/azure/azure-monitor/alerts/alerts-overview)"
             ))
+    
+    # Phase 5: DevSecOps Automation Methods
+    
+    def _check_configuration_management(self, code: str, file_path: str) -> None:
+        """Check for secure configuration management (KSI-CMT-01)."""
+        # Check for hardcoded configuration values
+        config_patterns = [
+            (r'(apiUrl|baseUrl|endpoint)\s*[:=]\s*[\'"]https?://[^\'"]+[\'"]', "API endpoint"),
+            (r'(connectionString|dbUrl)\s*[:=]\s*[\'"][^\'"]+[\'"]', "Connection string"),
+            (r'(port|dbPort)\s*[:=]\s*\d+', "Port number"),
+        ]
+        
+        hardcoded_configs = []
+        for pattern, config_type in config_patterns:
+            matches = list(re.finditer(pattern, code, re.IGNORECASE))
+            if matches:
+                for match in matches:
+                    context = code[max(0, match.start()-100):min(len(code), match.end()+100)]
+                    if not re.search(r'(process\.env|config\.|getConfig|@azure/app-configuration)', context):
+                        hardcoded_configs.append((match, config_type))
+        
+        has_app_config = bool(re.search(r'(@azure/app-configuration|AppConfigurationClient)', code))
+        has_key_vault = bool(re.search(r'(@azure/keyvault|SecretClient)', code))
+        has_env_vars = bool(re.search(r'process\.env\[|process\.env\.', code))
+        
+        if hardcoded_configs:
+            for match, config_type in hardcoded_configs[:3]:
+                line_num = self.get_line_number(code, match.group(0))
+                self.add_finding(Finding(
+                    requirement_id="KSI-CMT-01",
+                    severity=Severity.MEDIUM,
+                    title=f"Hardcoded {config_type} configuration",
+                    description=f"Configuration hardcoded in source. FedRAMP 20x requires externalized configuration.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=match.group(0),
+                    recommendation=f"Use Azure App Configuration:\n```typescript\nimport {{ AppConfigurationClient }} from '@azure/app-configuration';\nimport {{ DefaultAzureCredential }} from '@azure/identity';\n\nconst credential = new DefaultAzureCredential();\nconst client = new AppConfigurationClient(\n  process.env.APPCONFIGURATION_ENDPOINT!,\n  credential\n);\n\n// Retrieve configuration\nconst {config_type.replace(' ', '')} = await client.getConfigurationSetting({{\n  key: '{config_type.replace(' ', '-').lower()}'\n}});\n\nconsole.log({config_type.replace(' ', '')}.value);\n\n// Or use environment variables (simpler but less secure)\nconst {config_type.replace(' ', '')} = process.env.{config_type.upper().replace(' ', '_')};\n```\nSource: Azure App Configuration for JavaScript (https://learn.microsoft.com/azure/azure-app-configuration/quickstart-javascript)"
+                ))
+        
+        if has_app_config or has_key_vault:
+            line_num = self.get_line_number(code, "app-configuration") or self.get_line_number(code, "keyvault")
+            self.add_finding(Finding(
+                requirement_id="KSI-CMT-01",
+                severity=Severity.INFO,
+                title="Azure App Configuration or Key Vault integration",
+                description="Application uses centralized configuration management.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure all environment-specific values are externalized.",
+                good_practice=True
+            ))
+        elif not hardcoded_configs and has_env_vars:
+            line_num = self.get_line_number(code, "process.env")
+            self.add_finding(Finding(
+                requirement_id="KSI-CMT-01",
+                severity=Severity.LOW,
+                title="Configuration uses environment variables",
+                description="Environment variables used. Consider Azure App Configuration for centralized management.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Migrate to Azure App Configuration for FedRAMP audit trails.",
+                good_practice=True
+            ))
+    
+    def _check_version_control(self, code: str, file_path: str) -> None:
+        """Check for version control enforcement (KSI-CMT-02)."""
+        direct_deploy = bool(re.search(
+            r'(exec|spawn).*git\s+push.*production',
+            code,
+            re.IGNORECASE
+        ))
+        
+        if direct_deploy:
+            line_num = self.get_line_number(code, "git push")
+            self.add_finding(Finding(
+                requirement_id="KSI-CMT-02",
+                severity=Severity.HIGH,
+                title="Direct production deployment",
+                description="Code performs direct production deployment. FedRAMP 20x requires approval workflows.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Use GitHub Actions or Azure DevOps with approval gates."
+            ))
+        
+        has_cicd = bool(re.search(r'(\.github/workflows|azure-pipelines)', code, re.IGNORECASE))
+        if has_cicd:
+            line_num = self.get_line_number(code, "workflow")
+            self.add_finding(Finding(
+                requirement_id="KSI-CMT-02",
+                severity=Severity.INFO,
+                title="CI/CD configuration referenced",
+                description="Code references CI/CD pipelines.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Verify branch protection and approval requirements.",
+                good_practice=True
+            ))
+    
+    def _check_automated_testing(self, code: str, file_path: str) -> None:
+        """Check for automated security testing (KSI-CMT-03)."""
+        test_frameworks = [
+            r'from\s+[\'"]jest[\'"]',
+            r'from\s+[\'"]mocha[\'"]',
+            r'from\s+[\'"]@testing-library',
+            r'describe\(',
+            r'it\(',
+            r'test\(',
+        ]
+        
+        has_test_framework = any(re.search(p, code) for p in test_frameworks)
+        has_security_tests = bool(re.search(
+            r'(test.*security|test.*auth|test.*sql.*injection|test.*xss)',
+            code,
+            re.IGNORECASE
+        ))
+        
+        is_test_file = bool(re.search(r'(\.test\.|\.spec\.)(ts|js)$', file_path))
+        
+        if not is_test_file and not has_test_framework:
+            if re.search(r'(routes|controllers|services|api)', file_path, re.IGNORECASE):
+                self.add_finding(Finding(
+                    requirement_id="KSI-CMT-03",
+                    severity=Severity.MEDIUM,
+                    title="No automated tests found",
+                    description="Application code without tests. FedRAMP 20x requires automated security testing.",
+                    file_path=file_path,
+                    line_number=1,
+                    recommendation="Create security tests:\n```typescript\nimport request from 'supertest';\nimport app from '../app';\n\ndescribe('Security Tests', () => {\n  test('Protected endpoint requires authentication', async () => {\n    const response = await request(app)\n      .get('/api/protected')\n      .expect(401);\n  });\n  \n  test('Input validation blocks SQL injection', async () => {\n    const maliciousInput = \"'; DROP TABLE users; --\";\n    const response = await request(app)\n      .post('/api/search')\n      .send({ query: maliciousInput })\n      .expect(200);\n    \n    // Verify table still exists\n    const users = await User.find();\n    expect(users).toBeDefined();\n  });\n  \n  test('XSS payloads are escaped', async () => {\n    const xssPayload = '<script>alert(\"XSS\")</script>';\n    const response = await request(app)\n      .post('/api/comment')\n      .send({ text: xssPayload });\n    \n    expect(response.text).not.toContain('<script>');\n  });\n  \n  test('Authorization enforces access control', async () => {\n    const token = getTokenForUser('user1');\n    const response = await request(app)\n      .get('/api/users/user2/data')\n      .set('Authorization', `Bearer ${token}`)\n      .expect(403);\n  });\n});\n```"
+                ))
+        elif is_test_file and has_test_framework and has_security_tests:
+            line_num = self.get_line_number(code, "security") or self.get_line_number(code, "auth")
+            self.add_finding(Finding(
+                requirement_id="KSI-CMT-03",
+                severity=Severity.INFO,
+                title="Security tests implemented",
+                description="Test file includes security-focused tests.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure coverage: authentication, authorization, input validation.",
+                good_practice=True
+            ))
+    
+    def _check_audit_logging(self, code: str, file_path: str) -> None:
+        """Check for audit logging of security events (KSI-AFR-01)."""
+        has_auth_code = bool(re.search(
+            r'(authenticate|login|passport|jwt|authorization)',
+            code,
+            re.IGNORECASE
+        ))
+        
+        has_data_access = bool(re.search(
+            r'(mongoose|sequelize|\.find\(|\.query\(|SELECT|INSERT|UPDATE|DELETE)',
+            code,
+            re.IGNORECASE
+        ))
+        
+        has_logging = bool(re.search(r'(logger\.|winston|pino|console\.log|trackEvent)', code))
+        
+        if has_auth_code and not has_logging:
+            line_num = self.get_line_number(code, "authenticate") or self.get_line_number(code, "login")
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-01",
+                severity=Severity.HIGH,
+                title="Authentication without audit logging",
+                description="Authentication code missing audit logs. FedRAMP 20x requires logging of all security events.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Add audit logging:\n```typescript\nimport winston from 'winston';\nimport { TelemetryClient } from 'applicationinsights';\n\nclass SecurityAuditLogger {\n  private logger: winston.Logger;\n  private telemetry: TelemetryClient;\n  \n  logAuthenticationAttempt(\n    userId: string,\n    ipAddress: string,\n    success: boolean,\n    method: string = 'password'\n  ): void {\n    const event = {\n      event_type: 'authentication_attempt',\n      userId,\n      ipAddress,\n      success,\n      method,\n      timestamp: new Date().toISOString()\n    };\n    \n    this.telemetry.trackEvent({ name: 'AuthenticationAttempt', properties: event });\n    \n    if (success) {\n      this.logger.info('Authentication success', event);\n    } else {\n      this.logger.warn('Authentication failed', event);\n    }\n  }\n  \n  logAuthorizationCheck(\n    userId: string,\n    resource: string,\n    action: string,\n    allowed: boolean\n  ): void {\n    this.logger.log(allowed ? 'info' : 'warn', 'Authorization check', {\n      userId,\n      resource,\n      action,\n      allowed,\n      timestamp: new Date().toISOString()\n    });\n  }\n}\n```"
+            ))
+        
+        if has_data_access and not has_logging:
+            line_num = self.get_line_number(code, "find") or self.get_line_number(code, "query")
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-01",
+                severity=Severity.MEDIUM,
+                title="Data access without audit logging",
+                description="Database operations missing audit trails.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Log sensitive data access operations."
+            ))
+        
+        if (has_auth_code or has_data_access) and has_logging:
+            line_num = self.get_line_number(code, "logger") or self.get_line_number(code, "trackEvent")
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-01",
+                severity=Severity.INFO,
+                title="Audit logging implemented",
+                description="Security operations include audit logging.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure logs include: user ID, timestamp, action, result, IP, resource.",
+                good_practice=True
+            ))
+    
+    def _check_log_integrity(self, code: str, file_path: str) -> None:
+        """Check for log integrity and protection (KSI-AFR-02)."""
+        local_logging = bool(re.search(
+            r'(createWriteStream|FileTransport|\.log[\'"].*file)',
+            code,
+            re.IGNORECASE
+        ))
+        
+        if local_logging:
+            line_num = self.get_line_number(code, "File") or self.get_line_number(code, "WriteStream")
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-02",
+                severity=Severity.HIGH,
+                title="Logs written to local files (insecure)",
+                description="Application writes logs locally. FedRAMP 20x requires centralized, immutable logging.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Stream logs to Azure Monitor:\n```typescript\nimport { setup } from 'applicationinsights';\nimport { EventHubProducerClient } from '@azure/event-hubs';\nimport { DefaultAzureCredential } from '@azure/identity';\n\n// Configure Application Insights\nsetup(process.env.APPLICATIONINSIGHTS_CONNECTION_STRING)\n  .setAutoCollectConsole(true)\n  .start();\n\n// For immutable audit logs\nclass ImmutableAuditLogger {\n  private producer: EventHubProducerClient;\n  \n  constructor() {\n    this.producer = new EventHubProducerClient(\n      process.env.EVENTHUB_NAMESPACE!,\n      'audit-logs',\n      new DefaultAzureCredential()\n    );\n  }\n  \n  async logAuditEvent(event: any): Promise<void> {\n    const eventData = { body: JSON.stringify(event) };\n    await this.producer.sendBatch([eventData]);\n  }\n}\n```"
+            ))
+        
+        has_app_insights = bool(re.search(r'(applicationinsights|appInsights)', code))
+        has_event_hub = bool(re.search(r'EventHub', code))
+        
+        if not local_logging and (has_app_insights or has_event_hub):
+            line_num = self.get_line_number(code, "applicationinsights") or self.get_line_number(code, "EventHub")
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-02",
+                severity=Severity.INFO,
+                title="Logs streamed to centralized SIEM",
+                description="Application sends logs to Azure Monitor or Event Hubs.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Verify log retention meets FedRAMP requirements (90+ days).",
+                good_practice=True
+            ))
+    
+    def _check_key_management(self, code: str, file_path: str) -> None:
+        """Check for cryptographic key management (KSI-CED-01)."""
+        key_patterns = [
+            (r'(privateKey|secretKey|encryptionKey)\s*[:=]\s*[\'"][^\'"]{20,}[\'"]', "encryption key"),
+            (r'-----BEGIN\s+(PRIVATE|RSA)\s+KEY-----', "private key"),
+            (r'crypto\.createCipher', "cipher key"),
+        ]
+        
+        hardcoded_keys = []
+        for pattern, key_type in key_patterns:
+            matches = list(re.finditer(pattern, code, re.IGNORECASE | re.DOTALL))
+            for match in matches:
+                context = code[max(0, match.start()-100):min(len(code), match.end()+100)]
+                if not re.search(r'(SecretClient|getSecret|@azure/keyvault)', context):
+                    hardcoded_keys.append((match, key_type))
+        
+        key_generation = bool(re.search(
+            r'(crypto\.generateKey|crypto\.randomBytes)(?!.*KeyVault)',
+            code,
+            re.DOTALL
+        ))
+        
+        if key_generation:
+            line_num = self.get_line_number(code, "generateKey") or self.get_line_number(code, "randomBytes")
+            self.add_finding(Finding(
+                requirement_id="KSI-CED-01",
+                severity=Severity.HIGH,
+                title="Local cryptographic key generation",
+                description="Application generates keys locally. FedRAMP 20x requires Azure Key Vault with HSM.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Use Azure Key Vault:\n```typescript\nimport { KeyClient, CryptographyClient } from '@azure/keyvault-keys';\nimport { DefaultAzureCredential } from '@azure/identity';\n\nconst credential = new DefaultAzureCredential();\nconst keyClient = new KeyClient(process.env.KEY_VAULT_URL!, credential);\n\n// Generate key in Key Vault\nconst key = await keyClient.createRsaKey('data-encryption-key', {\n  keySize: 2048,\n  hsm: true  // Use HSM\n});\n\n// Use for encryption\nconst cryptoClient = new CryptographyClient(key.id, credential);\nconst result = await cryptoClient.encrypt({\n  algorithm: 'RSA-OAEP',\n  plaintext: Buffer.from('sensitive data')\n});\n\nconsole.log('Encrypted:', result.result.toString('hex'));\n```"
+            ))
+        
+        if hardcoded_keys:
+            for match, key_type in hardcoded_keys[:2]:
+                line_num = self.get_line_number(code, match.group(0))
+                self.add_finding(Finding(
+                    requirement_id="KSI-CED-01",
+                    severity=Severity.HIGH,
+                    title=f"Hardcoded {key_type} in source",
+                    description=f"Cryptographic {key_type} hardcoded. FedRAMP 20x prohibits keys in source.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation=f"Store {key_type} in Azure Key Vault."
+                ))
+        
+        has_key_vault = bool(re.search(r'(@azure/keyvault|KeyClient|SecretClient)', code))
+        has_managed_identity = bool(re.search(r'DefaultAzureCredential|ManagedIdentityCredential', code))
+        
+        if has_key_vault and has_managed_identity:
+            line_num = self.get_line_number(code, "KeyClient") or self.get_line_number(code, "SecretClient")
+            self.add_finding(Finding(
+                requirement_id="KSI-CED-01",
+                severity=Severity.INFO,
+                title="Azure Key Vault integration with Managed Identity",
+                description="Application retrieves keys from Key Vault using Managed Identity.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure HSM-backed keys and key rotation policies configured.",
+                good_practice=True
+            ))
+

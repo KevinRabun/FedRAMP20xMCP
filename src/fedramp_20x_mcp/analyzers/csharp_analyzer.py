@@ -66,6 +66,14 @@ class CSharpAnalyzer(BaseAnalyzer):
         self._check_performance_monitoring(code, file_path)
         self._check_incident_response(code, file_path)
         
+        # Phase 5: DevSecOps Automation
+        self._check_configuration_management(code, file_path)
+        self._check_version_control(code, file_path)
+        self._check_automated_testing(code, file_path)
+        self._check_audit_logging(code, file_path)
+        self._check_log_integrity(code, file_path)
+        self._check_key_management(code, file_path)
+        
         return self.result
     
     def _check_authentication(self, code: str, file_path: str) -> None:
@@ -778,3 +786,312 @@ class CSharpAnalyzer(BaseAnalyzer):
                 file_path=file_path,
                 recommendation="Integrate with incident response system:\n1. Use Azure Monitor Action Groups for alerts\n2. Configure webhooks to PagerDuty, ServiceNow, or similar\n3. Implement automated alerting for critical errors\n\nSource: Azure Monitor alerting (https://learn.microsoft.com/azure/azure-monitor/alerts/alerts-overview)"
             ))
+    
+    # Phase 5: DevSecOps Automation Methods
+    
+    def _check_configuration_management(self, code: str, file_path: str) -> None:
+        """Check for secure configuration management (KSI-CMT-01)."""
+        # Check for hardcoded configuration values
+        config_patterns = [
+            (r'(ApiUrl|BaseUrl|Endpoint)\s*=\s*"https?://[^"]+";', "API endpoint"),
+            (r'(ConnectionString|DbConnection)\s*=\s*"[^"]+";', "Connection string"),
+            (r'(Port|DbPort)\s*=\s*\d+;', "Port number"),
+        ]
+        
+        hardcoded_configs = []
+        for pattern, config_type in config_patterns:
+            matches = list(re.finditer(pattern, code, re.IGNORECASE))
+            if matches:
+                for match in matches:
+                    context = code[max(0, match.start()-100):min(len(code), match.end()+100)]
+                    if not re.search(r'(Configuration\[|GetValue<|GetSection|IConfiguration|Environment\.GetEnvironmentVariable)', context):
+                        hardcoded_configs.append((match, config_type))
+        
+        # Check for Azure App Configuration integration
+        has_app_config = bool(re.search(r'(Azure\.AppConfiguration|ConfigurationClient|AzureAppConfigurationOptions)', code))
+        has_key_vault = bool(re.search(r'(Azure\.KeyVault|SecretClient)', code))
+        has_iconfiguration = bool(re.search(r'IConfiguration', code))
+        
+        if hardcoded_configs:
+            for match, config_type in hardcoded_configs[:3]:
+                line_num = self.get_line_number(code, match.group(0))
+                self.add_finding(Finding(
+                    requirement_id="KSI-CMT-01",
+                    severity=Severity.MEDIUM,
+                    title=f"Hardcoded {config_type} configuration",
+                    description=f"Configuration value hardcoded in source. FedRAMP 20x requires externalized configuration.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=match.group(0),
+                    recommendation=f"Use Azure App Configuration:\n```csharp\n// Program.cs\nvar builder = WebApplication.CreateBuilder(args);\n\n// Add Azure App Configuration\nbuilder.Configuration.AddAzureAppConfiguration(options =>\n{{\n    options.Connect(\n        new Uri(builder.Configuration[\"AppConfig:Endpoint\"]),\n        new DefaultAzureCredential()\n    )\n    .ConfigureKeyVault(kv =>\n    {{\n        kv.SetCredential(new DefaultAzureCredential());\n    }});\n}});\n\n// Service configuration\npublic class MyService\n{{\n    private readonly IConfiguration _configuration;\n    \n    public MyService(IConfiguration configuration)\n    {{\n        _configuration = configuration;\n    }}\n    \n    public string Get{config_type.replace(' ', '')}()\n    {{\n        return _configuration[\"{config_type.replace(' ', '')}\"];\n    }}\n}}\n```\nSource: Azure App Configuration (https://learn.microsoft.com/azure/azure-app-configuration/quickstart-dotnet-core-app)"
+                ))
+        
+        if has_app_config or has_key_vault:
+            line_num = self.get_line_number(code, "AppConfiguration") or self.get_line_number(code, "KeyVault")
+            self.add_finding(Finding(
+                requirement_id="KSI-CMT-01",
+                severity=Severity.INFO,
+                title="Azure App Configuration or Key Vault integration",
+                description="Application uses centralized configuration management.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure all environment-specific values are externalized.",
+                good_practice=True
+            ))
+        elif not hardcoded_configs and has_iconfiguration:
+            line_num = self.get_line_number(code, "IConfiguration")
+            self.add_finding(Finding(
+                requirement_id="KSI-CMT-01",
+                severity=Severity.LOW,
+                title="Configuration uses IConfiguration",
+                description="Environment variables/appsettings.json used. Consider Azure App Configuration for centralized management.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Migrate to Azure App Configuration for FedRAMP audit trails.",
+                good_practice=True
+            ))
+    
+    def _check_version_control(self, code: str, file_path: str) -> None:
+        """Check for version control enforcement (KSI-CMT-02)."""
+        # Check for direct production deployment (anti-pattern)
+        direct_deploy_patterns = [
+            r'Process\.Start.*git\s+push.*production',
+            r'ProcessStartInfo.*deploy.*production',
+        ]
+        
+        has_direct_deploy = False
+        for pattern in direct_deploy_patterns:
+            match = re.search(pattern, code, re.IGNORECASE)
+            if match:
+                has_direct_deploy = True
+                line_num = self.get_line_number(code, match.group(0))
+                self.add_finding(Finding(
+                    requirement_id="KSI-CMT-02",
+                    severity=Severity.HIGH,
+                    title="Direct production deployment without approval",
+                    description="Code performs direct production deployment. FedRAMP 20x requires approval workflows.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=match.group(0),
+                    recommendation="Use Azure DevOps pipelines with approval gates or GitHub Actions with environment protection rules."
+                ))
+                break
+        
+        has_cicd_config = bool(re.search(r'(azure-pipelines|\.github/workflows)', code, re.IGNORECASE))
+        if has_cicd_config:
+            line_num = self.get_line_number(code, "pipeline")
+            self.add_finding(Finding(
+                requirement_id="KSI-CMT-02",
+                severity=Severity.INFO,
+                title="CI/CD configuration referenced",
+                description="Code references CI/CD pipelines.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Verify branch protection and approval requirements.",
+                good_practice=True
+            ))
+    
+    def _check_automated_testing(self, code: str, file_path: str) -> None:
+        """Check for automated security testing (KSI-CMT-03)."""
+        # Check for test frameworks
+        test_frameworks = [
+            r'using\s+Xunit',
+            r'using\s+NUnit',
+            r'using\s+Microsoft\.VisualStudio\.TestTools',
+        ]
+        
+        has_test_framework = False
+        for pattern in test_frameworks:
+            if re.search(pattern, code):
+                has_test_framework = True
+                break
+        
+        # Check for security tests
+        has_security_tests = bool(re.search(
+            r'(Test.*Security|Test.*Auth|Test.*Sql.*Injection|Test.*Xss)',
+            code,
+            re.IGNORECASE
+        ))
+        
+        is_test_file = bool(re.search(r'Tests?\.cs$', file_path))
+        
+        if not is_test_file and not has_test_framework:
+            if re.search(r'(Controllers|Services|Repositories)', file_path, re.IGNORECASE):
+                self.add_finding(Finding(
+                    requirement_id="KSI-CMT-03",
+                    severity=Severity.MEDIUM,
+                    title="No automated tests found",
+                    description="Application code without tests. FedRAMP 20x requires automated security testing.",
+                    file_path=file_path,
+                    line_number=1,
+                    recommendation="Create test project with security tests:\n```csharp\nusing Xunit;\nusing Microsoft.AspNetCore.Mvc.Testing;\n\npublic class SecurityTests : IClassFixture<WebApplicationFactory<Program>>\n{\n    private readonly HttpClient _client;\n    \n    [Fact]\n    public async Task ProtectedEndpoint_RequiresAuthentication()\n    {\n        var response = await _client.GetAsync(\"/api/protected\");\n        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);\n    }\n    \n    [Theory]\n    [InlineData(\"'; DROP TABLE Users; --\")]\n    [InlineData(\"<script>alert('XSS')</script>\")]\n    public async Task InputValidation_BlocksMaliciousInput(string maliciousInput)\n    {\n        var response = await _client.PostAsJsonAsync(\"/api/search\",\n            new { query = maliciousInput });\n        \n        Assert.NotEqual(HttpStatusCode.InternalServerError, response.StatusCode);\n    }\n    \n    [Fact]\n    public async Task Authorization_EnforcesAccessControl()\n    {\n        var token = GetTokenForUser(\"user1\");\n        _client.DefaultRequestHeaders.Authorization =\n            new AuthenticationHeaderValue(\"Bearer\", token);\n        \n        var response = await _client.GetAsync(\"/api/users/user2/data\");\n        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);\n    }\n}\n```"
+                ))
+        elif is_test_file and has_test_framework:
+            if has_security_tests:
+                line_num = self.get_line_number(code, "Security") or self.get_line_number(code, "Auth")
+                self.add_finding(Finding(
+                    requirement_id="KSI-CMT-03",
+                    severity=Severity.INFO,
+                    title="Security tests implemented",
+                    description="Test file includes security-focused tests.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Ensure coverage: authentication, authorization, input validation, XSS, SQL injection.",
+                    good_practice=True
+                ))
+    
+    def _check_audit_logging(self, code: str, file_path: str) -> None:
+        """Check for audit logging of security events (KSI-AFR-01)."""
+        has_auth_code = bool(re.search(
+            r'(Authenticate|Login|SignIn|Authorize|ClaimsPrincipal)',
+            code,
+            re.IGNORECASE
+        ))
+        
+        has_data_access = bool(re.search(
+            r'(DbContext|IQueryable|FromSql|ExecuteSql)',
+            code,
+            re.IGNORECASE
+        ))
+        
+        has_logging = bool(re.search(r'(ILogger|Log\.|TrackEvent|TelemetryClient)', code))
+        
+        if has_auth_code and not has_logging:
+            line_num = self.get_line_number(code, "Authenticate") or self.get_line_number(code, "Login")
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-01",
+                severity=Severity.HIGH,
+                title="Authentication without audit logging",
+                description="Authentication code missing audit logs. FedRAMP 20x requires logging of all security events.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Add audit logging:\n```csharp\npublic class SecurityAuditLogger\n{\n    private readonly ILogger<SecurityAuditLogger> _logger;\n    private readonly TelemetryClient _telemetry;\n    \n    public void LogAuthenticationAttempt(\n        string userId,\n        string ipAddress,\n        bool success,\n        string method = \"password\")\n    {\n        var properties = new Dictionary<string, string>\n        {\n            [\"UserId\"] = userId,\n            [\"IpAddress\"] = ipAddress,\n            [\"Success\"] = success.ToString(),\n            [\"Method\"] = method,\n            [\"Timestamp\"] = DateTime.UtcNow.ToString(\"O\")\n        };\n        \n        _telemetry.TrackEvent(\"AuthenticationAttempt\", properties);\n        _logger.Log(\n            success ? LogLevel.Information : LogLevel.Warning,\n            \"Authentication {Result} for user {UserId} from {IpAddress}\",\n            success ? \"success\" : \"failed\",\n            userId,\n            ipAddress\n        );\n    }\n    \n    public void LogAuthorizationCheck(\n        string userId,\n        string resource,\n        string action,\n        bool allowed)\n    {\n        _logger.Log(\n            allowed ? LogLevel.Information : LogLevel.Warning,\n            \"Authorization {Result}: {UserId} attempted {Action} on {Resource}\",\n            allowed ? \"granted\" : \"denied\",\n            userId,\n            action,\n            resource\n        );\n    }\n}\n```"
+            ))
+        
+        if has_data_access and not has_logging:
+            line_num = self.get_line_number(code, "DbContext")
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-01",
+                severity=Severity.MEDIUM,
+                title="Data access without audit logging",
+                description="Database operations missing audit trails.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Log sensitive data access operations."
+            ))
+        
+        if (has_auth_code or has_data_access) and has_logging:
+            line_num = self.get_line_number(code, "ILogger") or self.get_line_number(code, "TrackEvent")
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-01",
+                severity=Severity.INFO,
+                title="Audit logging implemented",
+                description="Security operations include audit logging.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure logs include: user ID, timestamp, action, result, IP, resource.",
+                good_practice=True
+            ))
+    
+    def _check_log_integrity(self, code: str, file_path: str) -> None:
+        """Check for log integrity and protection (KSI-AFR-02)."""
+        # Check for local file logging
+        local_logging = bool(re.search(
+            r'(FileAppender|File.*Logger|StreamWriter.*\.log)',
+            code,
+            re.IGNORECASE
+        ))
+        
+        if local_logging:
+            line_num = self.get_line_number(code, "File")
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-02",
+                severity=Severity.HIGH,
+                title="Logs written to local files (insecure)",
+                description="Application writes logs locally. FedRAMP 20x requires centralized, immutable logging.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Stream logs to Azure Monitor:\n```csharp\nusing Microsoft.ApplicationInsights;\nusing Azure.Messaging.EventHubs;\n\n// Configure Application Insights\nservices.AddApplicationInsightsTelemetry(\n    builder.Configuration[\"ApplicationInsights:ConnectionString\"]\n);\n\n// For immutable audit logs, use Event Hubs\npublic class ImmutableAuditLogger\n{\n    private readonly EventHubProducerClient _producer;\n    \n    public async Task LogAuditEventAsync(object auditEvent)\n    {\n        var eventData = new EventData(\n            JsonSerializer.SerializeToUtf8Bytes(auditEvent)\n        );\n        await _producer.SendAsync(new[] { eventData });\n    }\n}\n```"
+            ))
+        
+        has_app_insights = bool(re.search(r'(ApplicationInsights|TelemetryClient)', code))
+        has_event_hub = bool(re.search(r'EventHub', code))
+        
+        if not local_logging and (has_app_insights or has_event_hub):
+            line_num = self.get_line_number(code, "ApplicationInsights") or self.get_line_number(code, "EventHub")
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-02",
+                severity=Severity.INFO,
+                title="Logs streamed to centralized SIEM",
+                description="Application sends logs to Azure Monitor or Event Hubs.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Verify log retention meets FedRAMP requirements (90+ days).",
+                good_practice=True
+            ))
+    
+    def _check_key_management(self, code: str, file_path: str) -> None:
+        """Check for cryptographic key management (KSI-CED-01)."""
+        # Check for hardcoded keys
+        key_patterns = [
+            (r'(privateKey|secretKey|encryptionKey)\s*=\s*"[^"]{20,}";', "encryption key"),
+            (r'-----BEGIN\s+(PRIVATE|RSA)\s+KEY-----', "private key"),
+            (r'new\s+AesManaged\(\).*Key\s*=\s*', "AES key"),
+        ]
+        
+        hardcoded_keys = []
+        for pattern, key_type in key_patterns:
+            matches = list(re.finditer(pattern, code, re.IGNORECASE | re.DOTALL))
+            for match in matches:
+                context = code[max(0, match.start()-100):min(len(code), match.end()+100)]
+                if not re.search(r'(SecretClient|GetSecretAsync|KeyVaultSecret)', context):
+                    hardcoded_keys.append((match, key_type))
+        
+        # Check for local key generation
+        key_generation = bool(re.search(
+            r'(Aes\.Create|RSA\.Create|RNGCryptoServiceProvider)(?!.*KeyVault)',
+            code,
+            re.DOTALL
+        ))
+        
+        if key_generation:
+            line_num = self.get_line_number(code, "Aes.Create") or self.get_line_number(code, "RSA.Create")
+            self.add_finding(Finding(
+                requirement_id="KSI-CED-01",
+                severity=Severity.HIGH,
+                title="Local cryptographic key generation",
+                description="Application generates keys locally. FedRAMP 20x requires Azure Key Vault with HSM.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Use Azure Key Vault:\n```csharp\nusing Azure.Security.KeyVault.Keys;\nusing Azure.Security.KeyVault.Keys.Cryptography;\n\nvar keyClient = new KeyClient(\n    new Uri(configuration[\"KeyVault:Url\"]),\n    new DefaultAzureCredential()\n);\n\n// Generate key in Key Vault\nvar key = await keyClient.CreateRsaKeyAsync(\n    new CreateRsaKeyOptions(\"data-encryption-key\")\n    {\n        KeySize = 2048,\n        HardwareProtected = true  // Use HSM\n    }\n);\n\n// Use for encryption\nvar cryptoClient = new CryptographyClient(key.Value.Id, new DefaultAzureCredential());\nvar result = await cryptoClient.EncryptAsync(\n    EncryptionAlgorithm.RsaOaep,\n    plaintext\n);\n```"
+            ))
+        
+        if hardcoded_keys:
+            for match, key_type in hardcoded_keys[:2]:
+                line_num = self.get_line_number(code, match.group(0))
+                self.add_finding(Finding(
+                    requirement_id="KSI-CED-01",
+                    severity=Severity.HIGH,
+                    title=f"Hardcoded {key_type} in source",
+                    description=f"Cryptographic {key_type} hardcoded. FedRAMP 20x prohibits keys in source.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation=f"Store {key_type} in Azure Key Vault and retrieve at runtime."
+                ))
+        
+        has_key_vault = bool(re.search(r'(KeyClient|SecretClient|KeyVault)', code))
+        has_managed_identity = bool(re.search(r'DefaultAzureCredential|ManagedIdentityCredential', code))
+        
+        if has_key_vault and has_managed_identity:
+            line_num = self.get_line_number(code, "KeyClient") or self.get_line_number(code, "SecretClient")
+            self.add_finding(Finding(
+                requirement_id="KSI-CED-01",
+                severity=Severity.INFO,
+                title="Azure Key Vault integration with Managed Identity",
+                description="Application retrieves keys from Key Vault using Managed Identity.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure HSM-backed keys and key rotation policies configured.",
+                good_practice=True
+            ))
+

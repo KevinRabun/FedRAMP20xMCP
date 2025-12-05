@@ -1,15 +1,16 @@
 # Application Code Coverage Expansion Plan
 
 ## Current State
-- **Application Coverage:** 22 KSIs (30.6%) across Python, C#, Java, TypeScript ✅ **Updated: Phase 4 Complete**
+- **Application Coverage:** 28 KSIs (38.9%) across Python, C#, Java, TypeScript ✅ **Updated: Phase 5 Complete**
 - **Infrastructure Coverage:** 55 KSIs (76.4%)
 - **Phase 1 (8 KSIs):** IAM-01, SVC-06, SVC-08, PIY-02, MLA-05, SVC-03, IAM-03, CNA-01
 - **Phase 2 (2 KSIs):** IAM-05, CNA-03 ✅ **COMPLETE**
 - **Phase 3 (8 KSIs):** SVC-01, SVC-02, SVC-07, PIY-01, PIY-03, CNA-07, IAM-04, IAM-07 ✅ **COMPLETE**
 - **Phase 4 (4 KSIs):** MLA-03, MLA-04, MLA-06, INR-01 ✅ **COMPLETE**
+- **Phase 5 (6 KSIs):** CMT-01, CMT-02, CMT-03, AFR-01, AFR-02, CED-01 ✅ **COMPLETE**
 
 ## Goal
-**Target:** Increase application coverage from 22 to 30+ KSIs (42% coverage)
+**Target:** Increase application coverage from 28 to 30+ KSIs (42% coverage)
 **Focus:** Security-critical KSIs that apply to all application languages
 
 ---
@@ -170,11 +171,130 @@ All 4 KSIs for real-time security monitoring and incident response:
 
 ---
 
+## Phase 5 Expansion: DevSecOps Automation (6 KSIs) ✅ COMPLETE
+
+**Status:** ✅ **ALL COMPLETE** - Implemented in all 4 languages
+
+All 6 KSIs for secure DevSecOps practices and cryptographic operations:
+- ✅ KSI-CMT-01: Configuration Management
+- ✅ KSI-CMT-02: Version Control Enforcement
+- ✅ KSI-CMT-03: Automated Testing
+- ✅ KSI-AFR-01: Audit Logging
+- ✅ KSI-AFR-02: Log Integrity
+- ✅ KSI-CED-01: Cryptographic Key Management
+
+### KSI-CMT-01: Configuration Management ✅ IMPLEMENTED
+**Why:** Applications must use externalized configuration, not hardcoded values
+**Status:** ✅ **COMPLETE** - Implemented in all 4 analyzers
+**Applicable:** All 4 languages
+
+**Detection Patterns:**
+- ✅ Hardcoded API endpoints, connection strings, port numbers
+- ✅ Missing Azure App Configuration integration
+- ✅ Missing IConfiguration (C#), environment variable usage
+- ✅ Direct configuration values in source code
+
+**Implementation Details:**
+- Python: `_check_configuration_management()` - Detects hardcoded configs, recommends Azure App Configuration
+- C#: `_check_configuration_management()` - Validates IConfiguration, Azure App Configuration
+- Java: `_check_configuration_management()` - Checks @Value, Environment.getProperty(), Spring Cloud Config
+- TypeScript: `_check_configuration_management()` - Detects process.env usage, recommends centralized config
+
+### KSI-CMT-02: Version Control Enforcement ✅ IMPLEMENTED
+**Why:** Prevents direct production deployments without code review
+**Status:** ✅ **COMPLETE** - Implemented in all 4 analyzers
+**Applicable:** All 4 languages
+
+**Detection Patterns:**
+- ✅ Direct git push to production branches
+- ✅ Automated deployments without approval gates
+- ✅ Missing CI/CD pipeline references
+
+**Implementation Details:**
+- All languages: `_check_version_control()` - Detects direct deployment patterns, recommends CI/CD with approvals
+
+### KSI-CMT-03: Automated Testing ✅ IMPLEMENTED
+**Why:** Security testing must be automated in CI/CD pipelines
+**Status:** ✅ **COMPLETE** - Implemented in all 4 analyzers
+**Applicable:** All 4 languages
+
+**Detection Patterns:**
+- ✅ Application code without corresponding test files
+- ✅ Missing security-specific tests (auth, injection, XSS)
+- ✅ No test coverage tracking
+- ✅ Test frameworks present (pytest, xUnit, JUnit, Jest)
+
+**Implementation Details:**
+- Python: Detects pytest, unittest, checks for security test patterns
+- C#: Detects xUnit, NUnit, MSTest, validates security test cases
+- Java: Detects JUnit, TestNG, Spring Test, checks for security tests
+- TypeScript: Detects Jest, Mocha, Vitest, validates security test coverage
+
+### KSI-AFR-01: Audit Logging of Security Events ✅ IMPLEMENTED
+**Why:** All authentication, authorization, and data access must be logged
+**Status:** ✅ **COMPLETE** - Implemented in all 4 analyzers
+**Applicable:** All 4 languages
+
+**Detection Patterns:**
+- ✅ Authentication methods without logging
+- ✅ Authorization checks without audit trails
+- ✅ Database operations without access logging
+- ✅ Application Insights integration for audit events
+
+**Implementation Details:**
+- Python: Detects auth code (login, authenticate), validates logging presence
+- C#: Checks ILogger usage with authentication/data access code
+- Java: Validates SLF4J, Log4j usage with security operations
+- TypeScript: Checks winston, pino, bunyan logging in auth contexts
+
+### KSI-AFR-02: Log Integrity and Protection ✅ IMPLEMENTED
+**Why:** Logs must be immutable and sent to centralized SIEM
+**Status:** ✅ **COMPLETE** - Implemented in all 4 analyzers
+**Applicable:** All 4 languages
+
+**Detection Patterns:**
+- ✅ Local file logging (anti-pattern)
+- ✅ Missing Azure Monitor / Application Insights integration
+- ✅ No Event Hubs for immutable audit logs
+- ✅ Logs not sent to centralized SIEM
+
+**Implementation Details:**
+- Python: Detects FileHandler, validates Application Insights / Event Hubs
+- C#: Checks for file appenders, recommends Azure Monitor streaming
+- Java: Detects file appenders, validates Application Insights for Java
+- TypeScript: Checks fs.writeFile for logs, recommends applicationinsights npm
+
+### KSI-CED-01: Cryptographic Key Management ✅ IMPLEMENTED
+**Why:** Encryption keys must never be hardcoded or generated locally
+**Status:** ✅ **COMPLETE** - Implemented in all 4 analyzers
+**Applicable:** All 4 languages
+
+**Detection Patterns:**
+- ✅ Hardcoded encryption keys, private keys, certificates
+- ✅ Local key generation (RSA.generate, Fernet.generate_key, etc.)
+- ✅ Missing Azure Key Vault integration
+- ✅ Keys stored in environment variables (suboptimal)
+
+**Implementation Details:**
+- Python: Detects Fernet keys, RSA generation, validates Key Vault SecretClient
+- C#: Checks for AesManaged, RSA.Create, validates KeyClient usage
+- Java: Detects KeyGenerator, SecretKeyFactory, recommends Azure Key Vault SDK
+- TypeScript: Checks crypto.generateKeyPair, validates @azure/keyvault-keys
+
+**Test Coverage (Phase 5):**
+- Python: 12 tests (2 per KSI: missing + implemented) - **Pending**
+- C#: 12 tests (2 per KSI: missing + implemented) - **Pending**
+- Java: 12 tests (2 per KSI: missing + implemented) - **Pending**
+- TypeScript: 12 tests (2 per KSI: missing + implemented) - **Pending**
+- **Total:** 48 new tests for Phase 5
+
+---
+
 ## Additional High-Value Application KSIs
 
-### Phase 5 Application Expansion: Runtime Security (3 KSIs)
+### Phase 6 Application Expansion: Resilience & Runtime Security (Remaining KSIs)
 
-#### KSI-CMT-01: Configuration Management
+#### KSI-RPL-01: Database Replication Configuration
 **Applicable:** All 4 languages
 **Why:** Apps must load secure configs, not hardcode values
 

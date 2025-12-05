@@ -66,6 +66,14 @@ class PythonAnalyzer(BaseAnalyzer):
         self._check_performance_monitoring(code, file_path)
         self._check_incident_response(code, file_path)
         
+        # Phase 5: DevSecOps Automation
+        self._check_configuration_management(code, file_path)
+        self._check_version_control(code, file_path)
+        self._check_automated_testing(code, file_path)
+        self._check_audit_logging(code, file_path)
+        self._check_log_integrity(code, file_path)
+        self._check_key_management(code, file_path)
+        
         return self.result
     
     def _check_authentication(self, code: str, file_path: str) -> None:
@@ -1099,3 +1107,387 @@ class PythonAnalyzer(BaseAnalyzer):
                     line_number=line_num,
                     recommendation="Implement severity-based escalation for critical security events."
                 ))
+    
+    # Phase 5: DevSecOps Automation Methods
+    
+    def _check_configuration_management(self, code: str, file_path: str) -> None:
+        """Check for secure configuration management (KSI-CMT-01)."""
+        # Check for hardcoded configuration values
+        config_patterns = [
+            (r"(api_url|endpoint|base_url)\s*=\s*['\"]https?://[^'\"]+['\"]", "API endpoint"),
+            (r"(database_host|db_host|server)\s*=\s*['\"][^'\"]+['\"]", "Database host"),
+            (r"(port|db_port)\s*=\s*\d+", "Port number"),
+        ]
+        
+        hardcoded_configs = []
+        for pattern, config_type in config_patterns:
+            matches = list(re.finditer(pattern, code, re.IGNORECASE))
+            if matches:
+                # Check if it's using environment variables or config service
+                for match in matches:
+                    context = code[max(0, match.start()-100):min(len(code), match.end()+100)]
+                    if not re.search(r"(os\.environ|os\.getenv|config\.|settings\.|get_secret)", context):
+                        hardcoded_configs.append((match, config_type))
+        
+        # Check for App Configuration or Key Vault integration
+        has_app_config = bool(re.search(r"azure\.appconfiguration|AzureAppConfigurationClient", code))
+        has_key_vault = bool(re.search(r"azure\.keyvault|SecretClient", code))
+        has_env_vars = bool(re.search(r"os\.environ\[|os\.getenv\(", code))
+        
+        if hardcoded_configs:
+            for match, config_type in hardcoded_configs[:3]:  # Report first 3
+                line_num = self.get_line_number(code, match.group(0))
+                self.add_finding(Finding(
+                    requirement_id="KSI-CMT-01",
+                    severity=Severity.MEDIUM,
+                    title=f"Hardcoded {config_type} configuration",
+                    description=f"Configuration value hardcoded in source. FedRAMP 20x requires externalized, environment-specific configuration.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=match.group(0),
+                    recommendation=f"Use Azure App Configuration or environment variables:\n```python\nimport os\nfrom azure.appconfiguration import AzureAppConfigurationClient\nfrom azure.identity import DefaultAzureCredential\n\n# Option 1: Azure App Configuration (recommended for FedRAMP)\nconfig_client = AzureAppConfigurationClient(\n    base_url=os.environ['APPCONFIGURATION_ENDPOINT'],\n    credential=DefaultAzureCredential()\n)\n{config_type.lower().replace(' ', '_')} = config_client.get_configuration_setting(\n    key='{config_type.lower().replace(' ', '_')}'\n).value\n\n# Option 2: Environment variables (simpler but less secure)\n{config_type.lower().replace(' ', '_')} = os.environ['{config_type.upper().replace(' ', '_')}']\n```\nSource: Azure App Configuration (https://learn.microsoft.com/azure/azure-app-configuration/)"
+                ))
+        
+        if has_app_config or has_key_vault:
+            line_num = self.get_line_number(code, "appconfiguration") or self.get_line_number(code, "keyvault")
+            self.add_finding(Finding(
+                requirement_id="KSI-CMT-01",
+                severity=Severity.INFO,
+                title="Azure App Configuration or Key Vault integration",
+                description="Application uses centralized configuration management service.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure all environment-specific values are externalized and production configs are access-controlled.",
+                good_practice=True
+            ))
+        elif not hardcoded_configs and has_env_vars:
+            line_num = self.get_line_number(code, "os.environ")
+            self.add_finding(Finding(
+                requirement_id="KSI-CMT-01",
+                severity=Severity.LOW,
+                title="Configuration uses environment variables",
+                description="Environment variables used for configuration. Consider Azure App Configuration for centralized management.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="For FedRAMP environments, migrate to Azure App Configuration for audit trails and access control.",
+                good_practice=True
+            ))
+    
+    def _check_version_control(self, code: str, file_path: str) -> None:
+        """Check for version control enforcement (KSI-CMT-02)."""
+        # This check is more about repository configuration, but we can check for deployment scripts
+        
+        # Check for direct production deployment patterns (anti-pattern)
+        direct_deploy_patterns = [
+            r"subprocess.*git\s+push.*production",
+            r"os\.system.*git\s+push.*main",
+            r"subprocess.*deploy.*production",
+        ]
+        
+        has_direct_deploy = False
+        for pattern in direct_deploy_patterns:
+            match = re.search(pattern, code, re.IGNORECASE)
+            if match:
+                has_direct_deploy = True
+                line_num = self.get_line_number(code, match.group(0))
+                self.add_finding(Finding(
+                    requirement_id="KSI-CMT-02",
+                    severity=Severity.HIGH,
+                    title="Direct production deployment without approval",
+                    description="Code performs direct deployment to production. FedRAMP 20x requires code review and approval workflows.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=match.group(0),
+                    recommendation="Use CI/CD pipelines with approval gates:\n1. Require pull request reviews before merge\n2. Configure branch protection on main/production branches\n3. Use Azure DevOps pipelines or GitHub Actions with approval steps\n4. Implement automated security checks before deployment\n\nExample Azure Pipeline approval:\n```yaml\nstages:\n- stage: Deploy_Production\n  dependsOn: Test\n  condition: succeeded()\n  jobs:\n  - deployment: DeployProd\n    environment: production  # Requires approval in Azure DevOps\n    strategy:\n      runOnce:\n        deploy:\n          steps:\n          - script: python deploy.py\n```\nSource: Azure DevOps Approvals (https://learn.microsoft.com/azure/devops/pipelines/process/approvals)"
+                ))
+                break
+        
+        # Check for CI/CD configuration references (good practice)
+        has_cicd_config = bool(re.search(r"(\.github/workflows|azure-pipelines|\.gitlab-ci|jenkinsfile)", code, re.IGNORECASE))
+        has_approval_check = bool(re.search(r"(approval|approve|review|gate)", code, re.IGNORECASE))
+        
+        if has_cicd_config or has_approval_check:
+            line_num = self.get_line_number(code, "workflow") or self.get_line_number(code, "pipeline") or self.get_line_number(code, "approval")
+            self.add_finding(Finding(
+                requirement_id="KSI-CMT-02",
+                severity=Severity.INFO,
+                title="CI/CD approval workflow referenced",
+                description="Code references CI/CD approval processes.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Verify branch protection and approval requirements are enforced in repository settings.",
+                good_practice=True
+            ))
+    
+    def _check_automated_testing(self, code: str, file_path: str) -> None:
+        """Check for automated security testing (KSI-CMT-03)."""
+        # Check for test framework imports
+        test_frameworks = [
+            r"import\s+unittest",
+            r"import\s+pytest",
+            r"from\s+pytest",
+            r"import\s+nose",
+            r"from\s+django\.test",
+        ]
+        
+        has_test_framework = False
+        for pattern in test_frameworks:
+            if re.search(pattern, code):
+                has_test_framework = True
+                break
+        
+        # Check for security-specific testing
+        security_test_patterns = [
+            r"(test.*security|test.*auth|test.*authorization|test.*encryption|test.*xss|test.*sql.*injection)",
+            r"(pytest.*security|bandit|safety)",
+        ]
+        
+        has_security_tests = False
+        for pattern in security_test_patterns:
+            if re.search(pattern, code, re.IGNORECASE):
+                has_security_tests = True
+                break
+        
+        # Check for test coverage
+        has_coverage = bool(re.search(r"(coverage|pytest-cov|--cov)", code, re.IGNORECASE))
+        
+        # Check if this is a test file
+        is_test_file = bool(re.search(r"test_.*\.py$|.*_test\.py$", file_path))
+        
+        if not is_test_file and not has_test_framework:
+            # Only report missing tests for non-test files in certain directories
+            if re.search(r"(src/|app/|lib/|api/|views/|controllers/)", file_path, re.IGNORECASE):
+                self.add_finding(Finding(
+                    requirement_id="KSI-CMT-03",
+                    severity=Severity.MEDIUM,
+                    title="No automated tests found",
+                    description="Application code without corresponding test files. FedRAMP 20x requires automated security testing in CI/CD.",
+                    file_path=file_path,
+                    line_number=1,
+                    recommendation="Create test files with security-focused tests:\n```python\nimport pytest\nfrom myapp import app, db\nfrom myapp.models import User\n\nclass TestSecurity:\n    def test_authentication_required(self):\n        \"\"\"Test that protected endpoints require authentication.\"\"\"\n        response = app.test_client().get('/api/protected')\n        assert response.status_code == 401\n    \n    def test_sql_injection_prevention(self):\n        \"\"\"Test that SQL injection is blocked.\"\"\"\n        malicious_input = \"'; DROP TABLE users; --\"\n        response = app.test_client().post('/search', data={'query': malicious_input})\n        # Should not execute malicious SQL\n        assert User.query.count() > 0  # Table still exists\n    \n    def test_xss_prevention(self):\n        \"\"\"Test that XSS payloads are escaped.\"\"\"\n        xss_payload = '<script>alert(\"XSS\")</script>'\n        response = app.test_client().post('/comment', data={'text': xss_payload})\n        assert b'<script>' not in response.data  # Should be escaped\n    \n    def test_authorization_enforcement(self):\n        \"\"\"Test that users can only access their own data.\"\"\"\n        user1_token = get_token_for_user('user1')\n        response = app.test_client().get(\n            '/api/users/user2/data',\n            headers={'Authorization': f'Bearer {user1_token}'}\n        )\n        assert response.status_code == 403  # Forbidden\n\n# Run with coverage:\n# pytest --cov=myapp --cov-report=html tests/\n```\n\nIntegrate security scanners in CI/CD:\n```yaml\n# .github/workflows/security.yml\nname: Security Tests\non: [push, pull_request]\njobs:\n  security:\n    runs-on: ubuntu-latest\n    steps:\n    - uses: actions/checkout@v3\n    - name: Run Bandit security scanner\n      run: |\n        pip install bandit\n        bandit -r src/ -f json -o bandit-report.json\n    - name: Run Safety dependency checker\n      run: |\n        pip install safety\n        safety check --json\n    - name: Run tests with coverage\n      run: |\n        pytest --cov=src --cov-report=xml\n```\nSource: OWASP Testing Guide (https://owasp.org/www-project-web-security-testing-guide/)"
+                ))
+        elif is_test_file and has_test_framework:
+            if has_security_tests:
+                line_num = self.get_line_number(code, "test.*security") or self.get_line_number(code, "test.*auth")
+                self.add_finding(Finding(
+                    requirement_id="KSI-CMT-03",
+                    severity=Severity.INFO,
+                    title="Security tests implemented",
+                    description="Test file includes security-focused test cases.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Ensure tests cover: authentication, authorization, input validation, XSS, SQL injection, and CSRF.",
+                    good_practice=True
+                ))
+            
+            if has_coverage:
+                line_num = self.get_line_number(code, "coverage") or self.get_line_number(code, "cov")
+                self.add_finding(Finding(
+                    requirement_id="KSI-CMT-03",
+                    severity=Severity.INFO,
+                    title="Test coverage tracking configured",
+                    description="Tests configured with code coverage measurement.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    recommendation="Set minimum coverage thresholds (80%+) and fail builds on regression.",
+                    good_practice=True
+                ))
+    
+    def _check_audit_logging(self, code: str, file_path: str) -> None:
+        """Check for audit logging of security events (KSI-AFR-01)."""
+        # Check for authentication/authorization functions
+        has_auth_code = bool(re.search(r"(def.*login|def.*authenticate|def.*authorize|@login_required|@require_auth)", code, re.IGNORECASE))
+        
+        # Check for data access code
+        has_data_access = bool(re.search(r"(\.query\.|\.filter\(|SELECT|INSERT|UPDATE|DELETE|db\.session)", code, re.IGNORECASE))
+        
+        # Check for logging in auth/data access contexts
+        has_auth_logging = False
+        has_data_logging = False
+        
+        if has_auth_code:
+            # Look for logging near authentication code
+            auth_matches = re.finditer(r"(def.*login|def.*authenticate|@login_required)", code, re.IGNORECASE)
+            for match in auth_matches:
+                context = code[match.start():min(len(code), match.end()+500)]
+                if re.search(r"(logger\.|logging\.|log\.|track_event|track_trace)", context, re.IGNORECASE):
+                    has_auth_logging = True
+                    break
+        
+        if has_data_access:
+            # Look for logging near data operations
+            data_matches = re.finditer(r"(\.query\.|SELECT|INSERT|UPDATE|DELETE)", code, re.IGNORECASE)
+            for match in data_matches:
+                context = code[max(0, match.start()-200):min(len(code), match.end()+200)]
+                if re.search(r"(logger\.|logging\.|log\.|track_event)", context, re.IGNORECASE):
+                    has_data_logging = True
+                    break
+        
+        # Report missing audit logging
+        if has_auth_code and not has_auth_logging:
+            line_num = self.get_line_number(code, "login") or self.get_line_number(code, "authenticate")
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-01",
+                severity=Severity.HIGH,
+                title="Authentication without audit logging",
+                description="Authentication/authorization code missing audit logs. FedRAMP 20x requires logging of all security events.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Add audit logging for authentication events:\n```python\nimport logging\nfrom datetime import datetime\nfrom azure.monitor.opentelemetry import configure_azure_monitor\nfrom opentelemetry import trace\n\n# Configure Azure Monitor (Application Insights)\nconfigure_azure_monitor(\n    connection_string=os.environ['APPLICATIONINSIGHTS_CONNECTION_STRING']\n)\ntracer = trace.get_tracer(__name__)\nlogger = logging.getLogger(__name__)\n\nclass SecurityAuditLogger:\n    @staticmethod\n    def log_authentication_attempt(user_id: str, ip_address: str, success: bool, method: str = 'password'):\n        event = {\n            'event_type': 'authentication_attempt',\n            'user_id': user_id,\n            'ip_address': ip_address,\n            'success': success,\n            'method': method,\n            'timestamp': datetime.utcnow().isoformat(),\n        }\n        \n        if success:\n            logger.info('Authentication success', extra=event)\n        else:\n            logger.warning('Authentication failed', extra=event)\n        \n        # Send to Application Insights\n        with tracer.start_as_current_span('auth_attempt') as span:\n            span.set_attributes(event)\n    \n    @staticmethod\n    def log_authorization_check(user_id: str, resource: str, action: str, allowed: bool):\n        event = {\n            'event_type': 'authorization_check',\n            'user_id': user_id,\n            'resource': resource,\n            'action': action,\n            'allowed': allowed,\n            'timestamp': datetime.utcnow().isoformat(),\n        }\n        \n        if not allowed:\n            logger.warning('Authorization denied', extra=event)\n        else:\n            logger.info('Authorization granted', extra=event)\n\n# Usage\n@app.route('/login', methods=['POST'])\ndef login():\n    username = request.form['username']\n    password = request.form['password']\n    \n    user = User.query.filter_by(username=username).first()\n    \n    if user and user.check_password(password):\n        SecurityAuditLogger.log_authentication_attempt(\n            user_id=user.id,\n            ip_address=request.remote_addr,\n            success=True,\n            method='password'\n        )\n        login_user(user)\n        return redirect('/dashboard')\n    else:\n        SecurityAuditLogger.log_authentication_attempt(\n            user_id=username,\n            ip_address=request.remote_addr,\n            success=False,\n            method='password'\n        )\n        return 'Invalid credentials', 401\n```\nSource: Azure Monitor audit logging (https://learn.microsoft.com/azure/azure-monitor/logs/data-security)"
+            ))
+        
+        if has_data_access and not has_data_logging:
+            line_num = self.get_line_number(code, "query") or self.get_line_number(code, "SELECT")
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-01",
+                severity=Severity.MEDIUM,
+                title="Data access without audit logging",
+                description="Database operations missing audit trails. FedRAMP 20x requires logging of sensitive data access.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Log sensitive data access:\n```python\ndef log_data_access(user_id: str, table: str, operation: str, record_id: str = None):\n    logger.info('Data access', extra={\n        'event_type': 'data_access',\n        'user_id': user_id,\n        'table': table,\n        'operation': operation,\n        'record_id': record_id,\n        'timestamp': datetime.utcnow().isoformat()\n    })\n\n# Usage\n@app.route('/api/user/<user_id>', methods=['GET'])\n@login_required\ndef get_user(user_id):\n    log_data_access(\n        user_id=current_user.id,\n        table='users',\n        operation='read',\n        record_id=user_id\n    )\n    user = User.query.get(user_id)\n    return jsonify(user.to_dict())\n```"
+            ))
+        
+        # Good practice: audit logging present
+        if (has_auth_code and has_auth_logging) or (has_data_access and has_data_logging):
+            line_num = self.get_line_number(code, "logger") or self.get_line_number(code, "track_event")
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-01",
+                severity=Severity.INFO,
+                title="Audit logging implemented for security events",
+                description="Security-relevant operations include audit logging.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure audit logs include: user ID, timestamp, action, result, IP address, and resource accessed.",
+                good_practice=True
+            ))
+    
+    def _check_log_integrity(self, code: str, file_path: str) -> None:
+        """Check for log integrity and protection (KSI-AFR-02)."""
+        # Check for local file logging (anti-pattern for FedRAMP)
+        local_logging_patterns = [
+            r"FileHandler\(['\"].*\.log",
+            r"open\(['\"].*\.log['\"],\s*['\"]w",
+            r"with\s+open\(['\"].*\.log",
+            r"logging\.basicConfig.*filename=",
+        ]
+        
+        has_local_logging = False
+        for pattern in local_logging_patterns:
+            match = re.search(pattern, code, re.IGNORECASE)
+            if match:
+                has_local_logging = True
+                line_num = self.get_line_number(code, match.group(0))
+                self.add_finding(Finding(
+                    requirement_id="KSI-AFR-02",
+                    severity=Severity.HIGH,
+                    title="Logs written to local files (insecure)",
+                    description="Application writes logs to local files. FedRAMP 20x requires logs streamed to immutable, centralized storage (SIEM).",
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=match.group(0),
+                    recommendation="Stream logs to Azure Monitor (Application Insights):\n```python\nimport logging\nimport os\nfrom azure.monitor.opentelemetry import configure_azure_monitor\nfrom opentelemetry import trace\nfrom opentelemetry.sdk._logs import LoggingHandler\n\n# Configure Azure Monitor for centralized, immutable logging\nconfigure_azure_monitor(\n    connection_string=os.environ['APPLICATIONINSIGHTS_CONNECTION_STRING']\n)\n\n# Configure structured logging\nlogger = logging.getLogger(__name__)\nlogger.setLevel(logging.INFO)\n\n# DO NOT use FileHandler - logs must go to SIEM\n# handler = logging.FileHandler('app.log')  # WRONG\n\n# Instead, use Application Insights handler (logs are immutable)\nfrom opencensus.ext.azure.log_exporter import AzureLogHandler\nazure_handler = AzureLogHandler(\n    connection_string=os.environ['APPLICATIONINSIGHTS_CONNECTION_STRING']\n)\nlogger.addHandler(azure_handler)\n\n# All logs now sent to Azure Monitor (tamper-proof)\nlogger.info('Application started', extra={'version': '1.0.0'})\nlogger.warning('Security event detected', extra={'event_type': 'failed_login', 'user': 'john'})\n\n# For audit logs, use Azure Event Hubs for write-once storage\nfrom azure.eventhub import EventHubProducerClient, EventData\nfrom azure.identity import DefaultAzureCredential\n\nclass ImmutableAuditLogger:\n    def __init__(self):\n        self.producer = EventHubProducerClient(\n            fully_qualified_namespace=os.environ['EVENTHUB_NAMESPACE'],\n            eventhub_name='audit-logs',\n            credential=DefaultAzureCredential()\n        )\n    \n    def log_audit_event(self, event: dict):\n        \"\"\"Send audit log to Event Hubs (immutable, append-only).\"\"\"\n        event_data = EventData(json.dumps(event))\n        self.producer.send_event(event_data)\n\naudit_logger = ImmutableAuditLogger()\naudit_logger.log_audit_event({\n    'event_type': 'data_access',\n    'user_id': 'user123',\n    'resource': '/api/users/456',\n    'timestamp': datetime.utcnow().isoformat()\n})\n```\n\nConfigure log retention policies:\n```python\n# In Log Analytics workspace (via Bicep/ARM):\nresource workspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {\n  name: 'security-logs'\n  properties: {\n    retentionInDays: 90  # FedRAMP minimum\n    features: {\n      immediatePurgeDataOn30Days: false  # Prevent log deletion\n    }\n  }\n}\n```\nSource: Azure Monitor log integrity (https://learn.microsoft.com/azure/azure-monitor/logs/data-security)"
+                ))
+                break
+        
+        # Check for Application Insights or centralized logging
+        has_app_insights = bool(re.search(r"(azure.*monitor|applicationinsights|opencensus.*azure|AzureLogHandler)", code, re.IGNORECASE))
+        has_event_hub = bool(re.search(r"(eventhub|EventHubProducerClient)", code, re.IGNORECASE))
+        has_syslog = bool(re.search(r"(syslog|SysLogHandler)", code, re.IGNORECASE))
+        
+        has_centralized = has_app_insights or has_event_hub or has_syslog
+        
+        if not has_local_logging and has_centralized:
+            line_num = self.get_line_number(code, "applicationinsights") or self.get_line_number(code, "eventhub") or self.get_line_number(code, "syslog")
+            self.add_finding(Finding(
+                requirement_id="KSI-AFR-02",
+                severity=Severity.INFO,
+                title="Logs streamed to centralized SIEM",
+                description="Application sends logs to Azure Monitor or Event Hubs (immutable storage).",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Verify log retention meets FedRAMP requirements (90+ days) and logs cannot be modified/deleted.",
+                good_practice=True
+            ))
+    
+    def _check_key_management(self, code: str, file_path: str) -> None:
+        """Check for cryptographic key management (KSI-CED-01)."""
+        # Check for hardcoded cryptographic keys/certificates
+        key_patterns = [
+            (r"(private_key|secret_key|encryption_key)\s*=\s*['\"][^'\"]{20,}['\"]", "encryption key"),
+            (r"-----BEGIN\s+(PRIVATE|RSA|EC)\s+KEY-----", "private key"),
+            (r"(cert|certificate)\s*=\s*['\"].*BEGIN\s+CERTIFICATE", "certificate"),
+            (r"Fernet\(['\"].*['\"]", "Fernet key"),
+            (r"AES\.new\(['\"].*['\"]", "AES key"),
+        ]
+        
+        hardcoded_keys = []
+        for pattern, key_type in key_patterns:
+            matches = list(re.finditer(pattern, code, re.IGNORECASE | re.DOTALL))
+            for match in matches:
+                # Check if it's from Key Vault or environment (acceptable)
+                context = code[max(0, match.start()-100):min(len(code), match.end()+100)]
+                if not re.search(r"(get_secret|SecretClient|KeyVaultSecret|os\.environ)", context):
+                    hardcoded_keys.append((match, key_type))
+        
+        # Check for local key generation without HSM
+        key_generation_patterns = [
+            r"Fernet\.generate_key\(\)",
+            r"RSA\.generate\(",
+            r"secrets\.token_bytes\(",
+            r"os\.urandom\(",
+        ]
+        
+        has_local_keygen = False
+        for pattern in key_generation_patterns:
+            match = re.search(pattern, code)
+            if match:
+                # Check if it's for HSM or Key Vault
+                context = code[max(0, match.start()-200):min(len(code), match.end()+200)]
+                if not re.search(r"(KeyVaultClient|CryptographyClient|create_key|import_key)", context, re.IGNORECASE):
+                    has_local_keygen = True
+                    line_num = self.get_line_number(code, match.group(0))
+                    self.add_finding(Finding(
+                        requirement_id="KSI-CED-01",
+                        severity=Severity.HIGH,
+                        title="Local cryptographic key generation",
+                        description="Application generates encryption keys locally. FedRAMP 20x requires keys managed in Azure Key Vault with HSM backing.",
+                        file_path=file_path,
+                        line_number=line_num,
+                        code_snippet=match.group(0),
+                        recommendation="Use Azure Key Vault for key generation and storage:\n```python\nfrom azure.keyvault.keys import KeyClient\nfrom azure.keyvault.keys.crypto import CryptographyClient, EncryptionAlgorithm\nfrom azure.identity import DefaultAzureCredential\nimport os\n\n# Key Vault client\nkey_vault_url = os.environ['KEY_VAULT_URL']\ncredential = DefaultAzureCredential()\nkey_client = KeyClient(vault_url=key_vault_url, credential=credential)\n\n# Generate key in Key Vault (HSM-backed)\nkey_name = 'data-encryption-key'\nkey = key_client.create_rsa_key(\n    name=key_name,\n    size=2048,\n    hardware_protected=True  # Use HSM\n)\n\nprint(f'Created key: {key.name} (ID: {key.id})')\n\n# Use key for encryption (key never leaves Key Vault)\ncrypto_client = CryptographyClient(key, credential=credential)\nplaintext = b'Sensitive data to encrypt'\nresult = crypto_client.encrypt(EncryptionAlgorithm.rsa_oaep, plaintext)\nprint(f'Encrypted: {result.ciphertext.hex()}')\n\n# Decrypt\ndecrypt_result = crypto_client.decrypt(EncryptionAlgorithm.rsa_oaep, result.ciphertext)\nprint(f'Decrypted: {decrypt_result.plaintext.decode()}')\n\n# Rotate keys regularly\ndef rotate_key(key_name: str):\n    # Create new version of key\n    new_key = key_client.create_rsa_key(\n        name=key_name,\n        size=2048,\n        hardware_protected=True\n    )\n    print(f'Rotated key to version: {new_key.properties.version}')\n    return new_key\n\n# For symmetric encryption with Key Vault\nfrom azure.keyvault.secrets import SecretClient\n\nsecret_client = SecretClient(vault_url=key_vault_url, credential=credential)\n\n# Store data encryption key (DEK) in Key Vault\nfrom cryptography.fernet import Fernet\n\n# Generate DEK locally (wrapped immediately)\ndek = Fernet.generate_key()\n\n# Encrypt DEK with Key Vault KEK (envelope encryption)\nkek_crypto = CryptographyClient(key, credential=credential)\nencrypted_dek = kek_crypto.encrypt(EncryptionAlgorithm.rsa_oaep, dek)\n\n# Store encrypted DEK\nsecret_client.set_secret('encrypted-dek', encrypted_dek.ciphertext.hex())\n\n# Use DEK for data encryption\nfernet = Fernet(dek)\nencrypted_data = fernet.encrypt(b'My sensitive data')\n```\nSource: Azure Key Vault cryptographic operations (https://learn.microsoft.com/azure/key-vault/keys/about-keys)"
+                    ))
+        
+        # Report hardcoded keys
+        if hardcoded_keys:
+            for match, key_type in hardcoded_keys[:2]:  # Report first 2
+                line_num = self.get_line_number(code, match.group(0))
+                snippet = match.group(0)[:100] + ('...' if len(match.group(0)) > 100 else '')
+                self.add_finding(Finding(
+                    requirement_id="KSI-CED-01",
+                    severity=Severity.HIGH,
+                    title=f"Hardcoded {key_type} in source code",
+                    description=f"Cryptographic {key_type} hardcoded in application. FedRAMP 20x strictly prohibits keys in source code.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=snippet,
+                    recommendation=f"Store {key_type} in Azure Key Vault:\n```python\nfrom azure.keyvault.secrets import SecretClient\nfrom azure.identity import DefaultAzureCredential\nimport os\n\nkey_vault_url = os.environ['KEY_VAULT_URL']\ncredential = DefaultAzureCredential()\nsecret_client = SecretClient(vault_url=key_vault_url, credential=credential)\n\n# Retrieve {key_type} from Key Vault\n{key_type.replace(' ', '_')} = secret_client.get_secret('{key_type.replace(' ', '-')}').value\n\n# NEVER do this:\n# {key_type.replace(' ', '_')} = 'hardcoded-value'  # SECURITY VIOLATION\n```"
+                ))
+        
+        # Check for Key Vault usage (good practice)
+        has_key_vault = bool(re.search(r"(KeyClient|SecretClient|CryptographyClient|azure\.keyvault)", code))
+        has_managed_identity = bool(re.search(r"DefaultAzureCredential|ManagedIdentityCredential", code))
+        
+        if has_key_vault and has_managed_identity:
+            line_num = self.get_line_number(code, "KeyClient") or self.get_line_number(code, "SecretClient")
+            self.add_finding(Finding(
+                requirement_id="KSI-CED-01",
+                severity=Severity.INFO,
+                title="Azure Key Vault integration with Managed Identity",
+                description="Application retrieves cryptographic keys from Key Vault using Managed Identity (no credentials in code).",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure: 1) HSM-backed keys for sensitive operations, 2) Key rotation policies configured, 3) Access policies follow least privilege.",
+                good_practice=True
+            ))
+
