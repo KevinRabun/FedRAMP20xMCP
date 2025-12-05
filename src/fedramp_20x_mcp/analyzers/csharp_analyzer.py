@@ -8,9 +8,11 @@ tracks data flow for higher precision analysis.
 
 import re
 import json
+import xml.etree.ElementTree as ET
 from typing import Optional, List, Dict, Set, Tuple, Any
 from dataclasses import dataclass
 from pathlib import Path
+from packaging import version
 
 try:
     from tree_sitter import Language, Parser, Node
@@ -70,6 +72,21 @@ class MethodSignature:
     def __post_init__(self):
         if self.sensitive_params is None:
             self.sensitive_params = set()
+
+
+@dataclass
+class NuGetPackage:
+    """Represents a NuGet package reference."""
+    name: str
+    version: str
+    is_vulnerable: bool = False
+    vulnerabilities: List[Dict] = None
+    is_outdated: bool = False
+    latest_version: Optional[str] = None
+    
+    def __post_init__(self):
+        if self.vulnerabilities is None:
+            self.vulnerabilities = []
 
 
 class CSharpAnalyzer(BaseAnalyzer):
@@ -176,6 +193,9 @@ class CSharpAnalyzer(BaseAnalyzer):
         
         # Configuration file analysis (cross-file check)
         self._analyze_project_configuration(file_path)
+        
+        # Dependency vulnerability analysis (cross-file check)
+        self._analyze_project_dependencies(file_path)
         
         self._check_version_control(code, file_path)
         self._check_automated_testing(code, file_path)
@@ -737,6 +757,304 @@ Source: ASP.NET Core Data Protection (https://learn.microsoft.com/aspnet/core/se
         
         visit(root_node)
         return usings
+    
+    # ========================================================================
+    # Dependency Vulnerability Checking (KSI-SVC-08, TPR-03)
+    # ========================================================================
+    
+    def _find_csproj_files(self, file_path: str) -> List[Path]:
+        """Find .csproj files in project directory."""
+        try:
+            project_dir = Path(file_path).parent
+            while project_dir != project_dir.parent:
+                csproj_files = list(project_dir.glob("*.csproj"))
+                if csproj_files:
+                    return csproj_files
+                project_dir = project_dir.parent
+            return []
+        except Exception:
+            return []
+    
+    def _parse_csproj(self, csproj_path: Path) -> List[NuGetPackage]:
+        """Parse .csproj file to extract NuGet package references."""
+        packages = []
+        
+        try:
+            tree = ET.parse(csproj_path)
+            root = tree.getroot()
+            
+            # Find all PackageReference elements
+            for package_ref in root.findall(".//PackageReference"):
+                name = package_ref.get("Include")
+                version_str = package_ref.get("Version")
+                
+                if name and version_str:
+                    packages.append(NuGetPackage(
+                        name=name,
+                        version=version_str
+                    ))
+        except Exception:
+            pass
+        
+        return packages
+    
+    def _get_known_vulnerabilities(self) -> Dict[str, List[Dict]]:
+        """
+        Return known vulnerabilities for common NuGet packages.
+        
+        In production, this should query NVD, GitHub Advisory Database, or NuGet API.
+        This is a curated list of known high-impact vulnerabilities.
+        """
+        return {
+            "System.Text.Json": [
+                {
+                    "affected_versions": "<6.0.0",
+                    "cve": "CVE-2021-26701",
+                    "severity": "HIGH",
+                    "description": "DoS vulnerability in JSON deserialization",
+                    "fixed_in": "6.0.0"
+                }
+            ],
+            "Microsoft.AspNetCore.App": [
+                {
+                    "affected_versions": "<6.0.0",
+                    "cve": "CVE-2021-43877",
+                    "severity": "HIGH",
+                    "description": "Elevation of privilege vulnerability",
+                    "fixed_in": "6.0.0"
+                }
+            ],
+            "Newtonsoft.Json": [
+                {
+                    "affected_versions": "<13.0.1",
+                    "cve": "CVE-2024-21907",
+                    "severity": "HIGH",
+                    "description": "Deserialization vulnerability allowing RCE",
+                    "fixed_in": "13.0.1"
+                }
+            ],
+            "Microsoft.Data.SqlClient": [
+                {
+                    "affected_versions": "<5.1.0",
+                    "cve": "CVE-2024-0056",
+                    "severity": "HIGH",
+                    "description": "Information disclosure vulnerability",
+                    "fixed_in": "5.1.0"
+                }
+            ],
+            "Microsoft.AspNetCore.Authentication.JwtBearer": [
+                {
+                    "affected_versions": "<6.0.0",
+                    "cve": "CVE-2021-34532",
+                    "severity": "MEDIUM",
+                    "description": "JWT token validation bypass",
+                    "fixed_in": "6.0.0"
+                }
+            ],
+            "System.Security.Cryptography.Xml": [
+                {
+                    "affected_versions": "<6.0.0",
+                    "cve": "CVE-2021-24112",
+                    "severity": "HIGH",
+                    "description": "XML signature validation bypass",
+                    "fixed_in": "6.0.0"
+                }
+            ]
+        }
+    
+    def _get_latest_versions(self) -> Dict[str, str]:
+        """
+        Return latest stable versions for common packages.
+        
+        In production, this should query NuGet API for real-time data.
+        """
+        return {
+            "System.Text.Json": "8.0.0",
+            "Microsoft.AspNetCore.App": "8.0.0",
+            "Newtonsoft.Json": "13.0.3",
+            "Microsoft.Data.SqlClient": "5.2.0",
+            "Microsoft.AspNetCore.Authentication.JwtBearer": "8.0.0",
+            "System.Security.Cryptography.Xml": "8.0.0",
+            "Microsoft.EntityFrameworkCore": "8.0.0",
+            "Azure.Identity": "1.11.0",
+            "Azure.Security.KeyVault.Secrets": "4.6.0",
+            "Swashbuckle.AspNetCore": "6.5.0"
+        }
+    
+    def _is_version_vulnerable(self, package_version: str, affected_range: str) -> bool:
+        """
+        Check if package version falls within vulnerable range.
+        
+        Supports version comparisons like <6.0.0, <=5.1.0, etc.
+        """
+        try:
+            pkg_ver = version.parse(package_version)
+            
+            if affected_range.startswith("<="):
+                max_ver = version.parse(affected_range[2:])
+                return pkg_ver <= max_ver
+            elif affected_range.startswith("<"):
+                max_ver = version.parse(affected_range[1:])
+                return pkg_ver < max_ver
+            elif affected_range.startswith(">="):
+                min_ver = version.parse(affected_range[2:])
+                return pkg_ver >= min_ver
+            elif affected_range.startswith(">"):
+                min_ver = version.parse(affected_range[1:])
+                return pkg_ver > min_ver
+            elif affected_range.startswith("=="):
+                exact_ver = version.parse(affected_range[2:])
+                return pkg_ver == exact_ver
+            else:
+                # Assume exact match
+                exact_ver = version.parse(affected_range)
+                return pkg_ver == exact_ver
+        except Exception:
+            return False
+    
+    def _check_package_vulnerabilities(self, packages: List[NuGetPackage]) -> None:
+        """
+        Check packages against known vulnerability database.
+        
+        Maps to KSI-SVC-08 (Secure Dependencies) and KSI-TPR-03 (Supply Chain Security).
+        """
+        known_vulns = self._get_known_vulnerabilities()
+        latest_versions = self._get_latest_versions()
+        
+        for package in packages:
+            # Check for known vulnerabilities
+            if package.name in known_vulns:
+                for vuln in known_vulns[package.name]:
+                    if self._is_version_vulnerable(package.version, vuln["affected_versions"]):
+                        package.is_vulnerable = True
+                        package.vulnerabilities.append(vuln)
+                        
+                        severity_map = {
+                            "CRITICAL": Severity.HIGH,
+                            "HIGH": Severity.HIGH,
+                            "MEDIUM": Severity.MEDIUM,
+                            "LOW": Severity.LOW
+                        }
+                        
+                        self.add_finding(Finding(
+                            requirement_id="KSI-SVC-08",
+                            severity=severity_map.get(vuln["severity"], Severity.HIGH),
+                            title=f"Vulnerable NuGet package detected: {package.name}",
+                            description=f"Package {package.name} version {package.version} has known vulnerability {vuln['cve']}: {vuln['description']}",
+                            file_path="[Project Dependencies]",
+                            line_number=None,
+                            recommendation=f"""Update to secure version:
+```xml
+<PackageReference Include="{package.name}" Version="{vuln['fixed_in']}" />
+```
+
+Vulnerability Details:
+- CVE: {vuln['cve']}
+- Severity: {vuln['severity']}
+- Affected Versions: {vuln['affected_versions']}
+- Fixed In: {vuln['fixed_in']}
+
+FedRAMP 20x KSI-SVC-08 requires using secure, up-to-date dependencies without known vulnerabilities. 
+Regularly scan dependencies using tools like:
+- dotnet list package --vulnerable
+- OWASP Dependency-Check
+- Snyk
+- GitHub Dependabot
+
+Source: NVD Database (https://nvd.nist.gov/), OWASP Dependency-Check (https://owasp.org/www-project-dependency-check/)"""
+                        ))
+            
+            # Check for outdated packages
+            if package.name in latest_versions:
+                try:
+                    current_ver = version.parse(package.version)
+                    latest_ver = version.parse(latest_versions[package.name])
+                    
+                    if current_ver < latest_ver:
+                        # Only warn if significantly outdated (major version behind)
+                        if current_ver.major < latest_ver.major:
+                            package.is_outdated = True
+                            package.latest_version = latest_versions[package.name]
+                            
+                            self.add_finding(Finding(
+                                requirement_id="KSI-TPR-03",
+                                severity=Severity.LOW,
+                                title=f"Outdated NuGet package: {package.name}",
+                                description=f"Package {package.name} version {package.version} is outdated. Latest version is {latest_versions[package.name]}. While no known vulnerabilities exist, updating reduces supply chain risk.",
+                                file_path="[Project Dependencies]",
+                                line_number=None,
+                                recommendation=f"""Consider updating to latest stable version:
+```xml
+<PackageReference Include="{package.name}" Version="{latest_versions[package.name]}" />
+```
+
+Benefits of updating:
+- Security patches and bug fixes
+- Performance improvements
+- New features and API improvements
+- Reduced technical debt
+
+FedRAMP 20x KSI-TPR-03 requires maintaining secure supply chain practices, including keeping dependencies current.
+
+Source: NuGet Package Manager (https://www.nuget.org/)"""
+                            ))
+                except Exception:
+                    pass
+    
+    def _analyze_project_dependencies(self, file_path: str) -> None:
+        """
+        Analyze project dependencies for vulnerabilities.
+        
+        Finds .csproj files, parses NuGet references, and checks for:
+        - Known CVEs in package versions
+        - Outdated packages with security updates
+        """
+        csproj_files = self._find_csproj_files(file_path)
+        
+        if not csproj_files:
+            return
+        
+        all_packages = []
+        for csproj_path in csproj_files:
+            packages = self._parse_csproj(csproj_path)
+            all_packages.extend(packages)
+        
+        if all_packages:
+            self._check_package_vulnerabilities(all_packages)
+        else:
+            # No packages found - might indicate missing dependency management
+            self.add_finding(Finding(
+                requirement_id="KSI-TPR-03",
+                severity=Severity.INFO,
+                title="No NuGet package references detected",
+                description="No PackageReference elements found in .csproj file. If this project uses NuGet packages, ensure they're properly referenced.",
+                file_path="[Project Dependencies]",
+                line_number=None,
+                recommendation="""Ensure dependencies are properly managed:
+```xml
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
+    <PackageReference Include="Azure.Identity" Version="1.11.0" />
+  </ItemGroup>
+</Project>
+```
+
+Use dotnet CLI to add packages:
+```bash
+dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer
+```
+
+Regularly audit dependencies:
+```bash
+dotnet list package --vulnerable
+dotnet list package --outdated
+```"""
+            ))
     
     def _extract_classes(self, root_node: Node) -> List[Dict]:
         """Extract class definitions with their attributes and methods."""

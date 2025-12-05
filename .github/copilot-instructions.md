@@ -53,6 +53,13 @@ When users ask about OSCAL, clarify it's NOT mentioned in FedRAMP 20x - it's one
   - Method call graph analysis for data flow
   - Variable assignment tracking with propagation paths
   - Detects 10+ sensitive identifier patterns (SSN, password, token, etc.)
+✅ **Dependency Vulnerability Checking** (Dec 2024):
+  - NuGet package vulnerability detection from .csproj files
+  - Known CVE database checking (6 high-impact vulnerabilities)
+  - Outdated package detection with version comparison
+  - Supply chain security analysis (KSI-TPR-03)
+  - Maps vulnerable packages to KSI-SVC-08 (Secure Dependencies)
+  - Version parsing with semver comparison (<, <=, >, >=, ==)
 
 ### Current Capabilities
 The server provides 31 MCP tools:

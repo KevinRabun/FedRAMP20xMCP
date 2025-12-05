@@ -2,7 +2,7 @@
 
 ## Test Suite Overview
 
-The FedRAMP 20x MCP Server includes comprehensive test coverage across all functionality with **21 test files** validating **31 tools**, 329 requirements, 72 KSIs, 15 prompts, 23 templates, infrastructure code generation, and automated code analysis **supporting 4 programming languages** (Python, C#, Java, TypeScript/JavaScript).
+The FedRAMP 20x MCP Server includes comprehensive test coverage across all functionality with **22 test files** validating **31 tools**, 329 requirements, 72 KSIs, 15 prompts, 23 templates, infrastructure code generation, and automated code analysis **supporting 4 programming languages** (Python, C#, Java, TypeScript/JavaScript).
 
 ## Test Files
 
@@ -812,6 +812,53 @@ python tests/test_framework_detection.py
 **Run:**
 ```bash
 python tests/test_config_analysis.py
+```
+
+### 22. test_dependency_checking.py ⭐ **NEW - DEPENDENCY VULNERABILITY CHECKING**
+**Purpose:** Validate NuGet package vulnerability detection and supply chain security analysis
+
+**Coverage:**
+- ✅ Vulnerable package detection (known CVEs in NuGet packages)
+- ✅ Outdated package detection (version comparison with latest stable)
+- ✅ Critical vulnerability detection (HIGH severity CVEs)
+- ✅ Secure package validation (no false positives for current packages)
+- ✅ No packages detection (missing dependency management)
+- ✅ JWT authentication vulnerability detection (CVE-2021-34532)
+- ✅ Version comparison accuracy (semver parsing with <, <=, >, >=, ==)
+- ✅ KSI requirement mapping (KSI-SVC-08, KSI-TPR-03)
+
+**Test Cases:**
+1. **test_vulnerable_package_detection** - Detects Newtonsoft.Json 12.0.1 (CVE-2024-21907), Microsoft.Data.SqlClient 4.0.0 (CVE-2024-0056)
+2. **test_outdated_package_detection** - Identifies System.Text.Json 6.0.0, Azure.Identity 1.5.0 as outdated
+3. **test_critical_vulnerability_detection** - Finds System.Text.Json 5.0.0 (CVE-2021-26701), System.Security.Cryptography.Xml 5.0.0 (CVE-2021-24112)
+4. **test_secure_current_packages** - No warnings for System.Text.Json 8.0.0, Newtonsoft.Json 13.0.3, Azure.Identity 1.11.0
+5. **test_no_packages_detection** - INFO finding when no PackageReference elements found
+6. **test_jwt_authentication_vulnerability** - Detects JWT bearer 5.0.0 (CVE-2021-34532)
+7. **test_version_comparison_accuracy** - Validates semver logic for vulnerability ranges
+8. **test_ksi_requirement_mapping** - Verifies KSI-SVC-08 (vulnerable packages) and KSI-TPR-03 (outdated packages) mapping
+
+**KSI Coverage:**
+- KSI-SVC-08 (Secure Dependencies) - Vulnerable packages with known CVEs
+- KSI-TPR-03 (Supply Chain Security) - Outdated packages and dependency management
+
+**Known Vulnerabilities Database (6 CVEs):**
+- System.Text.Json <6.0.0 → CVE-2021-26701 (DoS vulnerability)
+- Microsoft.AspNetCore.App <6.0.0 → CVE-2021-43877 (Elevation of privilege)
+- Newtonsoft.Json <13.0.1 → CVE-2024-21907 (Deserialization RCE)
+- Microsoft.Data.SqlClient <5.1.0 → CVE-2024-0056 (Information disclosure)
+- Microsoft.AspNetCore.Authentication.JwtBearer <6.0.0 → CVE-2021-34532 (JWT validation bypass)
+- System.Security.Cryptography.Xml <6.0.0 → CVE-2021-24112 (XML signature bypass)
+
+**Version Comparison Support:**
+- `<6.0.0` - Less than version
+- `<=5.1.0` - Less than or equal to version
+- `>=7.0.0` - Greater than or equal to version
+- `>6.0.0` - Greater than version
+- `==5.0.0` - Exact version match
+
+**Run:**
+```bash
+python tests/test_dependency_checking.py
 ```
 
 ### Tool Functional Tests
