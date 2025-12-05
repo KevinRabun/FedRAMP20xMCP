@@ -778,6 +778,42 @@ public class UserService {
 python tests/test_framework_detection.py
 ```
 
+### 21. test_config_analysis.py ⭐ **NEW - CONFIGURATION SECURITY**
+**Purpose:** Validate appsettings.json security analysis for C# projects
+
+**Coverage:**
+- ✅ Hardcoded secrets detection (passwords, API keys, connection strings)
+- ✅ Connection string security (encryption, managed identity)
+- ✅ Logging configuration (verbose logging in production)
+- ✅ HTTPS/HSTS settings (production HTTPS endpoints, HSTS MaxAge)
+- ✅ Application Insights configuration (production monitoring)
+- ✅ Key Vault reference validation (no false positives)
+- ✅ Managed identity authentication (no warnings for secure patterns)
+- ✅ Environment-specific validation (dev vs production configs)
+
+**Test Cases:**
+1. **test_hardcoded_secret_detection** - Detects passwords, API keys, account keys
+2. **test_connection_string_security** - Validates encryption and auth methods
+3. **test_production_logging_configuration** - Checks Debug/Trace in production
+4. **test_https_configuration** - Verifies HTTPS endpoints in production
+5. **test_hsts_configuration** - Validates HSTS MaxAge (1 year minimum)
+6. **test_application_insights_missing** - Detects missing monitoring in production
+7. **test_key_vault_reference** - No false positives for @Microsoft.KeyVault references
+8. **test_managed_identity_connection** - No warnings for Active Directory Default auth
+
+**KSI Coverage:**
+- KSI-SVC-06 (Secrets Management)
+- KSI-CNA-01 (Network Security/Encryption)
+- KSI-MLA-05 (Logging Implementation)
+- KSI-MLA-03 (Security Monitoring)
+- KSI-SVC-07 (Secure Coding Practices/HTTPS)
+- KSI-CMT-01 (Configuration Management)
+
+**Run:**
+```bash
+python tests/test_config_analysis.py
+```
+
 ### Tool Functional Tests
 
 ### Resource Validation Tests

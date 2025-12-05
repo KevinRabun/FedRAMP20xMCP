@@ -7,8 +7,10 @@ tracks data flow for higher precision analysis.
 """
 
 import re
+import json
 from typing import Optional, List, Dict, Set, Tuple, Any
 from dataclasses import dataclass
+from pathlib import Path
 
 try:
     from tree_sitter import Language, Parser, Node
@@ -136,6 +138,10 @@ class CSharpAnalyzer(BaseAnalyzer):
         
         # Phase 5: DevSecOps Automation
         self._check_configuration_management(code, file_path)
+        
+        # Configuration file analysis (cross-file check)
+        self._analyze_project_configuration(file_path)
+        
         self._check_version_control(code, file_path)
         self._check_automated_testing(code, file_path)
         self._check_audit_logging(code, file_path)
@@ -183,6 +189,214 @@ class CSharpAnalyzer(BaseAnalyzer):
             r'#if\s+DEBUG',
         ]
         return any(re.search(pattern, code) for pattern in patterns)
+    
+    # ========================================================================
+    # Configuration Analysis Helpers
+    # ========================================================================
+    
+    def _find_appsettings_files(self, file_path: str) -> List[Path]:
+        """Find appsettings.json files in the project directory."""
+        try:
+            file_dir = Path(file_path).parent
+            project_root = file_dir
+            
+            # Try to find project root (look for .csproj or solution file)
+            while project_root.parent != project_root:
+                if list(project_root.glob("*.csproj")) or list(project_root.glob("*.sln")):
+                    break
+                project_root = project_root.parent
+            
+            # Find all appsettings*.json files
+            settings_files = []
+            settings_files.extend(project_root.glob("appsettings.json"))
+            settings_files.extend(project_root.glob("appsettings.*.json"))
+            
+            return settings_files
+        except Exception:
+            return []
+    
+    def _analyze_configuration_file(self, config_path: Path) -> List[Dict]:
+        """Analyze a configuration file for security issues."""
+        issues = []
+        
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+            
+            # Check for hardcoded secrets
+            secrets_found = self._check_config_secrets(config, config_path.name)
+            issues.extend(secrets_found)
+            
+            # Check logging configuration
+            logging_issues = self._check_config_logging(config, config_path.name)
+            issues.extend(logging_issues)
+            
+            # Check connection strings
+            connstr_issues = self._check_config_connection_strings(config, config_path.name)
+            issues.extend(connstr_issues)
+            
+            # Check HTTPS configuration
+            https_issues = self._check_config_https(config, config_path.name)
+            issues.extend(https_issues)
+            
+        except json.JSONDecodeError:
+            issues.append({
+                "type": "parse_error",
+                "message": f"Invalid JSON in {config_path.name}",
+                "severity": "medium"
+            })
+        except Exception as e:
+            issues.append({
+                "type": "error",
+                "message": f"Error analyzing {config_path.name}: {str(e)}",
+                "severity": "low"
+            })
+        
+        return issues
+    
+    def _check_config_secrets(self, config: dict, filename: str) -> List[Dict]:
+        """Check for hardcoded secrets in configuration."""
+        issues = []
+        
+        def check_value(key: str, value: Any, path: str = ""):
+            """Recursively check configuration values for secrets."""
+            current_path = f"{path}.{key}" if path else key
+            
+            if isinstance(value, dict):
+                for k, v in value.items():
+                    check_value(k, v, current_path)
+            elif isinstance(value, str):
+                key_lower = key.lower()
+                
+                # Check for secret-like keys with non-empty values
+                if any(secret_word in key_lower for secret_word in ['password', 'secret', 'apikey', 'api_key', 'token', 'connectionstring']):
+                    if value and not value.startswith('${') and not value.startswith('$('):
+                        # Check if it's a placeholder or environment variable reference
+                        if not any(placeholder in value.lower() for placeholder in ['<', '>', 'your-', 'placeholder', 'changeme', 'todo']):
+                            issues.append({
+                                "type": "hardcoded_secret",
+                                "path": current_path,
+                                "message": f"Potential hardcoded secret in '{current_path}'",
+                                "severity": "high",
+                                "filename": filename
+                            })
+        
+        for key, value in config.items():
+            check_value(key, value)
+        
+        return issues
+    
+    def _check_config_logging(self, config: dict, filename: str) -> List[Dict]:
+        """Check logging configuration for security issues."""
+        issues = []
+        
+        # Check if logging is configured
+        logging_config = config.get('Logging', {})
+        
+        if not logging_config:
+            issues.append({
+                "type": "missing_logging",
+                "message": "No logging configuration found",
+                "severity": "medium",
+                "filename": filename
+            })
+            return issues
+        
+        # Check log levels
+        log_levels = logging_config.get('LogLevel', {})
+        default_level = log_levels.get('Default', '').lower()
+        
+        # Check for overly verbose logging in production configs
+        if 'production' in filename.lower() or 'prod' in filename.lower():
+            if default_level in ['debug', 'trace']:
+                issues.append({
+                    "type": "verbose_logging",
+                    "message": f"Debug/Trace logging enabled in production config ({filename})",
+                    "severity": "medium",
+                    "filename": filename
+                })
+        
+        # Check for Application Insights configuration
+        app_insights = config.get('ApplicationInsights', {})
+        if not app_insights and 'production' in filename.lower():
+            issues.append({
+                "type": "missing_app_insights",
+                "message": "Application Insights not configured in production",
+                "severity": "low",
+                "filename": filename
+            })
+        
+        return issues
+    
+    def _check_config_connection_strings(self, config: dict, filename: str) -> List[Dict]:
+        """Check connection string configuration."""
+        issues = []
+        
+        conn_strings = config.get('ConnectionStrings', {})
+        
+        for name, conn_str in conn_strings.items():
+            if not isinstance(conn_str, str):
+                continue
+            
+            # Check for passwords in connection strings
+            if 'password=' in conn_str.lower() or 'pwd=' in conn_str.lower():
+                # Check if it's using environment variable or Key Vault reference
+                if not ('${' in conn_str or '$(' in conn_str or '@Microsoft.KeyVault' in conn_str):
+                    issues.append({
+                        "type": "connection_string_password",
+                        "message": f"Connection string '{name}' contains password (use Managed Identity or Key Vault)",
+                        "severity": "high",
+                        "filename": filename
+                    })
+            
+            # Check for non-encrypted connections (if not using Managed Identity)
+            if 'encrypt=' in conn_str.lower():
+                if 'encrypt=false' in conn_str.lower() or 'encrypt=no' in conn_str.lower():
+                    issues.append({
+                        "type": "unencrypted_connection",
+                        "message": f"Connection string '{name}' has encryption disabled",
+                        "severity": "high",
+                        "filename": filename
+                    })
+        
+        return issues
+    
+    def _check_config_https(self, config: dict, filename: str) -> List[Dict]:
+        """Check HTTPS and HSTS configuration."""
+        issues = []
+        
+        # Check Kestrel HTTPS configuration
+        kestrel = config.get('Kestrel', {})
+        endpoints = kestrel.get('Endpoints', {})
+        
+        has_https = False
+        for endpoint_name, endpoint_config in endpoints.items():
+            if isinstance(endpoint_config, dict):
+                url = endpoint_config.get('Url', '')
+                if 'https://' in url.lower():
+                    has_https = True
+        
+        if endpoints and not has_https and 'production' in filename.lower():
+            issues.append({
+                "type": "no_https_endpoint",
+                "message": "No HTTPS endpoint configured in production Kestrel settings",
+                "severity": "high",
+                "filename": filename
+            })
+        
+        # Check HSTS settings
+        hsts = config.get('Hsts', {})
+        if hsts:
+            max_age = hsts.get('MaxAge', 0)
+            if isinstance(max_age, (int, float)) and max_age < 31536000:  # 1 year
+                issues.append({
+                    "type": "short_hsts_maxage",
+                    "message": f"HSTS MaxAge is {max_age} seconds (recommended: 31536000+ for 1 year)",
+                    "severity": "medium",
+                    "filename": filename
+                })
+        
+        return issues
     
     def _extract_usings(self, root_node: Node) -> Set[str]:
         """Extract all using directives from the AST."""
@@ -2434,6 +2648,113 @@ Source: ASP.NET Core Logging (https://learn.microsoft.com/aspnet/core/fundamenta
                 recommendation="Migrate to Azure App Configuration for FedRAMP audit trails.",
                 good_practice=True
             ))
+    
+    def _analyze_project_configuration(self, file_path: str) -> None:
+        """Analyze appsettings.json files for security misconfigurations."""
+        # Find configuration files in project
+        config_files = self._find_appsettings_files(file_path)
+        
+        if not config_files:
+            return
+        
+        # Analyze each configuration file
+        severity_map = {"high": Severity.HIGH, "medium": Severity.MEDIUM, "low": Severity.LOW}
+        
+        for config_file in config_files:
+            issues = self._analyze_configuration_file(config_file)
+            
+            for issue in issues:
+                severity = severity_map.get(issue.get("severity", "medium"), Severity.MEDIUM)
+                issue_type = issue.get("type", "unknown")
+                
+                # Map issue types to KSI requirements
+                ksi_mapping = {
+                    "hardcoded_secret": ("KSI-SVC-06", "Hardcoded secrets in configuration"),
+                    "connection_string_password": ("KSI-SVC-06", "Connection string contains password"),
+                    "unencrypted_connection": ("KSI-CNA-01", "Database connection encryption disabled"),
+                    "verbose_logging": ("KSI-MLA-05", "Overly verbose logging in production"),
+                    "missing_logging": ("KSI-MLA-05", "Logging configuration missing"),
+                    "missing_app_insights": ("KSI-MLA-03", "Application Insights not configured"),
+                    "no_https_endpoint": ("KSI-SVC-07", "No HTTPS endpoint in production"),
+                    "short_hsts_maxage": ("KSI-SVC-07", "HSTS MaxAge too short"),
+                    "parse_error": ("KSI-CMT-01", "Invalid configuration file"),
+                }
+                
+                ksi_id, title = ksi_mapping.get(issue_type, ("KSI-CMT-01", "Configuration security issue"))
+                
+                # Build recommendation based on issue type
+                recommendations = {
+                    "hardcoded_secret": f"""Remove hardcoded secret from {config_file.name}. Use Azure Key Vault:
+```csharp
+// Program.cs
+builder.Configuration.AddAzureKeyVault(
+    new Uri($"https://{{vaultName}}.vault.azure.net/"),
+    new DefaultAzureCredential()
+);
+
+// Access secrets via IConfiguration
+var secret = configuration["{issue.get('path', 'SecretName')}"];
+```
+Source: Azure Key Vault configuration provider (https://learn.microsoft.com/azure/key-vault/general/tutorial-net-create-vault-azure-web-app)""",
+                    
+                    "connection_string_password": f"""Use Managed Identity for database authentication:
+```csharp
+// Remove password from connection string in {config_file.name}:
+"ConnectionStrings": {{
+    "Database": "Server=myserver.database.windows.net;Database=mydb;Authentication=Active Directory Default;"
+}}
+
+// Or use Key Vault reference:
+"ConnectionStrings": {{
+    "Database": "@Microsoft.KeyVault(SecretUri=https://myvault.vault.azure.net/secrets/db-connection-string)"
+}}
+```
+Source: Azure SQL Managed Identity authentication (https://learn.microsoft.com/azure/azure-sql/database/authentication-aad-configure)""",
+                    
+                    "unencrypted_connection": """Enable SQL connection encryption:
+```json
+"ConnectionStrings": {
+    "Database": "Server=myserver.database.windows.net;Database=mydb;Encrypt=true;TrustServerCertificate=false;"
+}
+```""",
+                    
+                    "verbose_logging": f"""Set appropriate log level in {config_file.name}:
+```json
+"Logging": {{
+    "LogLevel": {{
+        "Default": "Information",
+        "Microsoft.AspNetCore": "Warning"
+    }}
+}}
+```""",
+                    
+                    "no_https_endpoint": """Configure HTTPS endpoint in production:
+```json
+"Kestrel": {
+    "Endpoints": {
+        "Https": {
+            "Url": "https://*:443",
+            "Certificate": {
+                "Source": "AzureKeyVault",
+                "StoreLocation": "https://myvault.vault.azure.net/secrets/ssl-cert"
+            }
+        }
+    }
+}
+```""",
+                }
+                
+                recommendation = recommendations.get(issue_type, issue.get("message", "Review configuration security"))
+                
+                self.add_finding(Finding(
+                    requirement_id=ksi_id,
+                    severity=severity,
+                    title=title,
+                    description=f"{issue.get('message', 'Configuration issue detected')} in {config_file.name}",
+                    file_path=str(config_file),
+                    line_number=None,  # JSON files don't have meaningful line numbers without JSON parser
+                    recommendation=recommendation
+                ))
     
     def _check_version_control(self, code: str, file_path: str) -> None:
         """Check for version control enforcement (KSI-CMT-02)."""

@@ -39,6 +39,13 @@ When users ask about OSCAL, clarify it's NOT mentioned in FedRAMP 20x - it's one
   - Application Insights framework detection
   - Environment-specific configuration handling (dev vs prod)
   - Smart severity adjustment based on framework usage
+✅ **Configuration File Analysis** (Dec 2024):
+  - appsettings.json security analysis
+  - Hardcoded secrets detection
+  - Connection string security validation
+  - Logging configuration validation
+  - HTTPS/HSTS settings verification
+  - Production vs development environment differentiation
 
 ### Current Capabilities
 The server provides 31 MCP tools:
