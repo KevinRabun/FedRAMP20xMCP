@@ -223,6 +223,74 @@ class CSharpAnalyzer(BaseAnalyzer):
                     return True
         return bool(re.search(r'(RuleFor|AbstractValidator|ValidationResult|AddFluentValidation)', code))
     
+    def _extract_fluent_validators(self, root_node: Node) -> Dict[str, Dict]:
+        """
+        Extract FluentValidation validator classes and their validation rules.
+        
+        Returns dict mapping model names to validator info:
+        {
+            "CreateUserRequest": {
+                "validator_class": "CreateUserRequestValidator",
+                "rules": ["Username", "Email", "Password"],
+                "has_rules": True
+            }
+        }
+        """
+        validators = {}
+        
+        def visit(node: Node):
+            if node.type == "class_declaration":
+                class_name = None
+                base_classes = []
+                has_rules = False
+                validated_properties = []
+                
+                for child in node.children:
+                    if child.type == "identifier":
+                        class_name = self._get_node_text(child)
+                    elif child.type == "base_list":
+                        # Extract base classes to find AbstractValidator<T>
+                        base_text = self._get_node_text(child)
+                        if "AbstractValidator" in base_text:
+                            # Extract generic type parameter
+                            match = re.search(r'AbstractValidator<(\w+)>', base_text)
+                            if match:
+                                model_name = match.group(1)
+                                base_classes.append(model_name)
+                    elif child.type == "declaration_list":
+                        # Look for RuleFor statements in constructor or methods
+                        body_text = self._get_node_text(child)
+                        if "RuleFor" in body_text:
+                            has_rules = True
+                            # Extract property names from RuleFor(x => x.PropertyName)
+                            for match in re.finditer(r'RuleFor\s*\(\s*\w+\s*=>\s*\w+\.(\w+)\s*\)', body_text):
+                                validated_properties.append(match.group(1))
+                
+                if base_classes and has_rules:
+                    for model_name in base_classes:
+                        validators[model_name] = {
+                            "validator_class": class_name,
+                            "rules": validated_properties,
+                            "has_rules": has_rules
+                        }
+            
+            for child in node.children:
+                visit(child)
+        
+        visit(root_node)
+        return validators
+    
+    def _check_fluent_validation_registration(self, code: str) -> bool:
+        """Check if FluentValidation is registered in DI container."""
+        patterns = [
+            r'AddFluentValidation\s*\(',
+            r'AddValidatorsFromAssembly\s*\(',
+            r'AddValidatorsFromAssemblyContaining\s*\(',
+            r'services\.AddTransient<IValidator',
+            r'services\.AddScoped<IValidator',
+        ]
+        return any(re.search(pattern, code) for pattern in patterns)
+    
     def _has_data_protection_api(self, code: str, usings: Set[str] = None) -> bool:
         """Check if code uses ASP.NET Core Data Protection API."""
         if usings and 'Microsoft.AspNetCore.DataProtection' in usings:
@@ -1726,11 +1794,16 @@ dotnet list package --outdated
         - Analyzes ModelState.IsValid placement in method body
         - Detects custom validation logic
         - Framework detection: Recognizes Data Annotations and FluentValidation
+        - FluentValidation deep support: Detects AbstractValidator<T> classes
         """
         # Framework detection to reduce false positives
         usings = self._extract_usings(self.tree.root_node) if self.tree else set()
         has_data_annotations = self._has_data_annotations(code, usings)
         has_fluent_validation = self._has_fluent_validation(code, usings)
+        
+        # Extract FluentValidation validators (separate validator classes)
+        fluent_validators = self._extract_fluent_validators(self.tree.root_node) if self.tree else {}
+        has_fluent_registration = self._check_fluent_validation_registration(code)
         
         controller_methods = self._extract_controller_methods_with_params(classes)
         
@@ -1746,10 +1819,16 @@ dotnet list package --outdated
                 # Check if the parameter type itself has validation attributes
                 param_type = param.get("type")
                 has_type_validation = False
+                has_fluent_validator = False
                 
                 if param_type:
                     # Check if this is a known model class with validation
                     has_type_validation = self._check_class_has_validation_attributes(param_type, classes)
+                    
+                    # Check if FluentValidation validator exists for this type
+                    if param_type in fluent_validators:
+                        has_fluent_validator = True
+                        has_type_validation = True  # FluentValidation counts as validation
                 
                 # Check if parameter has validation attributes directly
                 validation_attrs = ["Required", "StringLength", "Range", "RegularExpression",
@@ -1757,11 +1836,16 @@ dotnet list package --outdated
                 has_param_validation = any(attr in param["attributes"] for attr in validation_attrs)
                 
                 if has_type_validation or has_param_validation:
-                    validated_params.append(param["name"])
+                    validated_params.append({
+                        "name": param["name"],
+                        "type": param_type,
+                        "fluent": has_fluent_validator
+                    })
                 else:
                     unvalidated_params.append({
                         "name": param["name"],
-                        "binding": param["binding"]
+                        "binding": param["binding"],
+                        "type": param_type
                     })
             
             # Issue 1: Parameters without validation
@@ -1780,7 +1864,7 @@ dotnet list package --outdated
                         description=f"Method '{method_info['method_name']}' in controller '{method_info['class_name']}' accepts input parameters ({param_names}) without validation attributes. Data Annotations or FluentValidation is being used on other parameters - consider applying to all parameters consistently.",
                         file_path=file_path,
                         line_number=method_info['line_number'],
-                        recommendation="Add validation attributes to all input parameters:\n```csharp\npublic class QueryRequest\n{\n    [Required]\n    [StringLength(100)]\n    public string Filter { get; set; }\n    \n    [Range(1, 100)]\n    public int PageSize { get; set; }\n}\n\n[HttpGet]\npublic IActionResult GetData([FromQuery] QueryRequest request)\n{\n    if (!ModelState.IsValid)\n        return BadRequest(ModelState);\n    // Process validated input\n}\n```\nSource: ASP.NET Core Model Validation (https://learn.microsoft.com/aspnet/core/mvc/models/validation)"
+                        recommendation="Add validation attributes to all input parameters:\n```csharp\npublic class QueryRequest\n{\n    [Required]\n    [StringLength(100)]\n    public string Filter { get; set; }\n    \n    [Range(1, 100)]\n    public int PageSize { get; set; }\n}\n\n[HttpGet]\npublic IActionResult GetData([FromQuery] QueryRequest request)\n{\n    if (!ModelState.IsValid)\n        return BadRequest(ModelState);\n    // Process validated input\n}\n```\n\nOr use FluentValidation:\n```csharp\npublic class QueryRequestValidator : AbstractValidator<QueryRequest>\n{\n    public QueryRequestValidator()\n    {\n        RuleFor(x => x.Filter).NotEmpty().MaximumLength(100);\n        RuleFor(x => x.PageSize).InclusiveBetween(1, 100);\n    }\n}\n```\nSource: ASP.NET Core Model Validation (https://learn.microsoft.com/aspnet/core/mvc/models/validation)"
                     ))
                 else:
                     # No validation framework detected or not being used - higher severity
@@ -1797,28 +1881,57 @@ dotnet list package --outdated
             
             # Issue 2: Has validation but missing ModelState check
             elif validated_params and not method_info["has_model_state_check"]:
-                self.add_finding(Finding(
-                    requirement_id="KSI-SVC-02",
-                    severity=Severity.MEDIUM,
-                    title=f"Missing ModelState.IsValid check in {method_info['method_name']}",
-                    description=f"Method '{method_info['method_name']}' has validated parameters but doesn't check ModelState.IsValid before processing. Validation attributes are defined but not enforced at runtime.",
-                    file_path=file_path,
-                    line_number=method_info['line_number'],
-                    recommendation="Add ModelState validation check:\n```csharp\n[HttpPost]\npublic IActionResult {method_info['method_name']}([FromBody] Model request)\n{\n    if (!ModelState.IsValid)\n    {\n        _logger.LogWarning(\"Validation failed: {{Errors}}\", ModelState.Values.SelectMany(v => v.Errors));\n        return BadRequest(ModelState);\n    }\n    // Process validated input\n}\n```"
-                ))
+                # Check if FluentValidation is properly registered
+                fluent_params = [p for p in validated_params if p.get("fluent")]
+                if fluent_params and has_fluent_registration:
+                    # FluentValidation with registration - automatic validation via pipeline
+                    self.add_finding(Finding(
+                        requirement_id="KSI-SVC-02",
+                        severity=Severity.INFO,
+                        title=f"FluentValidation configured in {method_info['method_name']}",
+                        description=f"Method '{method_info['method_name']}' uses FluentValidation with automatic validation pipeline. Validators registered via AddFluentValidation() automatically validate requests before reaching controller action.",
+                        file_path=file_path,
+                        line_number=method_info['line_number'],
+                        recommendation="Good practice: FluentValidation automatically validates and returns 400 Bad Request for invalid models when registered in pipeline.",
+                        good_practice=True
+                    ))
+                else:
+                    self.add_finding(Finding(
+                        requirement_id="KSI-SVC-02",
+                        severity=Severity.MEDIUM,
+                        title=f"Missing ModelState.IsValid check in {method_info['method_name']}",
+                        description=f"Method '{method_info['method_name']}' has validated parameters but doesn't check ModelState.IsValid before processing. Validation attributes are defined but not enforced at runtime.",
+                        file_path=file_path,
+                        line_number=method_info['line_number'],
+                        recommendation="Add ModelState validation check:\n```csharp\n[HttpPost]\npublic IActionResult {method_info['method_name']}([FromBody] Model request)\n{\n    if (!ModelState.IsValid)\n    {\n        _logger.LogWarning(\"Validation failed: {{Errors}}\", ModelState.Values.SelectMany(v => v.Errors));\n        return BadRequest(ModelState);\n    }\n    // Process validated input\n}\n```"
+                    ))
             
             # Good Practice: Proper validation with ModelState check
             elif validated_params and method_info["has_model_state_check"]:
-                self.add_finding(Finding(
-                    requirement_id="KSI-SVC-02",
-                    severity=Severity.INFO,
-                    title=f"Input validation properly configured in {method_info['method_name']}",
-                    description=f"Method '{method_info['method_name']}' correctly validates input parameters with data annotations and checks ModelState.IsValid. Good practice for FedRAMP compliance.",
-                    file_path=file_path,
-                    line_number=method_info['line_number'],
-                    recommendation="Consider using FluentValidation for complex validation scenarios requiring business logic.",
-                    good_practice=True
-                ))
+                fluent_params = [p for p in validated_params if p.get("fluent")]
+                if fluent_params:
+                    validator_info = ", ".join([f"{p['type']} (FluentValidation)" for p in fluent_params[:2]])
+                    self.add_finding(Finding(
+                        requirement_id="KSI-SVC-02",
+                        severity=Severity.INFO,
+                        title=f"Input validation with FluentValidation in {method_info['method_name']}",
+                        description=f"Method '{method_info['method_name']}' correctly validates input parameters using FluentValidation validators ({validator_info}) and checks ModelState.IsValid. Excellent practice for complex validation rules with business logic.",
+                        file_path=file_path,
+                        line_number=method_info['line_number'],
+                        recommendation="Continue using FluentValidation for maintainable validation logic separate from models.",
+                        good_practice=True
+                    ))
+                else:
+                    self.add_finding(Finding(
+                        requirement_id="KSI-SVC-02",
+                        severity=Severity.INFO,
+                        title=f"Input validation properly configured in {method_info['method_name']}",
+                        description=f"Method '{method_info['method_name']}' correctly validates input parameters with data annotations and checks ModelState.IsValid. Good practice for FedRAMP compliance.",
+                        file_path=file_path,
+                        line_number=method_info['line_number'],
+                        recommendation="Consider using FluentValidation for complex validation scenarios requiring business logic.",
+                        good_practice=True
+                    ))
     
     def _extract_middleware_pipeline(self, tree_node) -> List[Dict]:
         """

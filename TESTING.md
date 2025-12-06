@@ -2,7 +2,7 @@
 
 ## Test Suite Overview
 
-The FedRAMP 20x MCP Server includes comprehensive test coverage across all functionality with **22 test files** validating **31 tools**, 329 requirements, 72 KSIs, 15 prompts, 23 templates, infrastructure code generation, and automated code analysis **supporting 4 programming languages** (Python, C#, Java, TypeScript/JavaScript).
+The FedRAMP 20x MCP Server includes comprehensive test coverage across all functionality with **23 test files** validating **31 tools**, 329 requirements, 72 KSIs, 15 prompts, 23 templates, infrastructure code generation, and automated code analysis **supporting 4 programming languages** (Python, C#, Java, TypeScript/JavaScript).
 
 ## Test Files
 
@@ -911,6 +911,36 @@ python tests/test_templates.py
 **Run:**
 ```bash
 python tests/test_new_language_support.py
+```
+
+### 18. test_fluent_validation.py ⭐ NEW
+**Purpose:** Validate FluentValidation deep support in C# analyzer
+
+**Coverage:**
+- ✅ AbstractValidator<T> class detection and rule extraction
+- ✅ RuleFor() statement parsing for validated properties
+- ✅ DI container registration detection (AddFluentValidation, AddValidatorsFromAssembly, IValidator<T>)
+- ✅ Automatic validation pipeline recognition
+- ✅ False positive reduction for separate validator classes
+- ✅ Mixed validation approaches (Data Annotations + FluentValidation)
+- ✅ Missing validator detection (false negative prevention)
+- ✅ Multiple validators in single file
+- ✅ Validator extraction accuracy with complex rules
+- ✅ Model-to-validator mapping verification
+
+**Test Cases (8 tests):**
+1. **test_fluent_validation_separate_validator** - Recognizes AbstractValidator<T> pattern
+2. **test_fluent_validation_with_registration** - Detects DI registration for automatic validation
+3. **test_mixed_validation_approaches** - Handles Data Annotations + FluentValidation
+4. **test_missing_validator_class** - Warns about unvalidated models
+5. **test_validator_extraction_accuracy** - Extracts complex RuleFor statements
+6. **test_no_false_positive_with_fluent** - Zero false positives for validated models
+7. **test_multiple_validators_in_file** - Handles multiple validators correctly
+8. **test_fluent_validation_false_negative_prevention** - Catches missing enforcement
+
+**Run:**
+```bash
+python tests/test_fluent_validation.py
 ```
 
 ### 7. test_all_tools.py

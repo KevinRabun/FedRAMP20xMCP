@@ -60,6 +60,15 @@ When users ask about OSCAL, clarify it's NOT mentioned in FedRAMP 20x - it's one
   - Supply chain security analysis (KSI-TPR-03)
   - Maps vulnerable packages to KSI-SVC-08 (Secure Dependencies)
   - Version parsing with semver comparison (<, <=, >, >=, ==)
+✅ **FluentValidation Deep Support** (Dec 2024):
+  - AbstractValidator<T> class detection and extraction
+  - RuleFor() validation rule parsing
+  - DI container registration detection (AddFluentValidation, AddValidatorsFromAssembly)
+  - Automatic validation pipeline recognition
+  - False positive reduction for separate validator classes
+  - Differentiates Data Annotations vs FluentValidation approaches
+  - Model-to-validator mapping for accurate validation coverage
+  - Enterprise validation pattern recognition
 
 ### Current Capabilities
 The server provides 31 MCP tools:
