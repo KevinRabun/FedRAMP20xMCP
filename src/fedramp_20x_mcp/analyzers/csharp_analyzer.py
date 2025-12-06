@@ -9,18 +9,23 @@ tracks data flow for higher precision analysis.
 import re
 import json
 import xml.etree.ElementTree as ET
-from typing import Optional, List, Dict, Set, Tuple, Any
+from typing import Optional, List, Dict, Set, Tuple, Any, TYPE_CHECKING
 from dataclasses import dataclass
 from pathlib import Path
 from packaging import version
 
-try:
-    from tree_sitter import Language, Parser, Node
-    import tree_sitter_c_sharp as ts_csharp
-    TREE_SITTER_AVAILABLE = True
-except ImportError:
-    TREE_SITTER_AVAILABLE = False
-    Node = None
+if TYPE_CHECKING:
+    from tree_sitter import Node as TreeSitterNode
+else:
+    try:
+        from tree_sitter import Language, Parser, Node as TreeSitterNode
+        import tree_sitter_c_sharp as ts_csharp
+        TREE_SITTER_AVAILABLE = True
+    except ImportError:
+        TREE_SITTER_AVAILABLE = False
+        TreeSitterNode = Any  # Runtime placeholder
+        Language = Any
+        Parser = Any
 
 from .base import BaseAnalyzer, Finding, Severity, AnalysisResult
 
@@ -28,12 +33,12 @@ from .base import BaseAnalyzer, Finding, Severity, AnalysisResult
 @dataclass
 class CodeContext:
     """Represents semantic context around a code node."""
-    node: Optional[Node]
+    node: Optional['TreeSitterNode']
     parent_class: Optional[str] = None
     parent_method: Optional[str] = None
     namespace: Optional[str] = None
-    usings: Set[str] = None
-    attributes: List[str] = None
+    usings: Optional[Set[str]] = None
+    attributes: Optional[List[str]] = None
     
     def __post_init__(self):
         if self.usings is None:
@@ -51,7 +56,7 @@ class DataFlowNode:
     sensitivity_type: Optional[str] = None  # 'pii', 'password', 'token', 'secret'
     declared_in: Optional[str] = None  # class or method name
     line_number: Optional[int] = None
-    propagated_from: List[str] = None  # Track where sensitivity came from
+    propagated_from: Optional[List[str]] = None  # Track where sensitivity came from
     
     def __post_init__(self):
         if self.propagated_from is None:
@@ -66,7 +71,7 @@ class MethodSignature:
     parameters: List[Dict]
     return_type: Optional[str]
     has_sensitive_data: bool = False
-    sensitive_params: Set[str] = None
+    sensitive_params: Optional[Set[str]] = None
     returns_sensitive: bool = False
     
     def __post_init__(self):
@@ -80,7 +85,7 @@ class NuGetPackage:
     name: str
     version: str
     is_vulnerable: bool = False
-    vulnerabilities: List[Dict] = None
+    vulnerabilities: Optional[List[Dict]] = None
     is_outdated: bool = False
     latest_version: Optional[str] = None
     
@@ -209,13 +214,13 @@ class CSharpAnalyzer(BaseAnalyzer):
     # AST Helper Methods
     # ========================================================================
     
-    def _has_data_annotations(self, code: str, usings: Set[str] = None) -> bool:
+    def _has_data_annotations(self, code: str, usings: Optional[Set[str]] = None) -> bool:
         """Check if code uses Data Annotations for validation."""
         if usings and 'System.ComponentModel.DataAnnotations' in usings:
             return True
         return bool(re.search(r'\[(Required|StringLength|Range|RegularExpression|MaxLength|MinLength|EmailAddress|Phone|Url|CreditCard|Compare|DataType)\]', code))
     
-    def _has_fluent_validation(self, code: str, usings: Set[str] = None) -> bool:
+    def _has_fluent_validation(self, code: str, usings: Optional[Set[str]] = None) -> bool:
         """Check if code uses FluentValidation library."""
         if usings:
             for using in usings:
@@ -291,13 +296,13 @@ class CSharpAnalyzer(BaseAnalyzer):
         ]
         return any(re.search(pattern, code) for pattern in patterns)
     
-    def _has_data_protection_api(self, code: str, usings: Set[str] = None) -> bool:
+    def _has_data_protection_api(self, code: str, usings: Optional[Set[str]] = None) -> bool:
         """Check if code uses ASP.NET Core Data Protection API."""
         if usings and 'Microsoft.AspNetCore.DataProtection' in usings:
             return True
         return bool(re.search(r'(IDataProtector|IDataProtectionProvider|CreateProtector|Protect\(|Unprotect\()', code))
     
-    def _has_application_insights(self, code: str, usings: Set[str] = None) -> bool:
+    def _has_application_insights(self, code: str, usings: Optional[Set[str]] = None) -> bool:
         """Check if code uses Application Insights."""
         if usings and 'Microsoft.ApplicationInsights' in usings:
             return True
@@ -609,7 +614,7 @@ class CSharpAnalyzer(BaseAnalyzer):
         
         return method_signatures
     
-    def _method_returns_sensitive_data(self, method_node: Node) -> bool:
+    def _method_returns_sensitive_data(self, method_node: 'TreeSitterNode') -> bool:
         """Check if a method returns sensitive data by analyzing return statements."""
         if not method_node:
             return False
@@ -637,7 +642,7 @@ class CSharpAnalyzer(BaseAnalyzer):
         
         return False
     
-    def _track_data_flow_in_method(self, method_node: Node, method_name: str) -> List[DataFlowNode]:
+    def _track_data_flow_in_method(self, method_node: 'TreeSitterNode', method_name: str) -> List[DataFlowNode]:
         """Track data flow within a method to detect sensitive data propagation."""
         flow_nodes = []
         
@@ -1185,7 +1190,7 @@ dotnet list package --outdated
         visit(attribute_list_node)
         return attributes
     
-    def _extract_base_classes(self, base_list_node: Node) -> List[str]:
+    def _extract_base_classes(self, base_list_node: 'TreeSitterNode') -> List[str]:
         """Extract base class names."""
         base_classes = []
         for child in base_list_node.children:
@@ -1193,7 +1198,7 @@ dotnet list package --outdated
                 base_classes.append(self._get_node_text(child))
         return base_classes
     
-    def _extract_methods(self, declaration_list_node: Node) -> List[Dict]:
+    def _extract_methods(self, declaration_list_node: 'TreeSitterNode') -> List[Dict]:
         """Extract method declarations with attributes."""
         methods = []
         
@@ -1220,7 +1225,7 @@ dotnet list package --outdated
         
         return methods
     
-    def _extract_properties(self, declaration_list_node: Node) -> List[Dict]:
+    def _extract_properties(self, declaration_list_node: 'TreeSitterNode') -> List[Dict]:
         """Extract property declarations."""
         properties = []
         
@@ -1243,7 +1248,7 @@ dotnet list package --outdated
         
         return properties
     
-    def _extract_parameters(self, parameter_list_node: Node) -> List[Dict]:
+    def _extract_parameters(self, parameter_list_node: 'TreeSitterNode') -> List[Dict]:
         """Extract method parameters with attributes and types."""
         parameters = []
         
@@ -1274,7 +1279,7 @@ dotnet list package --outdated
         
         return parameters
     
-    def _get_node_text(self, node: Node) -> str:
+    def _get_node_text(self, node: 'TreeSitterNode') -> str:
         """Get the text content of a node."""
         if node and self.code_bytes:
             return self.code_bytes[node.start_byte:node.end_byte].decode('utf8')
@@ -1293,7 +1298,7 @@ dotnet list package --outdated
         visit(root)
         return results
     
-    def _is_in_comment(self, node: Node) -> bool:
+    def _is_in_comment(self, node: 'TreeSitterNode') -> bool:
         """Check if node is inside a comment."""
         current = node
         while current:
@@ -1302,7 +1307,7 @@ dotnet list package --outdated
             current = current.parent
         return False
     
-    def _is_in_string_literal(self, node: Node) -> bool:
+    def _is_in_string_literal(self, node: 'TreeSitterNode') -> bool:
         """Check if node is inside a string literal."""
         current = node
         while current:
@@ -1363,7 +1368,7 @@ dotnet list package --outdated
         visit(root_node)
         return try_blocks
     
-    def _parse_catch_clause(self, catch_node: Node) -> Dict:
+    def _parse_catch_clause(self, catch_node: 'TreeSitterNode') -> Dict:
         """Parse a catch clause to extract exception type, variable, and body."""
         catch_info = {
             "exception_type": None,
@@ -1589,7 +1594,7 @@ dotnet list package --outdated
                         good_practice=True
                     ))
     
-    def _check_secrets_management_ast(self, code: str, file_path: str, root_node: Node) -> None:
+    def _check_secrets_management_ast(self, code: str, file_path: str, root_node: 'TreeSitterNode') -> None:
         """
         Check for hardcoded secrets using AST analysis.
         
@@ -1696,7 +1701,7 @@ dotnet list package --outdated
                             good_practice=True
                         ))
     
-    def _check_error_handling_ast(self, code: str, file_path: str, root_node: Node) -> None:
+    def _check_error_handling_ast(self, code: str, file_path: str, root_node: 'TreeSitterNode') -> None:
         """
         Enhanced error handling check using AST (KSI-SVC-01).
         
@@ -2731,7 +2736,7 @@ Source: ASP.NET Core Logging (https://learn.microsoft.com/aspnet/core/fundamenta
                 recommendation="Use Azure Key Vault for secrets."
             ))
     
-    def _get_line_from_node(self, node: Node) -> int:
+    def _get_line_from_node(self, node: 'TreeSitterNode') -> Optional[int]:
         """Get line number from AST node."""
         if node:
             return node.start_point[0] + 1  # tree-sitter uses 0-based indexing
