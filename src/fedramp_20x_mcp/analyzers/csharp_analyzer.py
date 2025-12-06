@@ -155,6 +155,7 @@ class CSharpAnalyzer(BaseAnalyzer):
             self._check_input_validation_ast(code, file_path, classes)  # Tier 1.2: AST-enhanced
             self._check_secure_coding_practices_ast(code, file_path, self.tree.root_node)  # Tier 1.3: AST-enhanced
             self._check_entity_framework_security_ast(code, file_path, self.tree.root_node)  # Phase A: EF Security
+            self._check_aspnet_middleware_security_ast(code, file_path, self.tree.root_node)  # Phase B: Middleware Security
             self._check_least_privilege_authorization_ast(code, file_path, classes)  # Tier 2.1: AST-enhanced
             self._check_session_management_ast(code, file_path, self.tree.root_node)  # Tier 2.2: AST-enhanced
             self._check_logging_implementation_ast(code, file_path, self.tree.root_node)  # Tier 2.3: AST-enhanced
@@ -2134,6 +2135,273 @@ Source: EF Core Tracking (https://learn.microsoft.com/ef/core/querying/tracking)
         
         find_http_get_methods(root_node)
     
+    # ========================================================================
+    # ASP.NET Core Middleware Security (Phase B Enhancements)
+    # ========================================================================
+    
+    def _check_aspnet_middleware_security_ast(self, code: str, file_path: str, root_node: TreeSitterNode) -> None:
+        """
+        AST-enhanced ASP.NET Core middleware security checks.
+        
+        Phase B enhancements:
+        1. Security Headers Validation (KSI-SVC-07)
+        2. Rate Limiting Detection (KSI-SVC-07, AFR-01)
+        3. Request Size Limits (KSI-SVC-02, AFR-01)
+        """
+        # Phase B.1: Security Headers
+        self._check_security_headers(code, file_path, root_node)
+        
+        # Phase B.2: Rate Limiting
+        self._check_rate_limiting(code, file_path, root_node)
+        
+        # Phase B.3: Request Size Limits
+        self._check_request_size_limits(code, file_path, root_node)
+    
+    def _check_security_headers(self, code: str, file_path: str, root_node: TreeSitterNode) -> None:
+        """
+        Detect missing security headers in ASP.NET Core middleware (KSI-SVC-07).
+        
+        Critical headers:
+        - X-Content-Type-Options: nosniff
+        - X-Frame-Options: DENY/SAMEORIGIN
+        - Content-Security-Policy
+        - X-XSS-Protection
+        - Referrer-Policy
+        """
+        # Track which headers are configured
+        configured_headers = set()
+        has_nwebsec = False
+        
+        def find_security_headers(node):
+            nonlocal has_nwebsec
+            
+            if node.type == "invocation_expression":
+                method_name = self._extract_method_name(node)
+                
+                # Check for NWebsec middleware calls
+                if method_name in [
+                    "UseXContentTypeOptions",
+                    "UseXfo",
+                    "UseXXssProtection",
+                    "UseReferrerPolicy",
+                    "UseCsp",
+                    "UseHsts"
+                ]:
+                    has_nwebsec = True
+                    if method_name == "UseXContentTypeOptions":
+                        configured_headers.add("X-Content-Type-Options")
+                    elif method_name == "UseXfo":
+                        configured_headers.add("X-Frame-Options")
+                    elif method_name == "UseXXssProtection":
+                        configured_headers.add("X-XSS-Protection")
+                    elif method_name == "UseReferrerPolicy":
+                        configured_headers.add("Referrer-Policy")
+                    elif method_name == "UseCsp":
+                        configured_headers.add("Content-Security-Policy")
+                
+                # Check for manual header configuration
+                if method_name == "Add" or method_name == "Append":
+                    # Check if adding to Response.Headers
+                    parent_text = self.code_bytes[node.parent.start_byte:node.parent.end_byte].decode('utf8') if node.parent else ""
+                    if "Response.Headers" in parent_text or "Headers.Add" in parent_text:
+                        # Extract header name from arguments
+                        args_text = self._extract_arguments_text(node)
+                        if args_text:
+                            if "X-Content-Type-Options" in args_text:
+                                configured_headers.add("X-Content-Type-Options")
+                            if "X-Frame-Options" in args_text:
+                                configured_headers.add("X-Frame-Options")
+                            if "Content-Security-Policy" in args_text:
+                                configured_headers.add("Content-Security-Policy")
+                            if "X-XSS-Protection" in args_text:
+                                configured_headers.add("X-XSS-Protection")
+                            if "Referrer-Policy" in args_text:
+                                configured_headers.add("Referrer-Policy")
+            
+            for child in node.children:
+                find_security_headers(child)
+        
+        find_security_headers(root_node)
+        
+        # Check for missing critical headers
+        required_headers = {
+            "X-Content-Type-Options": "prevents MIME-type sniffing attacks",
+            "X-Frame-Options": "prevents clickjacking attacks",
+            "Content-Security-Policy": "prevents XSS and data injection attacks"
+        }
+        
+        missing_headers = [h for h in required_headers if h not in configured_headers]
+        
+        if missing_headers and ("Configure" in code or "UseEndpoints" in code or "app.Use" in code):
+            header_list = ", ".join(missing_headers)
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-07",
+                severity=Severity.MEDIUM,
+                title=f"Missing critical security headers: {header_list}",
+                description=f"Application middleware pipeline is missing {len(missing_headers)} critical security headers: {', '.join([f'{h} ({required_headers[h]})' for h in missing_headers])}. This leaves the application vulnerable to various attacks.",
+                file_path=file_path,
+                line_number=1,
+                recommendation=f"""Add security headers to middleware pipeline:
+
+// Option 1: Use NWebsec middleware package (recommended)
+app.UseXContentTypeOptions();
+app.UseXfo(options => options.Deny());
+app.UseCsp(opts => opts.DefaultSources(s => s.Self()));
+
+// Option 2: Manual header configuration
+app.Use(async (context, next) => {{
+    context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.Add("X-Frame-Options", "DENY");
+    context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'");
+    context.Response.Headers.Add("X-XSS-Protection", "1; mode=block");
+    context.Response.Headers.Add("Referrer-Policy", "strict-origin-when-cross-origin");
+    await next();
+}});
+
+Source: OWASP Secure Headers (https://owasp.org/www-project-secure-headers/)
+Package: NWebsec (https://docs.nwebsec.com/)"""
+            ))
+    
+    def _check_rate_limiting(self, code: str, file_path: str, root_node: TreeSitterNode) -> None:
+        """
+        Detect missing rate limiting on API endpoints (KSI-SVC-07, AFR-01).
+        
+        Checks for:
+        - .NET 7+ built-in rate limiting (AddRateLimiter)
+        - AspNetCoreRateLimit package
+        - [EnableRateLimiting] attribute on endpoints
+        """
+        has_rate_limiter_service = "AddRateLimiter" in code
+        has_aspnetcore_rate_limit = "AddInMemoryRateLimiting" in code or "IpRateLimitOptions" in code
+        has_rate_limit_attribute = "[EnableRateLimiting" in code or "[RateLimit" in code
+        
+        # Find HTTP POST/PUT/DELETE endpoints without rate limiting
+        def find_unprotected_endpoints(node):
+            if node.type == "method_declaration":
+                method_text = self.code_bytes[node.start_byte:node.end_byte].decode('utf8')
+                method_name = self._extract_method_name_from_declaration(node)
+                
+                # Check for HTTP verb attributes
+                has_post = "[HttpPost" in method_text
+                has_put = "[HttpPut" in method_text
+                has_delete = "[HttpDelete" in method_text
+                
+                if has_post or has_put or has_delete:
+                    # Check if this specific endpoint has rate limiting
+                    has_endpoint_rate_limit = "[EnableRateLimiting" in method_text or "[RateLimit" in method_text
+                    
+                    if not has_endpoint_rate_limit and not has_rate_limiter_service and not has_aspnetcore_rate_limit:
+                        verb = "POST" if has_post else ("PUT" if has_put else "DELETE")
+                        line_num = node.start_point[0] + 1
+                        self.add_finding(Finding(
+                            requirement_id="KSI-SVC-07",
+                            severity=Severity.MEDIUM,
+                            title=f"Missing rate limiting on {verb} endpoint: {method_name or 'endpoint'}",
+                            description=f"{verb} endpoint lacks rate limiting protection, making it vulnerable to brute-force attacks, resource exhaustion, and denial-of-service attacks.",
+                            file_path=file_path,
+                            line_number=line_num,
+                            recommendation=f"""Add rate limiting to protect endpoint:
+
+// Option 1: .NET 7+ built-in rate limiting (recommended)
+// In Program.cs:
+builder.Services.AddRateLimiter(options => {{
+    options.AddFixedWindowLimiter("fixed", options => {{
+        options.PermitLimit = 100;
+        options.Window = TimeSpan.FromMinutes(1);
+        options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        options.QueueLimit = 5;
+    }});
+}});
+
+// On endpoint:
+[EnableRateLimiting("fixed")]
+{verb.capitalize()}]
+public IActionResult {method_name or 'Method'}(...) {{ }}
+
+// Option 2: AspNetCoreRateLimit package
+// Install: dotnet add package AspNetCoreRateLimit
+services.AddMemoryCache();
+services.Configure<IpRateLimitOptions>(Configuration.GetSection("IpRateLimiting"));
+services.AddInMemoryRateLimiting();
+
+Source: Rate Limiting (https://learn.microsoft.com/aspnet/core/performance/rate-limit)
+KSI-AFR-01: Automated remediation for brute-force attacks"""
+                        ))
+            
+            for child in node.children:
+                find_unprotected_endpoints(child)
+        
+        find_unprotected_endpoints(root_node)
+    
+    def _check_request_size_limits(self, code: str, file_path: str, root_node: TreeSitterNode) -> None:
+        """
+        Detect file upload endpoints without request size limits (KSI-SVC-02, AFR-01).
+        
+        Checks for:
+        - [RequestSizeLimit] attribute
+        - FormOptions.MultipartBodyLengthLimit configuration
+        - IISServerOptions.MaxRequestBodySize configuration
+        """
+        has_global_size_limit = "MultipartBodyLengthLimit" in code or "MaxRequestBodySize" in code
+        
+        def find_upload_endpoints(node):
+            if node.type == "method_declaration":
+                method_text = self.code_bytes[node.start_byte:node.end_byte].decode('utf8')
+                method_name = self._extract_method_name_from_declaration(node)
+                
+                # Check if endpoint handles file uploads
+                has_file_param = "IFormFile" in method_text or "IFormFileCollection" in method_text
+                has_post = "[HttpPost" in method_text
+                
+                if has_file_param and has_post:
+                    # Check for [RequestSizeLimit] attribute
+                    has_size_limit_attr = "[RequestSizeLimit" in method_text
+                    
+                    if not has_size_limit_attr and not has_global_size_limit:
+                        line_num = node.start_point[0] + 1
+                        self.add_finding(Finding(
+                            requirement_id="KSI-SVC-02",
+                            severity=Severity.HIGH,
+                            title=f"Missing request size limit on file upload endpoint: {method_name or 'endpoint'}",
+                            description="File upload endpoint lacks request size limits, making it vulnerable to denial-of-service attacks through large payload submissions. Attackers could exhaust server resources by uploading extremely large files.",
+                            file_path=file_path,
+                            line_number=line_num,
+                            recommendation=f"""Add request size limits to file upload endpoint:
+
+// Option 1: Per-endpoint attribute (recommended for specific endpoints)
+[RequestSizeLimit(10_000_000)] // 10MB limit
+[HttpPost]
+public IActionResult {method_name or 'Upload'}(IFormFile file) {{ }}
+
+// Option 2: Global configuration (recommended for all uploads)
+// In Program.cs:
+builder.Services.Configure<FormOptions>(options => {{
+    options.MultipartBodyLengthLimit = 10_000_000; // 10MB
+}});
+
+builder.Services.Configure<IISServerOptions>(options => {{
+    options.MaxRequestBodySize = 10_000_000; // 10MB
+}});
+
+// Option 3: Disable limit for specific endpoint (use with caution)
+[RequestSizeLimit(long.MaxValue)]
+[HttpPost]
+public IActionResult {method_name or 'Upload'}(IFormFile file) {{ }}
+
+Recommended limits:
+- Small files (images, documents): 5-10 MB
+- Large files (videos, backups): 50-100 MB
+- Check available disk space and memory before setting limits
+
+Source: Upload Files (https://learn.microsoft.com/aspnet/core/mvc/models/file-uploads#upload-large-files-with-streaming)
+KSI-AFR-01: DoS protection through resource limits"""
+                        ))
+            
+            for child in node.children:
+                find_upload_endpoints(child)
+        
+        find_upload_endpoints(root_node)
+    
     def _extract_middleware_pipeline(self, tree_node) -> List[Dict]:
         """
         Extract middleware configuration from Configure or Program.cs startup code.
@@ -2936,6 +3204,37 @@ Source: ASP.NET Core Logging (https://learn.microsoft.com/aspnet/core/fundamenta
         """Get line number from AST node."""
         if node:
             return node.start_point[0] + 1  # tree-sitter uses 0-based indexing
+        return None
+    
+    # ========================================================================
+    # AST Helper Methods for Phase B
+    # ========================================================================
+    
+    def _extract_method_name(self, invocation_node: TreeSitterNode) -> Optional[str]:
+        """Extract method name from an invocation_expression node."""
+        for child in invocation_node.children:
+            if child.type == "member_access_expression":
+                # Get the last identifier (method name)
+                identifiers = [n for n in child.children if n.type == "identifier"]
+                if identifiers:
+                    return self.code_bytes[identifiers[-1].start_byte:identifiers[-1].end_byte].decode('utf8')
+            elif child.type == "identifier":
+                # Direct method call without member access
+                return self.code_bytes[child.start_byte:child.end_byte].decode('utf8')
+        return None
+    
+    def _extract_method_name_from_declaration(self, method_node: TreeSitterNode) -> Optional[str]:
+        """Extract method name from a method_declaration node."""
+        for child in method_node.children:
+            if child.type == "identifier":
+                return self.code_bytes[child.start_byte:child.end_byte].decode('utf8')
+        return None
+    
+    def _extract_arguments_text(self, invocation_node: TreeSitterNode) -> Optional[str]:
+        """Extract argument list text from an invocation_expression node."""
+        for child in invocation_node.children:
+            if child.type == "argument_list":
+                return self.code_bytes[child.start_byte:child.end_byte].decode('utf8')
         return None
     
     # ========================================================================
