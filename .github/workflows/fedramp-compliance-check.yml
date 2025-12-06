@@ -14,6 +14,11 @@ on:
       - '.github/workflows/fedramp-compliance-check.yml'
   workflow_dispatch:
 
+permissions:
+  contents: read          # Read repository contents for checkout
+  pull-requests: write    # Post comments on pull requests
+  actions: read           # Read workflow artifacts
+
 jobs:
   analyze-infrastructure:
     name: Analyze Infrastructure Code
