@@ -2,6 +2,9 @@
 Test suite for C# analyzer dependency vulnerability checking.
 
 Tests NuGet package vulnerability detection, version checking, and supply chain security.
+
+Note: These tests require GitHub API access. In CI environments with rate limiting,
+tests will be skipped gracefully.
 """
 
 import os
@@ -9,11 +12,54 @@ import sys
 import tempfile
 from pathlib import Path
 
+# Try to import pytest for decorators
+try:
+    import pytest
+    HAS_PYTEST = True
+except ImportError:
+    HAS_PYTEST = False
+    # Create dummy pytest for standalone execution
+    class DummyPytest:
+        class mark:
+            @staticmethod
+            def skipif(condition, reason=""):
+                def decorator(func):
+                    if condition:
+                        def wrapper(*args, **kwargs):
+                            print(f"SKIPPED: {reason}")
+                            return
+                        return wrapper
+                    return func
+                return decorator
+    pytest = DummyPytest()
+
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from fedramp_20x_mcp.analyzers.csharp_analyzer import CSharpAnalyzer
 from fedramp_20x_mcp.analyzers.base import Severity
+from fedramp_20x_mcp.cve_fetcher import CVEFetcher
+
+
+def check_github_api_available():
+    """Check if GitHub API is available (not rate limited)."""
+    try:
+        fetcher = CVEFetcher()
+        # Try a simple query with a non-existent package to test API availability
+        result = fetcher.get_package_vulnerabilities("__test_nonexistent_pkg__", "nuget")
+        return True  # API is available if we got a response (even if empty)
+    except Exception as e:
+        if "rate limit" in str(e).lower() or "403" in str(e):
+            return False
+        return True  # Other errors are OK for testing
+
+
+# Check API availability once at module load
+GITHUB_API_AVAILABLE = check_github_api_available()
+skip_if_rate_limited = pytest.mark.skipif(
+    not GITHUB_API_AVAILABLE,
+    reason="GitHub API rate limited - skipping live CVE tests"
+)
 
 
 def create_test_csproj(content: str, temp_dir: Path) -> Path:
@@ -30,6 +76,7 @@ def create_test_cs_file(content: str, temp_dir: Path) -> Path:
     return cs_path
 
 
+@skip_if_rate_limited
 def test_vulnerable_package_detection():
     """Test detection of packages with known CVEs."""
     print("\n=== Test 1: Vulnerable Package Detection ===")
@@ -73,6 +120,7 @@ def test_vulnerable_package_detection():
             print(f"  - {finding.title}: {finding.severity}")
 
 
+@skip_if_rate_limited
 def test_outdated_package_detection():
     """Test detection of outdated packages."""
     print("\n=== Test 2: Outdated Package Detection ===")
@@ -114,6 +162,7 @@ def test_outdated_package_detection():
             print(f"  - {finding.title}: {finding.severity}")
 
 
+@skip_if_rate_limited
 def test_critical_vulnerability_detection():
     """Test detection of critical CVEs."""
     print("\n=== Test 3: Critical Vulnerability Detection ===")
@@ -222,6 +271,7 @@ def test_no_packages_detection():
         print("✓ Detected missing package references")
 
 
+@skip_if_rate_limited
 def test_jwt_authentication_vulnerability():
     """Test detection of vulnerable JWT authentication package."""
     print("\n=== Test 6: JWT Authentication Vulnerability ===")
@@ -297,6 +347,7 @@ def test_version_comparison_accuracy():
         print(f"  - Found {len(vuln_findings)} vulnerability findings for v13.0.0")
 
 
+@skip_if_rate_limited
 def test_ksi_requirement_mapping():
     """Test that findings map to correct KSI requirements."""
     print("\n=== Test 8: KSI Requirement Mapping ===")

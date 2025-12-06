@@ -14,7 +14,21 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from fedramp_20x_mcp.analyzers.csharp_analyzer import CSharpAnalyzer, TREE_SITTER_AVAILABLE
 
+# Try to import pytest, but don't fail if not available
+try:
+    import pytest
+    HAS_PYTEST = True
+except ImportError:
+    HAS_PYTEST = False
+    # Create a dummy pytest module for standalone execution
+    class DummyPytest:
+        @staticmethod
+        def fail(msg):
+            raise AssertionError(msg)
+    pytest = DummyPytest()
+
 print(f"Tree-sitter available: {TREE_SITTER_AVAILABLE}")
+print(f"Pytest available: {HAS_PYTEST}")
 
 
 def test_data_annotations_detected():
@@ -55,14 +69,11 @@ public class UserController : ControllerBase
         # Should be LOW or MEDIUM severity, not HIGH
         high_severity = [f for f in validation_findings if f.severity.name == "HIGH"]
         if high_severity:
-            print("[FAIL] Data Annotations detected but HIGH severity finding still raised")
-            return False
+            pytest.fail(" Data Annotations detected but HIGH severity finding still raised")
         else:
-            print("[PASS] Data Annotations detected - severity appropriately reduced")
-            return True
+            print("✅ Data Annotations detected - severity appropriately reduced")
     else:
-        print("[PASS] Data Annotations detected - no false positive")
-        return True
+        print("✅ Data Annotations detected - no false positive")
 
 
 def test_fluent_validation_detected():
@@ -101,14 +112,11 @@ public class UserController : ControllerBase
     if validation_findings:
         high_severity = [f for f in validation_findings if f.severity.name == "HIGH"]
         if high_severity:
-            print("[FAIL] FluentValidation detected but HIGH severity finding still raised")
-            return False
+            pytest.fail(" FluentValidation detected but HIGH severity finding still raised")
         else:
-            print("[PASS] FluentValidation detected - severity appropriately reduced")
-            return True
+            print("✅ FluentValidation detected - severity appropriately reduced")
     else:
-        print("[PASS] FluentValidation detected - no false positive")
-        return True
+        print("✅ FluentValidation detected - no false positive")
 
 
 def test_data_protection_api_detected():
@@ -150,14 +158,11 @@ public class User
         # Should be LOW severity or INFO, not MEDIUM
         medium_severity = [f for f in pii_findings if f.severity.name == "MEDIUM"]
         if medium_severity:
-            print("[FAIL] Data Protection API detected but MEDIUM severity finding still raised")
-            return False
+            pytest.fail(" Data Protection API detected but MEDIUM severity finding still raised")
         else:
-            print("[PASS] Data Protection API detected - severity appropriately reduced")
-            return True
+            print("✅ Data Protection API detected - severity appropriately reduced")
     else:
-        print("[PASS] Data Protection API detected - no PII warning needed")
-        return True
+        print("✅ Data Protection API detected - no PII warning needed")
 
 
 def test_application_insights_detected():
@@ -193,8 +198,7 @@ public class OrderService
                              if "Application Insights" in f.title and f.good_practice]
     
     if app_insights_findings:
-        print("[PASS] Application Insights detected and recognized as good practice")
-        return True
+        print("✅ Application Insights detected and recognized as good practice")
     else:
         print("[WARN] Application Insights not detected (may be acceptable)")
         return True  # Not a failure, just different detection
@@ -237,20 +241,17 @@ public class Startup
         dev_aware = any("development" in f.description.lower() or "OK in development" in f.description 
                        for f in session_findings)
         if dev_aware:
-            print("[PASS] Development environment context recognized")
-            return True
+            print("✅ Development environment context recognized")
         else:
             # May still be acceptable if severity is reduced
             high_severity = [f for f in session_findings if f.severity.name == "HIGH"]
             if not high_severity:
-                print("[PASS] Development context handled (no HIGH severity)")
-                return True
+                print("✅ Development context handled (no HIGH severity)")
             else:
                 print("[WARN] Development context not fully recognized")
                 return True  # Not critical failure
     else:
-        print("[PASS] No session management issues detected")
-        return True
+        print("✅ No session management issues detected")
 
 
 def test_no_false_positive_with_modelstate_check():
@@ -289,8 +290,7 @@ public class UserController : ControllerBase
                           and not f.good_practice]
     
     if not validation_findings:
-        print("[PASS] Proper validation with ModelState check - no false positive")
-        return True
+        print("✅ Proper validation with ModelState check - no false positive")
     else:
         print("[FAIL] False positive raised despite proper validation")
         print(f"  Findings: {[f.title for f in validation_findings]}")
@@ -326,8 +326,7 @@ public class CreateUserRequest
     high_severity = [f for f in validation_findings if f.severity.name == "HIGH"]
     
     if high_severity:
-        print("[PASS] No validation framework detected - HIGH severity raised appropriately")
-        return True
+        print("✅ No validation framework detected - HIGH severity raised appropriately")
     else:
         print("[WARN] Expected HIGH severity finding for missing validation")
         return True  # May have MEDIUM which is also acceptable
@@ -368,14 +367,12 @@ public class PaymentService
     good_practices = [f for f in logging_findings if f.good_practice]
     
     if good_practices:
-        print("[PASS] Structured logging with Application Insights recognized as good practice")
-        return True
+        print("✅ Structured logging with Application Insights recognized as good practice")
     elif not logging_findings:
-        print("[PASS] Proper logging - no issues detected")
-        return True
+        print("✅ Proper logging - no issues detected")
     else:
         print("[WARN] Logging detected but not recognized as good practice")
-        return True
+        # Test passed
 
 
 def run_all_tests():
