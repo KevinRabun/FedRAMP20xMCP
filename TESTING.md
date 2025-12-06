@@ -865,11 +865,24 @@ python tests/test_config_analysis.py
 - 🛠️ Use `python verify_cache_fix.py` to check cache health
 
 **GitHub API Integration:**
+- **REQUIRES AUTHENTICATION:** Set `GITHUB_TOKEN` environment variable for reliable testing
+- Without token: Tests automatically skip (unauthenticated rate limits too low: 60 requests/hour)
+- With token: 5,000 requests/hour - sufficient for CI/CD testing
 - Live CVE data from GitHub Advisory Database
 - NVD fallback for additional coverage
-- Rate limiting: 60 requests/hour (unauthenticated), 5,000/hour (authenticated)
 - Tests skip gracefully with `@skip_if_rate_limited` when rate limited
-- Set `GITHUB_TOKEN` environment variable for higher rate limits
+
+**Setup for Testing:**
+```bash
+# Windows PowerShell
+$env:GITHUB_TOKEN = "your_github_token_here"
+
+# Linux/macOS
+export GITHUB_TOKEN="your_github_token_here"
+
+# Generate token at: https://github.com/settings/tokens
+# Permissions needed: None (public read-only access)
+```
 
 **Run:**
 ```bash

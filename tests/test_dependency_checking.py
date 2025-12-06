@@ -42,14 +42,33 @@ from fedramp_20x_mcp.cve_fetcher import CVEFetcher
 
 
 def check_github_api_available():
-    """Check if GitHub API is available (not rate limited)."""
+    """Check if GitHub API is available (not rate limited).
+    
+    Returns True only if:
+    1. We can successfully query the API
+    2. We have a GitHub token (for higher rate limits)
+    
+    Without authentication, GitHub API has very low limits (60 requests/hour)
+    which makes these tests unreliable in CI environments.
+    """
+    import os
+    
+    # Check if we have a GitHub token for higher rate limits
+    github_token = os.getenv("GITHUB_TOKEN")
+    if not github_token:
+        # Without token, rate limits are too low (60/hour) - skip by default
+        return False
+    
     try:
         import requests
-        # Check the actual advisories endpoint to see if we're rate limited
-        # Use a simple query that won't count heavily against rate limits
+        # Check the actual advisories endpoint with authentication
+        headers = {
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {github_token}"
+        }
         response = requests.get(
             "https://api.github.com/advisories?per_page=1",
-            headers={"Accept": "application/vnd.github+json"},
+            headers=headers,
             timeout=5
         )
         # 403 = rate limited, 200 = OK
@@ -64,32 +83,21 @@ def check_github_api_available():
 
 # Decorator that checks at test execution time, not import time
 def skip_if_rate_limited(func):
-    """Skip test if GitHub API is rate limited."""
+    """Skip test if GitHub API is rate limited.
+    
+    These tests require GitHub API access with authentication (GITHUB_TOKEN).
+    Without a token, rate limits are too low (60 requests/hour) for reliable testing.
+    """
     def wrapper(*args, **kwargs):
         if not check_github_api_available():
             if HAS_PYTEST:
-                pytest.skip("GitHub API rate limited - skipping live CVE test")
+                pytest.skip("GitHub API not available - requires GITHUB_TOKEN for authentication")
             else:
-                print(f"SKIPPED: {func.__name__} - GitHub API rate limited")
+                print(f"SKIPPED: {func.__name__} - GitHub API not available (set GITHUB_TOKEN environment variable)")
                 return
         
-        # Wrap test execution to catch rate limit errors that occur during the test
-        try:
-            return func(*args, **kwargs)
-        except AssertionError as e:
-            # Check if this is a rate limit issue by looking at stderr output
-            # If we got empty results, it might be due to rate limiting
-            error_msg = str(e)
-            if "got 0" in error_msg or "Expected >= 1" in error_msg:
-                # Re-check if API is still available
-                if not check_github_api_available():
-                    if HAS_PYTEST:
-                        pytest.skip("GitHub API became rate limited during test - skipping")
-                    else:
-                        print(f"SKIPPED: {func.__name__} - GitHub API rate limited during execution")
-                        return
-            # Not a rate limit issue, re-raise
-            raise
+        return func(*args, **kwargs)
+    
     wrapper.__name__ = func.__name__
     return wrapper
 
