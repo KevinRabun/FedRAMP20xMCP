@@ -156,6 +156,7 @@ class CSharpAnalyzer(BaseAnalyzer):
             self._check_secure_coding_practices_ast(code, file_path, self.tree.root_node)  # Tier 1.3: AST-enhanced
             self._check_entity_framework_security_ast(code, file_path, self.tree.root_node)  # Phase A: EF Security
             self._check_aspnet_middleware_security_ast(code, file_path, self.tree.root_node)  # Phase B: Middleware Security
+            self._check_azure_integration_security_ast(code, file_path, self.tree.root_node)  # Phase C: Azure Integration
             self._check_least_privilege_authorization_ast(code, file_path, classes)  # Tier 2.1: AST-enhanced
             self._check_session_management_ast(code, file_path, self.tree.root_node)  # Tier 2.2: AST-enhanced
             self._check_logging_implementation_ast(code, file_path, self.tree.root_node)  # Tier 2.3: AST-enhanced
@@ -2401,6 +2402,490 @@ KSI-AFR-01: DoS protection through resource limits"""
                 find_upload_endpoints(child)
         
         find_upload_endpoints(root_node)
+    
+    # ========================================================================
+    # Azure Integration Security (Phase C Enhancements)
+    # ========================================================================
+    
+    def _check_azure_integration_security_ast(self, code: str, file_path: str, root_node: TreeSitterNode) -> None:
+        """
+        AST-enhanced Azure service integration security checks.
+        
+        Phase C enhancements:
+        1. Cosmos DB Security (KSI-IAM-02, SVC-06)
+        2. Service Bus Security (KSI-IAM-02)
+        3. Azure Storage Security (KSI-IAM-02, SVC-06)
+        4. Key Vault Integration (KSI-SVC-06)
+        """
+        # Phase C.1: Cosmos DB Security
+        self._check_cosmos_db_security(code, file_path, root_node)
+        
+        # Phase C.2: Service Bus Security
+        self._check_service_bus_security(code, file_path, root_node)
+        
+        # Phase C.3: Azure Storage Security
+        self._check_azure_storage_security(code, file_path, root_node)
+        
+        # Phase C.4: Key Vault Integration
+        self._check_key_vault_integration(code, file_path, root_node)
+    
+    def _check_cosmos_db_security(self, code: str, file_path: str, root_node: TreeSitterNode) -> None:
+        """
+        Detect insecure Cosmos DB connection patterns (KSI-IAM-02, SVC-06).
+        
+        Checks for:
+        - Connection strings in code (should use Managed Identity)
+        - CosmosClient instantiation patterns
+        - DefaultAzureCredential usage (good practice)
+        """
+        has_managed_identity = "DefaultAzureCredential" in code or "ManagedIdentityCredential" in code
+        has_connection_string = False
+        connection_string_lines = []
+        
+        def find_cosmos_patterns(node):
+            nonlocal has_connection_string
+            
+            if node.type == "object_creation_expression":
+                # Check for new CosmosClient(connectionString)
+                type_node = node.child_by_field_name("type")
+                if type_node:
+                    type_text = self.code_bytes[type_node.start_byte:type_node.end_byte].decode('utf8')
+                    
+                    if "CosmosClient" in type_text:
+                        # Check arguments
+                        args_node = node.child_by_field_name("arguments")
+                        if args_node:
+                            args_text = self.code_bytes[args_node.start_byte:args_node.end_byte].decode('utf8')
+                            
+                            # Check if using connection string (string literal or variable)
+                            if ('"' in args_text or "connectionString" in args_text.lower() or 
+                                "GetConnectionString" in args_text or "_configuration[" in args_text):
+                                
+                                # Verify it's not using credential parameter
+                                if "DefaultAzureCredential" not in args_text and "TokenCredential" not in args_text:
+                                    has_connection_string = True
+                                    line_num = node.start_point[0] + 1
+                                    connection_string_lines.append(line_num)
+            
+            for child in node.children:
+                find_cosmos_patterns(child)
+        
+        find_cosmos_patterns(root_node)
+        
+        if has_connection_string and not has_managed_identity:
+            self.add_finding(Finding(
+                requirement_id="KSI-IAM-02",
+                severity=Severity.HIGH,
+                title="Cosmos DB using connection string instead of Managed Identity",
+                description="CosmosClient instantiated with connection string. FedRAMP 20x requires passwordless authentication using Managed Identity for Azure services per Azure Security Benchmark.",
+                file_path=file_path,
+                line_number=connection_string_lines[0] if connection_string_lines else None,
+                recommendation="""Use Managed Identity for Cosmos DB authentication:
+```csharp
+// ❌ DON'T: Connection string authentication
+var client = new CosmosClient(configuration["CosmosDb:ConnectionString"]);
+
+// ✅ DO: Managed Identity authentication
+var credential = new DefaultAzureCredential();
+var client = new CosmosClient(
+    accountEndpoint: "https://your-account.documents.azure.com:443/",
+    tokenCredential: credential
+);
+
+// Configure in Program.cs
+builder.Services.AddSingleton<CosmosClient>(sp =>
+{
+    var credential = new DefaultAzureCredential();
+    return new CosmosClient(
+        accountEndpoint: builder.Configuration["CosmosDb:AccountEndpoint"],
+        tokenCredential: credential
+    );
+});
+```
+
+**RBAC Assignment Required:**
+```bash
+# Assign Cosmos DB Built-in Data Contributor role to managed identity
+az cosmosdb sql role assignment create \\
+  --account-name <cosmos-account> \\
+  --resource-group <resource-group> \\
+  --role-definition-name "Cosmos DB Built-in Data Contributor" \\
+  --principal-id <managed-identity-principal-id> \\
+  --scope "/"
+```
+
+Source: Azure Cosmos DB Managed Identity (https://learn.microsoft.com/azure/cosmos-db/how-to-setup-rbac), Azure Security Benchmark - IM-1 (https://learn.microsoft.com/security/benchmark/azure/mcsb-identity-management#im-1-use-centralized-identity-and-authentication-system)"""
+            ))
+        elif has_managed_identity and "CosmosClient" in code:
+            # Good practice detected
+            line_num = code.find("DefaultAzureCredential")
+            if line_num != -1:
+                line_num = code[:line_num].count('\n') + 1
+            
+            self.add_finding(Finding(
+                requirement_id="KSI-IAM-02",
+                severity=Severity.INFO,
+                title="Cosmos DB using Managed Identity authentication",
+                description="CosmosClient configured with DefaultAzureCredential for passwordless authentication. Follows FedRAMP 20x identity management requirements.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure the managed identity has least-privilege RBAC roles (Cosmos DB Built-in Data Reader/Contributor) and not account-level keys.",
+                good_practice=True
+            ))
+    
+    def _check_service_bus_security(self, code: str, file_path: str, root_node: TreeSitterNode) -> None:
+        """
+        Detect insecure Service Bus connection patterns (KSI-IAM-02).
+        
+        Checks for:
+        - Connection strings in code (should use Managed Identity)
+        - ServiceBusClient instantiation patterns
+        - DefaultAzureCredential usage (good practice)
+        """
+        has_managed_identity = "DefaultAzureCredential" in code or "ManagedIdentityCredential" in code
+        has_connection_string = False
+        connection_string_lines = []
+        
+        def find_service_bus_patterns(node):
+            nonlocal has_connection_string
+            
+            if node.type == "object_creation_expression":
+                type_node = node.child_by_field_name("type")
+                if type_node:
+                    type_text = self.code_bytes[type_node.start_byte:type_node.end_byte].decode('utf8')
+                    
+                    if "ServiceBusClient" in type_text or "ServiceBusSender" in type_text or "ServiceBusReceiver" in type_text:
+                        args_node = node.child_by_field_name("arguments")
+                        if args_node:
+                            args_text = self.code_bytes[args_node.start_byte:args_node.end_byte].decode('utf8')
+                            
+                            # Check if using connection string
+                            if ('"' in args_text or "connectionString" in args_text.lower() or 
+                                "GetConnectionString" in args_text or "ServiceBus:ConnectionString" in args_text):
+                                
+                                if "DefaultAzureCredential" not in args_text and "TokenCredential" not in args_text:
+                                    has_connection_string = True
+                                    line_num = node.start_point[0] + 1
+                                    connection_string_lines.append(line_num)
+            
+            for child in node.children:
+                find_service_bus_patterns(child)
+        
+        find_service_bus_patterns(root_node)
+        
+        if has_connection_string and not has_managed_identity:
+            self.add_finding(Finding(
+                requirement_id="KSI-IAM-02",
+                severity=Severity.HIGH,
+                title="Service Bus using connection string instead of Managed Identity",
+                description="ServiceBusClient instantiated with connection string. FedRAMP 20x requires passwordless authentication using Managed Identity per Azure Security Benchmark.",
+                file_path=file_path,
+                line_number=connection_string_lines[0] if connection_string_lines else None,
+                recommendation="""Use Managed Identity for Service Bus authentication:
+```csharp
+// ❌ DON'T: Connection string authentication
+var client = new ServiceBusClient(configuration["ServiceBus:ConnectionString"]);
+
+// ✅ DO: Managed Identity authentication
+var credential = new DefaultAzureCredential();
+var client = new ServiceBusClient(
+    fullyQualifiedNamespace: "your-namespace.servicebus.windows.net",
+    credential: credential
+);
+
+// Configure in Program.cs
+builder.Services.AddSingleton<ServiceBusClient>(sp =>
+{
+    var credential = new DefaultAzureCredential();
+    return new ServiceBusClient(
+        fullyQualifiedNamespace: builder.Configuration["ServiceBus:Namespace"],
+        credential: credential
+    );
+});
+```
+
+**RBAC Assignment Required:**
+```bash
+# Assign Azure Service Bus Data Sender/Receiver role
+az role assignment create \\
+  --role "Azure Service Bus Data Sender" \\
+  --assignee <managed-identity-principal-id> \\
+  --scope /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.ServiceBus/namespaces/<namespace>
+```
+
+Source: Service Bus Managed Identity (https://learn.microsoft.com/azure/service-bus-messaging/service-bus-managed-service-identity), Azure Security Benchmark - IM-1"""
+            ))
+        elif has_managed_identity and "ServiceBusClient" in code:
+            line_num = code.find("DefaultAzureCredential")
+            if line_num != -1:
+                line_num = code[:line_num].count('\n') + 1
+            
+            self.add_finding(Finding(
+                requirement_id="KSI-IAM-02",
+                severity=Severity.INFO,
+                title="Service Bus using Managed Identity authentication",
+                description="ServiceBusClient configured with DefaultAzureCredential. Follows FedRAMP 20x passwordless authentication requirements.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Ensure RBAC roles are scoped to specific queues/topics (not namespace-wide) for least privilege.",
+                good_practice=True
+            ))
+    
+    def _check_azure_storage_security(self, code: str, file_path: str, root_node: TreeSitterNode) -> None:
+        """
+        Detect insecure Azure Storage access patterns (KSI-IAM-02, SVC-06).
+        
+        Checks for:
+        - Account keys in code (should use Managed Identity)
+        - SAS tokens without user delegation
+        - BlobServiceClient instantiation patterns
+        """
+        has_managed_identity = "DefaultAzureCredential" in code or "ManagedIdentityCredential" in code
+        has_account_key = False
+        has_sas_token = False
+        account_key_lines = []
+        sas_token_lines = []
+        
+        def find_storage_patterns(node):
+            nonlocal has_account_key, has_sas_token
+            
+            if node.type == "object_creation_expression":
+                type_node = node.child_by_field_name("type")
+                if type_node:
+                    type_text = self.code_bytes[type_node.start_byte:type_node.end_byte].decode('utf8')
+                    
+                    if "BlobServiceClient" in type_text or "BlobContainerClient" in type_text or "BlobClient" in type_text:
+                        args_node = node.child_by_field_name("arguments")
+                        if args_node:
+                            args_text = self.code_bytes[args_node.start_byte:args_node.end_byte].decode('utf8')
+                            
+                            # Check for account key usage
+                            if ("AccountKey" in args_text or "connectionString" in args_text.lower() or 
+                                "GetConnectionString" in args_text or "Storage:ConnectionString" in args_text):
+                                
+                                if "DefaultAzureCredential" not in args_text and "TokenCredential" not in args_text:
+                                    has_account_key = True
+                                    line_num = node.start_point[0] + 1
+                                    account_key_lines.append(line_num)
+                            
+                            # Check for SAS token usage
+                            if ("sasToken" in args_text or "SharedAccessSignature" in args_text or 
+                                "?sv=" in args_text or "sig=" in args_text):
+                                
+                                # Check if it's user delegation SAS (good) vs account SAS (bad)
+                                if "UserDelegationKey" not in code:
+                                    has_sas_token = True
+                                    line_num = node.start_point[0] + 1
+                                    sas_token_lines.append(line_num)
+            
+            for child in node.children:
+                find_storage_patterns(child)
+        
+        find_storage_patterns(root_node)
+        
+        if has_account_key and not has_managed_identity:
+            self.add_finding(Finding(
+                requirement_id="KSI-IAM-02",
+                severity=Severity.HIGH,
+                title="Azure Storage using account key instead of Managed Identity",
+                description="BlobServiceClient instantiated with connection string or account key. FedRAMP 20x requires passwordless authentication using Managed Identity per Azure Security Benchmark.",
+                file_path=file_path,
+                line_number=account_key_lines[0] if account_key_lines else None,
+                recommendation="""Use Managed Identity for Azure Storage authentication:
+```csharp
+// ❌ DON'T: Account key authentication
+var client = new BlobServiceClient(configuration["Storage:ConnectionString"]);
+
+// ✅ DO: Managed Identity authentication
+var credential = new DefaultAzureCredential();
+var client = new BlobServiceClient(
+    new Uri("https://youraccount.blob.core.windows.net"),
+    credential
+);
+
+// Configure in Program.cs
+builder.Services.AddSingleton<BlobServiceClient>(sp =>
+{
+    var credential = new DefaultAzureCredential();
+    return new BlobServiceClient(
+        new Uri(builder.Configuration["Storage:BlobEndpoint"]),
+        credential
+    );
+});
+```
+
+**RBAC Assignment Required:**
+```bash
+# Assign Storage Blob Data Contributor role
+az role assignment create \\
+  --role "Storage Blob Data Contributor" \\
+  --assignee <managed-identity-principal-id> \\
+  --scope /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Storage/storageAccounts/<account>
+```
+
+**Rotate account keys immediately** and disable Shared Key authorization:
+```bash
+az storage account update \\
+  --name <account> \\
+  --resource-group <rg> \\
+  --allow-shared-key-access false
+```
+
+Source: Azure Storage Managed Identity (https://learn.microsoft.com/azure/storage/blobs/authorize-access-azure-active-directory), Azure Security Benchmark - IM-1"""
+            ))
+        
+        if has_sas_token:
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-06",
+                severity=Severity.MEDIUM,
+                title="Azure Storage using account SAS token (consider user delegation SAS)",
+                description="Detected account-based SAS token usage. FedRAMP 20x recommends user delegation SAS (backed by Entra ID) over account keys per Azure Security Benchmark.",
+                file_path=file_path,
+                line_number=sas_token_lines[0] if sas_token_lines else None,
+                recommendation="""Use user delegation SAS tokens for temporary access:
+```csharp
+// Generate user delegation SAS (secured by Entra ID, not account key)
+var credential = new DefaultAzureCredential();
+var blobServiceClient = new BlobServiceClient(
+    new Uri("https://youraccount.blob.core.windows.net"),
+    credential
+);
+
+// Get user delegation key (valid for up to 7 days)
+UserDelegationKey userDelegationKey = await blobServiceClient
+    .GetUserDelegationKeyAsync(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddHours(1));
+
+// Create user delegation SAS
+BlobSasBuilder sasBuilder = new BlobSasBuilder()
+{
+    BlobContainerName = "container-name",
+    BlobName = "blob-name",
+    Resource = "b", // "b" for blob, "c" for container
+    StartsOn = DateTimeOffset.UtcNow,
+    ExpiresOn = DateTimeOffset.UtcNow.AddHours(1),
+    Protocol = SasProtocol.Https // HTTPS only
+};
+
+sasBuilder.SetPermissions(BlobSasPermissions.Read);
+
+BlobUriBuilder blobUriBuilder = new BlobUriBuilder(blobClient.Uri)
+{
+    Sas = sasBuilder.ToSasQueryParameters(userDelegationKey, blobServiceClient.AccountName)
+};
+
+string sasUrl = blobUriBuilder.ToUri().ToString();
+```
+
+**Benefits of user delegation SAS:**
+- No account key exposure
+- Revocable via Entra ID (disable service principal)
+- Auditable in Entra ID logs
+- Supports ABAC/RBAC conditions
+
+Source: User Delegation SAS (https://learn.microsoft.com/azure/storage/blobs/storage-blob-user-delegation-sas-create-dotnet), Azure WAF Security pillar"""
+            ))
+        
+        if has_managed_identity and ("BlobServiceClient" in code or "BlobContainerClient" in code):
+            line_num = code.find("DefaultAzureCredential")
+            if line_num != -1:
+                line_num = code[:line_num].count('\n') + 1
+            
+            self.add_finding(Finding(
+                requirement_id="KSI-IAM-02",
+                severity=Severity.INFO,
+                title="Azure Storage using Managed Identity authentication",
+                description="BlobServiceClient configured with DefaultAzureCredential. Follows FedRAMP 20x passwordless authentication requirements.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Consider disabling Shared Key access at storage account level for additional security: az storage account update --allow-shared-key-access false",
+                good_practice=True
+            ))
+    
+    def _check_key_vault_integration(self, code: str, file_path: str, root_node: TreeSitterNode) -> None:
+        """
+        Check Key Vault integration patterns (KSI-SVC-06).
+        
+        Checks for:
+        - SecretClient with Managed Identity (good practice)
+        - Direct secret access patterns
+        - Configuration integration
+        """
+        has_key_vault = "SecretClient" in code or "KeyClient" in code or "CertificateClient" in code
+        has_managed_identity = "DefaultAzureCredential" in code or "ManagedIdentityCredential" in code
+        has_config_integration = "AddAzureKeyVault" in code or "ConfigureKeyVault" in code
+        
+        if has_key_vault and not has_managed_identity:
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-06",
+                severity=Severity.HIGH,
+                title="Key Vault client without Managed Identity",
+                description="SecretClient instantiated without DefaultAzureCredential. FedRAMP 20x requires Managed Identity for Key Vault access per Azure Security Benchmark.",
+                file_path=file_path,
+                line_number=None,
+                recommendation="""Use Managed Identity for Key Vault access:
+```csharp
+// ❌ DON'T: Client secret credential
+var credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
+
+// ✅ DO: Managed Identity
+var credential = new DefaultAzureCredential();
+var client = new SecretClient(
+    new Uri("https://your-vault.vault.azure.net"),
+    credential
+);
+
+// ✅ BETTER: Integrate with configuration system
+builder.Configuration.AddAzureKeyVault(
+    new Uri("https://your-vault.vault.azure.net"),
+    new DefaultAzureCredential()
+);
+
+// Access secrets through IConfiguration
+var connectionString = builder.Configuration["CosmosDb--ConnectionString"]; // Note: -- not :
+```
+
+**RBAC Assignment Required:**
+```bash
+# Assign Key Vault Secrets User role (read-only)
+az role assignment create \\
+  --role "Key Vault Secrets User" \\
+  --assignee <managed-identity-principal-id> \\
+  --scope /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.KeyVault/vaults/<vault>
+```
+
+Source: Key Vault Managed Identity (https://learn.microsoft.com/azure/key-vault/general/authentication), Azure Security Benchmark - IM-1"""
+            ))
+        elif has_config_integration and has_managed_identity:
+            line_num = code.find("AddAzureKeyVault")
+            if line_num != -1:
+                line_num = code[:line_num].count('\n') + 1
+            
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-06",
+                severity=Severity.INFO,
+                title="Key Vault integrated with configuration system",
+                description="AddAzureKeyVault with DefaultAzureCredential detected. Follows FedRAMP 20x secrets management best practices.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Use Key Vault Secrets User role (not Key Vault Administrator) for least privilege. Enable soft delete and purge protection on vault.",
+                good_practice=True
+            ))
+        elif has_key_vault and has_managed_identity and not has_config_integration:
+            # Using SecretClient directly (less ideal but acceptable)
+            line_num = code.find("SecretClient")
+            if line_num != -1:
+                line_num = code[:line_num].count('\n') + 1
+            
+            self.add_finding(Finding(
+                requirement_id="KSI-SVC-06",
+                severity=Severity.INFO,
+                title="Key Vault using Managed Identity (consider configuration integration)",
+                description="SecretClient configured with DefaultAzureCredential. Consider using AddAzureKeyVault for seamless IConfiguration integration.",
+                file_path=file_path,
+                line_number=line_num,
+                recommendation="Integrate Key Vault with configuration system using AddAzureKeyVault() for automatic secret updates and simplified access pattern.",
+                good_practice=True
+            ))
     
     def _extract_middleware_pipeline(self, tree_node) -> List[Dict]:
         """
