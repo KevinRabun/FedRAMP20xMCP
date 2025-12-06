@@ -389,6 +389,47 @@ def test_ksi_requirement_mapping():
         print(f"✓ KSI-TPR-03 (Supply Chain Security): {len(tpr_03_findings)} findings")
 
 
+def test_cache_not_saved_on_error():
+    """Test that API errors don't get cached as empty results."""
+    print("\n=== Test 9: Error Results Not Cached ===")
+    
+    import json
+    from unittest.mock import patch, MagicMock
+    
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+        
+        # Create a CVE fetcher with custom cache directory
+        fetcher = CVEFetcher()
+        original_cache_dir = fetcher.cache_dir
+        fetcher.cache_dir = temp_path
+        
+        # Mock _fetch_from_github to raise an exception (simulating rate limit)
+        with patch.object(fetcher, '_fetch_from_github', side_effect=Exception("Rate limit exceeded")):
+            # Call get_package_vulnerabilities
+            result = fetcher.get_package_vulnerabilities("TestPackage", "nuget", "1.0.0")
+            
+            # Should return empty list
+            assert result == [], "Should return empty list on error"
+            
+            # Check cache directory - should NOT have created cache file
+            cache_files = list(temp_path.glob("*.json"))
+            
+            # If cache file exists, verify it's NOT empty
+            if cache_files:
+                for cache_file in cache_files:
+                    with open(cache_file, 'r') as f:
+                        cached_data = json.load(f)
+                    # Cache file should either not exist OR have non-empty data
+                    assert cached_data != [], f"Cache file {cache_file.name} should not contain empty array from API error"
+            
+            print("✓ API errors are not cached as empty results")
+            print(f"  - Cache files created: {len(cache_files)}")
+        
+        # Restore original cache directory
+        fetcher.cache_dir = original_cache_dir
+
+
 def run_all_tests():
     """Run all dependency checking tests."""
     print("\n" + "="*70)
@@ -404,6 +445,7 @@ def run_all_tests():
         test_jwt_authentication_vulnerability()
         test_version_comparison_accuracy()
         test_ksi_requirement_mapping()
+        test_cache_not_saved_on_error()
         
         print("\n" + "="*70)
         print("ALL DEPENDENCY CHECKING TESTS PASSED ✓")

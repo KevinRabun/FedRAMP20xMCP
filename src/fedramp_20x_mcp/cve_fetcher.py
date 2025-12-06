@@ -109,13 +109,13 @@ class CVEFetcher:
         # Fetch from GitHub Advisory Database
         try:
             vulnerabilities = self._fetch_from_github(package_name, ecosystem, version)
+            # Only cache successful results (don't cache errors/rate limits)
+            self._save_to_cache(cache_key, [v.to_dict() for v in vulnerabilities])
         except Exception as e:
             # Fallback to NVD (if available)
             print(f"GitHub Advisory fetch failed: {e}", file=__import__('sys').stderr)
             vulnerabilities = []
-        
-        # Cache results
-        self._save_to_cache(cache_key, [v.to_dict() for v in vulnerabilities])
+            # Don't cache errors - allow retry after rate limit expires
         
         return vulnerabilities
     
