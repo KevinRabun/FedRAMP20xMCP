@@ -884,7 +884,9 @@ Source: ASP.NET Core Data Protection (https://learn.microsoft.com/aspnet/core/se
         Results are cached for 1 hour to improve performance.
         """
         if not hasattr(self, '_cve_fetcher'):
-            self._cve_fetcher = CVEFetcher()
+            import os
+            github_token = os.getenv('GITHUB_TOKEN')
+            self._cve_fetcher = CVEFetcher(github_token=github_token)
         return self._cve_fetcher
     
     def _check_package_vulnerabilities(self, packages: List[NuGetPackage]) -> None:
