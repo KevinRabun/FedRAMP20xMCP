@@ -384,11 +384,13 @@ class CVEFetcher:
     
     def get_latest_version(self, package_name: str, ecosystem: str) -> Optional[str]:
         """
-        Get the latest version of a package from the GitHub Advisory Database.
+        Get the latest version of a package from package registry APIs.
         
-        This queries the advisory database for the package and extracts the latest
-        patched version mentioned in vulnerabilities. This is a heuristic approach
-        since GitHub Advisory Database doesn't have a direct "latest version" API.
+        Queries official package registries:
+        - NuGet: NuGet.org API
+        - npm: npm registry API
+        - PyPI: PyPI JSON API
+        - Maven: Maven Central API
         
         Args:
             package_name: Package name (e.g., "Newtonsoft.Json")
@@ -398,36 +400,69 @@ class CVEFetcher:
             Latest version string if found, None otherwise
         """
         try:
-            # Query GitHub Advisory Database for all advisories for this package
-            vulnerabilities = self.get_package_vulnerabilities(package_name, ecosystem, version=None)
+            if ecosystem == "nuget":
+                # Query NuGet.org API for latest version
+                # API docs: https://learn.microsoft.com/nuget/api/overview
+                url = f"https://api.nuget.org/v3-flatcontainer/{package_name.lower()}/index.json"
+                request = urllib.request.Request(url)
+                request.add_header("User-Agent", "FedRAMP-20x-MCP-Analyzer/1.0")
+                
+                with urllib.request.urlopen(request, timeout=5) as response:
+                    data = json.loads(response.read())
+                    versions = data.get("versions", [])
+                    
+                    if not versions:
+                        return None
+                    
+                    # Filter out pre-release versions (contain - or have non-numeric parts)
+                    stable_versions = [
+                        v for v in versions 
+                        if '-' not in v and all(part.isdigit() for part in v.split('.'))
+                    ]
+                    
+                    if not stable_versions:
+                        # If no stable versions, return the last version overall
+                        return versions[-1]
+                    
+                    # Return the last stable version (NuGet API returns versions in ascending order)
+                    return stable_versions[-1]
             
-            if not vulnerabilities:
-                return None
+            elif ecosystem == "npm":
+                # Query npm registry for latest version
+                url = f"https://registry.npmjs.org/{package_name}"
+                request = urllib.request.Request(url)
+                request.add_header("User-Agent", "FedRAMP-20x-MCP-Analyzer/1.0")
+                
+                with urllib.request.urlopen(request, timeout=5) as response:
+                    data = json.loads(response.read())
+                    return data.get("dist-tags", {}).get("latest")
             
-            # Extract all patched versions from all vulnerabilities
-            all_patched_versions = []
-            for vuln in vulnerabilities:
-                all_patched_versions.extend(vuln.patched_versions)
+            elif ecosystem == "pypi":
+                # Query PyPI JSON API for latest version
+                url = f"https://pypi.org/pypi/{package_name}/json"
+                request = urllib.request.Request(url)
+                request.add_header("User-Agent", "FedRAMP-20x-MCP-Analyzer/1.0")
+                
+                with urllib.request.urlopen(request, timeout=5) as response:
+                    data = json.loads(response.read())
+                    return data.get("info", {}).get("version")
             
-            if not all_patched_versions:
-                return None
+            elif ecosystem == "maven":
+                # Query Maven Central for latest version
+                url = f"https://search.maven.org/solrsearch/select?q=g:%22{package_name.split(':')[0]}%22+AND+a:%22{package_name.split(':')[1]}%22&rows=1&wt=json"
+                request = urllib.request.Request(url)
+                request.add_header("User-Agent", "FedRAMP-20x-MCP-Analyzer/1.0")
+                
+                with urllib.request.urlopen(request, timeout=5) as response:
+                    data = json.loads(response.read())
+                    docs = data.get("response", {}).get("docs", [])
+                    if docs:
+                        return docs[0].get("latestVersion")
             
-            # Find the highest version
-            latest = None
-            latest_tuple = None
+            return None
             
-            for ver_str in all_patched_versions:
-                try:
-                    ver_tuple = self._parse_version(ver_str)
-                    if latest_tuple is None or ver_tuple > latest_tuple:
-                        latest_tuple = ver_tuple
-                        latest = ver_str
-                except:
-                    continue
-            
-            return latest
         except Exception as e:
-            # If we can't get latest version, return None
+            # If we can't get latest version, return None (network error, package not found, etc.)
             return None
 
 
