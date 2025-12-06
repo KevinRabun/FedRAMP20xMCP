@@ -216,6 +216,49 @@ The server provides 33 MCP tools:
 - Avoid Unicode symbols in test output (use ASCII-safe markers like ✅/❌ for Windows compatibility)
 - **NEVER use deprecated functionality** - Always verify that libraries, actions, APIs, or methods are actively maintained and not deprecated before recommending or implementing them
 
+### Testing & Commit Workflow (CRITICAL - MUST FOLLOW)
+**ALWAYS run and verify ALL tests pass locally BEFORE committing to main:**
+
+1. **Set GitHub Token** (required for CVE tests):
+   ```powershell
+   $env:GITHUB_TOKEN = (gh auth token)
+   ```
+
+2. **Run Full Test Suite**:
+   ```powershell
+   # For specific test file:
+   python tests/test_dependency_checking.py
+   
+   # For all tests:
+   python tests/run_all_tests.py
+   ```
+
+3. **Verify ALL Tests Pass**:
+   - Review actual test output (do NOT assume tests pass)
+   - Look for "ALL TESTS PASSED ✓" message
+   - Check for any failures, errors, or warnings
+   - Count passing vs. total tests
+
+4. **Only Commit After Verification**:
+   - Bundle related fixes into a single, well-tested commit
+   - Do NOT commit multiple times hoping tests will pass
+   - Do NOT push to main without local verification
+   - Include test results summary in commit message
+
+5. **Test Commands by Category**:
+   - Dependency checking: `python tests/test_dependency_checking.py`
+   - Code analyzer: `python tests/test_code_analyzer.py`
+   - C# analyzer: `python tests/test_csharp_analyzer.py`
+   - All tools: `python tests/test_all_tools.py`
+
+**Why This Matters:**
+- GitHub Actions will fail if tests don't pass locally
+- Multiple failed commits create noise in commit history
+- Wastes time debugging in CI instead of locally
+- Protected branches may block or delay merges
+
+**Failure to follow this process is unacceptable and wastes everyone's time.**
+
 ### Version Management (CRITICAL - MUST DO FOR EVERY RELEASE)
 **When creating a new release, ALWAYS update all 3 version files simultaneously:**
 
