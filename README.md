@@ -48,8 +48,6 @@ The server provides access to **329 requirements** across all 12 FedRAMP 20x doc
 **Important Clarification: OSCAL Format**
 FedRAMP 20x requires **machine-readable** formats (JSON, XML, or structured data) for Authorization Data Sharing. **OSCAL is NOT mentioned in FedRAMP 20x requirements** - it's a NIST standard that can be used as one potential implementation approach. The actual requirement is simply "machine-readable" - you can use custom JSON/XML or OSCAL based on your implementation needs.
 
-📄 **See [OSCAL_CLARIFICATION.md](OSCAL_CLARIFICATION.md) for detailed guidance on format requirements and implementation approaches.**
-
 ## Installation
 
 ### Prerequisites
