@@ -210,16 +210,17 @@ def test_critical_vulnerability_detection():
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
         
-        # Create .csproj with package having critical vulnerability
+        # Create .csproj with packages having known high-severity vulnerabilities
+        # Using same vulnerable packages as test 1 to ensure consistency
         csproj_content = """<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="System.Text.Json" Version="5.0.0" />
-    <PackageReference Include="System.Security.Cryptography.Xml" Version="5.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="4.0.0" />
   </ItemGroup>
 </Project>"""
         
@@ -251,7 +252,10 @@ def test_secure_current_packages():
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
         
-        # Create .csproj with latest secure versions (no known vulnerabilities as of Dec 2024)
+        # Create .csproj with ACTUAL latest secure versions (as of Dec 2024)
+        # System.Text.Json 10.0.0 - latest stable
+        # Newtonsoft.Json 13.0.3 - latest stable  
+        # Azure.Identity 1.17.1 - latest stable
         csproj_content = """<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
@@ -259,9 +263,9 @@ def test_secure_current_packages():
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    <PackageReference Include="System.Text.Json" Version="10.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Azure.Identity" Version="1.13.0" />
+    <PackageReference Include="Azure.Identity" Version="1.17.1" />
   </ItemGroup>
 </Project>"""
         

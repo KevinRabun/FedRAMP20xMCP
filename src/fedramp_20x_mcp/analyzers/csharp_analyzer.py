@@ -843,14 +843,21 @@ Source: ASP.NET Core Data Protection (https://learn.microsoft.com/aspnet/core/se
     def _find_csproj_files(self, file_path: str) -> List[Path]:
         """Find .csproj files in project directory."""
         try:
+            # Start from the directory containing the .cs file
             project_dir = Path(file_path).parent
-            while project_dir != project_dir.parent:
+            
+            # Search current directory and upward
+            search_count = 0
+            while project_dir != project_dir.parent and search_count < 10:
                 csproj_files = list(project_dir.glob("*.csproj"))
                 if csproj_files:
                     return csproj_files
                 project_dir = project_dir.parent
+                search_count += 1
+            
             return []
-        except Exception:
+        except Exception as e:
+            # Silent failure - don't break analysis if .csproj not found
             return []
     
     def _parse_csproj(self, csproj_path: Path) -> List[NuGetPackage]:
@@ -1004,18 +1011,18 @@ Source: GitHub Advisory Database (https://github.com/advisories), NVD (https://n
                                 "fixed_in": patched
                             })
             
-                else:
-                    # No vulnerabilities found - check if package is significantly outdated (KSI-TPR-03)
-                    latest_version = fetcher.get_latest_version(package.name, "nuget")
-                    if latest_version and self._is_version_outdated(package.version, latest_version):
-                        self.add_finding(Finding(
-                            requirement_id="KSI-TPR-03",
-                            severity=Severity.LOW,
-                            title=f"Outdated NuGet package: {package.name}",
-                            description=f"Package {package.name} version {package.version} is outdated. Latest version is {latest_version}. While no known vulnerabilities exist, keeping dependencies current reduces supply chain risk per FedRAMP 20x KSI-TPR-03.",
-                            file_path="[Project Dependencies]",
-                            line_number=None,
-                            recommendation=f"""Update to latest version:
+                # Always check if package is significantly outdated (KSI-TPR-03)
+                # This is independent of vulnerability status - packages should be kept current
+                latest_version = fetcher.get_latest_version(package.name, "nuget")
+                if latest_version and self._is_version_outdated(package.version, latest_version):
+                    self.add_finding(Finding(
+                        requirement_id="KSI-TPR-03",
+                        severity=Severity.LOW,
+                        title=f"Outdated NuGet package: {package.name}",
+                        description=f"Package {package.name} version {package.version} is outdated. Latest version is {latest_version}. Keeping dependencies current reduces supply chain risk per FedRAMP 20x KSI-TPR-03.",
+                        file_path="[Project Dependencies]",
+                        line_number=None,
+                        recommendation=f"""Update to latest version:
 ```xml
 <PackageReference Include="{package.name}" Version="{latest_version}" />
 ```
