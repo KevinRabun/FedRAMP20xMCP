@@ -251,7 +251,7 @@ def test_secure_current_packages():
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
         
-        # Create .csproj with latest secure versions
+        # Create .csproj with latest secure versions (no known vulnerabilities as of Dec 2024)
         csproj_content = """<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
@@ -259,9 +259,9 @@ def test_secure_current_packages():
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="System.Text.Json" Version="8.0.0" />
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Azure.Identity" Version="1.11.0" />
+    <PackageReference Include="Azure.Identity" Version="1.13.0" />
   </ItemGroup>
 </Project>"""
         

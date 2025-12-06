@@ -381,6 +381,54 @@ class CVEFetcher:
         """Clear all cached vulnerability data."""
         for cache_file in self.cache_dir.glob("*.json"):
             cache_file.unlink()
+    
+    def get_latest_version(self, package_name: str, ecosystem: str) -> Optional[str]:
+        """
+        Get the latest version of a package from the GitHub Advisory Database.
+        
+        This queries the advisory database for the package and extracts the latest
+        patched version mentioned in vulnerabilities. This is a heuristic approach
+        since GitHub Advisory Database doesn't have a direct "latest version" API.
+        
+        Args:
+            package_name: Package name (e.g., "Newtonsoft.Json")
+            ecosystem: Package ecosystem ("nuget", "npm", "pypi", "maven")
+        
+        Returns:
+            Latest version string if found, None otherwise
+        """
+        try:
+            # Query GitHub Advisory Database for all advisories for this package
+            vulnerabilities = self.get_package_vulnerabilities(package_name, ecosystem, version=None)
+            
+            if not vulnerabilities:
+                return None
+            
+            # Extract all patched versions from all vulnerabilities
+            all_patched_versions = []
+            for vuln in vulnerabilities:
+                all_patched_versions.extend(vuln.patched_versions)
+            
+            if not all_patched_versions:
+                return None
+            
+            # Find the highest version
+            latest = None
+            latest_tuple = None
+            
+            for ver_str in all_patched_versions:
+                try:
+                    ver_tuple = self._parse_version(ver_str)
+                    if latest_tuple is None or ver_tuple > latest_tuple:
+                        latest_tuple = ver_tuple
+                        latest = ver_str
+                except:
+                    continue
+            
+            return latest
+        except Exception as e:
+            # If we can't get latest version, return None
+            return None
 
 
 # Convenience functions for analyzers

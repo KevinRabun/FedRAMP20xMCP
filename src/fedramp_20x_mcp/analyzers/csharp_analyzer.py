@@ -889,6 +889,38 @@ Source: ASP.NET Core Data Protection (https://learn.microsoft.com/aspnet/core/se
             self._cve_fetcher = CVEFetcher(github_token=github_token)
         return self._cve_fetcher
     
+    def _is_version_outdated(self, current: str, latest: str) -> bool:
+        """
+        Check if current version is significantly outdated compared to latest.
+        
+        Returns True if:
+        - Major version is behind (e.g., 6.x vs 8.x)
+        - Minor version is 2+ versions behind (e.g., 8.0.x vs 8.2.x)
+        """
+        try:
+            # Parse semantic versions
+            current_parts = [int(x) for x in current.split('.')[:3]]  # Major.Minor.Patch
+            latest_parts = [int(x) for x in latest.split('.')[:3]]
+            
+            # Pad to 3 parts if needed
+            while len(current_parts) < 3:
+                current_parts.append(0)
+            while len(latest_parts) < 3:
+                latest_parts.append(0)
+            
+            # Check major version difference
+            if latest_parts[0] > current_parts[0]:
+                return True
+            
+            # Check minor version difference (2+ versions behind)
+            if latest_parts[0] == current_parts[0] and latest_parts[1] - current_parts[1] >= 2:
+                return True
+            
+            return False
+        except (ValueError, IndexError):
+            # If version parsing fails, don't report as outdated
+            return False
+    
     def _check_package_vulnerabilities(self, packages: List[NuGetPackage]) -> None:
         """
         Check packages against live CVE databases (GitHub Advisory, NVD).
@@ -930,7 +962,7 @@ Source: ASP.NET Core Data Protection (https://learn.microsoft.com/aspnet/core/se
                             requirement_id="KSI-SVC-08",
                             severity=severity_map.get(vuln.severity, Severity.HIGH),
                             title=f"Vulnerable NuGet package detected: {package.name} ({vuln.cve_id})",
-                            description=f"Package {package.name} version {package.version} has known vulnerability:\n\n{vuln.description[:300]}...",
+                            description=f"Package {package.name} version {package.version} has known vulnerability:\n\nCVE: {vuln.cve_id}\nSeverity: {vuln.severity}\n\n{vuln.description[:250]}...",
                             file_path="[Project Dependencies]",
                             line_number=None,
                             recommendation=f"""Update to secure version:
@@ -971,6 +1003,40 @@ Source: GitHub Advisory Database (https://github.com/advisories), NVD (https://n
                                 "affected_versions": vuln.affected_versions,
                                 "fixed_in": patched
                             })
+            
+                else:
+                    # No vulnerabilities found - check if package is significantly outdated (KSI-TPR-03)
+                    latest_version = fetcher.get_latest_version(package.name, "nuget")
+                    if latest_version and self._is_version_outdated(package.version, latest_version):
+                        self.add_finding(Finding(
+                            requirement_id="KSI-TPR-03",
+                            severity=Severity.LOW,
+                            title=f"Outdated NuGet package: {package.name}",
+                            description=f"Package {package.name} version {package.version} is outdated. Latest version is {latest_version}. While no known vulnerabilities exist, keeping dependencies current reduces supply chain risk per FedRAMP 20x KSI-TPR-03.",
+                            file_path="[Project Dependencies]",
+                            line_number=None,
+                            recommendation=f"""Update to latest version:
+```xml
+<PackageReference Include="{package.name}" Version="{latest_version}" />
+```
+
+Benefits of staying current:
+- Security patches applied promptly
+- Bug fixes and performance improvements
+- Reduced technical debt
+- Easier future upgrades
+
+FedRAMP 20x Requirements:
+- KSI-TPR-03: Supply Chain Security - Maintain current dependencies to reduce third-party risk
+- Regular dependency updates are part of continuous monitoring requirements
+
+Automated Tools:
+- dotnet list package --outdated (built-in .NET CLI)
+- GitHub Dependabot (automatic update PRs)
+- Renovate Bot (https://www.mend.io/free-developer-tools/renovate/)
+
+Source: Azure Well-Architected Framework - Operational Excellence (https://learn.microsoft.com/azure/well-architected/operational-excellence/)"""
+                        ))
             
             except Exception as e:
                 # Log error but don't fail analysis
