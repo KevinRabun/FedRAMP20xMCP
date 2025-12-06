@@ -24,7 +24,7 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         data_loader: The data loader instance for accessing FedRAMP data
     """
     # Import all tool modules
-    from . import requirements, definitions, ksi, documentation, export, enhancements, evidence, analyzer, audit
+    from . import requirements, definitions, ksi, documentation, export, enhancements, evidence, analyzer, audit, security
     from ..templates import get_infrastructure_template, get_code_template
     
     # Requirements tools
@@ -212,4 +212,77 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         """
         return await audit.get_ksi_coverage_status_impl(ksi_id, data_loader)
     
-    logger.info("Registered 31 tools across 9 modules")
+    # Security tools - CVE vulnerability checking
+    @mcp.tool()
+    async def check_package_vulnerabilities(
+        package_name: str,
+        ecosystem: str,
+        version: Optional[str] = None,
+        github_token: Optional[str] = None
+    ) -> str:
+        """
+        Check a package for known CVE vulnerabilities against authoritative databases.
+        
+        Queries GitHub Advisory Database (and optionally NVD) for security vulnerabilities
+        in the specified package. Returns detailed CVE information, affected versions,
+        patched versions, severity ratings, and FedRAMP compliance recommendations.
+        
+        Args:
+            package_name: Package name (e.g., "Newtonsoft.Json", "lodash", "requests", "log4j")
+            ecosystem: Package ecosystem - "nuget" (.NET), "npm" (JavaScript/TypeScript), "pypi" (Python), "maven" (Java)
+            version: Specific version to check (optional, checks all versions if omitted)
+            github_token: GitHub Personal Access Token for higher API rate limits (optional)
+        
+        Returns:
+            JSON with vulnerability details including CVE IDs, severity, CVSS scores,
+            affected/patched versions, descriptions, and FedRAMP compliance status.
+        
+        Example:
+            check_package_vulnerabilities("Newtonsoft.Json", "nuget", "12.0.1")
+            check_package_vulnerabilities("lodash", "npm")
+        
+        Maps to FedRAMP 20x requirements:
+        - KSI-SVC-08: Secure Dependencies - vulnerability management
+        - KSI-TPR-03: Supply Chain Security - third-party risk assessment
+        """
+        return await security.check_package_vulnerabilities_impl(package_name, ecosystem, version, github_token)
+    
+    @mcp.tool()
+    async def scan_dependency_file(
+        file_content: str,
+        file_type: str,
+        github_token: Optional[str] = None
+    ) -> str:
+        """
+        Scan an entire dependency file for vulnerable packages.
+        
+        Analyzes dependency manifests and checks all packages against CVE databases.
+        Provides comprehensive vulnerability report with prioritized remediation guidance.
+        
+        Args:
+            file_content: Full content of the dependency file
+            file_type: Type of file - "csproj", "packages.config", "package.json", "requirements.txt", "pom.xml"
+            github_token: GitHub Personal Access Token for higher API rate limits (optional)
+        
+        Returns:
+            JSON with scan results including total vulnerabilities, severity breakdown,
+            vulnerable packages list, and prioritized remediation recommendations.
+        
+        Supported file formats:
+        - NuGet: *.csproj (PackageReference), packages.config, Directory.Packages.props
+        - npm: package.json, package-lock.json
+        - Python: requirements.txt, Pipfile, pyproject.toml
+        - Maven: pom.xml
+        
+        Example:
+            scan_dependency_file(csproj_content, "csproj")
+            scan_dependency_file(requirements_txt, "requirements.txt")
+        
+        Maps to FedRAMP 20x requirements:
+        - KSI-SVC-08: Secure Dependencies
+        - KSI-TPR-03: Supply Chain Security
+        - KSI-CMT-01: Continuous Monitoring (automated vulnerability scanning)
+        """
+        return await security.scan_dependency_file_impl(file_content, file_type, github_token)
+    
+    logger.info("Registered 33 tools across 10 modules")

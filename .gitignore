@@ -47,6 +47,7 @@ poetry.lock
 .cache/
 *.cache
 __fedramp_cache__/
+__cve_cache__/
 
 # OS
 .DS_Store

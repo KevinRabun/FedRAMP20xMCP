@@ -29,6 +29,7 @@ except ImportError:
         ts_csharp = None
 
 from .base import BaseAnalyzer, Finding, Severity, AnalysisResult
+from ..cve_fetcher import CVEFetcher
 
 
 @dataclass
@@ -872,209 +873,104 @@ Source: ASP.NET Core Data Protection (https://learn.microsoft.com/aspnet/core/se
         
         return packages
     
-    def _get_known_vulnerabilities(self) -> Dict[str, List[Dict]]:
+    def _get_cve_fetcher(self) -> CVEFetcher:
         """
-        Return known vulnerabilities for common NuGet packages.
+        Get CVE fetcher instance.
         
-        In production, this should query NVD, GitHub Advisory Database, or NuGet API.
-        This is a curated list of known high-impact vulnerabilities.
+        Queries GitHub Advisory Database for real-time vulnerability data.
+        Results are cached for 1 hour to improve performance.
         """
-        return {
-            "System.Text.Json": [
-                {
-                    "affected_versions": "<6.0.0",
-                    "cve": "CVE-2021-26701",
-                    "severity": "HIGH",
-                    "description": "DoS vulnerability in JSON deserialization",
-                    "fixed_in": "6.0.0"
-                }
-            ],
-            "Microsoft.AspNetCore.App": [
-                {
-                    "affected_versions": "<6.0.0",
-                    "cve": "CVE-2021-43877",
-                    "severity": "HIGH",
-                    "description": "Elevation of privilege vulnerability",
-                    "fixed_in": "6.0.0"
-                }
-            ],
-            "Newtonsoft.Json": [
-                {
-                    "affected_versions": "<13.0.1",
-                    "cve": "CVE-2024-21907",
-                    "severity": "HIGH",
-                    "description": "Deserialization vulnerability allowing RCE",
-                    "fixed_in": "13.0.1"
-                }
-            ],
-            "Microsoft.Data.SqlClient": [
-                {
-                    "affected_versions": "<5.1.0",
-                    "cve": "CVE-2024-0056",
-                    "severity": "HIGH",
-                    "description": "Information disclosure vulnerability",
-                    "fixed_in": "5.1.0"
-                }
-            ],
-            "Microsoft.AspNetCore.Authentication.JwtBearer": [
-                {
-                    "affected_versions": "<6.0.0",
-                    "cve": "CVE-2021-34532",
-                    "severity": "MEDIUM",
-                    "description": "JWT token validation bypass",
-                    "fixed_in": "6.0.0"
-                }
-            ],
-            "System.Security.Cryptography.Xml": [
-                {
-                    "affected_versions": "<6.0.0",
-                    "cve": "CVE-2021-24112",
-                    "severity": "HIGH",
-                    "description": "XML signature validation bypass",
-                    "fixed_in": "6.0.0"
-                }
-            ]
-        }
-    
-    def _get_latest_versions(self) -> Dict[str, str]:
-        """
-        Return latest stable versions for common packages.
-        
-        In production, this should query NuGet API for real-time data.
-        """
-        return {
-            "System.Text.Json": "8.0.0",
-            "Microsoft.AspNetCore.App": "8.0.0",
-            "Newtonsoft.Json": "13.0.3",
-            "Microsoft.Data.SqlClient": "5.2.0",
-            "Microsoft.AspNetCore.Authentication.JwtBearer": "8.0.0",
-            "System.Security.Cryptography.Xml": "8.0.0",
-            "Microsoft.EntityFrameworkCore": "8.0.0",
-            "Azure.Identity": "1.11.0",
-            "Azure.Security.KeyVault.Secrets": "4.6.0",
-            "Swashbuckle.AspNetCore": "6.5.0"
-        }
-    
-    def _is_version_vulnerable(self, package_version: str, affected_range: str) -> bool:
-        """
-        Check if package version falls within vulnerable range.
-        
-        Supports version comparisons like <6.0.0, <=5.1.0, etc.
-        """
-        try:
-            pkg_ver = version.parse(package_version)
-            
-            if affected_range.startswith("<="):
-                max_ver = version.parse(affected_range[2:])
-                return pkg_ver <= max_ver
-            elif affected_range.startswith("<"):
-                max_ver = version.parse(affected_range[1:])
-                return pkg_ver < max_ver
-            elif affected_range.startswith(">="):
-                min_ver = version.parse(affected_range[2:])
-                return pkg_ver >= min_ver
-            elif affected_range.startswith(">"):
-                min_ver = version.parse(affected_range[1:])
-                return pkg_ver > min_ver
-            elif affected_range.startswith("=="):
-                exact_ver = version.parse(affected_range[2:])
-                return pkg_ver == exact_ver
-            else:
-                # Assume exact match
-                exact_ver = version.parse(affected_range)
-                return pkg_ver == exact_ver
-        except Exception:
-            return False
+        if not hasattr(self, '_cve_fetcher'):
+            self._cve_fetcher = CVEFetcher()
+        return self._cve_fetcher
     
     def _check_package_vulnerabilities(self, packages: List[NuGetPackage]) -> None:
         """
-        Check packages against known vulnerability database.
+        Check packages against live CVE databases (GitHub Advisory, NVD).
         
         Maps to KSI-SVC-08 (Secure Dependencies) and KSI-TPR-03 (Supply Chain Security).
         """
-        known_vulns = self._get_known_vulnerabilities()
-        latest_versions = self._get_latest_versions()
+        fetcher = self._get_cve_fetcher()
         
         for package in packages:
-            # Check for known vulnerabilities
-            if package.name in known_vulns:
-                for vuln in known_vulns[package.name]:
-                    if self._is_version_vulnerable(package.version, vuln["affected_versions"]):
-                        package.is_vulnerable = True
-                        if package.vulnerabilities is not None:
-                            package.vulnerabilities.append(vuln)
-                        
+            try:
+                # Query live CVE data from GitHub Advisory Database
+                vulnerabilities = fetcher.get_package_vulnerabilities(
+                    package_name=package.name,
+                    ecosystem="nuget",
+                    version=package.version
+                )
+                
+                if vulnerabilities:
+                    package.is_vulnerable = True
+                    
+                    # Report each vulnerability
+                    for vuln in vulnerabilities:
                         severity_map = {
                             "CRITICAL": Severity.HIGH,
                             "HIGH": Severity.HIGH,
+                            "MODERATE": Severity.MEDIUM,
                             "MEDIUM": Severity.MEDIUM,
                             "LOW": Severity.LOW
                         }
                         
+                        # Format patched versions
+                        patched = ", ".join(vuln.patched_versions) if vuln.patched_versions else "See CVE for details"
+                        affected = ", ".join(vuln.affected_versions) if vuln.affected_versions else package.version
+                        
+                        # Format references
+                        refs = "\n".join(f"- {ref}" for ref in vuln.references[:3]) if vuln.references else "See GitHub Advisory Database"
+                        
                         self.add_finding(Finding(
                             requirement_id="KSI-SVC-08",
-                            severity=severity_map.get(vuln["severity"], Severity.HIGH),
-                            title=f"Vulnerable NuGet package detected: {package.name}",
-                            description=f"Package {package.name} version {package.version} has known vulnerability {vuln['cve']}: {vuln['description']}",
+                            severity=severity_map.get(vuln.severity, Severity.HIGH),
+                            title=f"Vulnerable NuGet package detected: {package.name} ({vuln.cve_id})",
+                            description=f"Package {package.name} version {package.version} has known vulnerability:\n\n{vuln.description[:300]}...",
                             file_path="[Project Dependencies]",
                             line_number=None,
                             recommendation=f"""Update to secure version:
 ```xml
-<PackageReference Include="{package.name}" Version="{vuln['fixed_in']}" />
+<PackageReference Include="{package.name}" Version="{patched}" />
 ```
 
 Vulnerability Details:
-- CVE: {vuln['cve']}
-- Severity: {vuln['severity']}
-- Affected Versions: {vuln['affected_versions']}
-- Fixed In: {vuln['fixed_in']}
+- CVE: {vuln.cve_id}
+- Severity: {vuln.severity} (CVSS: {vuln.cvss_score})
+- Affected Versions: {affected}
+- Patched Versions: {patched}
+- Published: {vuln.published_date}
 
-FedRAMP 20x KSI-SVC-08 requires using secure, up-to-date dependencies without known vulnerabilities. 
-Regularly scan dependencies using tools like:
-- dotnet list package --vulnerable
-- OWASP Dependency-Check
-- Snyk
-- GitHub Dependabot
+References:
+{refs}
 
-Source: NVD Database (https://nvd.nist.gov/), OWASP Dependency-Check (https://owasp.org/www-project-dependency-check/)"""
+FedRAMP 20x Requirements:
+- KSI-SVC-08: Secure Dependencies - Use secure, up-to-date dependencies without known vulnerabilities
+- HIGH/CRITICAL vulnerabilities must be remediated within 30 days of disclosure
+- Document in POA&M if remediation requires extended timeline
+
+Automated Scanning Tools:
+- dotnet list package --vulnerable (built-in .NET CLI)
+- GitHub Dependabot (automatic PRs)
+- Snyk (https://snyk.io/)
+- OWASP Dependency-Check (https://owasp.org/www-project-dependency-check/)
+
+Source: GitHub Advisory Database (https://github.com/advisories), NVD (https://nvd.nist.gov/)"""
                         ))
+                        
+                        # Store vulnerability in package object
+                        if package.vulnerabilities is not None:
+                            package.vulnerabilities.append({
+                                "cve": vuln.cve_id,
+                                "severity": vuln.severity,
+                                "description": vuln.description,
+                                "affected_versions": vuln.affected_versions,
+                                "fixed_in": patched
+                            })
             
-            # Check for outdated packages
-            if package.name in latest_versions:
-                try:
-                    current_ver = version.parse(package.version)
-                    latest_ver = version.parse(latest_versions[package.name])
-                    
-                    if current_ver < latest_ver:
-                        # Only warn if significantly outdated (major version behind)
-                        if current_ver.major < latest_ver.major:
-                            package.is_outdated = True
-                            package.latest_version = latest_versions[package.name]
-                            
-                            self.add_finding(Finding(
-                                requirement_id="KSI-TPR-03",
-                                severity=Severity.LOW,
-                                title=f"Outdated NuGet package: {package.name}",
-                                description=f"Package {package.name} version {package.version} is outdated. Latest version is {latest_versions[package.name]}. While no known vulnerabilities exist, updating reduces supply chain risk.",
-                                file_path="[Project Dependencies]",
-                                line_number=None,
-                                recommendation=f"""Consider updating to latest stable version:
-```xml
-<PackageReference Include="{package.name}" Version="{latest_versions[package.name]}" />
-```
-
-Benefits of updating:
-- Security patches and bug fixes
-- Performance improvements
-- New features and API improvements
-- Reduced technical debt
-
-FedRAMP 20x KSI-TPR-03 requires maintaining secure supply chain practices, including keeping dependencies current.
-
-Source: NuGet Package Manager (https://www.nuget.org/)"""
-                            ))
-                except Exception:
-                    pass
+            except Exception as e:
+                # Log error but don't fail analysis
+                import sys
+                print(f"Warning: Failed to check vulnerabilities for {package.name}: {e}", file=sys.stderr)
     
     def _analyze_project_dependencies(self, file_path: str) -> None:
         """

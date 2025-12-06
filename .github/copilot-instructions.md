@@ -54,12 +54,14 @@ When users ask about OSCAL, clarify it's NOT mentioned in FedRAMP 20x - it's one
   - Variable assignment tracking with propagation paths
   - Detects 10+ sensitive identifier patterns (SSN, password, token, etc.)
 ✅ **Dependency Vulnerability Checking** (Dec 2024):
-  - NuGet package vulnerability detection from .csproj files
-  - Known CVE database checking (6 high-impact vulnerabilities)
-  - Outdated package detection with version comparison
-  - Supply chain security analysis (KSI-TPR-03)
-  - Maps vulnerable packages to KSI-SVC-08 (Secure Dependencies)
-  - Version parsing with semver comparison (<, <=, >, >=, ==)
+  - **Live CVE Database Integration** - GitHub Advisory Database and NVD API
+  - **Multi-Ecosystem Support** - NuGet (.NET), npm (JavaScript), PyPI (Python), Maven (Java)
+  - **1-Hour Caching** - Performance optimization for repeated queries
+  - **MCP Tools for Users** - check_package_vulnerabilities, scan_dependency_file
+  - **Analyzer Integration** - C# analyzer uses live CVE data (no hardcoded vulnerabilities)
+  - Version range parsing with semver comparison (<, <=, >, >=, ==)
+  - FedRAMP compliance mapping (KSI-SVC-08, KSI-TPR-03)
+  - Severity mapping (CRITICAL, HIGH, MEDIUM, LOW with CVSS scores)
 ✅ **FluentValidation Deep Support** (Dec 2024):
   - AbstractValidator<T> class detection and extraction
   - RuleFor() validation rule parsing
@@ -71,7 +73,7 @@ When users ask about OSCAL, clarify it's NOT mentioned in FedRAMP 20x - it's one
   - Enterprise validation pattern recognition
 
 ### Current Capabilities
-The server provides 31 MCP tools:
+The server provides 33 MCP tools:
 
 **Core Tools:**
 1. **get_control** - Get specific FedRAMP requirement by ID
@@ -122,6 +124,10 @@ The server provides 31 MCP tools:
 30. **get_ksi_coverage_summary** - Get summary of KSI analyzer coverage and recommendation quality assessment
 31. **get_ksi_coverage_status** - Check if a specific KSI has analyzer coverage and limitations
 
+**🆕 Security Tools (CVE Vulnerability Checking):**
+32. **check_package_vulnerabilities** - Check package for CVE vulnerabilities from GitHub Advisory Database / NVD
+33. **scan_dependency_file** - Scan entire dependency file (csproj, package.json, requirements.txt, pom.xml) for vulnerable packages
+
 **Supported Languages:**
 - **Python**: Flask, Django, FastAPI
 - **C#/.NET**: ASP.NET Core, Entity Framework, Azure SDK
@@ -158,6 +164,7 @@ The server provides 31 MCP tools:
 - Tool modules in `tools/` directory (8 modules, 29 tools)
 - Tool registration: `register_tools(mcp, data_loader)` in `tools/__init__.py`
 - Code analyzers in `analyzers/` directory (8 modules: base, bicep_analyzer, terraform_analyzer, python_analyzer, csharp_analyzer, java_analyzer, typescript_analyzer, cicd_analyzer)
+- CVE fetcher module: `cve_fetcher.py` - Live vulnerability data from GitHub Advisory Database / NVD - **NEW**
 
 **Tool Organization:**
 - `tools/requirements.py` - Core requirements tools (3 tools)
@@ -169,6 +176,7 @@ The server provides 31 MCP tools:
 - `tools/evidence.py` - Evidence automation tools (3 tools)
 - `tools/analyzer.py` - Code analysis tools (2 tools)
 - `tools/audit.py` - Coverage audit tools (2 tools)
+- `tools/security.py` - CVE vulnerability checking tools (2 tools) - **NEW**
 - Each module has `*_impl` functions, registered via wrappers in `tools/__init__.py`
 
 **Analyzer Organization:**
