@@ -836,6 +836,7 @@ python tests/test_config_analysis.py
 6. **test_jwt_authentication_vulnerability** - Detects JWT bearer 5.0.0 (CVE-2021-34532)
 7. **test_version_comparison_accuracy** - Validates semver logic for vulnerability ranges
 8. **test_ksi_requirement_mapping** - Verifies KSI-SVC-08 (vulnerable packages) and KSI-TPR-03 (outdated packages) mapping
+9. **test_cache_not_saved_on_error** ⭐ **NEW** - Verifies API errors don't create empty cache files
 
 **KSI Coverage:**
 - KSI-SVC-08 (Secure Dependencies) - Vulnerable packages with known CVEs
@@ -855,6 +856,20 @@ python tests/test_config_analysis.py
 - `>=7.0.0` - Greater than or equal to version
 - `>6.0.0` - Greater than version
 - `==5.0.0` - Exact version match
+
+**Cache Behavior:**
+- ✅ Successful API responses cached for 1 hour
+- ✅ API errors (403 rate limits) NOT cached
+- ✅ Empty cache files prevented
+- ✅ Automatic retry after rate limit expires
+- 🛠️ Use `python verify_cache_fix.py` to check cache health
+
+**GitHub API Integration:**
+- Live CVE data from GitHub Advisory Database
+- NVD fallback for additional coverage
+- Rate limiting: 60 requests/hour (unauthenticated), 5,000/hour (authenticated)
+- Tests skip gracefully with `@skip_if_rate_limited` when rate limited
+- Set `GITHUB_TOKEN` environment variable for higher rate limits
 
 **Run:**
 ```bash
