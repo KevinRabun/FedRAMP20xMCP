@@ -249,7 +249,7 @@ public class Startup
                 print("✅ Development context handled (no HIGH severity)")
             else:
                 print("[WARN] Development context not fully recognized")
-                return True  # Not critical failure
+                # Not critical failure, framework detection working
     else:
         print("✅ No session management issues detected")
 
@@ -294,7 +294,7 @@ public class UserController : ControllerBase
     else:
         print("[FAIL] False positive raised despite proper validation")
         print(f"  Findings: {[f.title for f in validation_findings]}")
-        return False
+        pytest.fail("False positive detected with proper validation")
 
 
 def test_without_framework_high_severity():
@@ -329,7 +329,7 @@ public class CreateUserRequest
         print("✅ No validation framework detected - HIGH severity raised appropriately")
     else:
         print("[WARN] Expected HIGH severity finding for missing validation")
-        return True  # May have MEDIUM which is also acceptable
+        # May have MEDIUM which is also acceptable
 
 
 def test_structured_logging_patterns():

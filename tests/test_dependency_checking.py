@@ -44,22 +44,30 @@ from fedramp_20x_mcp.cve_fetcher import CVEFetcher
 def check_github_api_available():
     """Check if GitHub API is available (not rate limited)."""
     try:
-        fetcher = CVEFetcher()
-        # Try a simple query with a non-existent package to test API availability
-        result = fetcher.get_package_vulnerabilities("__test_nonexistent_pkg__", "nuget")
-        return True  # API is available if we got a response (even if empty)
-    except Exception as e:
-        if "rate limit" in str(e).lower() or "403" in str(e):
+        import requests
+        # Quick HEAD request to check API availability without counting against rate limit
+        response = requests.head("https://api.github.com/rate_limit", timeout=2)
+        if response.status_code == 403:
             return False
-        return True  # Other errors are OK for testing
+        return True
+    except Exception:
+        # If we can't check, assume it's available and let tests fail naturally
+        return True
 
 
-# Check API availability once at module load
-GITHUB_API_AVAILABLE = check_github_api_available()
-skip_if_rate_limited = pytest.mark.skipif(
-    not GITHUB_API_AVAILABLE,
-    reason="GitHub API rate limited - skipping live CVE tests"
-)
+# Decorator that checks at test execution time, not import time
+def skip_if_rate_limited(func):
+    """Skip test if GitHub API is rate limited."""
+    def wrapper(*args, **kwargs):
+        if not check_github_api_available():
+            if HAS_PYTEST:
+                pytest.skip("GitHub API rate limited - skipping live CVE test")
+            else:
+                print(f"SKIPPED: {func.__name__} - GitHub API rate limited")
+                return
+        return func(*args, **kwargs)
+    wrapper.__name__ = func.__name__
+    return wrapper
 
 
 def create_test_csproj(content: str, temp_dir: Path) -> Path:
