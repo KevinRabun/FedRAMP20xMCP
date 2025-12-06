@@ -14,18 +14,19 @@ from dataclasses import dataclass
 from pathlib import Path
 from packaging import version
 
-if TYPE_CHECKING:
-    from tree_sitter import Node as TreeSitterNode
-else:
-    try:
-        from tree_sitter import Language, Parser, Node as TreeSitterNode
-        import tree_sitter_c_sharp as ts_csharp
-        TREE_SITTER_AVAILABLE = True
-    except ImportError:
-        TREE_SITTER_AVAILABLE = False
-        TreeSitterNode = Any  # Runtime placeholder
+# Always import at runtime
+try:
+    from tree_sitter import Language, Parser, Node as TreeSitterNode
+    import tree_sitter_c_sharp as ts_csharp
+    TREE_SITTER_AVAILABLE = True
+except ImportError:
+    TREE_SITTER_AVAILABLE = False
+    # Type stubs for when tree-sitter is not available
+    if not TYPE_CHECKING:
+        TreeSitterNode = Any
         Language = Any
         Parser = Any
+        ts_csharp = None
 
 from .base import BaseAnalyzer, Finding, Severity, AnalysisResult
 
@@ -33,7 +34,7 @@ from .base import BaseAnalyzer, Finding, Severity, AnalysisResult
 @dataclass
 class CodeContext:
     """Represents semantic context around a code node."""
-    node: Optional['TreeSitterNode']
+    node: Any  # TreeSitterNode type
     parent_class: Optional[str] = None
     parent_method: Optional[str] = None
     namespace: Optional[str] = None
@@ -228,7 +229,7 @@ class CSharpAnalyzer(BaseAnalyzer):
                     return True
         return bool(re.search(r'(RuleFor|AbstractValidator|ValidationResult|AddFluentValidation)', code))
     
-    def _extract_fluent_validators(self, root_node: Node) -> Dict[str, Dict]:
+    def _extract_fluent_validators(self, root_node: TreeSitterNode) -> Dict[str, Dict]:
         """
         Extract FluentValidation validator classes and their validation rules.
         
@@ -243,7 +244,7 @@ class CSharpAnalyzer(BaseAnalyzer):
         """
         validators = {}
         
-        def visit(node: Node):
+        def visit(node: TreeSitterNode):
             if node.type == "class_declaration":
                 class_name = None
                 base_classes = []
@@ -614,7 +615,7 @@ class CSharpAnalyzer(BaseAnalyzer):
         
         return method_signatures
     
-    def _method_returns_sensitive_data(self, method_node: 'TreeSitterNode') -> bool:
+    def _method_returns_sensitive_data(self, method_node: TreeSitterNode) -> bool:
         """Check if a method returns sensitive data by analyzing return statements."""
         if not method_node:
             return False
@@ -642,7 +643,7 @@ class CSharpAnalyzer(BaseAnalyzer):
         
         return False
     
-    def _track_data_flow_in_method(self, method_node: 'TreeSitterNode', method_name: str) -> List[DataFlowNode]:
+    def _track_data_flow_in_method(self, method_node: TreeSitterNode, method_name: str) -> List[DataFlowNode]:
         """Track data flow within a method to detect sensitive data propagation."""
         flow_nodes = []
         
@@ -813,11 +814,11 @@ public class {class_name}
 Source: ASP.NET Core Data Protection (https://learn.microsoft.com/aspnet/core/security/data-protection/)"""
                                 ))
     
-    def _extract_usings(self, root_node: Node) -> Set[str]:
+    def _extract_usings(self, root_node: TreeSitterNode) -> Set[str]:
         """Extract all using directives from the AST."""
         usings = set()
         
-        def visit(node: Node):
+        def visit(node: TreeSitterNode):
             if node.type == "using_directive":
                 # Get the namespace being imported
                 for child in node.children:
@@ -1000,7 +1001,8 @@ Source: ASP.NET Core Data Protection (https://learn.microsoft.com/aspnet/core/se
                 for vuln in known_vulns[package.name]:
                     if self._is_version_vulnerable(package.version, vuln["affected_versions"]):
                         package.is_vulnerable = True
-                        package.vulnerabilities.append(vuln)
+                        if package.vulnerabilities is not None:
+                            package.vulnerabilities.append(vuln)
                         
                         severity_map = {
                             "CRITICAL": Severity.HIGH,
@@ -1129,11 +1131,11 @@ dotnet list package --outdated
 ```"""
             ))
     
-    def _extract_classes(self, root_node: Node) -> List[Dict]:
+    def _extract_classes(self, root_node: TreeSitterNode) -> List[Dict]:
         """Extract class definitions with their attributes and methods."""
         classes = []
         
-        def visit(node: Node, current_namespace: str = ""):
+        def visit(node: TreeSitterNode, current_namespace: str = ""):
             if node.type == "namespace_declaration":
                 # Update current namespace
                 for child in node.children:
@@ -1173,11 +1175,11 @@ dotnet list package --outdated
         visit(root_node)
         return classes
     
-    def _extract_attributes(self, attribute_list_node: Node) -> List[str]:
+    def _extract_attributes(self, attribute_list_node: TreeSitterNode) -> List[str]:
         """Extract attribute names from attribute list."""
         attributes = []
         
-        def visit(node: Node):
+        def visit(node: TreeSitterNode):
             if node.type == "attribute":
                 for child in node.children:
                     if child.type == "identifier" or child.type == "qualified_name":
@@ -1190,7 +1192,7 @@ dotnet list package --outdated
         visit(attribute_list_node)
         return attributes
     
-    def _extract_base_classes(self, base_list_node: 'TreeSitterNode') -> List[str]:
+    def _extract_base_classes(self, base_list_node: TreeSitterNode) -> List[str]:
         """Extract base class names."""
         base_classes = []
         for child in base_list_node.children:
@@ -1198,7 +1200,7 @@ dotnet list package --outdated
                 base_classes.append(self._get_node_text(child))
         return base_classes
     
-    def _extract_methods(self, declaration_list_node: 'TreeSitterNode') -> List[Dict]:
+    def _extract_methods(self, declaration_list_node: TreeSitterNode) -> List[Dict]:
         """Extract method declarations with attributes."""
         methods = []
         
@@ -1225,7 +1227,7 @@ dotnet list package --outdated
         
         return methods
     
-    def _extract_properties(self, declaration_list_node: 'TreeSitterNode') -> List[Dict]:
+    def _extract_properties(self, declaration_list_node: TreeSitterNode) -> List[Dict]:
         """Extract property declarations."""
         properties = []
         
@@ -1248,7 +1250,7 @@ dotnet list package --outdated
         
         return properties
     
-    def _extract_parameters(self, parameter_list_node: 'TreeSitterNode') -> List[Dict]:
+    def _extract_parameters(self, parameter_list_node: TreeSitterNode) -> List[Dict]:
         """Extract method parameters with attributes and types."""
         parameters = []
         
@@ -1279,17 +1281,17 @@ dotnet list package --outdated
         
         return parameters
     
-    def _get_node_text(self, node: 'TreeSitterNode') -> str:
+    def _get_node_text(self, node: TreeSitterNode) -> str:
         """Get the text content of a node."""
         if node and self.code_bytes:
             return self.code_bytes[node.start_byte:node.end_byte].decode('utf8')
         return ""
     
-    def _find_nodes_by_type(self, root: Node, node_type: str) -> List[Node]:
+    def _find_nodes_by_type(self, root: TreeSitterNode, node_type: str) -> List[TreeSitterNode]:
         """Find all nodes of a specific type in the AST."""
         results = []
         
-        def visit(node: Node):
+        def visit(node: TreeSitterNode):
             if node.type == node_type:
                 results.append(node)
             for child in node.children:
@@ -1298,7 +1300,7 @@ dotnet list package --outdated
         visit(root)
         return results
     
-    def _is_in_comment(self, node: 'TreeSitterNode') -> bool:
+    def _is_in_comment(self, node: TreeSitterNode) -> bool:
         """Check if node is inside a comment."""
         current = node
         while current:
@@ -1307,7 +1309,7 @@ dotnet list package --outdated
             current = current.parent
         return False
     
-    def _is_in_string_literal(self, node: 'TreeSitterNode') -> bool:
+    def _is_in_string_literal(self, node: TreeSitterNode) -> bool:
         """Check if node is inside a string literal."""
         current = node
         while current:
@@ -1316,7 +1318,7 @@ dotnet list package --outdated
             current = current.parent
         return False
     
-    def _extract_try_catch_blocks(self, root_node: Node) -> List[Dict]:
+    def _extract_try_catch_blocks(self, root_node: TreeSitterNode) -> List[Dict]:
         """
         Extract all try-catch-finally blocks with structure analysis.
         
@@ -1330,7 +1332,7 @@ dotnet list package --outdated
         """
         try_blocks = []
         
-        def visit(node: Node):
+        def visit(node: TreeSitterNode):
             if node.type == "try_statement":
                 block_info = {
                     "try_body": None,
@@ -1368,7 +1370,7 @@ dotnet list package --outdated
         visit(root_node)
         return try_blocks
     
-    def _parse_catch_clause(self, catch_node: 'TreeSitterNode') -> Dict:
+    def _parse_catch_clause(self, catch_node: TreeSitterNode) -> Dict:
         """Parse a catch clause to extract exception type, variable, and body."""
         catch_info = {
             "exception_type": None,
@@ -1411,9 +1413,9 @@ dotnet list package --outdated
         
         return catch_info
     
-    def _contains_method_call(self, node: Node, method_names: List[str]) -> bool:
+    def _contains_method_call(self, node: TreeSitterNode, method_names: List[str]) -> bool:
         """Check if a node contains any method call matching the given names."""
-        def visit(n: Node):
+        def visit(n: TreeSitterNode):
             if n.type == "invocation_expression":
                 # Get the method name from the invocation
                 for child in n.children:
@@ -1594,7 +1596,7 @@ dotnet list package --outdated
                         good_practice=True
                     ))
     
-    def _check_secrets_management_ast(self, code: str, file_path: str, root_node: 'TreeSitterNode') -> None:
+    def _check_secrets_management_ast(self, code: str, file_path: str, root_node: TreeSitterNode) -> None:
         """
         Check for hardcoded secrets using AST analysis.
         
@@ -1627,7 +1629,7 @@ dotnet list package --outdated
             for pattern, secret_type, skip_values in secret_patterns:
                 match = re.search(pattern, node_text)
                 if match:
-                    secret_value = match.group(1) if match.lastindex >= 1 else ""
+                    secret_value = match.group(1) if match.lastindex and match.lastindex >= 1 else ""
                     
                     # Skip test/placeholder values
                     if any(skip in secret_value.lower() for skip in skip_values):
@@ -1701,7 +1703,7 @@ dotnet list package --outdated
                             good_practice=True
                         ))
     
-    def _check_error_handling_ast(self, code: str, file_path: str, root_node: 'TreeSitterNode') -> None:
+    def _check_error_handling_ast(self, code: str, file_path: str, root_node: TreeSitterNode) -> None:
         """
         Enhanced error handling check using AST (KSI-SVC-01).
         
@@ -2325,7 +2327,7 @@ dotnet list package --outdated
         And object initializers like:
         new CookieOptions { HttpOnly = true, ... }
         """
-        cookie_config = {
+        cookie_config: Dict[str, Any] = {
             "HttpOnly": None,
             "Secure": None,
             "SecurePolicy": None,
@@ -2736,7 +2738,7 @@ Source: ASP.NET Core Logging (https://learn.microsoft.com/aspnet/core/fundamenta
                 recommendation="Use Azure Key Vault for secrets."
             ))
     
-    def _get_line_from_node(self, node: 'TreeSitterNode') -> Optional[int]:
+    def _get_line_from_node(self, node: TreeSitterNode) -> Optional[int]:
         """Get line number from AST node."""
         if node:
             return node.start_point[0] + 1  # tree-sitter uses 0-based indexing
@@ -2746,7 +2748,7 @@ Source: ASP.NET Core Logging (https://learn.microsoft.com/aspnet/core/fundamenta
     # Legacy Methods (keep for compatibility, can be enhanced)
     # ========================================================================
     
-    def get_line_number(self, code: str, search_text: str) -> int:
+    def get_line_number(self, code: str, search_text: str) -> Optional[int]:
         """Get line number for search text (used by legacy methods)."""
         try:
             index = code.index(search_text)
@@ -3511,7 +3513,7 @@ Source: Azure SQL Managed Identity authentication (https://learn.microsoft.com/a
                     description=f"{issue.get('message', 'Configuration issue detected')} in {config_file.name}",
                     file_path=str(config_file),
                     line_number=None,  # JSON files don't have meaningful line numbers without JSON parser
-                    recommendation=recommendation
+                    recommendation=recommendation or "Review security configuration"
                 ))
     
     def _check_version_control(self, code: str, file_path: str) -> None:
