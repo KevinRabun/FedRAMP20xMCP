@@ -154,6 +154,7 @@ class CSharpAnalyzer(BaseAnalyzer):
             self._check_error_handling_ast(code, file_path, self.tree.root_node)  # Tier 1.1: AST-enhanced
             self._check_input_validation_ast(code, file_path, classes)  # Tier 1.2: AST-enhanced
             self._check_secure_coding_practices_ast(code, file_path, self.tree.root_node)  # Tier 1.3: AST-enhanced
+            self._check_entity_framework_security_ast(code, file_path, self.tree.root_node)  # Phase A: EF Security
             self._check_least_privilege_authorization_ast(code, file_path, classes)  # Tier 2.1: AST-enhanced
             self._check_session_management_ast(code, file_path, self.tree.root_node)  # Tier 2.2: AST-enhanced
             self._check_logging_implementation_ast(code, file_path, self.tree.root_node)  # Tier 2.3: AST-enhanced
@@ -1835,6 +1836,303 @@ dotnet list package --outdated
                         recommendation="Consider using FluentValidation for complex validation scenarios requiring business logic.",
                         good_practice=True
                     ))
+    
+    # ========================================================================
+    # Entity Framework Security Checks (Phase A Enhancements)
+    # ========================================================================
+    
+    def _check_entity_framework_security_ast(self, code: str, file_path: str, root_node: TreeSitterNode) -> None:
+        """
+        AST-enhanced Entity Framework security checks.
+        
+        Phase A enhancements:
+        1. SQL Injection via ExecuteSqlRaw/FromSqlRaw (KSI-SVC-02)
+        2. N+1 Query Detection (KSI-SVC-01 - Performance)
+        3. Missing AsNoTracking() in read-only queries (KSI-MLA-06)
+        """
+        # Phase A.1: SQL Injection Detection
+        self._check_ef_sql_injection(code, file_path, root_node)
+        
+        # Phase A.2: N+1 Query Detection
+        self._check_ef_n_plus_one(code, file_path, root_node)
+        
+        # Phase A.3: Tracking vs No-Tracking
+        self._check_ef_tracking_performance(code, file_path, root_node)
+    
+    def _check_ef_sql_injection(self, code: str, file_path: str, root_node: TreeSitterNode) -> None:
+        """
+        Detect SQL injection vulnerabilities in Entity Framework code (KSI-SVC-02).
+        
+        Dangerous patterns:
+        - ExecuteSqlRaw with string interpolation or concatenation
+        - FromSqlRaw with string interpolation or concatenation
+        - Dynamic LINQ with user input
+        """
+        def find_ef_sql_calls(node):
+            """Find EF raw SQL method calls."""
+            if node.type == "invocation_expression":
+                # Extract method name
+                method_name = None
+                for child in node.children:
+                    if child.type == "member_access_expression":
+                        # Get the last identifier (method name)
+                        identifiers = [n for n in child.children if n.type == "identifier"]
+                        if identifiers:
+                            method_name = self.code_bytes[identifiers[-1].start_byte:identifiers[-1].end_byte].decode('utf8')
+                
+                # Check if it's a dangerous EF method
+                if method_name in ["ExecuteSqlRaw", "FromSqlRaw", "ExecuteSql", "FromSql"]:
+                    # Extract arguments
+                    args_node = None
+                    for child in node.children:
+                        if child.type == "argument_list":
+                            args_node = child
+                            break
+                    
+                    if args_node:
+                        args_text = self.code_bytes[args_node.start_byte:args_node.end_byte].decode('utf8')
+                        
+                        # Check for string interpolation ($"...") or concatenation (+ with strings)
+                        has_interpolation = '$"' in args_text
+                        has_concatenation = '" +' in args_text or '+ "' in args_text or '"+"' in args_text
+                        has_format_call = '.Format(' in args_text
+                        
+                        # Check if using parameters (safe pattern)
+                        has_parameters = '{0}' in args_text or (', ' in args_text and not has_concatenation)
+                        
+                        is_dangerous = False
+                        if has_interpolation and not method_name.endswith("Interpolated"):
+                            is_dangerous = True
+                        elif has_concatenation:
+                            is_dangerous = True
+                        elif has_format_call and not has_parameters:
+                            is_dangerous = True
+                        
+                        if is_dangerous:
+                                line_num = node.start_point[0] + 1
+                                
+                                # Extract full statement for context
+                                statement_text = self.code_bytes[node.start_byte:node.end_byte].decode('utf8')
+                                if len(statement_text) > 100:
+                                    statement_text = statement_text[:97] + "..."
+                                
+                                self.add_finding(Finding(
+                                    requirement_id="KSI-SVC-02",
+                                    severity=Severity.HIGH,
+                                    title=f"SQL injection vulnerability in {method_name}",
+                                    description=f"Entity Framework method '{method_name}' uses string interpolation or concatenation, which can lead to SQL injection attacks. FedRAMP 20x requires parameterized queries to prevent injection vulnerabilities.",
+                                    file_path=file_path,
+                                    line_number=line_num,
+                                    code_snippet=statement_text,
+                                    recommendation=f"""Use parameterized queries instead:
+
+```csharp
+// ❌ DANGEROUS: String interpolation
+{statement_text}
+
+// ✅ SAFE: Parameterized query
+context.Database.ExecuteSqlRaw("SELECT * FROM Users WHERE Id = {{0}}", userId);
+
+// ✅ SAFE: Interpolated (automatic parameters)
+context.Database.ExecuteSqlInterpolated($"SELECT * FROM Users WHERE Id = {{userId}}");
+
+// ✅ BEST: Use LINQ (automatically parameterized)
+var user = context.Users.FirstOrDefault(u => u.Id == userId);
+```
+
+Source: EF Core Raw SQL Queries (https://learn.microsoft.com/ef/core/querying/raw-sql)"""
+                                ))
+            
+            for child in node.children:
+                find_ef_sql_calls(child)
+        
+        find_ef_sql_calls(root_node)
+    
+    def _check_ef_n_plus_one(self, code: str, file_path: str, root_node: TreeSitterNode) -> None:
+        """
+        Detect N+1 query problems in Entity Framework (KSI-SVC-01).
+        
+        Pattern: foreach loop accessing navigation properties without Include().
+        """
+        def find_foreach_loops(node):
+            """Find foreach loops and analyze for N+1 issues."""
+            # Tree-sitter uses "for_each_statement" or "foreach_statement"
+            if node.type in ["for_each_statement", "foreach_statement"]:
+                # Extract loop body
+                loop_body = None
+                for child in node.children:
+                    if child.type == "block":
+                        loop_body = child
+                        break
+                
+                if loop_body:
+                    loop_text = self.code_bytes[loop_body.start_byte:loop_body.end_byte].decode('utf8')
+                    
+                    # Check for navigation property access (pattern: item.Property.SubProperty)
+                    # Common patterns: order.Customer.Name, user.Orders.Count, etc.
+                    nav_prop_pattern = r'\w+\.(\w+)\.(\w+)'
+                    nav_matches = re.findall(nav_prop_pattern, loop_text)
+                    
+                    if nav_matches:
+                        # Check if Include() is used before the loop
+                        # Look backwards from foreach statement
+                        context_start = max(0, node.start_byte - 500)
+                        context_text = self.code_bytes[context_start:node.start_byte].decode('utf8')
+                        
+                        has_include = '.Include(' in context_text or '.ThenInclude(' in context_text
+                        has_select = '.Select(' in context_text  # Projection avoids N+1
+                        
+                        if not (has_include or has_select):
+                            line_num = node.start_point[0] + 1
+                            accessed_props = ', '.join([f"{m[0]}.{m[1]}" for m in nav_matches[:3]])
+                            
+                            self.add_finding(Finding(
+                                requirement_id="KSI-SVC-01",
+                                severity=Severity.MEDIUM,
+                                title="Potential N+1 query problem detected",
+                                description=f"Foreach loop accesses navigation properties ({accessed_props}) without eager loading. This causes separate database queries for each iteration (N+1 problem), impacting performance and potentially causing timeout errors under load.",
+                                file_path=file_path,
+                                line_number=line_num,
+                                recommendation="""Fix N+1 query with eager loading:
+
+```csharp
+// ❌ N+1 PROBLEM: Separate query for each order's customer
+foreach (var order in context.Orders) {
+    Console.WriteLine(order.Customer.Name); // Triggers query
+}
+
+// ✅ EAGER LOADING: Single query with Include
+var orders = context.Orders.Include(o => o.Customer).ToList();
+foreach (var order in orders) {
+    Console.WriteLine(order.Customer.Name); // No query
+}
+
+// ✅ PROJECTION: Only load needed data
+var orders = context.Orders
+    .Select(o => new { o.Id, CustomerName = o.Customer.Name })
+    .ToList();
+
+// ✅ MULTIPLE LEVELS: ThenInclude for nested properties
+var orders = context.Orders
+    .Include(o => o.Customer)
+    .ThenInclude(c => c.Address)
+    .ToList();
+```
+
+Source: EF Core Related Data (https://learn.microsoft.com/ef/core/querying/related-data)"""
+                            ))
+            
+            for child in node.children:
+                find_foreach_loops(child)
+        
+        find_foreach_loops(root_node)
+    
+    def _check_ef_tracking_performance(self, code: str, file_path: str, root_node: TreeSitterNode) -> None:
+        """
+        Detect missing AsNoTracking() in read-only queries (KSI-MLA-06).
+        
+        Pattern: GET endpoints or read-only methods without AsNoTracking().
+        """
+        def find_http_get_methods(node):
+            """Find HTTP GET endpoints and check for AsNoTracking()."""
+            if node.type == "method_declaration":
+                # Check if method has [HttpGet] attribute
+                has_http_get = False
+                method_name = None
+                
+                for child in node.children:
+                    if child.type == "attribute_list":
+                        attr_text = self.code_bytes[child.start_byte:child.end_byte].decode('utf8')
+                        if 'HttpGet' in attr_text or '[Get' in attr_text:
+                            has_http_get = True
+                    
+                    if child.type == "identifier":
+                        method_name = self.code_bytes[child.start_byte:child.end_byte].decode('utf8')
+                
+                if has_http_get or (method_name and method_name.startswith('Get')):
+                    # Extract method body
+                    method_body = None
+                    for child in node.children:
+                        if child.type == "block":
+                            method_body = child
+                            break
+                    
+                    if method_body:
+                        body_text = self.code_bytes[method_body.start_byte:method_body.end_byte].decode('utf8')
+                        
+                        # Check if method queries a DbContext
+                        # Look for _context., context., or DbContext variable with LINQ methods
+                        # Allow for method chaining with .Include(), .Where(), etc.
+                        has_ef_query = bool(re.search(r'(_context|context|\w+DbContext)\s*\.\s*\w+', body_text)) and \
+                                       bool(re.search(r'\.(Where|FirstOrDefault|Find|ToList|Single|Any|Count|First|Include|AsNoTracking)\s*\(', body_text))
+                        has_no_tracking = '.AsNoTracking()' in body_text
+                        has_tracking_behavior = '.AsNoTrackingWithIdentityResolution()' in body_text
+                        
+                        if has_ef_query:
+                            if not (has_no_tracking or has_tracking_behavior):
+                                line_num = node.start_point[0] + 1
+                                
+                                self.add_finding(Finding(
+                                    requirement_id="KSI-MLA-06",
+                                    severity=Severity.LOW,
+                                    title=f"Read-only query without AsNoTracking() in {method_name or 'GET method'}",
+                                    description=f"HTTP GET endpoint queries Entity Framework without AsNoTracking(). For read-only operations, tracking overhead is unnecessary and impacts performance. This can cause memory issues and slower response times under high load.",
+                                    file_path=file_path,
+                                    line_number=line_num,
+                                    recommendation="""Add AsNoTracking() for read-only queries:
+
+```csharp
+// ❌ INEFFICIENT: Unnecessary change tracking
+[HttpGet]
+public IActionResult GetUsers() {
+    var users = context.Users.ToList(); // Tracking enabled
+    return Ok(users);
+}
+
+// ✅ EFFICIENT: No-tracking for read-only
+[HttpGet]
+public IActionResult GetUsers() {
+    var users = context.Users.AsNoTracking().ToList();
+    return Ok(users);
+}
+
+// ✅ WITH NAVIGATION: Include still works
+[HttpGet]
+public IActionResult GetOrders() {
+    var orders = context.Orders
+        .Include(o => o.Customer)
+        .AsNoTracking()
+        .ToList();
+    return Ok(orders);
+}
+
+// ℹ️ GLOBAL: Set no-tracking as default
+services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(connectionString)
+           .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
+```
+
+Benefits: ~20-30% faster queries, reduced memory usage.
+Source: EF Core Tracking (https://learn.microsoft.com/ef/core/querying/tracking)"""
+                                ))
+                            else:
+                                # Good practice detected
+                                line_num = node.start_point[0] + 1
+                                self.add_finding(Finding(
+                                    requirement_id="KSI-MLA-06",
+                                    severity=Severity.INFO,
+                                    title=f"Optimized read-only query in {method_name or 'GET method'}",
+                                    description="Query uses AsNoTracking() for read-only operations, improving performance by disabling change tracking overhead.",
+                                    file_path=file_path,
+                                    line_number=line_num,
+                                    recommendation="Good practice. Consider setting no-tracking as default behavior in DbContext configuration if most queries are read-only.",
+                                    good_practice=True
+                                ))
+            
+            for child in node.children:
+                find_http_get_methods(child)
+        
+        find_http_get_methods(root_node)
     
     def _extract_middleware_pipeline(self, tree_node) -> List[Dict]:
         """

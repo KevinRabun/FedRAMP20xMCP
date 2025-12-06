@@ -128,11 +128,19 @@ The server provides 33 MCP tools:
 32. **check_package_vulnerabilities** - Check package for CVE vulnerabilities from GitHub Advisory Database / NVD
 33. **scan_dependency_file** - Scan entire dependency file (csproj, package.json, requirements.txt, pom.xml) for vulnerable packages
 
-**Supported Languages:**
+**🆕 Multi-language support**:
 - **Python**: Flask, Django, FastAPI
-- **C#/.NET**: ASP.NET Core, Entity Framework, Azure SDK
+- **C#/.NET**: ASP.NET Core, Entity Framework, Azure SDK (Phase A EF security Dec 2024)
 - **Java**: Spring Boot, Spring Security, Jakarta EE
 - **TypeScript/JavaScript**: Express, NestJS, Next.js, React, Angular, Vue
+
+**Phase A: Entity Framework Security Enhancements (December 2024):**
+- ✅ SQL Injection via ExecuteSqlRaw/FromSqlRaw detection (string interpolation, concatenation)
+- ✅ N+1 Query Detection (foreach loops without Include())
+- ✅ Missing AsNoTracking() in read-only queries (performance optimization)
+- Detects dangerous patterns in EF Core queries
+- Recommends parameterized queries, eager loading, and no-tracking queries
+- AST-based analysis for accurate detection with minimal false positives
 
 **Comprehensive Prompts:**
 1. **initial_assessment_roadmap** - 9-11 month roadmap with budget/team guidance
