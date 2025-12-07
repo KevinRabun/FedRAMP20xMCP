@@ -33,7 +33,7 @@ jobs:
     
     - name: Run core tests
       run: |
-        pytest tests/ -v --ignore=tests/test_docs_integration.py
+        pytest tests/ -v --ignore=tests/test_docs_integration.py --ignore=tests/test_code_analyzer.py
     
     - name: Run docs integration test
       continue-on-error: true

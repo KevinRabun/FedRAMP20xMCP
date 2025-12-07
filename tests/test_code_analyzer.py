@@ -7,9 +7,6 @@ Includes both positive (should detect) and negative (should not detect) test cas
 Updated for KSI-centric architecture where each KSI file contains all language analyzers.
 """
 
-from fedramp_20x_mcp.analyzers.bicep_analyzer import BicepAnalyzer
-from fedramp_20x_mcp.analyzers.terraform_analyzer import TerraformAnalyzer
-from fedramp_20x_mcp.analyzers.python_analyzer import PythonAnalyzer
 from fedramp_20x_mcp.analyzers.ksi.factory import get_factory
 from fedramp_20x_mcp.analyzers.base import Severity
 
