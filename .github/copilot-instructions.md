@@ -199,10 +199,10 @@ The remaining 17 KSIs cannot be meaningfully implemented as code analyzers:
 - Template loaders: `get_infrastructure_template(family, type)` and `get_code_template(family, language)` in `templates/__init__.py`
 - Prompt templates in `prompts/` directory (15 files)
 - Prompt loader: `load_prompt(name)` in `prompts/__init__.py`
-- Tool modules in `tools/` directory (8 modules, 29 tools)
+- Tool modules in `tools/` directory (11 modules, 35 tools)
 - Tool registration: `register_tools(mcp, data_loader)` in `tools/__init__.py`
-- Code analyzers in `analyzers/` directory (8 modules: base, bicep_analyzer, terraform_analyzer, python_analyzer, csharp_analyzer, java_analyzer, typescript_analyzer, cicd_analyzer)
-- CVE fetcher module: `cve_fetcher.py` - Live vulnerability data from GitHub Advisory Database / NVD - **NEW**
+- Code analyzers in `analyzers/ksi/` directory (KSI-centric architecture: 72 KSI analyzer files + factory + base)
+- CVE fetcher module: `cve_fetcher.py` - Live vulnerability data from GitHub Advisory Database / NVD
 
 **Tool Organization:**
 - `tools/requirements.py` - Core requirements tools (3 tools)
@@ -214,27 +214,28 @@ The remaining 17 KSIs cannot be meaningfully implemented as code analyzers:
 - `tools/evidence.py` - Evidence automation tools (3 tools)
 - `tools/analyzer.py` - Code analysis tools (2 tools)
 - `tools/audit.py` - Coverage audit tools (2 tools)
-- `tools/security.py` - CVE vulnerability checking tools (2 tools) - **NEW**
+- `tools/security.py` - CVE vulnerability checking tools (2 tools)
+- `tools/ksi_status.py` - KSI implementation status tools (1 tool)
 - Each module has `*_impl` functions, registered via wrappers in `tools/__init__.py`
 
-**Analyzer Organization:**
-- `analyzers/base.py` - Base classes (Finding, AnalysisResult, Severity, BaseAnalyzer)
-- `analyzers/bicep_analyzer.py` - BicepAnalyzer (55 KSIs across 7 phases) - SPLIT FROM iac_analyzer.py in Phase 6B
-- `analyzers/terraform_analyzer.py` - TerraformAnalyzer (55 KSIs across 7 phases) - SPLIT FROM iac_analyzer.py in Phase 6B
-- `analyzers/python_analyzer.py` - PythonAnalyzer (8 KSIs)
-- `analyzers/csharp_analyzer.py` - CSharpAnalyzer (8 KSIs) - **NEW: Multi-language support**
-- `analyzers/java_analyzer.py` - JavaAnalyzer (8 KSIs) - **NEW: Multi-language support**
-- `analyzers/typescript_analyzer.py` - TypeScriptAnalyzer (8 KSIs) - **NEW: Multi-language support**
-- `analyzers/cicd_analyzer.py` - CICDAnalyzer (6 KSIs)
-- **Phase 1 (8 KSIs - Foundation):** MLA-05, SVC-06, CNA-01, IAM-03, SVC-03, IAM-01, SVC-08, PIY-02
-- **Phase 2 (9 KSIs - Critical Infrastructure):** IAM-02, IAM-06, CNA-02, CNA-04, CNA-06, SVC-04, SVC-05, MLA-01, MLA-02
-- **Phase 3 (8 KSIs - Secure Coding):** SVC-01, SVC-02, SVC-07, PIY-01, PIY-03, CNA-07, IAM-04, IAM-07
-- **Phase 4 (6 KSIs - DevSecOps Automation):** CMT-01, CMT-02, CMT-03, AFR-01, AFR-02, CED-01
-- **Phase 5 (6 KSIs - Runtime Security & Monitoring):** MLA-03, MLA-04, MLA-06, INR-01, INR-02, AFR-03
-- **Phase 6A (8 KSIs - Infrastructure Resilience):** RPL-01, RPL-02, RPL-03, RPL-04, CNA-03, CNA-05, IAM-05, AFR-11
-- **Phase 6B (8 KSIs - Advanced Infrastructure Security):** SVC-09, SVC-10, MLA-07, MLA-08, AFR-07, CNA-08, INR-03, CMT-04
-- **Phase 7 (2 KSIs - Supply Chain & Third-Party Security):** TPR-03, TPR-04
-- **Coverage:** 55 KSIs out of 65 active (84.6%) - **Maximum practical code-detectable coverage achieved**
+**Analyzer Organization (KSI-Centric Architecture):**
+- `analyzers/base.py` - Base classes (Finding, AnalysisResult, Severity)
+- `analyzers/ksi/base.py` - BaseKSIAnalyzer class for all KSI analyzers
+- `analyzers/ksi/factory.py` - KSIAnalyzerFactory for unified KSI analysis
+- `analyzers/ksi/ksi_*.py` - 72 individual KSI analyzer files (e.g., ksi_mla_05.py, ksi_svc_06.py)
+- Each KSI analyzer is self-contained with multi-language support:
+  - Application languages: Python, C#, Java, TypeScript/JavaScript
+  - IaC languages: Bicep, Terraform
+  - CI/CD platforms: GitHub Actions, Azure Pipelines, GitLab CI
+- **Factory Pattern Usage:**
+  - `get_factory()` - Get singleton factory instance
+  - `factory.analyze(ksi_id, code, language, file_path)` - Analyze code for specific KSI
+  - `factory.analyze_all_ksis(code, language, file_path)` - Analyze against all KSIs
+  - `factory.get_analyzer(ksi_id)` - Get specific KSI analyzer instance
+  - `factory.list_ksis()` - List all 72 registered KSI IDs
+- **Coverage:** 38 out of 65 active KSIs implemented (58.5%)
+  - 5/10 families 100% complete (IAM, SVC, CNA, TPR, CMT)
+  - Target: 55/65 (84.6%) - Maximum practical code-detectable coverage
 
 ## Development Rules
 
@@ -357,11 +358,11 @@ The remaining 17 KSIs cannot be meaningfully implemented as code analyzers:
 
 ### Project Structure
 - Infrastructure templates: `templates/{bicep,terraform}/` directory (7 templates each)
-- Code templates: `templates/code/` directory (7 templates: Python, C#, PowerShell)
+- Code templates: `templates/code/` directory (9 templates: Python, C#, PowerShell, Java, TypeScript)
 - Prompt templates: `prompts/` directory (15 prompts)
-- Tool modules: `tools/` directory (9 modules, 31 tools)
-- Tests: `tests/` directory (21 test files)
-- Analyzers: `analyzers/` directory (8 modules: base, bicep_analyzer, terraform_analyzer, python_analyzer, csharp_analyzer, java_analyzer, typescript_analyzer, cicd_analyzer)
+- Tool modules: `tools/` directory (11 modules, 35 tools)
+- Tests: `tests/` directory (24 test files)
+- Analyzers: `analyzers/ksi/` directory (KSI-centric architecture with 72 KSI analyzer files + factory + base)
 
 ### Template & Prompt Management
 - Use `get_infrastructure_template(family, type)` to load infrastructure templates
@@ -387,7 +388,7 @@ The remaining 17 KSIs cannot be meaningfully implemented as code analyzers:
 - Run all tests before committing: `python tests/test_*.py`
 - Update `TESTING.md` immediately when adding new tests
 
-### Test Organization (21 test files)
+### Test Organization (24 test files)
 **Core Functionality (8 files):**
 - `test_loader.py` - Data loading validation
 - `test_definitions.py` - Definition/KSI lookup
@@ -395,27 +396,28 @@ The remaining 17 KSIs cannot be meaningfully implemented as code analyzers:
 - `test_implementation_questions.py` - Question generation
 - `test_tool_registration.py` - Architecture validation
 - `test_evidence_automation.py` - IaC generation
-- `test_code_analyzer.py` - Code analysis engine (96 tests: 13 Phase 1, 18 Phase 3, 12 Phase 4, 12 Phase 5, 16 Phase 6A, 16 Phase 6B, 9 Phase 7)
+- `test_code_analyzer.py` - KSI-centric analyzer tests (12 focused tests using factory pattern)
 - `test_all_tools.py` - Integration testing
 
-**Tool Functional Tests (11 files):**
+**Tool Functional Tests (14 files):**
 - `test_requirements_tools.py` - Requirements tools (get_control, list_family_controls, search_requirements)
 - `test_definitions_tools.py` - Definition tools (get_definition, list_definitions, search_definitions)
 - `test_ksi_tools.py` - KSI tools (get_ksi, list_ksi)
 - `test_documentation_tools.py` - Documentation tools (search, get_file, list_files)
 - `test_export_tools.py` - Export tools (excel, csv, ksi_specification)
 - `test_enhancement_tools.py` - 7 enhancement tools (compare, examples, dependencies, etc.)
-- `test_analyzer_tools.py` - Analyzer MCP tools (10 tests)
+- `test_implementation_mapping_tools.py` - Implementation mapping tools (matrix, checklist)
+- `test_analyzer_tools.py` - Analyzer MCP tools
 - `test_audit_tools.py` - Audit tools (get_ksi_coverage_summary, get_ksi_coverage_status)
-- `test_enhancement_tools.py` - 7 enhancement tools (compare, examples, dependencies, etc.)
-- `test_analyzer_tools.py` - Analyzer MCP tools (10 tests)
-- `test_csharp_analyzer.py` - C# analyzer (12 security checks: ASP.NET Core, Entity Framework, Azure SDK)
-- `test_java_analyzer.py` - Java analyzer (12 security checks: Spring Boot, Spring Security, Azure SDK)
-- `test_typescript_analyzer.py` - TypeScript/JS analyzer (12 security checks: Express, NestJS, React, Azure SDK)
+- `test_security_tools.py` - CVE vulnerability checking tools
+- `test_cve_fetcher.py` - CVE fetcher module tests
+- `test_ksi_architecture.py` - KSI architecture validation
+- `test_new_ksi_implementations.py` - New KSI implementation tests
+- `test_new_language_support.py` - Multi-language analyzer tests
 
 **Resource Validation (2 files):**
 - `test_prompts.py` - All 15 prompt templates
-- `test_templates.py` - All 21 infrastructure/code templates
+- `test_templates.py` - All infrastructure/code templates
 
 ### Documentation Standards
 - **Single source of truth**: Keep all documentation consolidated in primary files
