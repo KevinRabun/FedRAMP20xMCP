@@ -9,7 +9,7 @@ Version: 25.11C (Published: 2025-12-01)
 """
 
 import re
-from typing import List
+from typing import List, Optional
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 
