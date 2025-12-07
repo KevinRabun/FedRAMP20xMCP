@@ -24,7 +24,7 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         data_loader: The data loader instance for accessing FedRAMP data
     """
     # Import all tool modules
-    from . import requirements, definitions, ksi, documentation, export, enhancements, evidence, analyzer, audit, security
+    from . import requirements, definitions, ksi, documentation, export, enhancements, evidence, analyzer, audit, security, ksi_status
     from ..templates import get_infrastructure_template, get_code_template
     
     # Requirements tools
@@ -67,8 +67,29 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
     
     @mcp.tool()
     async def list_ksi() -> str:
-        """List all Key Security Indicators."""
+        """
+        List all Key Security Indicators with their implementation status.
+        
+        Returns a comprehensive list showing:
+        - Implementation status (Implemented/Not Implemented/Retired)
+        - Code detectability (Code-Detectable vs Process-Based)
+        - Organized by family
+        - Summary statistics
+        """
         return await ksi.list_ksi_impl(data_loader)
+    
+    @mcp.tool()
+    async def get_ksi_implementation_summary() -> str:
+        """
+        Get a summary of KSI implementation status across all families.
+        
+        Returns statistics showing:
+        - Overall implementation coverage
+        - Breakdown by family
+        - Code-detectable vs process-based KSIs
+        - Retired KSIs
+        """
+        return await ksi.get_ksi_implementation_summary_impl(data_loader)
     
     # Documentation tools
     @mcp.tool()
@@ -285,4 +306,77 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         """
         return await security.scan_dependency_file_impl(file_content, file_type, github_token)
     
-    logger.info("Registered 33 tools across 10 modules")
+    # KSI Status tools
+    @mcp.tool()
+    async def get_ksi_implementation_status() -> str:
+        """
+        Get comprehensive implementation status of all KSI analyzers.
+        
+        Dynamically queries each KSI analyzer to report:
+        - Total KSIs, active vs retired
+        - Implementation status (IMPLEMENTED, PARTIAL, NOT_IMPLEMENTED)
+        - Code detectability (CODE_DETECTABLE vs PROCESS_BASED)
+        - Status organized by family
+        - Implementation percentages
+        
+        Returns:
+            JSON with complete KSI status including:
+            - Overall statistics (total, active, implemented, code_detectable)
+            - Family-level breakdown
+            - Individual KSI details with metadata
+            - Implementation and code detectability percentages
+        
+        This tool eliminates the need to maintain separate tracking documents by
+        querying each KSI analyzer's CODE_DETECTABLE and IMPLEMENTATION_STATUS properties.
+        
+        Example output:
+        {
+            "total_ksis": 72,
+            "active_ksis": 65,
+            "retired_ksis": 7,
+            "implemented_ksis": 38,
+            "code_detectable_ksis": 38,
+            "process_based_ksis": 27,
+            "implementation_percentage": 58.5,
+            "families": {...}
+        }
+        """
+        result = await ksi_status.get_ksi_implementation_status_impl()
+        return json.dumps(result, indent=2)
+    
+    @mcp.tool()
+    async def get_ksi_family_status(family: str) -> str:
+        """
+        Get implementation status for a specific KSI family.
+        
+        Args:
+            family: Family code (e.g., "IAM", "SVC", "CNA", "AFR", "MLA")
+        
+        Returns:
+            JSON with family-specific status:
+            - Total KSIs in family
+            - Active vs retired count
+            - Implementation status
+            - Code detectability breakdown
+            - List of all KSIs with their properties
+        
+        Supported families:
+        - IAM: Identity and Access Management
+        - SVC: Service Configuration
+        - MLA: Monitoring, Logging, and Alerting
+        - CNA: Cloud and Network Architecture
+        - AFR: Authorization by FedRAMP
+        - TPR: Third-Party Risk
+        - CMT: Change Management and Testing
+        - RPL: Resiliency and Performance Limits
+        - INR: Incident Response
+        - PIY: Privacy
+        - CED: Cybersecurity Education
+        
+        Example:
+            get_ksi_family_status("IAM")
+        """
+        result = await ksi_status.get_ksi_family_status_impl(family)
+        return json.dumps(result, indent=2)
+    
+    logger.info("Registered 35 tools across 11 modules")

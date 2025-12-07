@@ -1,28 +1,19 @@
 """
 Code analyzers for FedRAMP 20x compliance checking.
 
-This module provides analyzers for Infrastructure as Code (IaC), application code,
-and CI/CD pipelines to identify FedRAMP 20x compliance issues and provide recommendations.
+This module provides the base analyzer framework and KSI-specific analyzers.
+Each KSI analyzer is self-contained with all language implementations.
 """
 
 from .base import Finding, AnalysisResult, Severity, BaseAnalyzer
-from .iac_analyzer import BicepAnalyzer, TerraformAnalyzer
-from .python_analyzer import PythonAnalyzer
-from .csharp_analyzer import CSharpAnalyzer
-from .java_analyzer import JavaAnalyzer
-from .typescript_analyzer import TypeScriptAnalyzer
-from .cicd_analyzer import CICDAnalyzer
+from .ksi import BaseKSIAnalyzer, KSIAnalyzerFactory, get_factory
 
 __all__ = [
     "Finding",
     "AnalysisResult",
     "Severity",
     "BaseAnalyzer",
-    "BicepAnalyzer",
-    "TerraformAnalyzer",
-    "PythonAnalyzer",
-    "CSharpAnalyzer",
-    "JavaAnalyzer",
-    "TypeScriptAnalyzer",
-    "CICDAnalyzer",
+    "BaseKSIAnalyzer",
+    "KSIAnalyzerFactory",
+    "get_factory",
 ]

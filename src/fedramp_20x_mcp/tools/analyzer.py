@@ -5,15 +5,8 @@ Provides MCP tools for analyzing Infrastructure as Code, application code, and C
 """
 
 from typing import Optional
-from ..analyzers import (
-    BicepAnalyzer,
-    TerraformAnalyzer,
-    PythonAnalyzer,
-    CSharpAnalyzer,
-    JavaAnalyzer,
-    TypeScriptAnalyzer,
-    CICDAnalyzer
-)
+from ..analyzers.ksi.factory import get_factory
+from ..analyzers import AnalysisResult, Finding, Severity
 
 
 async def analyze_infrastructure_code_impl(
@@ -37,29 +30,42 @@ async def analyze_infrastructure_code_impl(
     if not file_path:
         file_path = f"file.{file_type}"
     
-    # Select appropriate analyzer
-    if file_type.lower() == "bicep":
-        analyzer = BicepAnalyzer()
-    elif file_type.lower() in ["terraform", "tf"]:
-        analyzer = TerraformAnalyzer()
-    else:
+    # Validate file type
+    file_type_lower = file_type.lower()
+    if file_type_lower not in ["bicep", "terraform", "tf"]:
         return {
             "error": f"Unsupported file type: {file_type}. Supported types: bicep, terraform"
         }
     
-    # Run analysis
-    result = analyzer.analyze(code, file_path)
+    # Normalize terraform variants
+    if file_type_lower == "tf":
+        file_type_lower = "terraform"
+    
+    # Get factory and run all KSI analyzers for this language
+    factory = get_factory()
+    all_findings = []
+    
+    for ksi_id in factory.list_ksis():
+        result = factory.analyze(ksi_id, code, file_type_lower, file_path)
+        if result and result.findings:
+            all_findings.extend(result.findings)
+    
+    # Create aggregated result
+    combined_result = AnalysisResult(
+        file_path=file_path,
+        findings=all_findings
+    )
     
     # Format output
-    output = result.to_dict()
+    output = combined_result.to_dict()
     
     # Add context if provided
     if context:
         output["context"] = context
     
     # Add formatted recommendations
-    if result.findings:
-        output["pr_comment"] = _format_pr_comment(result, file_path)
+    if combined_result.findings:
+        output["pr_comment"] = _format_pr_comment(combined_result, file_path)
     
     return output
 
@@ -85,35 +91,48 @@ async def analyze_application_code_impl(
     if not file_path:
         file_path = f"file.{language}"
     
-    # Select appropriate analyzer based on language
+    # Normalize language name
     language_lower = language.lower()
+    language_map = {
+        "py": "python",
+        "c#": "csharp",
+        "cs": "csharp",
+        "ts": "typescript",
+        "js": "typescript"  # TypeScript analyzer handles both
+    }
+    language_normalized = language_map.get(language_lower, language_lower)
     
-    if language_lower in ["python", "py"]:
-        analyzer = PythonAnalyzer()
-    elif language_lower in ["csharp", "c#", "cs"]:
-        analyzer = CSharpAnalyzer()
-    elif language_lower in ["java"]:
-        analyzer = JavaAnalyzer()
-    elif language_lower in ["typescript", "ts", "javascript", "js"]:
-        analyzer = TypeScriptAnalyzer()
-    else:
+    # Validate language
+    if language_normalized not in ["python", "csharp", "java", "typescript"]:
         return {
             "error": f"Unsupported language: {language}. Supported languages: python, csharp, java, typescript, javascript"
         }
     
-    # Run analysis
-    result = analyzer.analyze(code, file_path)
+    # Get factory and run all KSI analyzers for this language
+    factory = get_factory()
+    all_findings = []
+    
+    for ksi_id in factory.list_ksis():
+        result = factory.analyze(ksi_id, code, language_normalized, file_path)
+        if result and result.findings:
+            all_findings.extend(result.findings)
+    
+    # Create aggregated result
+    combined_result = AnalysisResult(
+        file_path=file_path,
+        findings=all_findings
+    )
     
     # Format output
-    output = result.to_dict()
+    output = combined_result.to_dict()
     
     # Add dependencies info if provided
     if dependencies:
         output["dependencies_checked"] = dependencies
     
     # Add formatted recommendations
-    if result.findings:
-        output["pr_comment"] = _format_pr_comment(result, file_path)
+    if combined_result.findings:
+        output["pr_comment"] = _format_pr_comment(combined_result, file_path)
     
     return output
 
@@ -144,19 +163,36 @@ async def analyze_cicd_pipeline_impl(
         else:
             file_path = "pipeline.yml"
     
-    # Use CICDAnalyzer for all pipeline types
-    analyzer = CICDAnalyzer()
+    # Normalize pipeline type name
+    pipeline_map = {
+        "github-actions": "github_actions",
+        "azure-pipelines": "azure_pipelines",
+        "gitlab-ci": "gitlab_ci"
+    }
+    language_normalized = pipeline_map.get(pipeline_type.lower(), pipeline_type.lower())
     
-    # Run analysis
-    result = analyzer.analyze(code, file_path)
+    # Get factory and run all KSI analyzers for this pipeline type
+    factory = get_factory()
+    all_findings = []
+    
+    for ksi_id in factory.list_ksis():
+        result = factory.analyze(ksi_id, code, language_normalized, file_path)
+        if result and result.findings:
+            all_findings.extend(result.findings)
+    
+    # Create aggregated result
+    combined_result = AnalysisResult(
+        file_path=file_path,
+        findings=all_findings
+    )
     
     # Format output
-    output = result.to_dict()
+    output = combined_result.to_dict()
     output["pipeline_type"] = pipeline_type
     
     # Add formatted recommendations
-    if result.findings:
-        output["pr_comment"] = _format_pr_comment(result, file_path)
+    if combined_result.findings:
+        output["pr_comment"] = _format_pr_comment(combined_result, file_path)
     
     return output
 
