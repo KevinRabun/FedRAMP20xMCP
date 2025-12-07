@@ -6,8 +6,12 @@ Tests the MCP tools for checking package vulnerabilities.
 
 import json
 import sys
+import io
 from pathlib import Path
 import asyncio
+
+# Set UTF-8 encoding for stdout (Windows compatibility)
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 # Add src directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))

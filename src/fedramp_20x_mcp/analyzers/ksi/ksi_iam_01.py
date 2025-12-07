@@ -199,14 +199,15 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
         # Check if ANY MFA is implemented
         any_mfa = django_mfa_found or flask_mfa_found or has_fido2 or has_webauthn or has_totp or has_sms_mfa
         if not any_mfa and re.search(r'@app\.route|@login|def\s+login|class.*Login', code):
+            line_num = self._find_line(lines, r'@app\.route.*login|def\s+login')
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="No MFA implementation detected",
                 description="Login functionality detected without any multi-factor authentication implementation. KSI-IAM-01 requires phishing-resistant MFA for all user authentication.",
                 severity=Severity.CRITICAL,
                 file_path=file_path,
-                line_number=self._find_line(lines, r'@app\.route.*login|def\s+login'),
-                code_snippet=self._get_snippet(lines, r'@app\.route.*login|def\s+login'),
+                line_number=line_num,
+                code_snippet=self._get_snippet(lines, line_num),
                 recommendation="Implement phishing-resistant MFA using FIDO2 (py_webauthn), WebAuthn, or integrate with Azure AD Conditional Access"
             ))
         
