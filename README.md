@@ -1278,32 +1278,51 @@ FedRAMP20xMCP/
 │       ├── __main__.py     # Entry point for python -m
 │       ├── server.py       # MCP server entry point (270 lines, 15 prompts)
 │       ├── data_loader.py  # FedRAMP data fetching and caching
+│       ├── cve_fetcher.py  # CVE vulnerability data (GitHub Advisory + NVD)
 │       ├── templates/      # Infrastructure & code templates
 │       │   ├── __init__.py # Template loader functions
 │       │   ├── bicep/      # Bicep IaC templates (7 files)
-│       │   ├── terraform/  # Terraform IaC templates (6 files)
-│       │   └── code/       # Code generation templates (7 files)
+│       │   ├── terraform/  # Terraform IaC templates (7 files)
+│       │   └── code/       # Code generation templates (9 files: Python, C#, PowerShell, Java, TypeScript)
 │       ├── prompts/        # Prompt templates (15 files)
 │       │   └── __init__.py # Prompt loader function
-│       ├── tools/          # Tool modules (24 tools across 7 modules)
+│       ├── tools/          # Tool modules (35 tools across 11 modules)
 │       │   ├── __init__.py # Tool registration system
 │       │   ├── requirements.py    # Core requirements tools (3)
 │       │   ├── definitions.py     # Definition lookup tools (3)
 │       │   ├── ksi.py             # KSI tools (2)
 │       │   ├── documentation.py   # Documentation tools (3)
 │       │   ├── export.py          # Export tools (3)
-│       │   ├── enhancements.py    # Enhancement tools (7)
-│       │   └── evidence.py        # Evidence automation tools (3)
+│       │   ├── enhancements.py    # Enhancement tools (9)
+│       │   ├── evidence.py        # Evidence automation tools (3)
+│       │   ├── analyzer.py        # Code analysis tools (2)
+│       │   ├── audit.py           # Coverage audit tools (2)
+│       │   ├── security.py        # CVE vulnerability checking tools (2)
+│       │   └── ksi_status.py      # KSI implementation status tools (1)
+│       ├── analyzers/      # KSI-centric code analyzers
+│       │   ├── __init__.py
+│       │   ├── base.py     # Base classes (Finding, AnalysisResult, Severity)
+│       │   └── ksi/        # 72 KSI analyzer files + factory
+│       │       ├── __init__.py
+│       │       ├── base.py    # BaseKSIAnalyzer
+│       │       ├── factory.py # KSIAnalyzerFactory (singleton pattern)
+│       │       └── ksi_*.py   # Individual KSI analyzers (72 files)
 │       └── __fedramp_cache__/  # Runtime cache for FedRAMP data
-├── tests/                   # Test suite
+│       └── __cve_cache__/      # Runtime cache for CVE data
+├── tests/                   # Test suite (24 test files)
 │   ├── __init__.py
 │   ├── test_loader.py      # Data loader tests (329 requirements)
 │   ├── test_definitions.py # Definition tool tests (50 definitions, 72 KSIs)
-│   ├── test_docs_integration.py  # Documentation integration tests (15 files)
+│   ├── test_docs_integration.py  # Documentation integration tests
 │   ├── test_implementation_questions.py  # Implementation questions tests
-│   ├── test_tool_registration.py  # Tool architecture validation (24 tools, 7 modules)
-│   ├── test_evidence_automation.py  # IaC generation tests (Bicep/Terraform/Python/C#/PowerShell)
-│   └── test_all_tools.py   # Comprehensive tool tests (all 24 tools)
+│   ├── test_tool_registration.py  # Tool architecture validation (35 tools, 11 modules)
+│   ├── test_evidence_automation.py  # IaC generation tests (Bicep/Terraform/Python/C#/PowerShell/Java/TypeScript)
+│   ├── test_code_analyzer.py  # KSI-centric analyzer tests (12 focused tests)
+│   ├── test_all_tools.py   # Comprehensive tool tests (all 35 tools)
+│   ├── test_*_tools.py     # Individual tool module tests (14 files)
+│   ├── test_cve_fetcher.py # CVE fetcher module tests
+│   ├── test_ksi_architecture.py  # KSI architecture validation
+│   └── test_*.py           # Additional test files
 ├── .github/
 │   ├── workflows/          # CI/CD workflows
 │   │   ├── test.yml        # Test workflow (multi-platform)
