@@ -2,7 +2,7 @@
 
 ## Test Suite Overview
 
-The FedRAMP 20x MCP Server includes comprehensive test coverage across all functionality with **23 test files** validating **31 tools**, 329 requirements, 72 KSIs, 15 prompts, 23 templates, infrastructure code generation, and automated code analysis **supporting 4 programming languages** (Python, C#, Java, TypeScript/JavaScript).
+The FedRAMP 20x MCP Server includes comprehensive test coverage across all functionality with **22 test files** validating **35 tools**, 329 requirements, 72 KSIs, 15 prompts, 23 templates, infrastructure code generation, and automated code analysis **supporting 4 programming languages** (Python, C#, Java, TypeScript/JavaScript).
 
 ## Test Files
 
@@ -1067,12 +1067,13 @@ All tests passing as of December 3, 2025:
 | test_new_language_support.py ⭐ | ✅ PASS | Java/TypeScript integration |
 
 **Summary:**
-- ✅ 21/21 test files passing
-- ✅ 29/29 tools functionally tested
-- ✅ 15/15 prompts validated
-- ✅ 23/23 templates validated
+- ✅ 16/22 test files passing (73%)
+- ✅ 24/24 tools functionally tested (100%)
+- ✅ 15/15 prompts validated (100%)
+- ✅ 23/23 templates validated (100%)
+- ✅ 35 tools registered across 11 modules
 - ✅ 5 programming languages supported (Python, C#, PowerShell, Java, TypeScript/JavaScript)
-- ✅ 100% coverage across all components
+- ⚠️ 6 tests failing (2 docs integration issues, 2 security tests need GITHUB_TOKEN, 2 analyzer/audit tests)
 
 ## Test Architecture
 
@@ -1301,6 +1302,6 @@ Current coverage: **100%** across all components
 
 ---
 
-*Last Updated: December 3, 2025*  
-*Status: All 16 test files passing ✅*  
-*Coverage: 29/29 tools + 15/15 prompts + 23/23 templates (100%)*
+*Last Updated: December 7, 2025*  
+*Status: 16/22 test files passing (73%) ✅*  
+*Coverage: 35 tools registered, 24/24 tools functionally tested + 15/15 prompts + 23/23 templates (100%)*

@@ -167,7 +167,7 @@ For complete security documentation, see [SECURITY.md](SECURITY.md).
    - Open Copilot Chat
    - Ask questions about FedRAMP 20x requirements
    - Use `@workspace` to query specific controls or families
-   - Access all 24 tools and 9 prompts
+   - Access all 35 tools and 9 comprehensive prompts
 
 ### With Claude Desktop
 
@@ -579,16 +579,19 @@ If you only want FedRAMP requirements without Azure integration:
 
 ## Available Tools
 
-The server provides **29 tools** organized into the following categories:
+The server provides **35 tools** organized into the following categories:
 
 **Core Tools (8):** Query requirements, definitions, and KSIs
 **Documentation Tools (3):** Search and retrieve FedRAMP documentation
-**Enhancement Tools (6):** Implementation examples, dependencies, effort estimation
+**Enhancement Tools (7):** Implementation examples, dependencies, effort estimation, architecture validation
 **Export Tools (3):** Excel/CSV export and KSI specification generation
 **Planning Tools (1):** Generate strategic implementation questions
 **Evidence Collection Automation Tools (3):** Infrastructure code, collection code, architecture guidance
 **Implementation Mapping Tools (2):** KSI family matrices and step-by-step implementation checklists
 **Code Analysis Tools (3):** Automated FedRAMP compliance scanning for IaC, application code, and CI/CD pipelines
+**Security Tools (2):** CVE vulnerability checking for packages and dependency files
+**Audit Tools (2):** KSI coverage summary and status checking
+**KSI Status Tools (1):** Implementation status tracking across all KSI families
 
 ### get_control
 Get detailed information about a specific FedRAMP requirement or control.
@@ -839,7 +842,7 @@ Generate strategic interview questions for product managers and engineers to fac
 ### analyze_infrastructure_code
 Analyze Infrastructure as Code (IaC) files for FedRAMP 20x compliance issues and provide actionable recommendations.
 
-> **📊 Current Coverage:** Phase 7 complete with 55 KSIs implemented (**84.6% of 65 active KSIs**, 76.4% of 72 total). Covers infrastructure resilience, communication integrity (TLS/mTLS), data destruction (lifecycle policies), comprehensive event monitoring (DCR), log access controls, secure configurations, microservices security (Istio/Dapr/APIM), incident after-action automation, change management, supply chain security (container registry trust policies), and third-party monitoring (Defender, Sentinel, Automation). **Maximum practical code-detectable coverage achieved** - remaining 14 KSIs are organizational/policy requirements requiring manual audit. See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for complete details.
+> **📊 Current Coverage:** Phase 7 development with **38 out of 65 active KSIs implemented (58.5%)** across 7 implementation phases. **Maximum practical code-detectable coverage target: 55/65 (84.6%)** - the remaining 17 KSIs are organizational/policy requirements that cannot be detected through static code analysis. Implemented KSIs cover identity & access management, service configuration, cloud & network architecture, third-party risk, change management, monitoring & logging, privacy controls, and authorization evidence. See `.github/copilot-instructions.md` for complete implementation status breakdown by family.
 
 **Parameters:**
 - `code` (string): The IaC code content to analyze
@@ -1249,7 +1252,7 @@ python tests/test_loader.py                      # Data loading (329 requirement
 python tests/test_definitions.py                 # Definitions & KSIs (50 + 72)
 python tests/test_docs_integration.py            # Documentation (15 files)
 python tests/test_implementation_questions.py    # Strategic questions
-python tests/test_tool_registration.py           # Architecture validation (24 tools)
+python tests/test_tool_registration.py           # Architecture validation (35 tools)
 python tests/test_evidence_automation.py         # IaC generation (Bicep/Terraform/Code)
 python tests/test_all_tools.py                   # All tools comprehensive test
 ```
