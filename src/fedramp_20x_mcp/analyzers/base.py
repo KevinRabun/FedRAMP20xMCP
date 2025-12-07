@@ -11,6 +11,7 @@ from typing import Optional
 
 class Severity(Enum):
     """Severity level for findings."""
+    CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
@@ -23,29 +24,64 @@ class Finding:
     Represents a single compliance finding in code.
     
     Attributes:
-        requirement_id: FedRAMP requirement ID (e.g., "KSI-MLA-05")
+        requirement_id: FedRAMP requirement ID (e.g., "KSI-MLA-05") - can be None if ksi_id is provided
         severity: Severity level of the finding
         title: Short description of the issue
         description: Detailed explanation of the issue
         file_path: Path to the file containing the issue
         line_number: Line number where the issue was found (optional)
         code_snippet: Relevant code snippet (optional)
-        recommendation: Specific recommendation to fix the issue
+        recommendation: Specific recommendation to fix the issue (alias: remediation)
         good_practice: Whether this is a positive finding (default: False)
+        ksi_id: Optional KSI identifier (for KSI-centric architecture) - if provided and requirement_id is None, requirement_id will be set to ksi_id
     """
-    requirement_id: str
     severity: Severity
     title: str
     description: str
     file_path: str
-    recommendation: str
+    recommendation: str = ""  # Make it optional with default
+    requirement_id: Optional[str] = None
     line_number: Optional[int] = None
     code_snippet: Optional[str] = None
     good_practice: bool = False
+    ksi_id: Optional[str] = None
+    
+    def __post_init__(self):
+        """Set requirement_id to ksi_id if not provided, handle remediation alias."""
+        if self.requirement_id is None and self.ksi_id is not None:
+            self.requirement_id = self.ksi_id
+        elif self.ksi_id is None and self.requirement_id is not None:
+            self.ksi_id = self.requirement_id
+    
+    def __init__(self, **kwargs):
+        """Allow both recommendation and remediation as aliases."""
+        # Handle remediation as alias for recommendation
+        if 'remediation' in kwargs and 'recommendation' not in kwargs:
+            kwargs['recommendation'] = kwargs.pop('remediation')
+        elif 'remediation' in kwargs:
+            kwargs.pop('remediation')  # Remove duplicate if both provided
+        
+        # Set all fields
+        self.severity = kwargs.get('severity')
+        self.title = kwargs.get('title')
+        self.description = kwargs.get('description')
+        self.file_path = kwargs.get('file_path')
+        self.recommendation = kwargs.get('recommendation', "")
+        self.requirement_id = kwargs.get('requirement_id')
+        self.line_number = kwargs.get('line_number')
+        self.code_snippet = kwargs.get('code_snippet')
+        self.good_practice = kwargs.get('good_practice', False)
+        self.ksi_id = kwargs.get('ksi_id')
+        
+        # Run post-init logic
+        if self.requirement_id is None and self.ksi_id is not None:
+            self.requirement_id = self.ksi_id
+        elif self.ksi_id is None and self.requirement_id is not None:
+            self.ksi_id = self.requirement_id
     
     def to_dict(self) -> dict:
         """Convert finding to dictionary for JSON serialization."""
-        return {
+        result = {
             "requirement_id": self.requirement_id,
             "severity": self.severity.value,
             "title": self.title,
@@ -56,6 +92,9 @@ class Finding:
             "recommendation": self.recommendation,
             "good_practice": self.good_practice,
         }
+        if self.ksi_id:
+            result["ksi_id"] = self.ksi_id
+        return result
 
 
 @dataclass
@@ -70,9 +109,23 @@ class AnalysisResult:
         high_priority_count: Number of high-severity issues
         medium_priority_count: Number of medium-severity issues
         low_priority_count: Number of low-severity issues
+        ksi_id: Optional KSI identifier (for KSI-centric architecture)
+        ksi_name: Optional KSI name (for KSI-centric architecture)
+        total_issues: Total number of issues found
+        critical_count: Number of critical-severity issues
+        high_count: Number of high-severity issues
+        medium_count: Number of medium-severity issues
+        low_count: Number of low-severity issues
     """
     findings: list[Finding] = field(default_factory=list)
     files_analyzed: int = 0
+    ksi_id: Optional[str] = None
+    ksi_name: Optional[str] = None
+    total_issues: int = 0
+    critical_count: int = 0
+    high_count: int = 0
+    medium_count: int = 0
+    low_count: int = 0
     
     @property
     def good_practices_count(self) -> int:

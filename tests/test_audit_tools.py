@@ -1,6 +1,10 @@
 """Quick test script for audit tools."""
 import sys
 import asyncio
+import io
+
+# Set UTF-8 encoding for stdout
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 sys.path.insert(0, 'src')
 

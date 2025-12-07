@@ -163,7 +163,8 @@ class BaseKSIAnalyzer(ABC):
                 "low": self.IMPACT_LOW,
                 "moderate": self.IMPACT_MODERATE
             },
-            "nist_controls": self.NIST_CONTROLS,
+            "controls": self.NIST_CONTROLS,  # Changed from nist_controls to controls for test compatibility
+            "nist_controls": self.NIST_CONTROLS,  # Keep both for backward compatibility
             "retired": self.RETIRED,
             "code_detectable": self.CODE_DETECTABLE,
             "implementation_status": self.IMPLEMENTATION_STATUS
