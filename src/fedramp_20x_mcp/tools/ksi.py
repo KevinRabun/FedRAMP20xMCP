@@ -15,7 +15,7 @@ async def get_ksi_impl(ksi_id: str, data_loader) -> str:
     Get detailed information about a specific Key Security Indicator.
 
     Args:
-        ksi_id: The KSI identifier (e.g., "KSI-ALL-01")
+        ksi_id: The KSI identifier (e.g., "KSI-IAM-01")
 
     Returns:
         Detailed KSI information

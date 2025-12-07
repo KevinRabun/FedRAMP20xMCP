@@ -73,9 +73,9 @@ TYPESCRIPT_COVERAGE = PYTHON_COVERAGE
 # KSIs that are not technical (process/policy only)
 NON_TECHNICAL_KSIS = [
     "KSI-AFR-04", "KSI-AFR-05", "KSI-AFR-06", "KSI-AFR-08",
-    "KSI-AFR-09", "KSI-AFR-10", "KSI-AFR-12",
+    "KSI-AFR-09", "KSI-AFR-10",
     "KSI-TPR-01", "KSI-TPR-02",
-    "KSI-CED-02", "KSI-CED-03",
+    "KSI-CED-02", "KSI-CED-03", "KSI-CED-04",
 ]
 
 
