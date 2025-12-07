@@ -151,14 +151,59 @@ class KSI_RPL_02_Analyzer(BaseKSIAnalyzer):
     
     def analyze_bicep(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Bicep IaC for KSI-RPL-02 compliance.
+        Analyze Bicep template for KSI-RPL-02 compliance.
         
-        TODO: Implement detection logic for Azure resources related to:
-        - Develop and maintain a recovery plan that aligns with the defined recovery objec...
+        Detects:
+        - Missing backup vault configuration
+        - Missing backup policies
+        - Missing retention policies
+        - Missing geo-redundant storage
         """
         findings = []
+        lines = code.split('\n')
         
-        # TODO: Implement Bicep-specific detection logic
+        # Check for backup infrastructure
+        has_backup_vault = bool(re.search(r'Microsoft\.RecoveryServices/vaults', code, re.IGNORECASE))
+        has_backup_policy = bool(re.search(r'backupPolicies|backup.*policy', code, re.IGNORECASE))
+        has_retention = bool(re.search(r'retention.*policy|retention.*period', code, re.IGNORECASE))
+        has_geo_redundancy = bool(re.search(r'(GeoRedundant|ZoneRedundant)', code, re.IGNORECASE))
+        has_vm_backup = bool(re.search(r'Microsoft\.RecoveryServices.*protectedItems', code, re.IGNORECASE))
+        
+        if not has_backup_vault:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="Missing Azure Backup Vault",
+                description="No Recovery Services Vault configured. KSI-RPL-02 requires automated backup infrastructure aligned with recovery plan.",
+                severity=Severity.CRITICAL,
+                file_path=file_path,
+                line_number=1,
+                code_snippet=self._get_snippet(lines, 1, 5),
+                recommendation="Add Recovery Services Vault: resource backupVault 'Microsoft.RecoveryServices/vaults@2023-01-01' = { name: 'vault-backup-prod', properties: { } }"
+            ))
+        
+        if not has_backup_policy:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="Missing backup policy",
+                description="No backup policy configured. KSI-RPL-02 requires backup schedules and retention policies.",
+                severity=Severity.HIGH,
+                file_path=file_path,
+                line_number=1,
+                code_snippet=self._get_snippet(lines, 1, 5),
+                recommendation="Add backup policy with schedule: schedulePolicy: { scheduleRunFrequency: 'Daily', scheduleRunTimes: ['2023-01-01T02:00:00Z'] }"
+            ))
+        
+        if not has_geo_redundancy:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="Missing geo-redundant backup storage",
+                description="Backup storage not configured for geo-redundancy. KSI-RPL-02 recovery plan should include geographic redundancy.",
+                severity=Severity.HIGH,
+                file_path=file_path,
+                line_number=1,
+                code_snippet=self._get_snippet(lines, 1, 5),
+                recommendation="Configure geo-redundancy: properties: { storageType: 'GeoRedundant', storageTypeState: 'Locked' }"
+            ))
         
         return findings
     

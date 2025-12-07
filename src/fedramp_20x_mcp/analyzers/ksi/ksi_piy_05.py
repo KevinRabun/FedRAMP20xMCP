@@ -168,11 +168,55 @@ class KSI_PIY_05_Analyzer(BaseKSIAnalyzer):
         """
         Analyze GitHub Actions workflow for KSI-PIY-05 compliance.
         
-        TODO: Implement detection logic if applicable.
+        Detects:
+        - Missing automated code scanning
+        - Missing security code review automation
+        - Missing vulnerability scanning
         """
         findings = []
+        lines = code.split('\n')
         
-        # TODO: Implement GitHub Actions detection if applicable
+        # Check for comprehensive scanning
+        has_code_scan = bool(re.search(r'(codeql|sonarqube|sonarcloud)', code, re.IGNORECASE))
+        has_vuln_scan = bool(re.search(r'(snyk|trivy|grype|anchore)', code, re.IGNORECASE))
+        has_secret_scan = bool(re.search(r'(gitleaks|trufflehog|detect.*secrets)', code, re.IGNORECASE))
+        has_dependency_scan = bool(re.search(r'(dependabot|dependency.*(check|review|scan))', code, re.IGNORECASE))
+        
+        if not has_code_scan:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="Missing automated code scanning",
+                description="No automated code scanning tool detected. KSI-PIY-05 requires automated code scanning integrated into development.",
+                severity=Severity.CRITICAL,
+                file_path=file_path,
+                line_number=1,
+                code_snippet=self._get_snippet(lines, 1, 5),
+                recommendation="Add CodeQL: - name: Initialize CodeQL\n  uses: github/codeql-action/init@v2\n  with:\n    languages: python, javascript"
+            ))
+        
+        if not has_secret_scan:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="Missing secret scanning",
+                description="No secret scanning detected. KSI-PIY-05 requires comprehensive security scanning including secrets.",
+                severity=Severity.HIGH,
+                file_path=file_path,
+                line_number=1,
+                code_snippet=self._get_snippet(lines, 1, 5),
+                recommendation="Add secret scanning: - name: GitLeaks Scan\n  uses: gitleaks/gitleaks-action@v2"
+            ))
+        
+        if not has_dependency_scan:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="Missing dependency scanning",
+                description="No dependency vulnerability scanning. KSI-PIY-05 requires scanning of dependencies for vulnerabilities.",
+                severity=Severity.HIGH,
+                file_path=file_path,
+                line_number=1,
+                code_snippet=self._get_snippet(lines, 1, 5),
+                recommendation="Enable GitHub Dependabot or add: - name: Dependency Scan\n  uses: snyk/actions/node@master"
+            ))
         
         return findings
     

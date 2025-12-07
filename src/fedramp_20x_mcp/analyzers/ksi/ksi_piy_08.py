@@ -168,11 +168,55 @@ class KSI_PIY_08_Analyzer(BaseKSIAnalyzer):
         """
         Analyze GitHub Actions workflow for KSI-PIY-08 compliance.
         
-        TODO: Implement detection logic if applicable.
+        Detects:
+        - Missing security scan stages
+        - Missing early vulnerability detection
+        - Missing fail-fast on security issues
         """
         findings = []
+        lines = code.split('\n')
         
-        # TODO: Implement GitHub Actions detection if applicable
+        # Check for security scanning in CI/CD
+        has_security_job = bool(re.search(r'(security|scan|sast|dast):.*\n.*runs-on', code, re.IGNORECASE))
+        has_fail_fast = bool(re.search(r'(continue-on-error:\s*false|exit\s*1)', code, re.IGNORECASE))
+        has_pr_scan = bool(re.search(r'pull_request.*\n.*security', code, re.IGNORECASE))
+        has_early_scan = bool(re.search(r'(build.*security|security.*build)', code, re.IGNORECASE))
+        
+        if not has_security_job:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="Missing dedicated security scan job",
+                description="No dedicated security scanning job in pipeline. KSI-PIY-08 requires regular security scans in CI/CD to detect vulnerabilities early.",
+                severity=Severity.CRITICAL,
+                file_path=file_path,
+                line_number=1,
+                code_snippet=self._get_snippet(lines, 1, 5),
+                recommendation="Add security job: security-scan:\n  runs-on: ubuntu-latest\n  steps:\n    - name: Run Security Scan\n      run: ./scripts/security-scan.sh"
+            ))
+        
+        if not has_pr_scan:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="Missing pull request security scanning",
+                description="No security scanning on pull requests. KSI-PIY-08 requires scanning PRs to prevent vulnerable code from merging.",
+                severity=Severity.HIGH,
+                file_path=file_path,
+                line_number=1,
+                code_snippet=self._get_snippet(lines, 1, 5),
+                recommendation="Add PR trigger: on:\n  pull_request:\n    branches: [main]\njobs:\n  security-scan:"
+            ))
+        
+        if not has_fail_fast:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="Missing fail-fast on security issues",
+                description="Pipeline doesn't fail on security findings. KSI-PIY-08 requires blocking builds when vulnerabilities are detected.",
+                severity=Severity.HIGH,
+                file_path=file_path,
+                line_number=1,
+                code_snippet=self._get_snippet(lines, 1, 5),
+                recommendation="Add fail-fast: - name: Fail on Vulnerabilities\n  run: |\n    if [ $VULN_COUNT -gt 0 ]; then exit 1; fi"
+            ))
         
         return findings
     

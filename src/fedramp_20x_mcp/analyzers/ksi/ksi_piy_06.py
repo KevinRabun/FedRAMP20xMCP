@@ -176,11 +176,54 @@ class KSI_PIY_06_Analyzer(BaseKSIAnalyzer):
         """
         Analyze GitHub Actions workflow for KSI-PIY-06 compliance.
         
-        TODO: Implement detection logic if applicable.
+        Detects:
+        - Missing scheduled vulnerability scans
+        - Missing multi-environment scanning
+        - Missing scan automation
         """
         findings = []
+        lines = code.split('\n')
         
-        # TODO: Implement GitHub Actions detection if applicable
+        # Check for scheduled scans
+        has_schedule = bool(re.search(r'on:\s*schedule:|cron:', code, re.IGNORECASE))
+        has_vuln_scanner = bool(re.search(r'(trivy|snyk|grype|anchore|vuln.*scan)', code, re.IGNORECASE))
+        has_container_scan = bool(re.search(r'(docker.*scan|container.*security|image.*scan)', code, re.IGNORECASE))
+        
+        if not has_schedule:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="Missing scheduled vulnerability scans",
+                description="No scheduled (cron) vulnerability scanning detected. KSI-PIY-06 requires regular automated scans of all environments.",
+                severity=Severity.CRITICAL,
+                file_path=file_path,
+                line_number=1,
+                code_snippet=self._get_snippet(lines, 1, 5),
+                recommendation="Add scheduled scan: on:\n  schedule:\n    - cron: '0 2 * * *'  # Daily at 2 AM"
+            ))
+        
+        if not has_vuln_scanner:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="Missing vulnerability scanner",
+                description="No vulnerability scanning tool configured. KSI-PIY-06 requires automated vulnerability detection.",
+                severity=Severity.CRITICAL,
+                file_path=file_path,
+                line_number=1,
+                code_snippet=self._get_snippet(lines, 1, 5),
+                recommendation="Add vulnerability scanner: - name: Trivy Scan\n  uses: aquasecurity/trivy-action@master"
+            ))
+        
+        if not has_container_scan:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="Missing container vulnerability scanning",
+                description="No container image scanning detected. KSI-PIY-06 requires scanning container images for vulnerabilities.",
+                severity=Severity.HIGH,
+                file_path=file_path,
+                line_number=1,
+                code_snippet=self._get_snippet(lines, 1, 5),
+                recommendation="Add container scan: - name: Scan Docker Image\n  run: trivy image ${{ env.IMAGE_NAME }}"
+            ))
         
         return findings
     

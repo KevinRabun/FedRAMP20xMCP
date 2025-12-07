@@ -177,11 +177,55 @@ class KSI_RPL_04_Analyzer(BaseKSIAnalyzer):
         """
         Analyze GitHub Actions workflow for KSI-RPL-04 compliance.
         
-        TODO: Implement detection logic if applicable.
+        Detects:
+        - Missing recovery testing automation
+        - Missing backup restoration validation
+        - Missing RTO/RPO verification
         """
         findings = []
+        lines = code.split('\n')
         
-        # TODO: Implement GitHub Actions detection if applicable
+        # Check for recovery testing
+        has_recovery_test = bool(re.search(r'(recovery.*test|restore.*test|backup.*validation)', code, re.IGNORECASE))
+        has_restore_job = bool(re.search(r'(restore|recovery):.*\n.*runs-on', code, re.IGNORECASE))
+        has_scheduled_test = bool(re.search(r'schedule.*\n.*recovery|recovery.*\n.*schedule', code, re.IGNORECASE))
+        has_rto_rpo_check = bool(re.search(r'(rto|rpo|recovery.*time|recovery.*point)', code, re.IGNORECASE))
+        
+        if not has_recovery_test:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="Missing automated recovery testing",
+                description="No automated recovery testing detected. KSI-RPL-04 requires regularly testing capability to recover from backup.",
+                severity=Severity.CRITICAL,
+                file_path=file_path,
+                line_number=1,
+                code_snippet=self._get_snippet(lines, 1, 5),
+                recommendation="Add recovery test: - name: Test Backup Recovery\n  run: ./scripts/test-restore.sh"
+            ))
+        
+        if not has_scheduled_test:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="Missing scheduled recovery testing",
+                description="No scheduled (regular) recovery testing. KSI-RPL-04 requires periodic validation of recovery capability.",
+                severity=Severity.HIGH,
+                file_path=file_path,
+                line_number=1,
+                code_snippet=self._get_snippet(lines, 1, 5),
+                recommendation="Add scheduled test: on:\n  schedule:\n    - cron: '0 3 * * 0'  # Weekly on Sunday at 3 AM"
+            ))
+        
+        if not has_rto_rpo_check:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="Missing RTO/RPO verification",
+                description="No verification of Recovery Time Objective (RTO) or Recovery Point Objective (RPO). KSI-RPL-04 requires testing against defined objectives.",
+                severity=Severity.HIGH,
+                file_path=file_path,
+                line_number=1,
+                code_snippet=self._get_snippet(lines, 1, 5),
+                recommendation="Add RTO/RPO check: - name: Verify RTO/RPO\n  run: ./scripts/measure-recovery-time.sh"
+            ))
         
         return findings
     

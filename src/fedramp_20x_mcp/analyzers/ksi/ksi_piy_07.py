@@ -169,11 +169,55 @@ class KSI_PIY_07_Analyzer(BaseKSIAnalyzer):
         """
         Analyze GitHub Actions workflow for KSI-PIY-07 compliance.
         
-        TODO: Implement detection logic if applicable.
+        Detects:
+        - Missing SBOM generation
+        - Missing dependency tracking
+        - Missing supply chain security checks
         """
         findings = []
+        lines = code.split('\n')
         
-        # TODO: Implement GitHub Actions detection if applicable
+        # Check for SBOM and supply chain security
+        has_sbom = bool(re.search(r'(sbom|cyclonedx|spdx|syft)', code, re.IGNORECASE))
+        has_dependency_review = bool(re.search(r'(dependency.*(review|check)|dependabot)', code, re.IGNORECASE))
+        has_artifact_signing = bool(re.search(r'(sign|sigstore|cosign)', code, re.IGNORECASE))
+        has_provenance = bool(re.search(r'(provenance|slsa|attestation)', code, re.IGNORECASE))
+        
+        if not has_sbom:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="Missing SBOM generation",
+                description="No Software Bill of Materials (SBOM) generation detected. KSI-PIY-07 requires SBOM for supply chain risk management.",
+                severity=Severity.CRITICAL,
+                file_path=file_path,
+                line_number=1,
+                code_snippet=self._get_snippet(lines, 1, 5),
+                recommendation="Add SBOM generation: - name: Generate SBOM\n  uses: anchore/sbom-action@v0\n  with:\n    format: cyclonedx-json"
+            ))
+        
+        if not has_dependency_review:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="Missing dependency review",
+                description="No dependency review process. KSI-PIY-07 requires tracking and reviewing all dependencies for supply chain security.",
+                severity=Severity.HIGH,
+                file_path=file_path,
+                line_number=1,
+                code_snippet=self._get_snippet(lines, 1, 5),
+                recommendation="Add dependency review: - name: Dependency Review\n  uses: actions/dependency-review-action@v3"
+            ))
+        
+        if not has_artifact_signing:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="Missing artifact signing",
+                description="No artifact signing detected. KSI-PIY-07 supply chain security requires cryptographic signing of build artifacts.",
+                severity=Severity.MEDIUM,
+                file_path=file_path,
+                line_number=1,
+                code_snippet=self._get_snippet(lines, 1, 5),
+                recommendation="Add artifact signing: - name: Sign Artifacts\n  uses: sigstore/cosign-installer@main"
+            ))
         
         return findings
     

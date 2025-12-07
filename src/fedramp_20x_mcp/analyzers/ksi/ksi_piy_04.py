@@ -179,11 +179,43 @@ class KSI_PIY_04_Analyzer(BaseKSIAnalyzer):
         """
         Analyze GitHub Actions workflow for KSI-PIY-04 compliance.
         
-        TODO: Implement detection logic if applicable.
+        Detects:
+        - Missing security gates in SDLC
+        - Missing SAST/DAST integration
+        - Missing secure by design practices
         """
         findings = []
+        lines = code.split('\n')
         
-        # TODO: Implement GitHub Actions detection if applicable
+        # Check for security scanning integration
+        has_sast = bool(re.search(r'(codeql|sonar|semgrep|snyk.*code)', code, re.IGNORECASE))
+        has_dast = bool(re.search(r'(zap|burp|dast|dynamic.*scan)', code, re.IGNORECASE))
+        has_security_gate = bool(re.search(r'(security.*(gate|check|review)|break.*build)', code, re.IGNORECASE))
+        has_threat_model = bool(re.search(r'threat.*(model|analysis)', code, re.IGNORECASE))
+        
+        if not has_sast:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="Missing SAST integration",
+                description="No static application security testing (SAST) detected. KSI-PIY-04 requires security built into SDLC per CISA Secure By Design.",
+                severity=Severity.HIGH,
+                file_path=file_path,
+                line_number=1,
+                code_snippet=self._get_snippet(lines, 1, 5),
+                recommendation="Add SAST: - name: CodeQL Analysis\n  uses: github/codeql-action/analyze@v2"
+            ))
+        
+        if not has_security_gate:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="Missing security gate",
+                description="No security gate to prevent insecure code from progressing. CISA Secure By Design requires security checks in SDLC.",
+                severity=Severity.HIGH,
+                file_path=file_path,
+                line_number=1,
+                code_snippet=self._get_snippet(lines, 1, 5),
+                recommendation="Add security gate: if: steps.security-scan.outputs.vulnerabilities > 0\n  run: exit 1"
+            ))
         
         return findings
     

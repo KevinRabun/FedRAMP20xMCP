@@ -168,11 +168,42 @@ class KSI_AFR_02_Analyzer(BaseKSIAnalyzer):
         """
         Analyze GitHub Actions workflow for KSI-AFR-02 compliance.
         
-        TODO: Implement detection logic if applicable.
+        Detects:
+        - Missing compliance validation steps
+        - Missing security goal tracking
+        - Missing progress monitoring
         """
         findings = []
+        lines = code.split('\n')
         
-        # TODO: Implement GitHub Actions detection if applicable
+        # Check for compliance validation steps
+        has_compliance_check = bool(re.search(r'(compliance|fedramp|security.*(validation|check|scan))', code, re.IGNORECASE))
+        has_status_reporting = bool(re.search(r'(status|progress).*(report|track|monitor)', code, re.IGNORECASE))
+        has_gates = bool(re.search(r'(gate|approval|review)', code, re.IGNORECASE))
+        
+        if not has_compliance_check:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="Missing automated compliance validation",
+                description="GitHub Actions workflow lacks automated compliance validation steps. KSI-AFR-02 requires automated validation of security goals and progress.",
+                severity=Severity.HIGH,
+                file_path=file_path,
+                line_number=1,
+                code_snippet=self._get_snippet(lines, 1, 5),
+                recommendation="Add compliance validation step: - name: Validate Compliance\n  run: ./scripts/validate-security-goals.sh"
+            ))
+        
+        if not has_status_reporting:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="Missing progress monitoring",
+                description="Workflow does not report security goal progress. KSI-AFR-02 requires monitoring and reporting of status.",
+                severity=Severity.MEDIUM,
+                file_path=file_path,
+                line_number=1,
+                code_snippet=self._get_snippet(lines, 1, 5),
+                recommendation="Add status reporting: - name: Report Security Status\n  run: ./scripts/report-security-progress.sh"
+            ))
         
         return findings
     
