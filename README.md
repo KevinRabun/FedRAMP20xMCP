@@ -167,7 +167,7 @@ For complete security documentation, see [SECURITY.md](SECURITY.md).
    - Open Copilot Chat
    - Ask questions about FedRAMP 20x requirements
    - Use `@workspace` to query specific controls or families
-   - Access all 35 tools and 9 comprehensive prompts
+   - Access all 35 tools and 15 comprehensive prompts
 
 ### With Claude Desktop
 

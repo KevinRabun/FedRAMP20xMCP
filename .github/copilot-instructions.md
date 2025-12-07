@@ -152,6 +152,12 @@ The server provides 35 MCP tools:
 7. **migration_from_rev5** - 7-phase Rev 5 to 20x migration guide
 8. **audit_preparation** - 12-week audit preparation timeline and checklist
 9. **azure_ksi_automation** - Complete Azure/M365 automation guide for all 72 KSIs with PowerShell, Azure CLI, Graph API, KQL queries, and evidence collection framework
+10. **ato_package_checklist** - ATO package preparation and submission checklist
+11. **authorization_boundary_review** - System boundary definition and validation
+12. **continuous_monitoring_setup** - Continuous monitoring program implementation
+13. **gap_analysis** - FedRAMP 20x compliance gap assessment
+14. **significant_change_assessment** - Significant change evaluation framework
+15. **vulnerability_remediation_timeline** - Vulnerability remediation tracking and prioritization
 
 ### Data Loaded
 - 329 total requirements from 12 documents (100% coverage)
