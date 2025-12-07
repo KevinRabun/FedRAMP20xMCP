@@ -5,13 +5,10 @@ This module tests that all prompt templates load correctly and contain expected 
 """
 
 import sys
-from pathlib import Path
 
 # Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from fedramp_20x_mcp.prompts import load_prompt, get_prompt
-
 
 def test_load_all_prompts():
     """Test that all prompt templates load successfully."""
@@ -63,7 +60,6 @@ def test_load_all_prompts():
     
     # All should load
     assert loaded_count == len(prompts), f"Expected all {len(prompts)} prompts to load, but only {loaded_count} loaded"
-
 
 def test_prompt_content_structure():
     """Test that key prompts contain expected sections and keywords."""
@@ -170,7 +166,6 @@ def test_prompt_content_structure():
         # Don't fail on missing keywords, just warn
         # Some prompts may use alternate terminology
 
-
 def test_get_prompt_with_default():
     """Test get_prompt function with default fallback."""
     print("\n=== Testing get_prompt with Default ===\n")
@@ -192,7 +187,6 @@ def test_get_prompt_with_default():
         assert False, "Should have raised FileNotFoundError"
     except FileNotFoundError:
         print(f"[OK] Invalid prompt without default: Raised FileNotFoundError as expected")
-
 
 def test_prompt_sizes():
     """Test that prompts are within reasonable size ranges."""
@@ -235,7 +229,6 @@ def test_prompt_sizes():
     print(f"   Min: {min_size} chars")
     print(f"   Max: {max_size} chars")
     print(f"[OK] All prompts within reasonable size ranges")
-
 
 if __name__ == "__main__":
     print("=" * 60)

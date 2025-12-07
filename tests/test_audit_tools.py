@@ -1,12 +1,8 @@
 """Quick test script for audit tools."""
-import sys
 import asyncio
 import io
 
 # Set UTF-8 encoding for stdout
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-
-sys.path.insert(0, 'src')
 
 from fedramp_20x_mcp.data_loader import FedRAMPDataLoader
 from fedramp_20x_mcp.tools.audit import (
@@ -14,7 +10,6 @@ from fedramp_20x_mcp.tools.audit import (
     get_ksi_coverage_status_impl,
     get_coverage_disclaimer
 )
-
 
 async def main():
     """Test audit tools."""
@@ -47,7 +42,6 @@ async def main():
     print(disclaimer)
     
     print("\n[OK] All audit tool tests completed!")
-
 
 if __name__ == "__main__":
     asyncio.run(main())

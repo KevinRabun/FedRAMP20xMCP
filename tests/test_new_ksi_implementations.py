@@ -12,10 +12,6 @@ Tests the 8 KSIs that were changed from CODE_DETECTABLE=False to True:
 - KSI-RPL-04: Recovery testing in CI/CD
 """
 
-import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
-
 from fedramp_20x_mcp.analyzers.ksi.factory import get_factory
 
 def test_ksi_afr_02_github_actions():

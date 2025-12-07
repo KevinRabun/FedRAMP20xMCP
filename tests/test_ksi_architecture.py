@@ -17,15 +17,12 @@ import io
 import os
 
 # Set UTF-8 encoding for stdout (Windows compatibility)
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 # Add project root to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.fedramp_20x_mcp.analyzers.ksi.ksi_iam_06 import KSI_IAM_06_Analyzer
 from src.fedramp_20x_mcp.analyzers.ksi.factory import get_factory
 from src.fedramp_20x_mcp.analyzers.base import Severity
-
 
 def test_ksi_iam_06_metadata():
     """Test KSI-IAM-06 metadata is correct from official source."""
@@ -49,7 +46,6 @@ def test_ksi_iam_06_metadata():
     print(f"  KSI: {metadata['ksi_id']} - {metadata['ksi_name']}")
     print(f"  NIST Controls: {', '.join(metadata['controls'])}")
     return True
-
 
 def test_python_detection():
     """Test Python detection for KSI-IAM-06."""
@@ -82,7 +78,6 @@ INSTALLED_APPS = [
     print(f"  Severity: {finding.severity.value}")
     return True
 
-
 def test_csharp_detection():
     """Test C# detection for KSI-IAM-06."""
     print("\n=== Test 3: C# Detection (ASP.NET Core Identity) ===")
@@ -112,7 +107,6 @@ services.AddIdentity<ApplicationUser, IdentityRole>(options => {
     for finding in result.findings:
         print(f"  - {finding.title} ({finding.severity.value})")
     return True
-
 
 def test_java_detection():
     """Test Java detection for KSI-IAM-06."""
@@ -153,7 +147,6 @@ public class CustomUserDetailsService implements UserDetailsService {
     print(f"  Issue: {finding.title}")
     return True
 
-
 def test_typescript_detection():
     """Test TypeScript detection for KSI-IAM-06."""
     print("\n=== Test 5: TypeScript Detection (Passport.js) ===")
@@ -192,7 +185,6 @@ app.post('/login', passport.authenticate('local'));
         print(f"  - {finding.title}")
     return True
 
-
 def test_bicep_detection():
     """Test Bicep detection for KSI-IAM-06."""
     print("\n=== Test 6: Bicep Detection (Azure Monitor Alerts) ===")
@@ -226,7 +218,6 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2021-06-01' = {
     print(f"  Issue: {finding.title}")
     return True
 
-
 def test_terraform_detection():
     """Test Terraform detection for KSI-IAM-06."""
     print("\n=== Test 7: Terraform Detection (Azure Monitor) ===")
@@ -257,7 +248,6 @@ resource "azurerm_log_analytics_workspace" "main" {
     print(f"  Issue: {finding.title}")
     return True
 
-
 def test_factory_registration():
     """Test factory registration and discovery."""
     print("\n=== Test 8: Factory Registration ===")
@@ -281,7 +271,6 @@ def test_factory_registration():
     print(f"✓ Factory registered {len(ksi_list)} KSI(s)")
     print(f"  Registered: {', '.join(ksi_list)}")
     return True
-
 
 def test_factory_analyze():
     """Test factory analyze functionality."""
@@ -307,7 +296,6 @@ services.AddIdentity<ApplicationUser, IdentityRole>(options => {
     print(f"✓ Factory analysis detected {len(result.findings)} issue(s)")
     print(f"  Issue: {finding.title}")
     return True
-
 
 def run_all_tests():
     """Run all KSI analyzer architecture tests."""
@@ -359,7 +347,6 @@ def run_all_tests():
     print("=" * 70)
     
     return failed == 0
-
 
 if __name__ == "__main__":
     success = run_all_tests()

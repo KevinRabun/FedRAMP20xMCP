@@ -1,14 +1,9 @@
 """
 Quick test to verify Java and TypeScript template integration.
 """
-import sys
 import io
-from pathlib import Path
 
 # Set UTF-8 encoding for stdout (Windows compatibility)
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 import asyncio
 from fedramp_20x_mcp.data_loader import get_data_loader

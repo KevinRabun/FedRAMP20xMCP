@@ -6,17 +6,14 @@ and contain expected content.
 """
 
 import sys
-from pathlib import Path
 
 # Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from fedramp_20x_mcp.templates import (
     load_template, 
     get_infrastructure_template, 
     get_code_template
 )
-
 
 def test_load_bicep_templates():
     """Test that all Bicep templates load successfully."""
@@ -40,7 +37,6 @@ def test_load_bicep_templates():
     
     print(f"\n[DATA] Loaded {len(templates)}/7 Bicep templates")
 
-
 def test_load_terraform_templates():
     """Test that all Terraform templates load successfully."""
     print("\n=== Testing Terraform Templates ===\n")
@@ -62,7 +58,6 @@ def test_load_terraform_templates():
             raise
     
     print(f"\n[DATA] Loaded {len(templates)}/7 Terraform templates")
-
 
 def test_load_code_templates():
     """Test that all code templates load successfully."""
@@ -119,7 +114,6 @@ def test_load_code_templates():
     
     print(f"\n[DATA] Loaded {len(templates)}/9 code templates")
 
-
 def test_get_infrastructure_template():
     """Test get_infrastructure_template function with all families."""
     print("\n=== Testing get_infrastructure_template ===\n")
@@ -149,7 +143,6 @@ def test_get_infrastructure_template():
             except Exception as e:
                 print(f"[FAIL] {family} ({infra_type}): {e}")
                 raise
-
 
 def test_get_code_template():
     """Test get_code_template function with all families and languages."""
@@ -189,7 +182,6 @@ def test_get_code_template():
             except Exception as e:
                 print(f"[FAIL] {family} ({language}): {e}")
                 raise
-
 
 def test_template_content_quality():
     """Test that templates contain expected quality markers."""
@@ -251,7 +243,6 @@ def test_template_content_quality():
     assert "#" in content or "<#" in content, "iam_powershell: Missing comments"
     print(f"[OK] iam_powershell: Has functions, variables, and documentation")
 
-
 def test_template_sizes():
     """Test that templates are within reasonable size ranges."""
     print("\n=== Testing Template Size Ranges ===\n")
@@ -295,7 +286,6 @@ def test_template_sizes():
     
     print(f"\n[OK] All templates within reasonable size ranges")
 
-
 def test_fallback_behavior():
     """Test that fallback to generic templates works correctly."""
     print("\n=== Testing Fallback Behavior ===\n")
@@ -321,7 +311,6 @@ def test_fallback_behavior():
     code_generic_csharp = load_template("code", "generic_csharp")
     assert code_cna_csharp == code_generic_csharp, "CNA C# should fallback to generic"
     print("[OK] CNA C# falls back to generic")
-
 
 if __name__ == "__main__":
     print("=" * 60)

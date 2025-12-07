@@ -7,7 +7,6 @@ import sys
 import os
 
 # Add src directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from fedramp_20x_mcp.data_loader import FedRAMPDataLoader
 from fedramp_20x_mcp.tools.enhancements import (
@@ -15,7 +14,6 @@ from fedramp_20x_mcp.tools.enhancements import (
     generate_implementation_checklist_impl
 )
 import asyncio
-
 
 async def test_get_ksi_implementation_matrix():
     """Test getting implementation matrix for a KSI family."""
@@ -75,7 +73,6 @@ async def test_get_ksi_implementation_matrix():
     print("[PASS] Content structure is correct")
     
     print("\n[PASS] All get_ksi_implementation_matrix tests passed!")
-
 
 async def test_generate_implementation_checklist():
     """Test generating implementation checklist for a KSI."""
@@ -155,7 +152,6 @@ async def test_generate_implementation_checklist():
     
     print("\n[PASS] All generate_implementation_checklist tests passed!")
 
-
 async def test_matrix_covers_all_families():
     """Test that matrix tool works for all KSI families."""
     print("\n=== Testing matrix covers all KSI families ===")
@@ -172,7 +168,6 @@ async def test_matrix_covers_all_families():
         print(f"[PASS] {family} family works")
     
     print("\n[PASS] All families supported!")
-
 
 async def test_checklist_azure_focus():
     """Test that checklists are Azure-focused."""
@@ -194,7 +189,6 @@ async def test_checklist_azure_focus():
         print(f"[PASS] {ksi_id} is Azure-focused")
     
     print("\n[PASS] All checklists are Azure-focused!")
-
 
 async def main():
     """Run all tests."""
@@ -221,7 +215,6 @@ async def main():
         import traceback
         traceback.print_exc()
         return 1
-
 
 if __name__ == "__main__":
     exit_code = asyncio.run(main())

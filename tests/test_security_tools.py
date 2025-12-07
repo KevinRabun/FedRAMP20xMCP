@@ -5,16 +5,12 @@ Tests the MCP tools for checking package vulnerabilities.
 """
 
 import json
-import sys
 import io
-from pathlib import Path
 import asyncio
 
 # Set UTF-8 encoding for stdout (Windows compatibility)
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 # Add src directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from fedramp_20x_mcp.tools.security import (
     check_package_vulnerabilities_impl,
@@ -24,7 +20,6 @@ from fedramp_20x_mcp.tools.security import (
     _parse_python_deps,
     _parse_maven_deps
 )
-
 
 async def test_check_package_vulnerabilities_basic():
     """Test basic package vulnerability checking."""
@@ -48,7 +43,6 @@ async def test_check_package_vulnerabilities_basic():
     else:
         print("✅ check_package_vulnerabilities test passed (no vulnerabilities)")
 
-
 async def test_check_package_vulnerabilities_safe():
     """Test checking a safe package."""
     print("Testing check_package_vulnerabilities (safe package)...")
@@ -65,7 +59,6 @@ async def test_check_package_vulnerabilities_safe():
     print(f"   Status: {data['status']}")
     print("✅ Safe package check test passed")
 
-
 async def test_check_package_vulnerabilities_error():
     """Test error handling for invalid package."""
     print("Testing check_package_vulnerabilities (error handling)...")
@@ -81,7 +74,6 @@ async def test_check_package_vulnerabilities_error():
     
     print(f"   Status: {data['status']}")
     print("✅ Error handling test passed")
-
 
 def test_parse_nuget_deps():
     """Test NuGet dependency parsing."""
@@ -108,7 +100,6 @@ def test_parse_nuget_deps():
     
     print(f"   Parsed {len(packages)} packages")
     print("✅ NuGet dependency parsing test passed")
-
 
 def test_parse_npm_deps():
     """Test npm dependency parsing."""
@@ -138,7 +129,6 @@ def test_parse_npm_deps():
     print(f"   Parsed {len(packages)} packages")
     print("✅ npm dependency parsing test passed")
 
-
 def test_parse_python_deps():
     """Test Python dependency parsing."""
     print("Testing Python dependency parsing...")
@@ -159,7 +149,6 @@ pytest>=7.0.0'''
     
     print(f"   Parsed {len(packages)} packages")
     print("✅ Python dependency parsing test passed")
-
 
 def test_parse_maven_deps():
     """Test Maven dependency parsing."""
@@ -188,7 +177,6 @@ def test_parse_maven_deps():
     print(f"   Attempted to parse Maven dependencies")
     print("✅ Maven dependency parsing test passed (no crash)")
 
-
 async def test_scan_dependency_file_csproj():
     """Test scanning a full .csproj file."""
     print("Testing scan_dependency_file (csproj)...")
@@ -216,7 +204,6 @@ async def test_scan_dependency_file_csproj():
     print(f"   Found {data.get('total_vulnerabilities', 0)} vulnerabilities")
     print("✅ scan_dependency_file test passed")
 
-
 async def test_scan_dependency_file_package_json():
     """Test scanning package.json."""
     print("Testing scan_dependency_file (package.json)...")
@@ -241,7 +228,6 @@ async def test_scan_dependency_file_package_json():
     print(f"   Scanned {data['packages_scanned']} packages")
     print("✅ package.json scan test passed")
 
-
 async def test_scan_dependency_file_requirements_txt():
     """Test scanning requirements.txt."""
     print("Testing scan_dependency_file (requirements.txt)...")
@@ -261,7 +247,6 @@ flask==2.3.0'''
     print(f"   Scanned {data['packages_scanned']} packages")
     print("✅ requirements.txt scan test passed")
 
-
 async def test_scan_dependency_file_unsupported():
     """Test error handling for unsupported file type."""
     print("Testing scan_dependency_file (unsupported file)...")
@@ -277,7 +262,6 @@ async def test_scan_dependency_file_unsupported():
     assert "Unsupported file type" in data["error"]
     
     print("✅ Unsupported file type test passed")
-
 
 def test_fedramp_compliance_info():
     """Test that FedRAMP compliance info is included."""
@@ -301,7 +285,6 @@ def test_fedramp_compliance_info():
     
     asyncio.run(check())
     print("✅ FedRAMP compliance information test passed")
-
 
 def run_all_tests():
     """Run all security tool tests."""
@@ -342,7 +325,6 @@ def run_all_tests():
     print("=" * 60)
     print("All Security Tools Tests Completed!")
     print("=" * 60)
-
 
 if __name__ == "__main__":
     run_all_tests()

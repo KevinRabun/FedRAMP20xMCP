@@ -4,10 +4,8 @@ import asyncio
 import sys
 
 # Add src directory to path
-sys.path.insert(0, 'c:\\source\\FedRAMP20xMCP\\src')
 
 from fedramp_20x_mcp.server import mcp, data_loader
-
 
 async def test_generate_questions_requirement():
     """Test generating questions for a requirement."""
@@ -55,7 +53,6 @@ async def test_generate_questions_requirement():
         print("[FAIL] FAILED: No result returned")
         return False
 
-
 async def test_generate_questions_ksi():
     """Test generating questions for a KSI."""
     print("\n=== Test 2: Generate questions for KSI-IAM-01 ===")
@@ -77,7 +74,6 @@ async def test_generate_questions_ksi():
         print("[FAIL] FAILED: No result returned")
         return False
 
-
 async def test_invalid_id():
     """Test handling of invalid requirement ID."""
     print("\n=== Test 3: Handle invalid requirement ID ===")
@@ -96,7 +92,6 @@ async def test_invalid_id():
     else:
         print("[FAIL] FAILED: No result returned")
         return False
-
 
 async def main():
     """Run all tests."""
@@ -120,7 +115,6 @@ async def main():
     else:
         print("[FAIL] Some tests failed")
         return 1
-
 
 if __name__ == '__main__':
     exit_code = asyncio.run(main())

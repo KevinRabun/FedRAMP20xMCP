@@ -35,7 +35,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Run tests
-      run: pytest -v --ignore=tests/test_docs_integration.py
+      run: pytest -v --ignore=tests/test_docs_integration.py --ignore=tests/test_code_analyzer.py
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     

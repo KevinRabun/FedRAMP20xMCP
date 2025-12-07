@@ -7,15 +7,11 @@ Includes both positive (should detect) and negative (should not detect) test cas
 Updated for KSI-centric architecture where each KSI file contains all language analyzers.
 """
 
-import sys
-from pathlib import Path
-
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-
+from fedramp_20x_mcp.analyzers.bicep_analyzer import BicepAnalyzer
+from fedramp_20x_mcp.analyzers.terraform_analyzer import TerraformAnalyzer
+from fedramp_20x_mcp.analyzers.python_analyzer import PythonAnalyzer
 from fedramp_20x_mcp.analyzers.ksi.factory import get_factory
 from fedramp_20x_mcp.analyzers.base import Severity
-
 
 # Helper function to analyze code with new KSI architecture
 def analyze_code_for_ksi(ksi_id: str, code: str, language: str, file_path: str = ""):
@@ -43,7 +39,6 @@ def analyze_code_for_ksi(ksi_id: str, code: str, language: str, file_path: str =
         return method(code, file_path)
     return []
 
-
 def test_bicep_missing_diagnostic_settings():
     """Test detection of missing diagnostic settings in Bicep."""
     print("\n=== Testing Bicep: Missing Diagnostic Settings ===")
@@ -65,7 +60,6 @@ def test_bicep_missing_diagnostic_settings():
     assert findings[0].severity == Severity.HIGH or findings[0].severity == Severity.MEDIUM
     print(f"[OK] Detected missing diagnostic settings: {findings[0].title}")
     print(f"   Remediation: {findings[0].remediation[:100]}...")
-
 
 def test_bicep_with_diagnostic_settings():
     """Test that diagnostic settings are NOT flagged when present."""
@@ -92,7 +86,6 @@ def test_bicep_with_diagnostic_settings():
     assert len(findings) == 0, "Should not flag when diagnostic settings are present"
     print(f"[OK] No issues found - diagnostic settings properly configured")
 
-
 def test_bicep_hardcoded_password():
     """Test detection of hardcoded passwords in Bicep."""
     print("\n=== Testing Bicep: Hardcoded Password ===")
@@ -115,7 +108,6 @@ def test_bicep_hardcoded_password():
     assert "Key Vault" in findings[0].remediation or "secret" in findings[0].remediation.lower()
     print(f"[OK] Detected hardcoded secret: {findings[0].title}")
     print(f"   Code snippet: {findings[0].snippet}")
-
 
 def test_bicep_missing_nsg():
     """Test detection of VNet without NSG."""
@@ -142,7 +134,6 @@ def test_bicep_missing_nsg():
     assert findings[0].severity == Severity.HIGH
     print(f"[OK] Detected network security issue: {findings[0].title}")
 
-
 def test_terraform_missing_diagnostic_settings():
     """Test detection of missing diagnostic settings in Terraform."""
     print("\n=== Testing Terraform: Missing Diagnostic Settings ===")
@@ -165,7 +156,6 @@ def test_terraform_missing_diagnostic_settings():
     assert len(findings) > 0, "Should detect missing diagnostic settings"
     assert findings[0].severity == Severity.HIGH
     print(f"[OK] Detected missing diagnostic settings: {findings[0].title}")
-
 
 def test_terraform_hardcoded_connection_string():
     """Test detection of hardcoded connection strings."""
@@ -193,7 +183,6 @@ def test_terraform_hardcoded_connection_string():
     assert findings[0].severity == Severity.HIGH
     print(f"[OK] Detected hardcoded secret: {findings[0].title}")
 
-
 def test_python_missing_authentication():
     """Test detection of unprotected API endpoints."""
     print("\n=== Testing Python: Missing Authentication ===")
@@ -220,7 +209,6 @@ def test_python_missing_authentication():
     assert len(findings) > 0, "Should detect endpoints without authentication"
     assert findings[0].severity == Severity.HIGH
     print(f"[OK] Detected authentication issue: {findings[0].title}")
-
 
 def test_python_with_authentication():
     """Test recognition of properly authenticated endpoints."""
@@ -254,7 +242,6 @@ def test_python_with_authentication():
     assert len(good_practices) > 0, "Should recognize authentication as good practice"
     print(f"[OK] Recognized good practice: {good_practices[0].title}")
 
-
 def test_python_hardcoded_api_key():
     """Test detection of hardcoded API keys."""
     print("\n=== Testing Python: Hardcoded API Key ===")
@@ -280,7 +267,6 @@ def test_python_hardcoded_api_key():
     assert "Key Vault" in findings[0].recommendation
     print(f"[OK] Detected hardcoded secret: {findings[0].title}")
 
-
 def test_python_key_vault_usage():
     """Test recognition of Key Vault usage."""
     print("\n=== Testing Python: Key Vault Usage ===")
@@ -301,7 +287,6 @@ def test_python_key_vault_usage():
     good_practices = [f for f in result.findings if f.requirement_id == "KSI-SVC-06" and f.good_practice]
     assert len(good_practices) > 0, "Should recognize Key Vault usage as good practice"
     print(f"[OK] Recognized good practice: {good_practices[0].title}")
-
 
 def test_python_unsafe_pickle():
     """Test detection of unsafe pickle usage."""
@@ -324,7 +309,6 @@ def test_python_unsafe_pickle():
     assert len(findings) > 0, "Should detect unsafe pickle usage"
     assert findings[0].severity == Severity.MEDIUM
     print(f"[OK] Detected unsafe library: {findings[0].title}")
-
 
 def test_python_pii_handling():
     """Test detection of unencrypted PII."""
@@ -350,7 +334,6 @@ def test_python_pii_handling():
     assert any("Social Security Number" in f.description for f in findings)
     print(f"[OK] Detected PII handling issue: {findings[0].title}")
 
-
 def test_python_pinned_dependencies():
     """Test recognition of pinned dependencies."""
     print("\n=== Testing Python: Pinned Dependencies ===")
@@ -368,7 +351,6 @@ def test_python_pinned_dependencies():
     good_practices = [f for f in result.findings if f.requirement_id == "KSI-SVC-08" and f.good_practice]
     assert len(good_practices) > 0, "Should recognize pinned dependencies as good practice"
     print(f"[OK] Recognized good practice: {good_practices[0].title}")
-
 
 def test_analysis_result_summary():
     """Test analysis result summary calculations."""
@@ -395,7 +377,6 @@ def test_analysis_result_summary():
     
     total_issues = summary['high_priority'] + summary['medium_priority'] + summary['low_priority']
     print(f"[OK] Summary calculated: {total_issues} issues, {summary['good_practices']} good practices")
-
 
 # ============================================================================
 # Phase 2 Tests: Service Account Management & Microservices Security
@@ -428,7 +409,6 @@ def test_python_hardcoded_password():
     assert "Managed Identity" in findings[0].recommendation or "Key Vault" in findings[0].recommendation
     print(f"[OK] Detected hardcoded credential: {findings[0].title}")
 
-
 def test_python_hardcoded_connection_string():
     """Test detection of hardcoded connection strings (KSI-IAM-05)."""
     print("\n=== Testing Python: Hardcoded Connection String ===")
@@ -448,7 +428,6 @@ def test_python_hardcoded_connection_string():
     assert len(findings) > 0, "Should detect hardcoded connection string"
     assert findings[0].severity == Severity.HIGH
     print(f"[OK] Detected hardcoded connection string: {findings[0].title}")
-
 
 def test_python_managed_identity_usage():
     """Test recognition of Managed Identity usage (KSI-IAM-05)."""
@@ -473,7 +452,6 @@ def test_python_managed_identity_usage():
     assert len(good_practices) > 0, "Should recognize Managed Identity usage as good practice"
     print(f"[OK] Recognized Managed Identity: {good_practices[0].title}")
 
-
 def test_python_environment_variable_credentials():
     """Test detection of environment variable credentials (KSI-IAM-05)."""
     print("\n=== Testing Python: Environment Variable Credentials ===")
@@ -495,7 +473,6 @@ def test_python_environment_variable_credentials():
     assert len(findings) > 0, "Should flag environment variable credentials or missing auth"
     # Environment variables are better than hardcoded but still not ideal, OR it detects missing Managed Identity
     print(f"[OK] Detected credential/auth issue: {findings[0].title}")
-
 
 def test_python_ssl_verification_disabled():
     """Test detection of disabled SSL verification (KSI-CNA-03)."""
@@ -524,7 +501,6 @@ def test_python_ssl_verification_disabled():
     assert "verify=False" in findings[0].description or "SSL verification disabled" in findings[0].description
     print(f"[OK] Detected disabled SSL verification: {findings[0].title}")
 
-
 def test_python_missing_service_auth():
     """Test detection of missing service-to-service auth (KSI-CNA-03)."""
     print("\n=== Testing Python: Missing Service Authentication ===")
@@ -544,7 +520,6 @@ def test_python_missing_service_auth():
     findings = [f for f in result.findings if f.requirement_id == "KSI-CNA-03" and not f.good_practice]
     assert len(findings) > 0, "Should detect missing service authentication"
     print(f"[OK] Detected missing service auth: {findings[0].title}")
-
 
 def test_python_proper_service_auth():
     """Test recognition of proper service-to-service auth (KSI-CNA-03)."""
@@ -579,7 +554,6 @@ def test_python_proper_service_auth():
     assert len(good_practices) > 0, "Should recognize proper service auth as good practice"
     print(f"[OK] Recognized proper service auth: {good_practices[0].title}")
 
-
 def test_python_mtls_configuration():
     """Test recognition of mTLS configuration (KSI-CNA-03)."""
     print("\n=== Testing Python: mTLS Configuration ===")
@@ -610,7 +584,6 @@ def test_python_mtls_configuration():
     assert len(good_practices) > 0, "Should recognize mTLS configuration"
     print(f"[OK] Recognized mTLS configuration: {good_practices[0].title}")
 
-
 def test_python_missing_rate_limiting():
     """Test detection of missing rate limiting (KSI-CNA-03)."""
     print("\n=== Testing Python: Missing Rate Limiting ===")
@@ -634,7 +607,6 @@ def test_python_missing_rate_limiting():
     findings = [f for f in result.findings if f.requirement_id == "KSI-CNA-03" and not f.good_practice]
     assert len(findings) > 0, "Should detect missing rate limiting"
     print(f"[OK] Detected missing rate limiting: {findings[0].title}")
-
 
 def test_python_with_rate_limiting():
     """Test recognition of rate limiting (KSI-CNA-03)."""
@@ -675,7 +647,6 @@ def test_python_with_rate_limiting():
     assert len(good_practices) > 0, "Should recognize rate limiting"
     print(f"[OK] Recognized rate limiting: {good_practices[0].title}")
 
-
 # ============================================================================
 # Phase 3 Tests: Secure Coding Practices
 # ============================================================================
@@ -702,7 +673,6 @@ def test_python_bare_except():
     assert len(findings) > 0, "Should detect bare except clause"
     assert findings[0].severity == Severity.MEDIUM
     print(f"[OK] Detected bare except: {findings[0].title}")
-
 
 def test_python_proper_error_handling():
     """Test recognition of proper error handling with logging (KSI-SVC-01)."""
@@ -731,7 +701,6 @@ def test_python_proper_error_handling():
     assert len(good_practices) > 0, "Should recognize proper error handling"
     print(f"[OK] Recognized good practice: {good_practices[0].title}")
 
-
 def test_python_sql_injection():
     """Test detection of SQL injection vulnerabilities (KSI-SVC-02)."""
     print("\n=== Testing Python: SQL Injection Detection ===")
@@ -756,7 +725,6 @@ def test_python_sql_injection():
     assert findings[0].severity == Severity.HIGH
     print(f"[OK] Detected SQL injection: {findings[0].title}")
 
-
 def test_python_parameterized_query():
     """Test recognition of parameterized queries (KSI-SVC-02)."""
     print("\n=== Testing Python: Parameterized Queries ===")
@@ -779,7 +747,6 @@ def test_python_parameterized_query():
     assert len(good_practices) > 0, "Should recognize parameterized queries"
     print(f"[OK] Recognized parameterized query: {good_practices[0].title}")
 
-
 def test_python_command_injection():
     """Test detection of command injection vulnerabilities (KSI-SVC-02)."""
     print("\n=== Testing Python: Command Injection Detection ===")
@@ -799,7 +766,6 @@ def test_python_command_injection():
     assert len(findings) > 0, "Should detect command injection vulnerability"
     assert findings[0].severity == Severity.HIGH
     print(f"[OK] Detected command injection: {findings[0].title}")
-
 
 def test_python_eval_usage():
     """Test detection of eval/exec usage (KSI-SVC-07)."""
@@ -822,7 +788,6 @@ def test_python_eval_usage():
     assert len(findings) >= 2, "Should detect both eval and exec usage"
     assert all(f.severity == Severity.HIGH for f in findings)
     print(f"[OK] Detected unsafe functions: {len(findings)} findings")
-
 
 def test_python_insecure_random():
     """Test detection of insecure random usage (KSI-SVC-07)."""
@@ -847,7 +812,6 @@ def test_python_insecure_random():
     assert findings[0].severity == Severity.MEDIUM
     print(f"[OK] Detected insecure random: {findings[0].title}")
 
-
 def test_python_secure_random():
     """Test recognition of secure random (KSI-SVC-07)."""
     print("\n=== Testing Python: Secure Random Usage ===")
@@ -870,7 +834,6 @@ def test_python_secure_random():
     assert len(good_practices) > 0, "Should recognize secure random usage"
     print(f"[OK] Recognized secure random: {good_practices[0].title}")
 
-
 def test_python_missing_data_classification():
     """Test detection of PII without classification (KSI-PIY-01)."""
     print("\n=== Testing Python: Missing Data Classification ===")
@@ -891,7 +854,6 @@ def test_python_missing_data_classification():
     assert len(findings) > 0, "Should detect PII without classification"
     assert findings[0].severity == Severity.MEDIUM
     print(f"[OK] Detected missing data classification: {findings[0].title}")
-
 
 def test_python_with_data_classification():
     """Test recognition of data classification (KSI-PIY-01)."""
@@ -916,7 +878,6 @@ def test_python_with_data_classification():
     assert len(good_practices) > 0, "Should recognize data classification"
     print(f"[OK] Recognized data classification: {good_practices[0].title}")
 
-
 def test_python_missing_retention_policy():
     """Test detection of missing data retention policies (KSI-PIY-03)."""
     print("\n=== Testing Python: Missing Retention Policy ===")
@@ -936,7 +897,6 @@ def test_python_missing_retention_policy():
     assert len(findings) > 0, "Should detect missing retention policy"
     assert findings[0].severity == Severity.LOW
     print(f"[OK] Detected missing retention policy: {findings[0].title}")
-
 
 def test_python_missing_deletion_capability():
     """Test detection of missing secure deletion (KSI-PIY-03)."""
@@ -962,7 +922,6 @@ def test_python_missing_deletion_capability():
     assert findings[0].severity == Severity.MEDIUM
     print(f"[OK] Detected missing deletion: {findings[0].title}")
 
-
 def test_python_service_mesh_missing_mtls():
     """Test detection of missing mTLS in service mesh (KSI-CNA-07)."""
     print("\n=== Testing Python: Missing Service Mesh mTLS ===")
@@ -985,7 +944,6 @@ def test_python_service_mesh_missing_mtls():
     assert len(findings) > 0, "Should detect permissive mTLS mode"
     assert findings[0].severity == Severity.HIGH
     print(f"[OK] Detected service mesh issue: {findings[0].title}")
-
 
 def test_python_wildcard_permissions():
     """Test detection of wildcard permissions (KSI-IAM-04)."""
@@ -1015,7 +973,6 @@ def test_python_wildcard_permissions():
     assert findings[0].severity == Severity.HIGH
     print(f"[OK] Detected wildcard permissions: {findings[0].title}")
 
-
 def test_python_scoped_permissions():
     """Test recognition of scoped permissions (KSI-IAM-04)."""
     print("\n=== Testing Python: Scoped Permissions ===")
@@ -1044,7 +1001,6 @@ def test_python_scoped_permissions():
     assert len(good_practices) > 0, "Should recognize scoped permissions"
     print(f"[OK] Recognized scoped permissions: {good_practices[0].title}")
 
-
 def test_python_insecure_session():
     """Test detection of insecure session configuration (KSI-IAM-07)."""
     print("\n=== Testing Python: Insecure Session Configuration ===")
@@ -1070,7 +1026,6 @@ def test_python_insecure_session():
     assert len(findings) > 0, "Should detect insecure session configuration"
     assert findings[0].severity == Severity.HIGH
     print(f"[OK] Detected insecure session: {findings[0].title}")
-
 
 def test_python_secure_session():
     """Test recognition of secure session configuration (KSI-IAM-07)."""
@@ -1099,7 +1054,6 @@ def test_python_secure_session():
     good_practices = [f for f in result.findings if f.requirement_id == "KSI-IAM-07" and f.good_practice]
     assert len(good_practices) > 0, "Should recognize secure session configuration"
     print(f"[OK] Recognized secure session: {good_practices[0].title}")
-
 
 # ==============================================================================
 # Phase 4: CI/CD Pipeline Analysis Tests (KSI-CMT-01, CMT-02, CMT-03, AFR-01, AFR-02, CED-01)
@@ -1131,7 +1085,6 @@ jobs:
     assert any("pull request" in f.description.lower() for f in findings)
     print(f"[OK] Detected missing PR triggers: {findings[0].title}")
 
-
 def test_github_with_pr_triggers():
     """Test recognition of PR triggers in GitHub Actions (KSI-CMT-01)."""
     print("\n=== Testing GitHub Actions: With PR Triggers ===")
@@ -1159,7 +1112,6 @@ jobs:
     assert len(good_practices) > 0, "Should recognize PR trigger as good practice"
     print(f"[OK] Recognized PR triggers: {good_practices[0].title}")
 
-
 def test_azure_missing_approval_gates():
     """Test detection of missing approval gates in Azure Pipelines (KSI-CMT-02)."""
     print("\n=== Testing Azure Pipelines: Missing Approval Gates ===")
@@ -1183,7 +1135,6 @@ stages:
     assert len(findings) > 0, "Should detect missing approval gates"
     assert any("approval" in f.description.lower() for f in findings)
     print(f"[OK] Detected missing approval gates: {findings[0].title}")
-
 
 def test_github_with_environment_protection():
     """Test recognition of environment protection rules (KSI-CMT-02)."""
@@ -1213,7 +1164,6 @@ jobs:
     assert len(good_practices) > 0, "Should recognize environment protection"
     print(f"[OK] Recognized environment protection: {good_practices[0].title}")
 
-
 def test_github_missing_tests():
     """Test detection of missing test execution in pipeline (KSI-CMT-03)."""
     print("\n=== Testing GitHub Actions: Missing Tests ===")
@@ -1237,7 +1187,6 @@ jobs:
     findings = [f for f in result.findings if f.requirement_id == "KSI-CMT-03" and not f.good_practice]
     assert len(findings) >= 2, "Should detect missing unit tests and security scans"
     print(f"[OK] Detected missing tests: {len(findings)} findings")
-
 
 def test_azure_with_tests():
     """Test recognition of test execution in pipeline (KSI-CMT-03)."""
@@ -1263,7 +1212,6 @@ stages:
     assert len(good_practices) > 0, "Should recognize test execution"
     print(f"[OK] Recognized test execution: {good_practices[0].title}")
 
-
 def test_github_missing_vulnerability_scan():
     """Test detection of missing vulnerability scanning (KSI-AFR-01)."""
     print("\n=== Testing GitHub Actions: Missing Vulnerability Scan ===")
@@ -1288,7 +1236,6 @@ jobs:
     assert len(findings) > 0, "Should detect missing vulnerability scanning"
     assert any("scan" in f.description.lower() for f in findings)
     print(f"[OK] Detected missing vulnerability scan: {findings[0].title}")
-
 
 def test_github_with_trivy_scan():
     """Test recognition of Trivy vulnerability scanning (KSI-AFR-01)."""
@@ -1320,7 +1267,6 @@ jobs:
     assert len(good_practices) > 0, "Should recognize vulnerability scanning"
     print(f"[OK] Recognized Trivy scanning: {good_practices[0].title}")
 
-
 def test_azure_vulnerabilities_not_blocking():
     """Test detection of non-blocking vulnerability findings (KSI-AFR-02)."""
     print("\n=== Testing Azure Pipelines: Vulnerabilities Not Blocking ===")
@@ -1346,7 +1292,6 @@ stages:
     assert len(findings) > 0, "Should detect non-blocking vulnerabilities"
     assert any("block" in f.description.lower() or "fail" in f.description.lower() for f in findings)
     print(f"[OK] Detected non-blocking vulnerabilities: {findings[0].title}")
-
 
 def test_github_vulnerability_blocking():
     """Test recognition of blocking on critical vulnerabilities (KSI-AFR-02)."""
@@ -1385,7 +1330,6 @@ jobs:
     assert len(good_practices) > 0, "Should recognize security remediation measures"
     print(f"[OK] Recognized vulnerability blocking/tracking: {len(good_practices)} good practices")
 
-
 def test_azure_missing_evidence_collection():
     """Test detection of missing evidence collection (KSI-CED-01)."""
     print("\n=== Testing Azure Pipelines: Missing Evidence Collection ===")
@@ -1410,7 +1354,6 @@ stages:
     assert len(findings) > 0, "Should detect missing evidence collection"
     assert any("artifact" in f.description.lower() or "evidence" in f.description.lower() for f in findings)
     print(f"[OK] Detected missing evidence collection: {findings[0].title}")
-
 
 def test_github_with_artifact_upload():
     """Test recognition of artifact upload for evidence (KSI-CED-01)."""
@@ -1442,7 +1385,6 @@ jobs:
     assert len(good_practices) > 0, "Should recognize evidence collection"
     print(f"[OK] Recognized artifact upload: {good_practices[0].title}")
 
-
 # =============================================================================
 # PHASE 5: Runtime Security & Monitoring Tests (KSI-MLA-03, MLA-04, MLA-06, INR-01, INR-02, AFR-03)
 # =============================================================================
@@ -1468,7 +1410,6 @@ def test_bicep_missing_security_monitoring():
     assert len(findings) > 0, "Should detect missing monitoring infrastructure"
     assert findings[0].severity == Severity.HIGH
     print(f"[OK] Detected missing monitoring: {findings[0].title}")
-
 
 def test_bicep_with_security_monitoring():
     """Test that complete monitoring setup is recognized."""
@@ -1504,7 +1445,6 @@ def test_bicep_with_security_monitoring():
     assert len(good_practices) > 0, "Should recognize monitoring setup"
     print(f"[OK] Recognized monitoring: {good_practices[0].title}")
 
-
 def test_bicep_missing_performance_monitoring():
     """Test detection of scalable resources without performance monitoring."""
     print("\n=== Testing Bicep: Missing Performance Monitoring (KSI-MLA-04) ===")
@@ -1527,7 +1467,6 @@ def test_bicep_missing_performance_monitoring():
     assert len(findings) > 0, "Should detect missing performance monitoring"
     assert findings[0].severity == Severity.MEDIUM
     print(f"[OK] Detected missing App Insights: {findings[0].title}")
-
 
 def test_bicep_with_performance_monitoring():
     """Test that Application Insights is recognized."""
@@ -1556,7 +1495,6 @@ def test_bicep_with_performance_monitoring():
     assert len(good_practices) > 0, "Should recognize App Insights"
     print(f"[OK] Recognized App Insights: {good_practices[0].title}")
 
-
 def test_bicep_missing_log_analysis():
     """Test detection of missing log analysis infrastructure."""
     print("\n=== Testing Bicep: Missing Log Analysis (KSI-MLA-06) ===")
@@ -1575,7 +1513,6 @@ def test_bicep_missing_log_analysis():
     assert len(findings) > 0, "Should detect missing log analysis"
     assert findings[0].severity == Severity.HIGH
     print(f"[OK] Detected missing log analysis: {findings[0].title}")
-
 
 def test_bicep_with_log_analysis():
     """Test that Sentinel analytics rules are recognized."""
@@ -1604,7 +1541,6 @@ def test_bicep_with_log_analysis():
     assert len(good_practices) > 0, "Should recognize analytics rules"
     print(f"[OK] Recognized log analysis: {good_practices[0].title}")
 
-
 def test_bicep_missing_incident_detection():
     """Test detection of missing incident detection system."""
     print("\n=== Testing Bicep: Missing Incident Detection (KSI-INR-01) ===")
@@ -1623,7 +1559,6 @@ def test_bicep_missing_incident_detection():
     assert len(findings) > 0, "Should detect missing Sentinel"
     assert findings[0].severity == Severity.HIGH
     print(f"[OK] Detected missing Sentinel: {findings[0].title}")
-
 
 def test_bicep_with_incident_detection():
     """Test that Sentinel with automation rules is recognized."""
@@ -1653,7 +1588,6 @@ def test_bicep_with_incident_detection():
     assert len(good_practices) > 0, "Should recognize incident detection"
     print(f"[OK] Recognized incident detection: {good_practices[0].title}")
 
-
 def test_bicep_missing_incident_logging():
     """Test detection of missing incident response logging."""
     print("\n=== Testing Bicep: Missing Incident Response Logging (KSI-INR-02) ===")
@@ -1677,7 +1611,6 @@ def test_bicep_missing_incident_logging():
     assert len(findings) > 0, "Should detect missing diagnostic logging"
     assert findings[0].severity == Severity.MEDIUM
     print(f"[OK] Detected missing response logging: {findings[0].title}")
-
 
 def test_bicep_with_incident_logging():
     """Test that diagnostic logging on Logic Apps is recognized."""
@@ -1705,7 +1638,6 @@ def test_bicep_with_incident_logging():
     assert len(good_practices) > 0, "Should recognize response logging"
     print(f"[OK] Recognized response logging: {good_practices[0].title}")
 
-
 def test_bicep_missing_threat_intelligence():
     """Test detection of missing threat intelligence integration."""
     print("\n=== Testing Bicep: Missing Threat Intelligence (KSI-AFR-03) ===")
@@ -1724,7 +1656,6 @@ def test_bicep_missing_threat_intelligence():
     assert len(findings) > 0, "Should detect missing threat intelligence"
     assert findings[0].severity == Severity.HIGH
     print(f"[OK] Detected missing threat intel: {findings[0].title}")
-
 
 def test_bicep_with_threat_intelligence():
     """Test that threat intelligence connectors are recognized."""
@@ -1751,7 +1682,6 @@ def test_bicep_with_threat_intelligence():
     assert len(good_practices) > 0, "Should recognize threat intelligence"
     print(f"[OK] Recognized threat intelligence: {good_practices[0].title}")
 
-
 # Phase 6A Tests: Recovery & Infrastructure
 
 def test_bicep_missing_recovery_objectives():
@@ -1772,7 +1702,6 @@ def test_bicep_missing_recovery_objectives():
     assert len(findings) > 0, "Should detect missing recovery objectives"
     assert findings[0].severity == Severity.HIGH
     print(f"[OK] Detected missing recovery objectives: {findings[0].title}")
-
 
 def test_bicep_with_recovery_objectives():
     """Test that recovery objectives are recognized."""
@@ -1797,7 +1726,6 @@ def test_bicep_with_recovery_objectives():
     assert len(good_practices) > 0, "Should recognize recovery objectives"
     print(f"[OK] Recognized recovery objectives: {good_practices[0].title}")
 
-
 def test_bicep_missing_recovery_plan():
     """Test detection of missing recovery plan."""
     print("\n=== Testing Bicep: Missing Recovery Plan (KSI-RPL-02) ===")
@@ -1816,7 +1744,6 @@ def test_bicep_missing_recovery_plan():
     assert len(findings) > 0, "Should detect missing recovery plan"
     assert findings[0].severity == Severity.HIGH
     print(f"[OK] Detected missing recovery plan: {findings[0].title}")
-
 
 def test_bicep_with_recovery_plan():
     """Test that recovery plan is recognized."""
@@ -1845,7 +1772,6 @@ def test_bicep_with_recovery_plan():
     assert len(good_practices) > 0, "Should recognize recovery plan"
     print(f"[OK] Recognized recovery plan: {good_practices[0].title}")
 
-
 def test_bicep_missing_system_backups():
     """Test detection of missing system backups."""
     print("\n=== Testing Bicep: Missing System Backups (KSI-RPL-03) ===")
@@ -1869,7 +1795,6 @@ def test_bicep_missing_system_backups():
     assert len(findings) > 0, "Should detect missing system backups"
     assert findings[0].severity == Severity.HIGH
     print(f"[OK] Detected missing system backups: {findings[0].title}")
-
 
 def test_bicep_with_system_backups():
     """Test that system backups are recognized."""
@@ -1897,7 +1822,6 @@ def test_bicep_with_system_backups():
     assert len(good_practices) > 0, "Should recognize system backups"
     print(f"[OK] Recognized system backups: {good_practices[0].title}")
 
-
 def test_bicep_missing_recovery_testing():
     """Test detection of missing recovery testing."""
     print("\n=== Testing Bicep: Missing Recovery Testing (KSI-RPL-04) ===")
@@ -1916,7 +1840,6 @@ def test_bicep_missing_recovery_testing():
     assert len(findings) > 0, "Should detect missing recovery testing"
     assert findings[0].severity == Severity.MEDIUM
     print(f"[OK] Detected missing recovery testing: {findings[0].title}")
-
 
 def test_bicep_with_recovery_testing():
     """Test that recovery testing automation is recognized."""
@@ -1944,7 +1867,6 @@ def test_bicep_with_recovery_testing():
     assert len(good_practices) > 0, "Should recognize recovery testing"
     print(f"[OK] Recognized recovery testing: {good_practices[0].title}")
 
-
 def test_bicep_missing_traffic_flow():
     """Test detection of missing traffic flow controls."""
     print("\n=== Testing Bicep: Missing Traffic Flow (KSI-CNA-03) ===")
@@ -1966,7 +1888,6 @@ def test_bicep_missing_traffic_flow():
     assert len(findings) > 0, "Should detect missing traffic flow controls"
     assert findings[0].severity == Severity.HIGH
     print(f"[OK] Detected missing traffic flow: {findings[0].title}")
-
 
 def test_bicep_with_traffic_flow():
     """Test that traffic flow controls are recognized."""
@@ -1999,7 +1920,6 @@ def test_bicep_with_traffic_flow():
     assert len(good_practices) > 0, "Should recognize traffic flow controls"
     print(f"[OK] Recognized traffic flow: {good_practices[0].title}")
 
-
 def test_bicep_missing_ddos_protection():
     """Test detection of missing DDoS protection."""
     print("\n=== Testing Bicep: Missing DDoS Protection (KSI-CNA-05) ===")
@@ -2021,7 +1941,6 @@ def test_bicep_missing_ddos_protection():
     assert len(findings) > 0, "Should detect missing DDoS protection"
     assert findings[0].severity == Severity.HIGH
     print(f"[OK] Detected missing DDoS protection: {findings[0].title}")
-
 
 def test_bicep_with_ddos_protection():
     """Test that DDoS protection is recognized."""
@@ -2050,7 +1969,6 @@ def test_bicep_with_ddos_protection():
     assert len(good_practices) > 0, "Should recognize DDoS protection"
     print(f"[OK] Recognized DDoS protection: {good_practices[0].title}")
 
-
 def test_bicep_missing_least_privilege():
     """Test detection of missing least privilege."""
     print("\n=== Testing Bicep: Missing Least Privilege (KSI-IAM-05) ===")
@@ -2069,7 +1987,6 @@ def test_bicep_missing_least_privilege():
     assert len(findings) > 0, "Should detect missing RBAC"
     assert findings[0].severity == Severity.HIGH
     print(f"[OK] Detected missing least privilege: {findings[0].title}")
-
 
 def test_bicep_with_least_privilege():
     """Test that least privilege RBAC is recognized."""
@@ -2100,7 +2017,6 @@ def test_bicep_with_least_privilege():
     assert len(good_practices) > 0, "Should recognize least privilege"
     print(f"[OK] Recognized least privilege: {good_practices[0].title}")
 
-
 def test_bicep_missing_cryptographic_modules():
     """Test detection of missing cryptographic modules."""
     print("\n=== Testing Bicep: Missing Cryptographic Modules (KSI-AFR-11) ===")
@@ -2122,7 +2038,6 @@ def test_bicep_missing_cryptographic_modules():
     assert len(findings) > 0, "Should detect missing FIPS crypto"
     assert findings[0].severity == Severity.HIGH
     print(f"[OK] Detected missing cryptographic modules: {findings[0].title}")
-
 
 def test_bicep_with_cryptographic_modules():
     """Test that FIPS-validated crypto is recognized."""
@@ -2156,7 +2071,6 @@ def test_bicep_with_cryptographic_modules():
     assert len(good_practices) > 0, "Should recognize FIPS crypto"
     print(f"[OK] Recognized cryptographic modules: {good_practices[0].title}")
 
-
 # ============================================================================
 # Phase 6B Tests: Service Management, Advanced Monitoring, Secure Config
 # ============================================================================
@@ -2182,7 +2096,6 @@ def test_bicep_missing_communication_integrity():
     assert len(findings) > 0, "Should detect missing mTLS"
     assert findings[0].severity == Severity.MEDIUM
     print(f"[OK] Detected missing communication integrity: {findings[0].title}")
-
 
 def test_bicep_with_communication_integrity():
     """Test that mTLS configuration is recognized."""
@@ -2214,7 +2127,6 @@ def test_bicep_with_communication_integrity():
     assert len(good_practices) > 0, "Should recognize mTLS"
     print(f"[OK] Recognized communication integrity: {good_practices[0].title}")
 
-
 def test_bicep_missing_data_destruction():
     """Test detection of missing soft delete capabilities."""
     print("\n=== Testing Bicep: Missing Data Destruction (KSI-SVC-10) ===")
@@ -2233,7 +2145,6 @@ def test_bicep_missing_data_destruction():
     assert len(findings) > 0, "Should detect missing soft delete"
     assert findings[0].severity == Severity.MEDIUM
     print(f"[OK] Detected missing data destruction: {findings[0].title}")
-
 
 def test_bicep_with_data_destruction():
     """Test that soft delete is recognized."""
@@ -2267,7 +2178,6 @@ def test_bicep_with_data_destruction():
     assert len(good_practices) > 0, "Should recognize soft delete"
     print(f"[OK] Recognized data destruction capabilities: {good_practices[0].title}")
 
-
 def test_bicep_missing_event_types():
     """Test detection of missing event type documentation."""
     print("\n=== Testing Bicep: Missing Event Types (KSI-MLA-07) ===")
@@ -2286,7 +2196,6 @@ def test_bicep_missing_event_types():
     assert len(findings) > 0, "Should detect missing event types"
     assert findings[0].severity == Severity.MEDIUM
     print(f"[OK] Detected missing event types: {findings[0].title}")
-
 
 def test_bicep_with_event_types():
     """Test that data collection rules are recognized."""
@@ -2321,7 +2230,6 @@ def test_bicep_with_event_types():
     assert len(good_practices) > 0, "Should recognize event types"
     print(f"[OK] Recognized event types monitoring: {good_practices[0].title}")
 
-
 def test_bicep_missing_log_access_control():
     """Test detection of missing log RBAC."""
     print("\n=== Testing Bicep: Missing Log Access Control (KSI-MLA-08) ===")
@@ -2340,7 +2248,6 @@ def test_bicep_missing_log_access_control():
     assert len(findings) > 0, "Should detect missing log RBAC"
     assert findings[0].severity == Severity.HIGH
     print(f"[OK] Detected missing log access control: {findings[0].title}")
-
 
 def test_bicep_with_log_access_control():
     """Test that log RBAC is recognized."""
@@ -2374,7 +2281,6 @@ def test_bicep_with_log_access_control():
     assert len(good_practices) > 0, "Should recognize log RBAC"
     print(f"[OK] Recognized log access control: {good_practices[0].title}")
 
-
 def test_bicep_insecure_configuration():
     """Test detection of insecure default configurations."""
     print("\n=== Testing Bicep: Insecure Configuration (KSI-AFR-07) ===")
@@ -2396,7 +2302,6 @@ def test_bicep_insecure_configuration():
     assert len(findings) > 0, "Should detect insecure config"
     assert findings[0].severity == Severity.HIGH
     print(f"[OK] Detected insecure configuration: {findings[0].title}")
-
 
 def test_bicep_with_secure_configuration():
     """Test that secure defaults are recognized."""
@@ -2431,7 +2336,6 @@ def test_bicep_with_secure_configuration():
     assert len(good_practices) > 0, "Should recognize secure config"
     print(f"[OK] Recognized secure configuration: {good_practices[0].title}")
 
-
 def test_bicep_missing_microservices_security():
     """Test detection of missing service mesh/API security."""
     print("\n=== Testing Bicep: Missing Microservices Security (KSI-CNA-08) ===")
@@ -2450,7 +2354,6 @@ def test_bicep_missing_microservices_security():
     assert len(findings) > 0, "Should detect missing service mesh"
     assert findings[0].severity == Severity.MEDIUM
     print(f"[OK] Detected missing microservices security: {findings[0].title}")
-
 
 def test_bicep_with_microservices_security():
     """Test that service mesh is recognized."""
@@ -2491,7 +2394,6 @@ def test_bicep_with_microservices_security():
     assert len(good_practices) > 0, "Should recognize service mesh"
     print(f"[OK] Recognized microservices security: {good_practices[0].title}")
 
-
 def test_bicep_missing_incident_after_action():
     """Test detection of missing incident automation."""
     print("\n=== Testing Bicep: Missing Incident After-Action (KSI-INR-03) ===")
@@ -2510,7 +2412,6 @@ def test_bicep_missing_incident_after_action():
     assert len(findings) > 0, "Should detect missing incident automation"
     assert findings[0].severity == Severity.MEDIUM
     print(f"[OK] Detected missing incident after-action: {findings[0].title}")
-
 
 def test_bicep_with_incident_after_action():
     """Test that incident automation is recognized."""
@@ -2543,7 +2444,6 @@ def test_bicep_with_incident_after_action():
     assert len(good_practices) > 0, "Should recognize incident automation"
     print(f"[OK] Recognized incident after-action: {good_practices[0].title}")
 
-
 def test_bicep_missing_change_management():
     """Test detection of missing change tracking."""
     print("\n=== Testing Bicep: Missing Change Management (KSI-CMT-04) ===")
@@ -2562,7 +2462,6 @@ def test_bicep_missing_change_management():
     assert len(findings) > 0, "Should detect missing change management"
     assert findings[0].severity == Severity.MEDIUM
     print(f"[OK] Detected missing change management: {findings[0].title}")
-
 
 def test_bicep_with_change_management():
     """Test that change tracking is recognized."""
@@ -2602,7 +2501,6 @@ def test_bicep_with_change_management():
     assert len(good_practices) > 0, "Should recognize change management"
     print(f"[OK] Recognized change management: {good_practices[0].title}")
 
-
 # ============================================================================
 # Phase 7 Tests: Supply Chain Security (KSI-TPR-03, KSI-TPR-04)
 # ============================================================================
@@ -2632,7 +2530,6 @@ def test_bicep_missing_supply_chain_security():
     assert findings[0].severity == Severity.HIGH
     print(f"[OK] Detected missing supply chain security: {findings[0].title}")
     print(f"   Description: {findings[0].description[:80]}...")
-
 
 def test_bicep_with_supply_chain_security():
     """Test recognition of supply chain security controls in Bicep ACR."""
@@ -2671,7 +2568,6 @@ def test_bicep_with_supply_chain_security():
     assert len(good_practices) > 0, "Should recognize supply chain security"
     print(f"[OK] Recognized supply chain security: {good_practices[0].title}")
 
-
 def test_bicep_aks_missing_supply_chain_controls():
     """Test detection of missing supply chain controls in Bicep AKS."""
     print("\n=== Testing Bicep: AKS Missing Supply Chain Controls (KSI-TPR-03) ===")
@@ -2701,7 +2597,6 @@ def test_bicep_aks_missing_supply_chain_controls():
     assert findings[0].severity == Severity.MEDIUM
     print(f"[OK] Detected missing AKS supply chain controls: {findings[0].title}")
 
-
 def test_bicep_missing_third_party_monitoring():
     """Test detection of missing third-party monitoring in Bicep."""
     print("\n=== Testing Bicep: Missing Third-Party Monitoring (KSI-TPR-04) ===")
@@ -2725,7 +2620,6 @@ def test_bicep_missing_third_party_monitoring():
     assert len(findings) > 0, "Should detect missing third-party monitoring"
     assert findings[0].severity == Severity.MEDIUM
     print(f"[OK] Detected missing third-party monitoring: {findings[0].title}")
-
 
 def test_bicep_with_third_party_monitoring():
     """Test recognition of third-party monitoring in Bicep."""
@@ -2768,7 +2662,6 @@ def test_bicep_with_third_party_monitoring():
     assert len(good_practices) > 0, "Should recognize third-party monitoring"
     print(f"[OK] Recognized third-party monitoring: {good_practices[0].title}")
 
-
 def test_terraform_missing_supply_chain_security():
     """Test detection of missing supply chain security controls in Terraform ACR."""
     print("\n=== Testing Terraform: Missing Supply Chain Security (KSI-TPR-03) ===")
@@ -2790,7 +2683,6 @@ def test_terraform_missing_supply_chain_security():
     assert len(findings) > 0, "Should detect missing supply chain controls"
     assert findings[0].severity == Severity.HIGH
     print(f"[OK] Detected missing supply chain security: {findings[0].title}")
-
 
 def test_terraform_with_supply_chain_security():
     """Test recognition of supply chain security controls in Terraform ACR."""
@@ -2824,7 +2716,6 @@ def test_terraform_with_supply_chain_security():
     assert len(good_practices) > 0, "Should recognize supply chain security"
     print(f"[OK] Recognized supply chain security: {good_practices[0].title}")
 
-
 def test_terraform_missing_third_party_monitoring():
     """Test detection of missing third-party monitoring in Terraform."""
     print("\n=== Testing Terraform: Missing Third-Party Monitoring (KSI-TPR-04) ===")
@@ -2845,7 +2736,6 @@ def test_terraform_missing_third_party_monitoring():
     assert len(findings) > 0, "Should detect missing third-party monitoring"
     assert findings[0].severity == Severity.MEDIUM
     print(f"[OK] Detected missing third-party monitoring: {findings[0].title}")
-
 
 def test_terraform_with_third_party_monitoring():
     """Test recognition of third-party monitoring in Terraform."""
@@ -2878,7 +2768,6 @@ def test_terraform_with_third_party_monitoring():
     good_practices = [f for f in result.findings if f.requirement_id == "KSI-TPR-04" and f.good_practice]
     assert len(good_practices) > 0, "Should recognize third-party monitoring"
     print(f"[OK] Recognized third-party monitoring: {good_practices[0].title}")
-
 
 def run_all_tests():
     """Run all analyzer tests."""
@@ -3111,7 +3000,6 @@ def run_all_tests():
     else:
         print("\n[OK] All tests passed!")
         return True
-
 
 if __name__ == "__main__":
     success = run_all_tests()

@@ -4,16 +4,6 @@ Tests for analyzer MCP tools with KSI-centric architecture.
 Validates that KSI analyzers work correctly through the factory pattern.
 """
 
-import sys
-import io
-from pathlib import Path
-
-# Set UTF-8 encoding for stdout (Windows compatibility)
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-
 from fedramp_20x_mcp.analyzers.ksi.factory import get_factory
 from fedramp_20x_mcp.analyzers.base import Severity
 
