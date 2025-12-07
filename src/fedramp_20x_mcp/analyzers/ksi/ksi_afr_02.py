@@ -51,7 +51,7 @@ class KSI_AFR_02_Analyzer(BaseKSIAnalyzer):
     IMPACT_LOW = True
     IMPACT_MODERATE = True
     NIST_CONTROLS = []
-    CODE_DETECTABLE = False
+    CODE_DETECTABLE = True
     IMPLEMENTATION_STATUS = "NOT_IMPLEMENTED"
     RETIRED = False
     

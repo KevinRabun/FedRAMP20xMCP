@@ -52,7 +52,7 @@ class KSI_PIY_07_Analyzer(BaseKSIAnalyzer):
     IMPACT_LOW = True
     IMPACT_MODERATE = True
     NIST_CONTROLS = ["ca-7.4", "sc-18"]
-    CODE_DETECTABLE = False
+    CODE_DETECTABLE = True
     IMPLEMENTATION_STATUS = "NOT_IMPLEMENTED"
     RETIRED = False
     

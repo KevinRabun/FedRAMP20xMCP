@@ -66,7 +66,7 @@ class KSI_RPL_02_Analyzer(BaseKSIAnalyzer):
     IMPACT_LOW = True
     IMPACT_MODERATE = True
     NIST_CONTROLS = ["cp-2", "cp-2.1", "cp-2.3", "cp-4.1", "cp-6", "cp-6.1", "cp-6.3", "cp-7", "cp-7.1", "cp-7.2", "cp-7.3", "cp-8", "cp-8.1", "cp-8.2", "cp-10", "cp-10.2"]
-    CODE_DETECTABLE = False
+    CODE_DETECTABLE = True
     IMPLEMENTATION_STATUS = "NOT_IMPLEMENTED"
     RETIRED = False
     

@@ -71,11 +71,16 @@ JAVA_COVERAGE = PYTHON_COVERAGE
 TYPESCRIPT_COVERAGE = PYTHON_COVERAGE
 
 # KSIs that are not technical (process/policy only)
+# Reduced from 23 to 15 after CODE_DETECTABLE accuracy verification (Dec 2024)
+# Removed: AFR-02, PIY-04, PIY-05, PIY-06, PIY-07, PIY-08, RPL-02, RPL-04
+# (these have code-detectable components in CI/CD, IaC, or SBOM/dependency scanning)
 NON_TECHNICAL_KSIS = [
-    "KSI-AFR-04", "KSI-AFR-05", "KSI-AFR-06", "KSI-AFR-08",
-    "KSI-AFR-09", "KSI-AFR-10",
-    "KSI-TPR-01", "KSI-TPR-02",
-    "KSI-CED-02", "KSI-CED-03", "KSI-CED-04",
+    "KSI-AFR-01", "KSI-AFR-03", "KSI-AFR-05", "KSI-AFR-06",
+    "KSI-AFR-08", "KSI-AFR-09", "KSI-AFR-10",
+    "KSI-CED-01", "KSI-CED-02", "KSI-CED-03", "KSI-CED-04",
+    "KSI-INR-01", "KSI-INR-03",
+    "KSI-PIY-03",
+    "KSI-RPL-01"
 ]
 
 
