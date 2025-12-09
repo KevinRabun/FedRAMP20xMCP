@@ -657,7 +657,7 @@ class KSI_CNA_05_Analyzer(BaseKSIAnalyzer):
         lines = code.split('\n')
         
         # Pattern 1: Web App/App Service without DDoS protection (HIGH)
-        webapp_match = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.Web/sites")
+        webapp_match = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.Web/sites", use_regex=True)
         
         if webapp_match:
             line_num = webapp_match['line_num']
@@ -794,7 +794,7 @@ class KSI_CNA_05_Analyzer(BaseKSIAnalyzer):
                 ))
         
         # Pattern 2: API Management without rate limiting (HIGH)
-        apim_match = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.ApiManagement/service")
+        apim_match = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.ApiManagement/service", use_regex=True)
         
         if apim_match:
             line_num = apim_match['line_num']
@@ -874,7 +874,7 @@ class KSI_CNA_05_Analyzer(BaseKSIAnalyzer):
                 ))
         
         # Pattern 3: Application Gateway without WAF (MEDIUM)
-        appgw_match = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.Network/applicationGateways")
+        appgw_match = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.Network/applicationGateways", use_regex=True)
         
         if appgw_match:
             line_num = appgw_match['line_num']
@@ -1098,23 +1098,3 @@ class KSI_CNA_05_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
-    
-    # ============================================================================
-    # HELPER METHODS
-    # ============================================================================
-    
-
-        """Find line number and content matching regex pattern."""
-        for i, line in enumerate(lines, 1):
-            if re.search(pattern, line, re.IGNORECASE):
-                return {'line_num': i, 'line': line}
-        return None
-    
-
-        """Get code snippet around line number."""
-        if line_number == 0:
-            return ""
-        start = max(0, line_number - context - 1)
-        end = min(len(lines), line_number + context)
-        return '\n'.join(lines[start:end])
-

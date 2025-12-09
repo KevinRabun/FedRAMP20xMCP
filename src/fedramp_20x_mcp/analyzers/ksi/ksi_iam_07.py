@@ -1158,30 +1158,3 @@ class KSI_IAM_07_Analyzer(BaseKSIAnalyzer):
         findings = []
         # No applicable patterns for GitLab CI
         return findings
-    
-    # ============================================================================
-    # HELPER METHODS
-    # ============================================================================
-    
-
-        """Find line number matching regex pattern (case-insensitive)."""
-        try:
-            regex = re.compile(pattern, re.IGNORECASE)
-            for i, line in enumerate(lines, 1):
-                if regex.search(line):
-                    return i
-        except re.error:
-            # Fallback to literal string search
-            for i, line in enumerate(lines, 1):
-                if pattern.lower() in line.lower():
-                    return i
-        return 1  # Return 1 instead of 0 for valid line numbers
-    
-
-        """Get code snippet around line number."""
-        if line_number <= 0:
-            return ""
-        start = max(0, line_number - context - 1)
-        end = min(len(lines), line_number + context)
-        return '\n'.join(lines[start:end])
-

@@ -367,7 +367,7 @@ class KSI_CNA_04_Analyzer(BaseKSIAnalyzer):
         lines = code.split('\n')
         
         # Pattern 1: Virtual Machine deployment (MEDIUM - suggests mutable infrastructure)
-        vm_match = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.Compute/virtualMachines")
+        vm_match = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.Compute/virtualMachines", use_regex=True)
         
         if vm_match:
             line_num = vm_match['line_num']
@@ -475,7 +475,7 @@ class KSI_CNA_04_Analyzer(BaseKSIAnalyzer):
                 ))
         
         # Pattern 2: Container App with mutable volumes (HIGH)
-        container_app_match = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.App/containerApps")
+        container_app_match = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.App/containerApps", use_regex=True)
         
         if container_app_match:
             line_num = container_app_match['line_num']
@@ -560,7 +560,7 @@ class KSI_CNA_04_Analyzer(BaseKSIAnalyzer):
                 ))
         
         # Pattern 3: AKS without image scanning (MEDIUM)
-        aks_match = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.ContainerService/managedClusters")
+        aks_match = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.ContainerService/managedClusters", use_regex=True)
         
         if aks_match:
             line_num = aks_match['line_num']
@@ -649,7 +649,7 @@ class KSI_CNA_04_Analyzer(BaseKSIAnalyzer):
         lines = code.split('\n')
         
         # Pattern 1: Virtual Machine deployment (MEDIUM - suggests mutable infrastructure)
-        vm_match = self._find_line(lines, r'resource\s+"azurerm_(linux|windows)_virtual_machine"')
+        vm_match = self._find_line(lines, r'resource\s+"azurerm_(linux|windows)_virtual_machine"', use_regex=True)
         
         if vm_match:
             line_num = vm_match['line_num']
@@ -733,7 +733,7 @@ class KSI_CNA_04_Analyzer(BaseKSIAnalyzer):
                 ))
         
         # Pattern 2: Container App with volume mounts (HIGH)
-        container_app_match = self._find_line(lines, r'resource\s+"azurerm_container_app"')
+        container_app_match = self._find_line(lines, r'resource\s+"azurerm_container_app"', use_regex=True)
         
         if container_app_match:
             line_num = container_app_match['line_num']
@@ -814,7 +814,7 @@ class KSI_CNA_04_Analyzer(BaseKSIAnalyzer):
                 ))
         
         # Pattern 3: AKS without Defender (MEDIUM)
-        aks_match = self._find_line(lines, r'resource\s+"azurerm_kubernetes_cluster"')
+        aks_match = self._find_line(lines, r'resource\s+"azurerm_kubernetes_cluster"', use_regex=True)
         
         if aks_match:
             line_num = aks_match['line_num']
@@ -919,23 +919,3 @@ class KSI_CNA_04_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
-    
-    # ============================================================================
-    # HELPER METHODS
-    # ============================================================================
-    
-
-        """Find line number and content matching regex pattern."""
-        for i, line in enumerate(lines, 1):
-            if re.search(pattern, line, re.IGNORECASE):
-                return {'line_num': i, 'line': line}
-        return None
-    
-
-        """Get code snippet around line number."""
-        if line_number == 0:
-            return ""
-        start = max(0, line_number - context - 1)
-        end = min(len(lines), line_number + context)
-        return '\n'.join(lines[start:end])
-

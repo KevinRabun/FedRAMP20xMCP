@@ -824,23 +824,3 @@ class KSI_CMT_04_Analyzer(BaseKSIAnalyzer):
             ))
         
         return findings
-    
-    # ============================================================================
-    # HELPER METHODS
-    # ============================================================================
-    
-
-        """Find line number containing search term (case-insensitive)."""
-        for i, line in enumerate(lines, 1):
-            if search_term.lower() in line.lower():
-                return i
-        return 0
-    
-
-        """Get code snippet around line number."""
-        if line_number == 0:
-            return ""
-        start = max(0, line_number - context - 1)
-        end = min(len(lines), line_number + context)
-        return '\n'.join(lines[start:end])
-

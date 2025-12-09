@@ -655,23 +655,3 @@ class KSI_IAM_02_Analyzer(BaseKSIAnalyzer):
         # GitLab CI uses GitLab's authentication
         # No specific findings for this KSI in CI/CD context
         return findings
-    
-    # ============================================================================
-    # HELPER METHODS
-    # ============================================================================
-    
-    def _find_text_line(self, lines: List[str], pattern: str) -> int:
-        """Find line number containing regex pattern (case-insensitive)."""
-        for i, line in enumerate(lines, 1):
-            if re.search(pattern, line, re.IGNORECASE):
-                return i
-        return 0
-    
-
-        """Get code snippet around line number."""
-        if line_number == 0:
-            return ""
-        start = max(0, line_number - context - 1)
-        end = min(len(lines), line_number + context)
-        return '\n'.join(lines[start:end])
-

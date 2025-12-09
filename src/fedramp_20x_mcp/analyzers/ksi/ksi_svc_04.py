@@ -953,31 +953,3 @@ class KSI_SVC_04_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
-    
-    # ============================================================================
-    # HELPER METHODS
-    # ============================================================================
-    
-
-        """Find the first line matching the pattern (regex-based)."""
-        try:
-            regex = re.compile(pattern, re.IGNORECASE)
-            for i, line in enumerate(lines, start=1):
-                if regex.search(line):
-                    return {'line_num': i, 'line': line}
-            return None
-        except re.error:
-            # Fallback to string search if regex is invalid
-            for i, line in enumerate(lines, start=1):
-                if pattern.lower() in line.lower():
-                    return {'line_num': i, 'line': line}
-            return None
-    
-
-        """Get code snippet around line number."""
-        if line_number == 0:
-            return ""
-        start = max(0, line_number - context - 1)
-        end = min(len(lines), line_number + context)
-        return '\n'.join(lines[start:end])
-

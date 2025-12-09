@@ -143,8 +143,7 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
         findings = []
         
         if re.search(r'verify\s*=\s*False', code):
-            result = self._find_line(lines, r'verify\s*=\s*False')
-
+            result = self._find_line(lines, r'verify\s*=\s*False', use_regex=True)
             line_num = result['line_num'] if result else 0
             if line_num:
                 findings.append(Finding(
@@ -178,8 +177,7 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 1: ServerCertificateValidationCallback => true (CRITICAL)
         if re.search(r'ServerCertificateValidationCallback.*=>\s*true', code):
-            result = self._find_line(lines, r'ServerCertificateValidationCallback')
-
+            result = self._find_line(lines, r'ServerCertificateValidationCallback', use_regex=True)
             line_num = result['line_num'] if result else 0
             if line_num:
                 findings.append(Finding(
@@ -239,8 +237,7 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 1: Empty checkServerTrusted() in TrustManager (CRITICAL)
         if re.search(r'X509TrustManager.*checkServerTrusted.*\{\s*\}', code, re.DOTALL):
-            result = self._find_line(lines, r'checkServerTrusted')
-
+            result = self._find_line(lines, r'checkServerTrusted', use_regex=True)
             line_num = result['line_num'] if result else 0
             if line_num:
                 findings.append(Finding(
@@ -274,16 +271,16 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
                         "sslContext.init(null, tmf.getTrustManagers(), null);\n\n"
                         "// Option 3: Mutual TLS (mTLS) for service-to-service\n"
                         "KeyManagerFactory kmf = KeyManagerFactory.getInstance(\n"
-                    "    KeyManagerFactory.getDefaultAlgorithm()\n"
-                    ");\n"
-                    "KeyStore clientKs = KeyStore.getInstance(\"PKCS12\");\n"
-                    "try (InputStream is = new FileInputStream(\"/path/to/client.p12\")) {{\n"
-                    "    clientKs.load(is, \"password\".toCharArray());\n"
-                    "}}\n"
-                    "kmf.init(clientKs, \"password\".toCharArray());\n"
-                    "sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);\n\n"
-                    "NEVER use trust-all TrustManagers in production!\n\n"
-                    "Ref: Java PKI Programmer's Guide (https://docs.oracle.com/en/java/javase/17/security/java-pki-programmers-guide.html)"
+                        "    KeyManagerFactory.getDefaultAlgorithm()\n"
+                        ");\n"
+                        "KeyStore clientKs = KeyStore.getInstance(\"PKCS12\");\n"
+                        "try (InputStream is = new FileInputStream(\"/path/to/client.p12\")) {{\n"
+                        "    clientKs.load(is, \"password\".toCharArray());\n"
+                        "}}\n"
+                        "kmf.init(clientKs, \"password\".toCharArray());\n"
+                        "sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);\n\n"
+                        "NEVER use trust-all TrustManagers in production!\n\n"
+                        "Ref: Java PKI Programmer's Guide (https://docs.oracle.com/en/java/javase/17/security/java-pki-programmers-guide.html)"
                 ),
                 ksi_id=self.KSI_ID
             ))
@@ -306,8 +303,7 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 1: rejectUnauthorized: false (CRITICAL)
         if re.search(r'rejectUnauthorized\s*:\s*false', code):
-            result = self._find_line(lines, r'rejectUnauthorized')
-
+            result = self._find_line(lines, r'rejectUnauthorized', use_regex=True)
             line_num = result['line_num'] if result else 0
             if line_num:
                 findings.append(Finding(
@@ -369,10 +365,10 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
         lines = code.split('\n')
         
         # Pattern 1: Application Gateway without SSL policy (MEDIUM)
-        appgw_match = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.Network/applicationGateways@")
+        appgw_result = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.Network/applicationGateways@", use_regex=True)
         
-        if appgw_match:
-            line_num = appgw_match
+        if appgw_result:
+            line_num = appgw_result['line_num']
             # Check if sslPolicy is configured in the resource block
             has_ssl_policy = any('sslPolicy' in line for line in lines[line_num:min(line_num+50, len(lines))])
             
@@ -417,10 +413,10 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
                 ))
         
         # Pattern 2: API Management without client certificate validation (MEDIUM)
-        apim_match = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.ApiManagement/service@")
+        apim_result = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.ApiManagement/service@", use_regex=True)
         
-        if apim_match:
-            line_num = apim_match
+        if apim_result:
+            line_num = apim_result['line_num']
             # Check if customProperties with client cert validation exists
             has_cert_validation = any('Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Ssl30' in line 
                                      for line in lines[line_num:min(line_num+50, len(lines))])
@@ -473,10 +469,10 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
         lines = code.split('\n')
         
         # Pattern 1: Application Gateway without SSL policy (MEDIUM)
-        appgw_match = self._find_line(lines, r'resource\s+"azurerm_application_gateway"')
+        appgw_result = self._find_line(lines, r'resource\s+"azurerm_application_gateway"', use_regex=True)
         
-        if appgw_match:
-            line_num = appgw_match
+        if appgw_result:
+            line_num = appgw_result['line_num']
             # Check if ssl_policy block exists
             has_ssl_policy = any('ssl_policy' in line for line in lines[line_num:min(line_num+50, len(lines))])
             
@@ -519,17 +515,18 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
                 ))
         
         # Pattern 2: Storage Account without HTTPS enforcement (HIGH)
-        storage_match = self._find_line(lines, r'resource\s+"azurerm_storage_account"')
+        storage_result = self._find_line(lines, r'resource\s+"azurerm_storage_account"', use_regex=True)
         
-        if storage_match:
-            line_num = storage_match
+        if storage_result:
+            line_num = storage_result['line_num']
             # Check for enable_https_traffic_only = false
-            has_https_disabled = self._find_line(
+            has_https_disabled_result = self._find_line(
                 lines[line_num:min(line_num+30, len(lines))],
-                r'enable_https_traffic_only\s*=\s*false'
+                r'enable_https_traffic_only\s*=\s*false',
+                use_regex=True
             )
             
-            if has_https_disabled:
+            if has_https_disabled_result:
                 findings.append(Finding(
                     severity=Severity.HIGH,
                     title="Storage Account With HTTPS Disabled",
@@ -539,7 +536,7 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
                         "allowing HTTP traffic exposes data to eavesdropping and man-in-the-middle attacks."
                     ),
                     file_path=file_path,
-                    line_number=line_num + has_https_disabled if has_https_disabled else line_num,
+                    line_number=line_num + has_https_disabled_result['line_num'] if has_https_disabled_result else line_num,
                     snippet=self._get_snippet(lines, line_num, context=5),
                     remediation=(
                         "Enable HTTPS-only traffic for Storage Account:\n"
@@ -598,29 +595,3 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
-    
-    # ============================================================================
-    # HELPER METHODS
-    # ============================================================================
-    
-
-        """
-        Find line matching regex pattern.
-        
-        Returns line number (1-indexed) or 0 if not found.
-        """
-        import re
-        regex = re.compile(pattern, re.IGNORECASE)
-        for i, line in enumerate(lines, 1):
-            if regex.search(line):
-                return i
-        return 0
-    
-
-        """Get code snippet around line number with bounds checking."""
-        if line_number == 0 or line_number > len(lines):
-            return ""
-        start = max(0, line_number - context - 1)
-        end = min(len(lines), line_number + context)
-        return '\n'.join(lines[start:end])
-

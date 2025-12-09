@@ -269,4 +269,12 @@ class BaseKSIAnalyzer(ABC):
         lines = code.split('\n')
         line_num = code[:start_byte].count('\n') + 1
         return self._get_snippet(lines, line_num, context)
+    
+    def _find_text_line(self, lines: List[str], text: str) -> int:
+        """Find line number containing text (case-insensitive)."""
+        text_lower = text.lower()
+        for i, line in enumerate(lines, 1):
+            if text_lower in line.lower():
+                return i
+        return 0
 

@@ -296,7 +296,7 @@ class KSI_SVC_08_Analyzer(BaseKSIAnalyzer):
         lines = code.split('\n')
         
         # Pattern 1: Temporary file creation
-        tempfile_match = self._find_line(lines, r'tempfile\.(NamedTemporaryFile|mkstemp|mkdtemp)')
+        tempfile_match = self._find_line(lines, r'tempfile\.(NamedTemporaryFile|mkstemp|mkdtemp)', use_regex=True)
         if tempfile_match:
             line_num = tempfile_match['line_num']
             has_delete_false = any('delete=False' in line for line in lines[line_num:min(line_num+5, len(lines))])
@@ -462,7 +462,7 @@ class KSI_SVC_08_Analyzer(BaseKSIAnalyzer):
         lines = code.split('\n')
         
         # Pattern 1: IDisposable without using
-        stream_match = self._find_line(lines, r'new\s+(FileStream|MemoryStream|StreamWriter|StreamReader)')
+        stream_match = self._find_line(lines, r'new\s+(FileStream|MemoryStream|StreamWriter|StreamReader)', use_regex=True)
         if stream_match:
             line_num = stream_match['line_num']
             has_using = any('using' in line for line in lines[max(0, line_num-3):line_num+1])
@@ -562,7 +562,7 @@ class KSI_SVC_08_Analyzer(BaseKSIAnalyzer):
                             ))
                 
                 # Check for sensitive arrays not zeroed (hybrid regex)
-                password_array_match = self._find_line(lines, r'(char\[\]|byte\[\])\s+\w*(password|secret|token)')
+                password_array_match = self._find_line(lines, r'(char\[\]|byte\[\])\s+\w*(password|secret|token)', use_regex=True)
                 if password_array_match:
                     line_num = password_array_match['line_num']
                     has_array_fill = any('Arrays.fill(' in line for line in lines[line_num:min(line_num+30, len(lines))])
@@ -607,7 +607,7 @@ class KSI_SVC_08_Analyzer(BaseKSIAnalyzer):
         lines = code.split('\n')
         
         # Pattern 1: AutoCloseable without try-with-resources
-        stream_match = self._find_line(lines, r'new\s+(FileInputStream|FileOutputStream|BufferedReader|BufferedWriter)')
+        stream_match = self._find_line(lines, r'new\s+(FileInputStream|FileOutputStream|BufferedReader|BufferedWriter)', use_regex=True)
         if stream_match:
             line_num = stream_match['line_num']
             has_try_resources = any('try (' in line for line in lines[max(0, line_num-3):line_num+1])
@@ -747,7 +747,7 @@ class KSI_SVC_08_Analyzer(BaseKSIAnalyzer):
         lines = code.split('\n')
         
         # Pattern 1: fs.openSync without closeSync
-        open_sync_match = self._find_line(lines, r'fs\.openSync\(')
+        open_sync_match = self._find_line(lines, r'fs\.openSync\(', use_regex=True)
         if open_sync_match:
             line_num = open_sync_match['line_num']
             has_close = any('closeSync' in line for line in lines[line_num:min(line_num+30, len(lines))])
@@ -1027,16 +1027,3 @@ class KSI_SVC_08_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
-    
-    # ============================================================================
-    # HELPER METHODS
-    # ============================================================================
-    
-
-        """Get code snippet around line number with bounds checking."""
-        if line_number == 0 or line_number > len(lines):
-            return ""
-        start = max(0, line_number - context - 1)
-        end = min(len(lines), line_number + context)
-        return '\n'.join(lines[start:end])
-

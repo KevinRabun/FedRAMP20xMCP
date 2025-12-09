@@ -496,26 +496,3 @@ class KSI_CNA_06_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
-    
-    # ============================================================================
-    # HELPER METHODS
-    # ============================================================================
-    
-
-        """
-        Find first line matching regex pattern.
-        Returns dict with line_num and line content, or None if not found.
-        """
-        for i, line in enumerate(lines, start=1):
-            if re.search(pattern, line, re.IGNORECASE):
-                return {'line_num': i, 'line': line}
-        return None
-    
-
-        """Get code snippet around line number."""
-        if line_number == 0:
-            return ""
-        start = max(0, line_number - context - 1)
-        end = min(len(lines), line_number + context)
-        return '\n'.join(lines[start:end])
-

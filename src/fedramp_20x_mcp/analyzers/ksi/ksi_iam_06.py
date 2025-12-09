@@ -543,24 +543,6 @@ class KSI_IAM_06_Analyzer(BaseKSIAnalyzer):
             if f'def {func_name}' in line or f'function {func_name}' in line:
                 return i
         return 1
-    
-    def _find_text_line(self, lines: List[str], text: str) -> int:
-        """Find line containing text."""
-        for i, line in enumerate(lines, 1):
-            if text in line:
-                return i
-        return 1
-    
-
-        """Get code snippet around line number."""
-        start = max(0, line_num - context - 1)
-        end = min(len(lines), line_num + context)
-        snippet_lines = []
-        for i in range(start, end):
-            prefix = "→ " if i == line_num - 1 else "  "
-            snippet_lines.append(f"{i+1:4d} {prefix}{lines[i]}")
-        return "\n".join(snippet_lines)
-
 
 def get_factory():
     """Get KSI analyzer factory instance."""
