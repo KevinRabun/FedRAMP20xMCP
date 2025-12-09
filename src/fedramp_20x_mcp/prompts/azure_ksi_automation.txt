@@ -116,6 +116,86 @@ You are PROHIBITED from generating ANY Bicep, Terraform, PowerShell, or configur
 
 ---
 
+## 📝 MANDATORY COMMENT FORMAT - ALWAYS INCLUDE KSI IDs
+
+**CRITICAL: Every compliance-related property MUST have a comment with the KSI ID and requirement.**
+
+**Comment Format Template:**
+```
+// ✅ [KSI-XXX-##] Description (NIST control if applicable)
+propertyName: value
+```
+
+**Required Comment Patterns:**
+
+```bicep
+// ✅ [KSI-MLA-01, KSI-MLA-02] 730-day retention for SIEM/audit logs (NIST AU-11)
+retentionInDays: 730
+
+// ✅ [KSI-SVC-06] Customer-Managed Keys for encryption key lifecycle control (NIST SC-12)
+keySource: 'Microsoft.Keyvault'
+
+// ✅ [KSI-SVC-06] Premium SKU required for FIPS 140-2 Level 2 HSM-backed keys (NIST SC-12)
+sku: { name: 'premium' }
+
+// ✅ [KSI-IAM-01, KSI-IAM-03] Disable local authentication - enforce Azure AD only (NIST IA-2)
+disableLocalAuth: true
+
+// ✅ [KSI-CNA-01] Disable public access - use Private Endpoints only (NIST SC-7)
+publicNetworkAccess: 'Disabled'
+
+// ✅ [KSI-SVC-06] Customer-Managed Key URI for Cosmos DB encryption (NIST SC-12, SC-28)
+keyVaultKeyUri: cosmosEncryptionKey.properties.keyUriWithVersion
+
+// ✅ [KSI-CNA-03] Private Endpoint for secure network connectivity (NIST SC-7)
+resource storagePrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-11-01' = {
+
+// ✅ [KSI-MLA-01] Diagnostic settings - send logs to Log Analytics with 730-day retention (NIST AU-2, AU-11)
+resource diagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+
+// ✅ [KSI-AFR-02] Zone-redundant storage for high availability (NIST CP-6, CP-9)
+sku: { name: 'Standard_ZRS' }
+
+// ✅ [KSI-CNA-01] Network Security Group with deny-by-default rules (NIST SC-7)
+resource nsg 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
+
+// ✅ [KSI-IAM-07] Managed Identity for authentication without credentials (NIST IA-5)
+identity: { type: 'SystemAssigned' }
+
+// ✅ [KSI-CNA-01] TLS 1.2 minimum for secure communications (NIST SC-8, SC-13)
+minimumTlsVersion: 'TLS1_2'
+```
+
+**Terraform Comment Format:**
+```hcl
+# ✅ [KSI-MLA-01, KSI-MLA-02] 730-day retention for SIEM/audit logs (NIST AU-11)
+retention_in_days = 730
+
+# ✅ [KSI-SVC-06] Customer-Managed Keys for encryption key lifecycle control (NIST SC-12)
+customer_managed_key {
+  key_vault_key_id = azurerm_key_vault_key.storage.id
+}
+
+# ✅ [KSI-IAM-01, KSI-IAM-03] Disable local authentication - enforce Azure AD only (NIST IA-2)
+local_authentication_disabled = true
+
+# ✅ [KSI-CNA-01] Disable public access - use Private Endpoints only (NIST SC-7)
+public_network_access_enabled = false
+
+# ✅ [KSI-CNA-03] Private Endpoint for secure network connectivity (NIST SC-7)
+resource "azurerm_private_endpoint" "storage" {
+```
+
+**Why This Matters:**
+1. **Traceability**: Auditors can map each setting to specific KSI requirements
+2. **Maintainability**: Future developers understand WHY each setting exists
+3. **Compliance Evidence**: Comments serve as inline documentation for FRR-ADS
+4. **Code Reviews**: Reviewers can verify correct KSI alignment
+
+**ENFORCEMENT: If you generate code without KSI ID comments, the validation tool will flag it.**
+
+---
+
 ## ❌ EXPLICITLY FORBIDDEN PATTERNS - THESE WILL CAUSE COMPLIANCE FAILURES
 
 **NEVER generate these patterns - they are CRITICAL FAILURES:**
@@ -934,11 +1014,11 @@ resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   name: storageAccountName
   location: location
   identity: {
-    type: 'SystemAssigned'
+    type: 'SystemAssigned'  // ✅ [KSI-IAM-07] Managed Identity for Key Vault access (NIST IA-5)
   }
   properties: {
     encryption: {
-      keySource: 'Microsoft.Keyvault'  // CMK (not 'Microsoft.Storage')
+      keySource: 'Microsoft.Keyvault'  // ✅ [KSI-SVC-06] Customer-Managed Keys (NIST SC-12)
       keyvaultproperties: {
         keyname: storageEncryptionKey.name
         keyvaulturi: keyVault.properties.vaultUri
@@ -953,7 +1033,7 @@ resource cosmosDb 'Microsoft.DocumentDB/databaseAccounts@2023-11-15' = {
   location: location
   kind: 'GlobalDocumentDB'
   identity: {
-    type: 'SystemAssigned'
+    type: 'SystemAssigned'  // ✅ [KSI-IAM-07] Managed Identity for Key Vault access (NIST IA-5)
   }
   properties: {
     databaseAccountOfferType: 'Standard'
@@ -965,14 +1045,11 @@ resource cosmosDb 'Microsoft.DocumentDB/databaseAccounts@2023-11-15' = {
       failoverPriority: 0
       isZoneRedundant: false
     }]
-    // CMK configuration - keyVaultKeyUri is a TOP-LEVEL property
-    keyVaultKeyUri: cosmosEncryptionKey.properties.keyUriWithVersion
-    // Identity & Access - MANDATORY for FedRAMP 20x
-    disableLocalAuth: true  // ✅ REQUIRED - Force Azure AD authentication (KSI-IAM-01, KSI-IAM-03)
-    // Network security
-    publicNetworkAccess: 'Disabled'
+    keyVaultKeyUri: cosmosEncryptionKey.properties.keyUriWithVersion  // ✅ [KSI-SVC-06] Customer-Managed Key (NIST SC-12, SC-28)
+    disableLocalAuth: true  // ✅ [KSI-IAM-01, KSI-IAM-03] Force Azure AD authentication (NIST IA-2)
+    publicNetworkAccess: 'Disabled'  // ✅ [KSI-CNA-01] Disable public access (NIST SC-7)
     networkAcls: {
-      defaultAction: 'Deny'
+      defaultAction: 'Deny'  // ✅ [KSI-CNA-01] Deny-by-default network rules (NIST SC-7)
     }
   }
 }
@@ -982,14 +1059,14 @@ resource cosmosDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-pre
   name: 'cosmos-diagnostics'
   scope: cosmosDb
   properties: {
-    workspaceId: logAnalytics.id
+    workspaceId: logAnalytics.id  // ✅ [KSI-MLA-01] Send logs to Log Analytics (NIST AU-2)
     logs: [
       {
         category: 'DataPlaneRequests'
         enabled: true
         retentionPolicy: {
           enabled: true
-          days: 730
+          days: 730  // ✅ [KSI-MLA-01, KSI-MLA-02] 730-day retention (NIST AU-11)
         }
       }
       {
@@ -997,7 +1074,7 @@ resource cosmosDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-pre
         enabled: true
         retentionPolicy: {
           enabled: true
-          days: 730
+          days: 730  // ✅ [KSI-MLA-01, KSI-MLA-02] 730-day retention (NIST AU-11)
         }
       }
       {
@@ -1005,7 +1082,7 @@ resource cosmosDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-pre
         enabled: true
         retentionPolicy: {
           enabled: true
-          days: 730
+          days: 730  // ✅ [KSI-MLA-01, KSI-MLA-02] 730-day retention (NIST AU-11)
         }
       }
     ]
@@ -1015,7 +1092,7 @@ resource cosmosDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-pre
         enabled: true
         retentionPolicy: {
           enabled: true
-          days: 730
+          days: 730  // ✅ [KSI-MLA-01, KSI-MLA-02] 730-day retention (NIST AU-11)
         }
       }
     ]
@@ -1263,14 +1340,14 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-11-01' = {
         properties: {
           addressPrefix: '10.0.1.0/24'
           networkSecurityGroup: { id: nsg.id }
-          privateEndpointNetworkPolicies: 'Disabled'  // Required for Private Endpoints
+          privateEndpointNetworkPolicies: 'Disabled'  // ✅ [KSI-CNA-03] Required for Private Endpoints (NIST SC-7)
         }
       }
       {
         name: 'snet-application'
         properties: {
           addressPrefix: '10.0.2.0/24'
-          networkSecurityGroup: { id: nsg.id }
+          networkSecurityGroup: { id: nsg.id }  // ✅ [KSI-CNA-01] NSG for network segmentation (NIST SC-7)
         }
       }
     ]
@@ -1281,17 +1358,17 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-11-01' = {
 // STEP 2: Private DNS Zones (required for name resolution)
 // ============================================================================
 resource privateDnsZoneStorage 'Microsoft.Network/privateDnsZones@2020-06-01' = {
-  name: 'privatelink.blob.core.windows.net'
+  name: 'privatelink.blob.core.windows.net'  // ✅ [KSI-CNA-03] Private DNS for Storage (NIST SC-7)
   location: 'global'
 }
 
 resource privateDnsZoneCosmosDb 'Microsoft.Network/privateDnsZones@2020-06-01' = {
-  name: 'privatelink.documents.azure.com'
+  name: 'privatelink.documents.azure.com'  // ✅ [KSI-CNA-03] Private DNS for Cosmos DB (NIST SC-7)
   location: 'global'
 }
 
 resource privateDnsZoneKeyVault 'Microsoft.Network/privateDnsZones@2020-06-01' = {
-  name: 'privatelink.vaultcore.azure.net'
+  name: 'privatelink.vaultcore.azure.net'  // ✅ [KSI-CNA-03] Private DNS for Key Vault (NIST SC-7)
   location: 'global'
 }
 
@@ -1301,7 +1378,7 @@ resource privateDnsZoneLinkStorage 'Microsoft.Network/privateDnsZones/virtualNet
   name: '${vnet.name}-link'
   location: 'global'
   properties: {
-    registrationEnabled: false
+    registrationEnabled: false  // ✅ [KSI-CNA-03] Manual DNS registration (NIST SC-7)
     virtualNetwork: { id: vnet.id }
   }
 }
@@ -1311,7 +1388,7 @@ resource privateDnsZoneLinkCosmosDb 'Microsoft.Network/privateDnsZones/virtualNe
   name: '${vnet.name}-link'
   location: 'global'
   properties: {
-    registrationEnabled: false
+    registrationEnabled: false  // ✅ [KSI-CNA-03] Manual DNS registration (NIST SC-7)
     virtualNetwork: { id: vnet.id }
   }
 }
@@ -1321,7 +1398,7 @@ resource privateDnsZoneLinkKeyVault 'Microsoft.Network/privateDnsZones/virtualNe
   name: '${vnet.name}-link'
   location: 'global'
   properties: {
-    registrationEnabled: false
+    registrationEnabled: false  // ✅ [KSI-CNA-03] Manual DNS registration (NIST SC-7)
     virtualNetwork: { id: vnet.id }
   }
 }
@@ -1332,14 +1409,14 @@ resource privateDnsZoneLinkKeyVault 'Microsoft.Network/privateDnsZones/virtualNe
 resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   name: 'stfedrampevidence'
   location: location
-  sku: { name: 'Standard_GRS' }
+  sku: { name: 'Standard_GRS' }  // ✅ [KSI-AFR-09] Geo-redundant storage for durability (NIST CP-6, CP-9)
   kind: 'StorageV2'
-  identity: { type: 'SystemAssigned' }
+  identity: { type: 'SystemAssigned' }  // ✅ [KSI-IAM-07] Managed Identity for Key Vault access (NIST IA-5)
   properties: {
-    publicNetworkAccess: 'Disabled'  // ✅ Public access disabled
-    minimumTlsVersion: 'TLS1_2'
+    publicNetworkAccess: 'Disabled'  // ✅ [KSI-CNA-01] Disable public access (NIST SC-7)
+    minimumTlsVersion: 'TLS1_2'  // ✅ [KSI-CNA-08] TLS 1.2 minimum (NIST SC-8)
     encryption: {
-      keySource: 'Microsoft.Keyvault'
+      keySource: 'Microsoft.Keyvault'  // ✅ [KSI-SVC-06] Customer-Managed Keys (NIST SC-12, SC-28)
       keyvaultproperties: {
         keyname: storageEncryptionKey.name
         keyvaulturi: keyVault.properties.vaultUri
@@ -1353,13 +1430,13 @@ resource storagePrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-11-01' 
   location: location
   properties: {
     subnet: {
-      id: '${vnet.id}/subnets/snet-private-endpoints'
+      id: '${vnet.id}/subnets/snet-private-endpoints'  // ✅ [KSI-CNA-03] Private Endpoint in dedicated subnet (NIST SC-7)
     }
     privateLinkServiceConnections: [{
       name: 'storage-blob-connection'
       properties: {
-        privateLinkServiceId: storage.id
-        groupIds: ['blob']  // Subresource: blob, file, table, queue
+        privateLinkServiceId: storage.id  // ✅ [KSI-CNA-03] Link to Storage Account (NIST SC-7)
+        groupIds: ['blob']  // ✅ [KSI-CNA-03] Target blob service (subresource: blob, file, table, queue)
       }
     }]
   }
@@ -1372,7 +1449,7 @@ resource storagePrivateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateD
     privateDnsZoneConfigs: [{
       name: 'storage-blob-config'
       properties: {
-        privateDnsZoneId: privateDnsZoneStorage.id
+        privateDnsZoneId: privateDnsZoneStorage.id  // ✅ [KSI-CNA-03] Link to Private DNS Zone (NIST SC-7)
       }
     }]
   }
@@ -1385,7 +1462,7 @@ resource cosmosDb 'Microsoft.DocumentDB/databaseAccounts@2023-11-15' = {
   name: 'cosmos-fedramp-db'
   location: location
   kind: 'GlobalDocumentDB'
-  identity: { type: 'SystemAssigned' }
+  identity: { type: 'SystemAssigned' }  // ✅ [KSI-IAM-07] Managed Identity for Key Vault access (NIST IA-5)
   properties: {
     databaseAccountOfferType: 'Standard'
     consistencyPolicy: { defaultConsistencyLevel: 'Session' }
@@ -1394,11 +1471,11 @@ resource cosmosDb 'Microsoft.DocumentDB/databaseAccounts@2023-11-15' = {
       failoverPriority: 0
       isZoneRedundant: false
     }]
-    keyVaultKeyUri: cosmosEncryptionKey.properties.keyUriWithVersion
-    disableLocalAuth: true  // ✅ Force Azure AD authentication
-    publicNetworkAccess: 'Disabled'  // ✅ Public access disabled
+    keyVaultKeyUri: cosmosEncryptionKey.properties.keyUriWithVersion  // ✅ [KSI-SVC-06] Customer-Managed Key (NIST SC-12, SC-28)
+    disableLocalAuth: true  // ✅ [KSI-IAM-01, KSI-IAM-03] Force Azure AD authentication (NIST IA-2)
+    publicNetworkAccess: 'Disabled'  // ✅ [KSI-CNA-01] Disable public access (NIST SC-7)
     networkAcls: {
-      defaultAction: 'Deny'
+      defaultAction: 'Deny'  // ✅ [KSI-CNA-01] Deny-by-default network rules (NIST SC-7)
       virtualNetworkRules: []  // No VNet rules - using Private Endpoint instead
     }
   }
@@ -1409,13 +1486,13 @@ resource cosmosPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-11-01' =
   location: location
   properties: {
     subnet: {
-      id: '${vnet.id}/subnets/snet-private-endpoints'
+      id: '${vnet.id}/subnets/snet-private-endpoints'  // ✅ [KSI-CNA-03] Private Endpoint in dedicated subnet (NIST SC-7)
     }
     privateLinkServiceConnections: [{
       name: 'cosmos-sql-connection'
       properties: {
-        privateLinkServiceId: cosmosDb.id
-        groupIds: ['Sql']  // Subresource: Sql, MongoDB, Cassandra, Gremlin, Table
+        privateLinkServiceId: cosmosDb.id  // ✅ [KSI-CNA-03] Link to Cosmos DB (NIST SC-7)
+        groupIds: ['Sql']  // ✅ [KSI-CNA-03] Target SQL API (subresource: Sql, MongoDB, Cassandra, Gremlin, Table)
       }
     }]
   }
@@ -1428,7 +1505,7 @@ resource cosmosPrivateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDn
     privateDnsZoneConfigs: [{
       name: 'cosmos-sql-config'
       properties: {
-        privateDnsZoneId: privateDnsZoneCosmosDb.id
+        privateDnsZoneId: privateDnsZoneCosmosDb.id  // ✅ [KSI-CNA-03] Link to Private DNS Zone (NIST SC-7)
       }
     }]
   }
@@ -1441,15 +1518,15 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: 'kv-fedramp-cmk'
   location: location
   properties: {
-    sku: { family: 'A', name: 'premium' }
+    sku: { family: 'A', name: 'premium' }  // ✅ [KSI-SVC-06] Premium SKU for HSM-backed keys (NIST SC-12)
     tenantId: subscription().tenantId
-    enabledForDiskEncryption: true
-    enableSoftDelete: true
-    softDeleteRetentionInDays: 90
-    enablePurgeProtection: true
-    publicNetworkAccess: 'Disabled'  // ✅ Public access disabled
+    enabledForDiskEncryption: true  // ✅ [KSI-SVC-06] Enable for disk encryption (NIST SC-28)
+    enableSoftDelete: true  // ✅ [KSI-AFR-09] Soft delete for key recovery (NIST CP-6, CP-9)
+    softDeleteRetentionInDays: 90  // ✅ [KSI-AFR-09] 90-day retention (NIST CP-6, CP-9)
+    enablePurgeProtection: true  // ✅ [KSI-AFR-09] Prevent permanent deletion (NIST CP-6, CP-9)
+    publicNetworkAccess: 'Disabled'  // ✅ [KSI-CNA-01] Disable public access (NIST SC-7)
     networkAcls: {
-      defaultAction: 'Deny'
+      defaultAction: 'Deny'  // ✅ [KSI-CNA-01] Deny-by-default network rules (NIST SC-7)
       bypass: 'AzureServices'  // Allow Azure platform services
       virtualNetworkRules: []  // No VNet rules - using Private Endpoint instead
     }
@@ -1461,13 +1538,13 @@ resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-11-01'
   location: location
   properties: {
     subnet: {
-      id: '${vnet.id}/subnets/snet-private-endpoints'
+      id: '${vnet.id}/subnets/snet-private-endpoints'  // ✅ [KSI-CNA-03] Private Endpoint in dedicated subnet (NIST SC-7)
     }
     privateLinkServiceConnections: [{
       name: 'keyvault-connection'
       properties: {
-        privateLinkServiceId: keyVault.id
-        groupIds: ['vault']  // Subresource: vault
+        privateLinkServiceId: keyVault.id  // ✅ [KSI-CNA-03] Link to Key Vault (NIST SC-7)
+        groupIds: ['vault']  // ✅ [KSI-CNA-03] Target vault subresource (NIST SC-7)
       }
     }]
   }
@@ -1480,7 +1557,7 @@ resource keyVaultPrivateDnsZoneGroup 'Microsoft.Network/privateEndpoints/private
     privateDnsZoneConfigs: [{
       name: 'keyvault-config'
       properties: {
-        privateDnsZoneId: privateDnsZoneKeyVault.id
+        privateDnsZoneId: privateDnsZoneKeyVault.id  // ✅ [KSI-CNA-03] Link to Private DNS Zone (NIST SC-7)
       }
     }]
   }
