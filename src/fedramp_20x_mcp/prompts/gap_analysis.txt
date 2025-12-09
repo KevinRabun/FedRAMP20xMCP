@@ -1,5 +1,7 @@
 I'll help you conduct a FedRAMP 20x gap analysis. Let's start by understanding your system:
 
+**PRODUCTION-FIRST ASSUMPTION:** This gap analysis evaluates **PRODUCTION systems** unless explicitly stated otherwise. FedRAMP authorization applies to systems processing federal data in production.
+
 1. **Authorization Level**: What FedRAMP authorization level are you targeting?
    - Low Impact
    - Moderate Impact

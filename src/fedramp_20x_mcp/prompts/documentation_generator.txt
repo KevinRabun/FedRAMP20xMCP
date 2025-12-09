@@ -2,6 +2,8 @@ I'll help you generate documentation templates for FedRAMP 20x compliance.
 
 # Documentation Generator for FedRAMP 20x
 
+**PRODUCTION-FIRST ASSUMPTION:** All documentation and system descriptions assume **PRODUCTION systems** with full security controls unless explicitly stated otherwise. FedRAMP authorization applies to production environments processing federal data.
+
 **Important Note on OSCAL:** FedRAMP 20x requires **machine-readable** formats (JSON/XML) for Authorization Data Sharing. **OSCAL is NOT mentioned in FedRAMP 20x** - it's a NIST standard shown below as one example implementation approach. Custom JSON/XML formats are equally valid.
 
 ## OSCAL System Security Plan (SSP) Template

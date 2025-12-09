@@ -832,12 +832,12 @@ class KSI_MLA_01_Analyzer(BaseKSIAnalyzer):
                 line_number=1,
                 snippet="No Log Analytics workspace found in Bicep template",
                 remediation=(
-                    "Deploy Log Analytics workspace:\n"
+                    "Deploy Log Analytics workspace with FedRAMP-compliant retention:\n"
                     "resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {\n"
                     "  name: 'law-${uniqueString(resourceGroup().id)}'\n"
                     "  location: location\n"
                     "  properties: {\n"
-                    "    retentionInDays: 90\n"
+                    "    retentionInDays: 730  // FedRAMP 20x requires 2-year retention (KSI-MLA-01, KSI-MLA-02)\n"
                     "    sku: { name: 'PerGB2018' }\n"
                     "  }\n"
                     "}"
@@ -890,6 +890,32 @@ class KSI_MLA_01_Analyzer(BaseKSIAnalyzer):
                     ))
                     break  # Only report once
         
+        # Pattern 3: Log Analytics workspace with insufficient retention (MEDIUM)
+        retention_pattern = r"retentionInDays:\s*(\d+)"
+        for match in re.finditer(retention_pattern, code):
+            retention_days = int(match.group(1))
+            if retention_days < 730:
+                line_num = code[:match.start()].count('\n') + 1
+                findings.append(Finding(
+                    severity=Severity.MEDIUM,
+                    title="Insufficient Log Retention Period",
+                    description=(
+                        f"Log Analytics workspace has {retention_days}-day retention at line {line_num}. "
+                        f"FedRAMP 20x requires 730 days (2 years) retention for audit logs per AU-11. "
+                        f"KSI-MLA-01 and KSI-MLA-02 mandate long-term tamper-resistant storage."
+                    ),
+                    file_path=file_path,
+                    line_number=line_num,
+                    snippet=self._get_snippet(lines, line_num),
+                    remediation=(
+                        f"Update retention to meet FedRAMP 20x requirements:\n"
+                        f"properties: {{\n"
+                        f"  retentionInDays: 730  // 2 years - FedRAMP minimum (KSI-MLA-01, AU-11)\n"
+                        f"}}"
+                    ),
+                    ksi_id=self.KSI_ID
+                ))
+        
         return findings
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
@@ -925,13 +951,13 @@ class KSI_MLA_01_Analyzer(BaseKSIAnalyzer):
                 line_number=1,
                 snippet="No azurerm_log_analytics_workspace found in configuration",
                 remediation=(
-                    "Add Log Analytics workspace:\n"
+                    "Add Log Analytics workspace with FedRAMP-compliant retention:\n"
                     "resource \"azurerm_log_analytics_workspace\" \"siem\" {\n"
                     "  name                = \"law-${var.project}-${var.environment}\"\n"
                     "  location            = azurerm_resource_group.main.location\n"
                     "  resource_group_name = azurerm_resource_group.main.name\n"
                     "  sku                 = \"PerGB2018\"\n"
-                    "  retention_in_days   = 90\n"
+                    "  retention_in_days   = 730  # FedRAMP 20x requires 2-year retention (KSI-MLA-01, KSI-MLA-02)\n"
                     "}"
                 ),
                 ksi_id=self.KSI_ID
@@ -979,6 +1005,30 @@ class KSI_MLA_01_Analyzer(BaseKSIAnalyzer):
                         ksi_id=self.KSI_ID
                     ))
                     break  # Only report once
+        
+        # Pattern 3: Log Analytics workspace with insufficient retention (MEDIUM)
+        retention_pattern = r"retention_in_days\s*=\s*(\d+)"
+        for match in re.finditer(retention_pattern, code):
+            retention_days = int(match.group(1))
+            if retention_days < 730:
+                line_num = code[:match.start()].count('\n') + 1
+                findings.append(Finding(
+                    severity=Severity.MEDIUM,
+                    title="Insufficient Log Retention Period",
+                    description=(
+                        f"Log Analytics workspace has {retention_days}-day retention at line {line_num}. "
+                        f"FedRAMP 20x requires 730 days (2 years) retention for audit logs per AU-11. "
+                        f"KSI-MLA-01 and KSI-MLA-02 mandate long-term tamper-resistant storage."
+                    ),
+                    file_path=file_path,
+                    line_number=line_num,
+                    snippet=self._get_snippet(lines, line_num),
+                    remediation=(
+                        f"Update retention to meet FedRAMP 20x requirements:\n"
+                        f"retention_in_days = 730  # 2 years - FedRAMP minimum (KSI-MLA-01, AU-11)"
+                    ),
+                    ksi_id=self.KSI_ID
+                ))
         
         return findings
     

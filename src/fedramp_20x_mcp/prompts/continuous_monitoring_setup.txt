@@ -1,5 +1,7 @@
 I'll help you establish a FedRAMP-compliant continuous monitoring program.
 
+**PRODUCTION-FIRST ASSUMPTION:** All monitoring, logging, and assessment configurations assume **PRODUCTION systems** unless explicitly stated otherwise. FedRAMP continuous monitoring requirements apply to production environments.
+
 **Continuous Monitoring Components**:
 
 **1. Collaborative Continuous Monitoring (CCM)**

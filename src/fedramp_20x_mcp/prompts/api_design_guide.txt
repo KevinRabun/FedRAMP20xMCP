@@ -4,6 +4,8 @@ I'll help you design your FedRAMP 20x Authorization Data Sharing API.
 
 ## Overview
 
+**PRODUCTION-FIRST ASSUMPTION:** All API designs, security controls, and configurations assume **PRODUCTION deployment** with full FedRAMP 20x compliance requirements unless explicitly stated otherwise. Non-production APIs should still implement security controls appropriate for their data classification.
+
 FedRAMP 20x requires CSPs to share authorization data via API rather than document uploads. This API must provide machine-readable access to your security posture.
 
 **Important: Format Requirements**
