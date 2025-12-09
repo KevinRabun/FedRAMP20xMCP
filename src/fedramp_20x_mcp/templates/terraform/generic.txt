@@ -7,6 +7,37 @@ variable "ksi_id" {
   type        = string
 }
 
+data "azurerm_client_config" "current" {}
+
+resource "random_string" "suffix" {
+  length  = 8
+  special = false
+  upper   = false
+}
+
+# Key Vault for customer-managed keys (FedRAMP 20x SC-12 requirement)
+resource "azurerm_key_vault" "cmk" {
+  name                       = "kv-${random_string.suffix.result}"
+  location                   = var.location
+  resource_group_name        = azurerm_resource_group.evidence.name
+  tenant_id                  = data.azurerm_client_config.current.tenant_id
+  sku_name                   = "premium"  # Premium for HSM-backed keys (FIPS 140-2 Level 2)
+  soft_delete_retention_days = 90
+  purge_protection_enabled   = true
+  enable_rbac_authorization  = true
+}
+
+# Encryption key for storage account (customer-managed key)
+resource "azurerm_key_vault_key" "storage" {
+  name         = "storage-encryption-key"
+  key_vault_id = azurerm_key_vault.cmk.id
+  key_type     = "RSA"
+  key_size     = 2048
+  key_opts     = ["decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey"]
+
+  depends_on = [azurerm_key_vault.cmk]
+}
+
 resource "azurerm_log_analytics_workspace" "generic" {
   name                = "log-${lower(var.ksi_id)}"
   location            = var.location
@@ -15,6 +46,7 @@ resource "azurerm_log_analytics_workspace" "generic" {
   retention_in_days   = 730
 }
 
+# Evidence storage account with customer-managed key encryption
 resource "azurerm_storage_account" "evidence" {
   name                     = "st${lower(replace(var.ksi_id, "-", ""))}evidence"
   resource_group_name      = azurerm_resource_group.evidence.name
@@ -22,6 +54,34 @@ resource "azurerm_storage_account" "evidence" {
   account_tier             = "Standard"
   account_replication_type = "GRS"
   min_tls_version          = "TLS1_2"
+
+  identity {
+    type = "SystemAssigned"  # Required for Key Vault access
+  }
+
+  customer_managed_key {
+    key_vault_key_id          = azurerm_key_vault_key.storage.id
+    user_assigned_identity_id = null  # Use system-assigned identity
+  }
+
+  depends_on = [
+    azurerm_key_vault_access_policy.storage
+  ]
+}
+
+# Grant storage account access to Key Vault key
+resource "azurerm_key_vault_access_policy" "storage" {
+  key_vault_id = azurerm_key_vault.cmk.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = azurerm_storage_account.evidence.identity[0].principal_id
+
+  key_permissions = [
+    "Get",
+    "UnwrapKey",
+    "WrapKey"
+  ]
+
+  depends_on = [azurerm_storage_account.evidence]
 }
 
 resource "azurerm_storage_container" "evidence" {

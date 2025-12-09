@@ -5,7 +5,43 @@
 param location string = resourceGroup().location
 param ksiId string
 
-// Evidence Storage Account
+// Key Vault for customer-managed keys (FedRAMP 20x SC-12 requirement)
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
+  name: 'kv-${uniqueString(resourceGroup().id, ksiId)}'
+  location: location
+  properties: {
+    sku: {
+      family: 'A'
+      name: 'premium'  // Premium SKU required for HSM-backed keys (FIPS 140-2 Level 2)
+    }
+    tenantId: subscription().tenantId
+    enableSoftDelete: true
+    softDeleteRetentionInDays: 90
+    enablePurgeProtection: true
+    enabledForDiskEncryption: true
+    enableRbacAuthorization: true
+  }
+}
+
+// Encryption key for storage account (customer-managed key)
+resource storageEncryptionKey 'Microsoft.KeyVault/vaults/keys@2023-07-01' = {
+  parent: keyVault
+  name: 'storage-encryption-key'
+  properties: {
+    kty: 'RSA'
+    keySize: 2048
+    keyOps: [
+      'encrypt'
+      'decrypt'
+      'sign'
+      'verify'
+      'wrapKey'
+      'unwrapKey'
+    ]
+  }
+}
+
+// Evidence Storage Account with customer-managed key encryption
 resource evidenceStorage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   name: 'st${toLower(replace(ksiId, '-', ''))}evidence'
   location: location
@@ -13,12 +49,40 @@ resource evidenceStorage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   sku: {
     name: 'Standard_GRS'
   }
+  identity: {
+    type: 'SystemAssigned'  // Required for Key Vault access
+  }
   properties: {
     supportsHttpsTrafficOnly: true
     minimumTlsVersion: 'TLS1_2'
     encryption: {
-      keySource: 'Microsoft.Storage'
+      keySource: 'Microsoft.Keyvault'  // Use customer-managed keys (CMK)
+      keyvaultproperties: {
+        keyname: storageEncryptionKey.name
+        keyvaulturi: keyVault.properties.vaultUri
+      }
     }
+  }
+}
+
+// Grant storage account access to Key Vault key
+resource keyVaultAccessPolicy 'Microsoft.KeyVault/vaults/accessPolicies@2023-07-01' = {
+  parent: keyVault
+  name: 'add'
+  properties: {
+    accessPolicies: [
+      {
+        tenantId: evidenceStorage.identity.tenantId
+        objectId: evidenceStorage.identity.principalId
+        permissions: {
+          keys: [
+            'get'
+            'unwrapKey'
+            'wrapKey'
+          ]
+        }
+      }
+    ]
   }
 }
 

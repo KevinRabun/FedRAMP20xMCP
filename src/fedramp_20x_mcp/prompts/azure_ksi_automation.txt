@@ -646,9 +646,143 @@ Get-AzPolicyState -PolicyAssignmentName "FedRAMP-Baseline-Windows" |
 **KSI-SVC-06: Secret Management**
 
 **Azure Services:**
-- Azure Key Vault
+- Azure Key Vault (Premium SKU for HSM-backed keys)
 - Managed Identity
 - Azure Monitor
+
+**CRITICAL: Customer-Managed Keys (CMK) Requirement**
+
+FedRAMP 20x SC-12 (Cryptographic Key Establishment and Management) requires organizations
+to control the full key lifecycle including revocation capability. This necessitates 
+customer-managed keys (CMK) for Moderate/High impact levels:
+
+**Why CMK is Required:**
+- **SC-12 Compliance**: Requires control over cryptographic key establishment and management
+- **Key Revocation**: Platform-managed keys (PMK) are controlled by Microsoft - limited revocation capability
+- **CMK Benefits**: Full lifecycle control (rotation, revocation, versioning, BYOK)
+- **FIPS 140-2 Level 2**: Key Vault Premium provides HSM-backed keys (required for CMK)
+
+**Resources Requiring CMK:**
+1. **Storage Accounts**: Use `keySource: 'Microsoft.Keyvault'` (not `'Microsoft.Storage'`)
+2. **SQL Databases**: Configure TDE with customer-managed key
+3. **Managed Disks**: Use Disk Encryption Sets with Key Vault key
+4. **Cosmos DB**: Configure with customer-managed key
+5. **Azure Data Lake**: Use customer-managed key encryption
+
+**CMK Configuration Example (Bicep):**
+```bicep
+// Step 1: Key Vault with Premium SKU (FIPS 140-2 Level 2 HSM)
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
+  name: 'kv-fedramp-cmk'
+  location: location
+  properties: {
+    sku: {
+      family: 'A'
+      name: 'premium'  // Required for CMK
+    }
+    tenantId: subscription().tenantId
+    enableSoftDelete: true
+    softDeleteRetentionInDays: 90
+    enablePurgeProtection: true
+    enabledForDiskEncryption: true
+    enableRbacAuthorization: true
+  }
+}
+
+// Step 2: Encryption key
+resource encryptionKey 'Microsoft.KeyVault/vaults/keys@2023-07-01' = {
+  parent: keyVault
+  name: 'storage-encryption-key'
+  properties: {
+    kty: 'RSA'
+    keySize: 2048
+    keyOps: ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey']
+  }
+}
+
+// Step 3: Storage with CMK
+resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: storageAccountName
+  location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    encryption: {
+      keySource: 'Microsoft.Keyvault'  // CMK (not 'Microsoft.Storage')
+      keyvaultproperties: {
+        keyname: encryptionKey.name
+        keyvaulturi: keyVault.properties.vaultUri
+      }
+    }
+  }
+}
+
+// Step 4: Grant access
+resource keyVaultAccess 'Microsoft.KeyVault/vaults/accessPolicies@2023-07-01' = {
+  parent: keyVault
+  name: 'add'
+  properties: {
+    accessPolicies: [{
+      tenantId: storage.identity.tenantId
+      objectId: storage.identity.principalId
+      permissions: {
+        keys: ['get', 'unwrapKey', 'wrapKey']
+      }
+    }]
+  }
+}
+```
+
+**CMK Configuration Example (Terraform):**
+```hcl
+# Step 1: Key Vault with Premium SKU
+resource "azurerm_key_vault" "cmk" {
+  name                       = "kv-fedramp-cmk"
+  location                   = var.location
+  resource_group_name        = azurerm_resource_group.rg.name
+  tenant_id                  = data.azurerm_client_config.current.tenant_id
+  sku_name                   = "premium"  # Required for CMK
+  soft_delete_retention_days = 90
+  purge_protection_enabled   = true
+  enable_rbac_authorization  = true
+}
+
+# Step 2: Encryption key
+resource "azurerm_key_vault_key" "storage" {
+  name         = "storage-encryption-key"
+  key_vault_id = azurerm_key_vault.cmk.id
+  key_type     = "RSA"
+  key_size     = 2048
+  key_opts     = ["decrypt", "encrypt", "unwrapKey", "wrapKey"]
+}
+
+# Step 3: Storage with CMK
+resource "azurerm_storage_account" "evidence" {
+  name                     = "stfedrampevidence"
+  resource_group_name      = azurerm_resource_group.rg.name
+  location                 = var.location
+  account_tier             = "Standard"
+  account_replication_type = "GRS"
+  
+  identity {
+    type = "SystemAssigned"
+  }
+  
+  customer_managed_key {
+    key_vault_key_id = azurerm_key_vault_key.storage.id
+  }
+}
+
+# Step 4: Grant access
+resource "azurerm_key_vault_access_policy" "storage" {
+  key_vault_id = azurerm_key_vault.cmk.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = azurerm_storage_account.evidence.identity[0].principal_id
+  
+  key_permissions = ["Get", "UnwrapKey", "WrapKey"]
+}
+```
 
 **Automation:**
 ```powershell

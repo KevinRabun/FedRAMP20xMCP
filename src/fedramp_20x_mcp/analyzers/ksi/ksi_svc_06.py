@@ -7,6 +7,7 @@ Official FedRAMP 20x Definition:
 Automate management, protection, and regular rotation of digital keys, certificates, and other secrets.
 """
 
+import re
 from typing import List, Set, Dict
 from ..base import Finding, Severity, AnalysisResult
 from .base import BaseKSIAnalyzer
@@ -600,11 +601,13 @@ class KSI_SVC_06_Analyzer(BaseKSIAnalyzer):
         return findings
     
     def _analyze_bicep_ast(self, tree, code: str, file_path: str, semantic_info) -> List[Finding]:
-        """Analyze Bicep IaC for Key Vault configuration."""
+        """Analyze Bicep IaC for Key Vault configuration and CMK enforcement."""
         findings = []
         lines = code.split('\n')
         
-        # Check for Key Vault resources (simplified regex for now)
+        # ============================================================================
+        # KEY VAULT CONFIGURATION CHECKS (existing logic)
+        # ============================================================================
         has_keyvault = "Microsoft.KeyVault/vaults" in code
         has_soft_delete = "enableSoftDelete" in code and "true" in code
         has_purge_protection = "enablePurgeProtection" in code and "true" in code
@@ -661,14 +664,194 @@ class KSI_SVC_06_Analyzer(BaseKSIAnalyzer):
                     recommendation="Create Key Vault: resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' = { properties: { enableSoftDelete: true, enablePurgeProtection: true } }"
                 ))
         
+        # ============================================================================
+        # CUSTOMER-MANAGED KEY (CMK) ENFORCEMENT
+        # ============================================================================
+        # KSI-SVC-06 Secret Management requires organizations to control key lifecycle
+        # including revocation capability. This necessitates customer-managed keys (CMK).
+        
+        # Pattern 1: Storage Account without CMK (HIGH)
+        in_storage_resource = False
+        storage_start_line = 0
+        has_keyvault_encryption = False
+        resource_name = ""
+        
+        for i, line in enumerate(lines, 1):
+            if re.search(r"resource\s+\w+\s+'Microsoft\.Storage/storageAccounts@", line):
+                in_storage_resource = True
+                storage_start_line = i
+                has_keyvault_encryption = False
+                match = re.search(r"resource\s+(\w+)\s+", line)
+                resource_name = match.group(1) if match else "storage account"
+            
+            if in_storage_resource:
+                # Platform-managed key (BAD)
+                if re.search(r"keySource:\s*['\"]Microsoft\.Storage['\"]", line):
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title=f"Storage Account Using Platform-Managed Keys ({resource_name})",
+                        description=(
+                            f"Storage account at line {storage_start_line} uses platform-managed keys (PMK). "
+                            f"KSI-SVC-06 Secret Management requires customer-managed keys (CMK) "
+                            f"to enable key lifecycle control including revocation capability. Platform-managed keys "
+                            f"are controlled by Microsoft, limiting your ability to revoke access per FedRAMP 20x."
+                        ),
+                        severity=Severity.HIGH,
+                        file_path=file_path,
+                        line_number=i,
+                        code_snippet=self._get_code_snippet(lines, i),
+                        recommendation=(
+                            f"Configure {resource_name} with customer-managed keys:\n\n"
+                            "resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {\n"
+                            "  name: 'kv-${uniqueString(resourceGroup().id)}'\n"
+                            "  properties: {\n"
+                            "    sku: { family: 'A', name: 'premium' }  // Premium for HSM\n"
+                            "    enableSoftDelete: true\n"
+                            "    enablePurgeProtection: true\n"
+                            "  }\n"
+                            "}\n"
+                            "resource key 'Microsoft.KeyVault/vaults/keys@2023-07-01' = {\n"
+                            "  parent: keyVault\n"
+                            "  name: 'storage-encryption-key'\n"
+                            "  properties: { kty: 'RSA', keySize: 2048 }\n"
+                            "}\n"
+                            f"resource {resource_name} 'Microsoft.Storage/storageAccounts@2023-01-01' = {{\n"
+                            "  identity: { type: 'SystemAssigned' }\n"
+                            "  properties: {\n"
+                            "    encryption: {\n"
+                            "      keySource: 'Microsoft.Keyvault'  // Use CMK\n"
+                            "      keyvaultproperties: {\n"
+                            "        keyname: key.name\n"
+                            "        keyvaulturi: keyVault.properties.vaultUri\n"
+                            "      }\n"
+                            "    }\n"
+                            "  }\n"
+                            "}\n\n"
+                            "Ref: KSI-SVC-06 Secret Management, Azure Storage CMK (https://learn.microsoft.com/azure/storage/common/customer-managed-keys-overview)"
+                        )
+                    ))
+                
+                # Customer-managed key (GOOD)
+                if re.search(r"keySource:\s*['\"]Microsoft\.Keyvault['\"]", line):
+                    has_keyvault_encryption = True
+                
+                # End of resource
+                if re.match(r'^}\s*$', line) and in_storage_resource:
+                    if not has_keyvault_encryption and storage_start_line > 0:
+                        has_encryption_property = any(
+                            'keySource' in lines[j] 
+                            for j in range(storage_start_line - 1, min(i, len(lines)))
+                        )
+                        if not has_encryption_property:
+                            findings.append(Finding(
+                                ksi_id=self.KSI_ID,
+                                title=f"Storage Account Missing Encryption Configuration ({resource_name})",
+                                description=(
+                                    f"Storage account at line {storage_start_line} has no encryption configuration. "
+                                    f"KSI-SVC-06 Secret Management requires customer-managed keys (CMK). Without explicit CMK configuration, "
+                                    f"Azure defaults to platform-managed keys (PMK) which limit key lifecycle control."
+                                ),
+                                severity=Severity.HIGH,
+                                file_path=file_path,
+                                line_number=storage_start_line,
+                                code_snippet=self._get_code_snippet(lines, storage_start_line),
+                                recommendation=f"Add CMK encryption to {resource_name} (see previous recommendation)"
+                            ))
+                    in_storage_resource = False
+        
+        # Pattern 2: SQL Database without CMK (HIGH)
+        for i, line in enumerate(lines, 1):
+            if re.search(r"Microsoft\.Sql/(servers/databases|managedInstances)", line):
+                context_start = max(0, i - 10)
+                context_end = min(len(lines), i + 20)
+                context = '\n'.join(lines[context_start:context_end])
+                
+                has_tde_cmk = re.search(r"transparentDataEncryption.*customer", context, re.IGNORECASE | re.DOTALL)
+                
+                if not has_tde_cmk:
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="SQL Database Without Customer-Managed Key Encryption",
+                        description=(
+                            f"SQL Database at line {i} lacks customer-managed key (CMK) for TDE. "
+                            f"KSI-SVC-06 Secret Management requires CMK for transparent data encryption on databases with federal data."
+                        ),
+                        severity=Severity.HIGH,
+                        file_path=file_path,
+                        line_number=i,
+                        code_snippet=self._get_code_snippet(lines, i),
+                        recommendation=(
+                            "Configure SQL with CMK for TDE:\n\n"
+                            "resource sqlServerKey 'Microsoft.Sql/servers/keys@2023-05-01-preview' = {\n"
+                            "  parent: sqlServer\n"
+                            "  name: '${keyVault.name}_${key.name}'\n"
+                            "  properties: {\n"
+                            "    serverKeyType: 'AzureKeyVault'\n"
+                            "    uri: key.properties.keyUriWithVersion\n"
+                            "  }\n"
+                            "}\n"
+                            "resource sqlServerTDE 'Microsoft.Sql/servers/encryptionProtector@2023-05-01-preview' = {\n"
+                            "  parent: sqlServer\n"
+                            "  name: 'current'\n"
+                            "  properties: {\n"
+                            "    serverKeyType: 'AzureKeyVault'\n"
+                            "    serverKeyName: sqlServerKey.name\n"
+                            "  }\n"
+                            "}\n\n"
+                            "Ref: Azure SQL TDE with CMK (https://learn.microsoft.com/azure/azure-sql/database/transparent-data-encryption-byok-overview)"
+                        )
+                    ))
+        
+        # Pattern 3: Managed Disk without Disk Encryption Set (MEDIUM)
+        for i, line in enumerate(lines, 1):
+            if re.search(r"Microsoft\.Compute/disks@", line):
+                context_start = max(0, i - 5)
+                context_end = min(len(lines), i + 20)
+                context = '\n'.join(lines[context_start:context_end])
+                
+                has_disk_encryption_set = 'diskEncryptionSet' in context
+                
+                if not has_disk_encryption_set:
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="Managed Disk Without Disk Encryption Set (CMK)",
+                        description=(
+                            f"Managed Disk at line {i} does not reference a Disk Encryption Set. "
+                            f"KSI-SVC-06 Secret Management requires customer-managed keys for disk encryption to maintain key lifecycle control."
+                        ),
+                        severity=Severity.MEDIUM,
+                        file_path=file_path,
+                        line_number=i,
+                        code_snippet=self._get_code_snippet(lines, i),
+                        recommendation=(
+                            "Configure Disk with Disk Encryption Set:\n\n"
+                            "resource diskEncryptionSet 'Microsoft.Compute/diskEncryptionSets@2023-04-02' = {\n"
+                            "  name: 'des-${uniqueString(resourceGroup().id)}'\n"
+                            "  identity: { type: 'SystemAssigned' }\n"
+                            "  properties: {\n"
+                            "    activeKey: { keyUrl: key.properties.keyUriWithVersion }\n"
+                            "    encryptionType: 'EncryptionAtRestWithCustomerKey'\n"
+                            "  }\n"
+                            "}\n"
+                            "resource disk 'Microsoft.Compute/disks@2023-04-02' = {\n"
+                            "  properties: {\n"
+                            "    encryption: { diskEncryptionSetId: diskEncryptionSet.id }\n"
+                            "  }\n"
+                            "}\n\n"
+                            "Ref: Azure Disk Encryption with CMK (https://learn.microsoft.com/azure/virtual-machines/disk-encryption)"
+                        )
+                    ))
+        
         return findings
     
     def _analyze_terraform_ast(self, tree, code: str, file_path: str, semantic_info) -> List[Finding]:
-        """Analyze Terraform IaC for Key Vault configuration."""
+        """Analyze Terraform IaC for Key Vault configuration and CMK enforcement."""
         findings = []
         lines = code.split('\n')
         
-        # Check for Key Vault resources (simplified)
+        # ============================================================================
+        # KEY VAULT CONFIGURATION CHECKS (existing logic)
+        # ============================================================================
         has_keyvault = "azurerm_key_vault" in code
         has_soft_delete = "soft_delete_retention_days" in code
         has_purge_protection = "purge_protection_enabled" in code and "true" in code
@@ -725,6 +908,137 @@ class KSI_SVC_06_Analyzer(BaseKSIAnalyzer):
                     recommendation='Create Key Vault: resource "azurerm_key_vault" "example" { soft_delete_retention_days = 90, purge_protection_enabled = true }'
                 ))
         
+        # ============================================================================
+        # CUSTOMER-MANAGED KEY (CMK) ENFORCEMENT
+        # ============================================================================
+        # KSI-SVC-06 Secret Management requires customer-managed keys for key lifecycle control
+        
+        # Pattern 1: Storage Account without CMK (HIGH)
+        in_storage_resource = False
+        storage_start_line = 0
+        has_cmk_config = False
+        resource_name = ""
+        brace_depth = 0
+        
+        for i, line in enumerate(lines, 1):
+            if re.search(r'resource\s+"azurerm_storage_account"', line):
+                in_storage_resource = True
+                storage_start_line = i
+                has_cmk_config = False
+                brace_depth = 0
+                match = re.search(r'resource\s+"azurerm_storage_account"\s+"(\w+)"', line)
+                resource_name = match.group(1) if match else "storage_account"
+            
+            if in_storage_resource:
+                brace_depth += line.count('{')
+                brace_depth -= line.count('}')
+                
+                if 'customer_managed_key' in line:
+                    has_cmk_config = True
+                
+                if brace_depth == 0 and in_storage_resource and i > storage_start_line:
+                    if not has_cmk_config:
+                        findings.append(Finding(
+                            ksi_id=self.KSI_ID,
+                            title=f"Storage Account Without Customer-Managed Key ({resource_name})",
+                            description=(
+                                f"Storage account '{resource_name}' at line {storage_start_line} lacks CMK configuration. "
+                                f"KSI-SVC-06 Secret Management requires customer-managed keys for key lifecycle control. "
+                                f"Without customer_managed_key block, storage uses platform-managed keys (PMK)."
+                            ),
+                            severity=Severity.HIGH,
+                            file_path=file_path,
+                            line_number=storage_start_line,
+                            code_snippet=self._get_code_snippet(lines, storage_start_line),
+                            recommendation=(
+                                f"Configure {resource_name} with CMK:\n\n"
+                                "resource \"azurerm_key_vault\" \"cmk\" {\n"
+                                "  sku_name = \"premium\"  # Required for HSM\n"
+                                "  soft_delete_retention_days = 90\n"
+                                "  purge_protection_enabled = true\n"
+                                "}\n"
+                                "resource \"azurerm_key_vault_key\" \"storage\" {\n"
+                                "  key_vault_id = azurerm_key_vault.cmk.id\n"
+                                "  key_type = \"RSA\"\n"
+                                "  key_size = 2048\n"
+                                "}\n"
+                                f"resource \"azurerm_storage_account\" \"{resource_name}\" {{\n"
+                                "  identity { type = \"SystemAssigned\" }\n"
+                                "  customer_managed_key {\n"
+                                "    key_vault_key_id = azurerm_key_vault_key.storage.id\n"
+                                "  }\n"
+                                "}\n\n"
+                                "Ref: KSI-SVC-06 Secret Management, Terraform azurerm_storage_account CMK"
+                            )
+                        ))
+                    in_storage_resource = False
+        
+        # Pattern 2: SQL Database without CMK (HIGH)
+        for i, line in enumerate(lines, 1):
+            if re.search(r'resource\s+"azurerm_mssql_(database|server)"', line):
+                context_start = max(0, i - 5)
+                context_end = min(len(lines), i + 30)
+                context = '\n'.join(lines[context_start:context_end])
+                
+                has_tde_cmk = re.search(r'azurerm_mssql_server_transparent_data_encryption.*customer_managed_key', 
+                                       context, re.DOTALL)
+                
+                if 'azurerm_mssql_database' in line and not has_tde_cmk:
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="SQL Database Without Customer-Managed TDE Key",
+                        description=(
+                            f"SQL Database at line {i} lacks customer-managed key for TDE. "
+                            f"KSI-SVC-06 Secret Management requires CMK for transparent data encryption."
+                        ),
+                        severity=Severity.HIGH,
+                        file_path=file_path,
+                        line_number=i,
+                        code_snippet=self._get_code_snippet(lines, i),
+                        recommendation=(
+                            "Configure SQL with CMK for TDE:\n\n"
+                            "resource \"azurerm_mssql_server_transparent_data_encryption\" \"tde\" {\n"
+                            "  server_id = azurerm_mssql_server.sql.id\n"
+                            "  key_vault_key_id = azurerm_key_vault_key.sql.id\n"
+                            "}\n\n"
+                            "Ref: Terraform TDE with CMK"
+                        )
+                    ))
+        
+        # Pattern 3: Managed Disk without disk_encryption_set_id (MEDIUM)
+        for i, line in enumerate(lines, 1):
+            if re.search(r'resource\s+"azurerm_managed_disk"', line):
+                context_start = max(0, i - 5)
+                context_end = min(len(lines), i + 20)
+                context = '\n'.join(lines[context_start:context_end])
+                
+                has_des = 'disk_encryption_set_id' in context
+                
+                if not has_des:
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="Managed Disk Without Disk Encryption Set",
+                        description=(
+                            f"Managed Disk at line {i} lacks disk_encryption_set_id. "
+                            f"KSI-SVC-06 Secret Management requires customer-managed keys for disk encryption."
+                        ),
+                        severity=Severity.MEDIUM,
+                        file_path=file_path,
+                        line_number=i,
+                        code_snippet=self._get_code_snippet(lines, i),
+                        recommendation=(
+                            "Configure Disk with Disk Encryption Set:\n\n"
+                            "resource \"azurerm_disk_encryption_set\" \"des\" {\n"
+                            "  key_vault_key_id = azurerm_key_vault_key.disk.id\n"
+                            "  identity { type = \"SystemAssigned\" }\n"
+                            "}\n"
+                            "resource \"azurerm_managed_disk\" \"disk\" {\n"
+                            "  disk_encryption_set_id = azurerm_disk_encryption_set.des.id\n"
+                            "}\n\n"
+                            "Ref: Terraform Disk Encryption Set"
+                        )
+                    ))
+        
         return findings
     
     # ============================================================================
@@ -747,7 +1061,7 @@ class KSI_SVC_06_Analyzer(BaseKSIAnalyzer):
         ]
         return any(ph in value_lower for ph in placeholders)
     
-
+    def _get_code_snippet(self, lines: List[str], line_number: int, context: int = 3) -> str:
         """Get code snippet around line number."""
         if line_number == 0 or line_number > len(lines):
             return ""
