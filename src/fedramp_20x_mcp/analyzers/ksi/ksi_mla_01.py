@@ -1,5 +1,5 @@
 """
-KSI-MLA-01 Enhanced: Security Information and Event Management (SIEM)
+KSI-MLA-01: Security Information and Event Management (SIEM)
 
 Operate a Security Information and Event Management (SIEM) or similar system(s) for centralized, 
 tamper-resistant logging of events, activities, and changes.
