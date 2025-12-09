@@ -52,12 +52,12 @@ async def analyze_infrastructure_code_impl(
     
     # Create aggregated result
     combined_result = AnalysisResult(
-        file_path=file_path,
         findings=all_findings
     )
     
     # Format output
     output = combined_result.to_dict()
+    output["file_path"] = file_path
     
     # Add context if provided
     if context:
@@ -119,12 +119,12 @@ async def analyze_application_code_impl(
     
     # Create aggregated result
     combined_result = AnalysisResult(
-        file_path=file_path,
         findings=all_findings
     )
     
     # Format output
     output = combined_result.to_dict()
+    output["file_path"] = file_path
     
     # Add dependencies info if provided
     if dependencies:
@@ -182,12 +182,12 @@ async def analyze_cicd_pipeline_impl(
     
     # Create aggregated result
     combined_result = AnalysisResult(
-        file_path=file_path,
         findings=all_findings
     )
     
     # Format output
     output = combined_result.to_dict()
+    output["file_path"] = file_path
     output["pipeline_type"] = pipeline_type
     
     # Add formatted recommendations
