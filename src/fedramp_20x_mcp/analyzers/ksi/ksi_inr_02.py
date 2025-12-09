@@ -61,8 +61,8 @@ class KSI_INR_02_Analyzer(BaseKSIAnalyzer):
         ("ir-5", "Incident Monitoring"),
         ("ir-8", "Incident Response Plan")
     ]
-    CODE_DETECTABLE = False
-    IMPLEMENTATION_STATUS = "NOT_IMPLEMENTED"
+    CODE_DETECTABLE = True
+    IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RETIRED = False
     
     def __init__(self, language=None, ksi_id: str = "", ksi_name: str = "", ksi_statement: str = ""):
