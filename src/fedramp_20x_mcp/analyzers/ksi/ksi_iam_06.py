@@ -1,5 +1,5 @@
 """
-KSI-IAM-06: Suspicious Activity (Enhanced with AST Analysis)
+KSI-IAM-06: Suspicious Activity
 
 Automatically disable or otherwise secure accounts with privileged access in response to suspicious activity.
 
