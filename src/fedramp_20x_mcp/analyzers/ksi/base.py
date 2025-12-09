@@ -185,4 +185,42 @@ class BaseKSIAnalyzer(ABC):
     def is_code_detectable(self) -> bool:
         """Check if this KSI can be detected via code analysis."""
         return self.CODE_DETECTABLE and not self.RETIRED
+    
+    # ============================================================================
+    # HELPER METHODS (Available to all subclasses)
+    # ============================================================================
+    
+    def _find_line(self, lines: List[str], search_term: str) -> int:
+        """
+        Find line number containing search term.
+        
+        Args:
+            lines: List of code lines
+            search_term: String to search for (case-insensitive)
+            
+        Returns:
+            1-based line number, or 0 if not found
+        """
+        for i, line in enumerate(lines, 1):
+            if search_term.lower() in line.lower():
+                return i
+        return 0
+    
+    def _get_snippet(self, lines: List[str], line_number: int, context: int = 2) -> str:
+        """
+        Get code snippet around a line number.
+        
+        Args:
+            lines: List of code lines
+            line_number: 1-based line number to center on
+            context: Number of lines before/after to include (default: 2)
+            
+        Returns:
+            Code snippet with context lines, or empty string if invalid line number
+        """
+        if line_number == 0:
+            return ""
+        start = max(0, line_number - context - 1)
+        end = min(len(lines), line_number + context)
+        return '\n'.join(lines[start:end])
 
