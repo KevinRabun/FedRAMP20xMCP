@@ -79,11 +79,23 @@ uv pip install -e .
 - `httpx>=0.27.0` - HTTP client for fetching FedRAMP data
 - `openpyxl>=3.1.0` - Excel file generation for export features
 - `python-docx>=1.1.0` - Word document generation for KSI specifications
+- `tree-sitter>=0.21.0` - AST parsing library for code analysis
+- `tree-sitter-python>=0.21.0` - Python language bindings for tree-sitter
+- `tree-sitter-c-sharp>=0.21.0` - C# language bindings for tree-sitter
+- `tree-sitter-java>=0.21.0` - Java language bindings for tree-sitter
+- `tree-sitter-javascript>=0.21.0` - JavaScript/TypeScript language bindings
 
-**Troubleshooting:** If you get "Python was not found" errors:
+**Troubleshooting:** 
+
+If you get "Python was not found" errors:
 1. Ensure Python is installed and added to PATH
 2. Try using `python3` instead of `python`
 3. Or use the full path to python.exe in `.vscode/mcp.json`
+
+If the MCP server reports fewer than 72 KSIs:
+1. Check that all tree-sitter packages are installed: `pip list | grep tree-sitter`
+2. Reinstall dependencies: `pip install -e . --force-reinstall`
+3. Check server logs for import errors (logged to stderr)
 
 ## Security
 

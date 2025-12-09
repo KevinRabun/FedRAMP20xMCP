@@ -341,7 +341,7 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
             "families": {...}
         }
         """
-        result = await ksi_status.get_ksi_implementation_status_impl()
+        result = await ksi_status.get_ksi_implementation_status_impl(data_loader)
         return json.dumps(result, indent=2)
     
     @mcp.tool()
@@ -376,7 +376,7 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         Example:
             get_ksi_family_status("IAM")
         """
-        result = await ksi_status.get_ksi_family_status_impl(family)
+        result = await ksi_status.get_ksi_family_status_impl(family, data_loader)
         return json.dumps(result, indent=2)
     
     logger.info("Registered 35 tools across 11 modules")

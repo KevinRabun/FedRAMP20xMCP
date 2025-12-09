@@ -7,11 +7,14 @@ Each KSI analyzer is self-contained with complete language support.
 
 import os
 import re
+import logging
 from pathlib import Path
 from importlib import import_module
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Any
 from .base import BaseKSIAnalyzer
 from ..base import AnalysisResult
+
+logger = logging.getLogger(__name__)
 
 
 class KSIAnalyzerFactory:
@@ -42,6 +45,8 @@ class KSIAnalyzerFactory:
             if f.stem not in ('ksi_base', '__init__')
         ])
         
+        failed_imports = []
+        
         # Dynamically import and register each analyzer
         for module_name in ksi_files:
             try:
@@ -56,9 +61,16 @@ class KSIAnalyzerFactory:
                 self.register(analyzer_class())
                 
             except (ImportError, AttributeError) as e:
-                # Skip if module or class not found
-                # This allows for WIP analyzers or files that don't follow the pattern
-                pass
+                # Log which analyzers failed to load
+                failed_imports.append((module_name, str(e)))
+                logger.warning(f"Failed to load KSI analyzer {module_name}: {e}")
+        
+        # Log summary
+        logger.info(f"Registered {len(self._analyzers)} KSI analyzers out of {len(ksi_files)} files")
+        if failed_imports:
+            logger.warning(f"Failed to load {len(failed_imports)} KSI analyzers:")
+            for module_name, error in failed_imports:
+                logger.warning(f"  - {module_name}: {error}")
     
     def register(self, analyzer: BaseKSIAnalyzer):
         """
@@ -68,6 +80,45 @@ class KSIAnalyzerFactory:
             analyzer: Instance of BaseKSIAnalyzer subclass
         """
         self._analyzers[analyzer.ksi_id] = analyzer
+    
+    async def sync_with_authoritative_data(self, data_loader) -> Dict[str, Any]:
+        """
+        Sync analyzer metadata with authoritative FedRAMP JSON data.
+        
+        This ensures RETIRED status and other metadata stays accurate
+        when the authoritative source is updated.
+        
+        Args:
+            data_loader: DataLoader instance with loaded KSI data
+            
+        Returns:
+            Dictionary with sync results
+        """
+        await data_loader.load_data()
+        
+        synced = 0
+        mismatches = []
+        
+        for ksi_id, analyzer in self._analyzers.items():
+            ksi_data = data_loader.get_ksi(ksi_id)
+            if ksi_data:
+                # Check if retired status matches
+                retired_in_data = ksi_data.get("retired", False)
+                if analyzer.RETIRED != retired_in_data:
+                    mismatches.append({
+                        "ksi_id": ksi_id,
+                        "analyzer_retired": analyzer.RETIRED,
+                        "data_retired": retired_in_data
+                    })
+                    # Update the analyzer's RETIRED status dynamically
+                    analyzer.RETIRED = retired_in_data
+                    synced += 1
+        
+        return {
+            "synced_count": synced,
+            "mismatches": mismatches,
+            "total_analyzers": len(self._analyzers)
+        }
     
     def get_analyzer(self, ksi_id: str) -> Optional[BaseKSIAnalyzer]:
         """

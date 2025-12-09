@@ -63,6 +63,10 @@ async def list_ksi_impl(data_loader) -> str:
     try:
         # Get all KSI analyzers from factory
         factory = get_factory()
+        
+        # Sync with authoritative data to ensure RETIRED status is current
+        await factory.sync_with_authoritative_data(data_loader)
+        
         analyzers = factory._analyzers
         
         if not analyzers:

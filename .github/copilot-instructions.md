@@ -15,11 +15,28 @@ FedRAMP 20x requires **machine-readable** formats (JSON/XML/structured data) for
 - **1-hour caching** with automatic refresh
 
 ## KSI Implementation Status
-**Progress:** 40/65 active KSIs complete (61.5%) | Target: 55/65 (84.6%)
+**Accurate Counts (verified via factory and authoritative source):**
+- **72 total KSIs**
+- **65 active KSIs** (7 retired)
+- **41 code-detectable KSIs** (63.1% of active)
+- **24 process-based KSIs** (36.9% of active)
+- **38 implemented KSIs** (58.5% of active code-detectable)
+
+**Retired KSIs (7):**
+- KSI-CMT-05 (superseded by KSI-AFR-05 SCN)
+- KSI-MLA-03, KSI-MLA-04, KSI-MLA-06 (superseded by KSI-AFR-04 VDR)
+- KSI-SVC-03 (superseded by KSI-AFR-11 UCM)
+- KSI-TPR-01, KSI-TPR-02 (superseded by KSI-AFR-01 MAS)
 
 **Complete Families (5/10):** IAM, SVC, CNA, TPR, CMT
-**Significantly Complete:** MLA (5/5), PIY (2/2 code-detectable), AFR (2/2 code-detectable), INR (1/1 code-detectable)
-**Remaining:** 17 KSIs are process/documentation-based (not code-detectable)
+**Significantly Complete:** MLA (5/8 active), PIY (2/2 code-detectable), AFR (active), INR (1/1 code-detectable)
+
+**Authoritative Data Sync:**
+- The factory's `sync_with_authoritative_data(data_loader)` method ensures RETIRED status stays current
+- Called automatically by `list_ksi` and `get_ksi_implementation_status` tools
+- Compares analyzer RETIRED flags against GitHub FedRAMP/docs JSON data
+- Dynamically updates analyzer metadata at runtime when discrepancies detected
+- Source: https://github.com/FedRAMP/docs/blob/main/data/FRMR.KSI.key-security-indicators.json
 
 ## Code Organization
 **All 4 Phases Refactoring Complete (97.2% reduction):**

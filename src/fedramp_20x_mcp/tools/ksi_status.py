@@ -3,27 +3,36 @@ KSI implementation status tools.
 
 Dynamically queries KSI analyzers to report on implementation status
 and code detectability without maintaining separate tracking lists.
+Syncs with authoritative FedRAMP data to ensure accuracy.
 """
 
 from typing import Dict, Any, List
 from ..analyzers.ksi.factory import get_factory
 
 
-async def get_ksi_implementation_status_impl() -> Dict[str, Any]:
+async def get_ksi_implementation_status_impl(data_loader=None) -> Dict[str, Any]:
     """
     Get comprehensive status of all KSI implementations.
     
     Queries each KSI analyzer for:
     - CODE_DETECTABLE: Whether the KSI can be detected in code
     - IMPLEMENTATION_STATUS: Current implementation state
-    - Retirement status
+    - Retirement status (synced from authoritative source)
     - Impact levels
     - NIST control mappings
+    
+    Args:
+        data_loader: Optional DataLoader for syncing with authoritative data
     
     Returns:
         Dictionary with complete KSI status information organized by family
     """
     factory = get_factory()
+    
+    # Sync with authoritative data if data_loader provided
+    if data_loader:
+        await factory.sync_with_authoritative_data(data_loader)
+    
     ksi_ids = factory.list_ksis()
     
     status = {
@@ -125,17 +134,23 @@ async def get_ksi_implementation_status_impl() -> Dict[str, Any]:
     return status
 
 
-async def get_ksi_family_status_impl(family: str) -> Dict[str, Any]:
+async def get_ksi_family_status_impl(family: str, data_loader=None) -> Dict[str, Any]:
     """
     Get implementation status for a specific KSI family.
     
     Args:
         family: Family code (e.g., "IAM", "SVC", "CNA")
+        data_loader: Optional DataLoader for syncing with authoritative data
     
     Returns:
         Dictionary with family-specific status information
     """
     factory = get_factory()
+    
+    # Sync with authoritative data if data_loader provided
+    if data_loader:
+        await factory.sync_with_authoritative_data(data_loader)
+    
     ksi_ids = factory.list_ksis()
     
     family_status = {
