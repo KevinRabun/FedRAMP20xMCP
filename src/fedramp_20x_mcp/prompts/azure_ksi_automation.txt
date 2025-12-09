@@ -874,8 +874,14 @@ customer-managed keys (CMK) for Moderate/High impact levels:
 1. **Storage Accounts**: Use `keySource: 'Microsoft.Keyvault'` (not `'Microsoft.Storage'`)
 2. **SQL Databases**: Configure TDE with customer-managed key
 3. **Managed Disks**: Use Disk Encryption Sets with Key Vault key
-4. **Cosmos DB**: Configure `keyVaultKeyUri` in defaultIdentity with customer-managed key
+4. **Cosmos DB**: Configure `keyVaultKeyUri` as **TOP-LEVEL property** (NOT inside encryption object)
 5. **Azure Data Lake**: Use customer-managed key encryption
+
+**⚠️ CRITICAL: Cosmos DB CMK Common Mistakes:**
+- ❌ WRONG: `properties: { encryption: { keyVaultKeyUri: '...' } }` - NO encryption object exists
+- ✅ CORRECT: `properties: { keyVaultKeyUri: '...' }` - keyVaultKeyUri is a direct property
+- ❌ WRONG: `properties: { diagnosticLogSettings: {...} }` - This property doesn't exist
+- ✅ CORRECT: Separate `Microsoft.Insights/diagnosticSettings` resource with `scope: cosmosDb`
 
 **CMK Configuration Example (Bicep):**
 ```bicep
@@ -954,7 +960,58 @@ resource cosmosDb 'Microsoft.DocumentDB/databaseAccounts@2023-11-15' = {
       failoverPriority: 0
       isZoneRedundant: false
     }]
-    keyVaultKeyUri: cosmosEncryptionKey.properties.keyUriWithVersion  // CMK requirement
+    // CMK configuration - keyVaultKeyUri is a TOP-LEVEL property
+    keyVaultKeyUri: cosmosEncryptionKey.properties.keyUriWithVersion
+    // Network security
+    publicNetworkAccess: 'Disabled'
+    networkAcls: {
+      defaultAction: 'Deny'
+    }
+  }
+}
+
+// Step 4b: Diagnostic settings for Cosmos DB (separate resource, NOT a property)
+resource cosmosDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'cosmos-diagnostics'
+  scope: cosmosDb
+  properties: {
+    workspaceId: logAnalytics.id
+    logs: [
+      {
+        category: 'DataPlaneRequests'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: 730
+        }
+      }
+      {
+        category: 'QueryRuntimeStatistics'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: 730
+        }
+      }
+      {
+        category: 'PartitionKeyStatistics'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: 730
+        }
+      }
+    ]
+    metrics: [
+      {
+        category: 'Requests'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: 730
+        }
+      }
+    ]
   }
 }
 
