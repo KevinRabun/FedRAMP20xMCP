@@ -162,6 +162,45 @@ async def validate_fedramp_config_impl(
                     "value": "Customer-Managed Keys configured",
                     "status": "COMPLIANT"
                 })
+        
+        # Check Cosmos DB
+        cosmos_pattern = r"resource\s+\w+\s+'Microsoft\.DocumentDB/databaseAccounts"
+        if re.search(cosmos_pattern, code):
+            # Check for missing keyVaultKeyUri (VIOLATION)
+            if not re.search(r"keyVaultKeyUri:", code):
+                violations.append({
+                    "requirement": "KSI-SVC-06: Customer-Managed Keys for Cosmos DB",
+                    "expected": "keyVaultKeyUri: 'https://{vault}.vault.azure.net/keys/{key}/{version}'",
+                    "found": "Missing keyVaultKeyUri property",
+                    "severity": "CRITICAL",
+                    "fix": "Add keyVaultKeyUri property with Key Vault key reference"
+                })
+            else:
+                compliant.append({
+                    "requirement": "KSI-SVC-06: Customer-Managed Keys for Cosmos DB",
+                    "value": "keyVaultKeyUri configured",
+                    "status": "COMPLIANT"
+                })
+    
+    elif file_type_lower == "terraform":
+        # Check Storage Accounts
+        storage_pattern = r'resource\s+"azurerm_storage_account"'
+        if re.search(storage_pattern, code):
+            # Check for missing customer_managed_key block (VIOLATION)
+            if not re.search(r"customer_managed_key\s*\{", code):
+                violations.append({
+                    "requirement": "KSI-SVC-06: Customer-Managed Keys for Storage",
+                    "expected": "customer_managed_key block configured",
+                    "found": "Missing customer_managed_key block",
+                    "severity": "CRITICAL",
+                    "fix": "Add customer_managed_key block with Key Vault key reference"
+                })
+            else:
+                compliant.append({
+                    "requirement": "KSI-SVC-06: Customer-Managed Keys for Storage",
+                    "value": "Customer-Managed Keys configured",
+                    "status": "COMPLIANT"
+                })
     
     # =============================================================================
     # MANDATORY REQUIREMENT 3: Key Vault Premium SKU
@@ -202,27 +241,6 @@ async def validate_fedramp_config_impl(
                 compliant.append({
                     "requirement": "Key Vault enabledForDiskEncryption",
                     "value": "true",
-                    "status": "COMPLIANT"
-                })
-    
-    # =============================================================================
-    # VALIDATION: Cosmos DB Customer-Managed Key (keyVaultKeyUri property)
-    # =============================================================================
-    if file_type_lower == "bicep":
-        cosmos_pattern = r"resource\s+\w+\s+'Microsoft\.DocumentDB/databaseAccounts"
-        if re.search(cosmos_pattern, code):
-            if not re.search(r"keyVaultKeyUri:", code):
-                violations.append({
-                    "requirement": "KSI-SVC-06: Cosmos DB Customer-Managed Key",
-                    "expected": "keyVaultKeyUri: '<key-vault-key-uri>'",
-                    "found": "Missing keyVaultKeyUri property",
-                    "severity": "CRITICAL",
-                    "fix": "Add keyVaultKeyUri property with Key Vault key reference"
-                })
-            else:
-                compliant.append({
-                    "requirement": "KSI-SVC-06: Cosmos DB Customer-Managed Key",
-                    "value": "keyVaultKeyUri configured",
                     "status": "COMPLIANT"
                 })
     

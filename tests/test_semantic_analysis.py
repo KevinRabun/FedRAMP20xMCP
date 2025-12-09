@@ -269,9 +269,9 @@ def handle_user_data():
         if var_name in types:
             actual_context = types[var_name].security_context
             if actual_context == expected_context:
-                print(f"  [PASS] {var_name}: {expected_context.value}")
+                print(f"  [PASS] Variable context: {expected_context.value}")
             else:
-                print(f"  [FAIL] {var_name}: expected {expected_context.value}, got {actual_context.value}")
+                print(f"  [FAIL] Variable context: expected {expected_context.value}, got {actual_context.value}")
     
     print()
 

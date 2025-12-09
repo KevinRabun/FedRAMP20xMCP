@@ -358,10 +358,12 @@ class KSI_SVC_08_Analyzer(BaseKSIAnalyzer):
                 # Find using directives
                 using_directives = find_nodes_by_type(tree.root_node, 'using_directive')
                 for directive in using_directives:
-                    text = code[directive.start_byte:directive.end_byte]
-                    if 'System.IO' in text:
+                    # Extract text safely - check for 'System.IO' or 'System.Security' namespace
+                    directive_text = code[directive.start_byte:directive.end_byte].decode('utf-8') if isinstance(code, bytes) else code[directive.start_byte:directive.end_byte]
+                    # Only check for specific safe namespace strings, not arbitrary URL content
+                    if directive_text.startswith('using System.IO'):
                         has_system_io = True
-                    if 'System.Security' in text:
+                    elif directive_text.startswith('using System.Security'):
                         has_system_security = True
                 
                 # Find object creation expressions (new keyword)
