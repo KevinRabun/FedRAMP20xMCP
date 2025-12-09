@@ -1455,7 +1455,7 @@ class KSI_RPL_03_Analyzer(BaseKSIAnalyzer):
     # HELPER METHODS
     # ============================================================================
     
-    def _find_line(self, lines: List[str], search_term: str) -> int:
+
         """Find line number containing search term."""
         for i, line in enumerate(lines, 1):
             if search_term.lower() in line.lower():
@@ -1470,7 +1470,7 @@ class KSI_RPL_03_Analyzer(BaseKSIAnalyzer):
                     return i
         return 1
     
-    def _get_snippet(self, lines: List[str], line_number: int, context: int = 2) -> str:
+
         """Get code snippet around line number."""
         if line_number == 0:
             line_number = 1

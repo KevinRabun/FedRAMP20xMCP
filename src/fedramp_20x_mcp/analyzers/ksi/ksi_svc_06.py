@@ -747,7 +747,7 @@ class KSI_SVC_06_Analyzer(BaseKSIAnalyzer):
         ]
         return any(ph in value_lower for ph in placeholders)
     
-    def _get_snippet(self, lines: List[str], line_number: int, context: int = 2) -> str:
+
         """Get code snippet around line number."""
         if line_number == 0 or line_number > len(lines):
             return ""

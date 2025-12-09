@@ -698,7 +698,7 @@ class KSI_MLA_05_Analyzer(BaseKSIAnalyzer):
         
         return findings
     
-    def _get_snippet(self, lines: List[str], line_num: int, context: int = 3) -> str:
+
         """Get code snippet around line number."""
         start = max(0, line_num - context - 1)
         end = min(len(lines), line_num + context)

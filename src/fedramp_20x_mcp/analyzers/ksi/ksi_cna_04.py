@@ -924,14 +924,14 @@ class KSI_CNA_04_Analyzer(BaseKSIAnalyzer):
     # HELPER METHODS
     # ============================================================================
     
-    def _find_line(self, lines: List[str], pattern: str) -> Optional[Dict[str, Any]]:
+
         """Find line number and content matching regex pattern."""
         for i, line in enumerate(lines, 1):
             if re.search(pattern, line, re.IGNORECASE):
                 return {'line_num': i, 'line': line}
         return None
     
-    def _get_snippet(self, lines: List[str], line_number: int, context: int = 2) -> str:
+
         """Get code snippet around line number."""
         if line_number == 0:
             return ""

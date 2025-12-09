@@ -633,20 +633,14 @@ class KSI_PIY_02_Analyzer(BaseKSIAnalyzer):
         
         return findings
     
-    def _find_line(self, lines: List[str], pattern: str) -> int:
+
         """Find line number containing pattern"""
         for i, line in enumerate(lines, 1):
             if pattern in line:
                 return i
         return 1
     
-    def _get_context(self, lines: List[str], line_num: int, context_lines: int = 5) -> str:
-        """Get context around line"""
-        start = max(0, line_num - context_lines - 1)
-        end = min(len(lines), line_num + context_lines)
-        return '\n'.join(lines[start:end])
-    
-    def _get_snippet(self, lines: List[str], line_num: int, context: int = 3) -> str:
+
         """Get code snippet around line"""
         if not lines or line_num < 1:
             return ""
@@ -654,7 +648,7 @@ class KSI_PIY_02_Analyzer(BaseKSIAnalyzer):
         end = min(len(lines), line_num + context)
         return '\n'.join(lines[start:end])
     
-    def _get_snippet_from_bytes(self, code: str, start_byte: int, end_byte: int, context: int = 100) -> str:
+
         """Get code snippet from byte positions with context"""
         snippet_start = max(0, start_byte - context)
         snippet_end = min(len(code), end_byte + context)

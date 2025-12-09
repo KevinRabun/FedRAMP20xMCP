@@ -190,19 +190,33 @@ class BaseKSIAnalyzer(ABC):
     # HELPER METHODS (Available to all subclasses)
     # ============================================================================
     
-    def _find_line(self, lines: List[str], search_term: str) -> int:
+    def _find_line(self, lines: List[str], search_term: str, use_regex: bool = False) -> int:
         """
-        Find line number containing search term.
+        Find line number containing search term or matching regex pattern.
         
         Args:
             lines: List of code lines
-            search_term: String to search for (case-insensitive)
+            search_term: String to search for (case-insensitive) or regex pattern if use_regex=True
+            use_regex: If True, treat search_term as regex pattern (default: False)
             
         Returns:
             1-based line number, or 0 if not found
         """
+        if use_regex:
+            import re
+            try:
+                pattern = re.compile(search_term, re.IGNORECASE)
+                for i, line in enumerate(lines, 1):
+                    if pattern.search(line):
+                        return i
+            except re.error:
+                # Invalid regex, fall back to substring search
+                pass
+        
+        # Simple substring search (default behavior)
+        search_lower = search_term.lower()
         for i, line in enumerate(lines, 1):
-            if search_term.lower() in line.lower():
+            if search_lower in line.lower():
                 return i
         return 0
     
@@ -218,9 +232,23 @@ class BaseKSIAnalyzer(ABC):
         Returns:
             Code snippet with context lines, or empty string if invalid line number
         """
-        if line_number == 0:
+        if line_number == 0 or not lines:
             return ""
         start = max(0, line_number - context - 1)
         end = min(len(lines), line_number + context)
         return '\n'.join(lines[start:end])
+    
+    def _get_context(self, lines: List[str], line_num: int, context_lines: int = 5) -> str:
+        """
+        Get context around a line (alias for _get_snippet with larger context).
+        
+        Args:
+            lines: List of code lines
+            line_num: 1-based line number
+            context_lines: Number of lines before/after to include (default: 5)
+            
+        Returns:
+            Code snippet with context lines
+        """
+        return self._get_snippet(lines, line_num, context_lines)
 

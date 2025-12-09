@@ -895,7 +895,7 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
     # HELPER METHODS
     # ============================================================================
     
-    def _find_line(self, lines: List[str], pattern: str) -> int:
+
         """Find line number matching regex pattern (case-insensitive)."""
         try:
             regex = re.compile(pattern, re.IGNORECASE)
@@ -909,7 +909,7 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
                     return i
         return 0
     
-    def _get_snippet(self, lines: List[str], line_number: int, context: int = 2) -> str:
+
         """Get code snippet around line number."""
         if line_number == 0:
             return ""

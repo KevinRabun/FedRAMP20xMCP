@@ -501,7 +501,7 @@ class KSI_CNA_06_Analyzer(BaseKSIAnalyzer):
     # HELPER METHODS
     # ============================================================================
     
-    def _find_line(self, lines: List[str], pattern: str) -> Optional[Dict[str, Any]]:
+
         """
         Find first line matching regex pattern.
         Returns dict with line_num and line content, or None if not found.
@@ -511,7 +511,7 @@ class KSI_CNA_06_Analyzer(BaseKSIAnalyzer):
                 return {'line_num': i, 'line': line}
         return None
     
-    def _get_snippet(self, lines: List[str], line_number: int, context: int = 2) -> str:
+
         """Get code snippet around line number."""
         if line_number == 0:
             return ""

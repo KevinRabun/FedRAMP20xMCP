@@ -1236,20 +1236,7 @@ class KSI_SVC_10_Analyzer(BaseKSIAnalyzer):
     # HELPER METHODS
     # ============================================================================
     
-    def _find_line(self, lines: List[str], pattern: str) -> Optional[Dict[str, Any]]:
-        """
-        Find line matching regex pattern.
-        
-        Returns dict with 'line_num' (1-indexed) and 'line' content, or None if not found.
-        """
-        import re
-        regex = re.compile(pattern, re.IGNORECASE)
-        for i, line in enumerate(lines, 1):
-            if regex.search(line):
-                return {'line_num': i, 'line': line}
-        return None
-    
-    def _get_snippet(self, lines: List[str], line_number: int, context: int = 2) -> str:
+
         """Get code snippet around line number with bounds checking."""
         if line_number == 0 or line_number > len(lines):
             return ""

@@ -458,13 +458,13 @@ class KSI_MLA_07_Analyzer(BaseKSIAnalyzer):
         match = re.search(r"resource\s+(\w+)", line)
         return match.group(1) if match else "unknown"
     
-    def _get_context(self, lines: List[str], line_num: int, context_lines: int = 15) -> str:
+
         """Get context around line"""
         start = max(0, line_num - context_lines - 1)
         end = min(len(lines), line_num + context_lines)
         return '\n'.join(lines[start:end])
     
-    def _get_snippet(self, lines: List[str], line_num: int, context: int = 3) -> str:
+
         """Get code snippet around line"""
         if not lines or line_num < 1:
             return ""

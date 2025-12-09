@@ -595,7 +595,7 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
     # HELPER METHODS
     # ============================================================================
     
-    def _find_line(self, lines: List[str], pattern: str) -> int:
+
         """
         Find line matching regex pattern.
         
@@ -608,7 +608,7 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
                 return i
         return 0
     
-    def _get_snippet(self, lines: List[str], line_number: int, context: int = 2) -> str:
+
         """Get code snippet around line number with bounds checking."""
         if line_number == 0 or line_number > len(lines):
             return ""

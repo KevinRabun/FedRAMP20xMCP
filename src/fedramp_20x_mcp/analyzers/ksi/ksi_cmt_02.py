@@ -408,20 +408,7 @@ class KSI_CMT_02_Analyzer(BaseKSIAnalyzer):
         
         return findings
     
-    def _find_line(self, lines: List[str], pattern: str) -> int:
-        """Find line number containing pattern"""
-        for i, line in enumerate(lines, 1):
-            if re.search(pattern, line, re.IGNORECASE):
-                return i
-        return 1
-    
-    def _get_context(self, lines: List[str], line_num: int, context_lines: int = 5) -> str:
-        """Get context around line"""
-        start = max(0, line_num - context_lines - 1)
-        end = min(len(lines), line_num + context_lines)
-        return '\n'.join(lines[start:end])
-    
-    def _get_snippet(self, lines: List[str], line_num: int, context: int = 3) -> str:
+
         """Get code snippet around line"""
         if not lines or line_num < 1:
             return ""

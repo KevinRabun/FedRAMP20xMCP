@@ -319,13 +319,13 @@ class KSI_MLA_02_Analyzer(BaseKSIAnalyzer):
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         return []
     
-    def _get_context(self, lines: List[str], line_num: int, context: int = 15) -> str:
+
         """Get surrounding context lines."""
         start = max(0, line_num - context - 1)
         end = min(len(lines), line_num + context)
         return '\n'.join(lines[start:end])
     
-    def _get_snippet(self, lines: List[str], line_num: int, context: int = 2) -> str:
+
         """Get code snippet."""
         start = max(0, line_num - context - 1)
         end = min(len(lines), line_num + context)
