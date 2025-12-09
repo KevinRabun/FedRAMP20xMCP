@@ -1,6 +1,6 @@
 [project]
 name = "fedramp-20x-mcp"
-version = "0.7.0"
+version = "0.8.0"
 description = "MCP server for querying FedRAMP 20x requirements"
 readme = "README.md"
 requires-python = ">=3.10"
