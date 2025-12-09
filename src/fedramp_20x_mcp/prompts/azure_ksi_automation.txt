@@ -2,60 +2,217 @@ I'll help you implement FedRAMP 20x KSI automation using Microsoft, Azure, and M
 
 # Azure/M365 KSI Automation Guide
 
-## MANDATORY PRODUCTION REQUIREMENTS
+## 🚨 STOP - READ THIS BEFORE GENERATING ANY CODE 🚨
 
-**⚠️ CRITICAL: READ THIS FIRST - NO ASSUMPTIONS ALLOWED ⚠️**
+**⚠️ CRITICAL INSTRUCTION: THESE ARE NOT SUGGESTIONS - THEY ARE MANDATORY REQUIREMENTS ⚠️**
 
-**PRODUCTION-FIRST ENFORCEMENT:** All configurations, templates, and code generated from this guide are for **PRODUCTION systems** unless the user EXPLICITLY states "non-production", "dev", "test", or "staging". FedRAMP 20x compliance applies to production systems. You MUST NOT make assumptions about configuration values.
+You are PROHIBITED from generating ANY Bicep, Terraform, PowerShell, or configuration code until you have VERIFIED every single value against the checklist below. Generating code with non-compliant values (like 90-day retention or platform-managed keys) is a CRITICAL FAILURE.
 
-**BEFORE GENERATING ANY CODE/TEMPLATES, VERIFY ALL VALUES AGAINST THIS MANDATORY CHECKLIST:**
+**PRODUCTION-FIRST ENFORCEMENT:** All configurations, templates, and code are for **PRODUCTION systems** ONLY. FedRAMP 20x compliance is NON-NEGOTIABLE. You may NOT use "common Azure defaults" - you MUST use FedRAMP-compliant values.
 
-### ✅ MANDATORY VALUES CHECKLIST (DO NOT DEVIATE)
+**❌ THESE EXCUSES ARE UNACCEPTABLE:**
+- "I'll document it for post-deployment enhancement" → NO, implement it NOW
+- "90 days is common in Azure" → IRRELEVANT, FedRAMP requires 730 days
+- "I misread the requirement" → NOT ACCEPTABLE, verify against checklist
+- "I'll flag it in the compliance scan" → NO, implement compliance from the start
+- "Basic tier is sufficient for testing" → WRONG, production values REQUIRED
 
-#### Encryption & Key Management (KSI-SVC-06)
-- [ ] **Customer-Managed Keys (CMK)**: REQUIRED for Storage, SQL, Cosmos DB, Disks, Event Hubs, Service Bus
-- [ ] **Key Vault SKU**: `Premium` (REQUIRED for FIPS 140-2 Level 2 HSM-backed keys)
-- [ ] **Key Vault enabledForDiskEncryption**: `true` (REQUIRED for Disk Encryption Sets)
-- [ ] **Cosmos DB keyVaultKeyUri**: REQUIRED (format: `https://{vault}.vault.azure.net/keys/{key}/{version}`)
-- [ ] **Storage Account keySource**: `Microsoft.Keyvault` (NEVER `Microsoft.Storage`)
+**VERIFICATION PROCESS (MANDATORY - NO EXCEPTIONS):**
+
+**STEP 1: BEFORE writing ANY code, ask yourself:**
+1. What is the Log Analytics retention? (Must be 730 days)
+2. Am I using Customer-Managed Keys for ALL data services? (Storage, SQL, Cosmos DB, Disks)
+3. Is Key Vault set to Premium SKU? (Required for FIPS 140-2 Level 2 HSM)
+4. Have I configured diagnostic settings for EVERY resource?
+5. Are Private Endpoints configured (public access disabled)?
+
+**STEP 2: If ANY answer is "no" or "I'm not sure", DO NOT GENERATE CODE. Query the requirements first.**
+
+**STEP 3: After writing code, verify EVERY SINGLE VALUE matches the checklist below.**
+
+### ✅ NON-NEGOTIABLE CONFIGURATION VALUES - VERIFY BEFORE CODE GENERATION
+
+### ✅ NON-NEGOTIABLE CONFIGURATION VALUES - VERIFY BEFORE CODE GENERATION
+
+**RULE: If you cannot verify 100% of these values in your generated code, STOP and query requirements instead of guessing.**
+
+#### Encryption & Key Management (KSI-SVC-06) - ZERO TOLERANCE FOR PLATFORM-MANAGED KEYS
+- [ ] **Customer-Managed Keys (CMK)**: MANDATORY for Storage, SQL, Cosmos DB, Disks, Event Hubs, Service Bus
+  - ❌ NEVER generate `keySource: 'Microsoft.Storage'` (platform-managed keys)
+  - ✅ ALWAYS use `keySource: 'Microsoft.Keyvault'` with `keyvaultproperties`
+  - ❌ NEVER omit `keyVaultKeyUri` for Cosmos DB
+  - ✅ ALWAYS configure `keyVaultKeyUri: 'https://{vault}.vault.azure.net/keys/{key}/{version}'`
+- [ ] **Key Vault SKU**: MANDATORY `Premium` (FIPS 140-2 Level 2 HSM-backed keys)
+  - ❌ NEVER use `name: 'standard'`
+  - ✅ ALWAYS use `name: 'premium'`
+- [ ] **Key Vault enabledForDiskEncryption**: MANDATORY `true` (Disk Encryption Sets requirement)
+  - ❌ NEVER set to `false` or omit
+  - ✅ ALWAYS include `enabledForDiskEncryption: true`
 - [ ] **Separate encryption keys**: One key per service type (storage-key, sql-key, cosmos-key, disk-key)
-- [ ] **Managed Identity**: SystemAssigned or UserAssigned with Key Vault access policies
+- [ ] **Managed Identity**: SystemAssigned or UserAssigned with Key Vault access policies (unwrapKey, wrapKey, get)
 
-#### Logging & Monitoring (KSI-MLA-01, KSI-MLA-02, KSI-MLA-07, KSI-MLA-08)
-- [ ] **Log Analytics retention**: `730 days` (2 years) - NEVER 90/180/365 days
-- [ ] **Diagnostic settings**: REQUIRED for ALL Azure resources (Storage, SQL, VMs, Key Vault, etc.)
-- [ ] **Log categories**: Enable ALL log categories (Audit, Security, Admin, Alert)
-- [ ] **Metric retention**: Align with log retention (730 days)
-- [ ] **Workspace SKU**: `PerGB2018` or `Committed` (NOT Free tier)
+#### Logging & Monitoring (KSI-MLA-01, KSI-MLA-02) - ZERO TOLERANCE FOR SHORT RETENTION
+- [ ] **Log Analytics retention**: MANDATORY `730 days` (2 years)
+  - ❌ NEVER use 90, 180, or 365 days
+  - ✅ ALWAYS use `retentionInDays: 730` (Bicep) or `retention_in_days = 730` (Terraform)
+  - **SOURCE**: NIST AU-11 Audit Record Retention, KSI-MLA-01 SIEM requirements, KSI-MLA-02 Audit Logging
+- [ ] **Diagnostic settings**: MANDATORY for ALL Azure resources (Storage, SQL, VMs, Key Vault, Cosmos DB, etc.)
+  - ❌ NEVER deploy resources without diagnostic settings
+  - ✅ ALWAYS include `Microsoft.Insights/diagnosticSettings` resource linked to Log Analytics
+- [ ] **Log categories**: Enable ALL log categories (Audit, Security, Admin, Alert, Access)
+- [ ] **Metric retention**: MANDATORY align with log retention (730 days)
+- [ ] **Workspace SKU**: MANDATORY `PerGB2018` or `Committed` (NEVER Free tier)
 
-#### Network Security (KSI-CNA-01 through KSI-CNA-08)
-- [ ] **Public access**: `Disabled` for Storage, SQL, Key Vault (use Private Endpoints)
-- [ ] **TLS version**: `1.2` minimum (prefer `1.3` where supported)
-- [ ] **Private Endpoints**: REQUIRED for PaaS services in production
-- [ ] **Network Security Groups**: REQUIRED with restrictive rules (deny-by-default)
-- [ ] **Azure Firewall/Application Gateway**: REQUIRED for inbound traffic
+#### Network Security (KSI-CNA-01 through KSI-CNA-08) - ZERO TOLERANCE FOR PUBLIC ACCESS
+- [ ] **Public access**: MANDATORY `Disabled` for Storage, SQL, Key Vault, Cosmos DB
+  - ❌ NEVER use `publicNetworkAccess: 'Enabled'`
+  - ✅ ALWAYS use `publicNetworkAccess: 'Disabled'` with Private Endpoints
+- [ ] **TLS version**: MANDATORY `1.2` minimum (prefer `1.3` where supported)
+  - ❌ NEVER use `minimumTlsVersion: 'TLS1_0'` or `'TLS1_1'`
+  - ✅ ALWAYS use `minimumTlsVersion: 'TLS1_2'`
+- [ ] **Private Endpoints**: MANDATORY for ALL PaaS services (Storage, SQL, Key Vault, Cosmos DB)
+- [ ] **Network Security Groups**: MANDATORY with restrictive rules (deny-by-default)
+- [ ] **Azure Firewall/Application Gateway**: MANDATORY for inbound traffic
 
-#### Identity & Access (KSI-IAM-01 through KSI-IAM-07)
-- [ ] **Managed Identity**: REQUIRED (prefer SystemAssigned, use UserAssigned for cross-resource)
-- [ ] **RBAC assignments**: Use built-in roles (NOT Owner/Contributor on production)
-- [ ] **Conditional Access**: REQUIRED for MFA enforcement
-- [ ] **Privileged Identity Management (PIM)**: REQUIRED for admin roles
+#### Identity & Access (KSI-IAM-01 through KSI-IAM-07) - ZERO TOLERANCE FOR WEAK AUTHENTICATION
+- [ ] **Managed Identity**: MANDATORY (prefer SystemAssigned, use UserAssigned for cross-resource)
+  - ❌ NEVER use connection strings or API keys in code
+  - ✅ ALWAYS use `identity: { type: 'SystemAssigned' }`
+- [ ] **RBAC assignments**: Use built-in roles (NEVER Owner/Contributor on production)
+- [ ] **Conditional Access**: MANDATORY for MFA enforcement
+- [ ] **Privileged Identity Management (PIM)**: MANDATORY for admin roles
 
-#### High Availability & Resilience (KSI-AFR family)
-- [ ] **Availability Zones**: REQUIRED for production (ZoneRedundant/Zone1+Zone2+Zone3)
-- [ ] **Backup retention**: Minimum 30 days (prefer 90+ days)
-- [ ] **Geo-replication**: REQUIRED for critical data (GRS, GZRS, RA-GRS)
-- [ ] **Auto-failover**: Enabled for multi-region deployments
+#### High Availability & Resilience (KSI-AFR family) - ZERO TOLERANCE FOR SINGLE POINTS OF FAILURE
+- [ ] **Availability Zones**: MANDATORY (ZoneRedundant or Zone1+Zone2+Zone3)
+  - ❌ NEVER use `sku: { name: 'Standard_LRS' }` (no zone redundancy)
+  - ✅ ALWAYS use `sku: { name: 'Standard_ZRS' }` or `'Standard_GZRS'`
+- [ ] **Backup retention**: MANDATORY 30 days minimum (prefer 90+ days for production)
+- [ ] **Geo-replication**: MANDATORY for critical data (GRS, GZRS, RA-GRS)
+- [ ] **Auto-failover**: MANDATORY enabled for multi-region deployments
 
-**❌ FORBIDDEN ASSUMPTIONS:**
-- DO NOT assume "90 days is enough" for log retention → USE 730 DAYS
-- DO NOT assume platform-managed keys are acceptable → USE CMK
-- DO NOT assume Basic/Standard tier is sufficient → USE Premium for Key Vault
-- DO NOT assume public access is acceptable → USE Private Endpoints
-- DO NOT assume single-zone deployment → USE Availability Zones
+---
 
-**✅ VALIDATION REQUIREMENT:**
-Before finalizing any template/code, you MUST state: "This configuration uses [730-day retention / CMK for all services / Premium Key Vault / Private Endpoints / etc.] per FedRAMP 20x requirements." If you cannot make this statement, DO NOT GENERATE THE CODE.
+## 🛑 STOP - FINAL VERIFICATION BEFORE CODE GENERATION 🛑
+
+**BEFORE you write a SINGLE LINE of Bicep/Terraform/PowerShell code, answer these questions:**
+
+1. **Log Analytics retention**: Is it EXACTLY `730` days? (Not 90, not 365, EXACTLY 730)
+2. **Customer-Managed Keys**: Have I configured CMK for EVERY data service? (Storage, SQL, Cosmos DB, Disks)
+3. **Key Vault SKU**: Is it EXACTLY `premium`? (Not standard, EXACTLY premium)
+4. **Cosmos DB keyVaultKeyUri**: Have I included this property with a valid Key Vault key reference?
+5. **Public access**: Is it DISABLED for ALL PaaS services with Private Endpoints configured?
+
+**IF YOU CANNOT ANSWER "YES" TO ALL 5 QUESTIONS, DO NOT GENERATE CODE.**
+
+**INSTEAD:** Query the requirements using available tools:
+- `get_ksi_by_id` - Get specific KSI requirements
+- `get_implementation_examples` - Get FedRAMP implementation examples
+- `get_infrastructure_code_for_ksi` - Get compliant infrastructure templates
+
+---
+
+## ❌ EXPLICITLY FORBIDDEN PATTERNS - THESE WILL CAUSE COMPLIANCE FAILURES
+
+**NEVER generate these patterns - they are CRITICAL FAILURES:**
+
+```bicep
+// ❌ CRITICAL FAILURE: 90-day retention (should be 730)
+retentionInDays: 90
+
+// ❌ CRITICAL FAILURE: Platform-managed keys (should be CMK)
+keySource: 'Microsoft.Storage'
+
+// ❌ CRITICAL FAILURE: Standard Key Vault (should be Premium)
+sku: { name: 'standard' }
+
+// ❌ CRITICAL FAILURE: Public access enabled (should be Disabled)
+publicNetworkAccess: 'Enabled'
+
+// ❌ CRITICAL FAILURE: Cosmos DB without CMK (should have keyVaultKeyUri)
+resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-11-15' = {
+  properties: {
+    // Missing keyVaultKeyUri property
+  }
+}
+
+// ❌ CRITICAL FAILURE: No diagnostic settings (should send logs to Log Analytics)
+resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  // Missing Microsoft.Insights/diagnosticSettings child resource
+}
+```
+
+**✅ ALWAYS generate these patterns instead:**
+
+```bicep
+// ✅ CORRECT: 730-day retention (2 years)
+retentionInDays: 730
+
+// ✅ CORRECT: Customer-managed keys
+keySource: 'Microsoft.Keyvault'
+keyvaultproperties: {
+  keyname: storageEncryptionKey.name
+  keyvaulturi: keyVault.properties.vaultUri
+}
+
+// ✅ CORRECT: Premium Key Vault
+sku: { name: 'premium' }
+
+// ✅ CORRECT: Public access disabled
+publicNetworkAccess: 'Disabled'
+
+// ✅ CORRECT: Cosmos DB with CMK
+resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-11-15' = {
+  identity: { type: 'SystemAssigned' }
+  properties: {
+    keyVaultKeyUri: 'https://myvault.vault.azure.net/keys/cosmos-key/version'
+  }
+}
+
+// ✅ CORRECT: Diagnostic settings configured
+resource diagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  scope: storageAccount
+  properties: {
+    workspaceId: logAnalytics.id
+    logs: [{ category: 'StorageWrite', enabled: true }]
+  }
+}
+```
+
+---
+
+## ✅ MANDATORY PRE-GENERATION DECLARATION
+
+**You MUST include this statement BEFORE generating ANY code:**
+
+> "I have verified this configuration against the FedRAMP 20x mandatory checklist:
+> - ✅ Log Analytics retention: 730 days
+> - ✅ Customer-Managed Keys: Configured for Storage, SQL, Cosmos DB, Disks
+> - ✅ Key Vault SKU: Premium (FIPS 140-2 Level 2 HSM)
+> - ✅ Key Vault enabledForDiskEncryption: true
+> - ✅ Cosmos DB keyVaultKeyUri: Configured
+> - ✅ Public access: Disabled with Private Endpoints
+> - ✅ Diagnostic settings: Configured for all resources
+> - ✅ Availability Zones: Zone-redundant storage configured
+>
+> **All values meet FedRAMP 20x requirements. Proceeding with code generation.**"
+
+**If you CANNOT make this declaration with 100% confidence, you MUST NOT generate code.**
+
+---
+
+## 🎯 EXECUTION MANDATE
+
+**THIS IS NOT OPTIONAL GUIDANCE - THIS IS MANDATORY POLICY:**
+
+1. **VERIFY FIRST**: Check EVERY value against checklist BEFORE writing code
+2. **DECLARE COMPLIANCE**: State which requirements you've verified
+3. **IMPLEMENT CORRECTLY**: Use EXACT values from checklist (730 days, Premium, CMK, etc.)
+4. **NO SHORTCUTS**: Do NOT defer to "post-deployment" or "additional steps"
+5. **NO EXCUSES**: "Common Azure defaults" are IRRELEVANT - use FedRAMP values
+
+**Failure to follow this process is unacceptable and will result in compliance violations.**
+
+---
 
 **Key Microsoft Services for FedRAMP 20x:**
 - **Microsoft Sentinel** - SIEM/SOAR (KSI-MLA)

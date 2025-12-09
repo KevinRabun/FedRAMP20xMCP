@@ -232,6 +232,22 @@ async def migration_from_rev5() -> str:
 @mcp.prompt()
 async def azure_ksi_automation() -> str:
     """
+    🚨 CRITICAL: MANDATORY FedRAMP 20x compliance values - NOT suggestions. 🚨
+    
+    BEFORE generating ANY code, VERIFY these NON-NEGOTIABLE requirements:
+    - Log Analytics retention: EXACTLY 730 days (NOT 90/180/365)
+    - Customer-Managed Keys: MANDATORY for Storage, SQL, Cosmos DB, Disks
+    - Key Vault SKU: EXACTLY 'premium' (NOT 'standard')
+    - Public access: DISABLED with Private Endpoints
+    - Diagnostic settings: CONFIGURED for ALL resources
+    
+    ❌ FORBIDDEN: "I'll document it for post-deployment" - Implement compliance NOW.
+    ❌ FORBIDDEN: "90 days is common in Azure" - FedRAMP requires 730 days.
+    ❌ FORBIDDEN: "Basic tier is sufficient" - Premium SKU required for FIPS 140-2.
+    
+    ✅ REQUIRED: Declare compliance BEFORE generating code. If you cannot verify
+    all requirements, query the KSI tools instead of guessing.
+    
     Comprehensive guide for implementing FedRAMP 20x KSI automation using Microsoft, Azure, and M365 capabilities.
     
     Use this prompt to:

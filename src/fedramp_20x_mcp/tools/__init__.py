@@ -24,7 +24,7 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         data_loader: The data loader instance for accessing FedRAMP data
     """
     # Import all tool modules
-    from . import requirements, definitions, ksi, documentation, export, enhancements, evidence, analyzer, audit, security, ksi_status
+    from . import requirements, definitions, ksi, documentation, export, enhancements, evidence, analyzer, audit, security, ksi_status, validation
     from ..templates import get_infrastructure_template, get_code_template
     
     # Requirements tools
@@ -197,6 +197,34 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
     async def analyze_infrastructure_code(code: str, file_type: str, file_path: Optional[str] = None, context: Optional[str] = None) -> dict:
         """Analyze Infrastructure as Code (Bicep/Terraform) for FedRAMP 20x compliance issues."""
         return await analyzer.analyze_infrastructure_code_impl(code, file_type, file_path, context)
+    
+    @mcp.tool()
+    async def validate_fedramp_config(code: str, file_type: str, strict_mode: bool = True) -> dict:
+        """
+        Validate Infrastructure as Code against FedRAMP 20x MANDATORY requirements BEFORE generating/deploying.
+        
+        🚨 USE THIS TOOL BEFORE FINALIZING ANY TEMPLATE/CODE 🚨
+        
+        This tool checks for CRITICAL violations that will cause compliance failures:
+        - Log Analytics retention < 730 days (CRITICAL)
+        - Platform-managed keys instead of Customer-Managed Keys (CRITICAL)
+        - Key Vault Standard SKU instead of Premium (CRITICAL)
+        - Public access enabled instead of disabled (CRITICAL)
+        - Missing diagnostic settings (HIGH)
+        
+        Returns:
+        - passed: bool - Whether ALL validations passed
+        - violations: list - CRITICAL issues that MUST be fixed
+        - warnings: list - Non-critical issues that SHOULD be fixed
+        - compliant_values: list - Requirements that passed validation
+        
+        Example usage:
+        1. Generate Bicep/Terraform code
+        2. Call validate_fedramp_config with the code
+        3. If violations exist, FIX THEM before deploying
+        4. If passed=true, code meets FedRAMP 20x requirements
+        """
+        return await validation.validate_fedramp_config_impl(code, file_type, strict_mode)
     
     @mcp.tool()
     async def analyze_application_code(code: str, language: str, file_path: Optional[str] = None, dependencies: Optional[list[str]] = None) -> dict:
@@ -379,4 +407,4 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         result = await ksi_status.get_ksi_family_status_impl(family, data_loader)
         return json.dumps(result, indent=2)
     
-    logger.info("Registered 35 tools across 11 modules")
+    logger.info("Registered 36 tools across 12 modules")
