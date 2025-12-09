@@ -10,7 +10,7 @@ Version: 25.11C (Published: 2025-12-01)
 
 import ast
 import re
-from typing import List
+from typing import List, Optional, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 

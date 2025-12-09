@@ -246,7 +246,7 @@ class KSI_CNA_07_Analyzer(BaseKSIAnalyzer):
                         "    // Or use UserAssigned for cross-resource scenarios:\n"
                         "    // type: 'UserAssigned'\n"
                         "    // userAssignedIdentities: {\n"
-                        "    //   '\${userAssignedIdentity.id}': {}\n"
+                        r"    //   '${userAssignedIdentity.id}': {}" + "\n"
                         "    // }\n"
                         "  }\n"
                         "  properties: {\n"
