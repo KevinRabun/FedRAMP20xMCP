@@ -944,7 +944,7 @@ class KSI_SVC_10_Analyzer(BaseKSIAnalyzer):
         lines = code.split('\n')
         
         # Pattern 1: Storage Account without lifecycle management (MEDIUM)
-        storage_match = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.Storage/storageAccounts@")
+        storage_match = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.Storage/storageAccounts@", use_regex=True)
         
         if storage_match:
             line_num = storage_match['line_num']
@@ -1087,7 +1087,7 @@ class KSI_SVC_10_Analyzer(BaseKSIAnalyzer):
         lines = code.split('\n')
         
         # Pattern 1: azurerm_storage_account without lifecycle management (MEDIUM)
-        storage_match = self._find_line(lines, r'resource\s+"azurerm_storage_account"')
+        storage_match = self._find_line(lines, r'resource\s+"azurerm_storage_account"', use_regex=True)
         
         if storage_match:
             line_num = storage_match['line_num']

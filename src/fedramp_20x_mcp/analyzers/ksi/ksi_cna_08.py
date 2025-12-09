@@ -680,7 +680,7 @@ class KSI_CNA_08_Analyzer(BaseKSIAnalyzer):
         lines = code.split('\n')
         
         # Pattern 1: AKS without Microsoft Defender (HIGH)
-        aks_match = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.ContainerService/managedClusters")
+        aks_match = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.ContainerService/managedClusters", use_regex=True)
         
         if aks_match:
             line_num = aks_match['line_num']
@@ -794,7 +794,7 @@ class KSI_CNA_08_Analyzer(BaseKSIAnalyzer):
                 ))
         
         # Pattern 2: Container Registry without vulnerability scanning (MEDIUM)
-        acr_match = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.ContainerRegistry/registries")
+        acr_match = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.ContainerRegistry/registries", use_regex=True)
         
         if acr_match:
             line_num = acr_match['line_num']

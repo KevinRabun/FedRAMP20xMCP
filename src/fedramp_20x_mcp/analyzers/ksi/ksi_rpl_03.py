@@ -1014,7 +1014,8 @@ class KSI_RPL_03_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 4: Missing backup encryption (HIGH)
         if has_vault and not re.search(r"encryption:\s*\{", code, re.IGNORECASE):
-            vault_line = self._find_line(lines, "Microsoft.RecoveryServices/vaults")
+            vault_line_result = self._find_line(lines, "Microsoft.RecoveryServices/vaults")
+            vault_line = vault_line_result['line_num'] if vault_line_result else 1
             findings.append(Finding(
                 severity=Severity.HIGH,
                 title="Missing Backup Encryption Configuration",
@@ -1256,7 +1257,8 @@ class KSI_RPL_03_Analyzer(BaseKSIAnalyzer):
         if has_azure_vault or has_aws_vault:
             # Check Azure vault encryption
             if has_azure_vault and not re.search(r'encryption\s*\{', code):
-                vault_line = self._find_line(lines, 'azurerm_recovery_services_vault')
+                vault_line_result = self._find_line(lines, 'azurerm_recovery_services_vault')
+                vault_line = vault_line_result['line_num'] if vault_line_result else 1
                 findings.append(Finding(
                     severity=Severity.HIGH,
                     title="Missing Azure Backup Vault Encryption",
@@ -1281,7 +1283,8 @@ class KSI_RPL_03_Analyzer(BaseKSIAnalyzer):
             
             # Check AWS vault encryption
             if has_aws_vault and not re.search(r'kms_key_arn', code):
-                vault_line = self._find_line(lines, 'aws_backup_vault')
+                vault_line_result = self._find_line(lines, 'aws_backup_vault')
+                vault_line = vault_line_result['line_num'] if vault_line_result else 1
                 findings.append(Finding(
                     severity=Severity.HIGH,
                     title="Missing AWS Backup Vault Encryption",

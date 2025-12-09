@@ -652,7 +652,7 @@ class KSI_SVC_05_Analyzer(BaseKSIAnalyzer):
         lines = code.split('\n')
         
         # Pattern 1: Container Registry without Content Trust (MEDIUM)
-        acr_match = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.ContainerRegistry/registries@")
+        acr_match = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.ContainerRegistry/registries@", use_regex=True)
         has_trust = re.search(r"trustPolicy.*status:\s*'enabled'", code, re.IGNORECASE | re.DOTALL)
         
         if acr_match and not has_trust:
@@ -708,7 +708,7 @@ class KSI_SVC_05_Analyzer(BaseKSIAnalyzer):
         lines = code.split('\n')
         
         # Pattern 1: Container Registry without Content Trust (MEDIUM)
-        acr_match = self._find_line(lines, r'resource\s+"azurerm_container_registry"')
+        acr_match = self._find_line(lines, r'resource\s+"azurerm_container_registry"', use_regex=True)
         has_trust = re.search(r'trust_policy\s*\{.*enabled\s*=\s*true', code, re.IGNORECASE | re.DOTALL)
         
         if acr_match and not has_trust:

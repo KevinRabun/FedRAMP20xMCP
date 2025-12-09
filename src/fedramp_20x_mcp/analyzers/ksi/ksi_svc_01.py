@@ -533,7 +533,7 @@ class KSI_SVC_01_Analyzer(BaseKSIAnalyzer):
         findings = []
         lines = code.split('\n')
         
-        storage_match = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.Storage/storageAccounts@")
+        storage_match = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.Storage/storageAccounts@", use_regex=True)
         has_diagnostics = re.search(r"Microsoft\.Insights/diagnosticSettings", code)
         
         if storage_match and not has_diagnostics:
@@ -592,7 +592,7 @@ class KSI_SVC_01_Analyzer(BaseKSIAnalyzer):
         findings = []
         lines = code.split('\n')
         
-        storage_match = self._find_line(lines, r'resource\s+"azurerm_storage_account"')
+        storage_match = self._find_line(lines, r'resource\s+"azurerm_storage_account"', use_regex=True)
         has_diagnostics = re.search(r'azurerm_monitor_diagnostic_setting', code)
         
         if storage_match and not has_diagnostics:
