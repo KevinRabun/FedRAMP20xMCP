@@ -6,6 +6,15 @@ I'll help you implement FedRAMP 20x KSI automation using Microsoft, Azure, and M
 
 This guide maps all 72 FedRAMP 20x Key Security Indicators to specific Microsoft services and provides automation approaches for evidence collection.
 
+**CRITICAL: When generating Bicep or Terraform templates, ALWAYS:**
+1. Use Customer-Managed Keys (CMK) for ALL data services (Storage, SQL, Cosmos DB, Disks, etc.)
+2. Set Key Vault `enabledForDiskEncryption: true` to support Disk Encryption Sets
+3. Use Premium SKU for Key Vault (required for FIPS 140-2 Level 2 HSM-backed keys)
+4. Configure `keyVaultKeyUri` for Cosmos DB accounts
+5. Use `keySource: 'Microsoft.Keyvault'` (NOT 'Microsoft.Storage') for Storage Accounts
+6. Create separate encryption keys for each service type
+7. Grant proper Key Vault access policies to managed identities
+
 **Key Microsoft Services for FedRAMP 20x:**
 - **Microsoft Sentinel** - SIEM/SOAR (KSI-MLA)
 - **Microsoft Defender for Cloud** - Security posture management (KSI-AFR, KSI-CNA)
@@ -666,7 +675,7 @@ customer-managed keys (CMK) for Moderate/High impact levels:
 1. **Storage Accounts**: Use `keySource: 'Microsoft.Keyvault'` (not `'Microsoft.Storage'`)
 2. **SQL Databases**: Configure TDE with customer-managed key
 3. **Managed Disks**: Use Disk Encryption Sets with Key Vault key
-4. **Cosmos DB**: Configure with customer-managed key
+4. **Cosmos DB**: Configure `keyVaultKeyUri` in defaultIdentity with customer-managed key
 5. **Azure Data Lake**: Use customer-managed key encryption
 
 **CMK Configuration Example (Bicep):**
@@ -678,21 +687,31 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   properties: {
     sku: {
       family: 'A'
-      name: 'premium'  // Required for CMK
+      name: 'premium'  // Required for CMK with HSM
     }
     tenantId: subscription().tenantId
     enableSoftDelete: true
     softDeleteRetentionInDays: 90
     enablePurgeProtection: true
-    enabledForDiskEncryption: true
+    enabledForDiskEncryption: true  // Required for Disk Encryption Sets
     enableRbacAuthorization: true
   }
 }
 
-// Step 2: Encryption key
-resource encryptionKey 'Microsoft.KeyVault/vaults/keys@2023-07-01' = {
+// Step 2: Encryption keys
+resource storageEncryptionKey 'Microsoft.KeyVault/vaults/keys@2023-07-01' = {
   parent: keyVault
   name: 'storage-encryption-key'
+  properties: {
+    kty: 'RSA'
+    keySize: 2048
+    keyOps: ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey']
+  }
+}
+
+resource cosmosEncryptionKey 'Microsoft.KeyVault/vaults/keys@2023-07-01' = {
+  parent: keyVault
+  name: 'cosmos-encryption-key'
   properties: {
     kty: 'RSA'
     keySize: 2048
@@ -711,15 +730,37 @@ resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
     encryption: {
       keySource: 'Microsoft.Keyvault'  // CMK (not 'Microsoft.Storage')
       keyvaultproperties: {
-        keyname: encryptionKey.name
+        keyname: storageEncryptionKey.name
         keyvaulturi: keyVault.properties.vaultUri
       }
     }
   }
 }
 
-// Step 4: Grant access
-resource keyVaultAccess 'Microsoft.KeyVault/vaults/accessPolicies@2023-07-01' = {
+// Step 4: Cosmos DB with CMK
+resource cosmosDb 'Microsoft.DocumentDB/databaseAccounts@2023-11-15' = {
+  name: cosmosAccountName
+  location: location
+  kind: 'GlobalDocumentDB'
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    databaseAccountOfferType: 'Standard'
+    consistencyPolicy: {
+      defaultConsistencyLevel: 'Session'
+    }
+    locations: [{
+      locationName: location
+      failoverPriority: 0
+      isZoneRedundant: false
+    }]
+    keyVaultKeyUri: cosmosEncryptionKey.properties.keyUriWithVersion  // CMK requirement
+  }
+}
+
+// Step 5: Grant Key Vault access to storage
+resource storageKeyVaultAccess 'Microsoft.KeyVault/vaults/accessPolicies@2023-07-01' = {
   parent: keyVault
   name: 'add'
   properties: {
@@ -732,6 +773,24 @@ resource keyVaultAccess 'Microsoft.KeyVault/vaults/accessPolicies@2023-07-01' = 
     }]
   }
 }
+
+// Step 6: Grant Key Vault access to Cosmos DB
+resource cosmosKeyVaultAccess 'Microsoft.KeyVault/vaults/accessPolicies@2023-07-01' = {
+  parent: keyVault
+  name: 'add'
+  properties: {
+    accessPolicies: [{
+      tenantId: cosmosDb.identity.tenantId
+      objectId: cosmosDb.identity.principalId
+      permissions: {
+        keys: ['get', 'unwrapKey', 'wrapKey']
+      }
+    }]
+  }
+  dependsOn: [
+    storageKeyVaultAccess  // Chain access policies to avoid conflicts
+  ]
+}
 ```
 
 **CMK Configuration Example (Terraform):**
@@ -742,15 +801,24 @@ resource "azurerm_key_vault" "cmk" {
   location                   = var.location
   resource_group_name        = azurerm_resource_group.rg.name
   tenant_id                  = data.azurerm_client_config.current.tenant_id
-  sku_name                   = "premium"  # Required for CMK
+  sku_name                   = "premium"  # Required for CMK with HSM
   soft_delete_retention_days = 90
   purge_protection_enabled   = true
+  enabled_for_disk_encryption = true  # Required for Disk Encryption Sets
   enable_rbac_authorization  = true
 }
 
-# Step 2: Encryption key
+# Step 2: Encryption keys
 resource "azurerm_key_vault_key" "storage" {
   name         = "storage-encryption-key"
+  key_vault_id = azurerm_key_vault.cmk.id
+  key_type     = "RSA"
+  key_size     = 2048
+  key_opts     = ["decrypt", "encrypt", "unwrapKey", "wrapKey"]
+}
+
+resource "azurerm_key_vault_key" "cosmos" {
+  name         = "cosmos-encryption-key"
   key_vault_id = azurerm_key_vault.cmk.id
   key_type     = "RSA"
   key_size     = 2048
@@ -774,13 +842,51 @@ resource "azurerm_storage_account" "evidence" {
   }
 }
 
-# Step 4: Grant access
+# Step 4: Cosmos DB with CMK
+resource "azurerm_cosmosdb_account" "db" {
+  name                = "cosmos-fedramp-db"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.rg.name
+  offer_type          = "Standard"
+  kind                = "GlobalDocumentDB"
+  
+  consistency_policy {
+    consistency_level = "Session"
+  }
+  
+  geo_location {
+    location          = var.location
+    failover_priority = 0
+  }
+  
+  identity {
+    type = "SystemAssigned"
+  }
+  
+  # CMK requirement
+  key_vault_key_id = azurerm_key_vault_key.cosmos.id
+}
+
+# Step 5: Grant Key Vault access to storage
 resource "azurerm_key_vault_access_policy" "storage" {
   key_vault_id = azurerm_key_vault.cmk.id
   tenant_id    = data.azurerm_client_config.current.tenant_id
   object_id    = azurerm_storage_account.evidence.identity[0].principal_id
   
   key_permissions = ["Get", "UnwrapKey", "WrapKey"]
+}
+
+# Step 6: Grant Key Vault access to Cosmos DB
+resource "azurerm_key_vault_access_policy" "cosmos" {
+  key_vault_id = azurerm_key_vault.cmk.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = azurerm_cosmosdb_account.db.identity[0].principal_id
+  
+  key_permissions = ["Get", "UnwrapKey", "WrapKey"]
+  
+  depends_on = [
+    azurerm_key_vault_access_policy.storage  # Chain to avoid conflicts
+  ]
 }
 ```
 

@@ -1,6 +1,6 @@
 """
 Test KSI-SVC-06 Customer-Managed Key (CMK) detection for Secret Management compliance.
-Tests the enhanced Bicep and Terraform analysis for storage, SQL, and disks.
+Tests the enhanced Bicep and Terraform analysis for storage, SQL, Cosmos DB, and disks.
 """
 
 import os
@@ -195,6 +195,75 @@ def test_bicep_disk_without_des():
     return True
 
 
+def test_bicep_cosmos_without_cmk():
+    """Test detection of Cosmos DB without customer-managed key (BAD)."""
+    print("\n=== Test 7: Bicep Cosmos DB Without CMK ===")
+    
+    code = """
+    resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-11-15' = {
+      name: 'mycosmosdb'
+      location: location
+      kind: 'GlobalDocumentDB'
+      properties: {
+        databaseAccountOfferType: 'Standard'
+        consistencyPolicy: {
+          defaultConsistencyLevel: 'Session'
+        }
+        locations: [{
+          locationName: location
+          failoverPriority: 0
+        }]
+      }
+    }
+    """
+    
+    factory = get_factory()
+    result = factory.analyze("KSI-SVC-06", code, "bicep", "test.bicep")
+    
+    # Should detect missing CMK for Cosmos DB
+    cosmos_findings = [f for f in result.findings if "Cosmos DB" in f.title and "Customer-Managed Key" in f.title]
+    assert len(cosmos_findings) == 1, f"Expected 1 Cosmos CMK finding, got {len(cosmos_findings)}"
+    assert cosmos_findings[0].severity.value == "high", f"Expected high severity, got {cosmos_findings[0].severity.value}"
+    print(f"[OK] Detected Cosmos without CMK: {cosmos_findings[0].title}")
+    return True
+
+
+def test_bicep_cosmos_with_cmk():
+    """Test detection of Cosmos DB with customer-managed key (GOOD)."""
+    print("\n=== Test 8: Bicep Cosmos DB With CMK ===")
+    
+    code = """
+    resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-11-15' = {
+      name: 'mycosmosdb'
+      location: location
+      kind: 'GlobalDocumentDB'
+      identity: {
+        type: 'SystemAssigned'
+      }
+      properties: {
+        databaseAccountOfferType: 'Standard'
+        consistencyPolicy: {
+          defaultConsistencyLevel: 'Session'
+        }
+        locations: [{
+          locationName: location
+          failoverPriority: 0
+        }]
+        keyVaultKeyUri: 'https://myvault.vault.azure.net/keys/cosmos-key/abc123'
+      }
+    }
+    """
+    
+    factory = get_factory()
+    result = factory.analyze("KSI-SVC-06", code, "bicep", "test.bicep")
+    
+    # Should NOT detect Cosmos CMK issues (properly configured)
+    cosmos_findings = [f for f in result.findings if "Cosmos DB" in f.title and "Customer-Managed Key" in f.title]
+    assert len(cosmos_findings) == 0, f"Expected 0 Cosmos CMK findings for properly configured, got {len(cosmos_findings)}"
+    print("[OK] No Cosmos CMK issues detected (properly configured)")
+    return True
+
+
 def run_all_tests():
     """Run all KSI-SVC-06 CMK tests."""
     print("=" * 70)
@@ -209,6 +278,8 @@ def run_all_tests():
         ("Terraform Storage without CMK", test_terraform_storage_without_cmk),
         ("Terraform Storage with CMK", test_terraform_storage_with_cmk),
         ("Bicep Disk without DES", test_bicep_disk_without_des),
+        ("Bicep Cosmos DB without CMK", test_bicep_cosmos_without_cmk),
+        ("Bicep Cosmos DB with CMK", test_bicep_cosmos_with_cmk),
     ]
     
     passed = 0

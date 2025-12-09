@@ -842,6 +842,52 @@ class KSI_SVC_06_Analyzer(BaseKSIAnalyzer):
                         )
                     ))
         
+        # Pattern 4: Cosmos DB without Customer-Managed Key (HIGH)
+        for i, line in enumerate(lines, 1):
+            if re.search(r"Microsoft\.DocumentDB/databaseAccounts@", line):
+                context_start = max(0, i - 5)
+                context_end = min(len(lines), i + 25)
+                context = '\n'.join(lines[context_start:context_end])
+                
+                has_keyvault_key_uri = 'keyVaultKeyUri' in context
+                
+                if not has_keyvault_key_uri:
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="Cosmos DB Without Customer-Managed Key (CMK)",
+                        description=(
+                            f"Cosmos DB account at line {i} does not configure keyVaultKeyUri. "
+                            f"KSI-SVC-06 Secret Management requires customer-managed keys for encryption to maintain key lifecycle control and revocation capability."
+                        ),
+                        severity=Severity.HIGH,
+                        file_path=file_path,
+                        line_number=i,
+                        code_snippet=self._get_code_snippet(lines, i),
+                        recommendation=(
+                            "Configure Cosmos DB with CMK:\n\n"
+                            "resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-11-15' = {\n"
+                            "  identity: { type: 'SystemAssigned' }\n"
+                            "  properties: {\n"
+                            "    keyVaultKeyUri: key.properties.keyUriWithVersion  // CMK requirement\n"
+                            "    // ... other properties\n"
+                            "  }\n"
+                            "}\n"
+                            "// Grant Cosmos DB identity access to Key Vault key\n"
+                            "resource keyVaultAccessPolicy 'Microsoft.KeyVault/vaults/accessPolicies@2023-07-01' = {\n"
+                            "  parent: keyVault\n"
+                            "  name: 'add'\n"
+                            "  properties: {\n"
+                            "    accessPolicies: [{\n"
+                            "      tenantId: cosmosAccount.identity.tenantId\n"
+                            "      objectId: cosmosAccount.identity.principalId\n"
+                            "      permissions: { keys: ['get', 'unwrapKey', 'wrapKey'] }\n"
+                            "    }]\n"
+                            "  }\n"
+                            "}\n\n"
+                            "Ref: Cosmos DB encryption with CMK (https://learn.microsoft.com/azure/cosmos-db/how-to-setup-cmk)"
+                        )
+                    ))
+        
         return findings
     
     def _analyze_terraform_ast(self, tree, code: str, file_path: str, semantic_info) -> List[Finding]:
