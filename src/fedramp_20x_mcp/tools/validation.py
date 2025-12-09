@@ -300,17 +300,53 @@ async def validate_fedramp_config_impl(
                 "fix": "Disable public access and configure Private Endpoints"
             })
         
-        # Check for disabled public access (COMPLIANT)
+        # Check for disabled public access (COMPLIANT if Private Endpoints exist)
         disabled_public_pattern = r"publicNetworkAccess:\s*['\"]Disabled['\"]"
         if re.search(disabled_public_pattern, code):
-            compliant.append({
-                "requirement": "KSI-CNA: Public Access Disabled",
-                "value": "Public access disabled",
-                "status": "COMPLIANT"
-            })
+            # Check if Private Endpoints are configured
+            private_endpoint_pattern = r"resource\s+\w+\s+'Microsoft\.Network/privateEndpoints"
+            has_private_endpoints = bool(re.search(private_endpoint_pattern, code))
+            
+            if has_private_endpoints:
+                compliant.append({
+                    "requirement": "KSI-CNA-01/CNA-03: Public Access Disabled with Private Endpoints",
+                    "value": "Public access disabled with Private Endpoints configured",
+                    "status": "COMPLIANT"
+                })
+            else:
+                violations.append({
+                    "requirement": "KSI-CNA-01/CNA-03: Private Endpoints Required",
+                    "expected": "Private Endpoints configured when publicNetworkAccess: 'Disabled'",
+                    "found": "publicNetworkAccess: 'Disabled' but NO Private Endpoints found",
+                    "severity": "CRITICAL",
+                    "fix": "Add Private Endpoints (Microsoft.Network/privateEndpoints) - resources are INACCESSIBLE without them"
+                })
+    
+    elif file_type_lower == "terraform":
+        # Check for Terraform public_network_access_enabled = false
+        public_access_disabled = r"public_network_access_enabled\s*=\s*false"
+        if re.search(public_access_disabled, code):
+            # Check if Private Endpoints are configured
+            private_endpoint_pattern = r'resource\s+"azurerm_private_endpoint"'
+            has_private_endpoints = bool(re.search(private_endpoint_pattern, code))
+            
+            if has_private_endpoints:
+                compliant.append({
+                    "requirement": "KSI-CNA-01/CNA-03: Public Access Disabled with Private Endpoints",
+                    "value": "Public access disabled with Private Endpoints configured",
+                    "status": "COMPLIANT"
+                })
+            else:
+                violations.append({
+                    "requirement": "KSI-CNA-01/CNA-03: Private Endpoints Required",
+                    "expected": "Private Endpoints configured when public_network_access_enabled = false",
+                    "found": "public_network_access_enabled = false but NO Private Endpoints found",
+                    "severity": "CRITICAL",
+                    "fix": "Add Private Endpoints (azurerm_private_endpoint) - resources are INACCESSIBLE without them"
+                })
     
     # =============================================================================
-    # MANDATORY REQUIREMENT 5: Diagnostic Settings
+    # MANDATORY REQUIREMENT 6: Diagnostic Settings
     # =============================================================================
     has_resources = False
     has_diagnostics = False
