@@ -1,5 +1,5 @@
 """
-KSI-IAM-07: Automated Account Management (Enhanced AST-Based Analyzer)
+KSI-IAM-07: Automated Account Management
 
 Securely manage the lifecycle and privileges of all accounts, roles, and groups, using automation.
 
