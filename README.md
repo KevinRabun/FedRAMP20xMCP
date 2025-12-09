@@ -1312,7 +1312,7 @@ FedRAMP20xMCP/
 │       │   └── code/       # Code generation templates (9 files: Python, C#, PowerShell, Java, TypeScript)
 │       ├── prompts/        # Prompt templates (15 files)
 │       │   └── __init__.py # Prompt loader function
-│       ├── tools/          # Tool modules (35 tools across 11 modules)
+│       ├── tools/          # Tool modules (36 tools across 12 modules)
 │       │   ├── __init__.py # Tool registration system
 │       │   ├── requirements.py    # Core requirements tools (3)
 │       │   ├── definitions.py     # Definition lookup tools (3)
@@ -1322,8 +1322,9 @@ FedRAMP20xMCP/
 │       │   ├── enhancements.py    # Enhancement tools (9)
 │       │   ├── evidence.py        # Evidence automation tools (3)
 │       │   ├── analyzer.py        # Code analysis tools (2)
-│       │   ├── audit.py           # Coverage audit tools (2)
+│       │   ├── validation.py      # Pre-generation validation tools (3)
 │       │   ├── security.py        # CVE vulnerability checking tools (2)
+│       │   ├── audit.py           # Coverage audit tools (2)
 │       │   └── ksi_status.py      # KSI implementation status tools (1)
 │       ├── analyzers/      # KSI-centric code analyzers
 │       │   ├── __init__.py
@@ -1335,16 +1336,16 @@ FedRAMP20xMCP/
 │       │       └── ksi_*.py   # Individual KSI analyzers (72 files)
 │       └── __fedramp_cache__/  # Runtime cache for FedRAMP data
 │       └── __cve_cache__/      # Runtime cache for CVE data
-├── tests/                   # Test suite (24 test files)
+├── tests/                   # Test suite (115+ test files)
 │   ├── __init__.py
 │   ├── test_loader.py      # Data loader tests (329 requirements)
 │   ├── test_definitions.py # Definition tool tests (50 definitions, 72 KSIs)
 │   ├── test_docs_integration.py  # Documentation integration tests
 │   ├── test_implementation_questions.py  # Implementation questions tests
-│   ├── test_tool_registration.py  # Tool architecture validation (35 tools, 11 modules)
+│   ├── test_tool_registration.py  # Tool architecture validation (36 tools, 12 modules)
 │   ├── test_evidence_automation.py  # IaC generation tests (Bicep/Terraform/Python/C#/PowerShell/Java/TypeScript)
 │   ├── test_code_analyzer.py  # KSI-centric analyzer tests (12 focused tests)
-│   ├── test_all_tools.py   # Comprehensive tool tests (all 35 tools)
+│   ├── test_all_tools.py   # Comprehensive tool tests (all 36 tools)
 │   ├── test_*_tools.py     # Individual tool module tests (14 files)
 │   ├── test_cve_fetcher.py # CVE fetcher module tests
 │   ├── test_ksi_architecture.py  # KSI architecture validation
@@ -1368,9 +1369,11 @@ FedRAMP20xMCP/
 ```
 
 **Architecture Highlights:**
-- **Modular Design:** Tools organized into 7 logical modules by functionality
+- **Modular Design:** Tools organized into 12 logical modules by functionality
 - **Template System:** Reusable Bicep/Terraform templates for IaC generation
-- **Prompt Templates:** External prompt files for easy updates without code changes
+- **Prompt Templates:** 15 external prompt files for easy updates without code changes
+- **KSI-Centric Analysis:** 72 dedicated KSI analyzer files with factory pattern
+- **AST-Powered:** Tree-sitter integration for accurate, semantic code analysis
 - **Clean Separation:** Organized codebase with clear module boundaries
 - **Registration Pattern:** Tools use `*_impl` functions with centralized registration
 
