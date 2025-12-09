@@ -14,6 +14,8 @@ This guide maps all 72 FedRAMP 20x Key Security Indicators to specific Microsoft
 5. Use `keySource: 'Microsoft.Keyvault'` (NOT 'Microsoft.Storage') for Storage Accounts
 6. Create separate encryption keys for each service type
 7. Grant proper Key Vault access policies to managed identities
+8. **Set Log Analytics retention to 730 days (2 years)** - NOT 90 days (KSI-MLA-01, KSI-MLA-02 requirement)
+9. Configure diagnostic settings for ALL Azure resources to send logs to Log Analytics
 
 **Key Microsoft Services for FedRAMP 20x:**
 - **Microsoft Sentinel** - SIEM/SOAR (KSI-MLA)
@@ -112,11 +114,11 @@ az sentinel data-connector create \
     --workspace-name sentinel-fedramp \
     --kind AzureActiveDirectory
 
-# Configure log retention (1 year minimum for FedRAMP)
+# Configure log retention (730 days / 2 years for FedRAMP compliance)
 az monitor log-analytics workspace update \
     --resource-group rg-fedramp \
     --workspace-name sentinel-fedramp \
-    --retention-time 365
+    --retention-time 730
 ```
 
 **Evidence Collection via KQL:**
