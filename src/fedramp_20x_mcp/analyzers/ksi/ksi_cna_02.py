@@ -128,7 +128,8 @@ class KSI_CNA_02_Analyzer(BaseKSIAnalyzer):
     def _detect_frameworks_csharp(self, code: str) -> List[str]:
         """Detect C# frameworks in code."""
         frameworks = []
-        if 'ASP.NET' in code or 'Microsoft.AspNetCore' in code:
+        # Check for Microsoft.AspNetCore namespace in using statements (more precise than substring search)
+        if 'Microsoft.AspNetCore' in code:
             frameworks.append('aspnetcore')
         return frameworks
     
