@@ -608,6 +608,7 @@ class KSI_IAM_07_Analyzer(BaseKSIAnalyzer):
         # Pattern 2: Missing account expiration tracking (HIGH)
         if re.search(r'(@Entity.*User|class\s+\w*User.*Entity|public\s+class\s+\w*User)', code):
             if not re.search(r'(expirationDate|lastLoginDate|accountExpiry|inactive|enabled\s*=\s*false)', code, re.IGNORECASE):
+                result = self._find_line(lines, r'@Entity.*User|class\s+\w*User', use_regex=True)
                 findings.append(Finding(
                     severity=Severity.HIGH,
                     title="User Entity Missing Lifecycle Tracking Fields",
@@ -617,8 +618,8 @@ class KSI_IAM_07_Analyzer(BaseKSIAnalyzer):
                         "after 90 days of inactivity."
                     ),
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'@Entity.*User|class\s+\w*User'),
-                    snippet=self._get_snippet(lines, self._find_line(lines, r'@Entity.*User|class\s+\w*User')),
+                    line_number=result['line_num'] if result else 0,
+                    snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                     remediation=(
                         "Add lifecycle tracking fields to user entity:\n"
                         "@Entity\n"
@@ -769,6 +770,7 @@ class KSI_IAM_07_Analyzer(BaseKSIAnalyzer):
         # Pattern 2: User model missing lifecycle fields (HIGH)
         if re.search(r'(interface\s+User|class\s+User|type\s+User)', code):
             if not re.search(r'(expiresAt|expirationDate|lastLoginAt|lastActivityAt|isActive)', code, re.IGNORECASE):
+                result = self._find_line(lines, r'interface\s+User|class\s+User|type\s+User', use_regex=True)
                 findings.append(Finding(
                     severity=Severity.HIGH,
                     title="User Model Missing Lifecycle Tracking Fields",
@@ -778,8 +780,8 @@ class KSI_IAM_07_Analyzer(BaseKSIAnalyzer):
                         "of expired/inactive accounts after 90 days."
                     ),
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'interface\s+User|class\s+User|type\s+User'),
-                    snippet=self._get_snippet(lines, self._find_line(lines, r'interface\s+User|class\s+User|type\s+User')),
+                    line_number=result['line_num'] if result else 0,
+                    snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                     remediation=(
                         "Add lifecycle tracking fields to user model:\n"
                         "interface User {\n"
@@ -823,6 +825,7 @@ class KSI_IAM_07_Analyzer(BaseKSIAnalyzer):
         # Pattern 3: User deletion without deprovisioning workflow (MEDIUM)
         if re.search(r'(deleteUser|removeUser|User\.delete|\.remove\s*\()', code, re.IGNORECASE):
             if not re.search(r'(deprovision|offboard|revokeAccess|lifecycle)', code, re.IGNORECASE):
+                result = self._find_line(lines, r'deleteUser|removeUser|User\.delete|\.remove\s*\(', use_regex=True)
                 findings.append(Finding(
                     severity=Severity.MEDIUM,
                     title="User Deletion Without Comprehensive Deprovisioning",
@@ -832,8 +835,8 @@ class KSI_IAM_07_Analyzer(BaseKSIAnalyzer):
                         "cleans up resources, and notifies dependent systems."
                     ),
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'deleteUser|removeUser|User\.delete|\.remove\s*\('),
-                    snippet=self._get_snippet(lines, self._find_line(lines, r'deleteUser|removeUser|User\.delete')),
+                    line_number=result['line_num'] if result else 0,
+                    snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                     remediation=(
                         "Implement comprehensive deprovisioning workflow:\n"
                         "async deleteUser(userId: string): Promise<void> {\n"
@@ -886,6 +889,7 @@ class KSI_IAM_07_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 1: Manual user creation in Bicep (INFO - should use IdP)
         if re.search(r"Microsoft\.(AzureActiveDirectory/b2cDirectories/users|Graph/users)", code):
+            result = self._find_line(lines, r"users'", use_regex=True)
             findings.append(Finding(
                 severity=Severity.INFO,
                 title="Manual User Provisioning in Infrastructure Code",
@@ -895,8 +899,8 @@ class KSI_IAM_07_Analyzer(BaseKSIAnalyzer):
                     "SCIM provisioning, or HR-driven automation, not static infrastructure code."
                 ),
                 file_path=file_path,
-                line_number=self._find_line(lines, r"users'"),
-                snippet=self._get_snippet(lines, self._find_line(lines, r"users'")),
+                line_number=result['line_num'] if result else 0,
+                snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                 remediation=(
                     "Use Azure AD identity governance instead:\n"
                     "1. Configure Azure AD Connect for on-premises directory sync\n"
@@ -913,6 +917,7 @@ class KSI_IAM_07_Analyzer(BaseKSIAnalyzer):
         # Pattern 2: Role assignments without access reviews (MEDIUM)
         if re.search(r"Microsoft\.Authorization/roleAssignments", code):
             if not re.search(r'accessReview|governanceInsight', code, re.IGNORECASE):
+                result = self._find_line(lines, r"roleAssignments'", use_regex=True)
                 findings.append(Finding(
                     severity=Severity.MEDIUM,
                     title="Role Assignments Without Automated Access Reviews",
@@ -922,8 +927,8 @@ class KSI_IAM_07_Analyzer(BaseKSIAnalyzer):
                         "for privileges and ensure least privilege."
                     ),
                     file_path=file_path,
-                    line_number=self._find_line(lines, r"roleAssignments'"),
-                    snippet=self._get_snippet(lines, self._find_line(lines, r"roleAssignments'")),
+                    line_number=result['line_num'] if result else 0,
+                    snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                     remediation=(
                         "Configure Azure AD Access Reviews for role assignments:\n"
                         "1. Set up recurring access reviews (quarterly for standard, monthly for privileged)\n"
@@ -1000,6 +1005,7 @@ class KSI_IAM_07_Analyzer(BaseKSIAnalyzer):
         # Pattern 1: Static azuread_user resources (MEDIUM)
         user_resources = list(re.finditer(r'resource\s+"azuread_user"\s+"\w+"', code))
         if len(user_resources) > 0:
+            result = self._find_line(lines, r'resource\s+"azuread_user"', use_regex=True)
             findings.append(Finding(
                 severity=Severity.MEDIUM,
                 title="Static User Provisioning in Terraform",
@@ -1010,8 +1016,8 @@ class KSI_IAM_07_Analyzer(BaseKSIAnalyzer):
                     f"creates security gaps and compliance risks."
                 ),
                 file_path=file_path,
-                line_number=self._find_line(lines, r'resource\s+"azuread_user"'),
-                snippet=self._get_snippet(lines, self._find_line(lines, r'resource\s+"azuread_user"')),
+                line_number=result['line_num'] if result else 0,
+                snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                 remediation=(
                     "Replace static user provisioning with automated lifecycle management:\n"
                     "1. Configure Azure AD Connect for on-premises directory sync\n"
@@ -1033,6 +1039,7 @@ class KSI_IAM_07_Analyzer(BaseKSIAnalyzer):
         # Pattern 2: Static group membership (MEDIUM)
         if re.search(r'resource\s+"azuread_group_member"', code):
             static_members = len(re.findall(r'resource\s+"azuread_group_member"', code))
+            result = self._find_line(lines, r'azuread_group_member', use_regex=True)
             findings.append(Finding(
                 severity=Severity.MEDIUM,
                 title="Static Group Membership Management",
@@ -1042,8 +1049,8 @@ class KSI_IAM_07_Analyzer(BaseKSIAnalyzer):
                     f"based on user attributes, not static assignments."
                 ),
                 file_path=file_path,
-                line_number=self._find_line(lines, r'azuread_group_member'),
-                snippet=self._get_snippet(lines, self._find_line(lines, r'azuread_group_member')),
+                line_number=result['line_num'] if result else 0,
+                snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                 remediation=(
                     "Use dynamic group membership for automated lifecycle:\n"
                     "resource \"azuread_group\" \"engineering\" {\n"

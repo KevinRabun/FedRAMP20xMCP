@@ -565,7 +565,9 @@ class KSI_PIY_02_Analyzer(BaseKSIAnalyzer):
         if re.search(r"Microsoft\.Storage/storageAccounts", code):
             has_lifecycle = bool(re.search(r"managementPolicies|lifecycleManagement", code))
             if not has_lifecycle:
-                line_num = self._find_line(lines, 'Storage/storageAccounts')
+                result = self._find_line(lines, 'Storage/storageAccounts')
+
+                line_num = result['line_num'] if result else 0
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="Storage without lifecycle policy",
@@ -604,7 +606,9 @@ class KSI_PIY_02_Analyzer(BaseKSIAnalyzer):
         if re.search(r'azurerm_storage_account', code):
             has_lifecycle = bool(re.search(r'azurerm_storage_management_policy|lifecycle_rule', code))
             if not has_lifecycle:
-                line_num = self._find_line(lines, 'azurerm_storage_account')
+                result = self._find_line(lines, 'azurerm_storage_account')
+
+                line_num = result['line_num'] if result else 0
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="Storage without lifecycle policy",

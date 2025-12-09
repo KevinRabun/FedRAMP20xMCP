@@ -319,7 +319,9 @@ class KSI_IAM_04_Analyzer(BaseKSIAnalyzer):
         ]
         
         for pattern in admin_patterns:
-            line_num = self._find_line(lines, pattern)
+            result = self._find_line(lines, pattern)
+
+            line_num = result['line_num'] if result else 0
             if line_num:
                 findings.append(Finding(
                     severity=Severity.HIGH,
@@ -912,7 +914,8 @@ class KSI_IAM_04_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 1: Permanent Owner/Contributor role assignments (HIGH)
         if re.search(r"roleDefinitionId.*\/(Owner|Contributor)'", code):
-            line_num = self._find_line(lines, r"(Owner|Contributor)'")
+            result = self._find_line(lines, r"(Owner|Contributor)'", use_regex=True)
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.HIGH,
                 title="Permanent Owner/Contributor Role Assignment",

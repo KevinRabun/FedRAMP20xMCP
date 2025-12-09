@@ -190,9 +190,9 @@ class BaseKSIAnalyzer(ABC):
     # HELPER METHODS (Available to all subclasses)
     # ============================================================================
     
-    def _find_line(self, lines: List[str], search_term: str, use_regex: bool = False) -> int:
+    def _find_line(self, lines: List[str], search_term: str, use_regex: bool = False) -> Optional[dict]:
         """
-        Find line number containing search term or matching regex pattern.
+        Find line containing search term or matching regex pattern.
         
         Args:
             lines: List of code lines
@@ -200,7 +200,7 @@ class BaseKSIAnalyzer(ABC):
             use_regex: If True, treat search_term as regex pattern (default: False)
             
         Returns:
-            1-based line number, or 0 if not found
+            Dict with 'line_num' (1-based int) and 'line' (str content), or None if not found
         """
         if use_regex:
             import re
@@ -208,7 +208,7 @@ class BaseKSIAnalyzer(ABC):
                 pattern = re.compile(search_term, re.IGNORECASE)
                 for i, line in enumerate(lines, 1):
                     if pattern.search(line):
-                        return i
+                        return {'line_num': i, 'line': line}
             except re.error:
                 # Invalid regex, fall back to substring search
                 pass
@@ -217,8 +217,8 @@ class BaseKSIAnalyzer(ABC):
         search_lower = search_term.lower()
         for i, line in enumerate(lines, 1):
             if search_lower in line.lower():
-                return i
-        return 0
+                return {'line_num': i, 'line': line}
+        return None
     
     def _get_snippet(self, lines: List[str], line_number: int, context: int = 2) -> str:
         """
@@ -251,4 +251,22 @@ class BaseKSIAnalyzer(ABC):
             Code snippet with context lines
         """
         return self._get_snippet(lines, line_num, context_lines)
+    
+    def _get_snippet_from_bytes(self, code: str, start_byte: int, end_byte: int, context: int = 2) -> str:
+        """
+        Extract code snippet from byte positions (for AST analysis).
+        
+        Args:
+            code: Full source code as string
+            start_byte: Start byte position
+            end_byte: End byte position
+            context: Number of lines before/after to include (default: 2)
+            
+        Returns:
+            Code snippet with context lines
+        """
+        # Convert byte positions to line numbers
+        lines = code.split('\n')
+        line_num = code[:start_byte].count('\n') + 1
+        return self._get_snippet(lines, line_num, context)
 

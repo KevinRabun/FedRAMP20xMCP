@@ -354,7 +354,7 @@ class KSI_CNA_07_Analyzer(BaseKSIAnalyzer):
         lines = code.split('\n')
         
         # Pattern 1: Outdated azurerm provider version (MEDIUM)
-        provider_match = self._find_line(lines, r'required_providers\s*{')
+        provider_match = self._find_line(lines, r'required_providers\s*{', use_regex=True)
         
         if provider_match:
             line_num = provider_match['line_num']

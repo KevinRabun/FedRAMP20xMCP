@@ -146,7 +146,9 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 1: Unrestricted binding (HIGH)
         if re.search(r'(app\.run|uvicorn\.run|server\.bind)\s*\([^)]*host\s*=\s*["\']0\.0\.0\.0', code):
-            line_num = self._find_line(lines, r'host\s*=\s*["\']0\.0\.0\.0')
+            result = self._find_line(lines, r'host\s*=\s*["\']0\.0\.0\.0')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.HIGH,
                 title="Unrestricted Network Binding (0.0.0.0)",
@@ -171,7 +173,9 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
         if re.search(r'socket\.socket\s*\(', code):
             has_bind_all = re.search(r'bind\s*\(\s*\(\s*["\']0\.0\.0\.0|bind\s*\(\s*\(\s*[""]["\']', code)
             if has_bind_all:
-                line_num = self._find_line(lines, r'bind\s*\(')
+                result = self._find_line(lines, r'bind\s*\(', use_regex=True)
+
+                line_num = result['line_num'] if result else 0
                 findings.append(Finding(
                     severity=Severity.HIGH,
                     title="Socket Server Without Network Restrictions",
@@ -299,7 +303,9 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 1: Unrestricted Kestrel endpoint (HIGH)
         if re.search(r'UseUrls\s*\([^)]*http://\*:|UseUrls\s*\([^)]*http://0\.0\.0\.0', code, re.IGNORECASE):
-            line_num = self._find_line(lines, r'UseUrls')
+            result = self._find_line(lines, r'UseUrls', use_regex=True)
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.HIGH,
                 title="Unrestricted Kestrel Endpoint Configuration",
@@ -325,7 +331,9 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
         has_ip_filter = re.search(r'(IPRestriction|AllowedIPs|ClientIpCheck|UseIpRateLimiting)', code, re.IGNORECASE)
         
         if has_web_app and not has_ip_filter:
-            line_num = self._find_line(lines, r'WebApplication\.Create|app\.Run')
+            result = self._find_line(lines, r'WebApplication\.Create|app\.Run', use_regex=True)
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.MEDIUM,
                 title="Missing IP Restriction Middleware",
@@ -468,7 +476,9 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
             # Check if bound to all interfaces
             has_unrestricted = re.search(r'new\s+ServerSocket\s*\(\s*\d+\s*\)', code)  # No IP specified = all interfaces
             if has_unrestricted:
-                line_num = self._find_line(lines, r'new\s+ServerSocket')
+                result = self._find_line(lines, r'new\s+ServerSocket', use_regex=True)
+
+                line_num = result['line_num'] if result else 0
                 findings.append(Finding(
                     severity=Severity.HIGH,
                     title="Unrestricted ServerSocket Binding",
@@ -496,7 +506,9 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
         )
         
         if has_spring_app and not has_ip_filter:
-            line_num = self._find_line(lines, r'@SpringBootApplication|SpringApplication\.run')
+            result = self._find_line(lines, r'@SpringBootApplication|SpringApplication\.run', use_regex=True)
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.MEDIUM,
                 title="Spring Boot Missing IP Filtering",
@@ -635,7 +647,9 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
         ]
         
         for pattern in listen_patterns:
-            line_num = self._find_line(lines, pattern)
+            result = self._find_line(lines, pattern)
+
+            line_num = result['line_num'] if result else 0
             if line_num:
                 findings.append(Finding(
                     severity=Severity.HIGH,
@@ -665,7 +679,8 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
         )
         
         if has_express and not has_ip_filter:
-            line_num = self._find_line(lines, r'express\(\)|@nestjs/common')
+            result = self._find_line(lines, r'express\(\)|@nestjs/common', use_regex=True)
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.MEDIUM,
                 title="Missing IP Filtering Middleware",
@@ -746,7 +761,9 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
         ]
         
         for pattern in permissive_patterns:
-            line_num = self._find_line(lines, pattern)
+            result = self._find_line(lines, pattern)
+
+            line_num = result['line_num'] if result else 0
             if line_num:
                 findings.append(Finding(
                     severity=Severity.HIGH,
@@ -821,7 +838,9 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
         ]
         
         for pattern in permissive_patterns:
-            line_num = self._find_line(lines, pattern)
+            result = self._find_line(lines, pattern)
+
+            line_num = result['line_num'] if result else 0
             if line_num:
                 findings.append(Finding(
                     severity=Severity.HIGH,

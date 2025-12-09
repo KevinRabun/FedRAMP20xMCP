@@ -296,7 +296,9 @@ class KSI_SVC_02_Analyzer(BaseKSIAnalyzer):
         ]
         
         for pattern in http_patterns:
-            line_num = self._find_line(lines, pattern)
+            result = self._find_line(lines, pattern)
+
+            line_num = result['line_num'] if result else 0
             if line_num > 0:
                 findings.append(Finding(
                     severity=Severity.CRITICAL,
@@ -311,7 +313,9 @@ class KSI_SVC_02_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 2: SSL verification disabled (CRITICAL)
         if re.search(r'verify\s*=\s*False', code):
-            line_num = self._find_line(lines, r'verify\s*=\s*False')
+            result = self._find_line(lines, r'verify\s*=\s*False')
+
+            line_num = result['line_num'] if result else 0
             if line_num > 0:
                 findings.append(Finding(
                     severity=Severity.CRITICAL,
@@ -447,7 +451,9 @@ class KSI_SVC_02_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 1: HTTP URLs (CRITICAL)
         if re.search(r'["\']http://[^"\']*["\']', code):
-            line_num = self._find_line(lines, r'["\']http://')
+            result = self._find_line(lines, r'["\']http://')
+
+            line_num = result['line_num'] if result else 0
             if line_num > 0:
                 line_content = lines[line_num - 1] if line_num <= len(lines) else ""
                 if not re.search(r'http://(localhost|127\.0\.0\.1)', line_content, re.IGNORECASE):
@@ -472,7 +478,9 @@ class KSI_SVC_02_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 2: RequireHttpsMetadata = false (CRITICAL)
         if re.search(r'RequireHttpsMetadata\s*=\s*false', code, re.IGNORECASE):
-            line_num = self._find_line(lines, r'RequireHttpsMetadata')
+            result = self._find_line(lines, r'RequireHttpsMetadata')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.CRITICAL,
                 title="HTTPS Metadata Requirement Disabled",
@@ -500,7 +508,9 @@ class KSI_SVC_02_Analyzer(BaseKSIAnalyzer):
         ]
         
         for pattern in weak_ssl_patterns:
-            line_num = self._find_line(lines, pattern)
+            result = self._find_line(lines, pattern)
+
+            line_num = result['line_num'] if result else 0
             if line_num:
                 findings.append(Finding(
                     severity=Severity.HIGH,
@@ -677,7 +687,9 @@ class KSI_SVC_02_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 1: HTTP URLs (CRITICAL)
         if re.search(r'["\']http://[^"\']* ["\']', code):
-            line_num = self._find_line(lines, r'["\']http://')
+            result = self._find_line(lines, r'["\']http://')
+
+            line_num = result['line_num'] if result else 0
             if line_num > 0:
                 line_content = lines[line_num - 1] if line_num <= len(lines) else ""
                 # Exclude localhost/127.0.0.1 for development
@@ -705,7 +717,9 @@ class KSI_SVC_02_Analyzer(BaseKSIAnalyzer):
         # Pattern 2: SSL verification disabled (CRITICAL)
         # Check for hostname verifier bypass
         if re.search(r'ALLOW_ALL_HOSTNAME_VERIFIER|NoopHostnameVerifier', code):
-            line_num = self._find_line(lines, r'ALLOW_ALL_HOSTNAME_VERIFIER|NoopHostnameVerifier')
+            result = self._find_line(lines, r'ALLOW_ALL_HOSTNAME_VERIFIER|NoopHostnameVerifier')
+
+            line_num = result['line_num'] if result else 0
             if line_num:
                 findings.append(Finding(
                     severity=Severity.CRITICAL,
@@ -729,7 +743,9 @@ class KSI_SVC_02_Analyzer(BaseKSIAnalyzer):
         # Check for empty TrustManager (multi-line pattern)
         if re.search(r'X509TrustManager.*checkServerTrusted.*\{\s*\}', code, re.DOTALL):
             # Find line with checkServerTrusted since pattern spans multiple lines
-            line_num = self._find_line(lines, r'checkServerTrusted')
+            result = self._find_line(lines, r'checkServerTrusted')
+
+            line_num = result['line_num'] if result else 0
             if line_num:
                 findings.append(Finding(
                     severity=Severity.CRITICAL,
@@ -751,7 +767,8 @@ class KSI_SVC_02_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 3: Weak TLS versions (HIGH)
         if re.search(r'(TLSv1(\.[01])?|SSLv[23])', code):
-            line_num = self._find_line(lines, r'TLSv1(\.[01])?|SSLv[23]')
+            result = self._find_line(lines, r'TLSv1(\.[01])?|SSLv[23]', use_regex=True)
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.HIGH,
                 title="Weak TLS Protocol Version",
@@ -921,7 +938,9 @@ class KSI_SVC_02_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 1: HTTP URLs (CRITICAL)
         if re.search(r'["\']http://[^"\']*["\']', code):
-            line_num = self._find_line(lines, r'["\']http://')
+            result = self._find_line(lines, r'["\']http://')
+
+            line_num = result['line_num'] if result else 0
             if line_num > 0:
                 line_content = lines[line_num - 1] if line_num <= len(lines) else ""
                 if not re.search(r'http://(localhost|127\.0\.0\.1)', line_content, re.IGNORECASE):
@@ -947,7 +966,9 @@ class KSI_SVC_02_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 2: rejectUnauthorized: false (CRITICAL)
         if re.search(r'rejectUnauthorized\s*:\s*false', code, re.IGNORECASE):
-            line_num = self._find_line(lines, r'rejectUnauthorized')
+            result = self._find_line(lines, r'rejectUnauthorized')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.CRITICAL,
                 title="SSL Certificate Validation Disabled",
@@ -970,7 +991,9 @@ class KSI_SVC_02_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 3: Insecure WebSocket (HIGH)
         if re.search(r'ws://(?!localhost|127\.0\.0\.1)', code):
-            line_num = self._find_line(lines, r'ws://')
+            result = self._find_line(lines, r'ws://')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.HIGH,
                 title="Unencrypted WebSocket Connection",
@@ -991,7 +1014,9 @@ class KSI_SVC_02_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 4: Weak TLS versions (HIGH)
         if re.search(r'minVersion.*[\'"]TLSv1(\.[01])?[\'"]', code):
-            line_num = self._find_line(lines, r'minVersion')
+            result = self._find_line(lines, r'minVersion')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.HIGH,
                 title="Weak TLS Protocol Version",
@@ -1031,7 +1056,9 @@ class KSI_SVC_02_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 1: HTTPS enforcement disabled (CRITICAL)
         if re.search(r'httpsOnly\s*:\s*false', code, re.IGNORECASE):
-            line_num = self._find_line(lines, r'httpsOnly')
+            result = self._find_line(lines, r'httpsOnly')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.CRITICAL,
                 title="HTTPS Enforcement Disabled",
@@ -1080,7 +1107,9 @@ class KSI_SVC_02_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 3: Weak TLS version (HIGH)
         if re.search(r"minimumTlsVersion\s*:\s*'TLS1_[01]'", code):
-            line_num = self._find_line(lines, r"minimumTlsVersion\s*:\s*'TLS1_[01]'")
+            result = self._find_line(lines, r"minimumTlsVersion\s*:\s*'TLS1_[01]'")
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.HIGH,
                 title="Weak TLS Version Configured",
@@ -1116,7 +1145,9 @@ class KSI_SVC_02_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 1: HTTPS traffic disabled (CRITICAL)
         if re.search(r'enable_https_traffic_only\s*=\s*false', code, re.IGNORECASE):
-            line_num = self._find_line(lines, r'enable_https_traffic_only')
+            result = self._find_line(lines, r'enable_https_traffic_only')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.CRITICAL,
                 title="HTTPS Traffic Not Enforced",
@@ -1163,7 +1194,9 @@ class KSI_SVC_02_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 3: Weak TLS version (HIGH)
         if re.search(r'min_tls_version\s*=\s*"TLS1_[01]"', code):
-            line_num = self._find_line(lines, r'min_tls_version\s*=\s*"TLS1_[01]"')
+            result = self._find_line(lines, r'min_tls_version\s*=\s*"TLS1_[01]"')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.HIGH,
                 title="Weak Minimum TLS Version",

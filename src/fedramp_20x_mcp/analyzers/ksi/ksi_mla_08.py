@@ -336,7 +336,9 @@ class KSI_MLA_08_Analyzer(BaseKSIAnalyzer):
         if re.search(r"Microsoft\.OperationalInsights/workspaces", code):
             has_rbac = bool(re.search(r"Microsoft\.Authorization/roleAssignments", code))
             if not has_rbac:
-                line_num = self._find_line(lines, 'OperationalInsights/workspaces')
+                result = self._find_line(lines, 'OperationalInsights/workspaces')
+
+                line_num = result['line_num'] if result else 0
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="Log Analytics without RBAC",
@@ -375,7 +377,9 @@ class KSI_MLA_08_Analyzer(BaseKSIAnalyzer):
         if re.search(r'azurerm_log_analytics_workspace', code):
             has_rbac = bool(re.search(r'azurerm_role_assignment', code))
             if not has_rbac:
-                line_num = self._find_line(lines, 'azurerm_log_analytics_workspace')
+                result = self._find_line(lines, 'azurerm_log_analytics_workspace')
+
+                line_num = result['line_num'] if result else 0
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="Log Analytics without RBAC",

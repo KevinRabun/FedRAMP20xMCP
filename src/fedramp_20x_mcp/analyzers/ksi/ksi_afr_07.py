@@ -99,9 +99,13 @@ class KSI_AFR_07_Analyzer(BaseKSIAnalyzer):
         has_hardcoded_debug = bool(re.search(r"(debug|DEBUG)['\"]*\s*[\]\s]*=\s*True", code))
         
         if has_hardcoded_debug:
-            line_num = self._find_line(lines, 'debug=True')
+            result = self._find_line(lines, 'debug=True')
+
+            line_num = result['line_num'] if result else 0
             if line_num == 0:
-                line_num = self._find_line(lines, 'debug = True')
+                result = self._find_line(lines, 'debug = True')
+
+                line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="Debug Mode Enabled (Insecure Default)",
@@ -162,7 +166,9 @@ Reference: FRR-AFR-07"""
         
         # Check for debug mode enabled
         if re.search(r'debug\s*=\s*True', code, re.IGNORECASE):
-            line_num = self._find_line(lines, 'debug=True')
+            result = self._find_line(lines, 'debug=True')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="Debug Mode Enabled (Insecure Default)",
@@ -243,7 +249,9 @@ Reference: FRR-AFR-07"""
         has_env_check = any('IsDevelopment' in line or 'IsProduction' in line for line in lines)
         
         if has_dev_exception and not has_env_check:
-            line_num = self._find_line(lines, 'UseDeveloperExceptionPage')
+            result = self._find_line(lines, 'UseDeveloperExceptionPage')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="Developer Exception Page May Run in Production",
@@ -301,7 +309,9 @@ Reference: FRR-AFR-07"""
         
         # Check for UseDeveloperExceptionPage without environment check
         if 'UseDeveloperExceptionPage' in code and not re.search(r'IsDevelopment|IsProduction', code):
-            line_num = self._find_line(lines, 'UseDeveloperExceptionPage')
+            result = self._find_line(lines, 'UseDeveloperExceptionPage')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="Developer Exception Page May Run in Production",
@@ -378,7 +388,9 @@ Reference: FRR-AFR-07"""
         has_debug_logging = any('logging.level' in line.lower() and 'debug' in line.lower() for line in lines)
         
         if has_debug_logging:
-            line_num = self._find_line(lines, 'logging.level')
+            result = self._find_line(lines, 'logging.level')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="Debug Logging Enabled (Insecure Default)",
@@ -402,7 +414,9 @@ Reference: FRR-AFR-07"""
         has_wildcard_cors = any('allowedOrigins' in line and '*' in line for line in lines)
         
         if has_wildcard_cors:
-            line_num = self._find_line(lines, 'allowedOrigins')
+            result = self._find_line(lines, 'allowedOrigins')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="Insecure CORS Configuration (Allow All Origins)",
@@ -443,7 +457,9 @@ Reference: FRR-AFR-07"""
         
         # Check for debug logging
         if re.search(r'logging\.level\.root\s*=\s*DEBUG', code, re.IGNORECASE):
-            line_num = self._find_line(lines, 'logging.level')
+            result = self._find_line(lines, 'logging.level')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="Debug Logging Enabled (Insecure Default)",
@@ -465,7 +481,9 @@ Reference: FRR-AFR-07"""
         
         # Check for insecure CORS
         if re.search(r'allowedOrigins\s*\(\s*["\']\*["\']\s*\)', code):
-            line_num = self._find_line(lines, 'allowedOrigins')
+            result = self._find_line(lines, 'allowedOrigins')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="Insecure CORS Configuration (Allow All Origins)",
@@ -553,7 +571,9 @@ Reference: FRR-AFR-07"""
         has_wildcard_cors = any("origin: '*'" in line or 'origin:"*"' in line or "origin:'*'" in line for line in lines)
         
         if has_wildcard_cors:
-            line_num = self._find_line(lines, "origin: '*'")
+            result = self._find_line(lines, "origin: '*'")
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="Insecure CORS Configuration",
@@ -610,7 +630,9 @@ Reference: FRR-AFR-07"""
         
         # Check for insecure CORS (allow all origins)
         if re.search(r'cors\s*\(\s*{[^}]*origin:\s*["\']\*["\']', code):
-            line_num = self._find_line(lines, "origin: '*'")
+            result = self._find_line(lines, "origin: '*'")
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="Insecure CORS Configuration",

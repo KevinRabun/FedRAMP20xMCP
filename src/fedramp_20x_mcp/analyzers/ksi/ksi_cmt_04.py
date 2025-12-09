@@ -98,7 +98,9 @@ class KSI_CMT_04_Analyzer(BaseKSIAnalyzer):
         has_manual_trigger = bool(re.search(r'workflow_dispatch', code, re.IGNORECASE))
         
         if has_prod_env and not has_approval and not has_manual_trigger:
-            line_num = self._find_line(lines, 'environment')
+            result = self._find_line(lines, 'environment')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.HIGH,
                 title="Production Deployment Without Approval Gate",
@@ -198,7 +200,9 @@ class KSI_CMT_04_Analyzer(BaseKSIAnalyzer):
         has_prod_deploy = bool(re.search(r'(deploy.*production|production.*deploy)', code, re.IGNORECASE))
         
         if has_auto_push_trigger and has_prod_deploy and not has_approval:
-            line_num = self._find_line(lines, 'on:')
+            result = self._find_line(lines, 'on:')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.MEDIUM,
                 title="Automated Production Deployment on Push",
@@ -302,7 +306,9 @@ class KSI_CMT_04_Analyzer(BaseKSIAnalyzer):
         has_approval = bool(re.search(r'(ManualValidation|approval|environment:.*\n.*checks)', code, re.IGNORECASE))
         
         if has_prod_env and not has_approval:
-            line_num = self._find_line(lines, 'production')
+            result = self._find_line(lines, 'production')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.HIGH,
                 title="Production Deployment Without Approval Gate",
@@ -419,7 +425,9 @@ class KSI_CMT_04_Analyzer(BaseKSIAnalyzer):
         has_protected = bool(re.search(r'protected', code, re.IGNORECASE))
         
         if has_prod_deploy and not has_manual:
-            line_num = self._find_line(lines, 'production')
+            result = self._find_line(lines, 'production')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.HIGH,
                 title="Production Deployment Without Manual Approval",
@@ -643,7 +651,9 @@ class KSI_CMT_04_Analyzer(BaseKSIAnalyzer):
         has_approval = bool(re.search(r'(approval|ticket|change.*request)', code, re.IGNORECASE))
         
         if has_prod_context and has_db_modify and not has_approval and len(code) > 100:
-            line_num = self._find_line(lines, '.execute(') or self._find_line(lines, '.commit(')
+            result = self._find_line(lines, '.execute(')
+
+            line_num = result['line_num'] if result else 0 or self._find_line(lines, '.commit(')
             findings.append(Finding(
                 severity=Severity.MEDIUM,
                 title="Direct Production Database Modification Without Approval Check (Regex Fallback)",
@@ -675,7 +685,9 @@ class KSI_CMT_04_Analyzer(BaseKSIAnalyzer):
         has_approval = bool(re.search(r'(Approval|Ticket|ChangeRequest)', code))
         
         if has_prod_context and has_db_modify and not has_approval and len(code) > 100:
-            line_num = self._find_line(lines, 'ExecuteSqlRaw') or self._find_line(lines, 'SaveChanges')
+            result = self._find_line(lines, 'ExecuteSqlRaw')
+
+            line_num = result['line_num'] if result else 0 or self._find_line(lines, 'SaveChanges')
             findings.append(Finding(
                 severity=Severity.MEDIUM,
                 title="Direct Production Database Modification Without Approval Check",
@@ -734,7 +746,9 @@ class KSI_CMT_04_Analyzer(BaseKSIAnalyzer):
         has_lock = bool(re.search(r'Microsoft\.Authorization/locks', code, re.IGNORECASE))
         
         if has_critical_resource and not has_lock and len(code) > 100:
-            line_num = self._find_line(lines, 'resource')
+            result = self._find_line(lines, 'resource')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.MEDIUM,
                 title="Critical Resource Without Lock",
@@ -780,7 +794,9 @@ class KSI_CMT_04_Analyzer(BaseKSIAnalyzer):
         has_lock = bool(re.search(r'azurerm_management_lock', code))
         
         if has_critical_resource and not has_lock and len(code) > 100:
-            line_num = self._find_line(lines, 'resource')
+            result = self._find_line(lines, 'resource')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.MEDIUM,
                 title="Critical Resource Without Management Lock",

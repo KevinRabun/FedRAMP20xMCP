@@ -241,7 +241,7 @@ class KSI_CNA_03_Analyzer(BaseKSIAnalyzer):
         findings = []
         
         # Pattern 1: CORS allowing all origins
-        cors_match = self._find_line(lines, r'CORS\(.*origins=\["?\*"?\]|CORSMiddleware.*allow_origins=\["?\*"?\]')
+        cors_match = self._find_line(lines, r'CORS\(.*origins=\["?\*"?\]|CORSMiddleware.*allow_origins=\["?\*"?\]', use_regex=True)
         if cors_match:
             line_num = cors_match['line_num']
             findings.append(Finding(
@@ -866,7 +866,7 @@ class KSI_CNA_03_Analyzer(BaseKSIAnalyzer):
             ))
         
         # Pattern 2: Admin controller without IP filtering (MEDIUM)
-        admin_controller_match = self._find_line(lines, r'@RequestMapping\(.*/admin|@RestController.*Admin')
+        admin_controller_match = self._find_line(lines, r'@RequestMapping\(.*/admin|@RestController.*Admin', use_regex=True)
         
         if admin_controller_match:
             line_num = admin_controller_match['line_num']

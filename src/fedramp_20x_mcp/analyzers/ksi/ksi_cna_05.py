@@ -254,7 +254,7 @@ class KSI_CNA_05_Analyzer(BaseKSIAnalyzer):
         
         # Check for Flask without limiter
         if 'flask' in code.lower() and 'flask_limiter' not in code.lower() and 'limiter' not in code.lower():
-            line_match = self._find_line(lines, r'Flask\s*\(')
+            line_match = self._find_line(lines, r'Flask\s*\(', use_regex=True)
             if line_match:
                 line_num = line_match['line_num']
                 findings.append(Finding(

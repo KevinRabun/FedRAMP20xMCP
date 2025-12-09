@@ -364,14 +364,15 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
         
         # Check for TOTP (non-phishing-resistant)
         if re.search(r'import\s+pyotp|from\s+pyotp|totp', code, re.IGNORECASE) and not (has_fido2 or has_webauthn):
+            result = self._find_line(lines, r'pyotp|totp', use_regex=True)
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="TOTP-based MFA is not phishing-resistant",
                 description="TOTP MFA is vulnerable to phishing attacks.",
                 severity=Severity.MEDIUM,
                 file_path=file_path,
-                line_number=self._find_line(lines, r'pyotp|totp'),
-                snippet=self._get_snippet(lines, self._find_line(lines, r'pyotp|totp')),
+                line_number = result['line_num'] if result else 0,
+                snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                 remediation="Migrate to phishing-resistant MFA: FIDO2, WebAuthn"
             ))
         
@@ -512,7 +513,9 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
         
         # Finding 1: ASP.NET Core Identity without MFA enforcement
         if aspnet_identity_found and not has_mfa_enforcement:
-            line_num = self._find_line(lines, r'AddIdentity|AddDefaultIdentity')
+            result = self._find_line(lines, r'AddIdentity|AddDefaultIdentity')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="ASP.NET Core Identity without MFA enforcement",
@@ -527,7 +530,9 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
         # Finding 2: Non-phishing-resistant MFA methods
         if aspnet_identity_found and not (has_certificate_auth or has_fido2):
             if has_email_mfa or has_sms_mfa:
-                line_num = self._find_line(lines, r'EmailTokenProvider|PhoneNumberTokenProvider|Twilio|SendGrid')
+                result = self._find_line(lines, r'EmailTokenProvider|PhoneNumberTokenProvider|Twilio|SendGrid')
+
+                line_num = result['line_num'] if result else 0
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="ASP.NET Core Identity using non-phishing-resistant MFA",
@@ -541,7 +546,9 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
         
         # Finding 3: Azure AD without MFA validation
         if has_azure_ad and not has_azure_ad_mfa_validation:
-            line_num = self._find_line(lines, r'AddMicrosoftIdentityWebApp|Microsoft\.Identity\.Web')
+            result = self._find_line(lines, r'AddMicrosoftIdentityWebApp|Microsoft\.Identity\.Web')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="Azure AD authentication without MFA validation",
@@ -556,7 +563,9 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
         # Finding 4: Authorization without MFA
         if has_authorization and not aspnet_identity_found:
             if not (has_certificate_auth or has_fido2 or has_azure_ad):
-                line_num = self._find_line(lines, r'\[Authorize\]|UseAuthentication')
+                result = self._find_line(lines, r'\[Authorize\]|UseAuthentication')
+
+                line_num = result['line_num'] if result else 0
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="Authentication without MFA implementation",
@@ -590,56 +599,60 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
             
             # Check if MFA is enforced
             if not re.search(r'RequireAuthenticatedSignIn\s*=\s*true|RequireTwoFactor\s*=\s*true|\[RequiresTwoFactor\]', code, re.IGNORECASE):
+                result = self._find_line(lines, r'AddIdentity', use_regex=True)
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="ASP.NET Core Identity MFA not enforced",
                     description="ASP.NET Core Identity is configured but MFA is not enforced. SignInOptions should set RequireTwoFactor = true.",
                     severity=Severity.HIGH,
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'AddIdentity'),
-                    code_snippet=self._get_snippet(lines, self._find_line(lines, r'AddIdentity')),
+                    line_number = result['line_num'] if result else 0,
+                    code_snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                     recommendation="Configure MFA enforcement: services.Configure<IdentityOptions>(options => { options.SignIn.RequireTwoFactor = true; });"
                 ))
             
             # Check for phishing-resistant token providers
             if not (has_certificate_auth or has_fido2):
                 if has_email_mfa or has_sms_mfa:
+                    result = self._find_line(lines, r'EmailTokenProvider|PhoneNumberTokenProvider', use_regex=True)
                     findings.append(Finding(
                         ksi_id=self.KSI_ID,
                         title="ASP.NET Core Identity using non-phishing-resistant MFA",
                         description="Email or SMS token providers detected. These are vulnerable to phishing. FedRAMP 20x requires phishing-resistant MFA.",
                         severity=Severity.HIGH,
                         file_path=file_path,
-                        line_number=self._find_line(lines, r'EmailTokenProvider|PhoneNumberTokenProvider'),
-                        code_snippet=self._get_snippet(lines, self._find_line(lines, r'EmailTokenProvider|PhoneNumberTokenProvider')),
+                        line_number = result['line_num'] if result else 0,
+                        code_snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                         recommendation="Implement FIDO2/WebAuthn or certificate-based authentication instead of email/SMS tokens"
                     ))
         
         # Check Azure AD/Entra ID configuration
         if re.search(r'Microsoft\.Identity\.Web|AddMicrosoftIdentityWebApp|AzureAD', code):
             if not re.search(r'ConditionalAccess|RequireMfa|ClaimsPrincipal.*amr.*mfa', code, re.IGNORECASE):
+                result = self._find_line(lines, r'AddMicrosoftIdentityWebApp', use_regex=True)
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="Azure AD authentication without MFA validation",
                     description="Azure AD authentication configured but no validation of MFA claim (amr claim) or Conditional Access enforcement detected.",
                     severity=Severity.HIGH,
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'AddMicrosoftIdentityWebApp'),
-                    code_snippet=self._get_snippet(lines, self._find_line(lines, r'AddMicrosoftIdentityWebApp')),
+                    line_number = result['line_num'] if result else 0,
+                    code_snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                     recommendation="Validate MFA claim: if (!User.Claims.Any(c => c.Type == \"amr\" && c.Value == \"mfa\")) { return Challenge(); }"
                 ))
         
         # Check for any authentication without MFA
         if re.search(r'\[Authorize\]|UseAuthentication\(\)', code) and not aspnet_identity_found:
             if not (has_certificate_auth or has_fido2 or re.search(r'AddMicrosoftIdentityWebApp', code)):
+                result = self._find_line(lines, r'\[Authorize\]|UseAuthentication', use_regex=True)
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="Authentication without MFA implementation",
                     description="Authorization is configured but no MFA implementation detected.",
                     severity=Severity.CRITICAL,
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'\[Authorize\]|UseAuthentication'),
-                    code_snippet=self._get_snippet(lines, self._find_line(lines, r'\[Authorize\]|UseAuthentication')),
+                    line_number = result['line_num'] if result else 0,
+                    code_snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                     recommendation="Implement phishing-resistant MFA: ASP.NET Core Identity with FIDO2, Azure AD with Conditional Access, or certificate-based authentication"
                 ))
         
@@ -734,7 +747,9 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
         
         # Finding 1: Spring Security without MFA enforcement
         if spring_security_found and not has_mfa_filter and not (has_fido2 or has_certificate_auth):
-            line_num = self._find_line(lines, r'@EnableWebSecurity|WebSecurityConfigurerAdapter|formLogin')
+            result = self._find_line(lines, r'@EnableWebSecurity|WebSecurityConfigurerAdapter|formLogin')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="Spring Security without MFA",
@@ -748,7 +763,9 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
             
         # Finding 2: Azure AD without MFA validation
         if has_azure_ad and not has_azure_ad_mfa_validation:
-            line_num = self._find_line(lines, r'azure-spring-boot-starter|AzureActiveDirectory')
+            result = self._find_line(lines, r'azure-spring-boot-starter|AzureActiveDirectory')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="Azure AD integration without MFA validation",
@@ -762,7 +779,9 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
             
         # Finding 3: TOTP warning
         if has_totp and not (has_fido2 or has_certificate_auth):
-            line_num = self._find_line(lines, r'GoogleAuthenticator|totp|TimeBasedOneTimePassword')
+            result = self._find_line(lines, r'GoogleAuthenticator|totp|TimeBasedOneTimePassword')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="TOTP-based MFA is not phishing-resistant",
@@ -776,7 +795,9 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
             
         # Finding 4: SMS warning
         if has_sms_mfa:
-            line_num = self._find_line(lines, r'sendSms.*verification|Twilio|SmsAuthenticationProvider')
+            result = self._find_line(lines, r'sendSms.*verification|Twilio|SmsAuthenticationProvider')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="SMS-based MFA is not phishing-resistant",
@@ -791,7 +812,9 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
         # Finding 5: No MFA implementation
             if spring_security_found and not (has_fido2 or has_certificate_auth or has_totp or has_sms_mfa):
                 if not has_azure_ad:
-                    line_num = self._find_line(lines, r'@EnableWebSecurity')
+                    result = self._find_line(lines, r'@EnableWebSecurity')
+
+                    line_num = result['line_num'] if result else 0
                     findings.append(Finding(
                         ksi_id=self.KSI_ID,
                         title="No MFA implementation detected",
@@ -825,67 +848,72 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
             
             # Check for MFA configuration
             if not re.search(r'TwoFactorAuthenticationFilter|MultiFactorAuthentication|mfaRequired|requireMfa', code, re.IGNORECASE):
+                result = self._find_line(lines, r'@EnableWebSecurity', use_regex=True)
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="Spring Security without MFA enforcement",
                     description="Spring Security is configured but no MFA enforcement filter or configuration is detected.",
                     severity=Severity.HIGH,
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'@EnableWebSecurity'),
-                    code_snippet=self._get_snippet(lines, self._find_line(lines, r'@EnableWebSecurity')),
+                    line_number = result['line_num'] if result else 0,
+                    code_snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                     recommendation="Implement MFA filter: create a TwoFactorAuthenticationFilter with phishing-resistant methods"
                 ))
         
         # Check Azure AD Spring Boot integration
         if re.search(r'azure-spring-boot-starter-active-directory|AzureActiveDirectoryB2CAutoConfiguration', code):
             if not re.search(r'conditionalAccess|amr.*claim.*mfa|validateMfa', code, re.IGNORECASE):
+                result = self._find_line(lines, r'azure-spring-boot-starter', use_regex=True)
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="Azure AD integration without MFA validation",
                     description="Azure AD authentication configured but no validation of MFA claims or Conditional Access configuration detected.",
                     severity=Severity.HIGH,
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'azure-spring-boot-starter'),
-                    code_snippet=self._get_snippet(lines, self._find_line(lines, r'azure-spring-boot-starter')),
+                    line_number = result['line_num'] if result else 0,
+                    code_snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                     recommendation="Validate MFA claim from Azure AD token or configure Azure AD Conditional Access"
                 ))
         
         # Warn about non-phishing-resistant MFA
         if has_totp and not (has_fido2 or has_certificate_auth):
+            result = self._find_line(lines, r'GoogleAuthenticator|totp', use_regex=True)
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="TOTP-based MFA is not phishing-resistant",
                 description="TOTP is vulnerable to phishing attacks. FedRAMP 20x requires phishing-resistant MFA.",
                 severity=Severity.MEDIUM,
                 file_path=file_path,
-                line_number=self._find_line(lines, r'GoogleAuthenticator|totp'),
-                code_snippet=self._get_snippet(lines, self._find_line(lines, r'GoogleAuthenticator|totp')),
+                line_number = result['line_num'] if result else 0,
+                code_snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                 recommendation="Migrate to phishing-resistant MFA: WebAuthn4J (FIDO2) or certificate-based authentication"
             ))
         
         if has_sms_mfa:
+            result = self._find_line(lines, r'sendSms.*verification|Twilio', use_regex=True)
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="SMS-based MFA is not phishing-resistant",
                 description="SMS-based MFA is vulnerable to SIM swapping and phishing attacks.",
                 severity=Severity.HIGH,
                 file_path=file_path,
-                line_number=self._find_line(lines, r'sendSms.*verification|Twilio'),
-                code_snippet=self._get_snippet(lines, self._find_line(lines, r'sendSms.*verification|Twilio')),
+                line_number = result['line_num'] if result else 0,
+                code_snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                 recommendation="Replace SMS MFA with WebAuthn4J (FIDO2) or certificate-based authentication"
             ))
         
         # Check if authentication exists without MFA
         if spring_security_found and not (has_fido2 or has_certificate_auth or has_totp or has_sms_mfa):
             if not re.search(r'azure-spring-boot-starter-active-directory', code):
+                result = self._find_line(lines, r'@EnableWebSecurity', use_regex=True)
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="No MFA implementation detected",
                     description="Spring Security authentication configured but no MFA implementation detected.",
                     severity=Severity.CRITICAL,
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'@EnableWebSecurity'),
-                    code_snippet=self._get_snippet(lines, self._find_line(lines, r'@EnableWebSecurity')),
+                    line_number = result['line_num'] if result else 0,
+                    code_snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                     recommendation="Implement phishing-resistant MFA using WebAuthn4J (FIDO2) or integrate with Azure AD Conditional Access"
                 ))
         
@@ -1020,7 +1048,10 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
             # Check for LocalStrategy (password-only authentication)
             has_local_strategy = 'LocalStrategy' in code or 'passport-local' in code
             
-            line_num = self._find_line(lines, r'passport|LocalStrategy')
+            result = self._find_line(lines, r'passport|LocalStrategy')
+
+            
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="Passport.js without MFA",
@@ -1034,7 +1065,9 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
         
         # Finding 2: NextAuth.js without MFA
         if has_nextauth and not has_nextauth_mfa:
-            line_num = self._find_line(lines, r'next-auth')
+            result = self._find_line(lines, r'next-auth')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="NextAuth.js without MFA configuration",
@@ -1048,7 +1081,9 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
         
         # Finding 3: MSAL without MFA validation
         if has_msal and not has_msal_mfa_validation:
-            line_num = self._find_line(lines, r'msal|PublicClientApplication|ConfidentialClientApplication')
+            result = self._find_line(lines, r'msal|PublicClientApplication|ConfidentialClientApplication')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="MSAL without MFA validation",
@@ -1062,7 +1097,9 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
         
         # Finding 4: TOTP warning
         if has_totp and not has_webauthn:
-            line_num = self._find_line(lines, r'speakeasy|otplib|authenticator')
+            result = self._find_line(lines, r'speakeasy|otplib|authenticator')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="TOTP-based MFA is not phishing-resistant",
@@ -1076,7 +1113,9 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
         
         # Finding 5: SMS warning
         if has_sms_mfa:
-            line_num = self._find_line(lines, r'twilio|nexmo|sns.*sms')
+            result = self._find_line(lines, r'twilio|nexmo|sns.*sms')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="SMS-based MFA is not phishing-resistant",
@@ -1091,7 +1130,9 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
         # Finding 6: No MFA implementation
         if (passport_found or has_authentication) and not (has_webauthn or has_totp or has_sms_mfa):
             if not has_msal:
-                line_num = self._find_line(lines, r'passport|jwt\.sign|authenticate')
+                result = self._find_line(lines, r'passport|jwt\.sign|authenticate')
+
+                line_num = result['line_num'] if result else 0
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="No MFA implementation detected",
@@ -1124,81 +1165,87 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
             
             # Check for MFA strategy
             if not re.search(r'passport-totp|passport-webauthn|passport.*mfa|passport.*2fa', code, re.IGNORECASE):
+                result = self._find_line(lines, r'passport', use_regex=True)
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="Passport.js without MFA strategy",
                     description="Passport.js is configured but no MFA strategy detected.",
                     severity=Severity.HIGH,
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'passport'),
-                    code_snippet=self._get_snippet(lines, self._find_line(lines, r'passport')),
+                    line_number = result['line_num'] if result else 0,
+                    code_snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                     recommendation="Implement MFA strategy: use passport-webauthn for phishing-resistant MFA"
                 ))
         
         # Check NextAuth.js configuration
         if re.search(r'import.*next-auth|from ["\']next-auth', code):
             if not re.search(r'credentials.*mfa|webauthn|adapter.*mfa', code, re.IGNORECASE):
+                result = self._find_line(lines, r'next-auth', use_regex=True)
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="NextAuth.js without MFA configuration",
                     description="NextAuth.js is configured but no MFA provider or adapter is detected.",
                     severity=Severity.HIGH,
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'next-auth'),
-                    code_snippet=self._get_snippet(lines, self._find_line(lines, r'next-auth')),
+                    line_number = result['line_num'] if result else 0,
+                    code_snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                     recommendation="Configure MFA: use AzureADProvider with Conditional Access or implement WebAuthn provider"
                 ))
         
         # Check MSAL (Azure AD) configuration
         if re.search(r'@azure/msal|PublicClientApplication|ConfidentialClientApplication', code):
             if not re.search(r'amr.*mfa|claimsRequest.*mfa|conditionalAccess', code, re.IGNORECASE):
+                result = self._find_line(lines, r'msal|PublicClientApplication', use_regex=True)
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="MSAL without MFA validation",
                     description="MSAL is configured but no MFA claim validation or Conditional Access enforcement detected.",
                     severity=Severity.HIGH,
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'msal|PublicClientApplication'),
-                    code_snippet=self._get_snippet(lines, self._find_line(lines, r'msal|PublicClientApplication')),
+                    line_number = result['line_num'] if result else 0,
+                    code_snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                     recommendation="Validate MFA claim: check for 'amr' claim containing 'mfa' or configure Azure AD Conditional Access"
                 ))
         
         # Warn about non-phishing-resistant MFA
         if has_totp and not has_webauthn:
+            result = self._find_line(lines, r'speakeasy|otplib|authenticator', use_regex=True)
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="TOTP-based MFA is not phishing-resistant",
                 description="TOTP is vulnerable to phishing attacks.",
                 severity=Severity.MEDIUM,
                 file_path=file_path,
-                line_number=self._find_line(lines, r'speakeasy|otplib|authenticator'),
-                code_snippet=self._get_snippet(lines, self._find_line(lines, r'speakeasy|otplib|authenticator')),
+                line_number = result['line_num'] if result else 0,
+                code_snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                 recommendation="Migrate to @simplewebauthn/server (FIDO2/WebAuthn) or fido2-lib"
             ))
         
         if has_sms_mfa:
+            result = self._find_line(lines, r'twilio|nexmo|sns.*sms', use_regex=True)
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="SMS-based MFA is not phishing-resistant",
                 description="SMS is vulnerable to SIM swapping and phishing attacks.",
                 severity=Severity.HIGH,
                 file_path=file_path,
-                line_number=self._find_line(lines, r'twilio|nexmo|sns.*sms'),
-                code_snippet=self._get_snippet(lines, self._find_line(lines, r'twilio|nexmo|sns.*sms')),
+                line_number = result['line_num'] if result else 0,
+                code_snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                 recommendation="Replace SMS MFA with @simplewebauthn/server (FIDO2/WebAuthn)"
             ))
         
         # Check for authentication without MFA
         if (passport_found or re.search(r'jwt\.sign|bcrypt\.compare|authenticate', code)) and not (has_webauthn or has_totp or has_sms_mfa):
             if not re.search(r'@azure/msal', code):
+                result = self._find_line(lines, r'passport|jwt\.sign|authenticate', use_regex=True)
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="No MFA implementation detected",
                     description="Authentication logic detected but no MFA implementation found.",
                     severity=Severity.CRITICAL,
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'passport|jwt\.sign|authenticate'),
-                    code_snippet=self._get_snippet(lines, self._find_line(lines, r'passport|jwt\.sign|authenticate')),
+                    line_number = result['line_num'] if result else 0,
+                    code_snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                     recommendation="Implement phishing-resistant MFA: @simplewebauthn/server (FIDO2) or integrate with Azure AD/MSAL"
                 ))
         
@@ -1226,27 +1273,29 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
         if has_conditional_access:
             # Check if MFA is required in grant controls
             if not re.search(r'grantControls.*requireMultiFactorAuthentication|mfa.*required', code, re.IGNORECASE):
+                result = self._find_line(lines, r'conditionalAccessPolic', use_regex=True)
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="Conditional Access policy without MFA enforcement",
                     description="Azure AD Conditional Access policy found but does not require MFA in grant controls.",
                     severity=Severity.HIGH,
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'conditionalAccessPolic'),
-                    code_snippet=self._get_snippet(lines, self._find_line(lines, r'conditionalAccessPolic')),
+                    line_number = result['line_num'] if result else 0,
+                    code_snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                     recommendation="Add grantControls with requireMultiFactorAuthentication: true in Conditional Access policy"
                 ))
             
             # Check for authentication strength (phishing-resistant)
             if not re.search(r'authenticationStrength|phishingResistant', code, re.IGNORECASE):
+                result = self._find_line(lines, r'conditionalAccessPolic', use_regex=True)
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="Conditional Access policy without authentication strength",
                     description="Conditional Access policy does not specify authentication strength. FedRAMP 20x requires phishing-resistant MFA.",
                     severity=Severity.MEDIUM,
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'conditionalAccessPolic'),
-                    code_snippet=self._get_snippet(lines, self._find_line(lines, r'conditionalAccessPolic')),
+                    line_number = result['line_num'] if result else 0,
+                    code_snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                     recommendation="Configure authentication strength policy requiring phishing-resistant MFA methods (certificate, FIDO2, Windows Hello for Business)"
                 ))
         else:
@@ -1283,27 +1332,29 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
         if has_conditional_access:
             # Check if MFA is required in grant controls
             if not re.search(r'grant_controls.*require_mfa|built_in_controls.*=.*\[.*"mfa".*\]', code, re.IGNORECASE):
+                result = self._find_line(lines, r'azuread_conditional_access_policy', use_regex=True)
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="Conditional Access policy without MFA enforcement",
                     description="azuread_conditional_access_policy resource found but does not require MFA in grant_controls.",
                     severity=Severity.HIGH,
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'azuread_conditional_access_policy'),
-                    code_snippet=self._get_snippet(lines, self._find_line(lines, r'azuread_conditional_access_policy')),
+                    line_number = result['line_num'] if result else 0,
+                    code_snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                     recommendation='Add grant_controls { built_in_controls = ["mfa"] operator = "OR" } to Conditional Access policy'
                 ))
             
             # Check for authentication strength
             if not re.search(r'authentication_strength_policy_id|phishing.*resistant', code, re.IGNORECASE):
+                result = self._find_line(lines, r'azuread_conditional_access_policy', use_regex=True)
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="Conditional Access policy without authentication strength",
                     description="Conditional Access policy does not reference authentication strength policy. FedRAMP 20x requires phishing-resistant MFA.",
                     severity=Severity.MEDIUM,
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'azuread_conditional_access_policy'),
-                    code_snippet=self._get_snippet(lines, self._find_line(lines, r'azuread_conditional_access_policy')),
+                    line_number = result['line_num'] if result else 0,
+                    code_snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                     recommendation="Configure authentication_strength_policy_id requiring phishing-resistant MFA methods (certificate, FIDO2, WHfB)"
                 ))
         else:

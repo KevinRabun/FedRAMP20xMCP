@@ -156,7 +156,9 @@ class KSI_TPR_03_Analyzer(BaseKSIAnalyzer):
         if re.search(r'^\w+[<>=]', code, re.MULTILINE):
             has_hashes = re.search(r'--hash=', code)
             if not has_hashes:
-                line_num = self._find_line(lines, r'^\w+[<>=]')
+                result = self._find_line(lines, r'^\w+[<>=]')
+
+                line_num = result['line_num'] if result else 0
                 findings.append(Finding(
                     severity=Severity.MEDIUM,
                     title="Missing Package Integrity Checks",
@@ -187,7 +189,9 @@ class KSI_TPR_03_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 1: HTTP PyPI mirror usage (HIGH)
         if re.search(r'--index-url\s+http://', code) or re.search(r'--extra-index-url\s+http://', code):
-            line_num = self._find_line(lines, r'--index-url.*http://|--extra-index-url.*http://')
+            result = self._find_line(lines, r'--index-url.*http://|--extra-index-url.*http://')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.HIGH,
                 title="Insecure Package Source (HTTP PyPI Mirror)",
@@ -213,7 +217,9 @@ class KSI_TPR_03_Analyzer(BaseKSIAnalyzer):
         
         return findings
         if re.search(r'--index-url\s+http://', code) or re.search(r'--extra-index-url\s+http://', code):
-            line_num = self._find_line(lines, r'--index-url.*http://|--extra-index-url.*http://')
+            result = self._find_line(lines, r'--index-url.*http://|--extra-index-url.*http://')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.HIGH,
                 title="Insecure Package Source (HTTP PyPI Mirror)",
@@ -237,7 +243,9 @@ class KSI_TPR_03_Analyzer(BaseKSIAnalyzer):
         if 'requirements.txt' in file_path.lower() and re.search(r'^\w+[<>=]', code, re.MULTILINE):
             has_hashes = re.search(r'--hash=', code)
             if not has_hashes:
-                line_num = self._find_line(lines, r'^\w+[<>=]')
+                result = self._find_line(lines, r'^\w+[<>=]')
+
+                line_num = result['line_num'] if result else 0
                 findings.append(Finding(
                     severity=Severity.MEDIUM,
                     title="Missing Package Integrity Checks",
@@ -277,7 +285,9 @@ class KSI_TPR_03_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 1: HTTP NuGet source (HIGH)
         if re.search(r'<add\s+key="[^"]+"\s+value="http://', code, re.IGNORECASE):
-            line_num = self._find_line(lines, r'<add\s+key.*value="http://')
+            result = self._find_line(lines, r'<add\s+key.*value="http://')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.HIGH,
                 title="Insecure NuGet Package Source (HTTP)",
@@ -301,7 +311,9 @@ class KSI_TPR_03_Analyzer(BaseKSIAnalyzer):
         # Check both element format and attribute format
         if (re.search(r'<signatureValidationMode>.*none.*</signatureValidationMode>', code, re.IGNORECASE) or
             re.search(r'key="signatureValidationMode"\s+value="none"', code, re.IGNORECASE)):
-            line_num = self._find_line(lines, r'signatureValidationMode.*none')
+            result = self._find_line(lines, r'signatureValidationMode.*none')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.MEDIUM,
                 title="NuGet Package Signature Validation Disabled",
@@ -342,7 +354,9 @@ class KSI_TPR_03_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 1: HTTP Maven repository (HIGH)
         if re.search(r'<url>http://', code) or re.search(r'maven\s*\{\s*url\s+["\']http://', code):
-            line_num = self._find_line(lines, r'<url>http://|maven.*url.*http://')
+            result = self._find_line(lines, r'<url>http://|maven.*url.*http://')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.HIGH,
                 title="Insecure Maven Repository (HTTP)",
@@ -364,7 +378,8 @@ class KSI_TPR_03_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 2: Dynamic versions (MEDIUM)
         if re.search(r'<version>(LATEST|RELEASE|\+)', code) or re.search(r"['\"][^'\"]+:\+['\"]", code):
-            line_num = self._find_line(lines, r'<version>(LATEST|RELEASE|\+)|:\+')
+            result = self._find_line(lines, r'<version>(LATEST|RELEASE|\+)|:\+', use_regex=True)
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.MEDIUM,
                 title="Dynamic Dependency Versions Increase Supply Chain Risk",
@@ -406,7 +421,9 @@ class KSI_TPR_03_Analyzer(BaseKSIAnalyzer):
         # Check both .npmrc format and package.json publishConfig format
         if ('.npmrc' in file_path.lower() and re.search(r'registry\s*=\s*http://', code)) or \
            ('package.json' in file_path.lower() and re.search(r'"registry"\s*:\s*"http://', code)):
-            line_num = self._find_line(lines, r'registry.*http://')
+            result = self._find_line(lines, r'registry.*http://')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.HIGH,
                 title="Insecure npm Registry (HTTP)",
@@ -430,7 +447,9 @@ class KSI_TPR_03_Analyzer(BaseKSIAnalyzer):
         # Pattern 2: Very broad version ranges (MEDIUM)
         if 'package.json' in file_path.lower():
             if re.search(r'"\*":|"latest":|">="', code):
-                line_num = self._find_line(lines, r'"\*":|"latest":|">="')
+                result = self._find_line(lines, r'"\*":|"latest":|">="')
+
+                line_num = result['line_num'] if result else 0
                 findings.append(Finding(
                     severity=Severity.MEDIUM,
                     title="Overly Broad Dependency Version Ranges",
@@ -474,7 +493,9 @@ class KSI_TPR_03_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 1: Container image with :latest tag (MEDIUM)
         if re.search(r'image\s*:\s*["\'][^"\']+:latest["\']', code):
-            line_num = self._find_line(lines, r'image.*:latest')
+            result = self._find_line(lines, r'image.*:latest')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.MEDIUM,
                 title="Container Image Using :latest Tag",
@@ -500,7 +521,9 @@ class KSI_TPR_03_Analyzer(BaseKSIAnalyzer):
         if re.search(r'image\s*:\s*["\'][^/]+/[^@"\']+["\']', code):
             has_digest = re.search(r'image\s*:\s*["\'][^"\']+@sha256:', code)
             if not has_digest:
-                line_num = self._find_line(lines, r'image\s*:\s*["\'][^/]+/[^@"\']')
+                result = self._find_line(lines, r'image\s*:\s*["\'][^/]+/[^@"\']')
+
+                line_num = result['line_num'] if result else 0
                 findings.append(Finding(
                     severity=Severity.MEDIUM,
                     title="Container Image Without Digest Pinning",
@@ -537,7 +560,9 @@ class KSI_TPR_03_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 1: Container image with :latest tag (MEDIUM)
         if re.search(r'image\s*=\s*"[^"]+:latest"', code):
-            line_num = self._find_line(lines, r'image.*:latest')
+            result = self._find_line(lines, r'image.*:latest')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.MEDIUM,
                 title="Container Image Using :latest Tag",
@@ -563,7 +588,9 @@ class KSI_TPR_03_Analyzer(BaseKSIAnalyzer):
         if re.search(r'image\s*=\s*"[^/]+/[^@"]+"', code):
             has_digest = re.search(r'image\s*=\s*"[^"]+@sha256:', code)
             if not has_digest:
-                line_num = self._find_line(lines, r'image\s*=\s*"[^/]+/[^@"]')
+                result = self._find_line(lines, r'image\s*=\s*"[^/]+/[^@"]')
+
+                line_num = result['line_num'] if result else 0
                 findings.append(Finding(
                     severity=Severity.MEDIUM,
                     title="Container Image Without Digest Pinning",

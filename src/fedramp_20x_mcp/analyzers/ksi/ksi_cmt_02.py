@@ -261,7 +261,9 @@ class KSI_CMT_02_Analyzer(BaseKSIAnalyzer):
         
         # Spring DevTools (hot swap)
         if re.search(r'spring-boot-devtools|DevToolsPropertyDefaultsPostProcessor', code):
-            line_num = self._find_line(lines, 'devtools')
+            result = self._find_line(lines, 'devtools')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="Spring DevTools enabled",
@@ -343,7 +345,9 @@ class KSI_CMT_02_Analyzer(BaseKSIAnalyzer):
         
         # VM extensions (mutable operations)
         if re.search(r"Microsoft\.Compute/virtualMachines/extensions", code):
-            line_num = self._find_line(lines, 'virtualMachines/extensions')
+            result = self._find_line(lines, 'virtualMachines/extensions')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="VM extension (mutable operation)",
@@ -379,7 +383,9 @@ class KSI_CMT_02_Analyzer(BaseKSIAnalyzer):
         
         # VM extensions
         if re.search(r'azurerm_virtual_machine_extension', code):
-            line_num = self._find_line(lines, 'virtual_machine_extension')
+            result = self._find_line(lines, 'virtual_machine_extension')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="VM extension (mutable operation)",

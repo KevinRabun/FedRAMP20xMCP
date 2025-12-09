@@ -401,7 +401,9 @@ class KSI_CMT_01_Analyzer(BaseKSIAnalyzer):
                 # Check if diagnostic settings exist nearby
                 has_diag = bool(re.search(rf'{resource_type}.*diagnosticSettings', code, re.DOTALL))
                 if not has_diag:
-                    line_num = self._find_line(lines, resource_type)
+                    result = self._find_line(lines, resource_type)
+
+                    line_num = result['line_num'] if result else 0
                     findings.append(Finding(
                         ksi_id=self.KSI_ID,
                         title=f"{resource_type} without change tracking",
@@ -448,7 +450,9 @@ class KSI_CMT_01_Analyzer(BaseKSIAnalyzer):
                 # Look for diagnostic settings for this resource
                 has_diag = bool(re.search(rf'{pattern}.*azurerm_monitor_diagnostic_setting', code, re.DOTALL))
                 if not has_diag:
-                    line_num = self._find_line(lines, pattern)
+                    result = self._find_line(lines, pattern)
+
+                    line_num = result['line_num'] if result else 0
                     findings.append(Finding(
                         ksi_id=self.KSI_ID,
                         title=f"{name} without change tracking",

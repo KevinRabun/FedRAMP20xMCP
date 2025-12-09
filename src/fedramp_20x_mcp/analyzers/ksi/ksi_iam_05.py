@@ -288,7 +288,9 @@ class KSI_IAM_05_Analyzer(BaseKSIAnalyzer):
         ]
         
         for pattern in wildcard_patterns:
-            line_num = self._find_line(lines, pattern)
+            result = self._find_line(lines, pattern)
+
+            line_num = result['line_num'] if result else 0
             if line_num:
                 findings.append(Finding(
                     severity=Severity.CRITICAL,
@@ -784,7 +786,9 @@ class KSI_IAM_05_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 1: Wildcard CORS origin (CRITICAL)
         if re.search(r'cors\s*\(\s*\{[^}]*origin\s*:\s*["\']\*["\']', code, re.IGNORECASE):
-            line_num = self._find_line(lines, r'origin\s*:\s*["\']\*')
+            result = self._find_line(lines, r'origin\s*:\s*["\']\*')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.CRITICAL,
                 title="CORS Configured to Allow All Origins",
@@ -823,7 +827,9 @@ class KSI_IAM_05_Analyzer(BaseKSIAnalyzer):
         
         for pattern in broad_role_patterns:
             if re.search(pattern, code):
-                line_num = self._find_line(lines, pattern)
+                result = self._find_line(lines, pattern)
+
+                line_num = result['line_num'] if result else 0
                 findings.append(Finding(
                     severity=Severity.CRITICAL,
                     title="Overly Broad Role Assignment at Subscription/MG Scope",
@@ -846,7 +852,9 @@ class KSI_IAM_05_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 2: Custom role with wildcard actions (CRITICAL)
         if re.search(r'actions\s*:\s*\[\s*["\']\*["\']\s*\]', code):
-            line_num = self._find_line(lines, r'actions\s*:\s*\[.*\*')
+            result = self._find_line(lines, r'actions\s*:\s*\[.*\*')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.CRITICAL,
                 title="Custom Role With Wildcard Actions",
@@ -938,7 +946,9 @@ class KSI_IAM_05_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 2: Custom role with wildcard actions (CRITICAL)
         if re.search(r'resource\s+"azurerm_role_definition"[^}]*actions\s*=\s*\[\s*"\*"', code, re.DOTALL):
-            line_num = self._find_line(lines, r'actions\s*=\s*\[\s*"\*"')
+            result = self._find_line(lines, r'actions\s*=\s*\[\s*"\*"')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.CRITICAL,
                 title="Custom Role Definition With Wildcard Actions",

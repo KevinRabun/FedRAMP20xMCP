@@ -291,7 +291,9 @@ class KSI_AFR_04_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 1: Insecure deserialization
         if re.search(r'\bimport\s+pickle\b|\bfrom\s+pickle\s+import\b', code):
-            line_num = self._find_line(lines, 'pickle')
+            result = self._find_line(lines, 'pickle')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="Insecure Deserialization (pickle)",
@@ -307,7 +309,9 @@ class KSI_AFR_04_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 2: Insecure YAML
         if re.search(r'yaml\.(unsafe_)?load\b', code):
-            line_num = self._find_line(lines, 'yaml.load')
+            result = self._find_line(lines, 'yaml.load')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="Insecure YAML Deserialization",
@@ -322,7 +326,9 @@ class KSI_AFR_04_Analyzer(BaseKSIAnalyzer):
         # Pattern 3: SQL injection
         sql_injection_pattern = r'\.(execute|executemany)\s*\([^)]*\+[^)]*\)'
         if re.search(sql_injection_pattern, code):
-            line_num = self._find_line(lines, '.execute')
+            result = self._find_line(lines, '.execute')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="SQL Injection Vulnerability",
@@ -487,7 +493,9 @@ class KSI_AFR_04_Analyzer(BaseKSIAnalyzer):
         insecure_formatters = ['BinaryFormatter', 'SoapFormatter', 'NetDataContractSerializer']
         for formatter in insecure_formatters:
             if re.search(rf'\b{formatter}\b', code):
-                line_num = self._find_line(lines, formatter)
+                result = self._find_line(lines, formatter)
+
+                line_num = result['line_num'] if result else 0
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title=f"Insecure Deserialization ({formatter})",
@@ -501,7 +509,9 @@ class KSI_AFR_04_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 2: SQL injection
         if re.search(r'SqlCommand.*\$".*SELECT|INSERT|UPDATE|DELETE', code, re.IGNORECASE):
-            line_num = self._find_line(lines, 'SqlCommand')
+            result = self._find_line(lines, 'SqlCommand')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="SQL Injection Vulnerability",
@@ -516,7 +526,9 @@ class KSI_AFR_04_Analyzer(BaseKSIAnalyzer):
         # Pattern 3: XXE
         if re.search(r'\bXmlDocument\b|\bXmlTextReader\b', code):
             if 'DtdProcessing' not in code and 'XmlResolver' not in code:
-                line_num = self._find_line(lines, 'XmlDocument')
+                result = self._find_line(lines, 'XmlDocument')
+
+                line_num = result['line_num'] if result else 0
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="XML External Entity (XXE) Vulnerability",
@@ -716,7 +728,9 @@ class KSI_AFR_04_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 1: Insecure deserialization
         if re.search(r'ObjectInputStream.*readObject\(\)', code):
-            line_num = self._find_line(lines, 'ObjectInputStream')
+            result = self._find_line(lines, 'ObjectInputStream')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="Insecure Deserialization (ObjectInputStream)",
@@ -730,7 +744,9 @@ class KSI_AFR_04_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 2: SQL injection
         if re.search(r'executeQuery\s*\([^)]*\+[^)]*\)', code):
-            line_num = self._find_line(lines, 'executeQuery')
+            result = self._find_line(lines, 'executeQuery')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
                 title="SQL Injection Vulnerability",
@@ -745,7 +761,9 @@ class KSI_AFR_04_Analyzer(BaseKSIAnalyzer):
         # Pattern 3: XXE
         if re.search(r'DocumentBuilderFactory', code):
             if 'setFeature' not in code or 'external-general-entities' not in code:
-                line_num = self._find_line(lines, 'DocumentBuilderFactory')
+                result = self._find_line(lines, 'DocumentBuilderFactory')
+
+                line_num = result['line_num'] if result else 0
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="XML External Entity (XXE) Vulnerability",

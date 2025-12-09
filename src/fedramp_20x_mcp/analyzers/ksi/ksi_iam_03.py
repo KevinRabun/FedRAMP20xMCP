@@ -188,7 +188,9 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
                         break
                 
                 if has_weak_credential or not (has_default_credential or has_managed_identity or has_certificate_credential):
-                    line_num = self._find_line(lines, r'from azure\.identity|import azure\.identity|ClientSecretCredential')
+                    result = self._find_line(lines, r'from azure\.identity|import azure\.identity|ClientSecretCredential')
+
+                    line_num = result['line_num'] if result else 0
                     findings.append(Finding(
                         severity=Severity.HIGH,
                         title="Weak Credential Type for Service Authentication",
@@ -254,7 +256,9 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
         ]
         
         for pattern in service_cred_patterns:
-            line_num = self._find_line(lines, pattern)
+            result = self._find_line(lines, pattern)
+
+            line_num = result['line_num'] if result else 0
             if line_num:
                 findings.append(Finding(
                     severity=Severity.CRITICAL,
@@ -278,6 +282,7 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
         # Pattern 2: Missing DefaultAzureCredential (HIGH)
         if re.search(r'from azure\.identity import \w+Credential', code, re.IGNORECASE):
             if not re.search(r'DefaultAzureCredential|ManagedIdentityCredential|CertificateCredential', code):
+                result = self._find_line(lines, r'from azure\.identity', use_regex=True)
                 findings.append(Finding(
                     severity=Severity.HIGH,
                     title="Weak Credential Type for Service Authentication",
@@ -287,8 +292,8 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
                         "or CertificateCredential for secure authentication."
                     ),
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'from azure\.identity'),
-                    snippet=self._get_snippet(lines, self._find_line(lines, r'from azure\.identity')),
+                    line_number = result['line_num'] if result else 0,
+                    snippet=self._get_snippet(lines, result['line_num'] if result else 0),
                     remediation=(
                         "Use DefaultAzureCredential() which automatically uses managed identity in Azure, "
                         "or explicitly use ManagedIdentityCredential() or CertificateCredential() for "
@@ -299,7 +304,9 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 3: Service account with password authentication (CRITICAL)
         if re.search(r'ServicePrincipalCredentials\s*\(.*password\s*=', code, re.IGNORECASE):
-            line_num = self._find_line(lines, r'ServicePrincipalCredentials')
+            result = self._find_line(lines, r'ServicePrincipalCredentials')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.CRITICAL,
                 title="Service Principal Using Password Authentication",
@@ -427,7 +434,9 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
         # Finding 2: Azure SDK without managed identity
         if has_azure_import and has_azure_client:
             if not (has_default_credential or has_managed_identity):
-                line_num = self._find_line(lines, r'new\s+\w+Client')
+                result = self._find_line(lines, r'new\s+\w+Client')
+
+                line_num = result['line_num'] if result else 0
                 findings.append(Finding(
                     severity=Severity.HIGH,
                     title="Azure SDK Client Without Managed Identity",
@@ -484,7 +493,9 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
         ]
         
         for pattern in sp_cred_patterns:
-            line_num = self._find_line(lines, pattern)
+            result = self._find_line(lines, pattern)
+
+            line_num = result['line_num'] if result else 0
             if line_num:
                 findings.append(Finding(
                     severity=Severity.CRITICAL,
@@ -507,7 +518,9 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
         
         if re.search(r'new\s+\w+Client\s*\(', code) and re.search(r'using Azure\.', code):
             if not re.search(r'DefaultAzureCredential|ManagedIdentityCredential|ChainedTokenCredential', code):
-                line_num = self._find_line(lines, r'new\s+\w+Client')
+                result = self._find_line(lines, r'new\s+\w+Client')
+
+                line_num = result['line_num'] if result else 0
                 findings.append(Finding(
                     severity=Severity.HIGH,
                     title="Azure SDK Client Without Managed Identity",
@@ -527,7 +540,9 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
                 ))
         
         if re.search(r'AddAuthentication.*\.UsePassword|UseBasicAuthentication', code, re.IGNORECASE):
-            line_num = self._find_line(lines, r'UsePassword|UseBasicAuthentication')
+            result = self._find_line(lines, r'UsePassword|UseBasicAuthentication')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.CRITICAL,
                 title="Service Account Using Password Authentication",
@@ -645,7 +660,9 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
         
         # Finding 2: Azure SDK without managed identity
         if has_azure_import and not (has_default_credential or has_managed_identity):
-            line_num = self._find_line(lines, r'import com\.azure\.')
+            result = self._find_line(lines, r'import com\.azure\.')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.HIGH,
                 title="Azure SDK Without Managed Identity Credentials",
@@ -725,7 +742,9 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
         ]
         
         for pattern in sa_cred_patterns:
-            line_num = self._find_line(lines, pattern)
+            result = self._find_line(lines, pattern)
+
+            line_num = result['line_num'] if result else 0
             if line_num:
                 findings.append(Finding(
                     severity=Severity.CRITICAL,
@@ -748,7 +767,9 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
         
         if re.search(r'import com\.azure\.', code):
             if not re.search(r'DefaultAzureCredentialBuilder|ManagedIdentityCredentialBuilder', code):
-                line_num = self._find_line(lines, r'import com\.azure\.')
+                result = self._find_line(lines, r'import com\.azure\.')
+
+                line_num = result['line_num'] if result else 0
                 findings.append(Finding(
                     severity=Severity.HIGH,
                     title="Azure SDK Without Managed Identity Credentials",
@@ -768,7 +789,9 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
                 ))
         
         if re.search(r'@Configuration.*BasicAuthenticationEntryPoint|httpBasic\(\)', code, re.IGNORECASE):
-            line_num = self._find_line(lines, r'BasicAuthenticationEntryPoint|httpBasic')
+            result = self._find_line(lines, r'BasicAuthenticationEntryPoint|httpBasic')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.CRITICAL,
                 title="Service Account Using Basic Authentication",
@@ -890,7 +913,9 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
         
         # Finding 2: Azure Identity without managed identity
         if has_azure_identity and not (has_default_credential or has_managed_identity):
-            line_num = self._find_line(lines, r'@azure/identity')
+            result = self._find_line(lines, r'@azure/identity')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.HIGH,
                 title="Azure Identity Without Managed Identity",
@@ -973,7 +998,9 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
         ]
         
         for pattern in token_patterns:
-            line_num = self._find_line(lines, pattern)
+            result = self._find_line(lines, pattern)
+
+            line_num = result['line_num'] if result else 0
             if line_num:
                 findings.append(Finding(
                     severity=Severity.CRITICAL,
@@ -996,7 +1023,9 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
         
         if re.search(r'from ["\']@azure/identity["\']|require\(["\']@azure/identity["\']\)', code):
             if not re.search(r'DefaultAzureCredential|ManagedIdentityCredential|ChainedTokenCredential', code):
-                line_num = self._find_line(lines, r'@azure/identity')
+                result = self._find_line(lines, r'@azure/identity')
+
+                line_num = result['line_num'] if result else 0
                 findings.append(Finding(
                     severity=Severity.HIGH,
                     title="Azure Identity Without Managed Identity",
@@ -1016,7 +1045,9 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
                 ))
         
         if re.search(r'passport\.authenticate\(["\']basic["\']|auth:\s*\{\s*username:', code, re.IGNORECASE):
-            line_num = self._find_line(lines, r'basic["\']|auth:\s*\{')
+            result = self._find_line(lines, r'basic["\']|auth:\s*\{')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.HIGH,
                 title="Service Account Using Basic Authentication",
@@ -1060,7 +1091,8 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
         for resource_type in resource_types:
             if re.search(rf'resource.*{resource_type.split("/")[1]}.*{resource_type.split("/")[0]}', code, re.IGNORECASE):
                 if not re.search(r'identity:\s*\{', code):
-                    line_num = self._find_line(lines, resource_type.split('/')[1])
+                    result = self._find_line(lines, resource_type.split('/')[1])
+                    line_num = result['line_num'] if result else 0
                     findings.append(Finding(
                         severity=Severity.HIGH,
                         title=f"{resource_type} Without Managed Identity",
@@ -1083,7 +1115,9 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 2: User-assigned identity best practice (INFO)
         if re.search(r"type:\s*'SystemAssigned'", code):
-            line_num = self._find_line(lines, r"type:\s*'SystemAssigned'")
+            result = self._find_line(lines, r"type:\s*'SystemAssigned'")
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.INFO,
                 title="Consider User-Assigned Managed Identity",
@@ -1161,7 +1195,9 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 2: Service principal with password/secret (CRITICAL)
         if re.search(r'azurerm_service_principal_password|client_secret\s*=\s*"', code):
-            line_num = self._find_line(lines, r'azurerm_service_principal_password|client_secret\s*=')
+            result = self._find_line(lines, r'azurerm_service_principal_password|client_secret\s*=')
+
+            line_num = result['line_num'] if result else 0
             findings.append(Finding(
                 severity=Severity.CRITICAL,
                 title="Service Principal Using Password Authentication",

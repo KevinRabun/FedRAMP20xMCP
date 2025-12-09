@@ -143,7 +143,9 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
         findings = []
         
         if re.search(r'verify\s*=\s*False', code):
-            line_num = self._find_line(lines, r'verify\s*=\s*False')
+            result = self._find_line(lines, r'verify\s*=\s*False')
+
+            line_num = result['line_num'] if result else 0
             if line_num:
                 findings.append(Finding(
                     severity=Severity.CRITICAL,
@@ -176,7 +178,9 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 1: ServerCertificateValidationCallback => true (CRITICAL)
         if re.search(r'ServerCertificateValidationCallback.*=>\s*true', code):
-            line_num = self._find_line(lines, r'ServerCertificateValidationCallback')
+            result = self._find_line(lines, r'ServerCertificateValidationCallback')
+
+            line_num = result['line_num'] if result else 0
             if line_num:
                 findings.append(Finding(
                     severity=Severity.CRITICAL,
@@ -235,7 +239,9 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 1: Empty checkServerTrusted() in TrustManager (CRITICAL)
         if re.search(r'X509TrustManager.*checkServerTrusted.*\{\s*\}', code, re.DOTALL):
-            line_num = self._find_line(lines, r'checkServerTrusted')
+            result = self._find_line(lines, r'checkServerTrusted')
+
+            line_num = result['line_num'] if result else 0
             if line_num:
                 findings.append(Finding(
                     severity=Severity.CRITICAL,
@@ -300,7 +306,9 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
         
         # Pattern 1: rejectUnauthorized: false (CRITICAL)
         if re.search(r'rejectUnauthorized\s*:\s*false', code):
-            line_num = self._find_line(lines, r'rejectUnauthorized')
+            result = self._find_line(lines, r'rejectUnauthorized')
+
+            line_num = result['line_num'] if result else 0
             if line_num:
                 findings.append(Finding(
                 severity=Severity.CRITICAL,

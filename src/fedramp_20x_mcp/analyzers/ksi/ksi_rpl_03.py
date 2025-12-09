@@ -929,7 +929,9 @@ class KSI_RPL_03_Analyzer(BaseKSIAnalyzer):
         if retention_match:
             retention_days = int(retention_match.group(1))
             if retention_days < self.MINIMUM_RETENTION_DAYS:
-                line_num = self._find_line(lines, 'retentionDuration')
+                result = self._find_line(lines, 'retentionDuration')
+
+                line_num = result['line_num'] if result else 0
                 findings.append(Finding(
                     severity=Severity.MEDIUM,
                     title="Insufficient Backup Retention Period",
@@ -975,7 +977,9 @@ class KSI_RPL_03_Analyzer(BaseKSIAnalyzer):
             if storage_config_match:
                 storage_type = storage_config_match.group(1)
                 if storage_type.lower() in ['locallyredundant', 'zoneredundant']:
-                    line_num = self._find_line(lines, 'storageModelType')
+                    result = self._find_line(lines, 'storageModelType')
+
+                    line_num = result['line_num'] if result else 0
                     findings.append(Finding(
                         severity=Severity.MEDIUM,
                         title="Backup Storage Missing Geo-Redundancy",
@@ -1216,7 +1220,9 @@ class KSI_RPL_03_Analyzer(BaseKSIAnalyzer):
         if retention_match:
             retention_days = int(retention_match.group(2) or retention_match.group(3))
             if retention_days < self.MINIMUM_RETENTION_DAYS:
-                line_num = self._find_line(lines, 'retention')
+                result = self._find_line(lines, 'retention')
+
+                line_num = result['line_num'] if result else 0
                 findings.append(Finding(
                     severity=Severity.MEDIUM,
                     title="Insufficient Backup Retention Period",

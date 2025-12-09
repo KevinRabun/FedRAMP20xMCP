@@ -201,7 +201,7 @@ class KSI_CNA_04_Analyzer(BaseKSIAnalyzer):
         
         # Check for Docker containers without read_only
         if re.search(r'containers\.run\(', code) and not re.search(r'read_only\s*=\s*True', code):
-            line_match = self._find_line(lines, r'containers\.run')
+            line_match = self._find_line(lines, r'containers\.run', use_regex=True)
             if line_match:
                 line_num = line_match['line_num']
                 findings.append(Finding(
