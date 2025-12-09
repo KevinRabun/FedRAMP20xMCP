@@ -12,6 +12,7 @@ import re
 from typing import List
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
+from ..ast_utils import ASTParser, CodeLanguage
 
 
 class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
@@ -54,17 +55,25 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
     FAMILY_NAME = "Cloud Native Architecture"
     IMPACT_LOW = True
     IMPACT_MODERATE = True
-    NIST_CONTROLS = ["ac-17.3", "ca-9", "cm-7.1", "sc-7.5", "si-8"]
+    NIST_CONTROLS = [
+        ("ac-17.3", "Managed Access Control Points"),
+        ("ca-9", "Internal System Connections"),
+        ("cm-7.1", "Periodic Review"),
+        ("sc-7.5", "Deny by Default — Allow by Exception"),
+        ("si-8", "Spam Protection")
+    ]
     CODE_DETECTABLE = True
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RETIRED = False
     
-    def __init__(self):
+    def __init__(self, language=None, ksi_id: str = "", ksi_name: str = "", ksi_statement: str = ""):
+        """Initialize analyzer with backward-compatible API."""
         super().__init__(
-            ksi_id=self.KSI_ID,
-            ksi_name=self.KSI_NAME,
-            ksi_statement=self.KSI_STATEMENT
+            ksi_id=ksi_id or self.KSI_ID,
+            ksi_name=ksi_name or self.KSI_NAME,
+            ksi_statement=ksi_statement or self.KSI_STATEMENT
         )
+        self.direct_language = language
     
     # ============================================================================
     # APPLICATION LANGUAGE ANALYZERS
@@ -72,7 +81,7 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for KSI-CNA-01 compliance.
+        Analyze Python code for KSI-CNA-01 compliance using AST.
         
         Frameworks: Flask, Django, FastAPI, Azure SDK
         
@@ -81,6 +90,56 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
         - Missing IP allowlist/restrictions
         - Open listening ports without filtering
         - Missing network security middleware
+        """
+        parser = ASTParser(CodeLanguage.PYTHON)
+        tree = parser.parse(code)
+        
+        if tree and tree.root_node:
+            return self._analyze_python_ast(code, file_path, parser, tree)
+        else:
+            return self._analyze_python_regex(code, file_path)
+    
+    def _analyze_python_ast(self, code: str, file_path: str, parser: ASTParser, tree) -> List[Finding]:
+        """AST-based analysis for Python code."""
+        findings = []
+        code_bytes = code.encode('utf8')
+        
+        # Pattern 1: Check function calls for unrestricted binding
+        # Look for app.run(), uvicorn.run(), server.bind() with host='0.0.0.0'
+        call_nodes = parser.find_nodes_by_type(tree.root_node, "call")
+        
+        for call_node in call_nodes:
+            call_text = parser.get_node_text(call_node, code_bytes)
+            
+            # Check if this is a run/bind call with 0.0.0.0
+            if any(method in call_text for method in ['app.run', 'uvicorn.run', 'server.bind', '.bind(']):
+                if '0.0.0.0' in call_text or (('host' in call_text or 'bind' in call_text) and ('""' in call_text or "''" in call_text)):
+                    line_num = code[:call_node.start_byte].count('\n') + 1
+                    findings.append(Finding(
+                        severity=Severity.HIGH,
+                        title="Unrestricted Network Binding (0.0.0.0)",
+                        description=(
+                            f"Application binds to 0.0.0.0 at line {line_num}, accepting connections from all interfaces. "
+                            f"FedRAMP requires restricting inbound and outbound network traffic. Consider binding to "
+                            f"specific interfaces or using Azure network security groups to limit access."
+                        ),
+                        file_path=file_path,
+                        line_number=line_num,
+                        snippet=call_text[:200],
+                        remediation=(
+                            "Restrict network binding:\n"
+                            "app.run(host='127.0.0.1')  # Localhost only\n"
+                            "Or use Azure Application Gateway/Front Door with NSG rules to control traffic. "
+                            "Implement IP allowlist middleware if public access is required."
+                        ),
+                        ksi_id=self.KSI_ID
+                    ))
+        
+        return findings
+    
+    def _analyze_python_regex(self, code: str, file_path: str = "") -> List[Finding]:
+        """
+        Regex fallback for Python analysis when AST parsing fails.
         """
         findings = []
         lines = code.split('\n')
@@ -137,7 +196,7 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze C# code for KSI-CNA-01 compliance.
+        Analyze C# code for KSI-CNA-01 compliance using AST.
         
         Frameworks: ASP.NET Core, Entity Framework, Azure SDK
         
@@ -146,6 +205,94 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
         - Missing IP filtering middleware
         - Open listening without allowlist
         - No network restriction configuration
+        """
+        parser = ASTParser(CodeLanguage.CSHARP)
+        tree = parser.parse(code)
+        
+        if tree and tree.root_node:
+            return self._analyze_csharp_ast(code, file_path, parser, tree)
+        else:
+            return self._analyze_csharp_regex(code, file_path)
+    
+    def _analyze_csharp_ast(self, code: str, file_path: str, parser: ASTParser, tree) -> List[Finding]:
+        """AST-based analysis for C# code."""
+        findings = []
+        code_bytes = code.encode('utf8')
+        
+        # Pattern 1: Check for UseUrls with unrestricted binding
+        invocation_nodes = parser.find_nodes_by_type(tree.root_node, "invocation_expression")
+        
+        for inv_node in invocation_nodes:
+            inv_text = parser.get_node_text(inv_node, code_bytes)
+            
+            if "UseUrls" in inv_text and ("http://*:" in inv_text or "http://0.0.0.0" in inv_text):
+                line_num = code[:inv_node.start_byte].count('\n') + 1
+                findings.append(Finding(
+                    severity=Severity.HIGH,
+                    title="Unrestricted Kestrel Endpoint Configuration",
+                    description=(
+                        f"Kestrel configured with unrestricted binding (http://*: or 0.0.0.0) at line {line_num}. "
+                        f"FedRAMP requires limiting inbound network traffic. Use Azure Application Gateway with "
+                        f"NSG rules or implement IP allowlist middleware."
+                    ),
+                    file_path=file_path,
+                    line_number=line_num,
+                    snippet=inv_text[:200],
+                    remediation=(
+                        "Restrict endpoint binding:\n"
+                        "webBuilder.UseUrls(\"http://localhost:5000\");\n"
+                        "Or deploy behind Azure Application Gateway with NSG restrictions. "
+                        "Add IP filtering middleware: app.UseMiddleware<IPRestrictionMiddleware>();"
+                    ),
+                    ksi_id=self.KSI_ID
+                ))
+        
+        # Pattern 2: Check for web app without IP restriction middleware
+        has_web_app = False
+        has_ip_filter = False
+        
+        for inv_node in invocation_nodes:
+            inv_text = parser.get_node_text(inv_node, code_bytes)
+            if any(method in inv_text for method in ["WebApplication.Create", ".Run(", "UseRouting"]):
+                has_web_app = True
+            if any(term in inv_text for term in ["UseMiddleware", "IPRestriction", "UseIpRateLimiting"]):
+                has_ip_filter = True
+        
+        # Also check for IP-related identifiers in the code
+        if not has_ip_filter:
+            if any(term in code for term in ["IPRestriction", "AllowedIPs", "ClientIpCheck", "UseIpRateLimiting"]):
+                has_ip_filter = True
+        
+        if has_web_app and not has_ip_filter:
+            # Find the line where web app is created/run
+            for inv_node in invocation_nodes:
+                inv_text = parser.get_node_text(inv_node, code_bytes)
+                if "WebApplication.Create" in inv_text or ".Run(" in inv_text:
+                    line_num = code[:inv_node.start_byte].count('\n') + 1
+                    findings.append(Finding(
+                        severity=Severity.MEDIUM,
+                        title="Missing IP Restriction Middleware",
+                        description=(
+                            f"ASP.NET Core application at line {line_num} without IP filtering middleware. "
+                            f"Application-level IP restrictions provide defense-in-depth alongside Azure NSG rules."
+                        ),
+                        file_path=file_path,
+                        line_number=line_num,
+                        snippet=inv_text[:200],
+                        remediation=(
+                            "Add IP restriction middleware:\n"
+                            "app.UseMiddleware<IPRestrictionMiddleware>();\n"
+                            "Configure allowed IPs in appsettings.json: \"AllowedIPs\": [\"10.0.0.0/8\", \"specific-ip\"]"
+                        ),
+                        ksi_id=self.KSI_ID
+                    ))
+                    break
+        
+        return findings
+    
+    def _analyze_csharp_regex(self, code: str, file_path: str = "") -> List[Finding]:
+        """
+        Regex fallback for C# analysis when AST parsing fails.
         """
         findings = []
         lines = code.split('\n')
@@ -201,7 +348,7 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Java code for KSI-CNA-01 compliance.
+        Analyze Java code for KSI-CNA-01 compliance using AST.
         
         Frameworks: Spring Boot, Spring Security, Azure SDK
         
@@ -210,6 +357,108 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
         - Missing Spring Security IP restrictions
         - Open listening ports without filtering
         - No network access control configuration
+        """
+        parser = ASTParser(CodeLanguage.JAVA)
+        tree = parser.parse(code)
+        
+        if tree and tree.root_node:
+            return self._analyze_java_ast(code, file_path, parser, tree)
+        else:
+            return self._analyze_java_regex(code, file_path)
+    
+    def _analyze_java_ast(self, code: str, file_path: str, parser: ASTParser, tree) -> List[Finding]:
+        """AST-based analysis for Java code."""
+        findings = []
+        code_bytes = code.encode('utf8')
+        
+        # Pattern 1: Check for ServerSocket creation
+        object_creation_nodes = parser.find_nodes_by_type(tree.root_node, "object_creation_expression")
+        
+        for obj_node in object_creation_nodes:
+            obj_text = parser.get_node_text(obj_node, code_bytes)
+            
+            if "ServerSocket" in obj_text:
+                # Check if only port argument (no IP specified) - binds to all interfaces
+                if obj_text.count(',') == 0 and '(' in obj_text and ')' in obj_text:
+                    line_num = code[:obj_node.start_byte].count('\n') + 1
+                    findings.append(Finding(
+                        severity=Severity.HIGH,
+                        title="Unrestricted ServerSocket Binding",
+                        description=(
+                            f"ServerSocket at line {line_num} binds to all interfaces (no IP specified). "
+                            f"FedRAMP requires restricting inbound network traffic. Bind to specific IP or "
+                            f"implement IP filtering with Azure NSG rules."
+                        ),
+                        file_path=file_path,
+                        line_number=line_num,
+                        snippet=obj_text[:200],
+                        remediation=(
+                            "Restrict ServerSocket binding:\n"
+                            "ServerSocket server = new ServerSocket(port, backlog, InetAddress.getLoopbackAddress());\n"
+                            "Or deploy behind Azure Application Gateway with NSG restrictions."
+                        ),
+                        ksi_id=self.KSI_ID
+                    ))
+        
+        # Pattern 2: Check for Spring Boot without IP restrictions
+        has_spring_app = False
+        has_ip_filter = False
+        
+        # Check for Spring annotations
+        annotation_nodes = parser.find_nodes_by_type(tree.root_node, "marker_annotation")
+        
+        for ann_node in annotation_nodes:
+            ann_text = parser.get_node_text(ann_node, code_bytes)
+            if "SpringBootApplication" in ann_text:
+                has_spring_app = True
+            elif any(term in ann_text for term in ["Configuration", "Order"]) and "IpFilter" in code:
+                has_ip_filter = True
+        
+        # Check for Spring application run
+        method_invocation_nodes = parser.find_nodes_by_type(tree.root_node, "method_invocation")
+        for method_node in method_invocation_nodes:
+            method_text = parser.get_node_text(method_node, code_bytes)
+            if "SpringApplication" in method_text and ".run(" in method_text:
+                has_spring_app = True
+        
+        # Check for IP filter classes/keywords
+        if not has_ip_filter and any(term in code for term in ["IpAddressFilter", "ClientIpCheck", "IpFilterSecurityConfig"]):
+            has_ip_filter = True
+        
+        if has_spring_app and not has_ip_filter:
+            # Find line with Spring annotation or run method
+            for ann_node in annotation_nodes:
+                ann_text = parser.get_node_text(ann_node, code_bytes)
+                if "SpringBootApplication" in ann_text:
+                    line_num = code[:ann_node.start_byte].count('\n') + 1
+                    findings.append(Finding(
+                        severity=Severity.MEDIUM,
+                        title="Spring Boot Missing IP Filtering",
+                        description=(
+                            f"Spring Boot application at line {line_num} without IP filtering configuration. "
+                            f"Implement IP allowlist using Spring Security or server configuration to restrict network traffic."
+                        ),
+                        file_path=file_path,
+                        line_number=line_num,
+                        snippet=ann_text[:200],
+                        remediation=(
+                            "Add IP filtering with Spring Security:\n"
+                            "@Configuration\n"
+                            "public class IpSecurityConfig extends WebSecurityConfigurerAdapter {\n"
+                            "  protected void configure(HttpSecurity http) {\n"
+                            "    http.authorizeRequests().requestMatchers(hasIpAddress(\"allowed-cidr\")).permitAll();\n"
+                            "  }\n"
+                            "}"
+                        ),
+                        ksi_id=self.KSI_ID
+                    ))
+                    break
+        
+        return findings
+    
+    def _analyze_java_regex(self, code: str, file_path: str = "") -> List[Finding]:
+        """
+        Regex fallback for Java analysis when AST parsing fails.
         """
         findings = []
         lines = code.split('\n')
@@ -274,7 +523,7 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze TypeScript/JavaScript code for KSI-CNA-01 compliance.
+        Analyze TypeScript/JavaScript code for KSI-CNA-01 compliance using AST.
         
         Frameworks: Express, NestJS, Next.js, React, Angular, Azure SDK
         
@@ -283,6 +532,97 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
         - Missing IP filtering middleware
         - Open HTTP server without restrictions
         - No network access control
+        """
+        parser = ASTParser(CodeLanguage.TYPESCRIPT)
+        tree = parser.parse(code)
+        
+        if tree and tree.root_node:
+            return self._analyze_typescript_ast(code, file_path, parser, tree)
+        else:
+            return self._analyze_typescript_regex(code, file_path)
+    
+    def _analyze_typescript_ast(self, code: str, file_path: str, parser: ASTParser, tree) -> List[Finding]:
+        """AST-based analysis for TypeScript code."""
+        findings = []
+        code_bytes = code.encode('utf8')
+        
+        # Pattern 1: Check for listen() calls with 0.0.0.0
+        call_nodes = parser.find_nodes_by_type(tree.root_node, "call_expression")
+        
+        for call_node in call_nodes:
+            call_text = parser.get_node_text(call_node, code_bytes)
+            
+            if ".listen(" in call_text and "0.0.0.0" in call_text:
+                line_num = code[:call_node.start_byte].count('\n') + 1
+                findings.append(Finding(
+                    severity=Severity.HIGH,
+                    title="Unrestricted Network Listener (0.0.0.0)",
+                    description=(
+                        f"Server listening on 0.0.0.0 at line {line_num}, accepting connections from all interfaces. "
+                        f"FedRAMP requires limiting inbound traffic. Use Azure Application Gateway with NSG rules "
+                        f"or implement IP allowlist middleware."
+                    ),
+                    file_path=file_path,
+                    line_number=line_num,
+                    snippet=call_text[:200],
+                    remediation=(
+                        "Restrict listening address:\n"
+                        "app.listen(port, '127.0.0.1');  // Localhost only\n"
+                        "Or deploy behind Azure Front Door with NSG rules. "
+                        "Add IP filtering middleware: app.use(ipFilter(allowedIPs));"
+                    ),
+                    ksi_id=self.KSI_ID
+                ))
+        
+        # Pattern 2: Check for Express/NestJS without IP filtering
+        has_express = False
+        has_ip_filter = False
+        
+        # Check imports
+        import_nodes = parser.find_nodes_by_type(tree.root_node, "import_statement")
+        
+        for import_node in import_nodes:
+            import_text = parser.get_node_text(import_node, code_bytes)
+            if "express" in import_text or "@nestjs/common" in import_text:
+                has_express = True
+            elif any(term in import_text for term in ["express-ipfilter", "ip-filter", "ipware"]):
+                has_ip_filter = True
+        
+        # Check for IP filter keywords in code
+        if not has_ip_filter and any(term in code for term in ["ClientIpCheck", "allowedIPs", "ipfilter", "IpFilter"]):
+            has_ip_filter = True
+        
+        if has_express and not has_ip_filter:
+            # Find line with Express import or instantiation
+            for import_node in import_nodes:
+                import_text = parser.get_node_text(import_node, code_bytes)
+                if "express" in import_text or "@nestjs/common" in import_text:
+                    line_num = code[:import_node.start_byte].count('\n') + 1
+                    findings.append(Finding(
+                        severity=Severity.MEDIUM,
+                        title="Missing IP Filtering Middleware",
+                        description=(
+                            f"Express/NestJS application at line {line_num} without IP filtering middleware. "
+                            f"Application-level IP restrictions complement Azure NSG rules for defense-in-depth."
+                        ),
+                        file_path=file_path,
+                        line_number=line_num,
+                        snippet=import_text[:200],
+                        remediation=(
+                            "Add IP filtering middleware:\n"
+                            "npm install express-ipfilter\n"
+                            "const ipfilter = require('express-ipfilter').IpFilter;\n"
+                            "app.use(ipfilter(['10.0.0.0/8', 'specific-ip'], {mode: 'allow'}));"
+                        ),
+                        ksi_id=self.KSI_ID
+                    ))
+                    break
+        
+        return findings
+    
+    def _analyze_typescript_regex(self, code: str, file_path: str = "") -> List[Finding]:
+        """
+        Regex fallback for TypeScript analysis when AST parsing fails.
         """
         findings = []
         lines = code.split('\n')
@@ -354,6 +694,8 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
     def analyze_bicep(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Bicep IaC for KSI-CNA-01 compliance.
+        
+        Note: Using regex - tree-sitter not available for Bicep.
         
         Detects:
         - Missing Network Security Groups (NSG)
@@ -432,6 +774,8 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
         """
         Analyze Terraform IaC for KSI-CNA-01 compliance.
         
+        Note: Using regex - tree-sitter not available for Terraform.
+        
         Detects:
         - Missing azurerm_network_security_group
         - Overly permissive security rules (0.0.0.0/0, *)
@@ -509,6 +853,8 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
         """
         Analyze GitHub Actions workflow for KSI-CNA-01 compliance.
         
+        Note: Using regex - tree-sitter not available for GitHub Actions YAML.
+        
         TODO: Implement detection logic if applicable.
         """
         findings = []
@@ -521,6 +867,8 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
         """
         Analyze Azure Pipelines YAML for KSI-CNA-01 compliance.
         
+        Note: Using regex - tree-sitter not available for Azure Pipelines YAML.
+        
         TODO: Implement detection logic if applicable.
         """
         findings = []
@@ -532,6 +880,8 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze GitLab CI YAML for KSI-CNA-01 compliance.
+        
+        Note: Using regex - tree-sitter not available for GitLab CI YAML.
         
         TODO: Implement detection logic if applicable.
         """
@@ -566,3 +916,4 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
         start = max(0, line_number - context - 1)
         end = min(len(lines), line_number + context)
         return '\n'.join(lines[start:end])
+

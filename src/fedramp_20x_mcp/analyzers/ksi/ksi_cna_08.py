@@ -8,8 +8,9 @@ Source: https://github.com/FedRAMP/docs/blob/main/data/FRMR.KSI.key-security-ind
 Version: 25.11C (Published: 2025-12-01)
 """
 
+import ast
 import re
-from typing import List, Optional, Dict, Any
+from typing import List
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 
@@ -51,17 +52,22 @@ class KSI_CNA_08_Analyzer(BaseKSIAnalyzer):
     FAMILY_NAME = "Cloud Native Architecture"
     IMPACT_LOW = False
     IMPACT_MODERATE = True
-    NIST_CONTROLS = ["ca-2.1", "ca-7.1"]
+    NIST_CONTROLS = [
+        ("ca-2.1", "Independent Assessors"),
+        ("ca-7.1", "Independent Assessment")
+    ]
     CODE_DETECTABLE = True
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RETIRED = False
     
-    def __init__(self):
+    def __init__(self, language=None, ksi_id: str = "", ksi_name: str = "", ksi_statement: str = ""):
+        """Initialize analyzer with backward-compatible API."""
         super().__init__(
-            ksi_id=self.KSI_ID,
-            ksi_name=self.KSI_NAME,
-            ksi_statement=self.KSI_STATEMENT
+            ksi_id=ksi_id or self.KSI_ID,
+            ksi_name=ksi_name or self.KSI_NAME,
+            ksi_statement=ksi_statement or self.KSI_STATEMENT
         )
+        self.direct_language = language
     
     # ============================================================================
     # APPLICATION LANGUAGE ANALYZERS
@@ -71,18 +77,264 @@ class KSI_CNA_08_Analyzer(BaseKSIAnalyzer):
         """
         Analyze Python code for KSI-CNA-08 compliance.
         
-        Frameworks: Flask, Django, FastAPI, Azure SDK
+        Detects:
+        - Flask/Django/FastAPI without Application Insights integration
+        - Missing Azure Monitor telemetry
+        - No health check or readiness endpoints
         
-        TODO: Implement detection logic for:
-        - Use automated services to persistently assess the security posture of all machin...
+        Frameworks: Flask, Django, FastAPI, Azure SDK
         """
         findings = []
         
-        # TODO: Implement Python-specific detection logic
-        # Example patterns to detect:
-        # - Configuration issues
-        # - Missing security controls
-        # - Framework-specific vulnerabilities
+        try:
+            tree = ast.parse(code)
+        except SyntaxError:
+            # Fall back to regex if AST parsing fails
+            return self._python_regex_fallback(code, file_path)
+        
+        # Check for Application Insights / Azure Monitor imports
+        has_appinsights = False
+        has_azure_monitor = False
+        has_opencensus = False
+        has_opentelemetry = False
+        
+        # Check for web framework
+        has_flask = False
+        has_django = False
+        has_fastapi = False
+        flask_app_line = None
+        fastapi_app_line = None
+        
+        for node in ast.walk(tree):
+            # Check for monitoring imports
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
+                module_name = ""
+                if isinstance(node, ast.Import):
+                    for alias in node.names:
+                        module_name = alias.name
+                        if 'applicationinsights' in module_name.lower():
+                            has_appinsights = True
+                        elif 'azure.monitor' in module_name.lower():
+                            has_azure_monitor = True
+                        elif 'opencensus' in module_name.lower():
+                            has_opencensus = True
+                        elif 'opentelemetry' in module_name.lower():
+                            has_opentelemetry = True
+                elif isinstance(node, ast.ImportFrom):
+                    module_name = node.module or ""
+                    if 'applicationinsights' in module_name.lower():
+                        has_appinsights = True
+                    elif 'azure.monitor' in module_name.lower():
+                        has_azure_monitor = True
+                    elif 'opencensus' in module_name.lower():
+                        has_opencensus = True
+                    elif 'opentelemetry' in module_name.lower():
+                        has_opentelemetry = True
+                    elif module_name == 'flask':
+                        has_flask = True
+                    elif 'django' in module_name.lower():
+                        has_django = True
+                    elif module_name == 'fastapi':
+                        has_fastapi = True
+            
+            # Find Flask app creation
+            if isinstance(node, ast.Call):
+                if hasattr(node.func, 'id') and node.func.id == 'Flask':
+                    flask_app_line = node.lineno
+                elif hasattr(node.func, 'id') and node.func.id == 'FastAPI':
+                    fastapi_app_line = node.lineno
+        
+        # Check if Django is used (settings.py or INSTALLED_APPS)
+        if 'django' in code.lower() or 'INSTALLED_APPS' in code:
+            has_django = True
+        
+        # Pattern 1: Flask without Application Insights (HIGH)
+        if has_flask and flask_app_line:
+            if not (has_appinsights or has_azure_monitor or has_opencensus or has_opentelemetry):
+                findings.append(Finding(
+                    severity=Severity.HIGH,
+                    title="Flask App Without Application Insights / Azure Monitor",
+                    description=(
+                        "Flask application deployed without Application Insights or Azure Monitor integration. "
+                        "KSI-CNA-08 requires using automated services to persistently assess security posture "
+                        "and operational state (CA-2.1, CA-7.1). Application Insights provides continuous monitoring, "
+                        "automated anomaly detection, performance tracking, and real-time alerting. "
+                        "Without monitoring integration, security incidents and operational issues "
+                        "cannot be automatically detected or remediated."
+                    ),
+                    file_path=file_path,
+                    line_number=flask_app_line,
+                    snippet=self._get_snippet(code.split('\n'), flask_app_line, context=3),
+                    remediation=(
+                        "Integrate Application Insights for continuous monitoring:\n"
+                        "# 1. Install Azure Monitor OpenTelemetry\n"
+                        "# pip install azure-monitor-opentelemetry\n\n"
+                        "from flask import Flask\n"
+                        "from azure.monitor.opentelemetry import configure_azure_monitor\n"
+                        "from opentelemetry import trace\n"
+                        "from opentelemetry.instrumentation.flask import FlaskInstrumentor\n\n"
+                        "# Configure Azure Monitor (persistent assessment)\n"
+                        "configure_azure_monitor(\n"
+                        "    connection_string=\"InstrumentationKey=<key>;...\",\n"
+                        "    # Continuous telemetry collection\n"
+                        "    logger_name=\"myapp\",\n"
+                        "    enable_live_metrics=True  # Real-time monitoring\n"
+                        ")\n\n"
+                        "app = Flask(__name__)\n\n"
+                        "# Auto-instrument Flask (automated monitoring)\n"
+                        "FlaskInstrumentor().instrument_app(app)\n\n"
+                        "# Health check endpoint (operational state assessment)\n"
+                        "@app.route('/health')\n"
+                        "def health_check():\n"
+                        "    return {'status': 'healthy'}, 200\n\n"
+                        "# Readiness endpoint (automated enforcement)\n"
+                        "@app.route('/ready')\n"
+                        "def readiness_check():\n"
+                        "    # Check dependencies (DB, cache, etc.)\n"
+                        "    return {'status': 'ready'}, 200\n\n"
+                        "What this provides:\n"
+                        "- Continuous performance monitoring (CA-7.1)\n"
+                        "- Automated anomaly detection (CA-2.1)\n"
+                        "- Real-time alerting on security/operational issues\n"
+                        "- Automated dependency tracking and correlation\n\n"
+                        "NIST Controls: CA-2.1 (Automated Assessments), CA-7.1 (Continuous Monitoring)\n"
+                        "Ref: Azure Monitor (https://learn.microsoft.com/azure/azure-monitor/)\n"
+                    ),
+                    ksi_id=self.KSI_ID
+                ))
+        
+        # Pattern 2: Django without monitoring (HIGH)
+        if has_django and not (has_appinsights or has_azure_monitor or has_opencensus or has_opentelemetry):
+            findings.append(Finding(
+                severity=Severity.HIGH,
+                title="Django App Without Application Insights / Azure Monitor",
+                description=(
+                    "Django application deployed without Application Insights or Azure Monitor integration. "
+                    "KSI-CNA-08 requires persistent security posture assessment (CA-2.1, CA-7.1). "
+                    "Without continuous monitoring, security incidents, performance degradation, "
+                    "and compliance violations cannot be automatically detected or remediated."
+                ),
+                file_path=file_path,
+                line_number=1,
+                snippet=self._get_snippet(code.split('\n'), 1, context=5),
+                remediation=(
+                    "Add Application Insights to Django settings:\n"
+                    "# settings.py\n"
+                    "from azure.monitor.opentelemetry import configure_azure_monitor\n\n"
+                    "# Configure Azure Monitor (continuous assessment)\n"
+                    "configure_azure_monitor(\n"
+                    "    connection_string=\"InstrumentationKey=<key>;...\",\n"
+                    "    enable_live_metrics=True\n"
+                    ")\n\n"
+                    "# Add OpenTelemetry middleware\n"
+                    "MIDDLEWARE = [\n"
+                    "    'django.middleware.security.SecurityMiddleware',\n"
+                    "    'opentelemetry.instrumentation.django.middleware.DjangoMiddleware',  # Auto-instrumentation\n"
+                    "    # ... other middleware\n"
+                    "]\n\n"
+                    "# Configure logging (automated alerts)\n"
+                    "LOGGING = {\n"
+                    "    'version': 1,\n"
+                    "    'handlers': {\n"
+                    "        'azure': {\n"
+                    "            'level': 'INFO',\n"
+                    "            'class': 'opencensus.ext.azure.log_exporter.AzureLogHandler',\n"
+                    "            'connection_string': '<connection-string>'\n"
+                    "        }\n"
+                    "    },\n"
+                    "    'loggers': {\n"
+                    "        'django': {\n"
+                    "            'handlers': ['azure'],\n"
+                    "            'level': 'INFO'\n"
+                    "        }\n"
+                    "    }\n"
+                    "}\n\n"
+                    "# Add health check URLs\n"
+                    "# urls.py\n"
+                    "from django.urls import path\n"
+                    "from myapp.views import health_check, readiness_check\n\n"
+                    "urlpatterns = [\n"
+                    "    path('health/', health_check),  # Operational state\n"
+                    "    path('ready/', readiness_check),  # Automated enforcement\n"
+                    "]\n\n"
+                    "NIST Controls: CA-2.1, CA-7.1\n"
+                    "Ref: Django with Application Insights (https://learn.microsoft.com/azure/azure-monitor/app/opencensus-python)\n"
+                ),
+                ksi_id=self.KSI_ID
+            ))
+        
+        # Pattern 3: FastAPI without monitoring (HIGH)
+        if has_fastapi and fastapi_app_line:
+            if not (has_appinsights or has_azure_monitor or has_opencensus or has_opentelemetry):
+                findings.append(Finding(
+                    severity=Severity.HIGH,
+                    title="FastAPI App Without Application Insights / Azure Monitor",
+                    description=(
+                        "FastAPI application deployed without Application Insights or Azure Monitor integration. "
+                        "KSI-CNA-08 requires automated services to persistently assess security posture "
+                        "and enforce operational state (CA-2.1, CA-7.1). Without continuous monitoring, "
+                        "API security issues, performance problems, and compliance violations "
+                        "cannot be automatically detected or remediated."
+                    ),
+                    file_path=file_path,
+                    line_number=fastapi_app_line,
+                    snippet=self._get_snippet(code.split('\n'), fastapi_app_line, context=3),
+                    remediation=(
+                        "Integrate Application Insights with FastAPI:\n"
+                        "# 1. Install dependencies\n"
+                        "# pip install azure-monitor-opentelemetry opentelemetry-instrumentation-fastapi\n\n"
+                        "from fastapi import FastAPI\n"
+                        "from azure.monitor.opentelemetry import configure_azure_monitor\n"
+                        "from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor\n\n"
+                        "# Configure Azure Monitor (persistent assessment)\n"
+                        "configure_azure_monitor(\n"
+                        "    connection_string=\"InstrumentationKey=<key>;...\",\n"
+                        "    enable_live_metrics=True  # Real-time monitoring\n"
+                        ")\n\n"
+                        "app = FastAPI()\n\n"
+                        "# Auto-instrument FastAPI (automated monitoring)\n"
+                        "FastAPIInstrumentor.instrument_app(app)\n\n"
+                        "# Health check endpoint (operational state)\n"
+                        "@app.get('/health')\n"
+                        "async def health_check():\n"
+                        "    return {'status': 'healthy'}\n\n"
+                        "# Readiness endpoint (automated enforcement)\n"
+                        "@app.get('/ready')\n"
+                        "async def readiness_check():\n"
+                        "    # Verify dependencies\n"
+                        "    return {'status': 'ready'}\n\n"
+                        "What this provides:\n"
+                        "- Continuous API monitoring and tracing\n"
+                        "- Automated performance baseline and anomaly detection\n"
+                        "- Real-time security incident detection\n"
+                        "- Automated dependency and correlation analysis\n\n"
+                        "NIST Controls: CA-2.1, CA-7.1\n"
+                        "Ref: FastAPI with Azure Monitor (https://learn.microsoft.com/azure/azure-monitor/)\n"
+                    ),
+                    ksi_id=self.KSI_ID
+                ))
+        
+        return findings
+    
+    def _python_regex_fallback(self, code: str, file_path: str = "") -> List[Finding]:
+        """Regex fallback when AST parsing fails."""
+        findings = []
+        
+        # Check for Flask without Application Insights
+        if re.search(r'Flask\s*\(', code) and not re.search(r'applicationinsights|azure\.monitor|opencensus|opentelemetry', code, re.IGNORECASE):
+            flask_match = re.search(r'Flask\s*\(', code)
+            if flask_match:
+                line_num = code[:flask_match.start()].count('\n') + 1
+                findings.append(Finding(
+                    severity=Severity.HIGH,
+                    title="Flask App Without Application Insights (Regex Fallback)",
+                    description="Flask application missing Application Insights integration (detected via regex fallback).",
+                    file_path=file_path,
+                    line_number=line_num,
+                    snippet=self._get_snippet(code.split('\n'), line_num, context=3),
+                    remediation="See Python analyzer remediation for Application Insights integration.",
+                    ksi_id=self.KSI_ID
+                ))
         
         return findings
     
@@ -90,14 +342,82 @@ class KSI_CNA_08_Analyzer(BaseKSIAnalyzer):
         """
         Analyze C# code for KSI-CNA-08 compliance.
         
-        Frameworks: ASP.NET Core, Entity Framework, Azure SDK
+        Detects:
+        - ASP.NET Core without Application Insights
+        - Missing ILogger or telemetry configuration
+        - No health check endpoints
         
-        TODO: Implement detection logic for:
-        - Use automated services to persistently assess the security posture of all machin...
+        Frameworks: ASP.NET Core, Entity Framework, Azure SDK
         """
         findings = []
         
-        # TODO: Implement C#-specific detection logic
+        # Check for ASP.NET Core
+        has_aspnetcore = re.search(r'using\s+Microsoft\.AspNetCore|WebApplication\.CreateBuilder', code)
+        
+        # Check for Application Insights / monitoring
+        has_appinsights = re.search(r'ApplicationInsights|AddApplicationInsightsTelemetry|TelemetryClient', code, re.IGNORECASE)
+        has_logger = re.search(r'ILogger<|_logger\.|logger\.Log', code)
+        has_diagnostics = re.search(r'DiagnosticSource|ActivitySource', code)
+        
+        # Pattern: ASP.NET Core without Application Insights (HIGH)
+        if has_aspnetcore and not (has_appinsights or has_diagnostics):
+            match = has_aspnetcore
+            line_num = code[:match.start()].count('\n') + 1
+            
+            findings.append(Finding(
+                severity=Severity.HIGH,
+                title="ASP.NET Core Without Application Insights / Azure Monitor",
+                description=(
+                    "ASP.NET Core application deployed without Application Insights or Azure Monitor integration. "
+                    "KSI-CNA-08 requires using automated services to persistently assess security posture "
+                    "and operational state (CA-2.1, CA-7.1). Application Insights provides continuous monitoring, "
+                    "automated anomaly detection, distributed tracing, and real-time alerting. "
+                    "Without monitoring, security incidents and operational issues cannot be automatically detected."
+                ),
+                file_path=file_path,
+                line_number=line_num,
+                snippet=self._get_snippet(code.split('\n'), line_num, context=3),
+                remediation=(
+                    "Integrate Application Insights for continuous monitoring:\n"
+                    "// 1. Install NuGet package\n"
+                    "// dotnet add package Microsoft.ApplicationInsights.AspNetCore\n\n"
+                    "using Microsoft.ApplicationInsights.AspNetCore.Extensions;\n"
+                    "using Microsoft.Extensions.DependencyInjection;\n\n"
+                    "var builder = WebApplication.CreateBuilder(args);\n\n"
+                    "// Configure Application Insights (persistent assessment)\n"
+                    "builder.Services.AddApplicationInsightsTelemetry(options =>\n"
+                    "{\n"
+                    "    options.ConnectionString = \"InstrumentationKey=<key>;...\";\n"
+                    "    options.EnableAdaptiveSampling = true;  // Automated sampling\n"
+                    "    options.EnableQuickPulseMetricStream = true;  // Real-time monitoring\n"
+                    "});\n\n"
+                    "// Add health checks (operational state assessment)\n"
+                    "builder.Services.AddHealthChecks()\n"
+                    "    .AddCheck(\"self\", () => HealthCheckResult.Healthy())\n"
+                    "    .AddSqlServer(connectionString)  // Database health\n"
+                    "    .AddAzureBlobStorage(storageConnectionString);  // Storage health\n\n"
+                    "var app = builder.Build();\n\n"
+                    "// Map health check endpoints (automated enforcement)\n"
+                    "app.MapHealthChecks(\"/health\");  // Liveness probe\n"
+                    "app.MapHealthChecks(\"/ready\", new HealthCheckOptions\n"
+                    "{\n"
+                    "    Predicate = _ => true,  // All checks\n"
+                    "    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse\n"
+                    "});  // Readiness probe\n\n"
+                    "// Enable detailed diagnostics\n"
+                    "app.UseDeveloperExceptionPage();  // Dev only\n"
+                    "app.UseHttpsRedirection();\n\n"
+                    "app.Run();\n\n"
+                    "What this provides:\n"
+                    "- Continuous performance and availability monitoring (CA-7.1)\n"
+                    "- Automated anomaly detection and alerting (CA-2.1)\n"
+                    "- Distributed tracing across microservices\n"
+                    "- Real-time dependency tracking and correlation\n\n"
+                    "NIST Controls: CA-2.1 (Automated Assessments), CA-7.1 (Continuous Monitoring)\n"
+                    "Ref: Application Insights for ASP.NET Core (https://learn.microsoft.com/azure/azure-monitor/app/asp-net-core)\n"
+                ),
+                ksi_id=self.KSI_ID
+            ))
         
         return findings
     
@@ -105,14 +425,89 @@ class KSI_CNA_08_Analyzer(BaseKSIAnalyzer):
         """
         Analyze Java code for KSI-CNA-08 compliance.
         
-        Frameworks: Spring Boot, Spring Security, Azure SDK
+        Detects:
+        - Spring Boot without Actuator
+        - Missing Application Insights or Micrometer
+        - No health check endpoints
         
-        TODO: Implement detection logic for:
-        - Use automated services to persistently assess the security posture of all machin...
+        Frameworks: Spring Boot, Spring Security, Azure SDK
         """
         findings = []
         
-        # TODO: Implement Java-specific detection logic
+        # Check for Spring Boot
+        has_springboot = re.search(r'@SpringBootApplication|springframework\.boot', code)
+        
+        # Check for monitoring/actuator
+        has_actuator = re.search(r'spring-boot-starter-actuator|@Endpoint|HealthIndicator', code)
+        has_appinsights = re.search(r'applicationinsights|azure\.monitor', code, re.IGNORECASE)
+        has_micrometer = re.search(r'io\.micrometer|MeterRegistry|@Timed', code)
+        
+        # Pattern: Spring Boot without Actuator or monitoring (HIGH)
+        if has_springboot and not (has_actuator or has_appinsights or has_micrometer):
+            match = has_springboot
+            line_num = code[:match.start()].count('\n') + 1
+            
+            findings.append(Finding(
+                severity=Severity.HIGH,
+                title="Spring Boot Without Actuator / Application Insights",
+                description=(
+                    "Spring Boot application deployed without Spring Boot Actuator or Application Insights. "
+                    "KSI-CNA-08 requires using automated services to persistently assess security posture "
+                    "and operational state (CA-2.1, CA-7.1). Spring Boot Actuator provides health checks, "
+                    "metrics, and operational insights. Application Insights provides continuous monitoring "
+                    "and automated anomaly detection. Without monitoring, security and operational issues "
+                    "cannot be automatically detected or remediated."
+                ),
+                file_path=file_path,
+                line_number=line_num,
+                snippet=self._get_snippet(code.split('\n'), line_num, context=3),
+                remediation=(
+                    "Integrate Spring Boot Actuator and Application Insights:\n"
+                    "// 1. Add dependencies to pom.xml\n"
+                    "<dependency>\n"
+                    "    <groupId>org.springframework.boot</groupId>\n"
+                    "    <artifactId>spring-boot-starter-actuator</artifactId>\n"
+                    "</dependency>\n"
+                    "<dependency>\n"
+                    "    <groupId>com.microsoft.azure</groupId>\n"
+                    "    <artifactId>applicationinsights-spring-boot-starter</artifactId>\n"
+                    "    <version>3.4.0</version>\n"
+                    "</dependency>\n\n"
+                    "// 2. Configure application.properties\n"
+                    "# Application Insights (persistent assessment)\n"
+                    "azure.application-insights.instrumentation-key=<key>\n"
+                    "azure.application-insights.enabled=true\n\n"
+                    "# Spring Boot Actuator (operational state monitoring)\n"
+                    "management.endpoints.web.exposure.include=health,info,metrics,prometheus\n"
+                    "management.endpoint.health.show-details=always\n"
+                    "management.health.defaults.enabled=true\n\n"
+                    "# Health checks (automated enforcement)\n"
+                    "management.health.db.enabled=true  // Database health\n"
+                    "management.health.redis.enabled=true  // Cache health\n"
+                    "management.health.diskspace.enabled=true  // Disk health\n\n"
+                    "// 3. Custom health indicator (optional)\n"
+                    "import org.springframework.boot.actuate.health.Health;\n"
+                    "import org.springframework.boot.actuate.health.HealthIndicator;\n"
+                    "import org.springframework.stereotype.Component;\n\n"
+                    "@Component\n"
+                    "public class CustomHealthIndicator implements HealthIndicator {\n"
+                    "    @Override\n"
+                    "    public Health health() {\n"
+                    "        // Custom health checks\n"
+                    "        return Health.up()\n"
+                    "            .withDetail(\"status\", \"operational\")\n"
+                    "            .build();\n"
+                    "    }\n"
+                    "}\n\n"
+                    "Actuator endpoints:\n"
+                    "- /actuator/health - Liveness/readiness probes (automated enforcement)\n"
+                    "- /actuator/metrics - Performance metrics (continuous monitoring)\n"
+                    "- /actuator/info - Application info\n\n"
+                    "NIST Controls: CA-2.1, CA-7.1\n"
+                    "Ref: Spring Boot Actuator (https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html)\n"
+                ),
+                ksi_id=self.KSI_ID
+            ))
         
         return findings
     
@@ -120,14 +515,151 @@ class KSI_CNA_08_Analyzer(BaseKSIAnalyzer):
         """
         Analyze TypeScript/JavaScript code for KSI-CNA-08 compliance.
         
-        Frameworks: Express, NestJS, Next.js, React, Angular, Azure SDK
+        Detects:
+        - Express/NestJS without health check endpoints
+        - Missing Application Insights integration
+        - No monitoring or telemetry
         
-        TODO: Implement detection logic for:
-        - Use automated services to persistently assess the security posture of all machin...
+        Frameworks: Express, NestJS, Next.js, React, Angular, Azure SDK
         """
         findings = []
         
-        # TODO: Implement TypeScript-specific detection logic
+        # Check for Express
+        has_express = re.search(r'import\s+express|require\([\'\"]express[\'\"]\)|from\s+[\'\"]express[\'\"]', code)
+        
+        # Check for NestJS
+        has_nestjs = re.search(r'@nestjs/common|@Module\(|@Controller\(', code)
+        
+        # Check for monitoring
+        has_appinsights = re.search(r'applicationinsights|@azure/monitor', code, re.IGNORECASE)
+        has_opentelemetry = re.search(r'@opentelemetry|opentelemetry-instrumentation', code)
+        has_health_check = re.search(r'[\'\"]/(health|healthz|ready|readiness)[\'\"]|@nestjs/terminus|express-health-check', code)
+        
+        # Pattern 1: Express without health checks or monitoring (HIGH)
+        if has_express and not (has_health_check or has_appinsights or has_opentelemetry):
+            match = has_express
+            line_num = code[:match.start()].count('\n') + 1
+            
+            findings.append(Finding(
+                severity=Severity.HIGH,
+                title="Express App Without Health Checks / Application Insights",
+                description=(
+                    "Express application deployed without health check endpoints or Application Insights integration. "
+                    "KSI-CNA-08 requires using automated services to persistently assess security posture "
+                    "and operational state (CA-2.1, CA-7.1). Health check endpoints enable automated "
+                    "liveness/readiness probes. Application Insights provides continuous monitoring "
+                    "and automated anomaly detection. Without monitoring, security and operational issues "
+                    "cannot be automatically detected."
+                ),
+                file_path=file_path,
+                line_number=line_num,
+                snippet=self._get_snippet(code.split('\n'), line_num, context=3),
+                remediation=(
+                    "Add health checks and Application Insights to Express:\n"
+                    "// 1. Install dependencies\n"
+                    "// npm install applicationinsights express-health-check\n\n"
+                    "import express from 'express';\n"
+                    "import appInsights from 'applicationinsights';\n"
+                    "import healthCheck from 'express-health-check';\n\n"
+                    "// Configure Application Insights (persistent assessment)\n"
+                    "appInsights.setup('<instrumentation-key>')\n"
+                    "    .setAutoDependencyCorrelation(true)  // Automated correlation\n"
+                    "    .setAutoCollectRequests(true)  // Request monitoring\n"
+                    "    .setAutoCollectPerformance(true)  // Performance tracking\n"
+                    "    .setAutoCollectExceptions(true)  // Exception tracking\n"
+                    "    .setAutoCollectDependencies(true)  // Dependency monitoring\n"
+                    "    .setUseDiskRetryCaching(true)  // Reliability\n"
+                    "    .start();\n\n"
+                    "const app = express();\n\n"
+                    "// Health check endpoint (operational state)\n"
+                    "app.get('/health', (req, res) => {\n"
+                    "    res.status(200).json({ status: 'healthy' });\n"
+                    "});\n\n"
+                    "// Readiness check (automated enforcement)\n"
+                    "app.get('/ready', async (req, res) => {\n"
+                    "    try {\n"
+                    "        // Check database connection\n"
+                    "        await db.ping();\n"
+                    "        // Check cache connection\n"
+                    "        await redis.ping();\n"
+                    "        res.status(200).json({ status: 'ready' });\n"
+                    "    } catch (error) {\n"
+                    "        res.status(503).json({ status: 'not ready', error });\n"
+                    "    }\n"
+                    "});\n\n"
+                    "// Custom telemetry (optional)\n"
+                    "const client = appInsights.defaultClient;\n"
+                    "client.trackEvent({ name: 'CustomEvent' });\n\n"
+                    "What this provides:\n"
+                    "- Continuous performance monitoring (CA-7.1)\n"
+                    "- Automated anomaly detection (CA-2.1)\n"
+                    "- Health endpoints for Kubernetes probes\n"
+                    "- Real-time dependency tracking\n\n"
+                    "NIST Controls: CA-2.1, CA-7.1\n"
+                    "Ref: Application Insights for Node.js (https://learn.microsoft.com/azure/azure-monitor/app/nodejs)\n"
+                ),
+                ksi_id=self.KSI_ID
+            ))
+        
+        # Pattern 2: NestJS without health checks or monitoring (HIGH)
+        if has_nestjs and not (has_health_check or has_appinsights or has_opentelemetry):
+            match = has_nestjs
+            line_num = code[:match.start()].count('\n') + 1
+            
+            findings.append(Finding(
+                severity=Severity.HIGH,
+                title="NestJS App Without Health Checks / Application Insights",
+                description=(
+                    "NestJS application deployed without @nestjs/terminus health checks or Application Insights. "
+                    "KSI-CNA-08 requires persistent assessment of security posture and operational state (CA-2.1, CA-7.1). "
+                    "Without health checks and monitoring, automated enforcement and continuous assessment "
+                    "cannot be achieved."
+                ),
+                file_path=file_path,
+                line_number=line_num,
+                snippet=self._get_snippet(code.split('\n'), line_num, context=3),
+                remediation=(
+                    "Add @nestjs/terminus and Application Insights to NestJS:\n"
+                    "// 1. Install dependencies\n"
+                    "// npm install @nestjs/terminus applicationinsights\n\n"
+                    "// app.module.ts\n"
+                    "import { Module } from '@nestjs/common';\n"
+                    "import { TerminusModule } from '@nestjs/terminus';\n"
+                    "import { HealthController } from './health.controller';\n\n"
+                    "// Configure Application Insights (persistent assessment)\n"
+                    "import * as appInsights from 'applicationinsights';\n"
+                    "appInsights.setup('<instrumentation-key>')\n"
+                    "    .setAutoCollectRequests(true)\n"
+                    "    .setAutoCollectPerformance(true)\n"
+                    "    .start();\n\n"
+                    "@Module({\n"
+                    "    imports: [TerminusModule],  // Health check module\n"
+                    "    controllers: [HealthController],\n"
+                    "})\n"
+                    "export class AppModule {}\n\n"
+                    "// health.controller.ts\n"
+                    "import { Controller, Get } from '@nestjs/common';\n"
+                    "import { HealthCheck, HealthCheckService, HttpHealthIndicator } from '@nestjs/terminus';\n\n"
+                    "@Controller('health')\n"
+                    "export class HealthController {\n"
+                    "    constructor(\n"
+                    "        private health: HealthCheckService,\n"
+                    "        private http: HttpHealthIndicator,\n"
+                    "    ) {}\n\n"
+                    "    @Get()\n"
+                    "    @HealthCheck()\n"
+                    "    check() {\n"
+                    "        return this.health.check([\n"
+                    "            () => this.http.pingCheck('api', 'https://example.com'),\n"
+                    "            // Add database, cache checks\n"
+                    "        ]);\n"
+                    "    }\n"
+                    "}\n\n"
+                    "NIST Controls: CA-2.1, CA-7.1\n"
+                    "Ref: NestJS Terminus (https://docs.nestjs.com/recipes/terminus)\n"
+                ),
+                ksi_id=self.KSI_ID
+            ))
         
         return findings
     
@@ -570,3 +1102,4 @@ class KSI_CNA_08_Analyzer(BaseKSIAnalyzer):
         start = max(0, line_number - context - 1)
         end = min(len(lines), line_number + context)
         return '\n'.join(lines[start:end])
+

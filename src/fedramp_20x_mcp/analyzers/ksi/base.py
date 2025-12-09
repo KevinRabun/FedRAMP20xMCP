@@ -32,7 +32,7 @@ class BaseKSIAnalyzer(ABC):
     FAMILY_NAME: str
     IMPACT_LOW: bool
     IMPACT_MODERATE: bool
-    NIST_CONTROLS: List[str]
+    NIST_CONTROLS: List[tuple[str, str]]
     RETIRED: bool = False
     CODE_DETECTABLE: bool = True  # Set to False for process/documentation-based KSIs
     IMPLEMENTATION_STATUS: str = "NOT_IMPLEMENTED"  # "IMPLEMENTED", "NOT_IMPLEMENTED", or "PARTIAL"
@@ -56,16 +56,21 @@ class BaseKSIAnalyzer(ABC):
         
         Args:
             code: Source code or configuration content
-            language: Language/framework (python, csharp, java, typescript, bicep, terraform, github_actions, azure_pipelines, gitlab_ci)
+            language: Language/framework (python, csharp, java, typescript, bicep, terraform, github_actions, azure_pipelines, gitlab_ci) - can be string or CodeLanguage enum
             file_path: Optional file path for context
             
         Returns:
             AnalysisResult with findings for this KSI
         """
-        language_lower = language.lower()
+        # Handle both string and CodeLanguage enum
+        from fedramp_20x_mcp.analyzers.ast_utils import CodeLanguage
+        if isinstance(language, CodeLanguage):
+            language_lower = language.value.lower()
+        else:
+            language_lower = language.lower()
         
         # Route to appropriate language analyzer
-        if language_lower == "python":
+        if language_lower in ("python", "py", "python3"):
             findings = self.analyze_python(code, file_path)
         elif language_lower in ("csharp", "c#", "cs"):
             findings = self.analyze_csharp(code, file_path)
@@ -75,7 +80,7 @@ class BaseKSIAnalyzer(ABC):
             findings = self.analyze_typescript(code, file_path)
         elif language_lower == "bicep":
             findings = self.analyze_bicep(code, file_path)
-        elif language_lower == "terraform":
+        elif language_lower in ("terraform", "tf"):
             findings = self.analyze_terraform(code, file_path)
         elif language_lower in ("github_actions", "github-actions"):
             findings = self.analyze_github_actions(code, file_path)
@@ -153,6 +158,9 @@ class BaseKSIAnalyzer(ABC):
             Dictionary with KSI metadata including statement, controls, impact levels, 
             implementation status, and code detectability
         """
+        # Extract control IDs from tuples (control_id, description)
+        control_ids = [ctrl[0] if isinstance(ctrl, tuple) else ctrl for ctrl in self.NIST_CONTROLS]
+        
         return {
             "ksi_id": self.KSI_ID,
             "ksi_name": self.KSI_NAME,
@@ -163,8 +171,8 @@ class BaseKSIAnalyzer(ABC):
                 "low": self.IMPACT_LOW,
                 "moderate": self.IMPACT_MODERATE
             },
-            "controls": self.NIST_CONTROLS,  # Changed from nist_controls to controls for test compatibility
-            "nist_controls": self.NIST_CONTROLS,  # Keep both for backward compatibility
+            "controls": control_ids,  # Just the IDs for easy checking
+            "nist_controls": self.NIST_CONTROLS,  # Full tuples for detailed info
             "retired": self.RETIRED,
             "code_detectable": self.CODE_DETECTABLE,
             "implementation_status": self.IMPLEMENTATION_STATUS

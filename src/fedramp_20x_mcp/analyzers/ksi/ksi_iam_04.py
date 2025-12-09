@@ -12,6 +12,7 @@ import re
 from typing import List
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
+from ..ast_utils import ASTParser, CodeLanguage
 
 
 class KSI_IAM_04_Analyzer(BaseKSIAnalyzer):
@@ -87,17 +88,58 @@ class KSI_IAM_04_Analyzer(BaseKSIAnalyzer):
     FAMILY_NAME = "Identity and Access Management"
     IMPACT_LOW = True
     IMPACT_MODERATE = True
-    NIST_CONTROLS = ["ac-2", "ac-2.1", "ac-2.2", "ac-2.3", "ac-2.4", "ac-2.6", "ac-3", "ac-4", "ac-5", "ac-6", "ac-6.1", "ac-6.2", "ac-6.5", "ac-6.7", "ac-6.9", "ac-6.10", "ac-7", "ac-20.1", "ac-17", "au-9.4", "cm-5", "cm-7", "cm-7.2", "cm-7.5", "cm-9", "ia-4", "ia-4.4", "ia-7", "ps-2", "ps-3", "ps-4", "ps-5", "ps-6", "ps-9", "ra-5.5", "sc-2", "sc-23", "sc-39"]
+    NIST_CONTROLS = [
+        ("ac-2", "Account Management"),
+        ("ac-2.1", "Automated System Account Management"),
+        ("ac-2.2", "Automated Temporary and Emergency Account Management"),
+        ("ac-2.3", "Disable Accounts"),
+        ("ac-2.4", "Automated Audit Actions"),
+        ("ac-2.6", "Dynamic Privilege Management"),
+        ("ac-3", "Access Enforcement"),
+        ("ac-4", "Information Flow Enforcement"),
+        ("ac-5", "Separation of Duties"),
+        ("ac-6", "Least Privilege"),
+        ("ac-6.1", "Authorize Access to Security Functions"),
+        ("ac-6.2", "Non-privileged Access for Nonsecurity Functions"),
+        ("ac-6.5", "Privileged Accounts"),
+        ("ac-6.7", "Review of User Privileges"),
+        ("ac-6.9", "Log Use of Privileged Functions"),
+        ("ac-6.10", "Prohibit Non-privileged Users from Executing Privileged Functions"),
+        ("ac-7", "Unsuccessful Logon Attempts"),
+        ("ac-20.1", "Limits on Authorized Use"),
+        ("ac-17", "Remote Access"),
+        ("au-9.4", "Access by Subset of Privileged Users"),
+        ("cm-5", "Access Restrictions for Change"),
+        ("cm-7", "Least Functionality"),
+        ("cm-7.2", "Prevent Program Execution"),
+        ("cm-7.5", "Authorized Software — Allow-by-exception"),
+        ("cm-9", "Configuration Management Plan"),
+        ("ia-4", "Identifier Management"),
+        ("ia-4.4", "Identify User Status"),
+        ("ia-7", "Cryptographic Module Authentication"),
+        ("ps-2", "Position Risk Designation"),
+        ("ps-3", "Personnel Screening"),
+        ("ps-4", "Personnel Termination"),
+        ("ps-5", "Personnel Transfer"),
+        ("ps-6", "Access Agreements"),
+        ("ps-9", "Position Descriptions"),
+        ("ra-5.5", "Privileged Access"),
+        ("sc-2", "Separation of System and User Functionality"),
+        ("sc-23", "Session Authenticity"),
+        ("sc-39", "Process Isolation")
+    ]
     CODE_DETECTABLE = True
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RETIRED = False
     
-    def __init__(self):
+    def __init__(self, language=None, ksi_id: str = "", ksi_name: str = "", ksi_statement: str = ""):
+        """Initialize analyzer with backward-compatible API."""
         super().__init__(
-            ksi_id=self.KSI_ID,
-            ksi_name=self.KSI_NAME,
-            ksi_statement=self.KSI_STATEMENT
+            ksi_id=ksi_id or self.KSI_ID,
+            ksi_name=ksi_name or self.KSI_NAME,
+            ksi_statement=ksi_statement or self.KSI_STATEMENT
         )
+        self.direct_language = language
     
     # ============================================================================
     # APPLICATION LANGUAGE ANALYZERS
@@ -105,35 +147,55 @@ class KSI_IAM_04_Analyzer(BaseKSIAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for KSI-IAM-04 compliance.
+        Analyze Python code for KSI-IAM-04 compliance using AST.
         
         Frameworks: Flask, Django, FastAPI, Azure SDK
         
         Detects:
-        - Permanent admin/privileged access
-        - Missing role-based authorization decorators
-        - Lack of time-limited access controls
-        - Azure PIM integration checks
+        - Permanent admin/privileged access without time limits
+        - Missing role-based authorization decorators on routes
+        - Azure PIM integration for JIT access
         """
+        parser = ASTParser(CodeLanguage.PYTHON)
+        tree = parser.parse(code)
+        
+        if tree:
+            return self._analyze_python_ast(code, file_path, parser, tree)
+        else:
+            return self._analyze_python_regex(code, file_path)
+    
+    def _analyze_python_ast(self, code: str, file_path: str, parser: ASTParser, tree) -> List[Finding]:
+        """AST-based analysis for Python code."""
         findings = []
-        lines = code.split('\n')
+        code_bytes = code.encode('utf-8')
         
         # Pattern 1: Permanent admin access without time limits (HIGH)
-        admin_patterns = [
-            r'is_superuser\s*=\s*True',
-            r'is_staff\s*=\s*True',
-            r'user\.admin\s*=\s*True',
-            r'role\s*=\s*["\']admin["\']',
-            r'permissions\s*=\s*\[\s*["\']\*["\']\s*\]',  # Wildcard permissions
-        ]
+        # Find assignments like is_superuser = True, role = "admin"
+        assignment_nodes = parser.find_nodes_by_type(tree.root_node, "assignment")
         
-        for pattern in admin_patterns:
-            line_num = self._find_line(lines, pattern)
-            if line_num:
-                # Check if there's no expiration or time limit in surrounding code
-                snippet_lines = code.split('\n')[max(0, line_num-5):min(len(lines), line_num+5)]
-                snippet_text = '\n'.join(snippet_lines)
-                if not re.search(r'expir|ttl|time_limit|duration|valid_until', snippet_text, re.IGNORECASE):
+        for assign_node in assignment_nodes:
+            assign_text = parser.get_node_text(assign_node, code_bytes)
+            line_num = assign_node.start_point[0] + 1
+            
+            # Check for permanent admin/privileged assignments
+            admin_patterns = ['is_superuser = True', 'is_staff = True', 'admin = True', 
+                            'role = "admin"', "role = 'admin'", 'permissions = ["*"]']
+            
+            if any(pattern in assign_text for pattern in admin_patterns):
+                # Check if there's an expiration in surrounding scope
+                parent = assign_node.parent
+                depth = 0
+                has_expiration = False
+                
+                while parent and depth < 5:
+                    parent_text = parser.get_node_text(parent, code_bytes)
+                    if any(keyword in parent_text.lower() for keyword in ['expir', 'ttl', 'time_limit', 'duration', 'valid_until']):
+                        has_expiration = True
+                        break
+                    parent = parent.parent
+                    depth += 1
+                
+                if not has_expiration:
                     findings.append(Finding(
                         severity=Severity.HIGH,
                         title="Permanent Privileged Access Without Time Limits",
@@ -143,7 +205,7 @@ class KSI_IAM_04_Analyzer(BaseKSIAnalyzer):
                         ),
                         file_path=file_path,
                         line_number=line_num,
-                        snippet=self._get_snippet(lines, line_num),
+                        snippet=assign_text[:200],
                         remediation=(
                             "Implement time-limited privilege elevation using Azure PIM, temporary role assignments, "
                             "or session-based permissions with expiration. Grant admin access only when needed and "
@@ -152,59 +214,121 @@ class KSI_IAM_04_Analyzer(BaseKSIAnalyzer):
                         ksi_id=self.KSI_ID
                     ))
         
-        # Pattern 2: Missing role/permission decorators (MEDIUM)
-        # Check for route handlers without authorization
-        route_patterns = [r'@app\.route', r'@api\.route', r'@router\.(get|post|put|delete)']
-        for pattern in route_patterns:
-            matches = list(re.finditer(pattern, code, re.IGNORECASE))
-            for match in matches:
-                line_num = code[:match.start()].count('\n') + 1
-                # Check next 10 lines for authorization decorator
-                check_lines = lines[max(0, line_num-3):min(len(lines), line_num+10)]
-                check_text = '\n'.join(check_lines)
-                if not re.search(r'@(login_required|permission_required|roles_required|requires_auth|authorize)', 
-                                check_text, re.IGNORECASE):
-                    findings.append(Finding(
-                        severity=Severity.MEDIUM,
-                        title="Route Without Role-Based Authorization",
-                        description=(
-                            f"API route at line {line_num} missing role-based authorization decorator. "
-                            f"All endpoints must implement role-based or attribute-based access control."
-                        ),
-                        file_path=file_path,
-                        line_number=line_num,
-                        snippet=self._get_snippet(lines, line_num),
-                        remediation=(
-                            "Add role-based authorization decorators:\n"
-                            "@login_required\n"
-                            "@permission_required('resource.action')\n"
-                            "or @roles_required('user', 'admin')\n"
-                            "Implement least-privilege access with specific roles, not blanket permissions."
-                        ),
-                        ksi_id=self.KSI_ID
-                    ))
+        # Pattern 2: Routes without authorization decorators (MEDIUM)
+        # Find decorator nodes for @app.route, @api.route, @router.get/post/etc
+        decorator_nodes = parser.find_nodes_by_type(tree.root_node, "decorator")
         
-        # Pattern 3: Missing Azure PIM integration (INFO)
-        if re.search(r'from azure\.', code) and re.search(r'RoleAssignment|role_assignment', code, re.IGNORECASE):
-            if not re.search(r'EligibleRoleAssignment|PIM|PrivilegedIdentityManagement', code, re.IGNORECASE):
-                line_num = self._find_line(lines, r'RoleAssignment')
+        for dec_node in decorator_nodes:
+            dec_text = parser.get_node_text(dec_node, code_bytes)
+            line_num = dec_node.start_point[0] + 1
+            
+            # Check if it's a route decorator
+            if any(route in dec_text for route in ['@app.route', '@api.route', '@router.get', '@router.post', 
+                                                    '@router.put', '@router.delete', '@router.patch']):
+                # Get the function being decorated
+                parent = dec_node.parent
+                if parent and parent.type == 'decorated_definition':
+                    # Check if there's an authorization decorator
+                    all_decorators = parser.find_nodes_by_type(parent, "decorator")
+                    auth_decorators = ['login_required', 'permission_required', 'roles_required', 
+                                     'requires_auth', 'authorize', 'authenticated']
+                    
+                    has_auth = False
+                    for auth_dec in all_decorators:
+                        auth_text = parser.get_node_text(auth_dec, code_bytes)
+                        if any(auth in auth_text for auth in auth_decorators):
+                            has_auth = True
+                            break
+                    
+                    if not has_auth:
+                        findings.append(Finding(
+                            severity=Severity.MEDIUM,
+                            title="Route Without Role-Based Authorization",
+                            description=(
+                                f"API route at line {line_num} missing role-based authorization decorator. "
+                                f"All endpoints must implement role-based or attribute-based access control."
+                            ),
+                            file_path=file_path,
+                            line_number=line_num,
+                            snippet=dec_text[:200],
+                            remediation=(
+                                "Add role-based authorization decorators:\n"
+                                "@login_required\n"
+                                "@permission_required('resource.action')\n"
+                                "or @roles_required('user', 'admin')\n"
+                                "Implement least-privilege access with specific roles, not blanket permissions."
+                            ),
+                            ksi_id=self.KSI_ID
+                        ))
+        
+        # Pattern 3: Azure PIM integration check (INFO)
+        # Check for Azure imports and role assignments without PIM
+        import_nodes = parser.find_nodes_by_type(tree.root_node, "import_from_statement")
+        
+        has_azure = False
+        has_role_assignment = False
+        has_pim = False
+        
+        for imp_node in import_nodes:
+            imp_text = parser.get_node_text(imp_node, code_bytes)
+            if 'from azure.' in imp_text:
+                has_azure = True
+            if 'PrivilegedIdentityManagement' in imp_text or 'PIM' in imp_text or 'EligibleRoleAssignment' in imp_text:
+                has_pim = True
+        
+        # Check for RoleAssignment usage
+        for node in parser.find_nodes_by_type(tree.root_node, "call"):
+            call_text = parser.get_node_text(node, code_bytes)
+            if 'RoleAssignment' in call_text or 'role_assignment' in call_text:
+                has_role_assignment = True
+                break
+        
+        if has_azure and has_role_assignment and not has_pim:
+            findings.append(Finding(
+                severity=Severity.INFO,
+                title="Consider Azure PIM for JIT Privilege Management",
+                description=(
+                    "Azure role assignments detected but no Azure PIM integration found. "
+                    "Azure Privileged Identity Management provides JIT access with time-limited role activations."
+                ),
+                file_path=file_path,
+                line_number=1,
+                snippet="",
+                remediation=(
+                    "Integrate Azure PIM for JIT access management:\n"
+                    "- Use eligible role assignments instead of permanent assignments\n"
+                    "- Require approval for role activation\n"
+                    "- Set maximum activation duration (1-24 hours)\n"
+                    "- Enable MFA for role activation"
+                ),
+                ksi_id=self.KSI_ID
+            ))
+        
+        return findings
+    
+    def _analyze_python_regex(self, code: str, file_path: str) -> List[Finding]:
+        """Fallback regex-based Python analysis when AST parsing fails."""
+        findings = []
+        lines = code.split('\n')
+        
+        # Pattern 1: Permanent admin access (HIGH)
+        admin_patterns = [
+            r'is_superuser\s*=\s*True',
+            r'is_staff\s*=\s*True',
+            r'role\s*=\s*["\']admin["\']',
+        ]
+        
+        for pattern in admin_patterns:
+            line_num = self._find_line(lines, pattern)
+            if line_num:
                 findings.append(Finding(
-                    severity=Severity.INFO,
-                    title="Consider Azure PIM for JIT Privilege Management",
-                    description=(
-                        f"Azure role assignments detected at line {line_num} but no Azure PIM integration found. "
-                        f"Azure Privileged Identity Management provides JIT access with time-limited role activations."
-                    ),
+                    severity=Severity.HIGH,
+                    title="Permanent Privileged Access Without Time Limits",
+                    description=f"Permanent admin access at line {line_num} without time limits.",
                     file_path=file_path,
                     line_number=line_num,
                     snippet=self._get_snippet(lines, line_num),
-                    remediation=(
-                        "Integrate Azure PIM for JIT access management:\n"
-                        "- Use eligible role assignments instead of permanent assignments\n"
-                        "- Require approval for role activation\n"
-                        "- Set maximum activation duration (1-24 hours)\n"
-                        "- Enable MFA for role activation"
-                    ),
+                    remediation="Implement time-limited privilege elevation with expiration.",
                     ksi_id=self.KSI_ID
                 ))
         
@@ -212,7 +336,7 @@ class KSI_IAM_04_Analyzer(BaseKSIAnalyzer):
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze C# code for KSI-IAM-04 compliance.
+        Analyze C# code for KSI-IAM-04 compliance using AST.
         
         Frameworks: ASP.NET Core, Entity Framework, Azure SDK
         
@@ -220,85 +344,157 @@ class KSI_IAM_04_Analyzer(BaseKSIAnalyzer):
         - Controllers/endpoints without [Authorize] attributes
         - Permanent admin role assignments
         - Missing role-based authorization policies
-        - Azure PIM integration for JIT access
         """
+        parser = ASTParser(CodeLanguage.CSHARP)
+        tree = parser.parse(code)
+        
+        if tree:
+            return self._analyze_csharp_ast(code, file_path, parser, tree)
+        else:
+            return self._analyze_csharp_regex(code, file_path)
+    
+    def _analyze_csharp_ast(self, code: str, file_path: str, parser: ASTParser, tree) -> List[Finding]:
+        """AST-based analysis for C# code."""
+        findings = []
+        code_bytes = code.encode('utf-8')
+        
+        # Pattern 1: Controller without [Authorize] attribute (HIGH)
+        class_nodes = parser.find_nodes_by_type(tree.root_node, "class_declaration")
+        
+        for class_node in class_nodes:
+            class_text = parser.get_node_text(class_node, code_bytes)
+            line_num = class_node.start_point[0] + 1
+            
+            # Check if it's a Controller class
+            if 'Controller' in class_text and ('public class' in class_text or 'internal class' in class_text):
+                # Check for [Authorize] or [AllowAnonymous] attributes
+                attribute_lists = parser.find_nodes_by_type(class_node, "attribute_list")
+                has_auth = False
+                
+                for attr_list in attribute_lists:
+                    attr_text = parser.get_node_text(attr_list, code_bytes)
+                    if '[Authorize' in attr_text or '[AllowAnonymous' in attr_text:
+                        has_auth = True
+                        break
+                
+                if not has_auth:
+                    findings.append(Finding(
+                        severity=Severity.HIGH,
+                        title="Controller Without Authorization Attribute",
+                        description=(
+                            f"Controller class at line {line_num} missing [Authorize] attribute. "
+                            f"All controllers must implement role-based or policy-based authorization."
+                        ),
+                        file_path=file_path,
+                        line_number=line_num,
+                        snippet=class_text[:200],
+                        remediation=(
+                            "Add [Authorize] attribute with role or policy:\n"
+                            "[Authorize(Roles = \"User,Admin\")]\n"
+                            "[Authorize(Policy = \"RequireAdminRole\")]\n"
+                            "Use least-privilege access with specific roles, not blanket authorization."
+                        ),
+                        ksi_id=self.KSI_ID
+                    ))
+        
+        # Pattern 2: Permanent admin role assignment (HIGH)
+        invocation_nodes = parser.find_nodes_by_type(tree.root_node, "invocation_expression")
+        
+        for inv_node in invocation_nodes:
+            inv_text = parser.get_node_text(inv_node, code_bytes)
+            line_num = inv_node.start_point[0] + 1
+            
+            # Check for AddToRoleAsync with Admin role
+            if 'AddToRoleAsync' in inv_text and ('Admin' in inv_text or 'admin' in inv_text):
+                # Check surrounding context for time limits
+                parent = inv_node.parent
+                depth = 0
+                has_time_limit = False
+                
+                while parent and depth < 5:
+                    parent_text = parser.get_node_text(parent, code_bytes)
+                    if any(keyword in parent_text for keyword in ['Expir', 'PIM', 'Eligible', 'TimeSpan', 'DateTime.Add']):
+                        has_time_limit = True
+                        break
+                    parent = parent.parent
+                    depth += 1
+                
+                if not has_time_limit:
+                    findings.append(Finding(
+                        severity=Severity.HIGH,
+                        title="Permanent Admin Role Assignment Without JIT",
+                        description=(
+                            f"Permanent admin role assignment at line {line_num} without time limits or PIM integration. "
+                            f"Admin privileges should be granted just-in-time with automatic expiration."
+                        ),
+                        file_path=file_path,
+                        line_number=line_num,
+                        snippet=inv_text[:200],
+                        remediation=(
+                            "Implement time-limited role assignments using:\n"
+                            "- Azure PIM for eligible role assignments with activation\n"
+                            "- Custom temporary role assignment with expiration logic\n"
+                            "- Session-based permissions that expire after defined period"
+                        ),
+                        ksi_id=self.KSI_ID
+                    ))
+        
+        # Pattern 3: Missing authorization policy configuration (MEDIUM)
+        has_auth_setup = False
+        has_authz_setup = False
+        auth_line = 0
+        
+        for inv_node in parser.find_nodes_by_type(tree.root_node, "invocation_expression"):
+            inv_text = parser.get_node_text(inv_node, code_bytes)
+            if 'AddAuthentication' in inv_text or 'AddJwtBearer' in inv_text:
+                has_auth_setup = True
+                auth_line = inv_node.start_point[0] + 1
+            if 'AddAuthorization' in inv_text or 'AddPolicy' in inv_text:
+                has_authz_setup = True
+        
+        if has_auth_setup and not has_authz_setup:
+            findings.append(Finding(
+                severity=Severity.MEDIUM,
+                title="Missing Role-Based Authorization Policies",
+                description=(
+                    f"Authentication configured at line {auth_line} but no authorization policies defined. "
+                    f"Implement role-based and attribute-based authorization policies for least-privilege access."
+                ),
+                file_path=file_path,
+                line_number=auth_line,
+                snippet="",
+                remediation=(
+                    "Add authorization policies in ConfigureServices:\n"
+                    "services.AddAuthorization(options => {\n"
+                    "  options.AddPolicy(\"RequireAdminRole\", policy => policy.RequireRole(\"Admin\"));\n"
+                    "  options.AddPolicy(\"RequireClaim\", policy => policy.RequireClaim(\"permission\", \"read\"));\n"
+                    "});"
+                ),
+                ksi_id=self.KSI_ID
+            ))
+        
+        return findings
+    
+    def _analyze_csharp_regex(self, code: str, file_path: str) -> List[Finding]:
+        """Fallback regex-based C# analysis when AST parsing fails."""
         findings = []
         lines = code.split('\n')
         
-        # Pattern 1: Controller without [Authorize] attribute (HIGH)
+        # Pattern 1: Controller without [Authorize] (HIGH)
         controller_matches = list(re.finditer(r'(public|internal)\s+class\s+\w+Controller\s*:', code))
         for match in controller_matches:
             line_num = code[:match.start()].count('\n') + 1
-            # Check previous 5 lines for [Authorize] or [AllowAnonymous]
             check_lines = lines[max(0, line_num-6):line_num]
             check_text = '\n'.join(check_lines)
             if not re.search(r'\[Authorize|\[AllowAnonymous', check_text):
                 findings.append(Finding(
                     severity=Severity.HIGH,
                     title="Controller Without Authorization Attribute",
-                    description=(
-                        f"Controller class at line {line_num} missing [Authorize] attribute. "
-                        f"All controllers must implement role-based or policy-based authorization."
-                    ),
+                    description=f"Controller at line {line_num} missing [Authorize] attribute.",
                     file_path=file_path,
                     line_number=line_num,
                     snippet=self._get_snippet(lines, line_num),
-                    remediation=(
-                        "Add [Authorize] attribute with role or policy:\n"
-                        "[Authorize(Roles = \"User,Admin\")]\n"
-                        "[Authorize(Policy = \"RequireAdminRole\")]\n"
-                        "Use least-privilege access with specific roles, not blanket authorization."
-                    ),
-                    ksi_id=self.KSI_ID
-                ))
-        
-        # Pattern 2: Permanent admin role assignment (HIGH)
-        if re.search(r'AddToRoleAsync\([^,]+,\s*["\']Admin["\']\)', code, re.IGNORECASE):
-            line_num = self._find_line(lines, r'AddToRoleAsync.*Admin')
-            # Check if there's no time limit or PIM integration
-            snippet_lines = code.split('\n')[max(0, line_num-5):min(len(lines), line_num+5)]
-            snippet_text = '\n'.join(snippet_lines)
-            if not re.search(r'Expir|PIM|Eligible|TimeSpan|DateTime\.Add', snippet_text, re.IGNORECASE):
-                findings.append(Finding(
-                    severity=Severity.HIGH,
-                    title="Permanent Admin Role Assignment Without JIT",
-                    description=(
-                        f"Permanent admin role assignment at line {line_num} without time limits or PIM integration. "
-                        f"Admin privileges should be granted just-in-time with automatic expiration."
-                    ),
-                    file_path=file_path,
-                    line_number=line_num,
-                    snippet=self._get_snippet(lines, line_num),
-                    remediation=(
-                        "Implement time-limited role assignments using:\n"
-                        "- Azure PIM for eligible role assignments with activation\n"
-                        "- Custom temporary role assignment with expiration logic\n"
-                        "- Session-based permissions that expire after defined period"
-                    ),
-                    ksi_id=self.KSI_ID
-                ))
-        
-        # Pattern 3: Missing authorization policy configuration (MEDIUM)
-        if re.search(r'services\.AddAuthentication|AddJwtBearer', code):
-            if not re.search(r'AddAuthorization\s*\(|AddPolicy', code):
-                line_num = self._find_line(lines, r'AddAuthentication|AddJwtBearer')
-                findings.append(Finding(
-                    severity=Severity.MEDIUM,
-                    title="Missing Role-Based Authorization Policies",
-                    description=(
-                        f"Authentication configured at line {line_num} but no authorization policies defined. "
-                        f"Implement role-based and attribute-based authorization policies for least-privilege access."
-                    ),
-                    file_path=file_path,
-                    line_number=line_num,
-                    snippet=self._get_snippet(lines, line_num),
-                    remediation=(
-                        "Add authorization policies in ConfigureServices:\n"
-                        "services.AddAuthorization(options => {\n"
-                        "  options.AddPolicy(\"RequireAdminRole\", policy => policy.RequireRole(\"Admin\"));\n"
-                        "  options.AddPolicy(\"RequireClaim\", policy => policy.RequireClaim(\"permission\", \"read\"));\n"
-                        "});"
-                    ),
+                    remediation="Add [Authorize] attribute with role or policy.",
                     ksi_id=self.KSI_ID
                 ))
         
@@ -306,7 +502,7 @@ class KSI_IAM_04_Analyzer(BaseKSIAnalyzer):
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Java code for KSI-IAM-04 compliance.
+        Analyze Java code for KSI-IAM-04 compliance using AST.
         
         Frameworks: Spring Boot, Spring Security, Azure SDK
         
@@ -314,8 +510,155 @@ class KSI_IAM_04_Analyzer(BaseKSIAnalyzer):
         - Endpoints without @Secured/@PreAuthorize annotations
         - Permanent admin privileges
         - Missing role-based access control
-        - Time-limited authorization validation
         """
+        parser = ASTParser(CodeLanguage.JAVA)
+        tree = parser.parse(code)
+        
+        if tree:
+            return self._analyze_java_ast(code, file_path, parser, tree)
+        else:
+            return self._analyze_java_regex(code, file_path)
+    
+    def _analyze_java_ast(self, code: str, file_path: str, parser: ASTParser, tree) -> List[Finding]:
+        """AST-based analysis for Java code."""
+        findings = []
+        code_bytes = code.encode('utf-8')
+        
+        # Pattern 1: REST endpoints without authorization (HIGH)
+        method_nodes = parser.find_nodes_by_type(tree.root_node, "method_declaration")
+        
+        for method_node in method_nodes:
+            method_text = parser.get_node_text(method_node, code_bytes)
+            line_num = method_node.start_point[0] + 1
+            
+            # Check if it has REST mapping annotation
+            annotations = parser.find_nodes_by_type(method_node, "marker_annotation")
+            annotations.extend(parser.find_nodes_by_type(method_node, "annotation"))
+            
+            has_rest_mapping = False
+            has_security = False
+            
+            for ann in annotations:
+                ann_text = parser.get_node_text(ann, code_bytes)
+                if any(mapping in ann_text for mapping in ['@GetMapping', '@PostMapping', '@PutMapping', '@DeleteMapping', '@RequestMapping']):
+                    has_rest_mapping = True
+                if any(sec in ann_text for sec in ['@Secured', '@PreAuthorize', '@RolesAllowed', '@DenyAll']):
+                    has_security = True
+            
+            if has_rest_mapping and not has_security:
+                findings.append(Finding(
+                    severity=Severity.HIGH,
+                    title="Endpoint Without Role-Based Authorization",
+                    description=(
+                        f"REST endpoint at line {line_num} missing authorization annotation. "
+                        f"All endpoints must implement role-based or permission-based access control."
+                    ),
+                    file_path=file_path,
+                    line_number=line_num,
+                    snippet=method_text[:200],
+                    remediation=(
+                        "Add authorization annotation:\n"
+                        "@PreAuthorize(\"hasRole('USER')\")\n"
+                        "@Secured({\"ROLE_USER\", \"ROLE_ADMIN\"})\n"
+                        "or @RolesAllowed(\"ADMIN\")\n"
+                        "Use least-privilege access with specific roles."
+                    ),
+                    ksi_id=self.KSI_ID
+                ))
+        
+        # Pattern 2: Permanent admin role assignment (HIGH)
+        # Check for admin role assignments in method invocations and assignments
+        for node in parser.find_nodes_by_type(tree.root_node, "method_invocation"):
+            node_text = parser.get_node_text(node, code_bytes)
+            line_num = node.start_point[0] + 1
+            
+            # Check for admin role assignments: addRole("ADMIN"), setRole("ADMIN"), etc.
+            is_admin_assignment = (
+                'ROLE_ADMIN' in node_text or 
+                ('hasRole' in node_text and 'ADMIN' in node_text) or
+                (('addRole' in node_text or 'setRole' in node_text or 'assignRole' in node_text) and 
+                 ('ADMIN' in node_text or 'admin' in node_text))
+            )
+            
+            if is_admin_assignment:
+                # Check surrounding context for time limits
+                parent = node.parent
+                depth = 0
+                has_time_limit = False
+                
+                while parent and depth < 5:
+                    parent_text = parser.get_node_text(parent, code_bytes)
+                    if any(keyword in parent_text for keyword in ['Duration', 'Instant', 'LocalDateTime', 'expir', 'ttl']):
+                        has_time_limit = True
+                        break
+                    parent = parent.parent
+                    depth += 1
+                
+                if not has_time_limit:
+                    findings.append(Finding(
+                        severity=Severity.HIGH,
+                        title="Permanent Admin Privileges Without Time Limits",
+                        description=(
+                            f"Permanent admin role granted at line {line_num} without time limits or expiration. "
+                            f"Privileged access should be granted just-in-time with automatic expiration."
+                        ),
+                        file_path=file_path,
+                        line_number=line_num,
+                        snippet=node_text[:200],
+                        remediation=(
+                            "Implement time-limited privilege elevation:\n"
+                            "- Store role assignments with expiration timestamps\n"
+                            "- Use session-based temporary permissions\n"
+                            "- Integrate Azure PIM for eligible role assignments\n"
+                            "- Automatically revoke privileges after defined period (1-8 hours)"
+                        ),
+                        ksi_id=self.KSI_ID
+                    ))
+                    break  # Only report once per file
+        
+        # Pattern 3: Missing global method security (MEDIUM)
+        class_nodes = parser.find_nodes_by_type(tree.root_node, "class_declaration")
+        
+        has_spring_app = False
+        has_method_security = False
+        spring_line = 0
+        
+        for class_node in class_nodes:
+            annotations = parser.find_nodes_by_type(class_node, "marker_annotation")
+            annotations.extend(parser.find_nodes_by_type(class_node, "annotation"))
+            
+            for ann in annotations:
+                ann_text = parser.get_node_text(ann, code_bytes)
+                if '@SpringBootApplication' in ann_text or '@Configuration' in ann_text:
+                    has_spring_app = True
+                    spring_line = ann.start_point[0] + 1
+                if '@EnableGlobalMethodSecurity' in ann_text or '@EnableMethodSecurity' in ann_text:
+                    has_method_security = True
+        
+        if has_spring_app and not has_method_security:
+            findings.append(Finding(
+                severity=Severity.MEDIUM,
+                title="Global Method Security Not Enabled",
+                description=(
+                    f"Spring Boot application at line {spring_line} without global method security enabled. "
+                    f"Enable method-level security to enforce role-based authorization across all service methods."
+                ),
+                file_path=file_path,
+                line_number=spring_line,
+                snippet="",
+                remediation=(
+                    "Enable method security in configuration class:\n"
+                    "@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)\n"
+                    "or (Spring Security 6+):\n"
+                    "@EnableMethodSecurity"
+                ),
+                ksi_id=self.KSI_ID
+            ))
+        
+        return findings
+    
+    def _analyze_java_regex(self, code: str, file_path: str) -> List[Finding]:
+        """Fallback regex-based Java analysis when AST parsing fails."""
         findings = []
         lines = code.split('\n')
         
@@ -325,84 +668,25 @@ class KSI_IAM_04_Analyzer(BaseKSIAnalyzer):
             matches = list(re.finditer(pattern, code))
             for match in matches:
                 line_num = code[:match.start()].count('\n') + 1
-                # Check for authorization annotations in previous 5 lines
                 check_lines = lines[max(0, line_num-6):line_num]
                 check_text = '\n'.join(check_lines)
                 if not re.search(r'@(Secured|PreAuthorize|RolesAllowed|DenyAll)', check_text):
                     findings.append(Finding(
                         severity=Severity.HIGH,
                         title="Endpoint Without Role-Based Authorization",
-                        description=(
-                            f"REST endpoint at line {line_num} missing authorization annotation. "
-                            f"All endpoints must implement role-based or permission-based access control."
-                        ),
+                        description=f"REST endpoint at line {line_num} missing authorization annotation.",
                         file_path=file_path,
                         line_number=line_num,
                         snippet=self._get_snippet(lines, line_num),
-                        remediation=(
-                            "Add authorization annotation:\n"
-                            "@PreAuthorize(\"hasRole('USER')\")\n"
-                            "@Secured({\"ROLE_USER\", \"ROLE_ADMIN\"})\n"
-                            "or @RolesAllowed(\"ADMIN\")\n"
-                            "Use least-privilege access with specific roles."
-                        ),
+                        remediation="Add authorization annotation like @PreAuthorize or @Secured.",
                         ksi_id=self.KSI_ID
                     ))
-        
-        # Pattern 2: Permanent admin role assignment (HIGH)
-        if re.search(r'grantedAuthorities\.add\([^)]*ROLE_ADMIN|hasRole\(["\']ADMIN["\'].*true', code, re.IGNORECASE):
-            line_num = self._find_line(lines, r'ROLE_ADMIN')
-            snippet_lines = code.split('\n')[max(0, line_num-5):min(len(lines), line_num+5)]
-            snippet_text = '\n'.join(snippet_lines)
-            if not re.search(r'Duration|Instant|LocalDateTime|expir|ttl', snippet_text, re.IGNORECASE):
-                findings.append(Finding(
-                    severity=Severity.HIGH,
-                    title="Permanent Admin Privileges Without Time Limits",
-                    description=(
-                        f"Permanent admin role granted at line {line_num} without time limits or expiration. "
-                        f"Privileged access should be granted just-in-time with automatic expiration."
-                    ),
-                    file_path=file_path,
-                    line_number=line_num,
-                    snippet=self._get_snippet(lines, line_num),
-                    remediation=(
-                        "Implement time-limited privilege elevation:\n"
-                        "- Store role assignments with expiration timestamps\n"
-                        "- Use session-based temporary permissions\n"
-                        "- Integrate Azure PIM for eligible role assignments\n"
-                        "- Automatically revoke privileges after defined period (1-8 hours)"
-                    ),
-                    ksi_id=self.KSI_ID
-                ))
-        
-        # Pattern 3: Missing global method security (MEDIUM)
-        if re.search(r'@SpringBootApplication|@Configuration', code):
-            if not re.search(r'@EnableGlobalMethodSecurity|@EnableMethodSecurity', code):
-                line_num = self._find_line(lines, r'@SpringBootApplication|@Configuration')
-                findings.append(Finding(
-                    severity=Severity.MEDIUM,
-                    title="Global Method Security Not Enabled",
-                    description=(
-                        f"Spring Boot application at line {line_num} without global method security enabled. "
-                        f"Enable method-level security to enforce role-based authorization across all service methods."
-                    ),
-                    file_path=file_path,
-                    line_number=line_num,
-                    snippet=self._get_snippet(lines, line_num),
-                    remediation=(
-                        "Enable method security in configuration class:\n"
-                        "@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)\n"
-                        "or (Spring Security 6+):\n"
-                        "@EnableMethodSecurity"
-                    ),
-                    ksi_id=self.KSI_ID
-                ))
         
         return findings
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze TypeScript/JavaScript code for KSI-IAM-04 compliance.
+        Analyze TypeScript/JavaScript code for KSI-IAM-04 compliance using AST.
         
         Frameworks: Express, NestJS, Next.js, React, Angular, Azure SDK
         
@@ -410,21 +694,35 @@ class KSI_IAM_04_Analyzer(BaseKSIAnalyzer):
         - Routes without authorization middleware
         - Missing role-based access guards
         - Permanent tokens without expiration
-        - Time-limited authorization checks
         """
+        parser = ASTParser(CodeLanguage.JAVASCRIPT)
+        tree = parser.parse(code)
+        
+        if tree:
+            return self._analyze_typescript_ast(code, file_path, parser, tree)
+        else:
+            return self._analyze_typescript_regex(code, file_path)
+    
+    def _analyze_typescript_ast(self, code: str, file_path: str, parser: ASTParser, tree) -> List[Finding]:
+        """AST-based analysis for TypeScript code."""
         findings = []
-        lines = code.split('\n')
+        code_bytes = code.encode('utf-8')
         
         # Pattern 1: Express routes without auth middleware (HIGH)
-        route_patterns = [r'app\.(get|post|put|delete|patch)\s*\(', r'router\.(get|post|put|delete|patch)\s*\(']
-        for pattern in route_patterns:
-            matches = list(re.finditer(pattern, code))
-            for match in matches:
-                line_num = code[:match.start()].count('\n') + 1
-                # Get the route definition line
-                route_line = lines[line_num - 1]
-                # Check if auth middleware is present
-                if not re.search(r'authenticate|authorize|requireAuth|checkRole|isAuthenticated|@UseGuards', route_line):
+        call_nodes = parser.find_nodes_by_type(tree.root_node, "call_expression")
+        
+        for call_node in call_nodes:
+            call_text = parser.get_node_text(call_node, code_bytes)
+            line_num = call_node.start_point[0] + 1
+            
+            # Check if it's a route definition (app.get, router.post, etc.)
+            if any(route in call_text for route in ['app.get(', 'app.post(', 'app.put(', 'app.delete(',
+                                                     'router.get(', 'router.post(', 'router.put(', 'router.delete(']):
+                # Check if auth middleware is in the call arguments
+                has_auth = any(auth in call_text for auth in ['authenticate', 'authorize', 'requireAuth', 
+                                                              'checkRole', 'isAuthenticated', '@UseGuards'])
+                
+                if not has_auth:
                     findings.append(Finding(
                         severity=Severity.HIGH,
                         title="Route Without Authorization Middleware",
@@ -434,7 +732,7 @@ class KSI_IAM_04_Analyzer(BaseKSIAnalyzer):
                         ),
                         file_path=file_path,
                         line_number=line_num,
-                        snippet=self._get_snippet(lines, line_num),
+                        snippet=call_text[:200],
                         remediation=(
                             "Add authorization middleware:\n"
                             "app.get('/api/resource', authenticate, checkRole('admin'), handler);\n"
@@ -446,12 +744,16 @@ class KSI_IAM_04_Analyzer(BaseKSIAnalyzer):
                     ))
         
         # Pattern 2: JWT tokens without expiration (HIGH)
-        if re.search(r'jwt\.sign\s*\(', code):
-            sign_matches = list(re.finditer(r'jwt\.sign\s*\([^)]+\)', code, re.DOTALL))
-            for match in sign_matches:
-                token_config = match.group(0)
-                if not re.search(r'expiresIn|exp:', token_config):
-                    line_num = code[:match.start()].count('\n') + 1
+        for call_node in parser.find_nodes_by_type(tree.root_node, "call_expression"):
+            call_text = parser.get_node_text(call_node, code_bytes)
+            line_num = call_node.start_point[0] + 1
+            
+            # Check for jwt.sign calls
+            if 'jwt.sign' in call_text:
+                # Check if expiresIn is present in the call
+                has_expiration = 'expiresIn' in call_text or 'exp:' in call_text
+                
+                if not has_expiration:
                     findings.append(Finding(
                         severity=Severity.HIGH,
                         title="JWT Token Without Expiration",
@@ -461,7 +763,7 @@ class KSI_IAM_04_Analyzer(BaseKSIAnalyzer):
                         ),
                         file_path=file_path,
                         line_number=line_num,
-                        snippet=self._get_snippet(lines, line_num),
+                        snippet=call_text[:200],
                         remediation=(
                             "Add expiration to JWT tokens:\n"
                             "jwt.sign(payload, secret, { expiresIn: '1h' });  // 1 hour\n"
@@ -470,31 +772,122 @@ class KSI_IAM_04_Analyzer(BaseKSIAnalyzer):
                         ksi_id=self.KSI_ID
                     ))
         
-        # Pattern 3: NestJS controllers without guards (MEDIUM)
-        if re.search(r'@Controller\s*\(', code):
-            controller_matches = list(re.finditer(r'@Controller\s*\([^)]*\)', code))
-            for match in controller_matches:
-                line_num = code[:match.start()].count('\n') + 1
-                # Check next 5 lines for guards
-                check_lines = lines[line_num:min(len(lines), line_num+5)]
-                check_text = '\n'.join(check_lines)
-                if not re.search(r'@UseGuards|@Roles|@SetMetadata', check_text):
+        # Pattern 3: Permanent admin role assignment (HIGH)
+        # Check for admin role assignments in assignment expressions
+        assignment_nodes = parser.find_nodes_by_type(tree.root_node, "assignment_expression")
+        assignment_nodes.extend(parser.find_nodes_by_type(tree.root_node, "pair"))
+        
+        for assign_node in assignment_nodes:
+            assign_text = parser.get_node_text(assign_node, code_bytes)
+            line_num = assign_node.start_point[0] + 1
+            
+            # Check for admin role assignments: user.role = 'admin', role: 'admin', etc.
+            is_admin_assignment = (
+                ('role' in assign_text.lower() and 'admin' in assign_text.lower()) or
+                ('permission' in assign_text.lower() and 'admin' in assign_text.lower())
+            )
+            
+            if is_admin_assignment and ('=' in assign_text or ':' in assign_text):
+                # Check surrounding context for time limits or expiration
+                parent = assign_node.parent
+                depth = 0
+                has_time_limit = False
+                
+                while parent and depth < 5:
+                    parent_text = parser.get_node_text(parent, code_bytes)
+                    if any(keyword in parent_text.lower() for keyword in ['expir', 'ttl', 'duration', 'timeout', 'minutes', 'hours']):
+                        has_time_limit = True
+                        break
+                    parent = parent.parent
+                    depth += 1
+                
+                if not has_time_limit:
                     findings.append(Finding(
-                        severity=Severity.MEDIUM,
-                        title="NestJS Controller Without Guards",
+                        severity=Severity.HIGH,
+                        title="Permanent Admin Privileges Without Time Limits",
                         description=(
-                            f"NestJS controller at line {line_num} without authorization guards. "
-                            f"Implement role-based guards to enforce access control."
+                            f"Permanent admin role granted at line {line_num} without time limits or expiration. "
+                            f"Privileged access should be granted just-in-time with automatic expiration."
                         ),
                         file_path=file_path,
                         line_number=line_num,
-                        snippet=self._get_snippet(lines, line_num),
+                        snippet=assign_text[:200],
                         remediation=(
-                            "Add guards to controller or routes:\n"
-                            "@UseGuards(AuthGuard('jwt'), RolesGuard)\n"
-                            "@Roles('admin')\n"
-                            "Use least-privilege access with specific roles."
+                            "Implement time-limited privilege elevation:\n"
+                            "- Store role assignments with expiration timestamps\n"
+                            "- Use session-based temporary permissions\n"
+                            "- Set TTL on admin tokens (e.g., jwt.sign with expiresIn: '1h'))\n"
+                            "- Automatically revoke privileges after defined period"
                         ),
+                        ksi_id=self.KSI_ID
+                    ))
+                    break  # Only report once per file
+        
+        # Pattern 4: NestJS controllers without guards (MEDIUM)
+        # Check for @Controller decorators without @UseGuards
+        decorator_nodes = parser.find_nodes_by_type(tree.root_node, "decorator")
+        
+        for dec_node in decorator_nodes:
+            dec_text = parser.get_node_text(dec_node, code_bytes)
+            line_num = dec_node.start_point[0] + 1
+            
+            if '@Controller' in dec_text:
+                # Get the class being decorated
+                parent = dec_node.parent
+                if parent and parent.type == 'class_declaration':
+                    # Check for guard decorators
+                    all_decorators = parser.find_nodes_by_type(parent, "decorator")
+                    has_guards = False
+                    
+                    for guard_dec in all_decorators:
+                        guard_text = parser.get_node_text(guard_dec, code_bytes)
+                        if any(guard in guard_text for guard in ['@UseGuards', '@Roles', '@SetMetadata']):
+                            has_guards = True
+                            break
+                    
+                    if not has_guards:
+                        findings.append(Finding(
+                            severity=Severity.MEDIUM,
+                            title="NestJS Controller Without Guards",
+                            description=(
+                                f"NestJS controller at line {line_num} without authorization guards. "
+                                f"Implement role-based guards to enforce access control."
+                            ),
+                            file_path=file_path,
+                            line_number=line_num,
+                            snippet=dec_text[:200],
+                            remediation=(
+                                "Add guards to controller or routes:\n"
+                                "@UseGuards(AuthGuard('jwt'), RolesGuard)\n"
+                                "@Roles('admin')\n"
+                                "Use least-privilege access with specific roles."
+                            ),
+                            ksi_id=self.KSI_ID
+                        ))
+        
+        return findings
+    
+    def _analyze_typescript_regex(self, code: str, file_path: str) -> List[Finding]:
+        """Fallback regex-based TypeScript analysis when AST parsing fails."""
+        findings = []
+        lines = code.split('\n')
+        
+        # Pattern 1: Express routes without auth middleware (HIGH)
+        route_patterns = [r'app\.(get|post|put|delete|patch)\s*\(', r'router\.(get|post|put|delete|patch)\s*\(']
+        for pattern in route_patterns:
+            matches = list(re.finditer(pattern, code))
+            for match in matches:
+                line_num = code[:match.start()].count('\n') + 1
+                route_line = lines[line_num - 1]
+                if not re.search(r'authenticate|authorize|requireAuth|checkRole|isAuthenticated', route_line):
+                    findings.append(Finding(
+                        severity=Severity.HIGH,
+                        title="Route Without Authorization Middleware",
+                        description=f"API route at line {line_num} missing authorization middleware.",
+                        file_path=file_path,
+                        line_number=line_num,
+                        snippet=self._get_snippet(lines, line_num),
+                        remediation="Add authorization middleware to route.",
                         ksi_id=self.KSI_ID
                     ))
         
@@ -746,3 +1139,4 @@ class KSI_IAM_04_Analyzer(BaseKSIAnalyzer):
         start = max(0, line_number - context - 1)
         end = min(len(lines), line_number + context)
         return '\n'.join(lines[start:end])
+

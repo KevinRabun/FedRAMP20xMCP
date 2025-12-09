@@ -59,17 +59,30 @@ class KSI_INR_01_Analyzer(BaseKSIAnalyzer):
     FAMILY_NAME = "Incident Response"
     IMPACT_LOW = True
     IMPACT_MODERATE = True
-    NIST_CONTROLS = ["ir-4", "ir-4.1", "ir-6", "ir-6.1", "ir-6.3", "ir-7", "ir-7.1", "ir-8", "ir-8.1", "si-4.5"]
-    CODE_DETECTABLE = False
-    IMPLEMENTATION_STATUS = "NOT_IMPLEMENTED"
+    NIST_CONTROLS = [
+        ("ir-4", "Incident Handling"),
+        ("ir-4.1", "Automated Incident Handling Processes"),
+        ("ir-6", "Incident Reporting"),
+        ("ir-6.1", "Automated Reporting"),
+        ("ir-6.3", "Supply Chain Coordination"),
+        ("ir-7", "Incident Response Assistance"),
+        ("ir-7.1", "Automation Support for Availability of Information and Support"),
+        ("ir-8", "Incident Response Plan"),
+        ("ir-8.1", "Breaches"),
+        ("si-4.5", "System-generated Alerts")
+    ]
+    CODE_DETECTABLE = True
+    IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RETIRED = False
     
-    def __init__(self):
+    def __init__(self, language=None, ksi_id: str = "", ksi_name: str = "", ksi_statement: str = ""):
+        """Initialize analyzer with backward-compatible API."""
         super().__init__(
-            ksi_id=self.KSI_ID,
-            ksi_name=self.KSI_NAME,
-            ksi_statement=self.KSI_STATEMENT
+            ksi_id=ksi_id or self.KSI_ID,
+            ksi_name=ksi_name or self.KSI_NAME,
+            ksi_statement=ksi_statement or self.KSI_STATEMENT
         )
+        self.direct_language = language
     
     # ============================================================================
     # APPLICATION LANGUAGE ANALYZERS
@@ -81,16 +94,49 @@ class KSI_INR_01_Analyzer(BaseKSIAnalyzer):
         
         Frameworks: Flask, Django, FastAPI, Azure SDK
         
-        TODO: Implement detection logic for:
-        - Always follow a documented incident response procedure....
+        Detects:
+        - Logging configuration with severity levels (CRITICAL, ERROR)
+        - Exception handling with alerting
+        - Integration with monitoring services
         """
         findings = []
+        lines = code.split('\n')
         
-        # TODO: Implement Python-specific detection logic
-        # Example patterns to detect:
-        # - Configuration issues
-        # - Missing security controls
-        # - Framework-specific vulnerabilities
+        # Check for critical/error logging
+        has_critical_logging = any(
+            re.search(r'log(?:ger)?\.(?:critical|error)', line.lower())
+            for line in lines
+        )
+        
+        # Check for alerting integrations
+        alerting_keywords = ['sentry', 'datadog', 'newrelic', 'applicationinsights', 'azure.monitor']
+        has_alerting = any(keyword in code.lower() for keyword in alerting_keywords)
+        
+        if not has_critical_logging:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                severity=Severity.MEDIUM,
+                title="No critical or error logging detected",
+                description="Python code should implement logging for critical events to support incident detection per ir-4.1 (Automated Incident Handling Processes).",
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Add logger.critical() or logger.error() calls for incident-worthy events to enable automated alerting.",
+                nist_control="ir-4.1"
+            ))
+        
+        if has_critical_logging and not has_alerting:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                severity=Severity.LOW,
+                title="Logging present but no alerting service integration detected",
+                description="Critical logging should be integrated with alerting services (Sentry, Application Insights) for automated incident reporting per ir-6.1 (Automated Reporting).",
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Integrate with alerting service: Azure Application Insights, Sentry, or Datadog for automated incident notifications.",
+                nist_control="ir-6.1"
+            ))
         
         return findings
     
@@ -100,12 +146,51 @@ class KSI_INR_01_Analyzer(BaseKSIAnalyzer):
         
         Frameworks: ASP.NET Core, Entity Framework, Azure SDK
         
-        TODO: Implement detection logic for:
-        - Always follow a documented incident response procedure....
+        Detects:
+        - ILogger usage with LogLevel.Critical/Error
+        - Exception handling with monitoring
+        - Application Insights integration
         """
         findings = []
+        lines = code.split('\n')
         
-        # TODO: Implement C#-specific detection logic
+        # Check for critical/error logging
+        has_critical_logging = any(
+            re.search(r'(?:ILogger|_logger)\.Log(?:Critical|Error)', line)
+            for line in lines
+        )
+        
+        # Check for Application Insights or monitoring
+        has_monitoring = any(
+            keyword in code 
+            for keyword in ['TelemetryClient', 'ApplicationInsights', 'ILogger<']
+        )
+        
+        if not has_critical_logging:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                severity=Severity.MEDIUM,
+                title="No critical or error logging detected",
+                description="C# code should implement ILogger with LogCritical/LogError for incident detection per ir-4.1.",
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Use ILogger.LogCritical() or ILogger.LogError() for incident-worthy events.",
+                nist_control="ir-4.1"
+            ))
+        
+        if has_critical_logging and not has_monitoring:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                severity=Severity.LOW,
+                title="Logging without monitoring integration",
+                description="Critical logging should integrate with Application Insights or similar monitoring for automated reporting per ir-6.1.",
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Add Application Insights TelemetryClient for automated incident tracking.",
+                nist_control="ir-6.1"
+            ))
         
         return findings
     
@@ -147,12 +232,63 @@ class KSI_INR_01_Analyzer(BaseKSIAnalyzer):
         """
         Analyze Bicep IaC for KSI-INR-01 compliance.
         
-        TODO: Implement detection logic for Azure resources related to:
-        - Always follow a documented incident response procedure....
+        Detects:
+        - Azure Monitor action groups for incident notifications
+        - Metric alerts for automated incident detection
+        - Log Analytics alert rules
         """
         findings = []
+        lines = code.split('\n')
         
-        # TODO: Implement Bicep-specific detection logic
+        # Check for action groups (notification mechanism)
+        has_action_groups = 'Microsoft.Insights/actionGroups' in code
+        
+        # Check for alert rules (incident detection)
+        has_alerts = (
+            'Microsoft.Insights/metricAlerts' in code or 
+            'Microsoft.Insights/scheduledQueryRules' in code
+        )
+        
+        if not has_action_groups:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                severity=Severity.HIGH,
+                title="No action groups configured for incident notifications",
+                description="Bicep should define Microsoft.Insights/actionGroups for automated incident notifications per ir-6.1 (Automated Reporting).",
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Add actionGroups resource with email, SMS, webhook, or Azure Function receivers for incident response team.",
+                nist_control="ir-6.1"
+            ))
+        
+        if not has_alerts:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                severity=Severity.HIGH,
+                title="No alert rules configured for incident detection",
+                description="Bicep should define alert rules (metricAlerts or scheduledQueryRules) for automated incident handling per ir-4.1.",
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Add Microsoft.Insights/metricAlerts or scheduledQueryRules to detect incidents automatically.",
+                nist_control="ir-4.1"
+            ))
+        
+        if has_alerts and has_action_groups:
+            # Check if alerts reference action groups
+            if not re.search(r'actionGroupId.*actionGroup', code, re.IGNORECASE):
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    severity=Severity.MEDIUM,
+                    title="Alert rules and action groups not connected",
+                    description="Alert rules should reference action groups to enable automated notifications per si-4.5 (System-generated Alerts).",
+                    file_path=file_path,
+                    line_number=1,
+                    code_snippet="",
+                    recommendation="Connect alert rules to action groups using actionGroupId property.",
+                    nist_control="si-4.5"
+                ))
         
         return findings
     
@@ -160,12 +296,61 @@ class KSI_INR_01_Analyzer(BaseKSIAnalyzer):
         """
         Analyze Terraform IaC for KSI-INR-01 compliance.
         
-        TODO: Implement detection logic for Azure resources related to:
-        - Always follow a documented incident response procedure....
+        Detects:
+        - CloudWatch alarms (AWS)
+        - SNS topics for notifications (AWS)
+        - Datadog monitors
+        - PagerDuty integrations
         """
         findings = []
+        lines = code.split('\n')
         
-        # TODO: Implement Terraform-specific detection logic
+        # Check for monitoring resources
+        monitoring_resources = {
+            'aws_cloudwatch_metric_alarm': 'CloudWatch metric alarm',
+            'aws_cloudwatch_log_metric_filter': 'CloudWatch log metric filter',
+            'datadog_monitor': 'Datadog monitor',
+            'pagerduty_service': 'PagerDuty service',
+            'azurerm_monitor_metric_alert': 'Azure Monitor metric alert',
+            'azurerm_monitor_scheduled_query_rules_alert': 'Azure Monitor log alert'
+        }
+        
+        # Check for notification resources
+        notification_resources = {
+            'aws_sns_topic': 'SNS topic',
+            'aws_sns_topic_subscription': 'SNS subscription',
+            'pagerduty_escalation_policy': 'PagerDuty escalation',
+            'azurerm_monitor_action_group': 'Azure action group'
+        }
+        
+        has_monitoring = any(resource in code for resource in monitoring_resources.keys())
+        has_notifications = any(resource in code for resource in notification_resources.keys())
+        
+        if not has_monitoring:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                severity=Severity.HIGH,
+                title="No monitoring/alerting resources detected",
+                description="Terraform should define monitoring resources (CloudWatch alarms, Datadog monitors, etc.) for automated incident detection per ir-4.1.",
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Add monitoring resources: aws_cloudwatch_metric_alarm, datadog_monitor, or azurerm_monitor_metric_alert.",
+                nist_control="ir-4.1"
+            ))
+        
+        if has_monitoring and not has_notifications:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                severity=Severity.HIGH,
+                title="Monitoring configured but no notification mechanism",
+                description="Monitoring alerts should connect to notification services (SNS, PagerDuty, action groups) for automated reporting per ir-6.1.",
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Add notification resources: aws_sns_topic, pagerduty_service, or azurerm_monitor_action_group.",
+                nist_control="ir-6.1"
+            ))
         
         return findings
     

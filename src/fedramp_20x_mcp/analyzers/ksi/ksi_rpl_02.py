@@ -65,17 +65,36 @@ class KSI_RPL_02_Analyzer(BaseKSIAnalyzer):
     FAMILY_NAME = "Recovery Planning"
     IMPACT_LOW = True
     IMPACT_MODERATE = True
-    NIST_CONTROLS = ["cp-2", "cp-2.1", "cp-2.3", "cp-4.1", "cp-6", "cp-6.1", "cp-6.3", "cp-7", "cp-7.1", "cp-7.2", "cp-7.3", "cp-8", "cp-8.1", "cp-8.2", "cp-10", "cp-10.2"]
-    CODE_DETECTABLE = True
+    NIST_CONTROLS = [
+        ("cp-2", "Contingency Plan"),
+        ("cp-2.1", "Coordinate with Related Plans"),
+        ("cp-2.3", "Resume Mission and Business Functions"),
+        ("cp-4.1", "Coordinate with Related Plans"),
+        ("cp-6", "Alternate Storage Site"),
+        ("cp-6.1", "Separation from Primary Site"),
+        ("cp-6.3", "Accessibility"),
+        ("cp-7", "Alternate Processing Site"),
+        ("cp-7.1", "Separation from Primary Site"),
+        ("cp-7.2", "Accessibility"),
+        ("cp-7.3", "Priority of Service"),
+        ("cp-8", "Telecommunications Services"),
+        ("cp-8.1", "Priority of Service Provisions"),
+        ("cp-8.2", "Single Points of Failure"),
+        ("cp-10", "System Recovery and Reconstitution"),
+        ("cp-10.2", "Transaction Recovery")
+    ]
+    CODE_DETECTABLE = False
     IMPLEMENTATION_STATUS = "NOT_IMPLEMENTED"
     RETIRED = False
     
-    def __init__(self):
+    def __init__(self, language=None, ksi_id: str = "", ksi_name: str = "", ksi_statement: str = ""):
+        """Initialize analyzer with backward-compatible API."""
         super().__init__(
-            ksi_id=self.KSI_ID,
-            ksi_name=self.KSI_NAME,
-            ksi_statement=self.KSI_STATEMENT
+            ksi_id=ksi_id or self.KSI_ID,
+            ksi_name=ksi_name or self.KSI_NAME,
+            ksi_statement=ksi_statement or self.KSI_STATEMENT
         )
+        self.direct_language = language
     
     # ============================================================================
     # APPLICATION LANGUAGE ANALYZERS
@@ -278,3 +297,4 @@ class KSI_RPL_02_Analyzer(BaseKSIAnalyzer):
         start = max(0, line_number - context - 1)
         end = min(len(lines), line_number + context)
         return '\n'.join(lines[start:end])
+

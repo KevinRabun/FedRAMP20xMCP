@@ -3,7 +3,7 @@ import asyncio
 
 # Add parent directory to path
 
-from src.fedramp_20x_mcp.data_loader import get_data_loader
+from fedramp_20x_mcp.data_loader import get_data_loader
 
 async def test_docs():
     loader = get_data_loader()

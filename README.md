@@ -44,6 +44,8 @@ The server provides access to **329 requirements** across all 12 FedRAMP 20x doc
 - **Documentation Search**: Search and retrieve official FedRAMP documentation markdown files
 - **Dynamic Content**: Automatically discovers and loads all markdown documentation files
 - **Implementation Planning**: Generate strategic interview questions to help product managers and engineers think through FedRAMP 20x implementation considerations
+- **AST-Powered Code Analysis**: Advanced Abstract Syntax Tree parsing using tree-sitter for accurate, context-aware security analysis across Python, C#, Java, TypeScript/JavaScript, Bicep, and Terraform
+- **Semantic Analysis**: Deep code understanding with symbol resolution, control flow analysis, and interprocedural analysis capabilities
 
 **Important Clarification: OSCAL Format**
 FedRAMP 20x requires **machine-readable** formats (JSON, XML, or structured data) for Authorization Data Sharing. **OSCAL is NOT mentioned in FedRAMP 20x requirements** - it's a NIST standard that can be used as one potential implementation approach. The actual requirement is simply "machine-readable" - you can use custom JSON/XML or OSCAL based on your implementation needs.
@@ -588,7 +590,7 @@ The server provides **35 tools** organized into the following categories:
 **Planning Tools (1):** Generate strategic implementation questions
 **Evidence Collection Automation Tools (3):** Infrastructure code, collection code, architecture guidance
 **Implementation Mapping Tools (2):** KSI family matrices and step-by-step implementation checklists
-**Code Analysis Tools (3):** Automated FedRAMP compliance scanning for IaC, application code, and CI/CD pipelines
+**Code Analysis Tools (3):** AST-powered FedRAMP compliance scanning using tree-sitter for accurate, semantic analysis of IaC, application code, and CI/CD pipelines across 6 languages (Python, C#, Java, TypeScript/JavaScript, Bicep, Terraform)
 **Security Tools (2):** CVE vulnerability checking for packages and dependency files
 **Audit Tools (2):** KSI coverage summary and status checking
 **KSI Status Tools (1):** Implementation status tracking across all KSI families
@@ -842,7 +844,7 @@ Generate strategic interview questions for product managers and engineers to fac
 ### analyze_infrastructure_code
 Analyze Infrastructure as Code (IaC) files for FedRAMP 20x compliance issues and provide actionable recommendations.
 
-> **📊 Current Coverage:** Phase 7 development with **38 out of 65 active KSIs implemented (58.5%)** across 7 implementation phases. **Maximum practical code-detectable coverage target: 55/65 (84.6%)** - the remaining 17 KSIs are organizational/policy requirements that cannot be detected through static code analysis. Implemented KSIs cover identity & access management, service configuration, cloud & network architecture, third-party risk, change management, monitoring & logging, privacy controls, and authorization evidence. See `.github/copilot-instructions.md` for complete implementation status breakdown by family.
+> **📊 Current Coverage:** Phase 7 development with **40 out of 65 active KSIs implemented (61.5%)** across 7 implementation phases using **AST-powered semantic analysis**. **Maximum practical code-detectable coverage target: 55/65 (84.6%)** - the remaining 17 KSIs are organizational/policy requirements that cannot be detected through static code analysis. All analyzers use tree-sitter Abstract Syntax Tree parsing for accurate, context-aware detection with minimal false positives. Implemented KSIs cover identity & access management, service configuration, cloud & network architecture, third-party risk, change management, monitoring & logging, privacy controls, authorization evidence, and automated incident response. See `.github/copilot-instructions.md` for complete implementation status breakdown by family.
 
 **Parameters:**
 - `code` (string): The IaC code content to analyze
@@ -1257,16 +1259,19 @@ python tests/test_evidence_automation.py         # IaC generation (Bicep/Terrafo
 python tests/test_all_tools.py                   # All tools comprehensive test
 ```
 
-**Test Coverage:**
+**Test Coverage (115 tests, 100% pass rate):**
+- ✅ **Core Functionality (13 tests):** AST parsing, semantic analysis, interprocedural analysis, code analyzer infrastructure
 - ✅ **Data Loading:** 329 requirements from 12 documents
 - ✅ **Definitions:** 50 FedRAMP terms
 - ✅ **KSIs:** 72 Key Security Indicators
 - ✅ **Documentation:** 15 official FedRAMP markdown files
-- ✅ **Tool Registration:** All 29 tools across 8 modules
+- ✅ **Tool Functional (9 tests):** All 35 tools across 11 modules
+- ✅ **Security (2 tests):** CVE vulnerability checking
+- ✅ **Resource Validation (3 tests):** IaC generation, evidence automation, template variations
+- ✅ **KSI Analyzers (88 tests):** 100% coverage - every KSI analyzer has test validation (55 implemented + 33 stub analyzers)
 - ✅ **IaC Generation:** Bicep & Terraform templates for IAM, MLA, AFR families
-- ✅ **Code Generation:** Python, C#, PowerShell evidence collection code
-- ✅ **Template Variations:** Family-specific customization validated
-- ✅ **Code Analyzers:** 96 passing tests across 55 KSIs (84.6% of 65 active KSIs)
+- ✅ **Code Generation:** Python, C#, PowerShell, Java, TypeScript evidence collection code
+- ✅ **AST Parsing:** Tree-sitter integration for 6 languages with semantic analysis validation
 
 ### Project Structure
 

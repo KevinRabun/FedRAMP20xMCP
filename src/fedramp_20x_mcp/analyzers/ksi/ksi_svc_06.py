@@ -1,546 +1,716 @@
 """
-KSI-SVC-06: Secret Management
+KSI-SVC-06 Enhanced Analyzer: Secret Management
 
+AST-based analyzer for detecting hardcoded secrets and validating Azure Key Vault usage.
+
+Official FedRAMP 20x Definition:
 Automate management, protection, and regular rotation of digital keys, certificates, and other secrets.
-
-Official FedRAMP 20x Definition
-Source: https://github.com/FedRAMP/docs/blob/main/data/FRMR.KSI.key-security-indicators.json
-Version: 25.11C (Published: 2025-12-01)
 """
 
-import re
-from typing import List
-from ..base import Finding, Severity
+from typing import List, Set, Dict
+from ..base import Finding, Severity, AnalysisResult
 from .base import BaseKSIAnalyzer
+from ..ast_utils import ASTParser, CodeLanguage
+from ..semantic_analysis import SemanticAnalyzer
 
 
 class KSI_SVC_06_Analyzer(BaseKSIAnalyzer):
     """
-    Analyzer for KSI-SVC-06: Secret Management
+    Enhanced AST-based analyzer for KSI-SVC-06: Secret Management.
     
-    **Official Statement:**
-    Automate management, protection, and regular rotation of digital keys, certificates, and other secrets.
+    Detects:
+    - Hardcoded passwords, API keys, tokens, connection strings
+    - Missing Azure Key Vault integration
+    - Secrets in environment variables (sub-optimal)
+    - Missing managed identity authentication
+    - Missing secret rotation/versioning
+    - Key Vault configuration issues (soft delete, purge protection, RBAC)
     
-    **Family:** SVC - Service Configuration
-    
-    **Impact Levels:**
-    - Low: Yes
-    - Moderate: Yes
-    
-    **NIST Controls:**
-    - ac-17.2
-    - ia-5.2
-    - ia-5.6
-    - sc-12
-    - sc-17
-    
-    **Detectability:** Code-Detectable (Implement detection logic)
-    
-    **Detection Strategy:**
-    Analyze code for patterns related to: Automate management, protection, and regular rotation of digital keys, certificates, and other secre...
-    
-    **Languages Supported:**
-    - Application: Python, C#, Java, TypeScript/JavaScript
-    - IaC: Bicep, Terraform
-    - CI/CD: GitHub Actions, Azure Pipelines, GitLab CI
-    
-    
+    Languages: Python, C#, Java, JavaScript, TypeScript, Bicep, Terraform
     """
     
     KSI_ID = "KSI-SVC-06"
     KSI_NAME = "Secret Management"
-    KSI_STATEMENT = """Automate management, protection, and regular rotation of digital keys, certificates, and other secrets."""
+    KSI_STATEMENT = "Implement secure secret management using Azure Key Vault or equivalent"
     FAMILY = "SVC"
-    FAMILY_NAME = "Service Configuration"
+    FAMILY_NAME = "Service Protection"
     IMPACT_LOW = True
     IMPACT_MODERATE = True
-    NIST_CONTROLS = ["ac-17.2", "ia-5.2", "ia-5.6", "sc-12", "sc-17"]
-    CODE_DETECTABLE = True
-    IMPLEMENTATION_STATUS = "IMPLEMENTED"
-    RETIRED = False
+    NIST_CONTROLS = [
+        ("ac-17.2", "Protection of Confidentiality and Integrity Using Encryption"),
+        ("ia-5.2", "Public Key-based Authentication"),
+        ("ia-5.6", "Protection of Authenticators"),
+        ("sc-12", "Cryptographic Key Establishment and Management"),
+        ("sc-17", "Public Key Infrastructure Certificates")
+    ]
     
-    def __init__(self):
+    # Patterns that indicate hardcoded secrets
+    SECRET_VARIABLE_NAMES = {
+        "password", "passwd", "pwd", "pass",
+        "api_key", "apikey", "api-key",
+        "secret", "secret_key", "secretkey",
+        "token", "auth_token", "access_token",
+        "private_key", "privatekey",
+        "connection_string", "connectionstring",
+        "client_secret", "clientsecret",
+        "database_password", "db_password",
+        "django_secret_key", "secret_key"
+    }
+    
+    # Azure Key Vault indicators
+    KEYVAULT_IMPORTS = {
+        "azure.keyvault", "azure.keyvault.secrets", "SecretClient",
+        "Azure.Security.KeyVault", "Azure.Security.KeyVault.Secrets",
+        "com.azure.security.keyvault", "@azure/keyvault-secrets"
+    }
+    
+    # Managed identity indicators
+    MANAGED_IDENTITY_PATTERNS = {
+        "DefaultAzureCredential", "ManagedIdentityCredential",
+        "ChainedTokenCredential", "DefaultAzureCredentialBuilder"
+    }
+    
+    # Environment variable patterns (sub-optimal)
+    ENV_VAR_PATTERNS = {
+        "os.getenv", "os.environ", "Environment.GetEnvironmentVariable",
+        "process.env", "System.getenv", "System.getProperty"
+    }
+    
+    def __init__(self, language=None, ksi_id: str = "", ksi_name: str = "", ksi_statement: str = ""):
+        """Initialize analyzer with backward-compatible API."""
         super().__init__(
-            ksi_id=self.KSI_ID,
-            ksi_name=self.KSI_NAME,
-            ksi_statement=self.KSI_STATEMENT
+            ksi_id=ksi_id or self.KSI_ID,
+            ksi_name=ksi_name or self.KSI_NAME,
+            ksi_statement=ksi_statement or self.KSI_STATEMENT
         )
-    
-    # ============================================================================
-    # APPLICATION LANGUAGE ANALYZERS
-    # ============================================================================
+        self.direct_language = language
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Python code for KSI-SVC-06 compliance.
-        
-        Frameworks: Flask, Django, FastAPI, Azure SDK
-        
-        Patterns Detected:
-        - Hardcoded passwords, API keys, connection strings
-        - Azure Key Vault SDK usage and configuration
-        - Environment variable usage for secrets
-        - Secret rotation mechanisms
-        - Certificate management
-        """
+        """Analyze Python code for hardcoded secrets and Key Vault usage."""
+        parser = ASTParser(CodeLanguage.PYTHON)
+        tree = parser.parse(code)
+        if tree:
+            semantic_analyzer = SemanticAnalyzer(CodeLanguage.PYTHON)
+            return self._analyze_python_ast(tree, code, file_path, semantic_analyzer, parser)
+        return []
+    
+    def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
+        """Analyze C# code for hardcoded secrets and Key Vault usage."""
+        parser = ASTParser(CodeLanguage.CSHARP)
+        tree = parser.parse(code)
+        if tree:
+            semantic_analyzer = SemanticAnalyzer(CodeLanguage.CSHARP)
+            return self._analyze_csharp_ast(tree, code, file_path, semantic_analyzer, parser)
+        return []
+    
+    def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
+        """Analyze Java code for hardcoded secrets and Key Vault usage."""
+        parser = ASTParser(CodeLanguage.JAVA)
+        tree = parser.parse(code)
+        if tree:
+            semantic_analyzer = SemanticAnalyzer(CodeLanguage.JAVA)
+            return self._analyze_java_ast(tree, code, file_path, semantic_analyzer, parser)
+        return []
+    
+    def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
+        """Analyze TypeScript code for hardcoded secrets and Key Vault usage."""
+        parser = ASTParser(CodeLanguage.TYPESCRIPT)
+        tree = parser.parse(code)
+        if tree:
+            semantic_analyzer = SemanticAnalyzer(CodeLanguage.TYPESCRIPT)
+            return self._analyze_typescript_ast(tree, code, file_path, semantic_analyzer, parser)
+        return []
+    
+    def _analyze_python_ast(self, tree, code: str, file_path: str, semantic_info, parser: ASTParser) -> List[Finding]:
+        """Analyze Python AST for hardcoded secrets and Key Vault usage."""
         findings = []
         lines = code.split('\n')
+        code_bytes = code.encode('utf-8')
         
-        # Pattern for hardcoded secrets (HIGH severity)
-        hardcoded_patterns = [
-            (r'password\s*=\s*["\'][^"\']', 'Hardcoded password detected'),
-            (r'api[_-]?key\s*=\s*["\'][^"\']', 'Hardcoded API key detected'),
-            (r'secret\s*=\s*["\'][^"\']', 'Hardcoded secret detected'),
-            (r'token\s*=\s*["\'][^"\']', 'Hardcoded token detected'),
-            (r'connection[_-]?string\s*=\s*["\'][^"\']', 'Hardcoded connection string detected'),
-            (r'private[_-]?key\s*=\s*["\'][^"\']', 'Hardcoded private key detected')
-        ]
+        # Track imports by parsing AST directly
+        has_keyvault = False
+        has_managed_identity = False
+        has_env_vars = False
+        has_django = False
         
-        for pattern, message in hardcoded_patterns:
-            matches = re.finditer(pattern, code, re.IGNORECASE)
-            for match in matches:
-                # Skip if it's clearly a placeholder or environment variable reference
-                matched_text = match.group(0)
-                if re.search(r'(os\.getenv|os\.environ|\${.*}|\[.*\]|<.*>|your.*here|example)', matched_text, re.IGNORECASE):
-                    continue
+        # Extract imports from AST
+        if tree:
+            imports = parser.find_nodes_by_type(tree.root_node, "import_statement")
+            imports.extend(parser.find_nodes_by_type(tree.root_node, "import_from_statement"))
+            
+            for imp in imports:
+                imp_text = parser.get_node_text(imp, code_bytes)
+                imp_lower = imp_text.lower()
                 
-                line_num = code[:match.start()].count('\n') + 1
-                findings.append(Finding(
-                    ksi_id=self.KSI_ID,
-                    title=message,
-                    description=f"{message}. Hardcoded secrets in source code violate KSI-SVC-06 and create security risks. Secrets must be stored in secure vaults like Azure Key Vault.",
-                    severity=Severity.CRITICAL,
-                    file_path=file_path,
-                    line_number=line_num,
-                    code_snippet=self._get_snippet(lines, line_num),
-                    recommendation="Use Azure Key Vault with azure-keyvault-secrets SDK: from azure.keyvault.secrets import SecretClient; secret = client.get_secret('secret-name')"
-                ))
+                if any(kv in imp_lower for kv in self.KEYVAULT_IMPORTS):
+                    has_keyvault = True
+                if any(mi in imp_text for mi in self.MANAGED_IDENTITY_PATTERNS):
+                    has_managed_identity = True
+                if "django" in imp_lower:
+                    has_django = True
         
-        # Check for Azure Key Vault usage
-        has_keyvault = bool(re.search(r'from\s+azure\.keyvault|import\s+azure\.keyvault|SecretClient', code))
-        has_env_vars = bool(re.search(r'os\.getenv|os\.environ\[', code))
+        # Traverse AST to find assignments
+        def visit_node(node):
+            nonlocal has_env_vars
+            
+            # Check for hardcoded secrets in assignments
+            if node.type == "assignment":
+                # Get left side (variable name)
+                left = node.child_by_field_name("left")
+                right = node.child_by_field_name("right")
+                
+                if left and right:
+                    var_name = self._get_node_text(left, code).lower()
+                    value = self._get_node_text(right, code)
+                    
+                    # Check if variable name suggests a secret
+                    if any(secret in var_name for secret in self.SECRET_VARIABLE_NAMES):
+                        # Check if it's a hardcoded string (not env var or Key Vault call)
+                        if right.type in ("string", "string_literal", "concatenated_string"):
+                            if not self._is_placeholder_or_env_var(value):
+                                line_num = right.start_point[0] + 1
+                                findings.append(Finding(
+                                    ksi_id=self.KSI_ID,
+                                    title=f"Hardcoded Secret: {var_name}",
+                                    description=f"Variable '{var_name}' contains a hardcoded secret. Use Azure Key Vault for secure secret management.",
+                                    severity=Severity.CRITICAL,
+                                    file_path=file_path,
+                                    line_number=line_num,
+                                    code_snippet=self._get_snippet(lines, line_num),
+                                    recommendation="Use Azure Key Vault: from azure.keyvault.secrets import SecretClient; secret = client.get_secret('secret-name').value"
+                                ))
+            
+            # Check for environment variable usage
+            if node.type == "call":
+                func = node.child_by_field_name("function")
+                if func:
+                    func_text = self._get_node_text(func, code)
+                    if any(env in func_text for env in self.ENV_VAR_PATTERNS):
+                        has_env_vars = True
+            
+            # Check Django SECRET_KEY
+            if has_django and node.type == "assignment":
+                left = node.child_by_field_name("left")
+                right = node.child_by_field_name("right")
+                if left and right:
+                    var_name = self._get_node_text(left, code)
+                    if "SECRET_KEY" in var_name:
+                        if right.type in ("string", "string_literal"):
+                            value = self._get_node_text(right, code)
+                            if not self._is_placeholder_or_env_var(value):
+                                line_num = right.start_point[0] + 1
+                                findings.append(Finding(
+                                    ksi_id=self.KSI_ID,
+                                    title="Django SECRET_KEY Hardcoded",
+                                    description="Django SECRET_KEY is hardcoded. This key should be stored in Azure Key Vault and rotated regularly.",
+                                    severity=Severity.CRITICAL,
+                                    file_path=file_path,
+                                    line_number=line_num,
+                                    code_snippet=self._get_snippet(lines, line_num),
+                                    recommendation="Load from Key Vault: SECRET_KEY = secret_client.get_secret('django-secret-key').value"
+                                ))
+            
+            # Recurse
+            for child in node.children:
+                visit_node(child)
         
-        # Check if secrets are retrieved from Key Vault properly
+        visit_node(tree.root_node)
+        
+        # Check Key Vault configuration
         if has_keyvault:
-            # Check for DefaultAzureCredential (recommended)
-            if not re.search(r'DefaultAzureCredential|ManagedIdentityCredential', code):
+            if not has_managed_identity:
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
-                    title="Key Vault without managed identity authentication",
-                    description="Azure Key Vault SDK is used but DefaultAzureCredential or ManagedIdentityCredential is not detected. Use managed identities for secure, credential-less authentication.",
+                    title="Key Vault Without Managed Identity",
+                    description="Azure Key Vault SDK is used but DefaultAzureCredential or ManagedIdentityCredential is not detected. Use managed identities for credential-less authentication.",
                     severity=Severity.MEDIUM,
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'SecretClient'),
-                    code_snippet=self._get_snippet(lines, self._find_line(lines, r'SecretClient')),
+                    line_number=0,
+                    code_snippet="",
                     recommendation="Use DefaultAzureCredential: from azure.identity import DefaultAzureCredential; credential = DefaultAzureCredential()"
                 ))
             
-            # Check for secret rotation/versioning awareness
-            if not re.search(r'properties\.version|get_secret.*version|list_properties_of_secret_versions', code, re.IGNORECASE):
+            # Check for secret versioning awareness (simplified check)
+            if "version" not in code.lower() and "list_properties" not in code.lower():
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
-                    title="No secret version management detected",
+                    title="No Secret Version Management Detected",
                     description="Key Vault is used but no version-aware secret retrieval detected. KSI-SVC-06 requires automated secret rotation.",
                     severity=Severity.MEDIUM,
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'get_secret'),
-                    code_snippet=self._get_snippet(lines, self._find_line(lines, r'get_secret')),
+                    line_number=0,
+                    code_snippet="",
                     recommendation="Implement secret rotation: always retrieve latest version and handle version updates gracefully"
                 ))
-        elif has_env_vars:
-            # Environment variables are better than hardcoding but not ideal
+        elif has_env_vars and not has_keyvault:
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
-                title="Secrets stored in environment variables",
-                description="Secrets are retrieved from environment variables. While better than hardcoding, KSI-SVC-06 requires centralized secret management with Azure Key Vault for automated rotation.",
+                title="Secrets in Environment Variables",
+                description="Secrets are retrieved from environment variables. While better than hardcoding, KSI-SVC-06 requires Azure Key Vault for automated rotation.",
                 severity=Severity.MEDIUM,
                 file_path=file_path,
-                line_number=self._find_line(lines, r'os\.getenv.*password|os\.environ.*api'),
-                code_snippet=self._get_snippet(lines, self._find_line(lines, r'os\.getenv')),
+                line_number=0,
+                code_snippet="",
                 recommendation="Migrate to Azure Key Vault for centralized secret management and automated rotation"
             ))
         
-        # Check Django SECRET_KEY configuration
-        if 'django' in code.lower():
-            if re.search(r'SECRET_KEY\s*=\s*["\'][^"\'{}<>]{20,}["\']', code):
-                findings.append(Finding(
-                    ksi_id=self.KSI_ID,
-                    title="Django SECRET_KEY hardcoded",
-                    description="Django SECRET_KEY appears to be hardcoded in settings. This key should be stored in Azure Key Vault and rotated regularly.",
-                    severity=Severity.CRITICAL,
-                    file_path=file_path,
-                    line_number=self._find_line(lines, r'SECRET_KEY'),
-                    code_snippet=self._get_snippet(lines, self._find_line(lines, r'SECRET_KEY')),
-                    recommendation="Load SECRET_KEY from Key Vault: SECRET_KEY = secret_client.get_secret('django-secret-key').value"
-                ))
-        
         return findings
     
-    def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for KSI-SVC-06 compliance.
-        
-        Frameworks: ASP.NET Core, Entity Framework, Azure SDK
-        
-        Patterns Detected:
-        - Hardcoded passwords, connection strings, API keys
-        - Azure Key Vault SecretClient usage
-        - Configuration management (IConfiguration, appsettings.json)
-        - Managed identity authentication
-        """
+    def _analyze_csharp_ast(self, tree, code: str, file_path: str, semantic_info, parser: ASTParser) -> List[Finding]:
+        """Analyze C# AST for hardcoded secrets and Key Vault usage."""
         findings = []
         lines = code.split('\n')
+        code_bytes = code.encode('utf-8')
         
-        # Hardcoded secret patterns
-        hardcoded_patterns = [
-            (r'password\s*=\s*"[^"]+"', 'Hardcoded password'),
-            (r'ConnectionString\s*=\s*"[^"]+"', 'Hardcoded connection string'),
-            (r'ApiKey\s*=\s*"[^"]+"', 'Hardcoded API key'),
-            (r'Secret\s*=\s*"[^"]+"', 'Hardcoded secret'),
-            (r'PrivateKey\s*=\s*"[^"]+"', 'Hardcoded private key')
-        ]
+        # Track using directives by parsing AST directly
+        has_keyvault = False
+        has_managed_identity = False
+        has_configuration = False
         
-        for pattern, message in hardcoded_patterns:
-            matches = re.finditer(pattern, code, re.IGNORECASE)
-            for match in matches:
-                matched_text = match.group(0)
-                if re.search(r'(Configuration\[|Environment\.|<.*>|your.*here)', matched_text, re.IGNORECASE):
-                    continue
+        # Extract using directives from AST
+        if tree:
+            using_directives = parser.find_nodes_by_type(tree.root_node, "using_directive")
+            
+            for using in using_directives:
+                using_text = parser.get_node_text(using, code_bytes)
                 
-                line_num = code[:match.start()].count('\n') + 1
-                findings.append(Finding(
-                    ksi_id=self.KSI_ID,
-                    title=f"{message} detected",
-                    description=f"{message} found in source code. Use Azure Key Vault for secret management.",
-                    severity=Severity.CRITICAL,
-                    file_path=file_path,
-                    line_number=line_num,
-                    code_snippet=self._get_snippet(lines, line_num),
-                    recommendation="Use Azure Key Vault: var secret = await secretClient.GetSecretAsync('secret-name');"
-                ))
+                if any(kv in using_text for kv in ["Azure.Security.KeyVault", "SecretClient"]):
+                    has_keyvault = True
+                if any(mi in using_text for mi in self.MANAGED_IDENTITY_PATTERNS):
+                    has_managed_identity = True
+                if "Microsoft.Extensions.Configuration" in using_text:
+                    has_configuration = True
         
-        # Check for Key Vault usage
-        has_keyvault = bool(re.search(r'using\s+Azure\.Security\.KeyVault|SecretClient', code))
-        has_config = bool(re.search(r'IConfiguration|ConfigurationBuilder', code))
+        # Traverse AST
+        def visit_node(node):
+            # Check for hardcoded secrets in variable declarations
+            if node.type == "variable_declarator":
+                # Get identifier - first child is usually the name
+                identifier = None
+                initializer = None
+                
+                for child in node.children:
+                    if child.type == "identifier" and not identifier:
+                        identifier = child
+                    elif child.type in ("string_literal", "object_creation_expression", "invocation_expression"):
+                        initializer = child
+                
+                if identifier and initializer:
+                    var_name = self._get_node_text(identifier, code).lower()
+                    value = self._get_node_text(initializer, code)
+                    
+                    # Check if variable name suggests a secret
+                    if any(secret in var_name for secret in self.SECRET_VARIABLE_NAMES):
+                        # Check if it's a hardcoded string
+                        if initializer.type == "string_literal":
+                            if not self._is_placeholder_or_env_var(value):
+                                line_num = initializer.start_point[0] + 1
+                                findings.append(Finding(
+                                    ksi_id=self.KSI_ID,
+                                    title=f"Hardcoded Secret: {var_name}",
+                                    description=f"Variable '{var_name}' contains a hardcoded secret. Use Azure Key Vault for secure secret management.",
+                                    severity=Severity.CRITICAL,
+                                    file_path=file_path,
+                                    line_number=line_num,
+                                    code_snippet=self._get_snippet(lines, line_num),
+                                    recommendation="Use Azure Key Vault: var secret = await secretClient.GetSecretAsync('secret-name');"
+                                ))
+                    
+                    # Also check for connection string content patterns
+                    if initializer.type == "string_literal":
+                        value_lower = value.lower()
+                        if any(pattern in value_lower for pattern in ["server=", "password=", "user id=", "pwd="]):
+                            if not self._is_placeholder_or_env_var(value):
+                                line_num = initializer.start_point[0] + 1
+                                findings.append(Finding(
+                                    ksi_id=self.KSI_ID,
+                                    title=f"Hardcoded Connection String: {var_name}",
+                                    description=f"Variable '{var_name}' contains a hardcoded connection string with credentials. Use Azure Key Vault.",
+                                    severity=Severity.CRITICAL,
+                                    file_path=file_path,
+                                    line_number=line_num,
+                                    code_snippet=self._get_snippet(lines, line_num),
+                                    recommendation="Store connection string in Key Vault and retrieve: var connStr = await secretClient.GetSecretAsync('connection-string');"
+                                ))
+            
+            # Check for hardcoded connection strings in assignments
+            if node.type == "assignment_expression":
+                left = node.child_by_field_name("left")
+                right = node.child_by_field_name("right")
+                
+                if left and right:
+                    var_name = self._get_node_text(left, code).lower()
+                    value = self._get_node_text(right, code)
+                    
+                    if "connectionstring" in var_name or "password" in var_name:
+                        if right.type == "string_literal" and not self._is_placeholder_or_env_var(value):
+                            line_num = right.start_point[0] + 1
+                            findings.append(Finding(
+                                ksi_id=self.KSI_ID,
+                                title=f"Hardcoded Secret: {var_name}",
+                                description=f"Connection string or password hardcoded in '{var_name}'. Use Azure Key Vault.",
+                                severity=Severity.CRITICAL,
+                                file_path=file_path,
+                                line_number=line_num,
+                                code_snippet=self._get_snippet(lines, line_num),
+                                recommendation="Use Azure Key Vault: var secret = await secretClient.GetSecretAsync('secret-name');"
+                            ))
+            
+            # Recurse
+            for child in node.children:
+                visit_node(child)
         
+        visit_node(tree.root_node)
+        
+        # Check Key Vault configuration
         if has_keyvault:
-            # Check for managed identity
-            if not re.search(r'DefaultAzureCredential|ManagedIdentityCredential', code):
+            if not has_managed_identity:
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
-                    title="Key Vault without managed identity",
+                    title="Key Vault Without Managed Identity",
                     description="SecretClient is used without DefaultAzureCredential or ManagedIdentityCredential.",
                     severity=Severity.MEDIUM,
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'SecretClient'),
-                    code_snippet=self._get_snippet(lines, self._find_line(lines, r'SecretClient')),
+                    line_number=0,
+                    code_snippet="",
                     recommendation="Use managed identity: var credential = new DefaultAzureCredential();"
                 ))
-        elif has_config and not has_keyvault:
+        elif has_configuration and not has_keyvault:
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
-                title="Configuration without Key Vault integration",
+                title="Configuration Without Key Vault Integration",
                 description="IConfiguration is used but no Key Vault integration detected. Secrets in appsettings.json are not rotatable.",
                 severity=Severity.MEDIUM,
                 file_path=file_path,
-                line_number=self._find_line(lines, r'IConfiguration'),
-                code_snippet=self._get_snippet(lines, self._find_line(lines, r'IConfiguration')),
+                line_number=0,
+                code_snippet="",
                 recommendation="Integrate Key Vault: builder.Configuration.AddAzureKeyVault(new Uri(kvUrl), new DefaultAzureCredential());"
             ))
         
         return findings
     
-    def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for KSI-SVC-06 compliance.
-        
-        Frameworks: Spring Boot, Spring Security, Azure SDK
-        
-        Patterns Detected:
-        - Hardcoded passwords, JDBC URLs, API keys
-        - Azure Key Vault SecretClient usage
-        - Spring @Value and application.properties
-        - Managed identity authentication
-        """
+    def _analyze_java_ast(self, tree, code: str, file_path: str, semantic_info, parser: ASTParser) -> List[Finding]:
+        """Analyze Java AST for hardcoded secrets and Key Vault usage."""
         findings = []
         lines = code.split('\n')
+        code_bytes = code.encode('utf-8')
         
-        # Hardcoded secret patterns
-        hardcoded_patterns = [
-            (r'password\s*=\s*"[^"]+"', 'Hardcoded password'),
-            (r'jdbcUrl\s*=\s*"[^"]+password=[^"]+"', 'Hardcoded database password in JDBC URL'),
-            (r'apiKey\s*=\s*"[^"]+"', 'Hardcoded API key'),
-            (r'secretKey\s*=\s*"[^"]+"', 'Hardcoded secret key'),
-            (r'spring\.datasource\.password\s*=\s*\S+', 'Hardcoded database password')
-        ]
+        # Track imports by parsing AST directly
+        has_keyvault = False
+        has_managed_identity = False
+        has_spring_config = False
         
-        for pattern, message in hardcoded_patterns:
-            matches = re.finditer(pattern, code, re.IGNORECASE)
-            for match in matches:
-                matched_text = match.group(0)
-                if re.search(r'(\$\{|Environment\.|<.*>|your.*here)', matched_text, re.IGNORECASE):
-                    continue
+        # Extract import declarations from AST
+        if tree:
+            imports = parser.find_nodes_by_type(tree.root_node, "import_declaration")
+            
+            for imp in imports:
+                import_text = parser.get_node_text(imp, code_bytes)
                 
-                line_num = code[:match.start()].count('\n') + 1
-                findings.append(Finding(
-                    ksi_id=self.KSI_ID,
-                    title=f"{message} detected",
-                    description=f"{message} found in source code. Use Azure Key Vault for secret management.",
-                    severity=Severity.CRITICAL,
-                    file_path=file_path,
-                    line_number=line_num,
-                    code_snippet=self._get_snippet(lines, line_num),
-                    recommendation="Use Azure Key Vault: SecretClient secretClient = new SecretClientBuilder().credential(new DefaultAzureCredentialBuilder().build()).buildClient();"
-                ))
+                if "com.azure.security.keyvault" in import_text or "SecretClient" in import_text:
+                    has_keyvault = True
+                if any(mi in import_text for mi in self.MANAGED_IDENTITY_PATTERNS):
+                    has_managed_identity = True
+            
+            # Check for Spring annotations in code
+            if "@Value" in code or "@ConfigurationProperties" in code:
+                has_spring_config = True
         
-        # Check for Key Vault usage
-        has_keyvault = bool(re.search(r'import\s+com\.azure\.security\.keyvault|SecretClient', code))
-        has_spring_config = bool(re.search(r'@Value|@ConfigurationProperties|application\.properties', code))
+        # Traverse AST
+        def visit_node(node):
+            # Check for hardcoded secrets in variable declarations
+            if node.type == "variable_declarator":
+                name_node = node.child_by_field_name("name")
+                value_node = node.child_by_field_name("value")
+                
+                if name_node and value_node:
+                    var_name = self._get_node_text(name_node, code).lower()
+                    value = self._get_node_text(value_node, code)
+                    
+                    # Check if variable name suggests a secret
+                    if any(secret in var_name for secret in self.SECRET_VARIABLE_NAMES):
+                        # Check if it's a hardcoded string
+                        if value_node.type == "string_literal":
+                            if not self._is_placeholder_or_env_var(value):
+                                line_num = value_node.start_point[0] + 1
+                                findings.append(Finding(
+                                    ksi_id=self.KSI_ID,
+                                    title=f"Hardcoded Secret: {var_name}",
+                                    description=f"Variable '{var_name}' contains a hardcoded secret. Use Azure Key Vault for secure secret management.",
+                                    severity=Severity.CRITICAL,
+                                    file_path=file_path,
+                                    line_number=line_num,
+                                    code_snippet=self._get_snippet(lines, line_num),
+                                    recommendation="Use Azure Key Vault: SecretClient secretClient = new SecretClientBuilder().credential(new DefaultAzureCredentialBuilder().build()).buildClient();"
+                                ))
+            
+            # Check for hardcoded JDBC URLs with passwords
+            if node.type == "string_literal":
+                text = self._get_node_text(node, code)
+                if "jdbc:" in text.lower() and "password=" in text.lower():
+                    line_num = node.start_point[0] + 1
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="Hardcoded Database Password in JDBC URL",
+                        description="JDBC URL contains hardcoded password. Use Azure Key Vault for secure credential management.",
+                        severity=Severity.CRITICAL,
+                        file_path=file_path,
+                        line_number=line_num,
+                        code_snippet=self._get_snippet(lines, line_num),
+                        recommendation="Load password from Key Vault and construct connection string dynamically"
+                    ))
+            
+            # Recurse
+            for child in node.children:
+                visit_node(child)
         
+        visit_node(tree.root_node)
+        
+        # Check Key Vault configuration
         if has_keyvault:
-            # Check for managed identity
-            if not re.search(r'DefaultAzureCredential|ManagedIdentityCredential', code):
+            if not has_managed_identity:
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
-                    title="Key Vault without managed identity",
+                    title="Key Vault Without Managed Identity",
                     description="SecretClient is used without DefaultAzureCredential.",
                     severity=Severity.MEDIUM,
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'SecretClient'),
-                    code_snippet=self._get_snippet(lines, self._find_line(lines, r'SecretClient')),
+                    line_number=0,
+                    code_snippet="",
                     recommendation="Use managed identity: new DefaultAzureCredentialBuilder().build()"
                 ))
         elif has_spring_config and not has_keyvault:
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
-                title="Spring configuration without Key Vault",
+                title="Spring Configuration Without Key Vault",
                 description="Spring configuration detected but no Key Vault integration. Secrets in application.properties are not rotatable.",
                 severity=Severity.MEDIUM,
                 file_path=file_path,
-                line_number=self._find_line(lines, r'@Value|application\.properties'),
-                code_snippet=self._get_snippet(lines, self._find_line(lines, r'@Value')),
+                line_number=0,
+                code_snippet="",
                 recommendation="Add azure-spring-boot-starter-keyvault-secrets dependency and configure Key Vault integration"
             ))
         
         return findings
     
-    def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for KSI-SVC-06 compliance.
-        
-        Frameworks: Express, NestJS, Next.js, React, Angular, Azure SDK
-        
-        Patterns Detected:
-        - Hardcoded API keys, passwords, tokens
-        - Azure Key Vault SecretClient usage
-        - Environment variable usage (process.env)
-        - Managed identity authentication
-        """
+    def _analyze_typescript_ast(self, tree, code: str, file_path: str, semantic_info, parser: ASTParser) -> List[Finding]:
+        """Analyze JavaScript/TypeScript AST for hardcoded secrets and Key Vault usage."""
         findings = []
         lines = code.split('\n')
+        code_bytes = code.encode('utf-8')
         
-        # Hardcoded secret patterns
-        hardcoded_patterns = [
-            (r'password\s*[=:]\s*["\'][^"\']', 'Hardcoded password'),
-            (r'apiKey\s*[=:]\s*["\'][^"\']', 'Hardcoded API key'),
-            (r'api_key\s*[=:]\s*["\'][^"\']', 'Hardcoded API key'),
-            (r'connectionString\s*[=:]\s*["\'][^"\']', 'Hardcoded connection string'),
-            (r'secret\s*[=:]\s*["\'][^"\']', 'Hardcoded secret'),
-            (r'token\s*[=:]\s*["\'][^"\']', 'Hardcoded token')
-        ]
+        # Track imports by parsing AST
+        has_keyvault = False
+        has_managed_identity = False
+        has_env_vars = False
         
-        for pattern, message in hardcoded_patterns:
-            matches = re.finditer(pattern, code, re.IGNORECASE)
-            for match in matches:
-                matched_text = match.group(0)
-                if re.search(r'(process\.env|\$\{|<.*>|your.*here|example)', matched_text, re.IGNORECASE):
-                    continue
+        # Extract imports from AST
+        if tree:
+            imports = parser.find_nodes_by_type(tree.root_node, "import_statement")
+            
+            for imp in imports:
+                import_text = parser.get_node_text(imp, code_bytes)
+                import_lower = import_text.lower()
                 
-                line_num = code[:match.start()].count('\n') + 1
-                findings.append(Finding(
-                    ksi_id=self.KSI_ID,
-                    title=f"{message} detected",
-                    description=f"{message} found in source code. Use Azure Key Vault for secret management.",
-                    severity=Severity.CRITICAL,
-                    file_path=file_path,
-                    line_number=line_num,
-                    code_snippet=self._get_snippet(lines, line_num),
-                    recommendation="Use Azure Key Vault: const secret = await secretClient.getSecret('secret-name');"
-                ))
+                if "@azure/keyvault-secrets" in import_lower or "SecretClient" in import_text:
+                    has_keyvault = True
+                if any(mi in import_text for mi in self.MANAGED_IDENTITY_PATTERNS):
+                    has_managed_identity = True
         
-        # Check for Key Vault usage
-        has_keyvault = bool(re.search(r'@azure/keyvault-secrets|SecretClient', code))
-        has_env_vars = bool(re.search(r'process\.env\.[A-Z_]+', code))
+        # Traverse AST
+        def visit_node(node):
+            nonlocal has_env_vars
+            
+            # Check for hardcoded secrets in variable declarations
+            if node.type in ("variable_declarator", "lexical_declaration"):
+                # Find identifier and initializer
+                for child in node.children:
+                    if child.type == "variable_declarator":
+                        name_node = child.child_by_field_name("name")
+                        value_node = child.child_by_field_name("value")
+                        
+                        if name_node and value_node:
+                            var_name = parser.get_node_text(name_node, code_bytes).lower()
+                            value = parser.get_node_text(value_node, code_bytes)
+                            
+                            # Check if variable name suggests a secret
+                            if any(secret in var_name for secret in self.SECRET_VARIABLE_NAMES):
+                                # Check if it's a hardcoded string
+                                if value_node.type in ("string", "string_fragment", "template_string"):
+                                    if not self._is_placeholder_or_env_var(value):
+                                        line_num = value_node.start_point[0] + 1
+                                        findings.append(Finding(
+                                            ksi_id=self.KSI_ID,
+                                            title=f"Hardcoded Secret: {var_name}",
+                                            description=f"Variable '{var_name}' contains a hardcoded secret. Use Azure Key Vault for secure secret management.",
+                                            severity=Severity.CRITICAL,
+                                            file_path=file_path,
+                                            line_number=line_num,
+                                            code_snippet=self._get_snippet(lines, line_num),
+                                            recommendation="Use Azure Key Vault: const secret = await secretClient.getSecret('secret-name');"
+                                        ))
+            
+            # Check for process.env usage
+            if node.type == "member_expression":
+                text = parser.get_node_text(node, code_bytes)
+                if "process.env" in text:
+                    has_env_vars = True
+            
+            # Recurse
+            for child in node.children:
+                visit_node(child)
         
+        visit_node(tree.root_node)
+        
+        # Check Key Vault configuration
         if has_keyvault:
-            # Check for managed identity
-            if not re.search(r'DefaultAzureCredential|ManagedIdentityCredential', code):
+            if not has_managed_identity:
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
-                    title="Key Vault without managed identity",
+                    title="Key Vault Without Managed Identity",
                     description="SecretClient is used without DefaultAzureCredential.",
                     severity=Severity.MEDIUM,
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'SecretClient'),
-                    code_snippet=self._get_snippet(lines, self._find_line(lines, r'SecretClient')),
+                    line_number=0,
+                    code_snippet="",
                     recommendation="Use managed identity: const credential = new DefaultAzureCredential();"
                 ))
-        elif has_env_vars:
+        elif has_env_vars and not has_keyvault:
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
-                title="Secrets in environment variables",
+                title="Secrets in Environment Variables",
                 description="Secrets stored in process.env. KSI-SVC-06 requires Azure Key Vault for automated rotation.",
                 severity=Severity.MEDIUM,
                 file_path=file_path,
-                line_number=self._find_line(lines, r'process\.env'),
-                code_snippet=self._get_snippet(lines, self._find_line(lines, r'process\.env')),
+                line_number=0,
+                code_snippet="",
                 recommendation="Migrate to Azure Key Vault: import { SecretClient } from '@azure/keyvault-secrets';"
             ))
         
         return findings
     
-    # ============================================================================
-    # INFRASTRUCTURE AS CODE ANALYZERS
-    # ============================================================================
-    
-    def analyze_bicep(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Bicep IaC for KSI-SVC-06 compliance.
-        
-        Checks:
-        - Azure Key Vault resources and configuration
-        - Secret rotation policies
-        - Managed identity assignments
-        - RBAC for Key Vault access
-        - Soft delete and purge protection
-        """
+    def _analyze_bicep_ast(self, tree, code: str, file_path: str, semantic_info) -> List[Finding]:
+        """Analyze Bicep IaC for Key Vault configuration."""
         findings = []
         lines = code.split('\n')
         
-        # Check for Key Vault resources
-        has_keyvault = bool(re.search(r'Microsoft\.KeyVault/vaults', code, re.IGNORECASE))
+        # Check for Key Vault resources (simplified regex for now)
+        has_keyvault = "Microsoft.KeyVault/vaults" in code
+        has_soft_delete = "enableSoftDelete" in code and "true" in code
+        has_purge_protection = "enablePurgeProtection" in code and "true" in code
+        has_rbac = "enableRbacAuthorization" in code and "true" in code
         
         if has_keyvault:
-            # Check for soft delete
-            if not re.search(r'enableSoftDelete\s*:\s*true', code, re.IGNORECASE):
+            if not has_soft_delete:
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
-                    title="Key Vault without soft delete enabled",
+                    title="Key Vault Without Soft Delete",
                     description="Key Vault resource found without enableSoftDelete: true. Soft delete protects against accidental deletion.",
                     severity=Severity.HIGH,
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'Microsoft\.KeyVault/vaults'),
-                    code_snippet=self._get_snippet(lines, self._find_line(lines, r'Microsoft\.KeyVault/vaults')),
+                    line_number=0,
+                    code_snippet="",
                     recommendation="Enable soft delete: properties: { enableSoftDelete: true, softDeleteRetentionInDays: 90 }"
                 ))
             
-            # Check for purge protection
-            if not re.search(r'enablePurgeProtection\s*:\s*true', code, re.IGNORECASE):
+            if not has_purge_protection:
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
-                    title="Key Vault without purge protection",
+                    title="Key Vault Without Purge Protection",
                     description="Key Vault resource found without enablePurgeProtection: true. Purge protection prevents permanent deletion.",
                     severity=Severity.MEDIUM,
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'Microsoft\.KeyVault/vaults'),
-                    code_snippet=self._get_snippet(lines, self._find_line(lines, r'Microsoft\.KeyVault/vaults')),
+                    line_number=0,
+                    code_snippet="",
                     recommendation="Enable purge protection: properties: { enablePurgeProtection: true }"
                 ))
             
-            # Check for RBAC-based access control
-            if not re.search(r'enableRbacAuthorization\s*:\s*true', code, re.IGNORECASE):
+            if not has_rbac:
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
-                    title="Key Vault using legacy access policies",
+                    title="Key Vault Using Legacy Access Policies",
                     description="Key Vault should use RBAC instead of access policies for better access management.",
                     severity=Severity.MEDIUM,
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'Microsoft\.KeyVault/vaults'),
-                    code_snippet=self._get_snippet(lines, self._find_line(lines, r'Microsoft\.KeyVault/vaults')),
+                    line_number=0,
+                    code_snippet="",
                     recommendation="Enable RBAC: properties: { enableRbacAuthorization: true }"
                 ))
         else:
-            # Check if there are resources that might need secrets
-            if re.search(r'Microsoft\.Web/sites|Microsoft\.App/containerApps|Microsoft\.Sql', code, re.IGNORECASE):
+            # Check for app resources without Key Vault
+            has_app_resources = any(res in code for res in ["Microsoft.Web/sites", "Microsoft.App/containerApps", "Microsoft.Sql"])
+            if has_app_resources:
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
-                    title="No Key Vault resource defined",
+                    title="No Key Vault Resource Defined",
                     description="Application resources detected but no Azure Key Vault is defined for secret management.",
                     severity=Severity.HIGH,
                     file_path=file_path,
-                    line_number=1,
+                    line_number=0,
                     code_snippet="",
                     recommendation="Create Key Vault: resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' = { properties: { enableSoftDelete: true, enablePurgeProtection: true } }"
                 ))
         
         return findings
     
-    def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Terraform IaC for KSI-SVC-06 compliance.
-        
-        Checks:
-        - azurerm_key_vault resources and configuration
-        - Secret rotation policies
-        - Managed identity assignments
-        - RBAC for Key Vault access
-        - Soft delete and purge protection
-        """
+    def _analyze_terraform_ast(self, tree, code: str, file_path: str, semantic_info) -> List[Finding]:
+        """Analyze Terraform IaC for Key Vault configuration."""
         findings = []
         lines = code.split('\n')
         
-        # Check for Key Vault resources
-        has_keyvault = bool(re.search(r'resource\s+"azurerm_key_vault"|azurerm_key_vault', code, re.IGNORECASE))
+        # Check for Key Vault resources (simplified)
+        has_keyvault = "azurerm_key_vault" in code
+        has_soft_delete = "soft_delete_retention_days" in code
+        has_purge_protection = "purge_protection_enabled" in code and "true" in code
+        has_rbac = "enable_rbac_authorization" in code and "true" in code
         
         if has_keyvault:
-            # Check for soft delete
-            if not re.search(r'soft_delete_retention_days\s*=\s*\d+', code, re.IGNORECASE):
+            if not has_soft_delete:
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
-                    title="Key Vault without soft delete configured",
+                    title="Key Vault Without Soft Delete",
                     description="azurerm_key_vault resource found without soft_delete_retention_days configured.",
                     severity=Severity.HIGH,
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'azurerm_key_vault'),
-                    code_snippet=self._get_snippet(lines, self._find_line(lines, r'azurerm_key_vault')),
+                    line_number=0,
+                    code_snippet="",
                     recommendation="Configure soft delete: soft_delete_retention_days = 90"
                 ))
             
-            # Check for purge protection
-            if not re.search(r'purge_protection_enabled\s*=\s*true', code, re.IGNORECASE):
+            if not has_purge_protection:
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
-                    title="Key Vault without purge protection",
+                    title="Key Vault Without Purge Protection",
                     description="azurerm_key_vault resource found without purge_protection_enabled = true.",
                     severity=Severity.MEDIUM,
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'azurerm_key_vault'),
-                    code_snippet=self._get_snippet(lines, self._find_line(lines, r'azurerm_key_vault')),
+                    line_number=0,
+                    code_snippet="",
                     recommendation="Enable purge protection: purge_protection_enabled = true"
                 ))
             
-            # Check for RBAC
-            if not re.search(r'enable_rbac_authorization\s*=\s*true', code, re.IGNORECASE):
+            if not has_rbac:
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
-                    title="Key Vault using legacy access policies",
+                    title="Key Vault Using Legacy Access Policies",
                     description="Key Vault should use RBAC instead of access policies.",
                     severity=Severity.MEDIUM,
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'azurerm_key_vault'),
-                    code_snippet=self._get_snippet(lines, self._find_line(lines, r'azurerm_key_vault')),
+                    line_number=0,
+                    code_snippet="",
                     recommendation="Enable RBAC: enable_rbac_authorization = true"
                 ))
         else:
-            # Check if there are resources that need secrets
-            if re.search(r'azurerm_app_service|azurerm_container_app|azurerm_sql_server', code, re.IGNORECASE):
+            # Check for app resources without Key Vault
+            has_app_resources = any(res in code for res in ["azurerm_app_service", "azurerm_container_app", "azurerm_sql_server"])
+            if has_app_resources:
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
-                    title="No Key Vault resource defined",
+                    title="No Key Vault Resource Defined",
                     description="Application resources detected but no azurerm_key_vault is defined for secret management.",
                     severity=Severity.HIGH,
                     file_path=file_path,
-                    line_number=1,
+                    line_number=0,
                     code_snippet="",
                     recommendation='Create Key Vault: resource "azurerm_key_vault" "example" { soft_delete_retention_days = 90, purge_protection_enabled = true }'
                 ))
@@ -548,62 +718,24 @@ class KSI_SVC_06_Analyzer(BaseKSIAnalyzer):
         return findings
     
     # ============================================================================
-    # CI/CD PIPELINE ANALYZERS
-    # ============================================================================
-    
-    def analyze_github_actions(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitHub Actions workflow for KSI-SVC-06 compliance.
-        
-        TODO: Implement detection logic if applicable.
-        """
-        findings = []
-        
-        # TODO: Implement GitHub Actions detection if applicable
-        
-        return findings
-    
-    def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Azure Pipelines YAML for KSI-SVC-06 compliance.
-        
-        TODO: Implement detection logic if applicable.
-        """
-        findings = []
-        
-        # TODO: Implement Azure Pipelines detection if applicable
-        
-        return findings
-    
-    def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitLab CI YAML for KSI-SVC-06 compliance.
-        
-        TODO: Implement detection logic if applicable.
-        """
-        findings = []
-        
-        # TODO: Implement GitLab CI detection if applicable
-        
-        return findings
-    
-    # ============================================================================
     # HELPER METHODS
     # ============================================================================
     
-    def _find_line(self, lines: List[str], pattern: str) -> int:
-        """Find line number matching regex pattern."""
-        try:
-            regex = re.compile(pattern, re.IGNORECASE)
-            for i, line in enumerate(lines, 1):
-                if regex.search(line):
-                    return i
-        except re.error:
-            # Fallback to substring search if regex fails
-            for i, line in enumerate(lines, 1):
-                if pattern.lower() in line.lower():
-                    return i
-        return 0
+    def _get_node_text(self, node, code: str) -> str:
+        """Extract text for a given AST node."""
+        if not node:
+            return ""
+        return code[node.start_byte:node.end_byte]
+    
+    def _is_placeholder_or_env_var(self, value: str) -> bool:
+        """Check if value is a placeholder or environment variable reference."""
+        value_lower = value.lower()
+        placeholders = [
+            "os.getenv", "os.environ", "${", "process.env",
+            "environment.", "configuration[", "your", "example",
+            "<", ">", "***", "xxx", "placeholder", "todo"
+        ]
+        return any(ph in value_lower for ph in placeholders)
     
     def _get_snippet(self, lines: List[str], line_number: int, context: int = 2) -> str:
         """Get code snippet around line number."""
@@ -612,3 +744,24 @@ class KSI_SVC_06_Analyzer(BaseKSIAnalyzer):
         start = max(0, line_number - context - 1)
         end = min(len(lines), line_number + context)
         return '\n'.join(lines[start:end])
+
+
+def create_analyzer(language: str) -> KSI_SVC_06_Analyzer:
+    """Factory function to create analyzer for specified language."""
+    lang_map = {
+        "python": CodeLanguage.PYTHON,
+        "csharp": CodeLanguage.CSHARP,
+        "c#": CodeLanguage.CSHARP,
+        "java": CodeLanguage.JAVA,
+        "javascript": CodeLanguage.JAVASCRIPT,
+        "typescript": CodeLanguage.TYPESCRIPT,
+        "bicep": CodeLanguage.BICEP,
+        "terraform": CodeLanguage.TERRAFORM,
+    }
+    
+    code_language = lang_map.get(language.lower())
+    if not code_language:
+        raise ValueError(f"Unsupported language: {language}. Supported: python, csharp, java, javascript, typescript, bicep, terraform")
+    
+    return KSI_SVC_06_Analyzer(code_language)
+

@@ -33,7 +33,7 @@ def test_cve_fetcher_initialization():
     assert fetcher_with_tokens.github_token == "test_token"
     assert fetcher_with_tokens.nvd_api_key == "test_key"
     
-    print("✅ CVE fetcher initialization test passed")
+    print("[OK] CVE fetcher initialization test passed")
 
 def test_version_parsing():
     """Test version string parsing."""
@@ -47,7 +47,7 @@ def test_version_parsing():
     assert fetcher._parse_version("2.0.0") == (2, 0, 0)
     assert fetcher._parse_version("10.15.23") == (10, 15, 23)
     
-    print("✅ Version parsing test passed")
+    print("[OK] Version parsing test passed")
 
 def test_version_comparison():
     """Test version comparison logic."""
@@ -69,7 +69,7 @@ def test_version_comparison():
     assert fetcher._check_single_range((1, 2, 3), "== 1.2.3") == True
     assert fetcher._check_single_range((1, 2, 4), "== 1.2.3") == False
     
-    print("✅ Version comparison test passed")
+    print("[OK] Version comparison test passed")
 
 def test_version_range_checking():
     """Test compound version range checking."""
@@ -83,7 +83,7 @@ def test_version_range_checking():
     assert fetcher._version_in_range((2, 0, 0), ">= 1.0.0, < 2.0.0") == False
     assert fetcher._version_in_range((1, 0, 0), ">= 1.0.0, < 2.0.0") == True
     
-    print("✅ Version range checking test passed")
+    print("[OK] Version range checking test passed")
 
 def test_version_affected():
     """Test if version is affected by vulnerability."""
@@ -102,7 +102,7 @@ def test_version_affected():
     assert fetcher._version_affected("1.5.0", [">= 1.0.0, < 2.0.0"], ["2.0.0"]) == True
     assert fetcher._version_affected("0.9.0", [">= 1.0.0, < 2.0.0"], ["2.0.0"]) == False
     
-    print("✅ Version affected logic test passed")
+    print("[OK] Version affected logic test passed")
 
 def test_cache_operations():
     """Test cache save and retrieval."""
@@ -129,7 +129,7 @@ def test_cache_operations():
     # Clean up
     fetcher.clear_cache()
     
-    print("✅ Cache operations test passed")
+    print("[OK] Cache operations test passed")
 
 def test_severity_to_cvss():
     """Test severity to CVSS score mapping."""
@@ -144,7 +144,7 @@ def test_severity_to_cvss():
     assert fetcher._severity_to_cvss("LOW") == 3.0
     assert fetcher._severity_to_cvss("UNKNOWN") is None
     
-    print("✅ Severity to CVSS mapping test passed")
+    print("[OK] Severity to CVSS mapping test passed")
 
 def test_vulnerability_dataclass():
     """Test Vulnerability dataclass."""
@@ -172,7 +172,7 @@ def test_vulnerability_dataclass():
     assert isinstance(vuln_dict, dict)
     assert vuln_dict["cve_id"] == "CVE-2024-TEST"
     
-    print("✅ Vulnerability dataclass test passed")
+    print("[OK] Vulnerability dataclass test passed")
 
 def test_ecosystem_mapping():
     """Test ecosystem name mapping."""
@@ -185,7 +185,7 @@ def test_ecosystem_mapping():
     assert fetcher.ECOSYSTEM_MAP["pypi"] == "PIP"
     assert fetcher.ECOSYSTEM_MAP["maven"] == "MAVEN"
     
-    print("✅ Ecosystem mapping test passed")
+    print("[OK] Ecosystem mapping test passed")
 
 def test_convenience_functions():
     """Test convenience functions for analyzers."""
@@ -201,9 +201,9 @@ def test_convenience_functions():
         assert callable(check_pypi_package)
         assert callable(check_maven_package)
         
-        print("✅ Convenience functions test passed")
+        print("[OK] Convenience functions test passed")
     except Exception as e:
-        print(f"⚠️ Convenience functions test passed with warning: {e}")
+        print(f"[WARN] Convenience functions test passed with warning: {e}")
 
 def test_known_vulnerable_package():
     """Test fetching a known vulnerable package (real API call)."""
@@ -223,12 +223,12 @@ def test_known_vulnerable_package():
             print(f"   Found {len(vulns)} vulnerabilities (expected)")
             for v in vulns[:2]:  # Show first 2
                 print(f"   - {v.cve_id}: {v.severity}")
-            print("✅ Known vulnerable package test passed")
+            print("[OK] Known vulnerable package test passed")
         else:
-            print("⚠️ No vulnerabilities found (possible API issue or data updated)")
+            print("[WARN] No vulnerabilities found (possible API issue or data updated)")
     
     except Exception as e:
-        print(f"⚠️ Known vulnerable package test skipped (network/API issue): {e}")
+        print(f"[WARN] Known vulnerable package test skipped (network/API issue): {e}")
 
 def test_safe_package():
     """Test fetching a safe package (real API call)."""
@@ -246,13 +246,13 @@ def test_safe_package():
         
         if not vulns:
             print("   No vulnerabilities found (expected)")
-            print("✅ Safe package test passed")
+            print("[OK] Safe package test passed")
         else:
             print(f"   Found {len(vulns)} vulnerabilities (unexpected, but possible)")
-            print("⚠️ Safe package test completed with findings")
+            print("[WARN] Safe package test completed with findings")
     
     except Exception as e:
-        print(f"⚠️ Safe package test skipped (network/API issue): {e}")
+        print(f"[WARN] Safe package test skipped (network/API issue): {e}")
 
 def test_npm_package():
     """Test npm package vulnerability checking."""
@@ -264,13 +264,13 @@ def test_npm_package():
         
         if vulns:
             print(f"   Found {len(vulns)} vulnerabilities")
-            print("✅ npm package test passed")
+            print("[OK] npm package test passed")
         else:
             print("   No vulnerabilities found")
-            print("✅ npm package test passed")
+            print("[OK] npm package test passed")
     
     except Exception as e:
-        print(f"⚠️ npm package test skipped (network/API issue): {e}")
+        print(f"[WARN] npm package test skipped (network/API issue): {e}")
 
 def test_pypi_package():
     """Test PyPI package vulnerability checking."""
@@ -282,13 +282,13 @@ def test_pypi_package():
         
         if vulns:
             print(f"   Found {len(vulns)} vulnerabilities")
-            print("✅ PyPI package test passed")
+            print("[OK] PyPI package test passed")
         else:
             print("   No vulnerabilities found")
-            print("✅ PyPI package test passed")
+            print("[OK] PyPI package test passed")
     
     except Exception as e:
-        print(f"⚠️ PyPI package test skipped (network/API issue): {e}")
+        print(f"[WARN] PyPI package test skipped (network/API issue): {e}")
 
 def run_all_tests():
     """Run all CVE fetcher tests."""

@@ -58,17 +58,29 @@ class KSI_AFR_03_Analyzer(BaseKSIAnalyzer):
     FAMILY_NAME = "Authorization by FedRAMP"
     IMPACT_LOW = True
     IMPACT_MODERATE = True
-    NIST_CONTROLS = ["ac-3", "ac-4", "au-2", "au-3", "au-6", "ca-2", "ir-4", "ra-5", "sc-8"]
+    NIST_CONTROLS = [
+        ("ac-3", "Access Enforcement"),
+        ("ac-4", "Information Flow Enforcement"),
+        ("au-2", "Event Logging"),
+        ("au-3", "Content of Audit Records"),
+        ("au-6", "Audit Record Review, Analysis, and Reporting"),
+        ("ca-2", "Control Assessments"),
+        ("ir-4", "Incident Handling"),
+        ("ra-5", "Vulnerability Monitoring and Scanning"),
+        ("sc-8", "Transmission Confidentiality and Integrity")
+    ]
     CODE_DETECTABLE = False
     IMPLEMENTATION_STATUS = "NOT_IMPLEMENTED"
     RETIRED = False
     
-    def __init__(self):
+    def __init__(self, language=None, ksi_id: str = "", ksi_name: str = "", ksi_statement: str = ""):
+        """Initialize analyzer with backward-compatible API."""
         super().__init__(
-            ksi_id=self.KSI_ID,
-            ksi_name=self.KSI_NAME,
-            ksi_statement=self.KSI_STATEMENT
+            ksi_id=ksi_id or self.KSI_ID,
+            ksi_name=ksi_name or self.KSI_NAME,
+            ksi_statement=ksi_statement or self.KSI_STATEMENT
         )
+        self.direct_language = language
     
     # ============================================================================
     # APPLICATION LANGUAGE ANALYZERS
@@ -226,3 +238,4 @@ class KSI_AFR_03_Analyzer(BaseKSIAnalyzer):
         start = max(0, line_number - context - 1)
         end = min(len(lines), line_number + context)
         return '\n'.join(lines[start:end])
+

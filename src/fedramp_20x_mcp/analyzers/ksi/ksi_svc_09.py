@@ -9,7 +9,8 @@ Version: 25.11C (Published: 2025-12-01)
 """
 
 import re
-from typing import List, Optional, Dict, Any
+import ast
+from typing import List
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 
@@ -51,17 +52,22 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
     FAMILY_NAME = "Service Configuration"
     IMPACT_LOW = False
     IMPACT_MODERATE = True
-    NIST_CONTROLS = ["sc-23", "si-7.1"]
+    NIST_CONTROLS = [
+        ("sc-23", "Session Authenticity"),
+        ("si-7.1", "Integrity Checks")
+    ]
     CODE_DETECTABLE = True
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RETIRED = False
     
-    def __init__(self):
+    def __init__(self, language=None, ksi_id: str = "", ksi_name: str = "", ksi_statement: str = ""):
+        """Initialize analyzer with backward-compatible API."""
         super().__init__(
-            ksi_id=self.KSI_ID,
-            ksi_name=self.KSI_NAME,
-            ksi_statement=self.KSI_STATEMENT
+            ksi_id=ksi_id or self.KSI_ID,
+            ksi_name=ksi_name or self.KSI_NAME,
+            ksi_statement=ksi_statement or self.KSI_STATEMENT
         )
+        self.direct_language = language
     
     # ============================================================================
     # APPLICATION LANGUAGE ANALYZERS
@@ -69,63 +75,89 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for KSI-SVC-09 compliance.
+        Analyze Python code for KSI-SVC-09 compliance using AST.
         
         Frameworks: Flask, Django, FastAPI, Azure SDK
         
         Detects:
-        - HTTP API calls without certificate verification
+        - SSL/TLS certificate verification disabled (verify=False)
         - Missing mutual TLS (mTLS) for service-to-service communication
-        - Unvalidated webhook signatures
+        - Certificate validation bypassed in any HTTP library
         """
         findings = []
         lines = code.split('\n')
         
-        # Pattern 1: requests with verify=False (CRITICAL)
-        verify_false_match = self._find_line(lines, r'requests\.(get|post|put|delete|patch).*verify\s*=\s*False')
+        try:
+            tree = ast.parse(code)
+        except SyntaxError:
+            # Fallback to regex if AST parsing fails
+            return self._python_regex_fallback(code, lines, file_path)
         
-        if verify_false_match:
-            line_num = verify_false_match['line_num']
-            findings.append(Finding(
-                severity=Severity.CRITICAL,
-                title="HTTP Request Without Certificate Verification",
-                description=(
-                    "HTTP request with verify=False disables SSL/TLS certificate validation. "
-                    "KSI-SVC-09 requires persistent validation of communication authenticity and integrity (SC-23, SI-7.1) - "
-                    "disabling certificate verification allows man-in-the-middle attacks, "
-                    "connection hijacking, and impersonation of trusted services."
-                ),
-                file_path=file_path,
-                line_number=line_num,
-                snippet=self._get_snippet(lines, line_num, context=3),
-                remediation=(
-                    "Enable certificate verification (default behavior):\n"
-                    "import requests\n\n"
-                    "# Option 1: Use default verification (recommended)\n"
-                    "response = requests.get('https://api.example.com/data')\n"
-                    "# verify=True is default, no need to specify\n\n"
-                    "# Option 2: Explicit verification with custom CA bundle\n"
-                    "response = requests.get(\n"
-                    "    'https://api.example.com/data',\n"
-                    "    verify='/path/to/ca-bundle.crt'\n"
-                    ")\n\n"
-                    "# Option 3: Mutual TLS (mTLS) for service-to-service\n"
-                    "response = requests.get(\n"
-                    "    'https://api.example.com/data',\n"
-                    "    cert=('/path/to/client.crt', '/path/to/client.key'),\n"
-                    "    verify='/path/to/ca-bundle.crt'\n"
-                    ")\n\n"
-                    "NEVER use verify=False in production!\n\n"
-                    "Ref: NIST SP 800-52 Rev. 2 - Guidelines for TLS Implementations "
-                    "(https://csrc.nist.gov/publications/detail/sp/800-52/rev-2/final)"
-                ),
-                ksi_id=self.KSI_ID
-            ))
+        # Pattern 1: verify=False in function calls (CRITICAL)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call):
+                # Check for keyword argument verify=False
+                for keyword in node.keywords:
+                    if keyword.arg == 'verify' and isinstance(keyword.value, ast.Constant):
+                        if keyword.value.value is False:
+                            findings.append(Finding(
+                                severity=Severity.CRITICAL,
+                                title="HTTP Request Without Certificate Verification",
+                                description=(
+                                    f"HTTP request with verify=False at line {node.lineno} disables SSL/TLS certificate validation. "
+                                    f"KSI-SVC-09 requires persistent validation of communication authenticity and integrity (SC-23, SI-7.1) - "
+                                    f"disabling certificate verification allows man-in-the-middle attacks, "
+                                    f"connection hijacking, and impersonation of trusted services."
+                                ),
+                                file_path=file_path,
+                                line_number=node.lineno,
+                                snippet=self._get_snippet(lines, node.lineno, context=3),
+                                remediation=(
+                                    "Enable certificate verification (default behavior):\n"
+                                    "import requests\n\n"
+                                    "# Option 1: Use default verification (recommended)\n"
+                                    "response = requests.get('https://api.example.com/data')\n"
+                                    "# verify=True is default, no need to specify\n\n"
+                                    "# Option 2: Explicit verification with custom CA bundle\n"
+                                    "response = requests.get(\n"
+                                    "    'https://api.example.com/data',\n"
+                                    "    verify='/path/to/ca-bundle.crt'\n"
+                                    ")\n\n"
+                                    "# Option 3: Mutual TLS (mTLS) for service-to-service\n"
+                                    "response = requests.get(\n"
+                                    "    'https://api.example.com/data',\n"
+                                    "    cert=('/path/to/client.crt', '/path/to/client.key'),\n"
+                                    "    verify='/path/to/ca-bundle.crt'\n"
+                                    ")\n\n"
+                                    "NEVER use verify=False in production!\n\n"
+                                    "Ref: NIST SP 800-52 Rev. 2 - Guidelines for TLS Implementations "
+                                    "(https://csrc.nist.gov/publications/detail/sp/800-52/rev-2/final)"
+                                ),
+                                ksi_id=self.KSI_ID
+                            ))
         
         return findings
-        # - Configuration issues
-        # - Missing security controls
-        # - Framework-specific vulnerabilities
+    
+    def _python_regex_fallback(self, code: str, lines: List[str], file_path: str) -> List[Finding]:
+        """Fallback regex-based analysis when AST parsing fails."""
+        findings = []
+        
+        if re.search(r'verify\s*=\s*False', code):
+            line_num = self._find_line(lines, r'verify\s*=\s*False')
+            if line_num:
+                findings.append(Finding(
+                    severity=Severity.CRITICAL,
+                    title="HTTP Request Without Certificate Verification (Regex Fallback)",
+                    description=(
+                        f"Detected verify=False at line {line_num}. "
+                        f"This disables SSL/TLS certificate validation."
+                    ),
+                    file_path=file_path,
+                    line_number=line_num,
+                    snippet=self._get_snippet(lines, line_num),
+                    remediation="Enable certificate verification by removing verify=False or using verify=True.",
+                    ksi_id=self.KSI_ID
+                ))
         
         return findings
     
@@ -136,56 +168,54 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
         Frameworks: ASP.NET Core, Entity Framework, Azure SDK
         
         Detects:
-        - HttpClient without certificate validation
         - ServerCertificateValidationCallback that always returns true
-        - Missing mutual TLS configuration
+        - Missing certificate validation in HttpClient
         """
         findings = []
         lines = code.split('\n')
         
-        # Pattern 1: ServerCertificateValidationCallback always returns true (CRITICAL)
-        callback_match = self._find_line(lines, r'ServerCertificateValidationCallback.*=>\s*true')
-        
-        if callback_match:
-            line_num = callback_match['line_num']
-            findings.append(Finding(
-                severity=Severity.CRITICAL,
-                title="Certificate Validation Callback Always Returns True",
-                description=(
-                    "ServerCertificateValidationCallback configured to always return true, disabling certificate validation. "
-                    "KSI-SVC-09 requires persistent validation of communication authenticity and integrity (SC-23, SI-7.1) - "
-                    "bypassing certificate validation allows man-in-the-middle attacks, "
-                    "connection hijacking, and impersonation of trusted services."
-                ),
-                file_path=file_path,
-                line_number=line_num,
-                snippet=self._get_snippet(lines, line_num, context=3),
-                remediation=(
-                    "Remove or properly implement certificate validation:\n"
-                    "// Option 1: Use default validation (recommended)\n"
-                    "using var httpClient = new HttpClient();\n"
-                    "// Default behavior validates certificates\n\n"
-                    "// Option 2: Custom validation with proper checks\n"
-                    "var handler = new HttpClientHandler\n"
-                    "{{\n"
-                    "    ServerCertificateCustomValidationCallback = (message, cert, chain, errors) =>\n"
-                    "    {{\n"
-                    "        // Only accept specific certificate thumbprints\n"
-                    "        var allowedThumbprints = new[] {{ \"expected-thumbprint\" }};\n"
-                    "        return errors == SslPolicyErrors.None &&\n"
-                    "               allowedThumbprints.Contains(cert.GetCertHashString());\n"
-                    "    }}\n"
-                    "}};\n\n"
-                    "// Option 3: Mutual TLS (mTLS) for service-to-service\n"
-                    "var clientCert = new X509Certificate2(\"/path/to/client.pfx\", \"password\");\n"
-                    "var handler = new HttpClientHandler();\n"
-                    "handler.ClientCertificates.Add(clientCert);\n"
-                    "using var httpClient = new HttpClient(handler);\n\n"
-                    "NEVER bypass certificate validation in production!\n\n"
-                    "Ref: .NET Security Best Practices (https://learn.microsoft.com/dotnet/standard/security/security-best-practices)"
-                ),
-                ksi_id=self.KSI_ID
-            ))
+        # Pattern 1: ServerCertificateValidationCallback => true (CRITICAL)
+        if re.search(r'ServerCertificateValidationCallback.*=>\s*true', code):
+            line_num = self._find_line(lines, r'ServerCertificateValidationCallback')
+            if line_num:
+                findings.append(Finding(
+                    severity=Severity.CRITICAL,
+                    title="Certificate Validation Callback Always Returns True",
+                    description=(
+                        f"ServerCertificateValidationCallback at line {line_num} configured to always return true, disabling certificate validation. "
+                        f"KSI-SVC-09 requires persistent validation of communication authenticity and integrity (SC-23, SI-7.1) - "
+                        f"bypassing certificate validation allows man-in-the-middle attacks, "
+                        f"connection hijacking, and impersonation of trusted services."
+                    ),
+                    file_path=file_path,
+                    line_number=line_num,
+                    snippet=self._get_snippet(lines, line_num, context=3),
+                    remediation=(
+                        "Remove or properly implement certificate validation:\n"
+                        "// Option 1: Use default validation (recommended)\n"
+                        "using var httpClient = new HttpClient();\n"
+                        "// Default behavior validates certificates\n\n"
+                        "// Option 2: Custom validation with proper checks\n"
+                        "var handler = new HttpClientHandler\n"
+                        "{{\n"
+                        "    ServerCertificateCustomValidationCallback = (message, cert, chain, errors) =>\n"
+                        "    {{\n"
+                        "        // Only accept specific certificate thumbprints\n"
+                        "        var allowedThumbprints = new[] {{ \"expected-thumbprint\" }};\n"
+                        "        return errors == SslPolicyErrors.None &&\n"
+                        "               allowedThumbprints.Contains(cert.GetCertHashString());\n"
+                        "    }}\n"
+                        "}};\n\n"
+                        "// Option 3: Mutual TLS (mTLS) for service-to-service\n"
+                        "var clientCert = new X509Certificate2(\"/path/to/client.pfx\", \"password\");\n"
+                        "var handler = new HttpClientHandler();\n"
+                        "handler.ClientCertificates.Add(clientCert);\n"
+                        "using var httpClient = new HttpClient(handler);\n\n"
+                        "NEVER bypass certificate validation in production!\n\n"
+                        "Ref: .NET Security Best Practices (https://learn.microsoft.com/dotnet/standard/security/security-best-practices)"
+                    ),
+                    ksi_id=self.KSI_ID
+                ))
         
         return findings
     
@@ -196,49 +226,48 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
         Frameworks: Spring Boot, Spring Security, Azure SDK
         
         Detects:
-        - SSLContext with trust-all TrustManager
+        - Trust-all TrustManager implementations
         - HostnameVerifier that always returns true
         - Missing certificate validation
         """
         findings = []
         lines = code.split('\n')
         
-        # Pattern 1: Trust-all TrustManager (CRITICAL)
-        trustall_match = self._find_line(lines, r'TrustManager.*new\s+X509TrustManager.*checkServerTrusted.*\{\s*\}')
-        
-        if trustall_match:
-            line_num = trustall_match['line_num']
-            findings.append(Finding(
-                severity=Severity.CRITICAL,
-                title="Trust-All TrustManager Implementation",
-                description=(
-                    "Custom TrustManager with empty checkServerTrusted() method, disabling certificate validation. "
-                    "KSI-SVC-09 requires persistent validation of communication authenticity and integrity (SC-23, SI-7.1) - "
-                    "trust-all TrustManagers accept any certificate, allowing man-in-the-middle attacks, "
-                    "connection hijacking, and impersonation of trusted services."
-                ),
-                file_path=file_path,
-                line_number=line_num,
-                snippet=self._get_snippet(lines, line_num, context=3),
-                remediation=(
-                    "Use default TrustManager or implement proper validation:\n"
-                    "// Option 1: Use default SSL context (recommended)\n"
-                    "HttpClient client = HttpClient.newBuilder()\n"
-                    "    .sslContext(SSLContext.getDefault())\n"
-                    "    .build();\n\n"
-                    "// Option 2: Custom TrustManager with proper validation\n"
-                    "TrustManagerFactory tmf = TrustManagerFactory.getInstance(\n"
-                    "    TrustManagerFactory.getDefaultAlgorithm()\n"
-                    ");\n"
-                    "KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());\n"
-                    "try (InputStream is = new FileInputStream(\"/path/to/truststore.jks\")) {{\n"
-                    "    ks.load(is, \"password\".toCharArray());\n"
-                    "}}\n"
-                    "tmf.init(ks);\n"
-                    "SSLContext sslContext = SSLContext.getInstance(\"TLS\");\n"
-                    "sslContext.init(null, tmf.getTrustManagers(), null);\n\n"
-                    "// Option 3: Mutual TLS (mTLS) for service-to-service\n"
-                    "KeyManagerFactory kmf = KeyManagerFactory.getInstance(\n"
+        # Pattern 1: Empty checkServerTrusted() in TrustManager (CRITICAL)
+        if re.search(r'X509TrustManager.*checkServerTrusted.*\{\s*\}', code, re.DOTALL):
+            line_num = self._find_line(lines, r'checkServerTrusted')
+            if line_num:
+                findings.append(Finding(
+                    severity=Severity.CRITICAL,
+                    title="Trust-All TrustManager Implementation",
+                    description=(
+                        f"Custom TrustManager with empty checkServerTrusted() at line {line_num}, disabling certificate validation. "
+                        f"KSI-SVC-09 requires persistent validation of communication authenticity and integrity (SC-23, SI-7.1) - "
+                        f"trust-all TrustManagers accept any certificate, allowing man-in-the-middle attacks, "
+                        f"connection hijacking, and impersonation of trusted services."
+                    ),
+                    file_path=file_path,
+                    line_number=line_num,
+                    snippet=self._get_snippet(lines, line_num, context=3),
+                    remediation=(
+                        "Use default TrustManager or implement proper validation:\n"
+                        "// Option 1: Use default SSL context (recommended)\n"
+                        "HttpClient client = HttpClient.newBuilder()\n"
+                        "    .sslContext(SSLContext.getDefault())\n"
+                        "    .build();\n\n"
+                        "// Option 2: Custom TrustManager with proper validation\n"
+                        "TrustManagerFactory tmf = TrustManagerFactory.getInstance(\n"
+                        "    TrustManagerFactory.getDefaultAlgorithm()\n"
+                        ");\n"
+                        "KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());\n"
+                        "try (InputStream is = new FileInputStream(\"/path/to/truststore.jks\")) {{\n"
+                        "    ks.load(is, \"password\".toCharArray());\n"
+                        "}}\n"
+                        "tmf.init(ks);\n"
+                        "SSLContext sslContext = SSLContext.getInstance(\"TLS\");\n"
+                        "sslContext.init(null, tmf.getTrustManagers(), null);\n\n"
+                        "// Option 3: Mutual TLS (mTLS) for service-to-service\n"
+                        "KeyManagerFactory kmf = KeyManagerFactory.getInstance(\n"
                     "    KeyManagerFactory.getDefaultAlgorithm()\n"
                     ");\n"
                     "KeyStore clientKs = KeyStore.getInstance(\"PKCS12\");\n"
@@ -270,11 +299,10 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
         lines = code.split('\n')
         
         # Pattern 1: rejectUnauthorized: false (CRITICAL)
-        reject_unauthorized_match = self._find_line(lines, r'rejectUnauthorized\s*:\s*false')
-        
-        if reject_unauthorized_match:
-            line_num = reject_unauthorized_match['line_num']
-            findings.append(Finding(
+        if re.search(r'rejectUnauthorized\s*:\s*false', code):
+            line_num = self._find_line(lines, r'rejectUnauthorized')
+            if line_num:
+                findings.append(Finding(
                 severity=Severity.CRITICAL,
                 title="Certificate Validation Disabled (rejectUnauthorized: false)",
                 description=(
@@ -336,7 +364,7 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
         appgw_match = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.Network/applicationGateways@")
         
         if appgw_match:
-            line_num = appgw_match['line_num']
+            line_num = appgw_match
             # Check if sslPolicy is configured in the resource block
             has_ssl_policy = any('sslPolicy' in line for line in lines[line_num:min(line_num+50, len(lines))])
             
@@ -384,7 +412,7 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
         apim_match = self._find_line(lines, r"resource\s+\w+\s+'Microsoft\.ApiManagement/service@")
         
         if apim_match:
-            line_num = apim_match['line_num']
+            line_num = apim_match
             # Check if customProperties with client cert validation exists
             has_cert_validation = any('Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Ssl30' in line 
                                      for line in lines[line_num:min(line_num+50, len(lines))])
@@ -440,7 +468,7 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
         appgw_match = self._find_line(lines, r'resource\s+"azurerm_application_gateway"')
         
         if appgw_match:
-            line_num = appgw_match['line_num']
+            line_num = appgw_match
             # Check if ssl_policy block exists
             has_ssl_policy = any('ssl_policy' in line for line in lines[line_num:min(line_num+50, len(lines))])
             
@@ -486,7 +514,7 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
         storage_match = self._find_line(lines, r'resource\s+"azurerm_storage_account"')
         
         if storage_match:
-            line_num = storage_match['line_num']
+            line_num = storage_match
             # Check for enable_https_traffic_only = false
             has_https_disabled = self._find_line(
                 lines[line_num:min(line_num+30, len(lines))],
@@ -503,7 +531,7 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
                         "allowing HTTP traffic exposes data to eavesdropping and man-in-the-middle attacks."
                     ),
                     file_path=file_path,
-                    line_number=line_num + (has_https_disabled['line_num'] if has_https_disabled else 0),
+                    line_number=line_num + has_https_disabled if has_https_disabled else line_num,
                     snippet=self._get_snippet(lines, line_num, context=5),
                     remediation=(
                         "Enable HTTPS-only traffic for Storage Account:\n"
@@ -567,18 +595,18 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
     # HELPER METHODS
     # ============================================================================
     
-    def _find_line(self, lines: List[str], pattern: str) -> Optional[Dict[str, Any]]:
+    def _find_line(self, lines: List[str], pattern: str) -> int:
         """
         Find line matching regex pattern.
         
-        Returns dict with 'line_num' (1-indexed) and 'line' content, or None if not found.
+        Returns line number (1-indexed) or 0 if not found.
         """
         import re
         regex = re.compile(pattern, re.IGNORECASE)
         for i, line in enumerate(lines, 1):
             if regex.search(line):
-                return {'line_num': i, 'line': line}
-        return None
+                return i
+        return 0
     
     def _get_snippet(self, lines: List[str], line_number: int, context: int = 2) -> str:
         """Get code snippet around line number with bounds checking."""
@@ -587,3 +615,4 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
         start = max(0, line_number - context - 1)
         end = min(len(lines), line_number + context)
         return '\n'.join(lines[start:end])
+

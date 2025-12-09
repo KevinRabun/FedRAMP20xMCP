@@ -61,17 +61,32 @@ class KSI_PIY_04_Analyzer(BaseKSIAnalyzer):
     FAMILY_NAME = "Policy and Inventory"
     IMPACT_LOW = True
     IMPACT_MODERATE = True
-    NIST_CONTROLS = ["ac-5", "au-3.3", "cm-3.4", "pl-8", "pm-7", "sa-3", "sa-8", "sc-4", "sc-18", "si-10", "si-11", "si-16"]
-    CODE_DETECTABLE = True
+    NIST_CONTROLS = [
+        ("ac-5", "Separation of Duties"),
+        ("au-3.3", "Limit Personally Identifiable Information Elements"),
+        ("cm-3.4", "Security and Privacy Representatives"),
+        ("pl-8", "Security and Privacy Architectures"),
+        ("pm-7", "Enterprise Architecture"),
+        ("sa-3", "System Development Life Cycle"),
+        ("sa-8", "Security and Privacy Engineering Principles"),
+        ("sc-4", "Information in Shared System Resources"),
+        ("sc-18", "Mobile Code"),
+        ("si-10", "Information Input Validation"),
+        ("si-11", "Error Handling"),
+        ("si-16", "Memory Protection")
+    ]
+    CODE_DETECTABLE = False
     IMPLEMENTATION_STATUS = "NOT_IMPLEMENTED"
     RETIRED = False
     
-    def __init__(self):
+    def __init__(self, language=None, ksi_id: str = "", ksi_name: str = "", ksi_statement: str = ""):
+        """Initialize analyzer with backward-compatible API."""
         super().__init__(
-            ksi_id=self.KSI_ID,
-            ksi_name=self.KSI_NAME,
-            ksi_statement=self.KSI_STATEMENT
+            ksi_id=ksi_id or self.KSI_ID,
+            ksi_name=ksi_name or self.KSI_NAME,
+            ksi_statement=ksi_statement or self.KSI_STATEMENT
         )
+        self.direct_language = language
     
     # ============================================================================
     # APPLICATION LANGUAGE ANALYZERS
@@ -261,3 +276,4 @@ class KSI_PIY_04_Analyzer(BaseKSIAnalyzer):
         start = max(0, line_number - context - 1)
         end = min(len(lines), line_number + context)
         return '\n'.join(lines[start:end])
+

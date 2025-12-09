@@ -12,11 +12,12 @@ import re
 from typing import List, Optional, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
+from ..ast_utils import ASTParser, CodeLanguage
 
 
 class KSI_SVC_10_Analyzer(BaseKSIAnalyzer):
     """
-    Analyzer for KSI-SVC-10: Data Destruction
+    Enhanced Analyzer for KSI-SVC-10: Data Destruction
     
     **Official Statement:**
     Remove unwanted federal customer data promptly when requested by an agency in alignment with customer agreements, including from backups if appropriate; this typically applies when a customer spills information or when a customer seeks to remove information from a service due to a change in usage.
@@ -51,17 +52,22 @@ class KSI_SVC_10_Analyzer(BaseKSIAnalyzer):
     FAMILY_NAME = "Service Configuration"
     IMPACT_LOW = False
     IMPACT_MODERATE = True
-    NIST_CONTROLS = ["si-12.3", "si-18.4"]
+    NIST_CONTROLS = [
+        ("si-12.3", "Information Disposal"),
+        ("si-18.4", "Individual Requests")
+    ]
     CODE_DETECTABLE = True
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RETIRED = False
     
-    def __init__(self):
+    def __init__(self, language=None, ksi_id: str = "", ksi_name: str = "", ksi_statement: str = ""):
+        """Initialize analyzer with backward-compatible API."""
         super().__init__(
-            ksi_id=self.KSI_ID,
-            ksi_name=self.KSI_NAME,
-            ksi_statement=self.KSI_STATEMENT
+            ksi_id=ksi_id or self.KSI_ID,
+            ksi_name=ksi_name or self.KSI_NAME,
+            ksi_statement=ksi_statement or self.KSI_STATEMENT
         )
+        self.direct_language = language
     
     # ============================================================================
     # APPLICATION LANGUAGE ANALYZERS
@@ -78,6 +84,157 @@ class KSI_SVC_10_Analyzer(BaseKSIAnalyzer):
         - Database operations without data retention policies
         - Missing backup deletion capabilities
         """
+        # Try AST-based analysis first
+        parser = ASTParser(CodeLanguage.PYTHON)
+        tree = parser.parse(code)
+        if tree:
+            return self._analyze_python_ast(code, file_path, parser, tree)
+        
+        # Fallback to regex
+        return self._analyze_python_regex(code, file_path)
+    
+    def _analyze_python_ast(self, code: str, file_path: str, parser: ASTParser, tree) -> List[Finding]:
+        """AST-based Python data destruction analysis"""
+        findings = []
+        code_bytes = code.encode('utf8')
+        lines = code.split('\n')
+        
+        # Pattern 1: Hard delete without soft delete (MEDIUM)
+        # Find .delete() or .remove() calls
+        call_nodes = parser.find_nodes_by_type(tree.root_node, "call")
+        has_delete = False
+        delete_line = 1
+        
+        for call_node in call_nodes:
+            call_text = parser.get_node_text(call_node, code_bytes)
+            
+            # Check for delete/remove method calls
+            if '.delete(' in call_text or '.remove(' in call_text:
+                has_delete = True
+                delete_line = code[:call_node.start_byte].count('\n') + 1
+                
+                # Check context for soft delete fields
+                context_start = max(0, delete_line - 11)
+                context_end = min(len(lines), delete_line + 10)
+                context = lines[context_start:context_end]
+                
+                has_soft_delete = any(re.search(r'(is_deleted|deleted_at|deleted|status\s*=\s*["\']deleted)', line, re.IGNORECASE) 
+                                     for line in context)
+                
+                if not has_soft_delete:
+                    findings.append(Finding(
+                        severity=Severity.MEDIUM,
+                        title="Hard Delete Without Soft Delete Mechanism",
+                        description=(
+                            "Database record deleted with .delete() or .remove() without soft delete mechanism. "
+                            "KSI-SVC-10 requires removing customer data promptly when requested (SI-12.3, SI-18.4) - "
+                            "hard deletes cannot be audited or recovered. Implement soft delete to track deletion requests "
+                            "and allow verification of data removal compliance."
+                        ),
+                        file_path=file_path,
+                        line_number=delete_line,
+                        snippet=self._get_snippet(lines, delete_line, context=3),
+                        remediation=(
+                            "Implement soft delete mechanism:\n"
+                            "# Django ORM Example\n"
+                            "from django.db import models\n"
+                            "from django.utils import timezone\n\n"
+                            "class SoftDeleteModel(models.Model):\n"
+                            "    deleted_at = models.DateTimeField(null=True, blank=True)\n"
+                            "    \n"
+                            "    def soft_delete(self):\n"
+                            "        self.deleted_at = timezone.now()\n"
+                            "        self.save()\n"
+                            "    \n"
+                            "    class Meta:\n"
+                            "        abstract = True\n\n"
+                            "# SQLAlchemy Example\n"
+                            "from sqlalchemy import Column, DateTime\n"
+                            "from datetime import datetime\n\n"
+                            "class SoftDeleteMixin:\n"
+                            "    deleted_at = Column(DateTime, nullable=True)\n"
+                            "    \n"
+                            "    def soft_delete(self):\n"
+                            "        self.deleted_at = datetime.utcnow()\n\n"
+                            "# Usage\n"
+                            "record.soft_delete()  # Instead of record.delete()\n\n"
+                            "# Query filtering\n"
+                            "active_records = Model.objects.filter(deleted_at__isnull=True)\n\n"
+                            "Ref: Django Soft Delete Pattern (https://docs.djangoproject.com/en/stable/topics/db/managers/)"
+                        ),
+                        ksi_id=self.KSI_ID
+                    ))
+                    break  # Only report first occurrence
+        
+        # Pattern 2: Backup operations without retention policy (LOW)
+        # Check for backup-related function calls
+        for call_node in parser.find_nodes_by_type(tree.root_node, "call"):
+            call_text = parser.get_node_text(call_node, code_bytes).lower()
+            
+            if any(keyword in call_text for keyword in ['backup', 'snapshot', 'export']):
+                backup_line = code[:call_node.start_byte].count('\n') + 1
+                
+                # Check if retention is mentioned in code
+                has_retention = any(keyword in code.lower() for keyword in ['retention', 'expire', 'ttl', 'lifecycle'])
+                
+                if not has_retention:
+                    findings.append(Finding(
+                        severity=Severity.LOW,
+                        title="Backup Operation Without Retention Policy",
+                        description=(
+                            "Backup or snapshot operation without retention/expiration policy. "
+                            "KSI-SVC-10 requires removing customer data from backups when requested (SI-12.3, SI-18.4) - "
+                            "indefinite backup retention may violate data deletion requirements. "
+                            "Set retention policies to ensure old backups are automatically removed."
+                        ),
+                        file_path=file_path,
+                        line_number=backup_line,
+                        snippet=self._get_snippet(lines, backup_line, context=3),
+                        remediation=(
+                            "Implement backup retention policies:\n"
+                            "# Azure Blob Storage with lifecycle management\n"
+                            "from azure.storage.blob import BlobServiceClient\n\n"
+                            "blob_service_client = BlobServiceClient.from_connection_string(conn_str)\n"
+                            "container_client = blob_service_client.get_container_client(container)\n\n"
+                            "# Upload backup with metadata\n"
+                            "blob_client = container_client.get_blob_client(\"backup.tar.gz\")\n"
+                            "blob_client.upload_blob(\n"
+                            "    data=backup_data,\n"
+                            "    metadata={\n"
+                            "        'retention_days': '30',\n"
+                            "        'expires_at': (datetime.now() + timedelta(days=30)).isoformat()\n"
+                            "    }\n"
+                            ")\n\n"
+                            "# AWS S3 with lifecycle policy\n"
+                            "import boto3\n\n"
+                            "s3 = boto3.client('s3')\n"
+                            "s3.put_object(\n"
+                            "    Bucket='backups',\n"
+                            "    Key='backup.tar.gz',\n"
+                            "    Body=backup_data,\n"
+                            "    Tagging='retention=30days'\n"
+                            ")\n\n"
+                            "# Configure lifecycle rule to delete after 30 days\n"
+                            "s3.put_bucket_lifecycle_configuration(\n"
+                            "    Bucket='backups',\n"
+                            "    LifecycleConfiguration={\n"
+                            "        'Rules': [{\n"
+                            "            'Id': 'DeleteOldBackups',\n"
+                            "            'Status': 'Enabled',\n"
+                            "            'Expiration': {'Days': 30}\n"
+                            "        }]\n"
+                            "    }\n"
+                            ")\n\n"
+                            "Ref: Azure Blob Lifecycle Management (https://learn.microsoft.com/azure/storage/blobs/lifecycle-management-overview)"
+                        ),
+                        ksi_id=self.KSI_ID
+                    ))
+                    break  # Only report first occurrence
+        
+        return findings
+    
+    def _analyze_python_regex(self, code: str, file_path: str) -> List[Finding]:
+        """Fallback regex-based analysis for Python."""
         findings = []
         lines = code.split('\n')
         
@@ -213,6 +370,105 @@ class KSI_SVC_10_Analyzer(BaseKSIAnalyzer):
         - Missing data retention policies
         - No audit trail for deletions
         """
+        # Try AST-based analysis first
+        parser = ASTParser(CodeLanguage.CSHARP)
+        tree = parser.parse(code)
+        if tree:
+            return self._analyze_csharp_ast(code, file_path, parser, tree)
+        
+        # Fallback to regex
+        return self._analyze_csharp_regex(code, file_path)
+    
+    def _analyze_csharp_ast(self, code: str, file_path: str, parser: ASTParser, tree) -> List[Finding]:
+        """AST-based C# data destruction analysis"""
+        findings = []
+        code_bytes = code.encode('utf8')
+        lines = code.split('\n')
+        
+        # Find .Remove() or .RemoveRange() calls
+        invocation_nodes = parser.find_nodes_by_type(tree.root_node, "invocation_expression")
+        
+        for invocation_node in invocation_nodes:
+            invocation_text = parser.get_node_text(invocation_node, code_bytes)
+            
+            if '.Remove(' in invocation_text or '.RemoveRange(' in invocation_text:
+                remove_line = code[:invocation_node.start_byte].count('\n') + 1
+                
+                # Check context for soft delete fields
+                context_start = max(0, remove_line - 21)
+                context_end = min(len(lines), remove_line + 10)
+                context = lines[context_start:context_end]
+                
+                has_soft_delete = any(re.search(r'(IsDeleted|DeletedAt|Deleted)', line, re.IGNORECASE) 
+                                     for line in context)
+                
+                if not has_soft_delete:
+                    findings.append(Finding(
+                        severity=Severity.MEDIUM,
+                        title="Hard Delete Without Soft Delete (Entity Framework)",
+                        description=(
+                            "Entity Framework Remove() or RemoveRange() without soft delete implementation. "
+                            "KSI-SVC-10 requires removing customer data promptly when requested (SI-12.3, SI-18.4) - "
+                            "hard deletes cannot be audited or traced for compliance verification. "
+                            "Implement soft delete to track deletion requests and verify data removal."
+                        ),
+                        file_path=file_path,
+                        line_number=remove_line,
+                        snippet=self._get_snippet(lines, remove_line, context=3),
+                        remediation=(
+                            "Implement soft delete in Entity Framework:\n"
+                            "// 1. Add soft delete properties to entity\n"
+                            "public class Customer\n"
+                            "{\n"
+                            "    public int Id { get; set; }\n"
+                            "    public string Name { get; set; }\n"
+                            "    public DateTime? DeletedAt { get; set; }\n"
+                            "    public bool IsDeleted => DeletedAt.HasValue;\n"
+                            "}\n\n"
+                            "// 2. Configure global query filter in DbContext\n"
+                            "protected override void OnModelCreating(ModelBuilder modelBuilder)\n"
+                            "{\n"
+                            "    modelBuilder.Entity<Customer>()\n"
+                            "        .HasQueryFilter(c => c.DeletedAt == null);\n"
+                            "}\n\n"
+                            "// 3. Implement soft delete method\n"
+                            "public async Task SoftDeleteCustomerAsync(int id)\n"
+                            "{\n"
+                            "    var customer = await _context.Customers\n"
+                            "        .IgnoreQueryFilters()  // To find soft-deleted records\n"
+                            "        .FirstOrDefaultAsync(c => c.Id == id);\n"
+                            "    \n"
+                            "    if (customer != null && !customer.IsDeleted)\n"
+                            "    {\n"
+                            "        customer.DeletedAt = DateTime.UtcNow;\n"
+                            "        await _context.SaveChangesAsync();\n"
+                            "    }\n"
+                            "}\n\n"
+                            "// 4. Hard delete after verification (compliance-driven)\n"
+                            "public async Task HardDeleteAfterVerificationAsync(int id)\n"
+                            "{\n"
+                            "    var customer = await _context.Customers\n"
+                            "        .IgnoreQueryFilters()\n"
+                            "        .FirstOrDefaultAsync(c => c.Id == id);\n"
+                            "    \n"
+                            "    if (customer?.IsDeleted == true)\n"
+                            "    {\n"
+                            "        _context.Customers.Remove(customer);\n"
+                            "        await _context.SaveChangesAsync();\n"
+                            "        // Log permanent deletion for audit\n"
+                            "        _logger.LogInformation(\"Hard deleted customer {Id}\", id);\n"
+                            "    }\n"
+                            "}\n\n"
+                            "Ref: EF Core Query Filters (https://learn.microsoft.com/ef/core/querying/filters)"
+                        ),
+                        ksi_id=self.KSI_ID
+                    ))
+                    break
+        
+        return findings
+    
+    def _analyze_csharp_regex(self, code: str, file_path: str) -> List[Finding]:
+        """Fallback regex-based analysis for C#."""
         findings = []
         lines = code.split('\n')
         
@@ -294,16 +550,110 @@ class KSI_SVC_10_Analyzer(BaseKSIAnalyzer):
         return findings
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for KSI-SVC-10 compliance.
+        """Analyze Java code for data destruction compliance (AST-first)."""  
+        parser = ASTParser(CodeLanguage.JAVA)
+        tree = parser.parse(code)
         
-        Frameworks: Spring Boot, Spring Security, Azure SDK
+        if tree:
+            return self._analyze_java_ast(code, tree, parser, file_path)
+        else:
+            return self._analyze_java_regex(code, file_path)
+    
+    def _analyze_java_ast(self, code: str, tree, parser, file_path: str) -> List[Finding]:
+        """AST-based analysis for Java using tree-sitter."""
+        findings = []
+        lines = code.split('\n')
+        code_bytes = code.encode('utf-8')
         
-        Detects:
-        - JPA/Hibernate delete operations without soft delete
-        - Missing @SQLDelete annotations
-        - No audit trail for data removal
-        """
+        # Find JPA delete operations (method_invocation nodes)
+        for method_node in parser.find_nodes_by_type(tree.root_node, "method_invocation"):
+            method_text = parser.get_node_text(method_node, code_bytes)
+            
+            if re.search(r'\.(delete|remove)\(', method_text, re.IGNORECASE):
+                delete_line = code[:method_node.start_byte].count('\n') + 1
+                
+                # Check context for @SQLDelete annotation or soft delete fields
+                context_start = max(0, delete_line - 30)
+                context_end = min(len(lines), delete_line + 10)
+                context = lines[context_start:context_end]
+                
+                has_soft_delete = any(
+                    re.search(r'(@SQLDelete|deletedAt|isDeleted)', line, re.IGNORECASE) 
+                    for line in context
+                )
+                
+                if not has_soft_delete:
+                    findings.append(Finding(
+                        severity=Severity.MEDIUM,
+                        title="Hard Delete Without Soft Delete (JPA/Hibernate)",
+                        description=(
+                            "JPA/Hibernate delete() or remove() operation without soft delete implementation. "
+                            "KSI-SVC-10 requires removing customer data promptly when requested (SI-12.3, SI-18.4) - "
+                            "hard deletes cannot be audited or traced for compliance verification. "
+                            "Implement soft delete with @SQLDelete annotation to track deletion requests."
+                        ),
+                        file_path=file_path,
+                        line_number=delete_line,
+                        snippet=self._get_snippet(lines, delete_line, context=3),
+                        remediation=(
+                            "Implement soft delete in JPA/Hibernate:\n"
+                            "// 1. Add soft delete fields to entity\n"
+                            "import org.hibernate.annotations.SQLDelete;\n"
+                            "import org.hibernate.annotations.Where;\n"
+                            "import javax.persistence.*;\n"
+                            "import java.time.LocalDateTime;\n\n"
+                            "@Entity\n"
+                            "@SQLDelete(sql = \"UPDATE customer SET deleted_at = NOW() WHERE id = ?\")\n"
+                            "@Where(clause = \"deleted_at IS NULL\")\n"
+                            "public class Customer {\n"
+                            "    @Id\n"
+                            "    @GeneratedValue(strategy = GenerationType.IDENTITY)\n"
+                            "    private Long id;\n"
+                            "    \n"
+                            "    private String name;\n"
+                            "    \n"
+                            "    @Column(name = \"deleted_at\")\n"
+                            "    private LocalDateTime deletedAt;\n"
+                            "    \n"
+                            "    public boolean isDeleted() {\n"
+                            "        return deletedAt != null;\n"
+                            "    }\n"
+                            "}\n\n"
+                            "// 2. Repository method for soft delete\n"
+                            "@Repository\n"
+                            "public interface CustomerRepository extends JpaRepository<Customer, Long> {\n"
+                            "    @Modifying\n"
+                            "    @Query(\"UPDATE Customer c SET c.deletedAt = CURRENT_TIMESTAMP WHERE c.id = :id\")\n"
+                            "    void softDelete(@Param(\"id\") Long id);\n"
+                            "    \n"
+                            "    @Query(\"SELECT c FROM Customer c WHERE c.deletedAt IS NOT NULL\")\n"
+                            "    List<Customer> findDeleted();\n"
+                            "}\n\n"
+                            "// 3. Service method for hard delete after verification\n"
+                            "@Service\n"
+                            "public class CustomerService {\n"
+                            "    @Transactional\n"
+                            "    public void hardDeleteAfterVerification(Long id) {\n"
+                            "        Customer customer = customerRepository.findById(id)\n"
+                            "            .orElseThrow(() -> new EntityNotFoundException());\n"
+                            "        \n"
+                            "        if (customer.isDeleted()) {\n"
+                            "            customerRepository.delete(customer);\n"
+                            "            log.info(\"Hard deleted customer {}\", id);\n"
+                            "        }\n"
+                            "    }\n"
+                            "}\n\n"
+                            "Ref: Hibernate @SQLDelete (https://docs.jboss.org/hibernate/orm/current/userguide/html_single/Hibernate_User_Guide.html#annotations-hibernate-sqldelete)"
+                        ),
+                        ksi_id=self.KSI_ID
+                    ))
+                    break  # Only report first occurrence
+        
+        return findings
+    
+    def _analyze_java_regex(self, code: str, file_path: str) -> List[Finding]:
+        """Fallback regex-based analysis for Java."""
+        # Note: Using regex - fallback when tree-sitter unavailable
         findings = []
         lines = code.split('\n')
         
@@ -389,16 +739,110 @@ class KSI_SVC_10_Analyzer(BaseKSIAnalyzer):
         return findings
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for KSI-SVC-10 compliance.
+        """Analyze TypeScript code for data destruction compliance (AST-first)."""  
+        parser = ASTParser(CodeLanguage.TYPESCRIPT)
+        tree = parser.parse(code)
         
-        Frameworks: Express, NestJS, Next.js, React, Angular, Azure SDK
+        if tree:
+            return self._analyze_typescript_ast(code, tree, parser, file_path)
+        else:
+            return self._analyze_typescript_regex(code, file_path)
+    
+    def _analyze_typescript_ast(self, code: str, tree, parser, file_path: str) -> List[Finding]:
+        """AST-based analysis for TypeScript using tree-sitter."""
+        findings = []
+        lines = code.split('\n')
+        code_bytes = code.encode('utf-8')
         
-        Detects:
-        - ORM delete operations without soft delete
-        - Missing deletedAt/isDeleted fields
-        - No data retention tracking
-        """
+        # Find ORM delete operations (call_expression nodes)
+        for call_node in parser.find_nodes_by_type(tree.root_node, "call_expression"):
+            call_text = parser.get_node_text(call_node, code_bytes)
+            
+            if re.search(r'\.(delete|remove)\(', call_text, re.IGNORECASE):
+                delete_line = code[:call_node.start_byte].count('\n') + 1
+                
+                # Check context for soft delete fields
+                context_start = max(0, delete_line - 20)
+                context_end = min(len(lines), delete_line + 15)
+                context = lines[context_start:context_end]
+                
+                has_soft_delete = any(
+                    re.search(r'(deletedAt|isDeleted|deleted)', line, re.IGNORECASE) 
+                    for line in context
+                )
+                
+                if not has_soft_delete:
+                    findings.append(Finding(
+                        severity=Severity.MEDIUM,
+                        title="Hard Delete Without Soft Delete (TypeScript/ORM)",
+                        description=(
+                            "ORM delete() or remove() operation without soft delete implementation. "
+                            "KSI-SVC-10 requires removing customer data promptly when requested (SI-12.3, SI-18.4) - "
+                            "hard deletes cannot be audited or traced for compliance verification. "
+                            "Implement soft delete with deletedAt/isDeleted fields to track deletion requests."
+                        ),
+                        file_path=file_path,
+                        line_number=delete_line,
+                        snippet=self._get_snippet(lines, delete_line, context=3),
+                        remediation=(
+                            "Implement soft delete in TypeScript/JavaScript:\n"
+                            "// 1. Prisma ORM with soft delete\n"
+                            "// schema.prisma\n"
+                            "model Customer {\n"
+                            "  id        Int       @id @default(autoincrement())\n"
+                            "  name      String\n"
+                            "  deletedAt DateTime? @map(\"deleted_at\")\n"
+                            "  @@index([deletedAt])\n"
+                            "}\n\n"
+                            "// Prisma middleware for soft delete\n"
+                            "prisma.$use(async (params, next) => {\n"
+                            "  if (params.model === 'Customer') {\n"
+                            "    if (params.action === 'delete') {\n"
+                            "      params.action = 'update';\n"
+                            "      params.args['data'] = { deletedAt: new Date() };\n"
+                            "    }\n"
+                            "    if (params.action === 'findMany' || params.action === 'findFirst') {\n"
+                            "      params.args.where = { deletedAt: null, ...params.args.where };\n"
+                            "    }\n"
+                            "  }\n"
+                            "  return next(params);\n"
+                            "});\n\n"
+                            "// 2. TypeORM with soft delete\n"
+                            "import { Entity, Column, DeleteDateColumn } from 'typeorm';\n\n"
+                            "@Entity()\n"
+                            "export class Customer {\n"
+                            "  @PrimaryGeneratedColumn()\n"
+                            "  id: number;\n"
+                            "  \n"
+                            "  @Column()\n"
+                            "  name: string;\n"
+                            "  \n"
+                            "  @DeleteDateColumn()\n"
+                            "  deletedAt?: Date;\n"
+                            "}\n\n"
+                            "// Usage\n"
+                            "await customerRepository.softDelete(id);  // Soft delete\n"
+                            "await customerRepository.recover(id);     // Restore\n\n"
+                            "// Hard delete after verification\n"
+                            "const customer = await customerRepository.findOne({\n"
+                            "  where: { id },\n"
+                            "  withDeleted: true\n"
+                            "});\n"
+                            "if (customer?.deletedAt) {\n"
+                            "  await customerRepository.remove(customer);\n"
+                            "  logger.info(`Hard deleted customer ${id}`);\n"
+                            "}\n\n"
+                            "Ref: TypeORM Soft Delete (https://typeorm.io/delete-query-builder#soft-delete)"
+                        ),
+                        ksi_id=self.KSI_ID
+                    ))
+                    break  # Only report first occurrence
+        
+        return findings
+    
+    def _analyze_typescript_regex(self, code: str, file_path: str) -> List[Finding]:
+        """Fallback regex-based analysis for TypeScript."""
+        # Note: Using regex - fallback when tree-sitter unavailable
         findings = []
         lines = code.split('\n')
         
@@ -647,8 +1091,8 @@ class KSI_SVC_10_Analyzer(BaseKSIAnalyzer):
         
         if storage_match:
             line_num = storage_match['line_num']
-            # Check if azurerm_storage_management_policy exists
-            has_lifecycle = any('azurerm_storage_management_policy' in line 
+            # Check if azurerm_storage_management_policy resource exists (not just in comments)
+            has_lifecycle = any(re.search(r'resource\s+"azurerm_storage_management_policy"', line)
                                for line in lines[line_num:min(len(lines), line_num+100)])
             
             if not has_lifecycle:
@@ -812,3 +1256,4 @@ class KSI_SVC_10_Analyzer(BaseKSIAnalyzer):
         start = max(0, line_number - context - 1)
         end = min(len(lines), line_number + context)
         return '\n'.join(lines[start:end])
+
