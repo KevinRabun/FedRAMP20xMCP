@@ -45,7 +45,6 @@ def test_ksi_iam_06_metadata():
     print("[PASS] All metadata verified against official FedRAMP 20x source")
     print(f"  KSI: {metadata['ksi_id']} - {metadata['ksi_name']}")
     print(f"  NIST Controls: {', '.join(metadata['controls'])}")
-    return True
 
 def test_python_detection():
     """Test Python detection for KSI-IAM-06."""
@@ -76,7 +75,6 @@ INSTALLED_APPS = [
     print(f"[PASS] Detected {len(result.findings)} issue(s)")
     print(f"  Issue: {finding.title}")
     print(f"  Severity: {finding.severity.value}")
-    return True
 
 def test_csharp_detection():
     """Test C# detection for KSI-IAM-06."""
@@ -106,7 +104,6 @@ services.AddIdentity<ApplicationUser, IdentityRole>(options => {
     print(f"[PASS] Detected {len(result.findings)} issue(s)")
     for finding in result.findings:
         print(f"  - {finding.title} ({finding.severity.value})")
-    return True
 
 def test_java_detection():
     """Test Java detection for KSI-IAM-06."""
@@ -145,7 +142,6 @@ public class CustomUserDetailsService implements UserDetailsService {
     
     print(f"[PASS] Detected {len(result.findings)} issue(s)")
     print(f"  Issue: {finding.title}")
-    return True
 
 def test_typescript_detection():
     """Test TypeScript detection for KSI-IAM-06."""
@@ -183,7 +179,6 @@ app.post('/login', passport.authenticate('local'));
     print(f"[PASS] Detected {len(result.findings)} issue(s)")
     for finding in result.findings:
         print(f"  - {finding.title}")
-    return True
 
 def test_bicep_detection():
     """Test Bicep detection for KSI-IAM-06."""
@@ -216,7 +211,6 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2021-06-01' = {
     
     print(f"[PASS] Detected {len(result.findings)} issue(s)")
     print(f"  Issue: {finding.title}")
-    return True
 
 def test_terraform_detection():
     """Test Terraform detection for KSI-IAM-06."""
@@ -246,7 +240,6 @@ resource "azurerm_log_analytics_workspace" "main" {
     
     print(f"[PASS] Detected {len(result.findings)} issue(s)")
     print(f"  Issue: {finding.title}")
-    return True
 
 def test_factory_registration():
     """Test factory registration and discovery."""
@@ -270,7 +263,6 @@ def test_factory_registration():
     
     print(f"[PASS] Factory registered {len(ksi_list)} KSI(s)")
     print(f"  Registered: {', '.join(ksi_list)}")
-    return True
 
 def test_factory_analyze():
     """Test factory analyze functionality."""
@@ -295,7 +287,6 @@ services.AddIdentity<ApplicationUser, IdentityRole>(options => {
     
     print(f"[PASS] Factory analysis detected {len(result.findings)} issue(s)")
     print(f"  Issue: {finding.title}")
-    return True
 
 def run_all_tests():
     """Run all KSI analyzer architecture tests."""
@@ -322,11 +313,11 @@ def run_all_tests():
     
     for name, test_func in tests:
         try:
-            if test_func():
-                passed += 1
-            else:
-                failed += 1
-                print(f"[FAIL] {name} FAILED")
+            test_func()  # Test functions now use assertions, don't return values
+            passed += 1
+        except AssertionError as e:
+            failed += 1
+            print(f"[FAIL] {name} FAILED: {str(e)}")
         except Exception as e:
             failed += 1
             print(f"[FAIL] {name} FAILED: {str(e)}")

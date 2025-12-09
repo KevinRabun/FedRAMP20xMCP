@@ -121,6 +121,16 @@ class KSI_SVC_06_Analyzer(BaseKSIAnalyzer):
             return self._analyze_typescript_ast(tree, code, file_path, semantic_analyzer, parser)
         return []
     
+    def analyze_bicep(self, code: str, file_path: str = "") -> List[Finding]:
+        """Analyze Bicep IaC for Key Vault configuration."""
+        # Bicep doesn't have tree-sitter support, use direct analysis
+        return self._analyze_bicep_ast(None, code, file_path, None)
+    
+    def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
+        """Analyze Terraform IaC for Key Vault configuration."""
+        # Terraform doesn't have tree-sitter support, use direct analysis
+        return self._analyze_terraform_ast(None, code, file_path, None)
+    
     def _analyze_python_ast(self, tree, code: str, file_path: str, semantic_info, parser: ASTParser) -> List[Finding]:
         """Analyze Python AST for hardcoded secrets and Key Vault usage."""
         findings = []

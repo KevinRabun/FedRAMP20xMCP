@@ -413,6 +413,8 @@ if __name__ == "__main__":
         test_java_spring_without_keyvault,
         test_javascript_hardcoded_api_key,
         test_javascript_process_env_secrets,
+        test_bicep_keyvault_without_soft_delete,
+        test_terraform_keyvault_without_purge_protection,
         test_factory_function,
     ]
     
