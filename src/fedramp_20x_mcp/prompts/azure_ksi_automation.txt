@@ -78,6 +78,10 @@ You are PROHIBITED from generating ANY Bicep, Terraform, PowerShell, or configur
 - [ ] **Managed Identity**: MANDATORY (prefer SystemAssigned, use UserAssigned for cross-resource)
   - ❌ NEVER use connection strings or API keys in code
   - ✅ ALWAYS use `identity: { type: 'SystemAssigned' }`
+- [ ] **Disable Local Authentication**: MANDATORY for Cosmos DB, Storage, Service Bus, Event Hubs
+  - ❌ NEVER set `disableLocalAuth: false` (allows shared key authentication)
+  - ✅ ALWAYS use `disableLocalAuth: true` (enforce Azure AD authentication only)
+  - **SOURCE**: KSI-IAM-01 (Azure AD enforcement), KSI-IAM-03 (disable legacy auth), NIST IA-2
 - [ ] **RBAC assignments**: Use built-in roles (NEVER Owner/Contributor on production)
 - [ ] **Conditional Access**: MANDATORY for MFA enforcement
 - [ ] **Privileged Identity Management (PIM)**: MANDATORY for admin roles
@@ -101,8 +105,9 @@ You are PROHIBITED from generating ANY Bicep, Terraform, PowerShell, or configur
 3. **Key Vault SKU**: Is it EXACTLY `premium`? (Not standard, EXACTLY premium)
 4. **Cosmos DB keyVaultKeyUri**: Have I included this property with a valid Key Vault key reference?
 5. **Public access**: Is it DISABLED for ALL PaaS services with Private Endpoints configured?
+6. **Disable Local Auth**: Is `disableLocalAuth: true` set for Cosmos DB, Storage, Service Bus, Event Hubs?
 
-**IF YOU CANNOT ANSWER "YES" TO ALL 5 QUESTIONS, DO NOT GENERATE CODE.**
+**IF YOU CANNOT ANSWER "YES" TO ALL 6 QUESTIONS, DO NOT GENERATE CODE.**
 
 **INSTEAD:** Query the requirements using available tools:
 - `get_ksi_by_id` - Get specific KSI requirements
@@ -962,6 +967,8 @@ resource cosmosDb 'Microsoft.DocumentDB/databaseAccounts@2023-11-15' = {
     }]
     // CMK configuration - keyVaultKeyUri is a TOP-LEVEL property
     keyVaultKeyUri: cosmosEncryptionKey.properties.keyUriWithVersion
+    // Identity & Access - MANDATORY for FedRAMP 20x
+    disableLocalAuth: true  // ✅ REQUIRED - Force Azure AD authentication (KSI-IAM-01, KSI-IAM-03)
     // Network security
     publicNetworkAccess: 'Disabled'
     networkAcls: {

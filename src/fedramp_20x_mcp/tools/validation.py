@@ -206,7 +206,87 @@ async def validate_fedramp_config_impl(
                 })
     
     # =============================================================================
-    # MANDATORY REQUIREMENT 4: Public Access Disabled
+    # VALIDATION: Cosmos DB Customer-Managed Key (keyVaultKeyUri property)
+    # =============================================================================
+    if file_type_lower == "bicep":
+        cosmos_pattern = r"resource\s+\w+\s+'Microsoft\.DocumentDB/databaseAccounts"
+        if re.search(cosmos_pattern, code):
+            if not re.search(r"keyVaultKeyUri:", code):
+                violations.append({
+                    "requirement": "KSI-SVC-06: Cosmos DB Customer-Managed Key",
+                    "expected": "keyVaultKeyUri: '<key-vault-key-uri>'",
+                    "found": "Missing keyVaultKeyUri property",
+                    "severity": "CRITICAL",
+                    "fix": "Add keyVaultKeyUri property with Key Vault key reference"
+                })
+            else:
+                compliant.append({
+                    "requirement": "KSI-SVC-06: Cosmos DB Customer-Managed Key",
+                    "value": "keyVaultKeyUri configured",
+                    "status": "COMPLIANT"
+                })
+    
+    # =============================================================================
+    # MANDATORY REQUIREMENT 4: Disable Local Authentication (KSI-IAM-01, KSI-IAM-03)
+    # =============================================================================
+    if file_type_lower == "bicep":
+        # Check Cosmos DB disableLocalAuth
+        cosmos_pattern = r"resource\s+\w+\s+'Microsoft\.DocumentDB/databaseAccounts"
+        if re.search(cosmos_pattern, code):
+            if re.search(r"disableLocalAuth:\s*false", code):
+                violations.append({
+                    "requirement": "KSI-IAM-01/IAM-03: Cosmos DB Disable Local Auth",
+                    "expected": "disableLocalAuth: true (enforce Azure AD authentication)",
+                    "found": "disableLocalAuth: false",
+                    "severity": "CRITICAL",
+                    "fix": "Change disableLocalAuth from false to true"
+                })
+            elif re.search(r"disableLocalAuth:\s*true", code):
+                compliant.append({
+                    "requirement": "KSI-IAM-01/IAM-03: Cosmos DB Disable Local Auth",
+                    "value": "Azure AD authentication enforced",
+                    "status": "COMPLIANT"
+                })
+            else:
+                warnings.append({
+                    "requirement": "KSI-IAM-01/IAM-03: Cosmos DB Disable Local Auth",
+                    "expected": "disableLocalAuth: true",
+                    "found": "Property missing (defaults to false)",
+                    "severity": "HIGH",
+                    "note": "Add disableLocalAuth: true to enforce Azure AD authentication"
+                })
+        
+        # Check Storage Account allowSharedKeyAccess
+        storage_pattern = r"resource\s+\w+\s+'Microsoft\.Storage/storageAccounts"
+        if re.search(storage_pattern, code):
+            if re.search(r"allowSharedKeyAccess:\s*false", code):
+                compliant.append({
+                    "requirement": "KSI-IAM-01/IAM-03: Storage Disable Shared Key",
+                    "value": "Shared key access disabled",
+                    "status": "COMPLIANT"
+                })
+    
+    elif file_type_lower == "terraform":
+        # Check Cosmos DB local_authentication_disabled
+        cosmos_pattern = r"resource\s+['\"]azurerm_cosmosdb_account['\"]"
+        if re.search(cosmos_pattern, code):
+            if re.search(r"local_authentication_disabled\s*=\s*false", code):
+                violations.append({
+                    "requirement": "KSI-IAM-01/IAM-03: Cosmos DB Disable Local Auth",
+                    "expected": "local_authentication_disabled = true",
+                    "found": "local_authentication_disabled = false",
+                    "severity": "CRITICAL",
+                    "fix": "Change local_authentication_disabled from false to true"
+                })
+            elif re.search(r"local_authentication_disabled\s*=\s*true", code):
+                compliant.append({
+                    "requirement": "KSI-IAM-01/IAM-03: Cosmos DB Disable Local Auth",
+                    "value": "Azure AD authentication enforced",
+                    "status": "COMPLIANT"
+                })
+    
+    # =============================================================================
+    # MANDATORY REQUIREMENT 5: Public Access Disabled
     # =============================================================================
     if file_type_lower == "bicep":
         # Check for enabled public access (VIOLATION)
