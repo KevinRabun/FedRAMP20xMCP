@@ -52,8 +52,8 @@ class KSI_CMT_05_Analyzer(BaseKSIAnalyzer):
     IMPACT_MODERATE = False
     NIST_CONTROLS = []
     CODE_DETECTABLE = False
-    IMPLEMENTATION_STATUS = "NOT_IMPLEMENTED"
-    RETIRED = False
+    IMPLEMENTATION_STATUS = "RETIRED"
+    RETIRED = True
     
     def __init__(self, language=None, ksi_id: str = "", ksi_name: str = "", ksi_statement: str = ""):
         """Initialize analyzer with backward-compatible API."""
