@@ -52,17 +52,23 @@ class KSI_CED_03_Analyzer(BaseKSIAnalyzer):
     FAMILY_NAME = "Cybersecurity Education"
     IMPACT_LOW = True
     IMPACT_MODERATE = True
-    NIST_CONTROLS = ["cp-3", "ir-2", "ps-6"]
+    NIST_CONTROLS = [
+        ("cp-3", "Contingency Training"),
+        ("ir-2", "Incident Response Training"),
+        ("ps-6", "Access Agreements")
+    ]
     CODE_DETECTABLE = False
     IMPLEMENTATION_STATUS = "NOT_IMPLEMENTED"
     RETIRED = False
     
-    def __init__(self):
+    def __init__(self, language=None, ksi_id: str = "", ksi_name: str = "", ksi_statement: str = ""):
+        """Initialize analyzer with backward-compatible API."""
         super().__init__(
-            ksi_id=self.KSI_ID,
-            ksi_name=self.KSI_NAME,
-            ksi_statement=self.KSI_STATEMENT
+            ksi_id=ksi_id or self.KSI_ID,
+            ksi_name=ksi_name or self.KSI_NAME,
+            ksi_statement=ksi_statement or self.KSI_STATEMENT
         )
+        self.direct_language = language
     
     # ============================================================================
     # APPLICATION LANGUAGE ANALYZERS

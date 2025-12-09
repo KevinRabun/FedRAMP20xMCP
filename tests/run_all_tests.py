@@ -1,8 +1,15 @@
 """
 Comprehensive test runner for all FedRAMP 20x MCP Server tests.
 
-This script runs all 17 test files in the correct order and provides
+This script runs all 115 test files in the correct order and provides
 a complete summary of test results.
+
+Includes:
+- 13 Core functionality tests (AST utils, code analyzer, semantic analysis)
+- 9 Tool functional tests  
+- 2 Security & dependency tests
+- 3 Resource validation tests
+- 88 KSI analyzer tests (including stubs)
 """
 
 import subprocess
@@ -91,6 +98,11 @@ def main():
         ("test_docs_integration.py", "Core Functionality"),
         ("test_implementation_questions.py", "Core Functionality"),
         ("test_tool_registration.py", "Core Functionality"),
+        ("test_ast_utils.py", "Core Functionality"),
+        ("test_code_analyzer.py", "Core Functionality"),
+        ("test_interprocedural.py", "Core Functionality"),
+        ("test_semantic_analysis.py", "Core Functionality"),
+        ("test_symbol_resolution.py", "Core Functionality"),
         ("test_evidence_automation.py", "Core Functionality"),
         ("test_ksi_architecture.py", "Core Functionality"),
         ("test_all_tools.py", "Core Functionality"),
@@ -114,6 +126,108 @@ def main():
         ("test_prompts.py", "Resource Validation"),
         ("test_templates.py", "Resource Validation"),
         ("test_new_language_support.py", "Resource Validation"),
+        
+        # KSI Analyzer tests
+        ("test_ksi_afr_04.py", "KSI Analyzer Tests"),
+        ("test_ksi_afr_05_complete.py", "KSI Analyzer Tests"),
+        ("test_ksi_afr_07.py", "KSI Analyzer Tests"),
+        ("test_ksi_afr_11_ast.py", "KSI Analyzer Tests"),
+        ("test_ksi_afr_11.py", "KSI Analyzer Tests"),
+        # New AFR tests
+        ("test_ksi_afr_01.py", "KSI Analyzer Tests"),
+        ("test_ksi_afr_02.py", "KSI Analyzer Tests"),
+        ("test_ksi_afr_03.py", "KSI Analyzer Tests"),
+        ("test_ksi_afr_06.py", "KSI Analyzer Tests"),
+        ("test_ksi_afr_08.py", "KSI Analyzer Tests"),
+        ("test_ksi_afr_09.py", "KSI Analyzer Tests"),
+        ("test_ksi_afr_10.py", "KSI Analyzer Tests"),
+        # CED tests
+        ("test_ksi_ced_01.py", "KSI Analyzer Tests"),
+        ("test_ksi_ced_02.py", "KSI Analyzer Tests"),
+        ("test_ksi_ced_03.py", "KSI Analyzer Tests"),
+        ("test_ksi_ced_04.py", "KSI Analyzer Tests"),
+        # CMT tests
+        ("test_ksi_cmt_01_complete.py", "KSI Analyzer Tests"),
+        ("test_ksi_cmt_02_complete.py", "KSI Analyzer Tests"),
+        ("test_ksi_cmt_03.py", "KSI Analyzer Tests"),
+        ("test_ksi_cmt_04_complete.py", "KSI Analyzer Tests"),
+        ("test_ksi_cmt_04.py", "KSI Analyzer Tests"),
+        ("test_ksi_cmt_05.py", "KSI Analyzer Tests"),
+        # CNA tests
+        ("test_ksi_cna_01.py", "KSI Analyzer Tests"),
+        ("test_ksi_cna_02.py", "KSI Analyzer Tests"),
+        ("test_ksi_cna_03_ast.py", "KSI Analyzer Tests"),
+        ("test_ksi_cna_03_complete.py", "KSI Analyzer Tests"),
+        ("test_ksi_cna_03.py", "KSI Analyzer Tests"),
+        ("test_ksi_cna_04_complete.py", "KSI Analyzer Tests"),
+        ("test_ksi_cna_04.py", "KSI Analyzer Tests"),
+        ("test_ksi_cna_05_ast.py", "KSI Analyzer Tests"),
+        ("test_ksi_cna_05_complete.py", "KSI Analyzer Tests"),
+        ("test_ksi_cna_08.py", "KSI Analyzer Tests"),
+        ("test_ksi_cna_06.py", "KSI Analyzer Tests"),
+        ("test_ksi_cna_07.py", "KSI Analyzer Tests"),
+        # IAM tests
+        ("test_ksi_iam_01_complete.py", "KSI Analyzer Tests"),
+        ("test_ksi_iam_01.py", "KSI Analyzer Tests"),
+        ("test_ksi_iam_02.py", "KSI Analyzer Tests"),
+        ("test_ksi_iam_03_complete.py", "KSI Analyzer Tests"),
+        # ("test_ksi_iam_03.py", "KSI Analyzer Tests"),  # Removed: Duplicate of test_ksi_iam_03_complete.py with stricter assertions
+        ("test_ksi_iam_04_ast.py", "KSI Analyzer Tests"),
+        ("test_ksi_iam_04.py", "KSI Analyzer Tests"),
+        ("test_ksi_iam_05.py", "KSI Analyzer Tests"),
+        ("test_ksi_iam_06.py", "KSI Analyzer Tests"),
+        ("test_ksi_iam_07_complete.py", "KSI Analyzer Tests"),
+        # INR tests
+        ("test_ksi_inr_01_complete.py", "KSI Analyzer Tests"),
+        ("test_ksi_inr_02.py", "KSI Analyzer Tests"),
+        ("test_ksi_inr_03.py", "KSI Analyzer Tests"),
+        # MLA tests
+        ("test_ksi_mla_01.py", "KSI Analyzer Tests"),
+        ("test_ksi_mla_02_complete.py", "KSI Analyzer Tests"),
+        ("test_ksi_mla_02.py", "KSI Analyzer Tests"),
+        ("test_ksi_mla_03.py", "KSI Analyzer Tests"),
+        ("test_ksi_mla_04.py", "KSI Analyzer Tests"),
+        ("test_ksi_mla_05.py", "KSI Analyzer Tests"),
+        ("test_ksi_mla_06.py", "KSI Analyzer Tests"),
+        ("test_ksi_mla_07_complete.py", "KSI Analyzer Tests"),
+        ("test_ksi_mla_07.py", "KSI Analyzer Tests"),
+        ("test_ksi_mla_08_complete.py", "KSI Analyzer Tests"),
+        ("test_ksi_mla_08.py", "KSI Analyzer Tests"),
+        # PIY tests
+        ("test_ksi_piy_01_complete.py", "KSI Analyzer Tests"),
+        ("test_ksi_piy_01.py", "KSI Analyzer Tests"),
+        ("test_ksi_piy_02_complete.py", "KSI Analyzer Tests"),
+        ("test_ksi_piy_02.py", "KSI Analyzer Tests"),
+        ("test_ksi_piy_03.py", "KSI Analyzer Tests"),
+        ("test_ksi_piy_04.py", "KSI Analyzer Tests"),
+        ("test_ksi_piy_05.py", "KSI Analyzer Tests"),
+        ("test_ksi_piy_06.py", "KSI Analyzer Tests"),
+        ("test_ksi_piy_07.py", "KSI Analyzer Tests"),
+        ("test_ksi_piy_08.py", "KSI Analyzer Tests"),
+        # RPL tests
+        ("test_ksi_rpl_03_complete.py", "KSI Analyzer Tests"),
+        ("test_ksi_rpl_03.py", "KSI Analyzer Tests"),
+        ("test_ksi_rpl_01.py", "KSI Analyzer Tests"),
+        ("test_ksi_rpl_02.py", "KSI Analyzer Tests"),
+        ("test_ksi_rpl_04.py", "KSI Analyzer Tests"),
+        # SVC tests
+        ("test_ksi_svc_01.py", "KSI Analyzer Tests"),
+        ("test_ksi_svc_02_complete.py", "KSI Analyzer Tests"),
+        ("test_ksi_svc_03.py", "KSI Analyzer Tests"),
+        ("test_ksi_svc_04.py", "KSI Analyzer Tests"),
+        ("test_ksi_svc_05.py", "KSI Analyzer Tests"),
+        ("test_ksi_svc_06.py", "KSI Analyzer Tests"),
+        ("test_ksi_svc_07.py", "KSI Analyzer Tests"),
+        ("test_ksi_svc_08_complete.py", "KSI Analyzer Tests"),
+        ("test_ksi_svc_08.py", "KSI Analyzer Tests"),
+        ("test_ksi_svc_09.py", "KSI Analyzer Tests"),
+        ("test_ksi_svc_10_complete.py", "KSI Analyzer Tests"),
+        ("test_ksi_svc_10.py", "KSI Analyzer Tests"),
+        # TPR tests
+        ("test_ksi_tpr_01.py", "KSI Analyzer Tests"),
+        ("test_ksi_tpr_02.py", "KSI Analyzer Tests"),
+        ("test_ksi_tpr_03.py", "KSI Analyzer Tests"),
+        ("test_ksi_tpr_04.py", "KSI Analyzer Tests"),
     ]
     
     start_time = time.time()

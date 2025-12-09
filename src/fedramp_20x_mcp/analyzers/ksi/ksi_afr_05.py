@@ -66,17 +66,37 @@ class KSI_AFR_05_Analyzer(BaseKSIAnalyzer):
     FAMILY_NAME = "Authorization by FedRAMP"
     IMPACT_LOW = True
     IMPACT_MODERATE = True
-    NIST_CONTROLS = ["ca-7.4", "cm-3.4", "cm-4", "cm-7.1", "au-5", "ca-5", "ca-7", "ra-5", "ra-5.2", "sa-22", "si-2", "si-2.2", "si-3", "si-5", "si-7.7", "si-10", "si-11"]
-    CODE_DETECTABLE = False
-    IMPLEMENTATION_STATUS = "NOT_IMPLEMENTED"
+    NIST_CONTROLS = [
+        ("ca-7.4", "Risk Monitoring"),
+        ("cm-3.4", "Security and Privacy Representatives"),
+        ("cm-4", "Impact Analyses"),
+        ("cm-7.1", "Periodic Review"),
+        ("au-5", "Response to Audit Logging Process Failures"),
+        ("ca-5", "Plan of Action and Milestones"),
+        ("ca-7", "Continuous Monitoring"),
+        ("ra-5", "Vulnerability Monitoring and Scanning"),
+        ("ra-5.2", "Update Vulnerabilities to Be Scanned"),
+        ("sa-22", "Unsupported System Components"),
+        ("si-2", "Flaw Remediation"),
+        ("si-2.2", "Automated Flaw Remediation Status"),
+        ("si-3", "Malicious Code Protection"),
+        ("si-5", "Security Alerts, Advisories, and Directives"),
+        ("si-7.7", "Integration of Detection and Response"),
+        ("si-10", "Information Input Validation"),
+        ("si-11", "Error Handling")
+    ]
+    CODE_DETECTABLE = True
+    IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RETIRED = False
     
-    def __init__(self):
+    def __init__(self, language=None, ksi_id: str = "", ksi_name: str = "", ksi_statement: str = ""):
+        """Initialize analyzer with backward-compatible API."""
         super().__init__(
-            ksi_id=self.KSI_ID,
-            ksi_name=self.KSI_NAME,
-            ksi_statement=self.KSI_STATEMENT
+            ksi_id=ksi_id or self.KSI_ID,
+            ksi_name=ksi_name or self.KSI_NAME,
+            ksi_statement=ksi_statement or self.KSI_STATEMENT
         )
+        self.direct_language = language
     
     # ============================================================================
     # APPLICATION LANGUAGE ANALYZERS
@@ -154,12 +174,43 @@ class KSI_AFR_05_Analyzer(BaseKSIAnalyzer):
         """
         Analyze Bicep IaC for KSI-AFR-05 compliance.
         
-        TODO: Implement detection logic for Azure resources related to:
-        - Determine how significant changes will be tracked and how all necessary parties ...
+        Detects:
+        - Azure Monitor alert rules for change detection
+        - Log Analytics queries for vulnerability tracking
+        - Action groups for notifications
         """
         findings = []
+        lines = code.split('\n')
         
-        # TODO: Implement Bicep-specific detection logic
+        # Check for monitoring resources
+        has_monitor_alerts = 'Microsoft.Insights/metricAlerts' in code or 'Microsoft.Insights/scheduledQueryRules' in code
+        has_action_groups = 'Microsoft.Insights/actionGroups' in code
+        
+        if not has_monitor_alerts:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                severity=Severity.MEDIUM,
+                title="No Azure Monitor alerts detected",
+                description="Bicep should define Azure Monitor alerts for significant change detection and continuous monitoring per ca-7 (Continuous Monitoring).",
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Add Microsoft.Insights/metricAlerts or Microsoft.Insights/scheduledQueryRules resources to monitor for significant changes.",
+                nist_control="ca-7"
+            ))
+        
+        if has_monitor_alerts and not has_action_groups:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                severity=Severity.LOW,
+                title="Alert rules present but no action groups for notifications",
+                description="Azure Monitor alerts should be connected to action groups for stakeholder notifications per si-5 (Security Alerts).",
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Add Microsoft.Insights/actionGroups resource with email, SMS, or webhook receivers.",
+                nist_control="si-5"
+            ))
         
         return findings
     
@@ -184,11 +235,61 @@ class KSI_AFR_05_Analyzer(BaseKSIAnalyzer):
         """
         Analyze GitHub Actions workflow for KSI-AFR-05 compliance.
         
-        TODO: Implement detection logic if applicable.
+        Detects:
+        - Security scanning (CodeQL, Snyk, Dependabot)
+        - Vulnerability scanning workflows
+        - Automated flaw remediation notifications
         """
         findings = []
+        lines = code.split('\n')
         
-        # TODO: Implement GitHub Actions detection if applicable
+        # Check for security scanning actions
+        security_scanners = {
+            'github/codeql-action': 'CodeQL security scanning',
+            'snyk/actions': 'Snyk vulnerability scanning',
+            'aquasecurity/trivy-action': 'Trivy container scanning',
+            'anchore/scan-action': 'Anchore container scanning',
+            'microsoft/security-devops-action': 'Microsoft Security DevOps'
+        }
+        
+        found_scanners = []
+        for i, line in enumerate(lines, 1):
+            if 'uses:' in line:
+                for scanner, description in security_scanners.items():
+                    if scanner in line:
+                        found_scanners.append(description)
+        
+        if not found_scanners:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                severity=Severity.MEDIUM,
+                title="No automated security scanning detected",
+                description="GitHub Actions workflow should include automated security scanning (CodeQL, Snyk, or similar) for change notifications per si-2.2 (Automated Flaw Remediation Status).",
+                file_path=file_path,
+                line_number=1,
+                code_snippet=self._get_snippet(lines, 1, 5),
+                recommendation="Add security scanning actions like github/codeql-action or snyk/actions to detect vulnerabilities automatically.",
+                nist_control="si-2.2"
+            ))
+        
+        # Check for notification mechanisms
+        has_notifications = any(
+            keyword in code.lower() 
+            for keyword in ['slack', 'teams', 'email', 'notify', 'alert', 'webhook']
+        )
+        
+        if found_scanners and not has_notifications:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                severity=Severity.LOW,
+                title="Security scanning present but no notification mechanism detected",
+                description="Workflow has security scanning but lacks explicit notification actions for significant findings per si-5 (Security Alerts, Advisories, and Directives).",
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Add notification steps (Slack, Teams, email) to alert stakeholders of significant security findings.",
+                nist_control="si-5"
+            ))
         
         return findings
     
@@ -196,11 +297,43 @@ class KSI_AFR_05_Analyzer(BaseKSIAnalyzer):
         """
         Analyze Azure Pipelines YAML for KSI-AFR-05 compliance.
         
-        TODO: Implement detection logic if applicable.
+        Detects:
+        - Security scanning tasks (CredScan, Semmle, etc.)
+        - Vulnerability assessment tasks
+        - Automated compliance checks
         """
         findings = []
+        lines = code.split('\n')
         
-        # TODO: Implement Azure Pipelines detection if applicable
+        # Check for security tasks
+        security_tasks = {
+            'CredScan': 'Credential scanning',
+            'Semmle': 'CodeQL/Semmle security analysis',
+            'securityandcompliance': 'Security and compliance scanning',
+            'WhiteSource': 'WhiteSource vulnerability scanning',
+            'Checkmarx': 'Checkmarx SAST scanning',
+            'ContainerScan': 'Container image scanning'
+        }
+        
+        found_tasks = []
+        for i, line in enumerate(lines, 1):
+            if 'task:' in line.lower():
+                for task, description in security_tasks.items():
+                    if task.lower() in line.lower():
+                        found_tasks.append(description)
+        
+        if not found_tasks:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                severity=Severity.MEDIUM,
+                title="No security scanning tasks detected",
+                description="Azure Pipeline should include security scanning tasks (CredScan, Semmle, etc.) for automated vulnerability detection per si-2.2.",
+                file_path=file_path,
+                line_number=1,
+                code_snippet=self._get_snippet(lines, 1, 5),
+                recommendation="Add security scanning tasks like CredScan@3 or Semmle@1 to detect security issues automatically.",
+                nist_control="si-2.2"
+            ))
         
         return findings
     
@@ -234,3 +367,4 @@ class KSI_AFR_05_Analyzer(BaseKSIAnalyzer):
         start = max(0, line_number - context - 1)
         end = min(len(lines), line_number + context)
         return '\n'.join(lines[start:end])
+

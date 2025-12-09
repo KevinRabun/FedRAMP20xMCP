@@ -12,6 +12,7 @@ import re
 from typing import List
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
+from ..ast_utils import ASTParser, CodeLanguage
 
 
 class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
@@ -56,17 +57,27 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
     FAMILY_NAME = "Identity and Access Management"
     IMPACT_LOW = True
     IMPACT_MODERATE = True
-    NIST_CONTROLS = ["ac-2", "ac-2.2", "ac-4", "ac-6.5", "ia-3", "ia-5.2", "ra-5.5"]
+    NIST_CONTROLS = [
+        ("ac-2", "Account Management"),
+        ("ac-2.2", "Automated Temporary and Emergency Account Management"),
+        ("ac-4", "Information Flow Enforcement"),
+        ("ac-6.5", "Privileged Accounts"),
+        ("ia-3", "Device Identification and Authentication"),
+        ("ia-5.2", "Public Key-based Authentication"),
+        ("ra-5.5", "Privileged Access")
+    ]
     CODE_DETECTABLE = True
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RETIRED = False
     
-    def __init__(self):
+    def __init__(self, language=None, ksi_id: str = "", ksi_name: str = "", ksi_statement: str = ""):
+        """Initialize analyzer with backward-compatible API."""
         super().__init__(
-            ksi_id=self.KSI_ID,
-            ksi_name=self.KSI_NAME,
-            ksi_statement=self.KSI_STATEMENT
+            ksi_id=ksi_id or self.KSI_ID,
+            ksi_name=ksi_name or self.KSI_NAME,
+            ksi_statement=ksi_statement or self.KSI_STATEMENT
         )
+        self.direct_language = language
     
     # ============================================================================
     # APPLICATION LANGUAGE ANALYZERS
@@ -74,7 +85,7 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for KSI-IAM-03 compliance.
+        Analyze Python code for KSI-IAM-03 compliance using AST.
         
         Frameworks: Flask, Django, FastAPI, Azure SDK
         
@@ -84,6 +95,152 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
         - Hardcoded service principal credentials
         - DefaultAzureCredential validation
         """
+        # AST-first dispatcher
+        parser = ASTParser(CodeLanguage.PYTHON)
+        tree = parser.parse(code)
+        
+        if tree:
+            return self._analyze_python_ast(code, file_path, parser, tree)
+        else:
+            return self._analyze_python_regex(code, file_path)
+    
+    def _analyze_python_ast(self, code: str, file_path: str, parser: ASTParser, tree) -> List[Finding]:
+        """AST-based Python analysis for service account credentials."""
+        findings = []
+        lines = code.split('\n')
+        code_bytes = code.encode('utf-8')
+        root_node = tree.root_node
+        
+        try:
+            # Track secure credential types
+            has_azure_identity_import = False
+            has_default_credential = False
+            has_managed_identity = False
+            has_certificate_credential = False
+            has_service_principal_creds = False
+            
+            # Check imports for Azure Identity and credential types
+            import_nodes = (parser.find_nodes_by_type(root_node, 'import_from_statement') +
+                          parser.find_nodes_by_type(root_node, 'import_statement'))
+            for node in import_nodes:
+                import_text = parser.get_node_text(node, code_bytes)
+                
+                if 'azure.identity' in import_text.lower():
+                    has_azure_identity_import = True
+                    
+                    if 'DefaultAzureCredential' in import_text:
+                        has_default_credential = True
+                    if 'ManagedIdentityCredential' in import_text:
+                        has_managed_identity = True
+                    if 'CertificateCredential' in import_text:
+                        has_certificate_credential = True
+                
+                if 'ServicePrincipalCredentials' in import_text:
+                    has_service_principal_creds = True
+            
+            # Check for hardcoded service account credentials (assignment nodes)
+            service_cred_keywords = [
+                'service_account_password', 'service_account_key',
+                'service_principal_secret', 'app_password', 
+                'client_secret', 'serviceAccountPassword', 'servicePrincipalSecret'
+            ]
+            
+            for node in parser.find_nodes_by_type(root_node, 'assignment'):
+                assignment_text = parser.get_node_text(node, code_bytes)
+                
+                # Check if it's a hardcoded credential (not from env/config)
+                for keyword in service_cred_keywords:
+                    if keyword in assignment_text.lower() and '=' in assignment_text:
+                        # Check if it's hardcoded (string literal on right side)
+                        if any(quote in assignment_text for quote in ['"', "'"]):
+                            # Exclude environment variables and config access
+                            if not any(safe_pattern in assignment_text for safe_pattern in 
+                                     ['os.environ', 'os.getenv', 'config[', 'settings.', 'Configuration[']):
+                                line_num = node.start_point[0] + 1
+                                findings.append(Finding(
+                                    severity=Severity.CRITICAL,
+                                    title="Service Account Credentials Hardcoded",
+                                    description=(
+                                        f"Service account credentials found hardcoded in code at line {line_num}. "
+                                        f"Non-user accounts must use secure authentication methods like managed identities "
+                                        f"or certificate-based authentication, never hardcoded passwords."
+                                    ),
+                                    file_path=file_path,
+                                    line_number=line_num,
+                                    snippet=self._get_snippet(lines, line_num),
+                                    remediation=(
+                                        "Use Azure Managed Identity (DefaultAzureCredential) or certificate-based "
+                                        "authentication for service accounts. Store credentials in Azure Key Vault "
+                                        "if managed identities cannot be used."
+                                    ),
+                                    ksi_id=self.KSI_ID
+                                ))
+                                break
+            
+            # Finding 2: Weak credential type when Azure Identity is imported
+            if has_azure_identity_import:
+                # Check if using weak credential types
+                has_weak_credential = False
+                for node in parser.find_nodes_by_type(root_node, 'call'):
+                    call_text = parser.get_node_text(node, code_bytes)
+                    if 'ClientSecretCredential' in call_text:
+                        has_weak_credential = True
+                        break
+                
+                if has_weak_credential or not (has_default_credential or has_managed_identity or has_certificate_credential):
+                    line_num = self._find_line(lines, r'from azure\.identity|import azure\.identity|ClientSecretCredential')
+                    findings.append(Finding(
+                        severity=Severity.HIGH,
+                        title="Weak Credential Type for Service Authentication",
+                        description=(
+                            "Azure SDK authentication detected but not using recommended credential types. "
+                            "Service accounts should use DefaultAzureCredential, ManagedIdentityCredential, "
+                            "or CertificateCredential for secure authentication."
+                        ),
+                        file_path=file_path,
+                        line_number=line_num,
+                        snippet=self._get_snippet(lines, line_num),
+                        remediation=(
+                            "Use DefaultAzureCredential() which automatically uses managed identity in Azure, "
+                            "or explicitly use ManagedIdentityCredential() or CertificateCredential() for "
+                            "service accounts."
+                        ),
+                        ksi_id=self.KSI_ID
+                    ))
+            
+            # Finding 3: ServicePrincipalCredentials with password parameter
+            if has_service_principal_creds:
+                for node in parser.find_nodes_by_type(root_node, 'call'):
+                    call_text = parser.get_node_text(node, code_bytes)
+                    if 'ServicePrincipalCredentials' in call_text and 'password' in call_text.lower():
+                        line_num = node.start_point[0] + 1
+                        findings.append(Finding(
+                            severity=Severity.CRITICAL,
+                            title="Service Principal Using Password Authentication",
+                            description=(
+                                f"Service principal configured with password authentication at line {line_num}. "
+                                f"Non-user accounts must use certificate-based authentication or managed identities, "
+                                f"not password-based authentication."
+                            ),
+                            file_path=file_path,
+                            line_number=line_num,
+                            snippet=self._get_snippet(lines, line_num),
+                            remediation=(
+                                "Use certificate-based authentication with CertificateCredential or managed "
+                                "identities with DefaultAzureCredential/ManagedIdentityCredential."
+                            ),
+                            ksi_id=self.KSI_ID
+                        ))
+                        break
+        
+        except Exception as e:
+            # Fallback to regex-based analysis
+            return self._analyze_python_regex(code, file_path)
+        
+        return findings
+    
+    def _analyze_python_regex(self, code: str, file_path: str = "") -> List[Finding]:
+        """Regex-based fallback for Python analysis."""
         findings = []
         lines = code.split('\n')
         
@@ -165,7 +322,7 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze C# code for KSI-IAM-03 compliance.
+        Analyze C# code for KSI-IAM-03 compliance using AST.
         
         Frameworks: ASP.NET Core, Entity Framework, Azure SDK
         
@@ -175,10 +332,150 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
         - Password-based service account authentication
         - Certificate-based authentication validation
         """
+        # AST-first dispatcher
+        parser = ASTParser(CodeLanguage.CSHARP)
+        tree = parser.parse(code)
+        
+        if tree:
+            return self._analyze_csharp_ast(code, file_path, parser, tree)
+        else:
+            return self._analyze_csharp_regex(code, file_path)
+    
+    def _analyze_csharp_ast(self, code: str, file_path: str, parser: ASTParser, tree) -> List[Finding]:
+        """AST-based C# analysis for service account credentials."""
+        findings = []
+        lines = code.split('\n')
+        code_bytes = code.encode('utf-8')
+        root_node = tree.root_node
+        
+        has_azure_import = False
+        has_default_credential = False
+        has_managed_identity = False
+        has_azure_client = False
+        
+        # Check using directives
+        for node in parser.find_nodes_by_type(root_node, 'using_directive'):
+            using_text = parser.get_node_text(node, code_bytes)
+            if 'Azure.' in using_text:
+                has_azure_import = True
+            if 'DefaultAzureCredential' in using_text:
+                has_default_credential = True
+            if 'ManagedIdentityCredential' in using_text:
+                has_managed_identity = True
+        
+        # Check for hardcoded credentials in object creation and assignments
+        nodes_to_check = []
+        nodes_to_check.extend(parser.find_nodes_by_type(root_node, 'object_creation_expression'))
+        nodes_to_check.extend(parser.find_nodes_by_type(root_node, 'assignment_expression'))
+        
+        for node in nodes_to_check:
+            node_text = parser.get_node_text(node, code_bytes)
+            
+            # Check for ClientSecretCredential with hardcoded secret
+            if 'ClientSecretCredential' in node_text and '"' in node_text:
+                if not any(safe in node_text for safe in ['Configuration[', 'Environment.']):
+                    line_num = node.start_point[0] + 1
+                    findings.append(Finding(
+                        severity=Severity.CRITICAL,
+                        title="Service Principal Credentials Hardcoded",
+                        description=(
+                            f"Service principal credentials found hardcoded at line {line_num}. "
+                            f"Non-user accounts must use managed identities or certificate-based "
+                            f"authentication, never hardcoded secrets."
+                        ),
+                        file_path=file_path,
+                        line_number=line_num,
+                        snippet=self._get_snippet(lines, line_num),
+                        remediation=(
+                            "Use DefaultAzureCredential or ManagedIdentityCredential for Azure services. "
+                            "If service principal is required, use CertificateCredential with certificates "
+                            "stored in Azure Key Vault or Windows Certificate Store."
+                        ),
+                        ksi_id=self.KSI_ID
+                    ))
+                    break
+            
+            # Check for hardcoded secrets in assignments
+            if any(keyword in node_text for keyword in ['ServicePrincipalSecret', 'AppPassword', 'ClientSecret']):
+                if '=' in node_text and '"' in node_text:
+                    if not any(safe in node_text for safe in ['Configuration[', 'Environment.']):
+                        line_num = node.start_point[0] + 1
+                        findings.append(Finding(
+                            severity=Severity.CRITICAL,
+                            title="Service Principal Credentials Hardcoded",
+                            description=(
+                                f"Service principal credentials found hardcoded at line {line_num}. "
+                                f"Non-user accounts must use managed identities or certificate-based "
+                                f"authentication, never hardcoded secrets."
+                            ),
+                            file_path=file_path,
+                            line_number=line_num,
+                            snippet=self._get_snippet(lines, line_num),
+                            remediation=(
+                                "Use DefaultAzureCredential or ManagedIdentityCredential for Azure services. "
+                                "If service principal is required, use CertificateCredential with certificates "
+                                "stored in Azure Key Vault or Windows Certificate Store."
+                            ),
+                            ksi_id=self.KSI_ID
+                        ))
+                        break
+            
+            # Check for Azure client instantiation
+            if 'Client(' in node_text and 'new' in node_text:
+                has_azure_client = True
+        
+        # Finding 2: Azure SDK without managed identity
+        if has_azure_import and has_azure_client:
+            if not (has_default_credential or has_managed_identity):
+                line_num = self._find_line(lines, r'new\s+\w+Client')
+                findings.append(Finding(
+                    severity=Severity.HIGH,
+                    title="Azure SDK Client Without Managed Identity",
+                    description=(
+                        f"Azure SDK client instantiation at line {line_num} not using managed identity. "
+                        f"Service accounts should authenticate using DefaultAzureCredential or "
+                        f"ManagedIdentityCredential for secure, credential-less authentication."
+                    ),
+                    file_path=file_path,
+                    line_number=line_num,
+                    snippet=self._get_snippet(lines, line_num),
+                    remediation=(
+                        "Use: new DefaultAzureCredential() or new ManagedIdentityCredential() "
+                        "when creating Azure SDK clients for service accounts."
+                    ),
+                    ksi_id=self.KSI_ID
+                ))
+        
+        # Finding 3: Password-based authentication
+        for node in parser.find_nodes_by_type(root_node, 'invocation_expression'):
+            node_text = parser.get_node_text(node, code_bytes)
+            if 'UsePassword' in node_text or 'UseBasicAuthentication' in node_text:
+                line_num = node.start_point[0] + 1
+                findings.append(Finding(
+                    severity=Severity.CRITICAL,
+                    title="Service Account Using Password Authentication",
+                    description=(
+                        f"Service account configured with password/basic authentication at line {line_num}. "
+                        f"Non-user accounts must use certificate-based or managed identity authentication."
+                    ),
+                    file_path=file_path,
+                    line_number=line_num,
+                    snippet=self._get_snippet(lines, line_num),
+                    remediation=(
+                        "Configure certificate-based authentication with .UseCertificate() or use "
+                        "managed identities with Azure.Identity SDK."
+                    ),
+                    ksi_id=self.KSI_ID
+                ))
+                break
+        
+        return findings
+    
+    def _analyze_csharp_regex(self, code: str, file_path: str = "") -> List[Finding]:
+        """Regex-based fallback for C# analysis."""
         findings = []
         lines = code.split('\n')
         
-        # Pattern 1: Hardcoded service principal credentials (CRITICAL)
         sp_cred_patterns = [
             r'new\s+ClientSecretCredential\s*\([^)]*["\'][^"\'{]+["\']',
             r'ServicePrincipalSecret\s*=\s*["\']',
@@ -208,7 +505,6 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
                     ksi_id=self.KSI_ID
                 ))
         
-        # Pattern 2: Missing managed identity for Azure SDK (HIGH)
         if re.search(r'new\s+\w+Client\s*\(', code) and re.search(r'using Azure\.', code):
             if not re.search(r'DefaultAzureCredential|ManagedIdentityCredential|ChainedTokenCredential', code):
                 line_num = self._find_line(lines, r'new\s+\w+Client')
@@ -230,7 +526,6 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
                     ksi_id=self.KSI_ID
                 ))
         
-        # Pattern 3: Service account with password authentication (CRITICAL)
         if re.search(r'AddAuthentication.*\.UsePassword|UseBasicAuthentication', code, re.IGNORECASE):
             line_num = self._find_line(lines, r'UsePassword|UseBasicAuthentication')
             findings.append(Finding(
@@ -254,7 +549,7 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Java code for KSI-IAM-03 compliance.
+        Analyze Java code for KSI-IAM-03 compliance using AST.
         
         Frameworks: Spring Boot, Spring Security, Azure SDK
         
@@ -264,10 +559,164 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
         - Password-based service authentication
         - ClientSecretCredential validation
         """
+        # AST-first dispatcher
+        parser = ASTParser(CodeLanguage.JAVA)
+        tree = parser.parse(code)
+        
+        if tree:
+            return self._analyze_java_ast(code, file_path, parser, tree)
+        else:
+            return self._analyze_java_regex(code, file_path)
+    
+    def _analyze_java_ast(self, code: str, file_path: str, parser: ASTParser, tree) -> List[Finding]:
+        """AST-based Java analysis for service account credentials."""
+        findings = []
+        lines = code.split('\n')
+        code_bytes = code.encode('utf-8')
+        root_node = tree.root_node
+        
+        has_azure_import = False
+        has_default_credential = False
+        has_managed_identity = False
+        
+        # Check imports
+        for node in parser.find_nodes_by_type(root_node, 'import_declaration'):
+            import_text = parser.get_node_text(node, code_bytes)
+            if 'com.azure.' in import_text:
+                has_azure_import = True
+            if 'DefaultAzureCredentialBuilder' in import_text:
+                has_default_credential = True
+            if 'ManagedIdentityCredentialBuilder' in import_text:
+                has_managed_identity = True
+        
+        # Check for hardcoded credentials in method invocations
+        for node in parser.find_nodes_by_type(root_node, 'method_invocation'):
+            node_text = parser.get_node_text(node, code_bytes)
+            
+            # Check for hardcoded secrets
+            if any(keyword in node_text for keyword in ['setClientSecret', 'clientSecret', 'withPassword']):
+                if '"' in node_text:
+                    if not any(safe in node_text for safe in ['System.getenv', 'config.get', 'properties.']):
+                        line_num = node.start_point[0] + 1
+                        findings.append(Finding(
+                            severity=Severity.CRITICAL,
+                            title="Service Account Credentials Hardcoded in Code",
+                            description=(
+                                f"Service account credentials found hardcoded at line {line_num}. "
+                                f"Non-user accounts must use managed identities or certificate-based "
+                                f"authentication for Azure services."
+                            ),
+                            file_path=file_path,
+                            line_number=line_num,
+                            snippet=self._get_snippet(lines, line_num),
+                            remediation=(
+                                "Use DefaultAzureCredentialBuilder or ManagedIdentityCredentialBuilder for "
+                                "service accounts. If certificates are needed, use ClientCertificateCredentialBuilder "
+                                "with certificates from Azure Key Vault."
+                            ),
+                            ksi_id=self.KSI_ID
+                        ))
+                        break
+        
+        # Check variable declarations for hardcoded passwords
+        for node in parser.find_nodes_by_type(root_node, 'variable_declarator'):
+            node_text = parser.get_node_text(node, code_bytes)
+            if 'serviceAccountPassword' in node_text and '=' in node_text and '"' in node_text:
+                line_num = node.start_point[0] + 1
+                findings.append(Finding(
+                    severity=Severity.CRITICAL,
+                    title="Service Account Credentials Hardcoded in Code",
+                    description=(
+                        f"Service account credentials found hardcoded at line {line_num}. "
+                        f"Non-user accounts must use managed identities or certificate-based "
+                        f"authentication for Azure services."
+                    ),
+                    file_path=file_path,
+                    line_number=line_num,
+                    snippet=self._get_snippet(lines, line_num),
+                    remediation=(
+                        "Use DefaultAzureCredentialBuilder or ManagedIdentityCredentialBuilder for "
+                        "service accounts. If certificates are needed, use ClientCertificateCredentialBuilder "
+                        "with certificates from Azure Key Vault."
+                    ),
+                    ksi_id=self.KSI_ID
+                ))
+                break
+        
+        # Finding 2: Azure SDK without managed identity
+        if has_azure_import and not (has_default_credential or has_managed_identity):
+            line_num = self._find_line(lines, r'import com\.azure\.')
+            findings.append(Finding(
+                severity=Severity.HIGH,
+                title="Azure SDK Without Managed Identity Credentials",
+                description=(
+                    f"Azure SDK usage detected at line {line_num} but not using managed identity. "
+                    f"Service accounts should use DefaultAzureCredentialBuilder or "
+                    f"ManagedIdentityCredentialBuilder for secure authentication."
+                ),
+                file_path=file_path,
+                line_number=line_num,
+                snippet=self._get_snippet(lines, line_num),
+                remediation=(
+                    "Use: new DefaultAzureCredentialBuilder().build() or "
+                    "new ManagedIdentityCredentialBuilder().build() for service account authentication."
+                ),
+                ksi_id=self.KSI_ID
+            ))
+        
+        # Finding 3: Basic authentication
+        for node in parser.find_nodes_by_type(root_node, 'method_invocation'):
+            node_text = parser.get_node_text(node, code_bytes)
+            if 'httpBasic()' in node_text:
+                line_num = node.start_point[0] + 1
+                findings.append(Finding(
+                    severity=Severity.CRITICAL,
+                    title="Service Account Using Basic Authentication",
+                    description=(
+                        f"Service account configured with basic/password authentication at line {line_num}. "
+                        f"Non-user accounts must use certificate-based or managed identity authentication."
+                    ),
+                    file_path=file_path,
+                    line_number=line_num,
+                    snippet=self._get_snippet(lines, line_num),
+                    remediation=(
+                        "Configure certificate-based authentication or use managed identities. "
+                        "For Spring Security, use x509() authentication or Azure AD integration."
+                    ),
+                    ksi_id=self.KSI_ID
+                ))
+                break
+        
+        # Check for BasicAuthenticationEntryPoint in object creation
+        for node in parser.find_nodes_by_type(root_node, 'object_creation_expression'):
+            node_text = parser.get_node_text(node, code_bytes)
+            if 'BasicAuthenticationEntryPoint' in node_text:
+                line_num = node.start_point[0] + 1
+                findings.append(Finding(
+                    severity=Severity.CRITICAL,
+                    title="Service Account Using Basic Authentication",
+                    description=(
+                        f"Service account configured with basic/password authentication at line {line_num}. "
+                        f"Non-user accounts must use certificate-based or managed identity authentication."
+                    ),
+                    file_path=file_path,
+                    line_number=line_num,
+                    snippet=self._get_snippet(lines, line_num),
+                    remediation=(
+                        "Configure certificate-based authentication or use managed identities. "
+                        "For Spring Security, use x509() authentication or Azure AD integration."
+                    ),
+                    ksi_id=self.KSI_ID
+                ))
+                break
+        
+        return findings
+    
+    def _analyze_java_regex(self, code: str, file_path: str = "") -> List[Finding]:
+        """Regex-based fallback for Java analysis."""
         findings = []
         lines = code.split('\n')
         
-        # Pattern 1: Hardcoded service account credentials (CRITICAL)
         sa_cred_patterns = [
             r'setClientSecret\s*\(\s*["\']',
             r'serviceAccountPassword\s*=\s*["\']',
@@ -297,7 +746,6 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
                     ksi_id=self.KSI_ID
                 ))
         
-        # Pattern 2: Missing managed identity for Azure SDK (HIGH)
         if re.search(r'import com\.azure\.', code):
             if not re.search(r'DefaultAzureCredentialBuilder|ManagedIdentityCredentialBuilder', code):
                 line_num = self._find_line(lines, r'import com\.azure\.')
@@ -319,7 +767,6 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
                     ksi_id=self.KSI_ID
                 ))
         
-        # Pattern 3: Service account with basic authentication (CRITICAL)
         if re.search(r'@Configuration.*BasicAuthenticationEntryPoint|httpBasic\(\)', code, re.IGNORECASE):
             line_num = self._find_line(lines, r'BasicAuthenticationEntryPoint|httpBasic')
             findings.append(Finding(
@@ -343,7 +790,7 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze TypeScript/JavaScript code for KSI-IAM-03 compliance.
+        Analyze TypeScript/JavaScript code for KSI-IAM-03 compliance using AST.
         
         Frameworks: Express, NestJS, Next.js, React, Angular, Azure SDK
         
@@ -353,10 +800,171 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
         - API keys in service authentication
         - Managed identity configuration
         """
+        # AST-first dispatcher
+        parser = ASTParser(CodeLanguage.TYPESCRIPT)
+        tree = parser.parse(code)
+        
+        if tree:
+            return self._analyze_typescript_ast(code, file_path, parser, tree)
+        else:
+            return self._analyze_typescript_regex(code, file_path)
+    
+    def _analyze_typescript_ast(self, code: str, file_path: str, parser: ASTParser, tree) -> List[Finding]:
+        """AST-based TypeScript/JavaScript analysis for service account credentials."""
+        findings = []
+        lines = code.split('\n')
+        code_bytes = code.encode('utf-8')
+        root_node = tree.root_node
+        
+        has_azure_identity = False
+        has_default_credential = False
+        has_managed_identity = False
+        
+        # Check imports
+        for node in parser.find_nodes_by_type(root_node, 'import_statement'):
+            import_text = parser.get_node_text(node, code_bytes)
+            if '@azure/identity' in import_text:
+                has_azure_identity = True
+                if 'DefaultAzureCredential' in import_text:
+                    has_default_credential = True
+                if 'ManagedIdentityCredential' in import_text:
+                    has_managed_identity = True
+        
+        # Check variable declarations for hardcoded tokens
+        var_nodes = (parser.find_nodes_by_type(root_node, 'variable_declarator') + 
+                     parser.find_nodes_by_type(root_node, 'lexical_declaration'))
+        for node in var_nodes:
+            node_text = parser.get_node_text(node, code_bytes)
+            
+            # Check for hardcoded secrets
+            if any(keyword in node_text for keyword in ['serviceAccountToken', 'clientSecret', 'apiKey', 'bearerToken']):
+                if '=' in node_text and ('"' in node_text or "'" in node_text):
+                    if not any(safe in node_text for safe in ['process.env', 'config.', '${']):
+                        line_num = node.start_point[0] + 1
+                        findings.append(Finding(
+                            severity=Severity.CRITICAL,
+                            title="Service Account Token Hardcoded",
+                            description=(
+                                f"Service account token/secret found hardcoded at line {line_num}. "
+                                f"Non-user accounts must use managed identities or secure credential stores, "
+                                f"never hardcoded tokens or API keys."
+                            ),
+                            file_path=file_path,
+                            line_number=line_num,
+                            snippet=self._get_snippet(lines, line_num),
+                            remediation=(
+                                "Use DefaultAzureCredential from @azure/identity for Azure services. "
+                                "Store credentials in Azure Key Vault and retrieve via managed identity. "
+                                "Use process.env for environment variables, never hardcode secrets."
+                            ),
+                            ksi_id=self.KSI_ID
+                        ))
+                        break
+        
+        # Check object properties for hardcoded credentials
+        for node in parser.find_nodes_by_type(root_node, 'pair'):
+            node_text = parser.get_node_text(node, code_bytes)
+            if any(keyword in node_text for keyword in ['clientSecret:', 'apiKey:', 'serviceAccountToken:']):
+                if ':' in node_text and ('"' in node_text or "'" in node_text):
+                    if not any(safe in node_text for safe in ['process.env', 'config.', '${']):
+                        line_num = node.start_point[0] + 1
+                        findings.append(Finding(
+                            severity=Severity.CRITICAL,
+                            title="Service Account Token Hardcoded",
+                            description=(
+                                f"Service account token/secret found hardcoded at line {line_num}. "
+                                f"Non-user accounts must use managed identities or secure credential stores, "
+                                f"never hardcoded tokens or API keys."
+                            ),
+                            file_path=file_path,
+                            line_number=line_num,
+                            snippet=self._get_snippet(lines, line_num),
+                            remediation=(
+                                "Use DefaultAzureCredential from @azure/identity for Azure services. "
+                                "Store credentials in Azure Key Vault and retrieve via managed identity. "
+                                "Use process.env for environment variables, never hardcode secrets."
+                            ),
+                            ksi_id=self.KSI_ID
+                        ))
+                        break
+        
+        # Finding 2: Azure Identity without managed identity
+        if has_azure_identity and not (has_default_credential or has_managed_identity):
+            line_num = self._find_line(lines, r'@azure/identity')
+            findings.append(Finding(
+                severity=Severity.HIGH,
+                title="Azure Identity Without Managed Identity",
+                description=(
+                    f"Azure Identity package used at line {line_num} but not using recommended "
+                    f"credential types. Service accounts should use DefaultAzureCredential or "
+                    f"ManagedIdentityCredential for secure authentication."
+                ),
+                file_path=file_path,
+                line_number=line_num,
+                snippet=self._get_snippet(lines, line_num),
+                remediation=(
+                    "Use: new DefaultAzureCredential() or new ManagedIdentityCredential() "
+                    "for service account authentication in Azure."
+                ),
+                ksi_id=self.KSI_ID
+            ))
+        
+        # Finding 3: Basic authentication
+        auth_nodes = (parser.find_nodes_by_type(root_node, 'call_expression') +
+                     parser.find_nodes_by_type(root_node, 'member_expression'))
+        for node in auth_nodes:
+            node_text = parser.get_node_text(node, code_bytes)
+            # Check for passport.authenticate with basic or BasicStrategy usage
+            if ('passport.authenticate' in node_text and 'basic' in node_text.lower()) or 'BasicStrategy' in node_text:
+                line_num = node.start_point[0] + 1
+                findings.append(Finding(
+                    severity=Severity.HIGH,
+                    title="Service Account Using Basic Authentication",
+                    description=(
+                        f"Service account configured with basic/username-password authentication at line {line_num}. "
+                        f"Non-user accounts should use token-based, certificate, or managed identity authentication."
+                    ),
+                    file_path=file_path,
+                    line_number=line_num,
+                    snippet=self._get_snippet(lines, line_num),
+                    remediation=(
+                        "Use OAuth2 bearer tokens, client certificates, or Azure managed identities "
+                        "for service-to-service authentication. Avoid username/password for non-user accounts."
+                    ),
+                    ksi_id=self.KSI_ID
+                ))
+                break
+        
+        # Check for auth config objects with username
+        for node in parser.find_nodes_by_type(root_node, 'object'):
+            node_text = parser.get_node_text(node, code_bytes)
+            if 'auth:' in node_text and 'username:' in node_text:
+                line_num = node.start_point[0] + 1
+                findings.append(Finding(
+                    severity=Severity.HIGH,
+                    title="Service Account Using Basic Authentication",
+                    description=(
+                        f"Service account configured with basic/username-password authentication at line {line_num}. "
+                        f"Non-user accounts should use token-based, certificate, or managed identity authentication."
+                    ),
+                    file_path=file_path,
+                    line_number=line_num,
+                    snippet=self._get_snippet(lines, line_num),
+                    remediation=(
+                        "Use OAuth2 bearer tokens, client certificates, or Azure managed identities "
+                        "for service-to-service authentication. Avoid username/password for non-user accounts."
+                    ),
+                    ksi_id=self.KSI_ID
+                ))
+                break
+        
+        return findings
+    
+    def _analyze_typescript_regex(self, code: str, file_path: str = "") -> List[Finding]:
+        """Regex-based fallback for TypeScript/JavaScript analysis."""
         findings = []
         lines = code.split('\n')
         
-        # Pattern 1: Hardcoded service account tokens (CRITICAL)
         token_patterns = [
             r'serviceAccountToken\s*[=:]\s*["\']',
             r'clientSecret\s*[=:]\s*["\'](?!process\.env|config\.|\$\{)',
@@ -386,7 +994,6 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
                     ksi_id=self.KSI_ID
                 ))
         
-        # Pattern 2: Missing DefaultAzureCredential (HIGH)
         if re.search(r'from ["\']@azure/identity["\']|require\(["\']@azure/identity["\']\)', code):
             if not re.search(r'DefaultAzureCredential|ManagedIdentityCredential|ChainedTokenCredential', code):
                 line_num = self._find_line(lines, r'@azure/identity')
@@ -408,7 +1015,6 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
                     ksi_id=self.KSI_ID
                 ))
         
-        # Pattern 3: Basic auth for service accounts (HIGH)
         if re.search(r'passport\.authenticate\(["\']basic["\']|auth:\s*\{\s*username:', code, re.IGNORECASE):
             line_num = self._find_line(lines, r'basic["\']|auth:\s*\{')
             findings.append(Finding(
@@ -493,7 +1099,7 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
                     "Create a user-assigned managed identity resource and reference it:\n"
                     "identity: {\n"
                     "  type: 'UserAssigned'\n"
-                    "  userAssignedIdentities: { '\${userIdentity.id}': {} }\n"
+                    "  userAssignedIdentities: { '${userIdentity.id}': {} }\n"
                     "}"
                 ),
                 ksi_id=self.KSI_ID
@@ -641,3 +1247,4 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
         start = max(0, line_number - context - 1)
         end = min(len(lines), line_number + context)
         return '\n'.join(lines[start:end])
+

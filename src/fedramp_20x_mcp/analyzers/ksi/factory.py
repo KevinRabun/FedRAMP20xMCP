@@ -5,6 +5,10 @@ Automatically discovers and registers all KSI analyzers in the ksi/ directory.
 Each KSI analyzer is self-contained with complete language support.
 """
 
+import os
+import re
+from pathlib import Path
+from importlib import import_module
 from typing import Dict, Optional, List
 from .base import BaseKSIAnalyzer
 from ..base import AnalysisResult
@@ -26,35 +30,25 @@ class KSIAnalyzerFactory:
         """
         Automatically discover and register all KSI analyzers.
         
-        Dynamically imports all KSI analyzer modules and registers them.
+        Scans the ksi/ directory for files matching ksi_*.py pattern,
+        dynamically imports them, and registers the analyzer classes.
         """
-        # All 72 KSI analyzer modules
-        ksi_modules = [
-            'ksi_afr_01', 'ksi_afr_02', 'ksi_afr_03', 'ksi_afr_04', 'ksi_afr_05',
-            'ksi_afr_06', 'ksi_afr_07', 'ksi_afr_08', 'ksi_afr_09', 'ksi_afr_10',
-            'ksi_afr_11', 'ksi_ced_01', 'ksi_ced_02', 'ksi_ced_03', 'ksi_ced_04',
-            'ksi_cmt_01', 'ksi_cmt_02', 'ksi_cmt_03', 'ksi_cmt_04', 'ksi_cmt_05',
-            'ksi_cna_01', 'ksi_cna_02', 'ksi_cna_03', 'ksi_cna_04', 'ksi_cna_05',
-            'ksi_cna_06', 'ksi_cna_07', 'ksi_cna_08', 'ksi_iam_01', 'ksi_iam_02',
-            'ksi_iam_03', 'ksi_iam_04', 'ksi_iam_05', 'ksi_iam_06', 'ksi_iam_07',
-            'ksi_inr_01', 'ksi_inr_02', 'ksi_inr_03', 'ksi_mla_01', 'ksi_mla_02',
-            'ksi_mla_03', 'ksi_mla_04', 'ksi_mla_05', 'ksi_mla_06', 'ksi_mla_07',
-            'ksi_mla_08', 'ksi_piy_01', 'ksi_piy_02', 'ksi_piy_03', 'ksi_piy_04',
-            'ksi_piy_05', 'ksi_piy_06', 'ksi_piy_07', 'ksi_piy_08', 'ksi_rpl_01',
-            'ksi_rpl_02', 'ksi_rpl_03', 'ksi_rpl_04', 'ksi_svc_01', 'ksi_svc_02',
-            'ksi_svc_03', 'ksi_svc_04', 'ksi_svc_05', 'ksi_svc_06', 'ksi_svc_07',
-            'ksi_svc_08', 'ksi_svc_09', 'ksi_svc_10', 'ksi_tpr_01', 'ksi_tpr_02',
-            'ksi_tpr_03', 'ksi_tpr_04',
-        ]
+        # Get directory containing this factory.py file
+        ksi_dir = Path(__file__).parent
+        
+        # Find all ksi_*.py files (excluding special files)
+        ksi_files = sorted([
+            f.stem for f in ksi_dir.glob('ksi_*.py')
+            if f.stem not in ('ksi_base', '__init__')
+        ])
         
         # Dynamically import and register each analyzer
-        for module_name in ksi_modules:
+        for module_name in ksi_files:
             try:
                 # Convert module name to class name (ksi_iam_06 -> KSI_IAM_06_Analyzer)
                 class_name = module_name.upper() + '_Analyzer'
                 
-                # Import module using importlib
-                from importlib import import_module
+                # Import module
                 module = import_module(f'.{module_name}', package='fedramp_20x_mcp.analyzers.ksi')
                 
                 # Get analyzer class and instantiate
@@ -62,7 +56,8 @@ class KSIAnalyzerFactory:
                 self.register(analyzer_class())
                 
             except (ImportError, AttributeError) as e:
-                # Skip if module or class not found (shouldn't happen with generated files)
+                # Skip if module or class not found
+                # This allows for WIP analyzers or files that don't follow the pattern
                 pass
     
     def register(self, analyzer: BaseKSIAnalyzer):

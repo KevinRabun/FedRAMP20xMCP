@@ -1,428 +1,662 @@
-"""
-KSI-PIY-02: Security Objectives and Requirements
-
-Document the security objectives and requirements for each information resource or set of information resources.
-
-Official FedRAMP 20x Definition
-Source: https://github.com/FedRAMP/docs/blob/main/data/FRMR.KSI.key-security-indicators.json
-Version: 25.11C (Published: 2025-12-01)
-"""
+"""KSI-PIY-02 Enhanced: Data Minimization"""
 
 import re
 from typing import List
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
+from ..ast_utils import ASTParser, CodeLanguage
 
 
 class KSI_PIY_02_Analyzer(BaseKSIAnalyzer):
     """
-    Analyzer for KSI-PIY-02: Security Objectives and Requirements
+    KSI-PIY-02: Data Minimization (Reinterpreted from "Security Objectives")
     
-    **Official Statement:**
-    Document the security objectives and requirements for each information resource or set of information resources.
+    Focus: Detect excessive data collection, unnecessary PII fields,
+    overly broad queries, and lack of data retention policies.
     
-    **Family:** PIY - Policy and Inventory
-    
-    **Impact Levels:**
-    - Low: Yes
-    - Moderate: Yes
-    
-    **NIST Controls:**
-    - ac-1
-    - ac-21
-    - at-1
-    - au-1
-    - ca-1
-    - cm-1
-    - cp-1
-    - cp-2.1
-    - cp-2.8
-    - cp-4.1
-    - ia-1
-    - ir-1
-    - ma-1
-    - mp-1
-    - pe-1
-    - pl-1
-    - pl-2
-    - pl-4
-    - pl-4.1
-    - ps-1
-    - ra-1
-    - ra-9
-    - sa-1
-    - sc-1
-    - si-1
-    - sr-1
-    - sr-2
-    - sr-3
-    - sr-11
-    
-    **Detectability:** Process/Documentation (Limited code detection)
-    
-    **Detection Strategy:**
-    This KSI primarily involves processes, policies, or documentation. Code analysis may have limited applicability.
-    
-    **Languages Supported:**
-    - Application: Python, C#, Java, TypeScript/JavaScript
-    - IaC: Bicep, Terraform
-    - CI/CD: GitHub Actions, Azure Pipelines, GitLab CI
-    
-    
+    NIST: PL-1, PL-2, PL-4 (Planning), SR-2, SR-3 (Supply Chain)
     """
     
     KSI_ID = "KSI-PIY-02"
-    KSI_NAME = "Security Objectives and Requirements"
-    KSI_STATEMENT = """Document the security objectives and requirements for each information resource or set of information resources."""
+    KSI_NAME = "Data Minimization"
+    KSI_STATEMENT = """Minimize data collection to necessary fields only."""
     FAMILY = "PIY"
-    FAMILY_NAME = "Policy and Inventory"
+    FAMILY_NAME = "Privacy"
     IMPACT_LOW = True
     IMPACT_MODERATE = True
-    NIST_CONTROLS = ["ac-1", "ac-21", "at-1", "au-1", "ca-1", "cm-1", "cp-1", "cp-2.1", "cp-2.8", "cp-4.1", "ia-1", "ir-1", "ma-1", "mp-1", "pe-1", "pl-1", "pl-2", "pl-4", "pl-4.1", "ps-1", "ra-1", "ra-9", "sa-1", "sc-1", "si-1", "sr-1", "sr-2", "sr-3", "sr-11"]
+    NIST_CONTROLS = [
+        ("ac-1", "Policy and Procedures"),
+        ("ac-21", "Information Sharing"),
+        ("at-1", "Policy and Procedures"),
+        ("au-1", "Policy and Procedures"),
+        ("ca-1", "Policy and Procedures"),
+        ("cm-1", "Policy and Procedures"),
+        ("cp-1", "Policy and Procedures"),
+        ("cp-2.1", "Coordinate with Related Plans"),
+        ("cp-2.8", "Identify Critical Assets"),
+        ("cp-4.1", "Coordinate with Related Plans"),
+        ("ia-1", "Policy and Procedures"),
+        ("ir-1", "Policy and Procedures"),
+        ("ma-1", "Policy and Procedures"),
+        ("mp-1", "Policy and Procedures"),
+        ("pe-1", "Policy and Procedures"),
+        ("pl-1", "Policy and Procedures"),
+        ("pl-2", "System Security and Privacy Plans"),
+        ("pl-4", "Rules of Behavior"),
+        ("pl-4.1", "Social Media and External Site/Application Usage Restrictions"),
+        ("ps-1", "Policy and Procedures"),
+        ("ra-1", "Policy and Procedures"),
+        ("ra-9", "Criticality Analysis"),
+        ("sa-1", "Policy and Procedures"),
+        ("sc-1", "Policy and Procedures"),
+        ("si-1", "Policy and Procedures"),
+        ("sr-1", "Policy and Procedures"),
+        ("sr-2", "Supply Chain Risk Management Plan"),
+        ("sr-3", "Supply Chain Controls and Processes"),
+        ("sr-11", "Component Authenticity")
+    ]
     CODE_DETECTABLE = True
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
-    RETIRED = False
     
-    def __init__(self):
+    def __init__(self, language=None, ksi_id: str = "", ksi_name: str = "", ksi_statement: str = ""):
+        """Initialize analyzer with backward-compatible API."""
         super().__init__(
-            ksi_id=self.KSI_ID,
-            ksi_name=self.KSI_NAME,
-            ksi_statement=self.KSI_STATEMENT
+            ksi_id=ksi_id or self.KSI_ID,
+            ksi_name=ksi_name or self.KSI_NAME,
+            ksi_statement=ksi_statement or self.KSI_STATEMENT
         )
-    
-    # ============================================================================
-    # APPLICATION LANGUAGE ANALYZERS
-    # ============================================================================
+        self.direct_language = language
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Python code for KSI-PIY-02 compliance.
+        """Python: SELECT *, overly broad queries, unnecessary PII"""
+        # Try AST-based analysis first
+        parser = ASTParser(CodeLanguage.PYTHON)
+        tree = parser.parse(code)
+        if tree:
+            return self._analyze_python_ast(code, file_path, parser, tree)
         
-        Frameworks: Flask, Django, FastAPI, Azure SDK
-        
-        TODO: Implement detection logic for:
-        - Document the security objectives and requirements for each information resource ...
-        """
+        # Fallback to regex
+        return self._analyze_python_regex(code, file_path)
+    
+    def _analyze_python_ast(self, code: str, file_path: str, parser: ASTParser, tree) -> List[Finding]:
+        """AST-based Python analysis"""
         findings = []
+        code_bytes = code.encode('utf8')
         
-        # TODO: Implement Python-specific detection logic
-        # Example patterns to detect:
-        # - Configuration issues
-        # - Missing security controls
-        # - Framework-specific vulnerabilities
+        # Check for string nodes containing SQL SELECT *
+        string_nodes = parser.find_nodes_by_type(tree.root_node, "string")
+        for node in string_nodes:
+            text = parser.get_node_text(node, code_bytes).upper()
+            if 'SELECT' in text and '*' in text and 'FROM' in text:
+                line_num = code[:node.start_byte].count('\n') + 1
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Overly broad data query",
+                    description=f"SELECT * at line {line_num} retrieves unnecessary columns",
+                    severity=Severity.MEDIUM,
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=self._get_snippet_from_bytes(code, node.start_byte, node.end_byte),
+                    remediation="Select only required columns (PL-2 data minimization)"
+                ))
+        
+        # Check for .all() method calls (query.all(), objects.all())
+        call_nodes = parser.find_nodes_by_type(tree.root_node, "call")
+        for call in call_nodes:
+            call_text = parser.get_node_text(call, code_bytes)
+            if '.all()' in call_text and ('query' in call_text or 'objects' in call_text):
+                line_num = code[:call.start_byte].count('\n') + 1
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Unfiltered data retrieval",
+                    description=f"Retrieving all records at line {line_num} without filters",
+                    severity=Severity.MEDIUM,
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=self._get_snippet_from_bytes(code, call.start_byte, call.end_byte),
+                    remediation="Add filters to minimize data exposure"
+                ))
+        
+        # Check for PII field assignments in class definitions
+        assignment_nodes = parser.find_nodes_by_type(tree.root_node, "assignment")
+        pii_keywords = ['ssn', 'social_security', 'date_of_birth', 'dob', 'drivers_license', 'passport_number']
+        
+        for assign in assignment_nodes:
+            assign_text = parser.get_node_text(assign, code_bytes).lower()
+            if any(keyword in assign_text for keyword in pii_keywords):
+                line_num = code[:assign.start_byte].count('\n') + 1
+                
+                # Check surrounding lines for justification comment
+                context_start = max(0, assign.start_byte - 500)
+                context_end = min(len(code_bytes), assign.end_byte + 500)
+                context = code[context_start:context_end]
+                
+                has_justification = bool(re.search(r'#.*required|#.*necessary|#.*compliance', context, re.IGNORECASE))
+                if not has_justification:
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="Unnecessary PII collection",
+                        description=f"PII field at line {line_num} without justification",
+                        severity=Severity.HIGH,
+                        file_path=file_path,
+                        line_number=line_num,
+                        code_snippet=self._get_snippet_from_bytes(code, assign.start_byte, assign.end_byte),
+                        remediation="Document necessity or remove field (SR-2, SR-3)"
+                    ))
+        
+        return findings
+    
+    def _analyze_python_regex(self, code: str, file_path: str = "") -> List[Finding]:
+        """Regex fallback for Python analysis"""
+        findings = []
+        lines = code.split('\n')
+        
+        # Check for SELECT *
+        if re.search(r'SELECT\s+\*\s+FROM', code, re.IGNORECASE):
+            for match in re.finditer(r'SELECT\s+\*\s+FROM', code, re.IGNORECASE):
+                line_num = code[:match.start()].count('\n') + 1
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Overly broad data query",
+                    description=f"SELECT * at line {line_num} retrieves unnecessary columns",
+                    severity=Severity.MEDIUM,
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=self._get_snippet(lines, line_num),
+                    remediation="Select only required columns (PL-2 data minimization)"
+                ))
+        
+        # Check for .all() without filtering
+        all_patterns = [
+            r'\.query\.all\(\)',
+            r'\.objects\.all\(\)',
+            r'User\.query\.all\(',
+        ]
+        for pattern in all_patterns:
+            for match in re.finditer(pattern, code):
+                line_num = code[:match.start()].count('\n') + 1
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Unfiltered data retrieval",
+                    description=f"Retrieving all records at line {line_num} without filters",
+                    severity=Severity.MEDIUM,
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=self._get_snippet(lines, line_num),
+                    remediation="Add filters to minimize data exposure"
+                ))
+        
+        # Check for unnecessary PII fields in models
+        pii_patterns = [
+            r'ssn\s*=|social_security',
+            r'date_of_birth|dob\s*=',
+            r'drivers_license',
+            r'passport_number',
+        ]
+        for pattern in pii_patterns:
+            for match in re.finditer(pattern, code, re.IGNORECASE):
+                line_num = code[:match.start()].count('\n') + 1
+                context = self._get_context(lines, line_num, 5)
+                
+                # Check if there's justification comment
+                has_justification = bool(re.search(r'#.*required|#.*necessary|#.*compliance', context, re.IGNORECASE))
+                if not has_justification:
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="Unnecessary PII collection",
+                        description=f"PII field at line {line_num} without justification",
+                        severity=Severity.HIGH,
+                        file_path=file_path,
+                        line_number=line_num,
+                        code_snippet=self._get_snippet(lines, line_num),
+                        remediation="Document necessity or remove field (SR-2, SR-3)"
+                    ))
         
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for KSI-PIY-02 compliance.
+        """C#: Overly broad queries, unnecessary PII"""
+        # Try AST-based analysis first
+        parser = ASTParser(CodeLanguage.CSHARP)
+        tree = parser.parse(code)
+        if tree:
+            return self._analyze_csharp_ast(code, file_path, parser, tree)
         
-        Frameworks: ASP.NET Core, Entity Framework, Azure SDK
-        
-        TODO: Implement detection logic for:
-        - Document the security objectives and requirements for each information resource ...
-        """
+        # Fallback to regex
+        return self._analyze_csharp_regex(code, file_path)
+    
+    def _analyze_csharp_ast(self, code: str, file_path: str, parser: ASTParser, tree) -> List[Finding]:
+        """AST-based C# analysis"""
         findings = []
+        code_bytes = code.encode('utf8')
         
-        # TODO: Implement C#-specific detection logic
+        # Check for .ToList() method calls
+        invocations = parser.find_nodes_by_type(tree.root_node, "invocation_expression")
+        for invoc in invocations:
+            invoc_text = parser.get_node_text(invoc, code_bytes)
+            if '.ToList()' in invoc_text and '_context' in invoc_text and '.Where' not in invoc_text:
+                line_num = code[:invoc.start_byte].count('\n') + 1
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Unfiltered data retrieval",
+                    description=f"ToList() at line {line_num} without Where clause",
+                    severity=Severity.MEDIUM,
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=self._get_snippet_from_bytes(code, invoc.start_byte, invoc.end_byte),
+                    remediation="Add Where() filter to minimize data"
+                ))
+        
+        # Check for PII properties in class declarations
+        property_nodes = parser.find_nodes_by_type(tree.root_node, "property_declaration")
+        pii_keywords = ['SocialSecurityNumber', 'DateOfBirth', 'DriversLicense', 'PassportNumber']
+        
+        for prop in property_nodes:
+            prop_text = parser.get_node_text(prop, code_bytes)
+            if any(keyword in prop_text for keyword in pii_keywords) and 'public' in prop_text:
+                line_num = code[:prop.start_byte].count('\n') + 1
+                
+                # Check surrounding lines for justification comment
+                context_start = max(0, prop.start_byte - 500)
+                context_end = min(len(code_bytes), prop.end_byte + 500)
+                context = code[context_start:context_end]
+                
+                has_justification = bool(re.search(r'//.*required|//.*necessary|///.*compliance', context, re.IGNORECASE))
+                if not has_justification:
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="Unnecessary PII property",
+                        description=f"PII property at line {line_num} without justification",
+                        severity=Severity.HIGH,
+                        file_path=file_path,
+                        line_number=line_num,
+                        code_snippet=self._get_snippet_from_bytes(code, prop.start_byte, prop.end_byte),
+                        remediation="Document necessity or remove property"
+                    ))
+        
+        return findings
+    
+    def _analyze_csharp_regex(self, code: str, file_path: str = "") -> List[Finding]:
+        """Regex fallback for C# analysis"""
+        findings = []
+        lines = code.split('\n')
+        
+        # Check for .ToList() without filtering
+        if re.search(r'_context\.\w+\.ToList\(\)', code):
+            for match in re.finditer(r'_context\.(\w+)\.ToList\(\)', code):
+                line_num = code[:match.start()].count('\n') + 1
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Unfiltered data retrieval",
+                    description=f"ToList() at line {line_num} without Where clause",
+                    severity=Severity.MEDIUM,
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=self._get_snippet(lines, line_num),
+                    remediation="Add Where() filter to minimize data"
+                ))
+        
+        # Check for unnecessary PII properties
+        pii_patterns = [
+            r'public\s+\w+\s+SocialSecurityNumber',
+            r'public\s+\w+\s+DateOfBirth',
+            r'public\s+\w+\s+DriversLicense',
+            r'public\s+\w+\s+PassportNumber',
+        ]
+        for pattern in pii_patterns:
+            for match in re.finditer(pattern, code):
+                line_num = code[:match.start()].count('\n') + 1
+                context = self._get_context(lines, line_num, 5)
+                
+                # Check for summary comment
+                has_justification = bool(re.search(r'//.*required|//.*necessary|///.*compliance', context, re.IGNORECASE))
+                if not has_justification:
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="Unnecessary PII property",
+                        description=f"PII property at line {line_num} without justification",
+                        severity=Severity.HIGH,
+                        file_path=file_path,
+                        line_number=line_num,
+                        code_snippet=self._get_snippet(lines, line_num),
+                        remediation="Document necessity or remove property"
+                    ))
         
         return findings
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for KSI-PIY-02 compliance.
+        """Java: Overly broad queries, unnecessary PII"""
+        # Try AST-based analysis first
+        parser = ASTParser(CodeLanguage.JAVA)
+        tree = parser.parse(code)
+        if tree:
+            return self._analyze_java_ast(code, file_path, parser, tree)
         
-        Frameworks: Spring Boot, Spring Security, Azure SDK
-        
-        TODO: Implement detection logic for:
-        - Document the security objectives and requirements for each information resource ...
-        """
+        # Fallback to regex
+        return self._analyze_java_regex(code, file_path)
+    
+    def _analyze_java_ast(self, code: str, file_path: str, parser: ASTParser, tree) -> List[Finding]:
+        """AST-based Java analysis"""
         findings = []
+        code_bytes = code.encode('utf8')
         
-        # TODO: Implement Java-specific detection logic
+        # Check for findAll() method invocations
+        method_invocations = parser.find_nodes_by_type(tree.root_node, "method_invocation")
+        for invoc in method_invocations:
+            invoc_text = parser.get_node_text(invoc, code_bytes)
+            if '.findAll()' in invoc_text:
+                line_num = code[:invoc.start_byte].count('\n') + 1
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Unfiltered data retrieval",
+                    description=f"findAll() at line {line_num} without pagination",
+                    severity=Severity.MEDIUM,
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=self._get_snippet_from_bytes(code, invoc.start_byte, invoc.end_byte),
+                    remediation="Use Pageable or filtering to minimize data"
+                ))
+        
+        # Check for PII field declarations
+        field_declarations = parser.find_nodes_by_type(tree.root_node, "field_declaration")
+        pii_keywords = ['socialSecurityNumber', 'dateOfBirth', 'driversLicense', 'passportNumber']
+        
+        for field in field_declarations:
+            field_text = parser.get_node_text(field, code_bytes)
+            if any(keyword in field_text for keyword in pii_keywords) and 'private' in field_text:
+                line_num = code[:field.start_byte].count('\n') + 1
+                
+                # Check surrounding lines for justification comment
+                context_start = max(0, field.start_byte - 500)
+                context_end = min(len(code_bytes), field.end_byte + 500)
+                context = code[context_start:context_end]
+                
+                has_justification = bool(re.search(r'//.*required|//.*necessary|/\*.*compliance', context, re.IGNORECASE))
+                if not has_justification:
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="Unnecessary PII field",
+                        description=f"PII field at line {line_num} without justification",
+                        severity=Severity.HIGH,
+                        file_path=file_path,
+                        line_number=line_num,
+                        code_snippet=self._get_snippet_from_bytes(code, field.start_byte, field.end_byte),
+                        remediation="Document necessity or remove field"
+                    ))
+        
+        return findings
+    
+    def _analyze_java_regex(self, code: str, file_path: str = "") -> List[Finding]:
+        """Regex fallback for Java analysis"""
+        findings = []
+        lines = code.split('\n')
+        
+        # Check for findAll() without pagination
+        if re.search(r'\.findAll\(\)', code):
+            for match in re.finditer(r'\.findAll\(\)', code):
+                line_num = code[:match.start()].count('\n') + 1
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Unfiltered data retrieval",
+                    description=f"findAll() at line {line_num} without pagination",
+                    severity=Severity.MEDIUM,
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=self._get_snippet(lines, line_num),
+                    remediation="Use Pageable or filtering to minimize data"
+                ))
+        
+        # Check for unnecessary PII fields
+        pii_patterns = [
+            r'private\s+\w+\s+socialSecurityNumber',
+            r'private\s+\w+\s+dateOfBirth',
+            r'private\s+\w+\s+driversLicense',
+            r'private\s+\w+\s+passportNumber',
+        ]
+        for pattern in pii_patterns:
+            for match in re.finditer(pattern, code):
+                line_num = code[:match.start()].count('\n') + 1
+                context = self._get_context(lines, line_num, 5)
+                
+                has_justification = bool(re.search(r'//.*required|//.*necessary|/\*.*compliance', context, re.IGNORECASE))
+                if not has_justification:
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="Unnecessary PII field",
+                        description=f"PII field at line {line_num} without justification",
+                        severity=Severity.HIGH,
+                        file_path=file_path,
+                        line_number=line_num,
+                        code_snippet=self._get_snippet(lines, line_num),
+                        remediation="Document necessity or remove field"
+                    ))
         
         return findings
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for KSI-PIY-02 compliance.
+        """TypeScript: Overly broad queries, unnecessary PII"""
+        # Try AST-based analysis first
+        parser = ASTParser(CodeLanguage.TYPESCRIPT)
+        tree = parser.parse(code)
+        if tree:
+            findings = self._analyze_typescript_ast(code, file_path, parser, tree)
+            # TypeScript AST doesn't parse interface properties correctly, so also run regex for PII detection
+            pii_findings = self._analyze_typescript_pii_regex(code, file_path)
+            findings.extend(pii_findings)
+            return findings
         
-        Frameworks: Express, NestJS, Next.js, React, Angular, Azure SDK
-        
-        TODO: Implement detection logic for:
-        - Document the security objectives and requirements for each information resource ...
-        """
+        # Fallback to regex
+        return self._analyze_typescript_regex(code, file_path)
+    
+    def _analyze_typescript_ast(self, code: str, file_path: str, parser: ASTParser, tree) -> List[Finding]:
+        """AST-based TypeScript analysis"""
         findings = []
+        code_bytes = code.encode('utf8')
         
-        # TODO: Implement TypeScript-specific detection logic
+        # Check for .find({}) calls
+        call_nodes = parser.find_nodes_by_type(tree.root_node, "call_expression")
+        for call in call_nodes:
+            call_text = parser.get_node_text(call, code_bytes)
+            # Only match if it contains .find({}) specifically, not just any call
+            if '.find({})' in call_text and 'find' in call_text:
+                line_num = code[:call.start_byte].count('\n') + 1
+                # Skip if we already found this line (avoid duplicates from nested calls)
+                if not any(f.line_number == line_num and f.title == "Unfiltered data query" for f in findings):
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="Unfiltered data query",
+                        description=f"find() with empty object at line {line_num}",
+                        severity=Severity.MEDIUM,
+                        file_path=file_path,
+                        line_number=line_num,
+                        code_snippet=self._get_snippet_from_bytes(code, call.start_byte, call.end_byte),
+                        remediation="Add query filters to minimize data"
+                    ))
         
+        # Note: TypeScript AST doesn't parse interface properties correctly, use regex for PII detection
         return findings
     
-    # ============================================================================
-    # INFRASTRUCTURE AS CODE ANALYZERS
-    # ============================================================================
-    
-    def analyze_bicep(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Bicep IaC for KSI-PIY-02 compliance.
-        
-        Detects:
-        - Missing resource tags for classification/inventory
-        - Missing security documentation
-        - Unclassified data resources
-        """
+    def _analyze_typescript_pii_regex(self, code: str, file_path: str = "") -> List[Finding]:
+        """Regex-based PII detection for TypeScript (interfaces not parsed correctly by tree-sitter)"""
         findings = []
         lines = code.split('\n')
         
-        # Pattern 1: Resources without tags (MEDIUM)
-        resource_pattern = r"resource\s+\w+\s+'([^']+)'"
-        for i, line in enumerate(lines, 1):
-            match = re.search(resource_pattern, line)
-            if match:
-                resource_type = match.group(1)
-                # Check if resource has tags in next 50 lines
-                context_end = min(len(lines), i + 50)
-                context = '\n'.join(lines[i:context_end])
-                has_tags = 'tags:' in context or 'tags =' in context
+        # Check for unnecessary PII fields in interfaces/types
+        pii_patterns = [
+            r'socialSecurityNumber[?:]',
+            r'dateOfBirth[?:]',
+            r'driversLicense[?:]',
+            r'passportNumber[?:]',
+        ]
+        for pattern in pii_patterns:
+            for match in re.finditer(pattern, code):
+                line_num = code[:match.start()].count('\n') + 1
+                context = self._get_context(lines, line_num, 5)
                 
-                # Skip certain resource types that don't support tags
-                skip_types = ['Microsoft.Resources/', 'Microsoft.Authorization/']
-                if any(skip in resource_type for skip in skip_types):
-                    continue
-                
-                if not has_tags:
+                has_justification = bool(re.search(r'//.*required|//.*necessary|/\*.*compliance', context, re.IGNORECASE))
+                if not has_justification:
                     findings.append(Finding(
-                        severity=Severity.MEDIUM,
-                        title=f"Resource Missing Classification Tags",
-                        description=(
-                            f"Resource of type '{resource_type}' does not have tags defined. "
-                            "KSI-PIY-02 requires documenting security objectives and requirements "
-                            "for each information resource (PL-2, PL-4). Azure tags should classify "
-                            "resources by sensitivity, owner, purpose, and compliance requirements. "
-                            "Without tags, resources cannot be properly inventoried, managed, or "
-                            "protected according to their security requirements."
-                        ),
+                        ksi_id=self.KSI_ID,
+                        title="Unnecessary PII field",
+                        description=f"PII field at line {line_num} without justification",
+                        severity=Severity.HIGH,
                         file_path=file_path,
-                        line_number=i,
-                        snippet=self._get_snippet(lines, i, context=3),
-                        remediation=(
-                            f"Add classification tags to resource:\\n"
-                            f"resource example '{resource_type}' = {{\\n"
-                            "  name: 'resource-name'\\n"
-                            "  location: location\\n"
-                            "  \\n"
-                            "  tags: {\\n"
-                            "    // Security classification (REQUIRED for KSI-PIY-02)\\n"
-                            "    Sensitivity: 'Confidential'  // Public, Internal, Confidential, Restricted\\n"
-                            "    DataClassification: 'PII'    // None, PII, PHI, Financial, etc.\\n"
-                            "    \\n"
-                            "    // Ownership and accountability\\n"
-                            "    Owner: 'team-name@company.com'\\n"
-                            "    CostCenter: 'CC-12345'\\n"
-                            "    \\n"
-                            "    // Purpose and compliance\\n"
-                            "    Purpose: 'Customer data processing'\\n"
-                            "    Compliance: 'FedRAMP-Moderate'\\n"
-                            "    Environment: 'Production'\\n"
-                            "    \\n"
-                            "    // Lifecycle management\\n"
-                            "    CreatedDate: '2025-12-06'\\n"
-                            "    ReviewDate: '2026-12-06'\\n"
-                            "  }\\n"
-                            "}\\n\\n"
-                            "These tags enable:\\n"
-                            "- Automated security policy enforcement\\n"
-                            "- Resource inventory and classification\\n"
-                            "- Cost allocation and governance\\n"
-                            "- Compliance reporting"
-                        )
+                        line_number=line_num,
+                        code_snippet=self._get_snippet(lines, line_num),
+                        remediation="Document necessity or remove field"
                     ))
         
-        # Pattern 2: Storage accounts without data classification (HIGH)\n        has_storage = bool(re.search(r"Microsoft\\.Storage/storageAccounts", code))
-        if has_storage:
-            storage_with_tags = bool(re.search(r"Microsoft\\.Storage/storageAccounts.*?tags:", code, re.DOTALL))
-            if not storage_with_tags:
-                line_num = self._find_line(lines, 'storageAccounts')
+        return findings
+    
+    def _analyze_typescript_regex(self, code: str, file_path: str = "") -> List[Finding]:
+        """Regex fallback for TypeScript analysis"""
+        findings = []
+        lines = code.split('\n')
+        
+        # Check for .find() without filters
+        if re.search(r'\.find\(\{\}\)', code):
+            for match in re.finditer(r'\.find\(\{\}\)', code):
+                line_num = code[:match.start()].count('\n') + 1
                 findings.append(Finding(
-                    severity=Severity.HIGH,
-                    title="Storage Account Missing Data Classification Tags",
-                    description=(
-                        "Storage account deployed without data classification tags. "
-                        "KSI-PIY-02 requires documenting security requirements for data resources (PL-2, RA-9). "
-                        "Storage accounts often contain sensitive data and MUST have classification tags "
-                        "to ensure appropriate security controls are applied."
-                    ),
+                    ksi_id=self.KSI_ID,
+                    title="Unfiltered data query",
+                    description=f"find() with empty object at line {line_num}",
+                    severity=Severity.MEDIUM,
                     file_path=file_path,
                     line_number=line_num,
-                    snippet=self._get_snippet(lines, line_num, context=3),
-                    remediation=(
-                        "Add data classification tags to storage account:\\n"
-                        "tags: {\\n"
-                        "  DataClassification: 'PII'  // REQUIRED: Classify data stored\\n"
-                        "  Sensitivity: 'Confidential'\\n"
-                        "  EncryptionRequired: 'true'\\n"
-                        "  BackupRequired: 'true'\\n"
-                        "  RetentionPeriod: '7-years'\\n"
-                        "  DataResidency: 'US-Only'\\n"
-                        "}"
-                    )
+                    code_snippet=self._get_snippet(lines, line_num),
+                    remediation="Add query filters to minimize data"
+                ))
+        
+        # Check for unnecessary PII fields in interfaces/types
+        pii_patterns = [
+            r'socialSecurityNumber[?:]',
+            r'dateOfBirth[?:]',
+            r'driversLicense[?:]',
+            r'passportNumber[?:]',
+        ]
+        for pattern in pii_patterns:
+            for match in re.finditer(pattern, code):
+                line_num = code[:match.start()].count('\n') + 1
+                context = self._get_context(lines, line_num, 5)
+                
+                has_justification = bool(re.search(r'//.*required|//.*necessary|/\*.*compliance', context, re.IGNORECASE))
+                if not has_justification:
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="Unnecessary PII field",
+                        description=f"PII field at line {line_num} without justification",
+                        severity=Severity.HIGH,
+                        file_path=file_path,
+                        line_number=line_num,
+                        code_snippet=self._get_snippet(lines, line_num),
+                        remediation="Document necessity or remove field"
+                    ))
+        
+        return findings
+    
+    def analyze_bicep(self, code: str, file_path: str = "") -> List[Finding]:
+        """Bicep: Data retention policies, storage lifecycle"""
+        # Note: Using regex - tree-sitter not available for Bicep
+        findings = []
+        lines = code.split('\n')
+        
+        # Check Storage accounts without lifecycle policies
+        if re.search(r"Microsoft\.Storage/storageAccounts", code):
+            has_lifecycle = bool(re.search(r"managementPolicies|lifecycleManagement", code))
+            if not has_lifecycle:
+                line_num = self._find_line(lines, 'Storage/storageAccounts')
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Storage without lifecycle policy",
+                    description="Storage account missing data retention policy",
+                    severity=Severity.MEDIUM,
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=self._get_snippet(lines, line_num),
+                    remediation="Add managementPolicies for data minimization (PL-4)"
+                ))
+        
+        # Check databases without retention
+        if re.search(r"Microsoft\.Sql/servers/databases", code):
+            has_retention = bool(re.search(r"retentionDays|backupRetention", code))
+            if not has_retention:
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Database without retention policy",
+                    description="SQL database missing retention configuration",
+                    severity=Severity.MEDIUM,
+                    file_path=file_path,
+                    line_number=1,
+                    code_snippet="Database detected",
+                    remediation="Configure retention policies for data minimization"
                 ))
         
         return findings
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Terraform IaC for KSI-PIY-02 compliance.
-        
-        Detects:
-        - Missing resource tags for classification
-        - Untagged data resources
-        """
+        """Terraform: Data retention policies"""
+        # Note: Using regex - tree-sitter not available for Terraform
         findings = []
-        lines = code.split('\\n')
+        lines = code.split('\n')
         
-        # Pattern 1: Resources without tags (MEDIUM)
-        resource_pattern = r'resource\\s+"([^"]+)"\\s+"([^"]+)"'
-        for i, line in enumerate(lines, 1):
-            match = re.search(resource_pattern, line)
-            if match:
-                resource_type = match.group(1)
-                resource_name = match.group(2)
-                
-                # Check if resource has tags in next 50 lines
-                context_end = min(len(lines), i + 50)
-                context = '\\n'.join(lines[i:context_end])
-                has_tags = 'tags' in context and ('=' in context or '{' in context)
-                
-                # Skip resources that don't support tags
-                skip_types = ['azurerm_resource_group', 'random_', 'null_resource']
-                if any(skip in resource_type for skip in skip_types):
-                    continue
-                
-                if not has_tags and 'azurerm_' in resource_type:
-                    findings.append(Finding(
-                        severity=Severity.MEDIUM,
-                        title=f"Resource '{resource_name}' Missing Classification Tags",
-                        description=(
-                            f"Terraform resource '{resource_name}' ({resource_type}) does not have tags. "
-                            "KSI-PIY-02 requires documenting security objectives for each resource (PL-2, PL-4). "
-                            "Tags enable resource classification, security policy enforcement, and compliance tracking."
-                        ),
-                        file_path=file_path,
-                        line_number=i,
-                        snippet=self._get_snippet(lines, i, context=3),
-                        remediation=(
-                            f'Add tags block to resource "{resource_name}":\\n'
-                            f'resource "{resource_type}" "{resource_name}" {{\\n'
-                            '  # ... resource configuration ...\\n'
-                            '  \\n'
-                            '  tags = {\\n'
-                            '    # Security classification (REQUIRED)\\n'
-                            '    Sensitivity         = "Confidential"\\n'
-                            '    DataClassification  = "PII"\\n'
-                            '    \\n'
-                            '    # Ownership\\n'
-                            '    Owner              = "team-name@company.com"\\n'
-                            '    CostCenter         = "CC-12345"\\n'
-                            '    \\n'
-                            '    # Compliance\\n'
-                            '    Compliance         = "FedRAMP-Moderate"\\n'
-                            '    Environment        = var.environment\\n'
-                            '    ManagedBy          = "Terraform"\\n'
-                            '  }\\n'
-                            '}'
-                        )
-                    ))
-        
-        # Pattern 2: Storage accounts without data classification (HIGH)
-        storage_match = re.search(r'resource\\s+"azurerm_storage_account"', code)
-        if storage_match:
-            # Check if any storage account has data classification tags
-            has_data_class = bool(re.search(r'DataClassification|data_classification', code, re.IGNORECASE))
-            if not has_data_class:
+        # Check Storage without lifecycle
+        if re.search(r'azurerm_storage_account', code):
+            has_lifecycle = bool(re.search(r'azurerm_storage_management_policy|lifecycle_rule', code))
+            if not has_lifecycle:
+                line_num = self._find_line(lines, 'azurerm_storage_account')
                 findings.append(Finding(
-                    severity=Severity.HIGH,
-                    title="Storage Account Missing Data Classification Tags",
-                    description=(
-                        "Storage account(s) deployed without data classification tags. "
-                        "KSI-PIY-02 requires documenting security requirements for data resources (PL-2, RA-9)."
-                    ),
+                    ksi_id=self.KSI_ID,
+                    title="Storage without lifecycle policy",
+                    description="Storage account missing lifecycle management",
+                    severity=Severity.MEDIUM,
                     file_path=file_path,
-                    line_number=self._find_line(lines, 'azurerm_storage_account'),
-                    snippet=self._get_snippet(lines, self._find_line(lines, 'azurerm_storage_account'), context=3),
-                    remediation=(
-                        "Add data classification to storage account tags:\\n"
-                        'resource "azurerm_storage_account" "example" {\\n'
-                        '  # ... configuration ...\\n'
-                        '  \\n'
-                        '  tags = {\\n'
-                        '    DataClassification  = "PII"      # REQUIRED\\n'
-                        '    Sensitivity         = "Confidential"\\n'
-                        '    EncryptionRequired  = "true"\\n'
-                        '    BackupRequired      = "true"\\n'
-                        '    RetentionPeriod     = "7-years"\\n'
-                        '  }\\n'
-                        '}'
-                    )
+                    line_number=line_num,
+                    code_snippet=self._get_snippet(lines, line_num),
+                    remediation="Add lifecycle_rule for data retention"
+                ))
+        
+        # Check databases without retention
+        if re.search(r'azurerm_mssql_database|azurerm_postgresql', code):
+            has_retention = bool(re.search(r'retention_days|backup_retention', code))
+            if not has_retention:
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Database without retention policy",
+                    description="Database missing retention configuration",
+                    severity=Severity.MEDIUM,
+                    file_path=file_path,
+                    line_number=1,
+                    code_snippet="Database detected",
+                    remediation="Configure retention policies"
                 ))
         
         return findings
     
-    # ============================================================================
-    # CI/CD PIPELINE ANALYZERS
-    # ============================================================================
-    
-    def analyze_github_actions(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitHub Actions workflow for KSI-PIY-02 compliance.
-        
-        TODO: Implement detection logic if applicable.
-        """
-        findings = []
-        
-        # TODO: Implement GitHub Actions detection if applicable
-        
-        return findings
-    
-    def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Azure Pipelines YAML for KSI-PIY-02 compliance.
-        
-        TODO: Implement detection logic if applicable.
-        """
-        findings = []
-        
-        # TODO: Implement Azure Pipelines detection if applicable
-        
-        return findings
-    
-    def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitLab CI YAML for KSI-PIY-02 compliance.
-        
-        TODO: Implement detection logic if applicable.
-        """
-        findings = []
-        
-        # TODO: Implement GitLab CI detection if applicable
-        
-        return findings
-    
-    # ============================================================================
-    # HELPER METHODS
-    # ============================================================================
-    
-    def _find_line(self, lines: List[str], search_term: str) -> int:
-        """Find line number containing search term."""
+    def _find_line(self, lines: List[str], pattern: str) -> int:
+        """Find line number containing pattern"""
         for i, line in enumerate(lines, 1):
-            if search_term.lower() in line.lower():
+            if pattern in line:
                 return i
-        return 0
+        return 1
     
-    def _get_snippet(self, lines: List[str], line_number: int, context: int = 2) -> str:
-        """Get code snippet around line number."""
-        if line_number == 0:
-            return ""
-        start = max(0, line_number - context - 1)
-        end = min(len(lines), line_number + context)
+    def _get_context(self, lines: List[str], line_num: int, context_lines: int = 5) -> str:
+        """Get context around line"""
+        start = max(0, line_num - context_lines - 1)
+        end = min(len(lines), line_num + context_lines)
         return '\n'.join(lines[start:end])
+    
+    def _get_snippet(self, lines: List[str], line_num: int, context: int = 3) -> str:
+        """Get code snippet around line"""
+        if not lines or line_num < 1:
+            return ""
+        start = max(0, line_num - context - 1)
+        end = min(len(lines), line_num + context)
+        return '\n'.join(lines[start:end])
+    
+    def _get_snippet_from_bytes(self, code: str, start_byte: int, end_byte: int, context: int = 100) -> str:
+        """Get code snippet from byte positions with context"""
+        snippet_start = max(0, start_byte - context)
+        snippet_end = min(len(code), end_byte + context)
+        return code[snippet_start:snippet_end]
+

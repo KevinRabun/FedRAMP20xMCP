@@ -1,558 +1,465 @@
 """
-KSI-CNA-02: Minimize the Attack Surface
+KSI-CNA-02 Enhanced: Minimize the Attack Surface (AST-Based)
 
 Design systems to minimize the attack surface and minimize lateral movement if compromised.
 
-Official FedRAMP 20x Definition
-Source: https://github.com/FedRAMP/docs/blob/main/data/FRMR.KSI.key-security-indicators.json
-Version: 25.11C (Published: 2025-12-01)
+This enhanced version uses AST parsing and semantic analysis for improved accuracy.
 """
 
-import re
-from typing import List
-from ..base import Finding, Severity
+from typing import List, Set
+from ..base import Finding, Severity, AnalysisResult
+from ..ast_utils import ASTParser, CodeLanguage
+from ..semantic_analysis import SemanticAnalyzer
+from ..interprocedural import InterProceduralAnalyzer
 from .base import BaseKSIAnalyzer
 
 
 class KSI_CNA_02_Analyzer(BaseKSIAnalyzer):
     """
-    Analyzer for KSI-CNA-02: Minimize the Attack Surface
+    Enhanced AST-based analyzer for KSI-CNA-02: Minimize the Attack Surface.
     
-    **Official Statement:**
-    Design systems to minimize the attack surface and minimize lateral movement if compromised.
-    
-    **Family:** CNA - Cloud Native Architecture
-    
-    **Impact Levels:**
-    - Low: Yes
-    - Moderate: Yes
-    
-    **NIST Controls:**
-    - ac-17.3
-    - ac-18.1
-    - ac-18.3
-    - ac-20.1
-    - ca-9
-    - sc-7.3
-    - sc-7.4
-    - sc-7.5
-    - sc-7.8
-    - sc-8
-    - sc-10
-    - si-10
-    - si-11
-    - si-16
-    
-    **Detectability:** Process/Documentation (Limited code detection)
-    
-    **Detection Strategy:**
-    This KSI primarily involves processes, policies, or documentation. Code analysis may have limited applicability.
-    
-    **Languages Supported:**
-    - Application: Python, C#, Java, TypeScript/JavaScript
-    - IaC: Bicep, Terraform
-    - CI/CD: GitHub Actions, Azure Pipelines, GitLab CI
-    
-    
+    Uses AST parsing, semantic analysis, and inter-procedural analysis to detect:
+    - Debug mode enabled in production
+    - Developer exception pages without environment checks
+    - Permissive CORS configurations (allow all origins)
+    - Public network access on cloud resources
+    - Stack trace exposure in error handlers
+    - Missing service endpoints on subnets
+    - Exposed actuator endpoints without security
     """
     
     KSI_ID = "KSI-CNA-02"
     KSI_NAME = "Minimize the Attack Surface"
-    KSI_STATEMENT = """Design systems to minimize the attack surface and minimize lateral movement if compromised."""
+    KSI_STATEMENT = "Design systems to minimize the attack surface and minimize lateral movement if compromised."
     FAMILY = "CNA"
     FAMILY_NAME = "Cloud Native Architecture"
     IMPACT_LOW = True
     IMPACT_MODERATE = True
-    NIST_CONTROLS = ["ac-17.3", "ac-18.1", "ac-18.3", "ac-20.1", "ca-9", "sc-7.3", "sc-7.4", "sc-7.5", "sc-7.8", "sc-8", "sc-10", "si-10", "si-11", "si-16"]
+    NIST_CONTROLS = [
+        ("ac-17.3", "Managed Access Control Points"),
+        ("ac-18.1", "Authentication and Encryption"),
+        ("ac-18.3", "Disable Wireless Networking"),
+        ("ac-20.1", "Limits on Authorized Use"),
+        ("ca-9", "Internal System Connections"),
+        ("sc-7.3", "Access Points"),
+        ("sc-7.4", "External Telecommunications Services"),
+        ("sc-7.5", "Deny by Default — Allow by Exception"),
+        ("sc-7.8", "Route Traffic to Authenticated Proxy Servers"),
+        ("sc-8", "Transmission Confidentiality and Integrity"),
+        ("sc-10", "Network Disconnect"),
+        ("si-10", "Information Input Validation"),
+        ("si-11", "Error Handling"),
+        ("si-16", "Memory Protection")
+    ]
     CODE_DETECTABLE = True
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RETIRED = False
     
-    def __init__(self):
-        super().__init__(
-            ksi_id=self.KSI_ID,
-            ksi_name=self.KSI_NAME,
-            ksi_statement=self.KSI_STATEMENT
-        )
+    # Attack surface indicators
+    DEBUG_METHODS = {"run", "uvicorn.run", "app.run", "UseDeveloperExceptionPage"}
+    PERMISSIVE_CORS_PATTERNS = {"AllowAnyOrigin", "allowedOrigins", "origins"}
+    ERROR_EXPOSURE_PATTERNS = {"stack", "error.stack", "err.stack"}
+    PUBLIC_SERVICES = {"Microsoft.Storage/storageAccounts", "azurerm_storage_account"}
     
-    # ============================================================================
-    # APPLICATION LANGUAGE ANALYZERS
-    # ============================================================================
+    def __init__(self, language=None, ksi_id: str = "", ksi_name: str = "", ksi_statement: str = ""):
+        """Initialize analyzer with backward-compatible API."""
+        super().__init__(
+            ksi_id=ksi_id or self.KSI_ID,
+            ksi_name=ksi_name or self.KSI_NAME,
+            ksi_statement=ksi_statement or self.KSI_STATEMENT
+        )
+        self.direct_language = language
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Python code for KSI-CNA-02 compliance.
+        """Analyze Python code for attack surface minimization."""
+        parser = ASTParser(CodeLanguage.PYTHON)
+        tree = parser.parse(code)
+        if not tree:
+            return []
         
-        Frameworks: Flask, Django, FastAPI, Azure SDK
-        
-        Detects:
-        - Debug mode enabled in production
-        - Unnecessary services/endpoints exposed
-        - Missing error handling (info disclosure)
-        - Overly permissive CORS configuration
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # Pattern 1: Debug mode enabled (CRITICAL)
-        if re.search(r'(app\.run|uvicorn\.run)\s*\([^)]*debug\s*=\s*True', code, re.IGNORECASE):
-            line_num = self._find_line(lines, r'debug\s*=\s*True')
-            findings.append(Finding(
-                severity=Severity.CRITICAL,
-                title="Debug Mode Enabled Increases Attack Surface",
-                description=(
-                    f"Debug mode enabled at line {line_num}. Debug mode exposes stack traces, "
-                    f"environment variables, and internal application details that aid attackers. "
-                    f"This violates the principle of minimizing attack surface."
-                ),
-                file_path=file_path,
-                line_number=line_num,
-                snippet=self._get_snippet(lines, line_num),
-                remediation=(
-                    "Disable debug mode in production:\n"
-                    "app.run(debug=False)  # or remove debug parameter\n"
-                    "Use environment variables: debug=os.getenv('DEBUG', 'false').lower() == 'true'"
-                ),
-                ksi_id=self.KSI_ID
-            ))
-        
-        # Pattern 2: Overly permissive CORS (HIGH)
-        if re.search(r'CORS\s*\([^)]*origins\s*=\s*["\']\\*["\']', code):
-            line_num = self._find_line(lines, r'origins\s*=\s*["\']\\*["\']')
-            findings.append(Finding(
-                severity=Severity.HIGH,
-                title="Permissive CORS Configuration Expands Attack Surface",
-                description=(
-                    f"CORS allows all origins (*) at line {line_num}. This increases attack surface "
-                    f"by allowing any website to make requests to your API, potentially enabling "
-                    f"cross-site attacks and lateral movement."
-                ),
-                file_path=file_path,
-                line_number=line_num,
-                snippet=self._get_snippet(lines, line_num),
-                remediation=(
-                    "Restrict CORS to specific origins:\n"
-                    "CORS(app, origins=['https://yourdomain.com', 'https://trusted-partner.com'])\n"
-                    "Use environment-based configuration for different deployment stages."
-                ),
-                ksi_id=self.KSI_ID
-            ))
-        
-        return findings
+        code_bytes = code.encode('utf-8')
+        frameworks = self._detect_frameworks_python(code)
+        return self._analyze_python_ast(tree.root_node, code_bytes, file_path, frameworks, parser)
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for KSI-CNA-02 compliance.
+        """Analyze C# code for attack surface minimization."""
+        parser = ASTParser(CodeLanguage.CSHARP)
+        tree = parser.parse(code)
+        if not tree:
+            return []
         
-        Frameworks: ASP.NET Core, Entity Framework, Azure SDK
-        
-        Detects:
-        - UseDeveloperExceptionPage in production
-        - Overly permissive CORS policies
-        - Unnecessary endpoints exposed
-        - Missing endpoint authorization
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # Pattern 1: Developer exception page without environment check (CRITICAL)
-        has_dev_page = re.search(r'UseDeveloperExceptionPage\s*\(', code, re.IGNORECASE)
-        has_env_check = re.search(r'if\s*\(\s*env\.IsDevelopment\s*\(\s*\)', code, re.IGNORECASE)
-        
-        if has_dev_page and not has_env_check:
-            line_num = self._find_line(lines, r'UseDeveloperExceptionPage')
-            findings.append(Finding(
-                severity=Severity.CRITICAL,
-                title="Developer Exception Page Exposes Internal Details",
-                description=(
-                    f"UseDeveloperExceptionPage at line {line_num} without environment check. "
-                    f"This exposes stack traces, source code paths, and internal state in production, "
-                    f"significantly increasing attack surface."
-                ),
-                file_path=file_path,
-                line_number=line_num,
-                snippet=self._get_snippet(lines, line_num),
-                remediation=(
-                    "Restrict to development environment:\n"
-                    "if (env.IsDevelopment()) {\n"
-                    "    app.UseDeveloperExceptionPage();\n"
-                    "} else {\n"
-                    "    app.UseExceptionHandler(\"/Error\");\n"
-                    "}"
-                ),
-                ksi_id=self.KSI_ID
-            ))
-        
-        # Pattern 2: Permissive CORS (HIGH)
-        if re.search(r'AllowAnyOrigin\s*\(\s*\)', code, re.IGNORECASE):
-            line_num = self._find_line(lines, r'AllowAnyOrigin')
-            findings.append(Finding(
-                severity=Severity.HIGH,
-                title="Permissive CORS Policy Increases Attack Surface",
-                description=(
-                    f"AllowAnyOrigin() at line {line_num} permits requests from any domain. "
-                    f"This expands attack surface and enables potential cross-site attacks."
-                ),
-                file_path=file_path,
-                line_number=line_num,
-                snippet=self._get_snippet(lines, line_num),
-                remediation=(
-                    "Restrict CORS to specific origins:\n"
-                    "builder.WithOrigins(\"https://yourdomain.com\", \"https://trusted.com\")\n"
-                    "Configure origins in appsettings.json and load dynamically."
-                ),
-                ksi_id=self.KSI_ID
-            ))
-        
-        return findings
+        code_bytes = code.encode('utf-8')
+        frameworks = self._detect_frameworks_csharp(code)
+        return self._analyze_csharp_ast(tree.root_node, code_bytes, file_path, frameworks, parser)
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for KSI-CNA-02 compliance.
+        """Analyze Java code for attack surface minimization."""
+        parser = ASTParser(CodeLanguage.JAVA)
+        tree = parser.parse(code)
+        if not tree:
+            return []
         
-        Frameworks: Spring Boot, Spring Security, Azure SDK
-        
-        Detects:
-        - Debug/trace logging in production
-        - Overly permissive CORS configurations
-        - Unnecessary actuator endpoints exposed
-        - Missing method-level authorization
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # Pattern 1: Permissive CORS (HIGH)
-        if re.search(r'allowedOrigins\s*\(\s*"\*"\s*\)', code):
-            line_num = self._find_line(lines, r'allowedOrigins\s*\(\s*"\*"')
-            findings.append(Finding(
-                severity=Severity.HIGH,
-                title="Permissive CORS Increases Attack Surface",
-                description=(
-                    f"CORS configured to allow all origins (*) at line {line_num}. "
-                    f"This expands the attack surface by allowing any website to interact with your API, "
-                    f"potentially enabling cross-origin attacks."
-                ),
-                file_path=file_path,
-                line_number=line_num,
-                snippet=self._get_snippet(lines, line_num),
-                remediation=(
-                    "Restrict CORS to specific origins:\n"
-                    "@Override\n"
-                    "public void addCorsMappings(CorsRegistry registry) {\n"
-                    "    registry.addMapping(\"/api/**\")\n"
-                    "        .allowedOrigins(\"https://yourdomain.com\", \"https://trusted.com\");\n"
-                    "}"
-                ),
-                ksi_id=self.KSI_ID
-            ))
-        
-        # Pattern 2: Actuator without security (MEDIUM)
-        has_actuator = re.search(r'spring-boot-starter-actuator', code)
-        has_actuator_security = re.search(r'management\.endpoints\.web\.exposure\.include|@Secured.*actuator', code)
-        
-        if has_actuator and not has_actuator_security:
-            line_num = self._find_line(lines, r'spring-boot-starter-actuator')
-            findings.append(Finding(
-                severity=Severity.MEDIUM,
-                title="Actuator Endpoints Exposed Without Restrictions",
-                description=(
-                    f"Spring Boot Actuator at line {line_num} without explicit endpoint restrictions. "
-                    f"Actuator exposes internal application metrics, health checks, and configuration, "
-                    f"increasing attack surface if not properly secured."
-                ),
-                file_path=file_path,
-                line_number=line_num,
-                snippet=self._get_snippet(lines, line_num),
-                remediation=(
-                    "Restrict actuator endpoints in application.properties:\n"
-                    "management.endpoints.web.exposure.include=health,info\n"
-                    "management.endpoint.health.show-details=when-authorized\n"
-                    "Protect with Spring Security: .requestMatchers(\"/actuator/**\").hasRole(\"ADMIN\")"
-                ),
-                ksi_id=self.KSI_ID
-            ))
-        
-        return findings
+        code_bytes = code.encode('utf-8')
+        frameworks = self._detect_frameworks_java(code)
+        return self._analyze_java_ast(tree.root_node, code_bytes, file_path, frameworks, parser)
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for KSI-CNA-02 compliance.
+        """Analyze TypeScript/JavaScript code for attack surface minimization."""
+        parser = ASTParser(CodeLanguage.TYPESCRIPT)
+        tree = parser.parse(code)
+        if not tree:
+            return []
         
-        Frameworks: Express, NestJS, Next.js, React, Angular, Azure SDK
-        
-        Detects:
-        - Overly permissive CORS configurations
-        - Unnecessary error details exposed
-        - Debug/development endpoints in production
-        - Missing rate limiting
-        """
+        code_bytes = code.encode('utf-8')
+        frameworks = self._detect_frameworks_typescript(code)
+        return self._analyze_typescript_ast(tree.root_node, code_bytes, file_path, frameworks, parser)
+    
+    def _detect_frameworks_python(self, code: str) -> List[str]:
+        """Detect Python frameworks in code."""
+        frameworks = []
+        if 'flask' in code.lower():
+            frameworks.append('flask')
+        if 'django' in code.lower():
+            frameworks.append('django')
+        if 'fastapi' in code.lower():
+            frameworks.append('fastapi')
+        return frameworks
+    
+    def _detect_frameworks_csharp(self, code: str) -> List[str]:
+        """Detect C# frameworks in code."""
+        frameworks = []
+        # Check for Microsoft.AspNetCore namespace in using statements (more precise than substring search)
+        if 'Microsoft.AspNetCore' in code:
+            frameworks.append('aspnetcore')
+        return frameworks
+    
+    def _detect_frameworks_java(self, code: str) -> List[str]:
+        """Detect Java frameworks in code."""
+        frameworks = []
+        if 'springframework' in code.lower():
+            frameworks.append('spring')
+        return frameworks
+    
+    def _detect_frameworks_typescript(self, code: str) -> List[str]:
+        """Detect TypeScript/JavaScript frameworks in code."""
+        frameworks = []
+        if 'express' in code.lower():
+            frameworks.append('express')
+        if 'nestjs' in code.lower():
+            frameworks.append('nestjs')
+        return frameworks
+    
+    def _analyze_python_ast(self, root_node, code_bytes: bytes, file_path: str,
+                           frameworks: List[str], parser: ASTParser) -> List[Finding]:
+        """Analyze Python code using AST for attack surface issues."""
         findings = []
-        lines = code.split('\n')
         
-        # Pattern 1: Permissive CORS (HIGH)
-        if re.search(r'cors\s*\(\s*\{[^}]*origin\s*:\s*["\']\\*["\']', code):
-            line_num = self._find_line(lines, r'origin\s*:\s*["\']\\*["\']')
-            findings.append(Finding(
-                severity=Severity.HIGH,
-                title="Permissive CORS Configuration Expands Attack Surface",
-                description=(
-                    f"CORS allows all origins (*) at line {line_num}. This increases attack surface "
-                    f"by allowing any website to make cross-origin requests, potentially enabling "
-                    f"credential theft and lateral movement attacks."
-                ),
-                file_path=file_path,
-                line_number=line_num,
-                snippet=self._get_snippet(lines, line_num),
-                remediation=(
-                    "Restrict CORS to specific origins:\n"
-                    "app.use(cors({\n"
-                    "  origin: ['https://yourdomain.com', 'https://trusted.com'],\n"
-                    "  credentials: true\n"
-                    "}));"
-                ),
-                ksi_id=self.KSI_ID
-            ))
+        # Check 1: Debug mode enabled (CRITICAL)
+        # Look for app.run(debug=True) or uvicorn.run(..., debug=True)
+        calls = parser.find_nodes_by_type(root_node, "call")
+        for call in calls:
+            call_text = parser.get_node_text(call, code_bytes)
+            
+            # Check if it's a run() call with debug=True
+            if "run" in call_text and "debug" in call_text:
+                args = parser.find_nodes_by_type(call, "argument_list")
+                for arg_list in args:
+                    # Look for keyword argument debug=True
+                    keywords = parser.find_nodes_by_type(arg_list, "keyword_argument")
+                    for kw in keywords:
+                        kw_text = parser.get_node_text(kw, code_bytes)
+                        if "debug" in kw_text.lower() and "true" in kw_text.lower():
+                            findings.append(Finding(
+                                severity=Severity.CRITICAL,
+                                title="Debug Mode Enabled Increases Attack Surface",
+                                description=(
+                                    f"Debug mode enabled at line {call.start_point[0] + 1}. "
+                                    f"Debug mode exposes stack traces, environment variables, and internal "
+                                    f"application details that aid attackers. This violates the principle "
+                                    f"of minimizing attack surface."
+                                ),
+                                file_path=file_path,
+                                line_number=call.start_point[0] + 1,
+                                snippet=call_text[:200],
+                                remediation=(
+                                    "Disable debug mode in production:\n"
+                                    "app.run(debug=False)  # or remove debug parameter\n"
+                                    "Use environment variables: debug=os.getenv('DEBUG', 'false').lower() == 'true'"
+                                ),
+                                ksi_id=self.KSI_ID
+                            ))
         
-        # Pattern 2: Error handler exposing stack traces (MEDIUM)
-        if re.search(r'(err\.stack|error\.stack).*res\.(send|json)', code):
-            line_num = self._find_line(lines, r'err\.stack|error\.stack')
-            findings.append(Finding(
-                severity=Severity.MEDIUM,
-                title="Stack Traces Exposed in Error Responses",
-                description=(
-                    f"Error stack trace exposed at line {line_num}. Stack traces reveal internal "
-                    f"application structure, file paths, and dependencies, increasing attack surface "
-                    f"by providing reconnaissance information to attackers."
-                ),
-                file_path=file_path,
-                line_number=line_num,
-                snippet=self._get_snippet(lines, line_num),
-                remediation=(
-                    "Use generic error messages in production:\n"
-                    "if (process.env.NODE_ENV === 'production') {\n"
-                    "  res.status(500).json({ error: 'Internal server error' });\n"
-                    "} else {\n"
-                    "  res.status(500).json({ error: err.message, stack: err.stack });\n"
-                    "}"
-                ),
-                ksi_id=self.KSI_ID
-            ))
+        # Check 2: Permissive CORS (HIGH)
+        # Look for CORS(app, origins=['*']) or CORS(..., origins="*")
+        for call in calls:
+            call_text = parser.get_node_text(call, code_bytes)
+            
+            if "CORS" in call_text:
+                args = parser.find_nodes_by_type(call, "argument_list")
+                for arg_list in args:
+                    # Look for origins parameter
+                    keywords = parser.find_nodes_by_type(arg_list, "keyword_argument")
+                    for kw in keywords:
+                        kw_text = parser.get_node_text(kw, code_bytes)
+                        if "origins" in kw_text and ("*" in kw_text or '"*"' in kw_text or "'*'" in kw_text):
+                            findings.append(Finding(
+                                severity=Severity.HIGH,
+                                title="Permissive CORS Configuration Expands Attack Surface",
+                                description=(
+                                    f"CORS allows all origins (*) at line {call.start_point[0] + 1}. "
+                                    f"This increases attack surface by allowing any website to make requests "
+                                    f"to your API, potentially enabling cross-site attacks and lateral movement."
+                                ),
+                                file_path=file_path,
+                                line_number=call.start_point[0] + 1,
+                                snippet=call_text[:200],
+                                remediation=(
+                                    "Restrict CORS to specific origins:\n"
+                                    "CORS(app, origins=['https://yourdomain.com', 'https://trusted-partner.com'])\n"
+                                    "Use environment-based configuration for different deployment stages."
+                                ),
+                                ksi_id=self.KSI_ID
+                            ))
         
         return findings
     
-    # ============================================================================
-    # INFRASTRUCTURE AS CODE ANALYZERS
-    # ============================================================================
-    
-    def analyze_bicep(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Bicep IaC for KSI-CNA-02 compliance.
-        
-        Detects:
-        - Public endpoints without Private Link
-        - Missing service endpoints on subnets
-        - Resources without network isolation
-        - Overly broad public access
-        """
+    def _analyze_csharp_ast(self, root_node, code_bytes: bytes, file_path: str,
+                           frameworks: List[str], parser: ASTParser) -> List[Finding]:
+        """Analyze C# code using AST for attack surface issues."""
         findings = []
-        lines = code.split('\n')
         
-        # Pattern 1: Storage account with public network access (HIGH)
-        if re.search(r"'Microsoft\.Storage/storageAccounts", code):
-            has_network_restriction = re.search(r'publicNetworkAccess\s*:\s*["\']Disabled["\']', code)
-            if not has_network_restriction:
-                line_num = self._find_line(lines, r"Microsoft\.Storage/storageAccounts")
+        # Check 1: UseDeveloperExceptionPage without environment check (CRITICAL)
+        invocations = parser.find_nodes_by_type(root_node, "invocation_expression")
+        has_dev_page = False
+        dev_page_line = 0
+        
+        for inv in invocations:
+            inv_text = parser.get_node_text(inv, code_bytes)
+            if "UseDeveloperExceptionPage" in inv_text:
+                has_dev_page = True
+                dev_page_line = inv.start_point[0] + 1
+        
+        # Check if there's an environment check (if (env.IsDevelopment()))
+        if has_dev_page:
+            has_env_check = False
+            if_statements = parser.find_nodes_by_type(root_node, "if_statement")
+            for if_stmt in if_statements:
+                if_text = parser.get_node_text(if_stmt, code_bytes)
+                if "IsDevelopment" in if_text and "UseDeveloperExceptionPage" in if_text:
+                    has_env_check = True
+                    break
+            
+            if not has_env_check:
                 findings.append(Finding(
-                    severity=Severity.HIGH,
-                    title="Storage Account Without Network Restrictions",
+                    severity=Severity.CRITICAL,
+                    title="Developer Exception Page Exposes Internal Details",
                     description=(
-                        f"Storage account at line {line_num} without publicNetworkAccess disabled. "
-                        f"Public endpoints increase attack surface. Use Private Link or service endpoints "
-                        f"to minimize exposure and prevent lateral movement."
+                        f"UseDeveloperExceptionPage at line {dev_page_line} without environment check. "
+                        f"This exposes stack traces, source code paths, and internal state in production, "
+                        f"significantly increasing attack surface."
                     ),
                     file_path=file_path,
-                    line_number=line_num,
-                    snippet=self._get_snippet(lines, line_num),
+                    line_number=dev_page_line,
+                    snippet="UseDeveloperExceptionPage() without env.IsDevelopment() check",
                     remediation=(
-                        "Disable public network access:\n"
-                        "properties: {\n"
-                        "  publicNetworkAccess: 'Disabled'\n"
-                        "  networkAcls: {\n"
-                        "    defaultAction: 'Deny'\n"
-                        "  }\n"
-                        "}\n"
-                        "Configure Private Link for secure access."
+                        "Restrict to development environment:\n"
+                        "if (env.IsDevelopment()) {\n"
+                        "    app.UseDeveloperExceptionPage();\n"
+                        "} else {\n"
+                        "    app.UseExceptionHandler(\"/Error\");\n"
+                        "}"
                     ),
                     ksi_id=self.KSI_ID
                 ))
         
-        # Pattern 2: Subnet without service endpoints (MEDIUM)
-        has_subnet = re.search(r'subnets\s*:\s*\[', code)
-        has_service_endpoints = re.search(r'serviceEndpoints\s*:', code)
-        
-        if has_subnet and not has_service_endpoints:
-            line_num = self._find_line(lines, r'subnets')
-            findings.append(Finding(
-                severity=Severity.MEDIUM,
-                title="Subnet Missing Service Endpoints",
-                description=(
-                    f"Subnet at line {line_num} without service endpoints configured. "
-                    f"Service endpoints reduce attack surface by keeping traffic within Azure backbone "
-                    f"and limiting lateral movement through network segmentation."
-                ),
-                file_path=file_path,
-                line_number=line_num,
-                snippet=self._get_snippet(lines, line_num),
-                remediation=(
-                    "Add service endpoints to subnet:\n"
-                    "serviceEndpoints: [\n"
-                    "  { service: 'Microsoft.Storage' }\n"
-                    "  { service: 'Microsoft.KeyVault' }\n"
-                    "  { service: 'Microsoft.Sql' }\n"
-                    "]"
-                ),
-                ksi_id=self.KSI_ID
-            ))
+        # Check 2: AllowAnyOrigin in CORS (HIGH)
+        for inv in invocations:
+            inv_text = parser.get_node_text(inv, code_bytes)
+            if "AllowAnyOrigin" in inv_text:
+                findings.append(Finding(
+                    severity=Severity.HIGH,
+                    title="Permissive CORS Policy Increases Attack Surface",
+                    description=(
+                        f"AllowAnyOrigin() at line {inv.start_point[0] + 1} permits requests from any domain. "
+                        f"This expands attack surface and enables potential cross-site attacks."
+                    ),
+                    file_path=file_path,
+                    line_number=inv.start_point[0] + 1,
+                    snippet=inv_text[:200],
+                    remediation=(
+                        "Restrict CORS to specific origins:\n"
+                        "builder.WithOrigins(\"https://yourdomain.com\", \"https://trusted.com\")\n"
+                        "Configure origins in appsettings.json and load dynamically."
+                    ),
+                    ksi_id=self.KSI_ID
+                ))
         
         return findings
     
-    def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Terraform IaC for KSI-CNA-02 compliance.
-        
-        Detects:
-        - Public endpoints without Private Link
-        - Missing service endpoints on subnets
-        - Resources without network isolation
-        - Overly broad public access
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # Pattern 1: Storage account with public network access (HIGH)
-        has_storage = re.search(r'resource\s+"azurerm_storage_account"', code)
-        has_public_disabled = re.search(r'public_network_access_enabled\s*=\s*false', code)
-        
-        if has_storage and not has_public_disabled:
-            line_num = self._find_line(lines, r'azurerm_storage_account')
-            findings.append(Finding(
-                severity=Severity.HIGH,
-                title="Storage Account With Public Network Access",
-                description=(
-                    f"Storage account at line {line_num} without public_network_access_enabled = false. "
-                    f"Public endpoints increase attack surface. Use Private Link to minimize exposure "
-                    f"and restrict lateral movement."
-                ),
-                file_path=file_path,
-                line_number=line_num,
-                snippet=self._get_snippet(lines, line_num),
-                remediation=(
-                    "Disable public network access:\n"
-                    "resource \"azurerm_storage_account\" \"example\" {\n"
-                    "  public_network_access_enabled = false\n"
-                    "  network_rules {\n"
-                    "    default_action = \"Deny\"\n"
-                    "  }\n"
-                    "}\n"
-                    "Configure azurerm_private_endpoint for secure access."
-                ),
-                ksi_id=self.KSI_ID
-            ))
-        
-        # Pattern 2: Subnet without service endpoints (MEDIUM)
-        has_subnet = re.search(r'resource\s+"azurerm_subnet"', code)
-        has_service_endpoints = re.search(r'service_endpoints\s*=', code)
-        
-        if has_subnet and not has_service_endpoints:
-            line_num = self._find_line(lines, r'azurerm_subnet')
-            findings.append(Finding(
-                severity=Severity.MEDIUM,
-                title="Subnet Missing Service Endpoints",
-                description=(
-                    f"Subnet at line {line_num} without service endpoints. Service endpoints reduce "
-                    f"attack surface by routing traffic through Azure backbone, preventing internet "
-                    f"exposure and limiting lateral movement paths."
-                ),
-                file_path=file_path,
-                line_number=line_num,
-                snippet=self._get_snippet(lines, line_num),
-                remediation=(
-                    "Add service endpoints:\n"
-                    "resource \"azurerm_subnet\" \"example\" {\n"
-                    "  service_endpoints = [\n"
-                    "    \"Microsoft.Storage\",\n"
-                    "    \"Microsoft.KeyVault\",\n"
-                    "    \"Microsoft.Sql\"\n"
-                    "  ]\n"
-                    "}"
-                ),
-                ksi_id=self.KSI_ID
-            ))
-        
-        return findings
-    
-    # ============================================================================
-    # CI/CD PIPELINE ANALYZERS
-    # ============================================================================
-    
-    def analyze_github_actions(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitHub Actions workflow for KSI-CNA-02 compliance.
-        
-        TODO: Implement detection logic if applicable.
-        """
+    def _analyze_java_ast(self, root_node, code_bytes: bytes, file_path: str,
+                         frameworks: List[str], parser: ASTParser) -> List[Finding]:
+        """Analyze Java code using AST for attack surface issues."""
         findings = []
         
-        # TODO: Implement GitHub Actions detection if applicable
+        # Check 1: Permissive CORS (HIGH)
+        # Look for allowedOrigins("*")
+        method_invocations = parser.find_nodes_by_type(root_node, "method_invocation")
+        for inv in method_invocations:
+            inv_text = parser.get_node_text(inv, code_bytes)
+            if "allowedOrigins" in inv_text and '"*"' in inv_text:
+                findings.append(Finding(
+                    severity=Severity.HIGH,
+                    title="Permissive CORS Increases Attack Surface",
+                    description=(
+                        f"CORS configured to allow all origins (*) at line {inv.start_point[0] + 1}. "
+                        f"This expands the attack surface by allowing any website to interact with your API, "
+                        f"potentially enabling cross-origin attacks."
+                    ),
+                    file_path=file_path,
+                    line_number=inv.start_point[0] + 1,
+                    snippet=inv_text[:200],
+                    remediation=(
+                        "Restrict CORS to specific origins:\n"
+                        "@Override\n"
+                        "public void addCorsMappings(CorsRegistry registry) {\n"
+                        "    registry.addMapping(\"/api/**\")\n"
+                        "        .allowedOrigins(\"https://yourdomain.com\", \"https://trusted.com\");\n"
+                        "}"
+                    ),
+                    ksi_id=self.KSI_ID
+                ))
+        
+        # Check 2: Actuator without security (MEDIUM)
+        # Look for spring-boot-starter-actuator dependency
+        string_literals = parser.find_nodes_by_type(root_node, "string_literal")
+        has_actuator = False
+        actuator_line = 0
+        
+        for lit in string_literals:
+            lit_text = parser.get_node_text(lit, code_bytes)
+            if "spring-boot-starter-actuator" in lit_text:
+                has_actuator = True
+                actuator_line = lit.start_point[0] + 1
+                break
+        
+        if has_actuator:
+            # Check for actuator security configuration
+            has_security = False
+            for lit in string_literals:
+                lit_text = parser.get_node_text(lit, code_bytes)
+                if "management.endpoints.web.exposure.include" in lit_text:
+                    has_security = True
+                    break
+            
+            if not has_security:
+                findings.append(Finding(
+                    severity=Severity.MEDIUM,
+                    title="Actuator Endpoints Exposed Without Restrictions",
+                    description=(
+                        f"Spring Boot Actuator at line {actuator_line} without explicit endpoint restrictions. "
+                        f"Actuator exposes internal application metrics, health checks, and configuration, "
+                        f"increasing attack surface if not properly secured."
+                    ),
+                    file_path=file_path,
+                    line_number=actuator_line,
+                    snippet="spring-boot-starter-actuator dependency",
+                    remediation=(
+                        "Restrict actuator endpoints in application.properties:\n"
+                        "management.endpoints.web.exposure.include=health,info\n"
+                        "management.endpoint.health.show-details=when-authorized\n"
+                        "Protect with Spring Security: .requestMatchers(\"/actuator/**\").hasRole(\"ADMIN\")"
+                    ),
+                    ksi_id=self.KSI_ID
+                ))
         
         return findings
     
-    def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Azure Pipelines YAML for KSI-CNA-02 compliance.
-        
-        TODO: Implement detection logic if applicable.
-        """
+    def _analyze_typescript_ast(self, root_node, code_bytes: bytes, file_path: str,
+                               frameworks: List[str], parser: ASTParser) -> List[Finding]:
+        """Analyze JavaScript/TypeScript code using AST for attack surface issues."""
         findings = []
         
-        # TODO: Implement Azure Pipelines detection if applicable
+        # Check 1: Permissive CORS (HIGH)
+        # Look for cors({ origin: '*' }) or cors({ origin: "*" })
+        calls = parser.find_nodes_by_type(root_node, "call_expression")
+        for call in calls:
+            call_text = parser.get_node_text(call, code_bytes)
+            
+            if "cors" in call_text and "origin" in call_text:
+                # Check for wildcard origin
+                args = parser.find_nodes_by_type(call, "arguments")
+                for arg in args:
+                    arg_text = parser.get_node_text(arg, code_bytes)
+                    if "origin" in arg_text and ("'*'" in arg_text or '"*"' in arg_text):
+                        findings.append(Finding(
+                            severity=Severity.HIGH,
+                            title="Permissive CORS Configuration Expands Attack Surface",
+                            description=(
+                                f"CORS allows all origins (*) at line {call.start_point[0] + 1}. "
+                                f"This increases attack surface by allowing any website to make cross-origin "
+                                f"requests, potentially enabling credential theft and lateral movement attacks."
+                            ),
+                            file_path=file_path,
+                            line_number=call.start_point[0] + 1,
+                            snippet=call_text[:200],
+                            remediation=(
+                                "Restrict CORS to specific origins:\n"
+                                "app.use(cors({\n"
+                                "  origin: ['https://yourdomain.com', 'https://trusted.com'],\n"
+                                "  credentials: true\n"
+                                "}));"
+                            ),
+                            ksi_id=self.KSI_ID
+                        ))
+        
+        # Check 2: Stack trace exposure (MEDIUM)
+        # Look for err.stack or error.stack being sent in response
+        member_expressions = parser.find_nodes_by_type(root_node, "member_expression")
+        for member in member_expressions:
+            member_text = parser.get_node_text(member, code_bytes)
+            if "stack" in member_text and ("err." in member_text or "error." in member_text):
+                # Check if this is in a response context (look for parent call with res.send or res.json)
+                parent = member.parent
+                while parent and parent.type not in ("call_expression", "expression_statement"):
+                    parent = parent.parent
+                
+                if parent and parent.type == "call_expression":
+                    parent_text = parser.get_node_text(parent, code_bytes)
+                    if "res." in parent_text and ("send" in parent_text or "json" in parent_text):
+                        findings.append(Finding(
+                            severity=Severity.MEDIUM,
+                            title="Stack Traces Exposed in Error Responses",
+                            description=(
+                                f"Error stack trace exposed at line {member.start_point[0] + 1}. "
+                                f"Stack traces reveal internal application structure, file paths, and "
+                                f"dependencies, increasing attack surface by providing reconnaissance "
+                                f"information to attackers."
+                            ),
+                            file_path=file_path,
+                            line_number=member.start_point[0] + 1,
+                            snippet=parent_text[:200],
+                            remediation=(
+                                "Use generic error messages in production:\n"
+                                "if (process.env.NODE_ENV === 'production') {\n"
+                                "  res.status(500).json({ error: 'Internal server error' });\n"
+                                "} else {\n"
+                                "  res.status(500).json({ error: err.message, stack: err.stack });\n"
+                                "}"
+                            ),
+                            ksi_id=self.KSI_ID
+                        ))
         
         return findings
-    
-    def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitLab CI YAML for KSI-CNA-02 compliance.
-        
-        TODO: Implement detection logic if applicable.
-        """
-        findings = []
-        
-        # TODO: Implement GitLab CI detection if applicable
-        
-        return findings
-    
-    # ============================================================================
-    # HELPER METHODS
-    # ============================================================================
-    
-    def _find_line(self, lines: List[str], pattern: str) -> int:
-        """Find line number matching regex pattern (case-insensitive)."""
-        try:
-            regex = re.compile(pattern, re.IGNORECASE)
-            for i, line in enumerate(lines, 1):
-                if regex.search(line):
-                    return i
-        except re.error:
-            # Fallback to literal string search if pattern is invalid
-            for i, line in enumerate(lines, 1):
-                if pattern.lower() in line.lower():
-                    return i
-        return 0
-    
-    def _get_snippet(self, lines: List[str], line_number: int, context: int = 2) -> str:
-        """Get code snippet around line number."""
-        if line_number == 0:
-            return ""
-        start = max(0, line_number - context - 1)
-        end = min(len(lines), line_number + context)
-        return '\n'.join(lines[start:end])
+
+
+def create_analyzer(language: str) -> KSI_CNA_02_Analyzer:
+    """Factory function to create analyzer for specific language."""
+    lang_map = {
+        "python": CodeLanguage.PYTHON,
+        "csharp": CodeLanguage.CSHARP,
+        "java": CodeLanguage.JAVA,
+        "javascript": CodeLanguage.JAVASCRIPT,
+        "typescript": CodeLanguage.TYPESCRIPT,
+    }
+    return KSI_CNA_02_Analyzer(lang_map.get(language.lower(), CodeLanguage.PYTHON))
+

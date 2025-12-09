@@ -4,6 +4,7 @@ Tests for analyzer MCP tools with KSI-centric architecture.
 Validates that KSI analyzers work correctly through the factory pattern.
 """
 
+import sys
 from fedramp_20x_mcp.analyzers.ksi.factory import get_factory
 from fedramp_20x_mcp.analyzers.base import Severity
 
@@ -30,6 +31,9 @@ def test_bicep_analysis():
     factory = get_factory()
     analyzer = factory.get_analyzer("KSI-MLA-05")
     
+    # If the analyzer is not found, it should cause an error
+    assert analyzer is not None, "KSI-MLA-05 analyzer should be found"
+    
     code = """
     resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
       name: 'mystorageaccount'
@@ -54,6 +58,9 @@ def test_python_analysis():
     factory = get_factory()
     analyzer = factory.get_analyzer("KSI-SVC-06")
     
+    # If the analyzer is not found, it should cause an error
+    assert analyzer is not None, "KSI-SVC-06 analyzer should be found"
+
     code = """
     from flask import Flask
     
@@ -83,6 +90,9 @@ def test_csharp_analysis():
     factory = get_factory()
     analyzer = factory.get_analyzer("KSI-IAM-01")
     
+    # If the analyzer is not found, it should cause an error
+    assert analyzer is not None, "KSI-IAM-01 analyzer should be found"
+
     code = """
     using Microsoft.AspNetCore.Mvc;
     
@@ -115,6 +125,9 @@ def test_terraform_analysis():
     factory = get_factory()
     analyzer = factory.get_analyzer("KSI-CNA-01")
     
+    # If the analyzer is not found, it should cause an error
+    assert analyzer is not None, "KSI-CNA-01 analyzer should be found"
+
     code = """
     resource "azurerm_virtual_network" "main" {
       name                = "my-vnet"
@@ -172,6 +185,9 @@ def test_good_practices():
     factory = get_factory()
     analyzer = factory.get_analyzer("KSI-MLA-05")
     
+    # If the analyzer is not found, it should cause an error
+    assert analyzer is not None, "KSI-MLA-05 analyzer should be found"
+
     code = """
     resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
       name: 'mystorageaccount'

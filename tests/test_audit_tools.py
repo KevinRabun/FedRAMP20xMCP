@@ -1,8 +1,11 @@
 """Quick test script for audit tools."""
 import asyncio
 import io
+import sys
 
 # Set UTF-8 encoding for stdout
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8')
 
 from fedramp_20x_mcp.data_loader import FedRAMPDataLoader
 from fedramp_20x_mcp.tools.audit import (

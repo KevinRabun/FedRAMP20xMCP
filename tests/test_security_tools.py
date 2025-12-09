@@ -39,9 +39,9 @@ async def test_check_package_vulnerabilities_basic():
     print(f"   Status: {data['status']}")
     if data["status"] == "vulnerabilities_found":
         print(f"   Found {data['vulnerabilities_found']} vulnerabilities")
-        print("✅ check_package_vulnerabilities test passed")
+        print("[OK] check_package_vulnerabilities test passed")
     else:
-        print("✅ check_package_vulnerabilities test passed (no vulnerabilities)")
+        print("[OK] check_package_vulnerabilities test passed (no vulnerabilities)")
 
 async def test_check_package_vulnerabilities_safe():
     """Test checking a safe package."""
@@ -57,7 +57,7 @@ async def test_check_package_vulnerabilities_safe():
     assert data["package"] == "Azure.Identity"
     
     print(f"   Status: {data['status']}")
-    print("✅ Safe package check test passed")
+    print("[OK] Safe package check test passed")
 
 async def test_check_package_vulnerabilities_error():
     """Test error handling for invalid package."""
@@ -73,7 +73,7 @@ async def test_check_package_vulnerabilities_error():
     assert "status" in data
     
     print(f"   Status: {data['status']}")
-    print("✅ Error handling test passed")
+    print("[OK] Error handling test passed")
 
 def test_parse_nuget_deps():
     """Test NuGet dependency parsing."""
@@ -99,7 +99,7 @@ def test_parse_nuget_deps():
     assert ("Microsoft.EntityFrameworkCore", "8.0.0", "nuget") in packages
     
     print(f"   Parsed {len(packages)} packages")
-    print("✅ NuGet dependency parsing test passed")
+    print("[OK] NuGet dependency parsing test passed")
 
 def test_parse_npm_deps():
     """Test npm dependency parsing."""
@@ -127,7 +127,7 @@ def test_parse_npm_deps():
     assert "lodash" in package_names
     
     print(f"   Parsed {len(packages)} packages")
-    print("✅ npm dependency parsing test passed")
+    print("[OK] npm dependency parsing test passed")
 
 def test_parse_python_deps():
     """Test Python dependency parsing."""
@@ -148,7 +148,7 @@ pytest>=7.0.0'''
     assert "requests" in package_names or "flask" in package_names
     
     print(f"   Parsed {len(packages)} packages")
-    print("✅ Python dependency parsing test passed")
+    print("[OK] Python dependency parsing test passed")
 
 def test_parse_maven_deps():
     """Test Maven dependency parsing."""
@@ -175,7 +175,7 @@ def test_parse_maven_deps():
     
     # May not parse correctly without namespace, but should not crash
     print(f"   Attempted to parse Maven dependencies")
-    print("✅ Maven dependency parsing test passed (no crash)")
+    print("[OK] Maven dependency parsing test passed (no crash)")
 
 async def test_scan_dependency_file_csproj():
     """Test scanning a full .csproj file."""
@@ -202,7 +202,7 @@ async def test_scan_dependency_file_csproj():
     
     print(f"   Scanned {data['packages_scanned']} packages")
     print(f"   Found {data.get('total_vulnerabilities', 0)} vulnerabilities")
-    print("✅ scan_dependency_file test passed")
+    print("[OK] scan_dependency_file test passed")
 
 async def test_scan_dependency_file_package_json():
     """Test scanning package.json."""
@@ -226,7 +226,7 @@ async def test_scan_dependency_file_package_json():
     assert data["packages_scanned"] >= 1
     
     print(f"   Scanned {data['packages_scanned']} packages")
-    print("✅ package.json scan test passed")
+    print("[OK] package.json scan test passed")
 
 async def test_scan_dependency_file_requirements_txt():
     """Test scanning requirements.txt."""
@@ -245,7 +245,7 @@ flask==2.3.0'''
     assert data["status"] == "scan_complete"
     
     print(f"   Scanned {data['packages_scanned']} packages")
-    print("✅ requirements.txt scan test passed")
+    print("[OK] requirements.txt scan test passed")
 
 async def test_scan_dependency_file_unsupported():
     """Test error handling for unsupported file type."""
@@ -261,7 +261,7 @@ async def test_scan_dependency_file_unsupported():
     assert data["status"] == "error"
     assert "Unsupported file type" in data["error"]
     
-    print("✅ Unsupported file type test passed")
+    print("[OK] Unsupported file type test passed")
 
 def test_fedramp_compliance_info():
     """Test that FedRAMP compliance info is included."""
@@ -284,7 +284,7 @@ def test_fedramp_compliance_info():
             assert "requirement" in data["fedramp_compliance"]
     
     asyncio.run(check())
-    print("✅ FedRAMP compliance information test passed")
+    print("[OK] FedRAMP compliance information test passed")
 
 def run_all_tests():
     """Run all security tool tests."""

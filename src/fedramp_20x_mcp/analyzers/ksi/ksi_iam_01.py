@@ -12,6 +12,7 @@ import re
 from typing import List
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
+from ..ast_utils import ASTParser, CodeLanguage
 
 
 class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
@@ -57,17 +58,28 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
     FAMILY_NAME = "Identity and Access Management"
     IMPACT_LOW = True
     IMPACT_MODERATE = True
-    NIST_CONTROLS = ["ac-2", "ia-2", "ia-2.1", "ia-2.2", "ia-2.8", "ia-5", "ia-8", "sc-23"]
+    NIST_CONTROLS = [
+        ("ac-2", "Account Management"),
+        ("ia-2", "Identification and Authentication (Organizational Users)"),
+        ("ia-2.1", "Multi-factor Authentication to Privileged Accounts"),
+        ("ia-2.2", "Multi-factor Authentication to Non-privileged Accounts"),
+        ("ia-2.8", "Access to Accounts — Replay Resistant"),
+        ("ia-5", "Authenticator Management"),
+        ("ia-8", "Identification and Authentication (Non-organizational Users)"),
+        ("sc-23", "Session Authenticity")
+    ]
     CODE_DETECTABLE = True
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RETIRED = False
     
-    def __init__(self):
+    def __init__(self, language=None, ksi_id: str = "", ksi_name: str = "", ksi_statement: str = ""):
+        """Initialize analyzer with backward-compatible API."""
         super().__init__(
-            ksi_id=self.KSI_ID,
-            ksi_name=self.KSI_NAME,
-            ksi_statement=self.KSI_STATEMENT
+            ksi_id=ksi_id or self.KSI_ID,
+            ksi_name=ksi_name or self.KSI_NAME,
+            ksi_statement=ksi_statement or self.KSI_STATEMENT
         )
+        self.direct_language = language
     
     # ============================================================================
     # APPLICATION LANGUAGE ANALYZERS
@@ -75,100 +87,174 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for KSI-IAM-01 compliance.
+        Analyze Python code for KSI-IAM-01 compliance using AST.
         
         Frameworks: Flask, Django, FastAPI, Azure SDK
         
-        Patterns Detected:
-        - Django MFA configuration (django-mfa3, django-otp, django-two-factor-auth)
-        - Flask MFA implementation (Flask-Two-Factor)
-        - FastAPI MFA middleware
-        - Azure AD B2C MFA configuration
-        - FIDO2/WebAuthn implementation (phishing-resistant)
-        - TOTP/SMS-based MFA (less secure, flagged as warning)
+        Detects:
+        - Missing FIDO2/WebAuthn (phishing-resistant MFA)
+        - TOTP/SMS-based MFA (less secure)
+        - Django/Flask/FastAPI MFA configuration
+        - Azure AD MFA enforcement
         """
+        # AST-first dispatcher
+        parser = ASTParser(CodeLanguage.PYTHON)
+        tree = parser.parse(code)
+        
+        if tree:
+            return self._analyze_python_ast(code, file_path, parser, tree)
+        else:
+            return self._analyze_python_regex(code, file_path)
+    
+    def _analyze_python_ast(self, code: str, file_path: str, parser: ASTParser, tree) -> List[Finding]:
+        """AST-based Python analysis for MFA implementation."""
         findings = []
-        lines = code.split('\n')
+        code_bytes = code.encode('utf-8')
         
-        # Check for phishing-resistant MFA methods (FIDO2, WebAuthn, certificate-based)
-        has_fido2 = bool(re.search(r'import\s+fido2|from\s+fido2', code, re.IGNORECASE))
-        has_webauthn = bool(re.search(r'import\s+webauthn|from\s+webauthn', code, re.IGNORECASE))
-        has_certificate_auth = bool(re.search(r'certificate.*auth|client.*certificate', code, re.IGNORECASE))
+        # Check for phishing-resistant MFA imports
+        import_nodes = parser.find_nodes_by_type(tree.root_node, "import_statement")
+        import_nodes.extend(parser.find_nodes_by_type(tree.root_node, "import_from_statement"))
         
-        # Check for less secure MFA methods (TOTP, SMS)
-        has_totp = bool(re.search(r'import\s+pyotp|from\s+pyotp|totp', code, re.IGNORECASE))
-        has_sms_mfa = bool(re.search(r'sms.*mfa|twilio.*verify|send.*sms.*code', code, re.IGNORECASE))
-        
-        # Check Django MFA configurations
+        has_fido2 = False
+        has_webauthn = False
+        has_certificate_auth = False
+        has_totp = False
+        has_sms_mfa = False
         django_mfa_found = False
-        if 'django' in code.lower():
-            # Check for django-otp
-            if re.search(r'from\s+django_otp|import\s+django_otp|\'django_otp\'', code):
-                django_mfa_found = True
-                # Check if FIDO2/WebAuthn device is configured
-                if not re.search(r'TOTPDevice|WebAuthnDevice|U2FDevice', code):
-                    findings.append(Finding(
-                        ksi_id=self.KSI_ID,
-                        title="Django OTP without phishing-resistant device",
-                        description="django-otp is configured but no phishing-resistant device (WebAuthn, U2F) is detected. Consider using WebAuthnDevice or U2FDevice instead of TOTPDevice for phishing-resistant MFA.",
-                        severity=Severity.HIGH,
-                        file_path=file_path,
-                        line_number=self._find_line(lines, r'django_otp'),
-                        code_snippet=self._get_snippet(lines, r'django_otp'),
-                        recommendation="Configure WebAuthnDevice or U2FDevice in django-otp: from django_otp.plugins.otp_webauthn.models import WebAuthnDevice"
-                    ))
-            
-            # Check for django-mfa3 or django-two-factor-auth
-            if re.search(r'django.mfa|django_two_factor', code):
-                django_mfa_found = True
-        
-        # Check Flask MFA
         flask_mfa_found = False
-        if 'flask' in code.lower():
-            if re.search(r'from\s+flask_security|import\s+flask_security', code):
+        has_azure_ad = False
+        
+        for imp_node in import_nodes:
+            imp_text = parser.get_node_text(imp_node, code_bytes)
+            
+            # Phishing-resistant methods
+            if 'fido2' in imp_text.lower():
+                has_fido2 = True
+            if 'webauthn' in imp_text.lower():
+                has_webauthn = True
+            if 'certificate' in imp_text.lower() and 'auth' in imp_text.lower():
+                has_certificate_auth = True
+            
+            # Less secure methods
+            if 'pyotp' in imp_text.lower() or 'totp' in imp_text.lower():
+                has_totp = True
+            if 'twilio' in imp_text.lower() or ('sms' in imp_text.lower() and 'mfa' in imp_text.lower()):
+                has_sms_mfa = True
+            
+            # Framework-specific
+            if 'django_otp' in imp_text or 'django_two_factor' in imp_text:
+                django_mfa_found = True
+            if 'flask_security' in imp_text:
                 flask_mfa_found = True
-                # Check if MFA is enforced
-                if not re.search(r'SECURITY_TWO_FACTOR\s*=\s*True|@two_factor_required', code):
-                    findings.append(Finding(
-                        ksi_id=self.KSI_ID,
-                        title="Flask-Security MFA not enforced",
-                        description="Flask-Security is present but SECURITY_TWO_FACTOR is not set to True or @two_factor_required decorator is not used.",
-                        severity=Severity.HIGH,
-                        file_path=file_path,
-                        line_number=self._find_line(lines, r'flask_security'),
-                        code_snippet=self._get_snippet(lines, r'flask_security'),
-                        recommendation="Enable MFA: SECURITY_TWO_FACTOR = True and SECURITY_TWO_FACTOR_REQUIRED = True"
-                    ))
+            if 'msal' in imp_text.lower() or 'azure' in imp_text.lower():
+                has_azure_ad = True
         
-        # Check FastAPI MFA
-        if 'fastapi' in code.lower():
-            if re.search(r'from\s+fastapi|import\s+fastapi', code):
-                # Check for MFA dependencies or middleware
-                if not (has_fido2 or has_webauthn or re.search(r'mfa.*middleware|auth.*middleware', code, re.IGNORECASE)):
-                    findings.append(Finding(
-                        ksi_id=self.KSI_ID,
-                        title="FastAPI missing MFA middleware",
-                        description="FastAPI application detected without MFA middleware or FIDO2/WebAuthn implementation.",
-                        severity=Severity.HIGH,
-                        file_path=file_path,
-                        line_number=self._find_line(lines, r'FastAPI'),
-                        code_snippet=self._get_snippet(lines, r'FastAPI'),
-                        recommendation="Implement MFA middleware with FIDO2/WebAuthn or integrate with Azure AD B2C for phishing-resistant MFA"
-                    ))
+        # Check Django OTP configuration
+        if django_mfa_found:
+            # Check for phishing-resistant device classes
+            has_resistant_device = False
+            for imp_node in import_nodes:
+                imp_text = parser.get_node_text(imp_node, code_bytes)
+                if any(device in imp_text for device in ['WebAuthnDevice', 'U2FDevice']):
+                    has_resistant_device = True
+                    break
+            
+            if not has_resistant_device:
+                line_num = 1
+                for imp_node in import_nodes:
+                    imp_text = parser.get_node_text(imp_node, code_bytes)
+                    if 'django_otp' in imp_text:
+                        line_num = imp_node.start_point[0] + 1
+                        break
+                
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Django OTP without phishing-resistant device",
+                    description="django-otp is configured but no phishing-resistant device (WebAuthn, U2F) is detected. Consider using WebAuthnDevice or U2FDevice instead of TOTPDevice for phishing-resistant MFA.",
+                    severity=Severity.HIGH,
+                    file_path=file_path,
+                    line_number=line_num,
+                    snippet="",
+                    remediation="Configure WebAuthnDevice or U2FDevice in django-otp: from django_otp.plugins.otp_webauthn.models import WebAuthnDevice"
+                ))
         
-        # Check Azure AD B2C configuration
-        if re.search(r'msal|azure.*identity|azure.*ad', code, re.IGNORECASE):
-            # Check if MFA is enforced in configuration
-            if not re.search(r'require.*mfa|enforce.*mfa|conditional.*access', code, re.IGNORECASE):
+        # Check Flask MFA enforcement
+        if flask_mfa_found:
+            # Look for SECURITY_TWO_FACTOR configuration
+            has_mfa_enforced = False
+            assignment_nodes = parser.find_nodes_by_type(tree.root_node, "assignment")
+            
+            for assign_node in assignment_nodes:
+                assign_text = parser.get_node_text(assign_node, code_bytes)
+                if 'SECURITY_TWO_FACTOR' in assign_text and 'True' in assign_text:
+                    has_mfa_enforced = True
+                    break
+            
+            if not has_mfa_enforced:
+                line_num = 1
+                for imp_node in import_nodes:
+                    imp_text = parser.get_node_text(imp_node, code_bytes)
+                    if 'flask_security' in imp_text:
+                        line_num = imp_node.start_point[0] + 1
+                        break
+                
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Flask-Security MFA not enforced",
+                    description="Flask-Security is present but SECURITY_TWO_FACTOR is not set to True or @two_factor_required decorator is not used.",
+                    severity=Severity.HIGH,
+                    file_path=file_path,
+                    line_number=line_num,
+                    snippet="",
+                    remediation="Enable MFA: SECURITY_TWO_FACTOR = True and SECURITY_TWO_FACTOR_REQUIRED = True"
+                ))
+        
+        # Check FastAPI MFA middleware
+        has_fastapi = any('fastapi' in parser.get_node_text(imp, code_bytes).lower() for imp in import_nodes)
+        
+        if has_fastapi and not (has_fido2 or has_webauthn):
+            # Check for MFA middleware in function definitions
+            has_mfa_middleware = False
+            func_nodes = parser.find_nodes_by_type(tree.root_node, "function_definition")
+            
+            for func_node in func_nodes:
+                func_text = parser.get_node_text(func_node, code_bytes)
+                if 'mfa' in func_text.lower() and 'middleware' in func_text.lower():
+                    has_mfa_middleware = True
+                    break
+            
+            if not has_mfa_middleware:
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="FastAPI missing MFA middleware",
+                    description="FastAPI application detected without MFA middleware or FIDO2/WebAuthn implementation.",
+                    severity=Severity.HIGH,
+                    file_path=file_path,
+                    line_number=1,
+                    snippet="",
+                    remediation="Implement MFA middleware with FIDO2/WebAuthn or integrate with Azure AD B2C for phishing-resistant MFA"
+                ))
+        
+        # Check Azure AD MFA enforcement
+        if has_azure_ad:
+            # Check for MFA enforcement configuration
+            has_mfa_config = False
+            for node in parser.find_nodes_by_type(tree.root_node, "string"):
+                node_text = parser.get_node_text(node, code_bytes)
+                if any(keyword in node_text.lower() for keyword in ['require_mfa', 'enforce_mfa', 'conditional_access']):
+                    has_mfa_config = True
+                    break
+            
+            if not has_mfa_config:
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
                     title="Azure AD configuration missing MFA enforcement",
                     description="Azure AD/MSAL authentication detected but MFA enforcement not configured. Azure AD Conditional Access should require MFA for all users.",
                     severity=Severity.HIGH,
                     file_path=file_path,
-                    line_number=self._find_line(lines, r'msal|azure.*identity'),
-                    code_snippet=self._get_snippet(lines, r'msal|azure.*identity'),
-                    recommendation="Configure Azure AD Conditional Access policy to require phishing-resistant MFA (certificate-based, FIDO2, or Windows Hello for Business)"
+                    line_number=1,
+                    snippet="",
+                    remediation="Configure Azure AD Conditional Access policy to require phishing-resistant MFA (certificate-based, FIDO2, or Windows Hello for Business)"
                 ))
         
         # Warn about non-phishing-resistant MFA methods
@@ -179,9 +265,9 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
                 description="Time-based One-Time Password (TOTP) MFA is vulnerable to phishing attacks. FedRAMP 20x requires phishing-resistant MFA methods.",
                 severity=Severity.MEDIUM,
                 file_path=file_path,
-                line_number=self._find_line(lines, r'pyotp|totp'),
-                code_snippet=self._get_snippet(lines, r'pyotp|totp'),
-                recommendation="Migrate to phishing-resistant MFA: FIDO2 (py_webauthn), WebAuthn, or certificate-based authentication"
+                line_number=1,
+                snippet="",
+                remediation="Migrate to phishing-resistant MFA: FIDO2 (py_webauthn), WebAuthn, or certificate-based authentication"
             ))
         
         if has_sms_mfa:
@@ -191,31 +277,109 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
                 description="SMS-based MFA is vulnerable to SIM swapping and phishing attacks. FedRAMP 20x requires phishing-resistant MFA methods.",
                 severity=Severity.HIGH,
                 file_path=file_path,
-                line_number=self._find_line(lines, r'sms.*mfa|twilio.*verify'),
-                code_snippet=self._get_snippet(lines, r'sms.*mfa|twilio.*verify'),
-                recommendation="Replace SMS MFA with phishing-resistant methods: FIDO2, WebAuthn, or certificate-based authentication"
+                line_number=1,
+                snippet="",
+                remediation="Replace SMS MFA with phishing-resistant methods: FIDO2, WebAuthn, or certificate-based authentication"
             ))
         
-        # Check if ANY MFA is implemented
-        any_mfa = django_mfa_found or flask_mfa_found or has_fido2 or has_webauthn or has_totp or has_sms_mfa
-        if not any_mfa and re.search(r'@app\.route|@login|def\s+login|class.*Login', code):
-            line_num = self._find_line(lines, r'@app\.route.*login|def\s+login')
+        # Check for login functions without MFA
+        func_nodes = parser.find_nodes_by_type(tree.root_node, "function_definition")
+        
+        for func_node in func_nodes:
+            func_text = parser.get_node_text(func_node, code_bytes)
+            line_num = func_node.start_point[0] + 1
+            
+            # Check if function name contains 'login'
+            func_name = ''
+            for child in func_node.children:
+                if child.type == 'identifier':
+                    func_name = parser.get_node_text(child, code_bytes).lower()
+                    break
+            
+            # Check decorators for login routes
+            is_login_route = 'login' in func_name
+            decorators = parser.find_nodes_by_type(func_node, "decorator")
+            for dec in decorators:
+                dec_text = parser.get_node_text(dec, code_bytes)
+                if 'login' in dec_text.lower() or '/login' in dec_text:
+                    is_login_route = True
+                    break
+            
+            if is_login_route:
+                # Check if this login function/route has MFA implementation
+                has_mfa_in_func = (
+                    'fido2' in func_text.lower() or 
+                    'webauthn' in func_text.lower() or
+                    'totp' in func_text.lower() or
+                    'two_factor' in func_text.lower() or
+                    'mfa' in func_text.lower()
+                )
+                
+                if not has_mfa_in_func:
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="Login without MFA",
+                        description="Login functionality detected without multi-factor authentication implementation. KSI-IAM-01 requires phishing-resistant MFA for all user authentication.",
+                        severity=Severity.CRITICAL,
+                        file_path=file_path,
+                        line_number=line_num,
+                        snippet=func_text[:200] if len(func_text) < 200 else func_text[:200] + '...',
+                        remediation="Implement phishing-resistant MFA using FIDO2 (py_webauthn), WebAuthn, or integrate with Azure AD Conditional Access"
+                    ))
+        
+        # Check for @login_required decorator without MFA enforcement
+        all_decorators = parser.find_nodes_by_type(tree.root_node, "decorator")
+        for dec_node in all_decorators:
+            dec_text = parser.get_node_text(dec_node, code_bytes)
+            if 'login_required' in dec_text:
+                # Check if there's also an MFA decorator
+                parent_func = dec_node.parent
+                if parent_func and parent_func.type == 'decorated_definition':
+                    full_text = parser.get_node_text(parent_func, code_bytes)
+                    has_mfa_decorator = any(mfa in full_text.lower() for mfa in ['mfa_required', 'two_factor_required', 'fido2', 'webauthn'])
+                    
+                    if not has_mfa_decorator:
+                        line_num = dec_node.start_point[0] + 1
+                        findings.append(Finding(
+                            ksi_id=self.KSI_ID,
+                            title="Authentication decorator without MFA",
+                            description="@login_required decorator found without MFA enforcement. Password-only authentication does not meet KSI-IAM-01 phishing-resistant MFA requirements.",
+                            severity=Severity.HIGH,
+                            file_path=file_path,
+                            line_number=line_num,
+                            snippet=dec_text,
+                            remediation="Add @mfa_required or @two_factor_required decorator, or implement FIDO2/WebAuthn authentication"
+                        ))
+        
+        return findings
+    
+    def _analyze_python_regex(self, code: str, file_path: str) -> List[Finding]:
+        """Fallback regex-based Python analysis when AST parsing fails."""
+        findings = []
+        lines = code.split('\n')
+        
+        # Check for phishing-resistant MFA methods
+        has_fido2 = bool(re.search(r'import\s+fido2|from\s+fido2', code, re.IGNORECASE))
+        has_webauthn = bool(re.search(r'import\s+webauthn|from\s+webauthn', code, re.IGNORECASE))
+        
+        # Check for TOTP (non-phishing-resistant)
+        if re.search(r'import\s+pyotp|from\s+pyotp|totp', code, re.IGNORECASE) and not (has_fido2 or has_webauthn):
             findings.append(Finding(
                 ksi_id=self.KSI_ID,
-                title="No MFA implementation detected",
-                description="Login functionality detected without any multi-factor authentication implementation. KSI-IAM-01 requires phishing-resistant MFA for all user authentication.",
-                severity=Severity.CRITICAL,
+                title="TOTP-based MFA is not phishing-resistant",
+                description="TOTP MFA is vulnerable to phishing attacks.",
+                severity=Severity.MEDIUM,
                 file_path=file_path,
-                line_number=line_num,
-                code_snippet=self._get_snippet(lines, line_num),
-                recommendation="Implement phishing-resistant MFA using FIDO2 (py_webauthn), WebAuthn, or integrate with Azure AD Conditional Access"
+                line_number=self._find_line(lines, r'pyotp|totp'),
+                snippet=self._get_snippet(lines, self._find_line(lines, r'pyotp|totp')),
+                remediation="Migrate to phishing-resistant MFA: FIDO2, WebAuthn"
             ))
         
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze C# code for KSI-IAM-01 compliance.
+        Analyze C# code for KSI-IAM-01 compliance using AST.
         
         Frameworks: ASP.NET Core, Entity Framework, Azure SDK
         
@@ -226,6 +390,188 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
         - FIDO2/WebAuthn implementation
         - SMS/Email MFA (non-phishing-resistant, flagged)
         """
+        # AST-first dispatcher
+        parser = ASTParser(CodeLanguage.CSHARP)
+        tree = parser.parse(code)
+        
+        if tree:
+            return self._analyze_csharp_ast(code, file_path, parser, tree)
+        else:
+            # Fallback to regex if AST parsing fails
+            return self._analyze_csharp_regex(code, file_path)
+    
+    def _analyze_csharp_ast(self, code: str, file_path: str, parser: ASTParser, tree) -> List[Finding]:
+        """AST-based C# analysis for MFA implementation."""
+        findings = []
+        lines = code.split('\n')
+        code_bytes = code.encode('utf-8')
+        root_node = tree.root_node
+        
+        # Track MFA implementations
+        has_certificate_auth = False
+        has_fido2 = False
+        has_email_mfa = False
+        has_sms_mfa = False
+        aspnet_identity_found = False
+        has_mfa_enforcement = False
+        has_azure_ad = False
+        has_azure_ad_mfa_validation = False
+        has_authorization = False
+        
+        # Check using statements for MFA-related namespaces
+        using_nodes = parser.find_nodes_by_type(root_node, 'using_directive')
+        for node in using_nodes:
+            using_text = parser.get_node_text(node, code_bytes)
+            
+            # Phishing-resistant MFA
+            if any(keyword in using_text for keyword in ['Certificate', 'X509', 'ClientCertificate']):
+                has_certificate_auth = True
+            if any(keyword in using_text.lower() for keyword in ['fido2', 'webauthn']):
+                has_fido2 = True
+            
+            # Non-phishing-resistant MFA (vulnerable)
+            if 'EmailTokenProvider' in using_text or 'SendGrid' in using_text:
+                has_email_mfa = True
+            if 'PhoneNumberTokenProvider' in using_text or 'Twilio' in using_text:
+                has_sms_mfa = True
+            
+            # ASP.NET Core Identity
+            if 'Microsoft.AspNetCore.Identity' in using_text:
+                aspnet_identity_found = True
+            
+            # Azure AD / Microsoft Identity Web
+            if 'Microsoft.Identity.Web' in using_text or 'Microsoft.Graph' in using_text:
+                has_azure_ad = True
+        
+        # Check for AddIdentity<> configuration
+        invocation_nodes = parser.find_nodes_by_type(root_node, 'invocation_expression')
+        for node in invocation_nodes:
+            invocation_text = parser.get_node_text(node, code_bytes)
+            if 'AddIdentity<' in invocation_text or 'AddDefaultIdentity<' in invocation_text:
+                aspnet_identity_found = True
+            
+            # Check for phishing-resistant authentication methods
+            if 'AddCertificate' in invocation_text or 'AddClientCertificate' in invocation_text:
+                has_certificate_auth = True
+            
+            # Check for Azure AD configuration
+            if 'AddMicrosoftIdentityWebApp' in invocation_text or 'AddMicrosoftIdentityPlatform' in invocation_text:
+                has_azure_ad = True
+        
+        # Check for RequireTwoFactor configuration and token provider assignments
+        assignment_nodes = parser.find_nodes_by_type(root_node, 'assignment_expression')
+        for node in assignment_nodes:
+            assignment_text = parser.get_node_text(node, code_bytes)
+            if 'RequireTwoFactor' in assignment_text and '= true' in assignment_text:
+                has_mfa_enforcement = True
+            
+            # Check for email/SMS token provider assignments
+            if 'EmailTokenProvider' in assignment_text:
+                has_email_mfa = True
+            if 'PhoneNumberTokenProvider' in assignment_text or 'SmsTokenProvider' in assignment_text:
+                has_sms_mfa = True
+        
+        # Check for Azure AD MFA claim validation
+        member_access_nodes = parser.find_nodes_by_type(root_node, 'member_access_expression')
+        for node in member_access_nodes:
+            node_text = parser.get_node_text(node, code_bytes)
+            if 'amr' in node_text.lower() and 'mfa' in node_text.lower():
+                has_azure_ad_mfa_validation = True
+            if 'ConditionalAccess' in node_text or 'RequireMfa' in node_text:
+                has_azure_ad_mfa_validation = True
+        
+        # Check for authorization attributes/middleware
+        attribute_nodes = parser.find_nodes_by_type(root_node, 'attribute')
+        for node in attribute_nodes:
+            node_text = parser.get_node_text(node, code_bytes)
+            if '[Authorize]' in node_text or 'UseAuthentication()' in node_text:
+                has_authorization = True
+        
+        # Check for [Authorize] attribute without MFA requirement
+        attribute_list_nodes = parser.find_nodes_by_type(root_node, 'attribute_list')
+        for attr_list_node in attribute_list_nodes:
+            attr_text = parser.get_node_text(attr_list_node, code_bytes)
+            if '[Authorize]' in attr_text or '[Authorize(' in attr_text:
+                # Check if there's an MFA policy requirement
+                has_mfa_policy = 'RequireMfa' in attr_text or 'TwoFactor' in attr_text or 'Mfa' in attr_text
+                
+                if not has_mfa_policy and not (has_certificate_auth or has_fido2):
+                    line_num = attr_list_node.start_point[0] + 1
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="[Authorize] without MFA requirement",
+                        description="[Authorize] attribute detected without MFA policy requirement. Password-only authentication does not meet KSI-IAM-01 phishing-resistant MFA requirements.",
+                        severity=Severity.HIGH,
+                        file_path=file_path,
+                        line_number=line_num,
+                        code_snippet=attr_text[:200] if len(attr_text) < 200 else attr_text[:200] + '...',
+                        recommendation="Add MFA policy requirement: [Authorize(Policy = \"RequireMfa\")] or configure Azure AD Conditional Access to require MFA"
+                    ))
+        
+        # Generate findings based on analysis
+        
+        # Finding 1: ASP.NET Core Identity without MFA enforcement
+        if aspnet_identity_found and not has_mfa_enforcement:
+            line_num = self._find_line(lines, r'AddIdentity|AddDefaultIdentity')
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="ASP.NET Core Identity without MFA enforcement",
+                description="ASP.NET Core Identity is configured but RequireTwoFactor is not set to true. KSI-IAM-01 requires phishing-resistant MFA for all user authentication.",
+                severity=Severity.CRITICAL,
+                file_path=file_path,
+                line_number=line_num,
+                code_snippet=self._get_snippet(lines, line_num),
+                recommendation="Configure MFA enforcement: services.Configure<IdentityOptions>(options => { options.SignIn.RequireTwoFactor = true; });"
+            ))
+        
+        # Finding 2: Non-phishing-resistant MFA methods
+        if aspnet_identity_found and not (has_certificate_auth or has_fido2):
+            if has_email_mfa or has_sms_mfa:
+                line_num = self._find_line(lines, r'EmailTokenProvider|PhoneNumberTokenProvider|Twilio|SendGrid')
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="ASP.NET Core Identity using non-phishing-resistant MFA",
+                    description="Email or SMS token providers detected. These are vulnerable to phishing. FedRAMP 20x requires phishing-resistant MFA.",
+                    severity=Severity.HIGH,
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=self._get_snippet(lines, line_num),
+                    recommendation="Implement FIDO2/WebAuthn or certificate-based authentication instead of email/SMS tokens"
+                ))
+        
+        # Finding 3: Azure AD without MFA validation
+        if has_azure_ad and not has_azure_ad_mfa_validation:
+            line_num = self._find_line(lines, r'AddMicrosoftIdentityWebApp|Microsoft\.Identity\.Web')
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="Azure AD authentication without MFA validation",
+                description="Azure AD authentication configured but no validation of MFA claim (amr claim) or Conditional Access enforcement detected.",
+                severity=Severity.HIGH,
+                file_path=file_path,
+                line_number=line_num,
+                code_snippet=self._get_snippet(lines, line_num),
+                recommendation="Validate MFA claim: if (!User.Claims.Any(c => c.Type == \"amr\" && c.Value == \"mfa\")) { return Challenge(); }"
+            ))
+        
+        # Finding 4: Authorization without MFA
+        if has_authorization and not aspnet_identity_found:
+            if not (has_certificate_auth or has_fido2 or has_azure_ad):
+                line_num = self._find_line(lines, r'\[Authorize\]|UseAuthentication')
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Authentication without MFA implementation",
+                    description="Authorization is configured but no MFA implementation detected.",
+                    severity=Severity.CRITICAL,
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=self._get_snippet(lines, line_num),
+                    recommendation="Implement phishing-resistant MFA: ASP.NET Core Identity with FIDO2, Azure AD with Conditional Access, or certificate-based authentication"
+                ))
+        
+        return findings
+    
+    def _analyze_csharp_regex(self, code: str, file_path: str = "") -> List[Finding]:
+        """Regex-based fallback for C# analysis."""
         findings = []
         lines = code.split('\n')
         
@@ -301,7 +647,7 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Java code for KSI-IAM-01 compliance.
+        Analyze Java code for KSI-IAM-01 compliance using AST.
         
         Frameworks: Spring Boot, Spring Security, Azure SDK
         
@@ -312,6 +658,155 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
         - FIDO2/WebAuthn implementation (phishing-resistant)
         - TOTP/SMS-based MFA (non-phishing-resistant, flagged)
         """
+        # AST-first dispatcher
+        parser = ASTParser(CodeLanguage.JAVA)
+        tree = parser.parse(code)
+        
+        if tree:
+            return self._analyze_java_ast(code, file_path, parser, tree)
+        else:
+            return self._analyze_java_regex(code, file_path)
+    
+    def _analyze_java_ast(self, code: str, file_path: str, parser: ASTParser, tree) -> List[Finding]:
+        """AST-based Java analysis for MFA implementation."""
+        findings = []
+        lines = code.split('\n')
+        code_bytes = code.encode('utf-8')
+        root_node = tree.root_node
+        
+        # Track MFA implementations
+        has_fido2 = False
+        has_certificate_auth = False
+        has_totp = False
+        has_sms_mfa = False
+        spring_security_found = False
+        has_mfa_filter = False
+        has_azure_ad = False
+        has_azure_ad_mfa_validation = False
+        
+        # Check import statements
+        for node in parser.find_nodes_by_type(root_node, 'import_declaration'):
+            import_text = parser.get_node_text(node, code_bytes)
+            
+            # Phishing-resistant MFA
+            if any(keyword in import_text.lower() for keyword in ['webauthn4j', 'yubico.webauthn', 'fido2']):
+                has_fido2 = True
+            if 'X509AuthenticationFilter' in import_text or 'CertificateAuthentication' in import_text:
+                has_certificate_auth = True
+            
+            # Non-phishing-resistant MFA (vulnerable)
+            if any(keyword in import_text.lower() for keyword in ['googleauthenticator', 'totp', 'timebasedonetimepassword']):
+                has_totp = True
+            if any(keyword in import_text.lower() for keyword in ['twilio', 'smsauthenticationprovider']):
+                has_sms_mfa = True
+            
+            # Spring Security
+            if 'springframework.security' in import_text.lower():
+                spring_security_found = True
+            
+            # Azure AD Spring Boot
+            if 'azure-spring-boot' in import_text.lower() or 'AzureActiveDirectory' in import_text:
+                has_azure_ad = True
+            
+        # Check for Spring Security annotations
+        for node in parser.find_nodes_by_type(root_node, 'marker_annotation'):
+            annotation_text = parser.get_node_text(node, code_bytes)
+            if '@EnableWebSecurity' in annotation_text:
+                spring_security_found = True
+        
+        # Check for MFA filter classes
+        class_nodes = parser.find_nodes_by_type(root_node, 'class_declaration')
+        method_nodes = parser.find_nodes_by_type(root_node, 'method_declaration')
+        for node in class_nodes + method_nodes:
+            node_text = parser.get_node_text(node, code_bytes)
+            if any(keyword in node_text for keyword in ['TwoFactorAuthenticationFilter', 'MultiFactorAuthentication', 'mfaRequired', 'requireMfa']):
+                has_mfa_filter = True
+        
+        # Check for Azure AD MFA validation
+        for node in parser.find_nodes_by_type(root_node, 'method_invocation'):
+            node_text = parser.get_node_text(node, code_bytes)
+            if 'amr' in node_text.lower() and ('claim' in node_text.lower() or 'mfa' in node_text.lower()):
+                has_azure_ad_mfa_validation = True
+            if 'conditionalAccess' in node_text or 'validateMfa' in node_text:
+                has_azure_ad_mfa_validation = True
+        
+        # Generate findings based on analysis
+        
+        # Finding 1: Spring Security without MFA enforcement
+        if spring_security_found and not has_mfa_filter and not (has_fido2 or has_certificate_auth):
+            line_num = self._find_line(lines, r'@EnableWebSecurity|WebSecurityConfigurerAdapter|formLogin')
+            findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Spring Security without MFA",
+                    description="Spring Security is configured with form login but no MFA enforcement is detected. KSI-IAM-01 requires phishing-resistant MFA for all user authentication.",
+                    severity=Severity.CRITICAL,
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=self._get_snippet(lines, line_num),
+                    recommendation="Implement phishing-resistant MFA: add WebAuthn4J or Yubico WebAuthn library with TwoFactorAuthenticationFilter"
+                ))
+            
+        # Finding 2: Azure AD without MFA validation
+        if has_azure_ad and not has_azure_ad_mfa_validation:
+            line_num = self._find_line(lines, r'azure-spring-boot-starter|AzureActiveDirectory')
+            findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Azure AD integration without MFA validation",
+                    description="Azure AD authentication configured but no validation of MFA claims or Conditional Access configuration detected.",
+                    severity=Severity.HIGH,
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=self._get_snippet(lines, line_num),
+                    recommendation="Validate MFA claim from Azure AD token or configure Azure AD Conditional Access"
+                ))
+            
+        # Finding 3: TOTP warning
+        if has_totp and not (has_fido2 or has_certificate_auth):
+            line_num = self._find_line(lines, r'GoogleAuthenticator|totp|TimeBasedOneTimePassword')
+            findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="TOTP-based MFA is not phishing-resistant",
+                    description="TOTP is vulnerable to phishing attacks. FedRAMP 20x requires phishing-resistant MFA.",
+                    severity=Severity.MEDIUM,
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=self._get_snippet(lines, line_num),
+                    recommendation="Migrate to phishing-resistant MFA: WebAuthn4J (FIDO2) or certificate-based authentication"
+                ))
+            
+        # Finding 4: SMS warning
+        if has_sms_mfa:
+            line_num = self._find_line(lines, r'sendSms.*verification|Twilio|SmsAuthenticationProvider')
+            findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="SMS-based MFA is not phishing-resistant",
+                    description="SMS-based MFA is vulnerable to SIM swapping and phishing attacks.",
+                    severity=Severity.HIGH,
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=self._get_snippet(lines, line_num),
+                    recommendation="Replace SMS MFA with WebAuthn4J (FIDO2) or certificate-based authentication"
+                ))
+            
+        # Finding 5: No MFA implementation
+            if spring_security_found and not (has_fido2 or has_certificate_auth or has_totp or has_sms_mfa):
+                if not has_azure_ad:
+                    line_num = self._find_line(lines, r'@EnableWebSecurity')
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="No MFA implementation detected",
+                        description="Spring Security authentication configured but no MFA implementation detected.",
+                        severity=Severity.CRITICAL,
+                        file_path=file_path,
+                        line_number=line_num,
+                        code_snippet=self._get_snippet(lines, line_num),
+                        recommendation="Implement phishing-resistant MFA using WebAuthn4J (FIDO2) or integrate with Azure AD Conditional Access"
+                    ))
+        
+        return findings
+    
+    def _analyze_java_regex(self, code: str, file_path: str = "") -> List[Finding]:
+        """Regex-based fallback for Java analysis."""
         findings = []
         lines = code.split('\n')
         
@@ -395,10 +890,12 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
                 ))
         
         return findings
+        
+        return findings
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze TypeScript/JavaScript code for KSI-IAM-01 compliance.
+        Analyze TypeScript/JavaScript code for KSI-IAM-01 compliance using AST.
         
         Frameworks: Express, NestJS, Next.js, React, Angular, Azure SDK
         
@@ -409,6 +906,207 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
         - WebAuthn/FIDO2 implementation (phishing-resistant)
         - TOTP/OTP-based MFA (non-phishing-resistant, flagged)
         """
+        # AST-first dispatcher
+        parser = ASTParser(CodeLanguage.TYPESCRIPT)
+        tree = parser.parse(code)
+        
+        if tree:
+            return self._analyze_typescript_ast(code, file_path, parser, tree)
+        else:
+            return self._analyze_typescript_regex(code, file_path)
+    
+    def _analyze_typescript_ast(self, code: str, file_path: str, parser: ASTParser, tree) -> List[Finding]:
+        """AST-based TypeScript/JavaScript analysis for MFA implementation."""
+        findings = []
+        lines = code.split('\n')
+        code_bytes = code.encode('utf-8')
+        root_node = tree.root_node
+        
+        # Track MFA implementations
+        has_webauthn = False
+        has_totp = False
+        has_sms_mfa = False
+        passport_found = False
+        has_passport_mfa = False
+        has_nextauth = False
+        has_nextauth_mfa = False
+        has_msal = False
+        has_msal_mfa_validation = False
+        has_authentication = False
+        
+        # Check import statements (ES6 imports)
+        for node in parser.find_nodes_by_type(root_node, 'import_statement'):
+            import_text = parser.get_node_text(node, code_bytes)
+            
+            # Phishing-resistant MFA
+            if any(keyword in import_text.lower() for keyword in ['@simplewebauthn', 'fido2-lib', 'webauthn']):
+                has_webauthn = True
+            
+            # Non-phishing-resistant MFA (vulnerable)
+            if any(keyword in import_text.lower() for keyword in ['speakeasy', 'otplib', 'authenticator', 'totp']):
+                has_totp = True
+            if any(keyword in import_text.lower() for keyword in ['twilio', 'nexmo']):
+                has_sms_mfa = True
+            
+            # Authentication frameworks
+            if 'passport' in import_text.lower():
+                passport_found = True
+                if any(keyword in import_text.lower() for keyword in ['passport-totp', 'passport-webauthn', 'passport-mfa', 'passport-2fa']):
+                    has_passport_mfa = True
+            
+            if 'next-auth' in import_text.lower():
+                has_nextauth = True
+            
+            if '@azure/msal' in import_text.lower() or 'PublicClientApplication' in import_text or 'ConfidentialClientApplication' in import_text:
+                has_msal = True
+        
+        # Check require statements (CommonJS imports)
+        for node in parser.find_nodes_by_type(root_node, 'call_expression'):
+            call_text = parser.get_node_text(node, code_bytes)
+            if 'require(' in call_text:
+                # Phishing-resistant MFA
+                if any(keyword in call_text.lower() for keyword in ['@simplewebauthn', 'fido2-lib', 'webauthn']):
+                    has_webauthn = True
+                
+                # Non-phishing-resistant MFA (vulnerable)
+                if any(keyword in call_text.lower() for keyword in ['speakeasy', 'otplib', 'authenticator', 'totp']):
+                    has_totp = True
+                if any(keyword in call_text.lower() for keyword in ['twilio', 'nexmo']):
+                    has_sms_mfa = True
+                
+                # Authentication frameworks
+                if 'passport' in call_text.lower():
+                    passport_found = True
+                    if any(keyword in call_text.lower() for keyword in ['passport-totp', 'passport-webauthn', 'passport-mfa', 'passport-2fa']):
+                        has_passport_mfa = True
+                
+                if 'next-auth' in call_text.lower():
+                    has_nextauth = True
+                
+                if '@azure/msal' in call_text.lower() or 'PublicClientApplication' in call_text or 'ConfidentialClientApplication' in call_text:
+                    has_msal = True
+            
+        # Check for NextAuth MFA configuration (look for actual MFA providers, not just credential providers)
+        for node in parser.find_nodes_by_type(root_node, 'object'):
+            node_text = parser.get_node_text(node, code_bytes)
+            if has_nextauth and any(keyword in node_text.lower() for keyword in ['webauthn', 'totp', 'authenticator', 'fido']):
+                has_nextauth_mfa = True
+            
+        # Check for MSAL MFA validation
+        for node in parser.find_nodes_by_type(root_node, 'call_expression'):
+            node_text = parser.get_node_text(node, code_bytes)
+            if has_msal:
+                if 'amr' in node_text.lower() and 'mfa' in node_text.lower():
+                    has_msal_mfa_validation = True
+                if 'claimsRequest' in node_text or 'conditionalAccess' in node_text:
+                    has_msal_mfa_validation = True
+            
+        # Check for WebAuthn implementation
+        for node in parser.find_nodes_by_type(root_node, 'call_expression'):
+            node_text = parser.get_node_text(node, code_bytes)
+            if 'navigator.credentials.create' in node_text or 'navigator.credentials.get' in node_text:
+                has_webauthn = True
+        
+        # Check for authentication logic
+        for node in parser.find_nodes_by_type(root_node, 'call_expression'):
+            node_text = parser.get_node_text(node, code_bytes)
+            if any(keyword in node_text.lower() for keyword in ['jwt.sign', 'bcrypt.compare', 'authenticate']):
+                has_authentication = True
+            
+        # Generate findings based on analysis
+        
+        # Finding 1: Passport.js without MFA
+        if passport_found and not (has_passport_mfa or has_webauthn):
+            # Check for LocalStrategy (password-only authentication)
+            has_local_strategy = 'LocalStrategy' in code or 'passport-local' in code
+            
+            line_num = self._find_line(lines, r'passport|LocalStrategy')
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="Passport.js without MFA",
+                description="Passport.js is configured with LocalStrategy (password-only) without MFA enforcement. KSI-IAM-01 requires phishing-resistant MFA for all user authentication.",
+                severity=Severity.HIGH,
+                file_path=file_path,
+                line_number=line_num,
+                code_snippet=self._get_snippet(lines, line_num),
+                recommendation="Add phishing-resistant MFA: implement passport-webauthn strategy or integrate with Azure AD B2C for phishing-resistant MFA"
+            ))
+        
+        # Finding 2: NextAuth.js without MFA
+        if has_nextauth and not has_nextauth_mfa:
+            line_num = self._find_line(lines, r'next-auth')
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="NextAuth.js without MFA configuration",
+                description="NextAuth.js is configured but no MFA provider or adapter is detected.",
+                severity=Severity.HIGH,
+                file_path=file_path,
+                line_number=line_num,
+                code_snippet=self._get_snippet(lines, line_num),
+                recommendation="Configure MFA: use AzureADProvider with Conditional Access or implement WebAuthn provider"
+            ))
+        
+        # Finding 3: MSAL without MFA validation
+        if has_msal and not has_msal_mfa_validation:
+            line_num = self._find_line(lines, r'msal|PublicClientApplication|ConfidentialClientApplication')
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="MSAL without MFA validation",
+                description="MSAL is configured but no MFA claim validation or Conditional Access enforcement detected.",
+                severity=Severity.HIGH,
+                file_path=file_path,
+                line_number=line_num,
+                code_snippet=self._get_snippet(lines, line_num),
+                recommendation="Validate MFA claim: check for 'amr' claim containing 'mfa' or configure Azure AD Conditional Access"
+            ))
+        
+        # Finding 4: TOTP warning
+        if has_totp and not has_webauthn:
+            line_num = self._find_line(lines, r'speakeasy|otplib|authenticator')
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="TOTP-based MFA is not phishing-resistant",
+                description="TOTP is vulnerable to phishing attacks.",
+                severity=Severity.MEDIUM,
+                file_path=file_path,
+                line_number=line_num,
+                code_snippet=self._get_snippet(lines, line_num),
+                recommendation="Migrate to @simplewebauthn/server (FIDO2/WebAuthn) or fido2-lib"
+            ))
+        
+        # Finding 5: SMS warning
+        if has_sms_mfa:
+            line_num = self._find_line(lines, r'twilio|nexmo|sns.*sms')
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="SMS-based MFA is not phishing-resistant",
+                description="SMS is vulnerable to SIM swapping and phishing attacks.",
+                severity=Severity.HIGH,
+                file_path=file_path,
+                line_number=line_num,
+                code_snippet=self._get_snippet(lines, line_num),
+                recommendation="Replace SMS MFA with @simplewebauthn/server (FIDO2/WebAuthn)"
+            ))
+        
+        # Finding 6: No MFA implementation
+        if (passport_found or has_authentication) and not (has_webauthn or has_totp or has_sms_mfa):
+            if not has_msal:
+                line_num = self._find_line(lines, r'passport|jwt\.sign|authenticate')
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="No MFA implementation detected",
+                    description="Authentication logic detected but no MFA implementation found.",
+                    severity=Severity.CRITICAL,
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=self._get_snippet(lines, line_num),
+                    recommendation="Implement phishing-resistant MFA: @simplewebauthn/server (FIDO2) or integrate with Azure AD/MSAL"
+                ))
+        
+        return findings
+    
+    def _analyze_typescript_regex(self, code: str, file_path: str = "") -> List[Finding]:
+        """Regex-based fallback for TypeScript/JavaScript analysis."""
         findings = []
         lines = code.split('\n')
         
@@ -689,3 +1387,4 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
         start = max(0, line_number - context - 1)
         end = min(len(lines), line_number + context)
         return '\n'.join(lines[start:end])
+

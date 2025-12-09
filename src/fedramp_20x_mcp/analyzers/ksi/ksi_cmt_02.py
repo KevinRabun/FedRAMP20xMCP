@@ -1,13 +1,6 @@
-"""
-KSI-CMT-02: Redeployment
+"""KSI-CMT-02 Enhanced: Immutable Infrastructure"""
 
-Execute changes though redeployment of version controlled immutable resources rather than direct modification wherever possible
-
-Official FedRAMP 20x Definition
-Source: https://github.com/FedRAMP/docs/blob/main/data/FRMR.KSI.key-security-indicators.json
-Version: 25.11C (Published: 2025-12-01)
-"""
-
+import ast
 import re
 from typing import List
 from ..base import Finding, Severity
@@ -16,423 +9,423 @@ from .base import BaseKSIAnalyzer
 
 class KSI_CMT_02_Analyzer(BaseKSIAnalyzer):
     """
-    Analyzer for KSI-CMT-02: Redeployment
+    KSI-CMT-02: Redeployment / Immutable Infrastructure
     
-    **Official Statement:**
-    Execute changes though redeployment of version controlled immutable resources rather than direct modification wherever possible
+    Execute changes through redeployment of version controlled immutable 
+    resources rather than direct modification wherever possible.
     
-    **Family:** CMT - Change Management
-    
-    **Impact Levels:**
-    - Low: Yes
-    - Moderate: Yes
-    
-    **NIST Controls:**
-    - cm-2
-    - cm-3
-    - cm-5
-    - cm-6
-    - cm-7
-    - cm-8.1
-    - si-3
-    
-    **Detectability:** Process/Documentation (Limited code detection)
-    
-    **Detection Strategy:**
-    This KSI primarily involves processes, policies, or documentation. Code analysis may have limited applicability.
-    
-    **Languages Supported:**
-    - Application: Python, C#, Java, TypeScript/JavaScript
-    - IaC: Bicep, Terraform
-    - CI/CD: GitHub Actions, Azure Pipelines, GitLab CI
-    
-    
+    NIST: CM-2, CM-3, CM-5, CM-6, CM-7, CM-8.1, SI-3
+    Focus: Hot reload, runtime config changes, mutable infrastructure
     """
     
     KSI_ID = "KSI-CMT-02"
-    KSI_NAME = "Redeployment"
-    KSI_STATEMENT = """Execute changes though redeployment of version controlled immutable resources rather than direct modification wherever possible"""
+    KSI_NAME = "Immutable Infrastructure"
+    KSI_STATEMENT = "Execute changes through redeployment of version controlled immutable resources rather than direct modification wherever possible."
     FAMILY = "CMT"
     FAMILY_NAME = "Change Management"
     IMPACT_LOW = True
     IMPACT_MODERATE = True
-    NIST_CONTROLS = ["cm-2", "cm-3", "cm-5", "cm-6", "cm-7", "cm-8.1", "si-3"]
+    NIST_CONTROLS = [
+        ("cm-2", "Baseline Configuration"),
+        ("cm-3", "Configuration Change Control"),
+        ("cm-5", "Access Restrictions for Change"),
+        ("cm-6", "Configuration Settings"),
+        ("cm-7", "Least Functionality"),
+        ("cm-8.1", "Updates During Installation and Removal"),
+        ("si-3", "Malicious Code Protection")
+    ]
     CODE_DETECTABLE = True
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
-    RETIRED = False
     
-    def __init__(self):
+    def __init__(self, language=None, ksi_id: str = "", ksi_name: str = "", ksi_statement: str = ""):
+        """Initialize analyzer with backward-compatible API."""
         super().__init__(
-            ksi_id=self.KSI_ID,
-            ksi_name=self.KSI_NAME,
-            ksi_statement=self.KSI_STATEMENT
+            ksi_id=ksi_id or self.KSI_ID,
+            ksi_name=ksi_name or self.KSI_NAME,
+            ksi_statement=ksi_statement or self.KSI_STATEMENT
         )
-    
-    # ============================================================================
-    # APPLICATION LANGUAGE ANALYZERS
-    # ============================================================================
+        self.direct_language = language
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Python code for KSI-CMT-02 compliance.
-        
-        Frameworks: Flask, Django, FastAPI, Azure SDK
-        
-        Detects:
-        - Direct runtime configuration changes (setattr, __dict__ modification)
-        - Hot-reloading enabled in production
-        - In-memory state mutation without persistence
-        """
+        """Python: Hot reload, runtime config changes (AST-based)"""
         findings = []
         lines = code.split('\n')
         
-        # Pattern 1: Hot-reloading in production (MEDIUM)
-        if re.search(r'(reload=True|use_reloader=True)', code):
-            line_num = self._find_line(lines, r'reload=True|use_reloader=True')
-            findings.append(Finding(
-                severity=Severity.MEDIUM,
-                title="Hot-Reloading Enabled (Violates Immutable Deployment)",
-                description=(
-                    f"Hot-reloading enabled at line {line_num}. Hot-reloading allows runtime "
-                    f"code changes without redeployment, violating KSI-CMT-02's requirement for "
-                    f"immutable, version-controlled deployments. Changes should go through proper "
-                    f"CI/CD pipelines with versioning."
-                ),
-                file_path=file_path,
-                line_number=line_num,
-                snippet=self._get_snippet(lines, line_num),
-                remediation=(
-                    "Disable hot-reloading in production:\n"
-                    "app.run(debug=False, use_reloader=False)  # Flask\n"
-                    "uvicorn.run(reload=False)  # FastAPI\n"
-                    "Use environment variables: reload=os.getenv('RELOAD', 'false').lower() == 'true'"
-                ),
-                ksi_id=self.KSI_ID
-            ))
+        # Try AST parsing
+        try:
+            tree = ast.parse(code)
+            
+            # Pattern 1: Hot reload parameters (use_reloader=True, reload=True, debug=True)
+            for node in ast.walk(tree):
+                if isinstance(node, ast.keyword):
+                    # Check for hot reload keywords
+                    if node.arg in ['use_reloader', 'reload', 'debug']:
+                        if isinstance(node.value, ast.Constant) and node.value.value is True:
+                            line_num = node.lineno
+                            param_name = node.arg
+                            findings.append(Finding(
+                                ksi_id=self.KSI_ID,
+                                title="Hot reload enabled",
+                                description=f"{param_name}=True at line {line_num} violates immutable deployment (NIST CM-3, CM-5)",
+                                severity=Severity.HIGH,
+                                file_path=file_path,
+                                line_number=line_num,
+                                code_snippet=self._get_snippet(lines, line_num),
+                                remediation=f"Disable {param_name}, use CI/CD for changes. Example:\n"
+                                           f"app.run(host='0.0.0.0', port=5000, {param_name}=False)"
+                            ))
+            
+            # Pattern 2: setattr() on config objects
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Call):
+                    if isinstance(node.func, ast.Name) and node.func.id == 'setattr':
+                        # Check if first arg contains 'config'
+                        if node.args and len(node.args) >= 1:
+                            first_arg = node.args[0]
+                            arg_repr = ast.unparse(first_arg) if hasattr(ast, 'unparse') else ''
+                            if 'config' in arg_repr.lower():
+                                line_num = node.lineno
+                                findings.append(Finding(
+                                    ksi_id=self.KSI_ID,
+                                    title="Runtime configuration modification",
+                                    description=f"setattr() on config at line {line_num} bypasses version control (NIST CM-2)",
+                                    severity=Severity.MEDIUM,
+                                    file_path=file_path,
+                                    line_number=line_num,
+                                    code_snippet=self._get_snippet(lines, line_num),
+                                    remediation="Use environment variables set at deployment:\n"
+                                               "import os\n"
+                                               "config.setting = os.getenv('SETTING', 'default')"
+                                ))
+            
+            # Pattern 3: os.environ[] assignment
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Assign):
+                    for target in node.targets:
+                        if isinstance(target, ast.Subscript):
+                            # Check if it's os.environ[...]
+                            if isinstance(target.value, ast.Attribute):
+                                if (isinstance(target.value.value, ast.Name) and 
+                                    target.value.value.id == 'os' and 
+                                    target.value.attr == 'environ'):
+                                    line_num = node.lineno
+                                    findings.append(Finding(
+                                        ksi_id=self.KSI_ID,
+                                        title="Runtime environment modification",
+                                        description=f"os.environ assignment at line {line_num} bypasses version control (NIST CM-2)",
+                                        severity=Severity.MEDIUM,
+                                        file_path=file_path,
+                                        line_number=line_num,
+                                        code_snippet=self._get_snippet(lines, line_num),
+                                        remediation="Set environment variables at container startup:\n"
+                                                   "# In Dockerfile or docker-compose.yml\n"
+                                                   "ENV SETTING=value"
+                                    ))
+            
+            # Pattern 4: config.__dict__[] assignment
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Assign):
+                    for target in node.targets:
+                        if isinstance(target, ast.Subscript):
+                            # Check for .__dict__[...]
+                            if isinstance(target.value, ast.Attribute) and target.value.attr == '__dict__':
+                                # Check if the object name contains 'config'
+                                if isinstance(target.value.value, ast.Name):
+                                    obj_name = target.value.value.id
+                                    if 'config' in obj_name.lower():
+                                        line_num = node.lineno
+                                        findings.append(Finding(
+                                            ksi_id=self.KSI_ID,
+                                            title="Runtime configuration modification",
+                                            description=f"config.__dict__ modification at line {line_num} bypasses version control (NIST CM-2)",
+                                            severity=Severity.MEDIUM,
+                                            file_path=file_path,
+                                            line_number=line_num,
+                                            code_snippet=self._get_snippet(lines, line_num),
+                                            remediation="Use immutable config loaded at startup"
+                                        ))
+        
+        except SyntaxError:
+            # Fallback to regex for invalid syntax
+            return self._python_regex_fallback(code, file_path, lines)
+        
+        return findings
+    
+    def _python_regex_fallback(self, code: str, file_path: str, lines: List[str]) -> List[Finding]:
+        """Regex fallback for Python when AST fails"""
+        findings = []
+        
+        # Hot reload patterns
+        reload_patterns = [
+            (r'use_reloader\s*=\s*True', 'use_reloader parameter'),
+            (r'reload\s*=\s*True', 'reload parameter'),
+            (r'debug\s*=\s*True', 'debug mode'),
+        ]
+        for pattern, desc in reload_patterns:
+            for match in re.finditer(pattern, code):
+                line_num = code[:match.start()].count('\n') + 1
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Hot reload enabled (Regex Fallback)",
+                    description=f"{desc} at line {line_num} violates immutable deployment",
+                    severity=Severity.HIGH,
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=self._get_snippet(lines, line_num),
+                    remediation="Disable hot reload, use CI/CD for changes"
+                ))
+        
+        # Runtime config modification
+        config_patterns = [
+            r'setattr\(.*config',
+            r'config\.__dict__\[',
+            r'os\.environ\[.*\]\s*=',
+        ]
+        for pattern in config_patterns:
+            for match in re.finditer(pattern, code, re.IGNORECASE):
+                line_num = code[:match.start()].count('\n') + 1
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Runtime configuration modification (Regex Fallback)",
+                    description=f"Config modification at line {line_num} bypasses version control",
+                    severity=Severity.MEDIUM,
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=self._get_snippet(lines, line_num),
+                    remediation="Use environment variables set at deployment"
+                ))
         
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for KSI-CMT-02 compliance.
-        
-        Frameworks: ASP.NET Core, Entity Framework, Azure SDK
-        
-        Detects:
-        - Hot reload enabled in production
-        - Direct configuration modification at runtime
-        - Mutable deployment patterns
-        """
+        """C#: Runtime compilation, hot reload"""
         findings = []
         lines = code.split('\n')
         
-        # Pattern 1: Hot reload enabled (MEDIUM)
-        if re.search(r'AddRazorRuntimeCompilation|UseRazorRuntimeCompilation', code, re.IGNORECASE):
-            line_num = self._find_line(lines, r'RazorRuntimeCompilation')
-            findings.append(Finding(
-                severity=Severity.MEDIUM,
-                title="Razor Runtime Compilation Enabled (Violates Immutable Deployment)",
-                description=(
-                    f"Razor runtime compilation at line {line_num}. Runtime compilation allows "
-                    f"view changes without redeployment, violating KSI-CMT-02's requirement for "
-                    f"immutable, version-controlled deployments. All changes should go through "
-                    f"CI/CD with proper versioning."
-                ),
-                file_path=file_path,
-                line_number=line_num,
-                snippet=self._get_snippet(lines, line_num),
-                remediation=(
-                    "Disable runtime compilation in production:\n"
-                    "if (env.IsDevelopment()) {\n"
-                    "    services.AddRazorPages().AddRazorRuntimeCompilation();\n"
-                    "} else {\n"
-                    "    services.AddRazorPages();\n"
-                    "}\n"
-                    "Precompile views during build for immutable deployments."
-                ),
-                ksi_id=self.KSI_ID
-            ))
+        # Razor runtime compilation
+        if re.search(r'AddRazorRuntimeCompilation|UseRazorRuntimeCompilation', code):
+            for match in re.finditer(r'(AddRazorRuntimeCompilation|UseRazorRuntimeCompilation)', code):
+                line_num = code[:match.start()].count('\n') + 1
+                context = self._get_context(lines, line_num, 5)
+                
+                # Check if development-only
+                is_dev_only = bool(re.search(r'IsDevelopment|#if DEBUG', context))
+                if not is_dev_only:
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="Razor runtime compilation enabled",
+                        description=f"Runtime compilation at line {line_num} violates immutable deployment",
+                        severity=Severity.HIGH,
+                        file_path=file_path,
+                        line_number=line_num,
+                        code_snippet=self._get_snippet(lines, line_num),
+                        remediation="Limit to development only: if (env.IsDevelopment())"
+                    ))
+        
+        # Hot reload
+        if re.search(r'UseHotReload|EnableHotReload', code):
+            for match in re.finditer(r'(UseHotReload|EnableHotReload)', code):
+                line_num = code[:match.start()].count('\n') + 1
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Hot reload enabled",
+                    description=f"Hot reload at line {line_num} allows runtime changes",
+                    severity=Severity.HIGH,
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=self._get_snippet(lines, line_num),
+                    remediation="Disable hot reload in production (CM-3)"
+                ))
+        
+        # Runtime config modification
+        if re.search(r'Configuration\[.*\]\s*=', code, re.IGNORECASE):
+            for match in re.finditer(r'Configuration\[.*\]\s*=', code, re.IGNORECASE):
+                line_num = code[:match.start()].count('\n') + 1
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Runtime configuration modification",
+                    description=f"Config change at line {line_num} bypasses version control",
+                    severity=Severity.MEDIUM,
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=self._get_snippet(lines, line_num),
+                    remediation="Set configuration at deployment time (CM-2)"
+                ))
         
         return findings
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for KSI-CMT-02 compliance.
-        
-        Frameworks: Spring Boot, Spring Security, Azure SDK
-        
-        Detects:
-        - Spring Boot DevTools in production
-        - Hot reload/live reload enabled
-        - JRebel or similar hot-swap tools
-        """
+        """Java: Hot swap, runtime config changes"""
         findings = []
         lines = code.split('\n')
         
-        # Pattern 1: Spring Boot DevTools in production dependencies (MEDIUM)
-        if re.search(r'<artifactId>spring-boot-devtools</artifactId>', code) and not re.search(r'<scope>.*runtime.*</scope>', code):
-            line_num = self._find_line(lines, r'spring-boot-devtools')
+        # Spring DevTools (hot swap)
+        if re.search(r'spring-boot-devtools|DevToolsPropertyDefaultsPostProcessor', code):
+            line_num = self._find_line(lines, 'devtools')
             findings.append(Finding(
-                severity=Severity.MEDIUM,
-                title="Spring Boot DevTools Included (Enables Mutable Deployments)",
-                description=(
-                    f"Spring Boot DevTools at line {line_num}. DevTools enables automatic restarts "
-                    f"and live reload, allowing runtime changes without proper redeployment. This "
-                    f"violates KSI-CMT-02's requirement for immutable, version-controlled deployments."
-                ),
+                ksi_id=self.KSI_ID,
+                title="Spring DevTools enabled",
+                description=f"DevTools at line {line_num} enables hot swap in production",
+                severity=Severity.HIGH,
                 file_path=file_path,
                 line_number=line_num,
-                snippet=self._get_snippet(lines, line_num),
-                remediation=(
-                    "Exclude DevTools from production:\n"
-                    "<dependency>\n"
-                    "  <groupId>org.springframework.boot</groupId>\n"
-                    "  <artifactId>spring-boot-devtools</artifactId>\n"
-                    "  <scope>runtime</scope>\n"
-                    "  <optional>true</optional>\n"
-                    "</dependency>\n"
-                    "Or remove completely from production builds using Maven profiles."
-                ),
-                ksi_id=self.KSI_ID
+                code_snippet=self._get_snippet(lines, line_num),
+                remediation="Exclude devtools from production builds"
             ))
+        
+        # Runtime config modification
+        config_patterns = [
+            r'System\.setProperty\(',
+            r'Environment\.setProperty\(',
+        ]
+        for pattern in config_patterns:
+            for match in re.finditer(pattern, code):
+                line_num = code[:match.start()].count('\n') + 1
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Runtime system property modification",
+                    description=f"System property change at line {line_num} bypasses version control",
+                    severity=Severity.MEDIUM,
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=self._get_snippet(lines, line_num),
+                    remediation="Set properties at JVM startup (CM-2)"
+                ))
         
         return findings
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for KSI-CMT-02 compliance.
-        
-        Frameworks: Express, NestJS, Next.js, React, Angular, Azure SDK
-        
-        Detects:
-        - Hot module replacement (HMR) in production
-        - Nodemon or similar watch tools
-        - Live reload configurations
-        """
+        """TypeScript: Hot module reload, runtime config"""
         findings = []
         lines = code.split('\n')
         
-        # Pattern 1: Hot module replacement in production (MEDIUM)
-        if re.search(r'hot:\s*true|webpack\.HotModuleReplacementPlugin', code):
-            line_num = self._find_line(lines, r'hot:\s*true|HotModuleReplacementPlugin')
-            findings.append(Finding(
-                severity=Severity.MEDIUM,
-                title="Hot Module Replacement Enabled (Violates Immutable Deployment)",
-                description=(
-                    f"Hot Module Replacement (HMR) at line {line_num}. HMR allows runtime code "
-                    f"updates without full redeployment, violating KSI-CMT-02's requirement for "
-                    f"immutable, version-controlled deployments. All changes should go through CI/CD."
-                ),
-                file_path=file_path,
-                line_number=line_num,
-                snippet=self._get_snippet(lines, line_num),
-                remediation=(
-                    "Disable HMR in production webpack.config.js:\n"
-                    "module.exports = {\n"
-                    "  devServer: {\n"
-                    "    hot: process.env.NODE_ENV !== 'production'\n"
-                    "  }\n"
-                    "};\n"
-                    "Or use separate webpack.prod.js configuration without HMR."
-                ),
-                ksi_id=self.KSI_ID
-            ))
+        # Hot module replacement
+        hmr_patterns = [
+            r'hot:\s*true',
+            r'module\.hot',
+            r'if\s*\(module\.hot\)',
+        ]
+        for pattern in hmr_patterns:
+            for match in re.finditer(pattern, code):
+                line_num = code[:match.start()].count('\n') + 1
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Hot module replacement enabled",
+                    description=f"HMR at line {line_num} allows runtime changes",
+                    severity=Severity.HIGH,
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=self._get_snippet(lines, line_num),
+                    remediation="Disable HMR in production builds (CM-3)"
+                ))
         
-        # Pattern 2: Nodemon in production scripts (MEDIUM)
-        if 'package.json' in file_path.lower() and re.search(r'"start":\s*"nodemon', code):
-            line_num = self._find_line(lines, r'"start".*nodemon')
-            findings.append(Finding(
-                severity=Severity.MEDIUM,
-                title="Nodemon Used for Production Start Script",
-                description=(
-                    f"Nodemon in start script at line {line_num}. Nodemon watches for file changes "
-                    f"and auto-restarts, allowing runtime modifications without proper redeployment. "
-                    f"This violates immutable deployment principles."
-                ),
-                file_path=file_path,
-                line_number=line_num,
-                snippet=self._get_snippet(lines, line_num),
-                remediation=(
-                    "Use node directly for production:\n"
-                    "\"scripts\": {\n"
-                    "  \"start\": \"node dist/main.js\",\n"
-                    "  \"dev\": \"nodemon src/main.ts\"\n"
-                    "}\n"
-                    "Reserve nodemon for development only."
-                ),
-                ksi_id=self.KSI_ID
-            ))
+        # Runtime config modification
+        if re.search(r'process\.env\[.*\]\s*=', code):
+            for match in re.finditer(r'process\.env\[.*\]\s*=', code):
+                line_num = code[:match.start()].count('\n') + 1
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Runtime environment modification",
+                    description=f"process.env modification at line {line_num} bypasses version control",
+                    severity=Severity.MEDIUM,
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=self._get_snippet(lines, line_num),
+                    remediation="Set environment variables at container startup"
+                ))
         
         return findings
     
-    # ============================================================================
-    # INFRASTRUCTURE AS CODE ANALYZERS
-    # ============================================================================
-    
     def analyze_bicep(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Bicep IaC for KSI-CMT-02 compliance.
-        
-        Detects:
-        - Mutable deployment configurations
-        - Missing immutability settings
-        - Resources configured for in-place updates
-        """
+        """Bicep: Mutable VM operations, manual scaling"""
         findings = []
         lines = code.split('\n')
         
-        # Pattern 1: Storage Account without immutability policy (LOW)
-        has_storage = re.search(r"'Microsoft\.Storage/storageAccounts", code)
-        has_immutability = re.search(r'immutabilityPolicy|allowProtectedAppendWrites', code)
-        
-        if has_storage and not has_immutability:
-            line_num = self._find_line(lines, r"Microsoft\.Storage/storageAccounts")
+        # VM extensions (mutable operations)
+        if re.search(r"Microsoft\.Compute/virtualMachines/extensions", code):
+            line_num = self._find_line(lines, 'virtualMachines/extensions')
             findings.append(Finding(
-                severity=Severity.LOW,
-                title="Storage Account Without Immutability Policy",
-                description=(
-                    f"Storage account at line {line_num} without immutability policy. "
-                    f"For compliance audit logs and critical data, consider immutable storage "
-                    f"to prevent unauthorized modifications and ensure version-controlled changes."
-                ),
+                ksi_id=self.KSI_ID,
+                title="VM extension (mutable operation)",
+                description=f"VM extension at line {line_num} modifies running VM instead of redeploying",
+                severity=Severity.MEDIUM,
                 file_path=file_path,
                 line_number=line_num,
-                snippet=self._get_snippet(lines, line_num),
-                remediation=(
-                    "Add immutability policy for critical containers:\n"
-                    "resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-01-01' = {\n"
-                    "  name: 'default'\n"
-                    "  parent: storageAccount\n"
-                    "}\n"
-                    "resource container 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {\n"
-                    "  name: 'audit-logs'\n"
-                    "  parent: blobService\n"
-                    "  properties: {\n"
-                    "    immutableStorageWithVersioning: {\n"
-                    "      enabled: true\n"
-                    "    }\n"
-                    "  }\n"
-                    "}"
-                ),
-                ksi_id=self.KSI_ID
+                code_snippet=self._get_snippet(lines, line_num),
+                remediation="Use immutable VM scale sets with custom images (CM-3)"
             ))
+        
+        # Manual scaling (not autoscale)
+        if re.search(r"Microsoft\.Compute/virtualMachineScaleSets", code):
+            has_autoscale = bool(re.search(r"Microsoft\.Insights/autoscalesettings", code))
+            if not has_autoscale:
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="VMSS without autoscale",
+                    description="VM scale set without autoscale requires manual capacity changes",
+                    severity=Severity.LOW,
+                    file_path=file_path,
+                    line_number=1,
+                    code_snippet="VMSS detected",
+                    remediation="Add autoscalesettings for immutable scaling (CM-2)"
+                ))
         
         return findings
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Terraform IaC for KSI-CMT-02 compliance.
-        
-        Detects:
-        - Mutable deployment configurations
-        - Missing immutability settings
-        - Resources configured for in-place updates
-        """
+        """Terraform: Mutable operations, manual changes"""
         findings = []
         lines = code.split('\n')
         
-        # Pattern 1: Storage Account without immutability (LOW)
-        has_storage = re.search(r'resource\s+"azurerm_storage_account"', code)
-        has_container_immutability = re.search(r'immutability_policy|azurerm_storage_container.*immutable', code)
-        
-        if has_storage and not has_container_immutability:
-            line_num = self._find_line(lines, r'azurerm_storage_account')
+        # VM extensions
+        if re.search(r'azurerm_virtual_machine_extension', code):
+            line_num = self._find_line(lines, 'virtual_machine_extension')
             findings.append(Finding(
-                severity=Severity.LOW,
-                title="Storage Account Without Immutability Policy",
-                description=(
-                    f"Storage account at line {line_num} without immutability policy configuration. "
-                    f"For compliance audit logs and critical data, immutable storage prevents "
-                    f"unauthorized modifications and ensures version-controlled changes."
-                ),
+                ksi_id=self.KSI_ID,
+                title="VM extension (mutable operation)",
+                description=f"VM extension at line {line_num} modifies running VM",
+                severity=Severity.MEDIUM,
                 file_path=file_path,
                 line_number=line_num,
-                snippet=self._get_snippet(lines, line_num),
-                remediation=(
-                    "Add immutability policy to containers:\n"
-                    "resource \"azurerm_storage_container\" \"audit_logs\" {\n"
-                    "  name                  = \"audit-logs\"\n"
-                    "  storage_account_name  = azurerm_storage_account.example.name\n"
-                    "  container_access_type = \"private\"\n"
-                    "}\n"
-                    "resource \"azurerm_storage_management_policy\" \"example\" {\n"
-                    "  storage_account_id = azurerm_storage_account.example.id\n"
-                    "  rule {\n"
-                    "    name    = \"immutability\"\n"
-                    "    enabled = true\n"
-                    "    filters {\n"
-                    "      blob_types = [\"blockBlob\"]\n"
-                    "    }\n"
-                    "  }\n"
-                    "}"
-                ),
-                ksi_id=self.KSI_ID
+                code_snippet=self._get_snippet(lines, line_num),
+                remediation="Use immutable infrastructure with custom images"
             ))
         
-        return findings
-    
-    # ============================================================================
-    # CI/CD PIPELINE ANALYZERS
-    # ============================================================================
-    
-    def analyze_github_actions(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitHub Actions workflow for KSI-CMT-02 compliance.
-        
-        TODO: Implement detection logic if applicable.
-        """
-        findings = []
-        
-        # TODO: Implement GitHub Actions detection if applicable
-        
-        return findings
-    
-    def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Azure Pipelines YAML for KSI-CMT-02 compliance.
-        
-        TODO: Implement detection logic if applicable.
-        """
-        findings = []
-        
-        # TODO: Implement Azure Pipelines detection if applicable
+        # Manual provisioners (anti-pattern)
+        if re.search(r'provisioner\s+"(remote-exec|local-exec)"', code):
+            for match in re.finditer(r'provisioner\s+"(remote-exec|local-exec)"', code):
+                line_num = code[:match.start()].count('\n') + 1
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Manual provisioner (anti-pattern)",
+                    description=f"Provisioner at line {line_num} performs mutable operations",
+                    severity=Severity.HIGH,
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=self._get_snippet(lines, line_num),
+                    remediation="Use immutable images or init scripts (CM-3, CM-5)"
+                ))
         
         return findings
-    
-    def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitLab CI YAML for KSI-CMT-02 compliance.
-        
-        TODO: Implement detection logic if applicable.
-        """
-        findings = []
-        
-        # TODO: Implement GitLab CI detection if applicable
-        
-        return findings
-    
-    # ============================================================================
-    # HELPER METHODS
-    # ============================================================================
     
     def _find_line(self, lines: List[str], pattern: str) -> int:
-        """Find line number matching regex pattern (case-insensitive)."""
-        try:
-            regex = re.compile(pattern, re.IGNORECASE)
-            for i, line in enumerate(lines, 1):
-                if regex.search(line):
-                    return i
-        except re.error:
-            # Fallback to literal string search if pattern is invalid
-            for i, line in enumerate(lines, 1):
-                if pattern.lower() in line.lower():
-                    return i
-        return 0
+        """Find line number containing pattern"""
+        for i, line in enumerate(lines, 1):
+            if re.search(pattern, line, re.IGNORECASE):
+                return i
+        return 1
     
-    def _get_snippet(self, lines: List[str], line_number: int, context: int = 2) -> str:
-        """Get code snippet around line number."""
-        if line_number == 0:
-            return ""
-        start = max(0, line_number - context - 1)
-        end = min(len(lines), line_number + context)
+    def _get_context(self, lines: List[str], line_num: int, context_lines: int = 5) -> str:
+        """Get context around line"""
+        start = max(0, line_num - context_lines - 1)
+        end = min(len(lines), line_num + context_lines)
         return '\n'.join(lines[start:end])
+    
+    def _get_snippet(self, lines: List[str], line_num: int, context: int = 3) -> str:
+        """Get code snippet around line"""
+        if not lines or line_num < 1:
+            return ""
+        start = max(0, line_num - context - 1)
+        end = min(len(lines), line_num + context)
+        return '\n'.join(lines[start:end])
+

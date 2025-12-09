@@ -12,6 +12,7 @@ import re
 from typing import List
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
+from ..ast_utils import ASTParser, CodeLanguage
 
 
 class KSI_TPR_03_Analyzer(BaseKSIAnalyzer):
@@ -59,17 +60,30 @@ class KSI_TPR_03_Analyzer(BaseKSIAnalyzer):
     FAMILY_NAME = "Third-Party Information Resources"
     IMPACT_LOW = True
     IMPACT_MODERATE = True
-    NIST_CONTROLS = ["ac-20", "ra-3.1", "sa-9", "sa-10", "sa-11", "sa-15.3", "sa-22", "si-7.1", "sr-5", "sr-6"]
+    NIST_CONTROLS = [
+        ("ac-20", "Use of External Systems"),
+        ("ra-3.1", "Supply Chain Risk Assessment"),
+        ("sa-9", "External System Services"),
+        ("sa-10", "Developer Configuration Management"),
+        ("sa-11", "Developer Testing and Evaluation"),
+        ("sa-15.3", "Criticality Analysis"),
+        ("sa-22", "Unsupported System Components"),
+        ("si-7.1", "Integrity Checks"),
+        ("sr-5", "Acquisition Strategies, Tools, and Methods"),
+        ("sr-6", "Supplier Assessments and Reviews")
+    ]
     CODE_DETECTABLE = True
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RETIRED = False
     
-    def __init__(self):
+    def __init__(self, language=None, ksi_id: str = "", ksi_name: str = "", ksi_statement: str = ""):
+        """Initialize analyzer with backward-compatible API."""
         super().__init__(
-            ksi_id=self.KSI_ID,
-            ksi_name=self.KSI_NAME,
-            ksi_statement=self.KSI_STATEMENT
+            ksi_id=ksi_id or self.KSI_ID,
+            ksi_name=ksi_name or self.KSI_NAME,
+            ksi_statement=ksi_statement or self.KSI_STATEMENT
         )
+        self.direct_language = language
     
     # ============================================================================
     # APPLICATION LANGUAGE ANALYZERS
@@ -87,10 +101,117 @@ class KSI_TPR_03_Analyzer(BaseKSIAnalyzer):
         - Missing integrity checks (pip --require-hashes)
         - Unpinned dependencies (pip install without version)
         """
+        # Try AST-based analysis first
+        parser = ASTParser(CodeLanguage.PYTHON)
+        tree = parser.parse(code)
+        if tree:
+            return self._analyze_python_ast(code, file_path, parser, tree)
+        
+        # Fallback to regex
+        return self._analyze_python_regex(code, file_path)
+    
+    def _analyze_python_ast(self, code: str, file_path: str, parser, tree) -> List[Finding]:
+        """AST-based analysis for Python using tree-sitter."""
+        findings = []
+        lines = code.split('\n')
+        code_bytes = code.encode('utf-8')
+        
+        # Pattern 1: subprocess.run/call with pip/HTTP (AST detection)
+        for call_node in parser.find_nodes_by_type(tree.root_node, "call"):
+            call_text = parser.get_node_text(call_node, code_bytes)
+            
+            # Check for subprocess calls with pip and HTTP
+            if 'subprocess' in call_text and 'pip' in call_text and 'http://' in call_text:
+                line_num = code[:call_node.start_byte].count('\n') + 1
+                findings.append(Finding(
+                    severity=Severity.HIGH,
+                    title="Insecure Package Source (HTTP PyPI Mirror)",
+                    description=(
+                        f"HTTP package index URL at line {line_num}. Using HTTP for package downloads "
+                        f"exposes supply chain to man-in-the-middle attacks where attackers can inject "
+                        f"malicious packages. Use HTTPS to protect package integrity."
+                    ),
+                    file_path=file_path,
+                    line_number=line_num,
+                    snippet=self._get_snippet(lines, line_num),
+                    remediation=(
+                        "Use HTTPS for package sources:\n"
+                        "pip install --index-url https://pypi.org/simple/ package_name\n"
+                        "Or use default PyPI (already HTTPS): pip install package_name"
+                    ),
+                    ksi_id=self.KSI_ID
+                ))
+                break
+        
+        # Pattern 2: requirements.txt files - use regex (file content analysis)
+        if 'requirements.txt' in file_path.lower():
+            findings.extend(self._analyze_python_requirements(code, lines, file_path))
+        
+        return findings
+    
+    def _analyze_python_requirements(self, code: str, lines: List[str], file_path: str) -> List[Finding]:
+        """Analyze requirements.txt for missing hashes."""
+        findings = []
+        
+        if re.search(r'^\w+[<>=]', code, re.MULTILINE):
+            has_hashes = re.search(r'--hash=', code)
+            if not has_hashes:
+                line_num = self._find_line(lines, r'^\w+[<>=]')
+                findings.append(Finding(
+                    severity=Severity.MEDIUM,
+                    title="Missing Package Integrity Checks",
+                    description=(
+                        f"Requirements file at line {line_num} without hash verification. "
+                        f"Hashes protect against supply chain attacks by ensuring downloaded packages "
+                        f"match expected content. Without hashes, compromised packages could be installed."
+                    ),
+                    file_path=file_path,
+                    line_number=line_num,
+                    snippet=self._get_snippet(lines, line_num),
+                    remediation=(
+                        "Generate hashed requirements:\n"
+                        "pip-compile --generate-hashes requirements.in\n"
+                        "Or use pip-tools: pip install --require-hashes -r requirements.txt\n"
+                        "Example format: package==1.2.3 --hash=sha256:abc123..."
+                    ),
+                    ksi_id=self.KSI_ID
+                ))
+        
+        return findings
+    
+    def _analyze_python_regex(self, code: str, file_path: str) -> List[Finding]:
+        """Fallback regex-based analysis for Python."""
+        # Note: Using regex - fallback when tree-sitter unavailable
         findings = []
         lines = code.split('\n')
         
         # Pattern 1: HTTP PyPI mirror usage (HIGH)
+        if re.search(r'--index-url\s+http://', code) or re.search(r'--extra-index-url\s+http://', code):
+            line_num = self._find_line(lines, r'--index-url.*http://|--extra-index-url.*http://')
+            findings.append(Finding(
+                severity=Severity.HIGH,
+                title="Insecure Package Source (HTTP PyPI Mirror)",
+                description=(
+                    f"HTTP package index URL at line {line_num}. Using HTTP for package downloads "
+                    f"exposes supply chain to man-in-the-middle attacks where attackers can inject "
+                    f"malicious packages. Use HTTPS to protect package integrity."
+                ),
+                file_path=file_path,
+                line_number=line_num,
+                snippet=self._get_snippet(lines, line_num),
+                remediation=(
+                    "Use HTTPS for package sources:\n"
+                    "pip install --index-url https://pypi.org/simple/ package_name\n"
+                    "Or use default PyPI (already HTTPS): pip install package_name"
+                ),
+                ksi_id=self.KSI_ID
+            ))
+        
+        # Pattern 2: requirements.txt files
+        if 'requirements.txt' in file_path.lower():
+            findings.extend(self._analyze_python_requirements(code, lines, file_path))
+        
+        return findings
         if re.search(r'--index-url\s+http://', code) or re.search(r'--extra-index-url\s+http://', code):
             line_num = self._find_line(lines, r'--index-url.*http://|--extra-index-url.*http://')
             findings.append(Finding(
@@ -177,7 +298,9 @@ class KSI_TPR_03_Analyzer(BaseKSIAnalyzer):
             ))
         
         # Pattern 2: Disabled package signature validation (MEDIUM)
-        if re.search(r'<signatureValidationMode>.*none.*</signatureValidationMode>', code, re.IGNORECASE):
+        # Check both element format and attribute format
+        if (re.search(r'<signatureValidationMode>.*none.*</signatureValidationMode>', code, re.IGNORECASE) or
+            re.search(r'key="signatureValidationMode"\s+value="none"', code, re.IGNORECASE)):
             line_num = self._find_line(lines, r'signatureValidationMode.*none')
             findings.append(Finding(
                 severity=Severity.MEDIUM,
@@ -193,6 +316,8 @@ class KSI_TPR_03_Analyzer(BaseKSIAnalyzer):
                 remediation=(
                     "Enable package signature validation in nuget.config:\n"
                     "<signatureValidationMode>require</signatureValidationMode>\n"
+                    "Or use:\n"
+                    '<add key="signatureValidationMode" value="require" />\n'
                     "This ensures packages are signed by trusted publishers."
                 ),
                 ksi_id=self.KSI_ID
@@ -278,7 +403,9 @@ class KSI_TPR_03_Analyzer(BaseKSIAnalyzer):
         lines = code.split('\n')
         
         # Pattern 1: HTTP npm registry (HIGH)
-        if '.npmrc' in file_path.lower() and re.search(r'registry\s*=\s*http://', code):
+        # Check both .npmrc format and package.json publishConfig format
+        if ('.npmrc' in file_path.lower() and re.search(r'registry\s*=\s*http://', code)) or \
+           ('package.json' in file_path.lower() and re.search(r'"registry"\s*:\s*"http://', code)):
             line_num = self._find_line(lines, r'registry.*http://')
             findings.append(Finding(
                 severity=Severity.HIGH,
@@ -292,8 +419,9 @@ class KSI_TPR_03_Analyzer(BaseKSIAnalyzer):
                 line_number=line_num,
                 snippet=self._get_snippet(lines, line_num),
                 remediation=(
-                    "Use HTTPS for npm registry in .npmrc:\n"
-                    "registry=https://registry.npmjs.org/\n"
+                    "Use HTTPS for npm registry:\n"
+                    ".npmrc: registry=https://registry.npmjs.org/\n"
+                    'package.json: "registry": "https://registry.npmjs.org"\n'
                     "Remove HTTP registry configurations."
                 ),
                 ksi_id=self.KSI_ID
@@ -523,3 +651,4 @@ class KSI_TPR_03_Analyzer(BaseKSIAnalyzer):
         start = max(0, line_number - context - 1)
         end = min(len(lines), line_number + context)
         return '\n'.join(lines[start:end])
+

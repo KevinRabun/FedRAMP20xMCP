@@ -8,6 +8,7 @@ Source: https://github.com/FedRAMP/docs/blob/main/data/FRMR.KSI.key-security-ind
 Version: 25.11C (Published: 2025-12-01)
 """
 
+import ast
 import re
 from typing import List
 from ..base import Finding, Severity
@@ -53,17 +54,24 @@ class KSI_CMT_03_Analyzer(BaseKSIAnalyzer):
     FAMILY_NAME = "Change Management"
     IMPACT_LOW = True
     IMPACT_MODERATE = True
-    NIST_CONTROLS = ["cm-3", "cm-3.2", "cm-4.2", "si-2"]
+    NIST_CONTROLS = [
+        ("cm-3", "Configuration Change Control"),
+        ("cm-3.2", "Testing, Validation, and Documentation of Changes"),
+        ("cm-4.2", "Verification of Controls"),
+        ("si-2", "Flaw Remediation")
+    ]
     CODE_DETECTABLE = True
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RETIRED = False
     
-    def __init__(self):
+    def __init__(self, language=None, ksi_id: str = "", ksi_name: str = "", ksi_statement: str = ""):
+        """Initialize analyzer with backward-compatible API."""
         super().__init__(
-            ksi_id=self.KSI_ID,
-            ksi_name=self.KSI_NAME,
-            ksi_statement=self.KSI_STATEMENT
+            ksi_id=ksi_id or self.KSI_ID,
+            ksi_name=ksi_name or self.KSI_NAME,
+            ksi_statement=ksi_statement or self.KSI_STATEMENT
         )
+        self.direct_language = language
     
     # ============================================================================
     # APPLICATION LANGUAGE ANALYZERS
@@ -71,9 +79,9 @@ class KSI_CMT_03_Analyzer(BaseKSIAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for KSI-CMT-03 compliance.
+        Analyze Python code for KSI-CMT-03 compliance using AST.
         
-        Frameworks: Flask, Django, FastAPI, Azure SDK
+        Frameworks: Flask, Django, FastAPI, pytest, unittest
         
         Detects:
         - Missing test files/functions
@@ -86,29 +94,172 @@ class KSI_CMT_03_Analyzer(BaseKSIAnalyzer):
         # Check if this is a test file
         is_test_file = bool(re.search(r'(test_.*\.py|.*_test\.py|tests/)', file_path, re.IGNORECASE))
         
+        try:
+            tree = ast.parse(code)
+        except SyntaxError:
+            # Fallback to regex if AST parsing fails
+            return self._python_regex_fallback(code, lines, file_path, is_test_file)
+        
+        if is_test_file:
+            # Check for test framework imports using AST
+            has_test_framework = False
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    for alias in node.names:
+                        if alias.name in ('pytest', 'unittest'):
+                            has_test_framework = True
+                            break
+                elif isinstance(node, ast.ImportFrom):
+                    if node.module in ('pytest', 'unittest'):
+                        has_test_framework = True
+                        break
+            
+            if not has_test_framework:
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Test File Without Testing Framework",
+                    description=(
+                        f"Test file '{file_path}' does not import pytest or unittest. "
+                        f"KSI-CMT-03 requires automated testing framework (CM-3, CM-4.2, SI-2) - "
+                        f"proper test frameworks enable persistent validation of changes."
+                    ),
+                    severity=Severity.MEDIUM,
+                    file_path=file_path,
+                    line_number=1,
+                    code_snippet="",
+                    remediation=(
+                        "Import a test framework:\n\n"
+                        "import pytest\n"
+                        "# or\n"
+                        "import unittest\n\n"
+                        "class TestMyFeature(unittest.TestCase):\n"
+                        "    def test_something(self):\n"
+                        "        assert True"
+                    )
+                ))
+            
+            # Check for test functions/classes using AST
+            test_functions = []
+            test_classes = []
+            
+            for node in ast.walk(tree):
+                if isinstance(node, ast.FunctionDef):
+                    if node.name.startswith('test_'):
+                        test_functions.append((node.name, node.lineno))
+                elif isinstance(node, ast.ClassDef):
+                    if node.name.startswith('Test'):
+                        test_classes.append((node.name, node.lineno))
+            
+            if not test_functions and not test_classes:
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="No Test Functions Found",
+                    description=(
+                        f"Test file '{file_path}' does not contain test functions or classes. "
+                        f"KSI-CMT-03 requires automated testing (CM-3, CM-4.2) - "
+                        f"add test_* functions or Test* classes to validate changes."
+                    ),
+                    severity=Severity.HIGH,
+                    file_path=file_path,
+                    line_number=1,
+                    code_snippet="",
+                    remediation=(
+                        "Add test functions:\n\n"
+                        "def test_user_authentication():\n"
+                        "    user = authenticate('user@example.com', 'password')\n"
+                        "    assert user is not None\n"
+                        "    assert user.is_authenticated\n\n"
+                        "def test_data_validation():\n"
+                        "    result = validate_input('test data')\n"
+                        "    assert result.is_valid"
+                    )
+                ))
+            
+            # Check for assertions using AST
+            has_assertions = False
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Assert):
+                    has_assertions = True
+                    break
+                # Also check for unittest assertions (self.assert*)
+                elif isinstance(node, ast.Expr):
+                    if isinstance(node.value, ast.Call):
+                        if isinstance(node.value.func, ast.Attribute):
+                            if node.value.func.attr.startswith('assert'):
+                                has_assertions = True
+                                break
+            
+            if not has_assertions and (test_functions or test_classes):
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Test Function Without Assertions",
+                    description=(
+                        f"Test file '{file_path}' contains test functions but no assertions. "
+                        f"KSI-CMT-03 requires validation of expected behavior (CM-3.2, SI-2) - "
+                        f"tests must include assertions to verify correctness."
+                    ),
+                    severity=Severity.HIGH,
+                    file_path=file_path,
+                    line_number=test_functions[0][1] if test_functions else test_classes[0][1],
+                    code_snippet=self._get_snippet(lines, test_functions[0][1] if test_functions else test_classes[0][1]),
+                    remediation=(
+                        "Add assertions to validate behavior:\n\n"
+                        "def test_calculation():\n"
+                        "    result = calculate(2, 3)\n"
+                        "    assert result == 5, 'Expected 2 + 3 = 5'\n\n"
+                        "def test_error_handling():\n"
+                        "    with pytest.raises(ValueError):\n"
+                        "        process_invalid_input('')"
+                    )
+                ))
+        else:
+            # For non-test files, provide informational guidance
+            if not re.search(r'test', file_path, re.IGNORECASE):
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Consider Adding Test Coverage",
+                    description=(
+                        f"Source file '{file_path}' may need test coverage. "
+                        f"KSI-CMT-03 requires persistent testing and validation (CM-3, CM-4.2, SI-2)."
+                    ),
+                    severity=Severity.INFO,
+                    file_path=file_path,
+                    line_number=1,
+                    code_snippet="",
+                    remediation=(
+                        f"Create a corresponding test file (e.g., test_{file_path.split('/')[-1]}) with comprehensive tests:\n\n"
+                        "# tests/test_module.py\n"
+                        "import pytest\n"
+                        "from module import function_to_test\n\n"
+                        "def test_function_success():\n"
+                        "    result = function_to_test('valid input')\n"
+                        "    assert result is not None\n\n"
+                        "def test_function_error_handling():\n"
+                        "    with pytest.raises(ValueError):\n"
+                        "        function_to_test('invalid input')\n\n"
+                        "Run tests with coverage: pytest --cov=. --cov-report=html"
+                    )
+                ))
+        
+        return findings
+    
+    def _python_regex_fallback(self, code: str, lines: List[str], file_path: str, is_test_file: bool) -> List[Finding]:
+        """Fallback regex-based analysis when AST parsing fails."""
+        findings = []
+        
         if is_test_file:
             # Verify test framework imports
             has_test_framework = bool(re.search(r'(import pytest|import unittest|from unittest|from pytest)', code, re.IGNORECASE))
             if not has_test_framework:
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
-                    title="Missing Test Framework Import",
-                    description=f"Test file '{file_path}' does not import pytest or unittest. KSI-CMT-03 requires automated testing framework.",
+                    title="Missing Test Framework Import (Regex Fallback)",
+                    description=f"Test file '{file_path}' does not import pytest or unittest.",
                     severity=Severity.MEDIUM,
                     file_path=file_path,
                     line_number=0,
                     code_snippet="",
-                    remediation="""Import a test framework:
-
-```python
-import pytest
-# or
-import unittest
-
-class TestMyFeature(unittest.TestCase):
-    def test_something(self):
-        assert True
-```"""
+                    remediation="Import a test framework: import pytest or import unittest"
                 ))
             
             # Check for test functions/methods
@@ -116,24 +267,13 @@ class TestMyFeature(unittest.TestCase):
             if not has_test_functions:
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
-                    title="No Test Functions Found",
-                    description=f"Test file '{file_path}' does not contain test functions. Add test_* functions or Test* classes.",
+                    title="No Test Functions Found (Regex Fallback)",
+                    description=f"Test file '{file_path}' does not contain test functions.",
                     severity=Severity.HIGH,
                     file_path=file_path,
                     line_number=0,
                     code_snippet="",
-                    remediation="""Add test functions:
-
-```python
-def test_user_authentication():
-    user = authenticate("user@example.com", "password")
-    assert user is not None
-    assert user.is_authenticated
-
-def test_data_validation():
-    result = validate_input("test data")
-    assert result.is_valid
-```"""
+                    remediation="Add test functions starting with test_ or Test classes"
                 ))
             
             # Check for assertions
@@ -141,53 +281,13 @@ def test_data_validation():
             if not has_assertions:
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
-                    title="Missing Test Assertions",
-                    description=f"Test file '{file_path}' does not contain assertions. Tests must validate expected behavior.",
+                    title="Missing Test Assertions (Regex Fallback)",
+                    description=f"Test file '{file_path}' does not contain assertions.",
                     severity=Severity.HIGH,
                     file_path=file_path,
                     line_number=0,
                     code_snippet="",
-                    remediation="""Add assertions to validate behavior:
-
-```python
-def test_calculation():
-    result = calculate(2, 3)
-    assert result == 5, "Expected 2 + 3 = 5"
-    
-def test_error_handling():
-    with pytest.raises(ValueError):
-        process_invalid_input("")
-```"""
-                ))
-        else:
-            # For non-test files, check if there's a corresponding test file mentioned
-            # This is informational only
-            if not re.search(r'test', file_path, re.IGNORECASE):
-                findings.append(Finding(
-                    ksi_id=self.KSI_ID,
-                    title="Consider Adding Test Coverage",
-                    description=f"Source file '{file_path}' may need test coverage. KSI-CMT-03 requires persistent testing and validation.",
-                    severity=Severity.INFO,
-                    file_path=file_path,
-                    line_number=0,
-                    code_snippet="",
-                    remediation=f"""Create a corresponding test file (e.g., test_{file_path.split('/')[-1]}) with comprehensive tests:
-
-```python
-# tests/test_module.py
-import pytest
-from module import function_to_test
-
-def test_function_success():
-    result = function_to_test("valid input")
-    assert result is not None
-
-def test_function_error_handling():
-    with pytest.raises(ValueError):
-        function_to_test("invalid input")
-```
-
-Run tests with coverage: `pytest --cov=. --cov-report=html`"""
+                    remediation="Add assertions to validate behavior"
                 ))
         
         return findings
@@ -215,7 +315,7 @@ Run tests with coverage: `pytest --cov=. --cov-report=html`"""
             if not has_test_framework:
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
-                    title="Missing Test Framework Reference",
+                    title="Test File Without Testing Framework",
                     description=f"Test file '{file_path}' does not reference xUnit, NUnit, or MSTest. KSI-CMT-03 requires automated testing framework.",
                     severity=Severity.MEDIUM,
                     file_path=file_path,
@@ -236,19 +336,20 @@ public class UserServiceTests
 }
 ```"""
                 ))
-            
-            # Check for test attributes
-            has_test_attributes = bool(re.search(r'(\[Fact\]|\[Test\]|\[TestMethod\])', code, re.IGNORECASE))
-            if not has_test_attributes:
-                findings.append(Finding(
-                    ksi_id=self.KSI_ID,
-                    title="No Test Methods Found",
-                    description=f"Test file '{file_path}' does not contain test method attributes. Add [Fact], [Test], or [TestMethod] attributes.",
-                    severity=Severity.HIGH,
-                    file_path=file_path,
-                    line_number=0,
-                    code_snippet="",
-                    remediation="""Add test methods with attributes:
+            # Only check for test methods if framework is present
+            elif has_test_framework:
+                # Check for test attributes
+                has_test_attributes = bool(re.search(r'(\[Fact\]|\[Test\]|\[TestMethod\])', code, re.IGNORECASE))
+                if not has_test_attributes:
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="No Test Methods Found",
+                        description=f"Test file '{file_path}' does not contain test method attributes. Add [Fact], [Test], or [TestMethod] attributes.",
+                        severity=Severity.HIGH,
+                        file_path=file_path,
+                        line_number=0,
+                        code_snippet="",
+                        remediation="""Add test methods with attributes:
 
 ```csharp
 [Fact]
@@ -274,7 +375,7 @@ public void Add_VariousInputs_ReturnsExpectedResult(int a, int b, int expected)
             if not has_assertions:
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
-                    title="Missing Test Assertions",
+                    title="Test Function Without Assertions",
                     description=f"Test file '{file_path}' does not contain assertions. Tests must validate expected behavior.",
                     severity=Severity.HIGH,
                     file_path=file_path,
@@ -360,7 +461,7 @@ Run tests with coverage: `dotnet test --collect:"XPlat Code Coverage"`"""
             if not has_test_framework:
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
-                    title="Missing Test Framework Import",
+                    title="Test File Without Testing Framework",
                     description=f"Test file '{file_path}' does not import JUnit or TestNG. KSI-CMT-03 requires automated testing framework.",
                     severity=Severity.MEDIUM,
                     file_path=file_path,
@@ -383,15 +484,16 @@ public class UserServiceTest {
 }
 ```"""
                 ))
-            
-            # Check for @Test annotations
-            has_test_annotations = bool(re.search(r'@Test', code))
-            if not has_test_annotations:
-                findings.append(Finding(
-                    ksi_id=self.KSI_ID,
-                    title="No Test Methods Found",
-                    description=f"Test file '{file_path}' does not contain @Test annotations. Add test methods with @Test.",
-                    severity=Severity.HIGH,
+            # Only check for test methods if framework is present
+            elif has_test_framework:
+                # Check for @Test annotations
+                has_test_annotations = bool(re.search(r'@Test', code))
+                if not has_test_annotations:
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="No Test Methods Found",
+                        description=f"Test file '{file_path}' does not contain @Test annotations. Add test methods with @Test.",
+                        severity=Severity.HIGH,
                     file_path=file_path,
                     line_number=0,
                     code_snippet="",
@@ -422,7 +524,7 @@ public class CalculatorTest {
             if not has_assertions:
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
-                    title="Missing Test Assertions",
+                    title="Test Function Without Assertions",
                     description=f"Test file '{file_path}' does not contain assertions. Tests must validate expected behavior.",
                     severity=Severity.HIGH,
                     file_path=file_path,
@@ -496,12 +598,12 @@ Run tests with coverage: `mvn test jacoco:report`"""
         is_test_file = bool(re.search(r'(\.test\.(ts|js|tsx|jsx)|\.spec\.(ts|js|tsx|jsx)|__tests__/)', file_path, re.IGNORECASE))
         
         if is_test_file:
-            # Check for test framework imports
-            has_test_framework = bool(re.search(r'(from [\'"]jest|from [\'"]mocha|from [\'"]@testing-library|from [\'"]chai|describe\(|it\(|test\()', code, re.IGNORECASE))
+            # Check for test framework imports (not just usage)
+            has_test_framework = bool(re.search(r'(from [\'"]jest|from [\'"]mocha|from [\'"]@testing-library|from [\'"]chai|from [\'"]vitest|import .* from [\'"]jest|import .* from [\'"]mocha)', code, re.IGNORECASE))
             if not has_test_framework:
                 findings.append(Finding(
                     ksi_id=self.KSI_ID,
-                    title="Missing Test Framework",
+                    title="Test File Without Testing Framework",
                     description=f"Test file '{file_path}' does not use Jest, Mocha, or another test framework. KSI-CMT-03 requires automated testing.",
                     severity=Severity.MEDIUM,
                     file_path=file_path,
@@ -523,18 +625,20 @@ describe('UserService', () => {
 ```"""
                 ))
             
-            # Check for test blocks
-            has_test_blocks = bool(re.search(r'(describe\(|it\(|test\()', code))
-            if not has_test_blocks:
-                findings.append(Finding(
-                    ksi_id=self.KSI_ID,
-                    title="No Test Blocks Found",
-                    description=f"Test file '{file_path}' does not contain test blocks (describe/it/test). Add test cases.",
-                    severity=Severity.HIGH,
-                    file_path=file_path,
-                    line_number=0,
-                    code_snippet="",
-                    remediation="""Add test blocks:
+            # Only check for test blocks if framework is present
+            elif has_test_framework:
+                # Check for test blocks
+                has_test_blocks = bool(re.search(r'(describe\(|it\(|test\()', code))
+                if not has_test_blocks:
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="No Test Blocks Found",
+                        description=f"Test file '{file_path}' does not contain test blocks (describe/it/test). Add test cases.",
+                        severity=Severity.HIGH,
+                        file_path=file_path,
+                        line_number=0,
+                        code_snippet="",
+                        remediation="""Add test blocks:
 
 ```typescript
 describe('Calculator', () => {
@@ -547,20 +651,51 @@ describe('Calculator', () => {
     });
 });
 ```"""
-                ))
-            
-            # Check for assertions
-            has_assertions = bool(re.search(r'(expect\(|assert\(|should\.)', code, re.IGNORECASE))
-            if not has_assertions:
-                findings.append(Finding(
-                    ksi_id=self.KSI_ID,
-                    title="Missing Test Assertions",
-                    description=f"Test file '{file_path}' does not contain assertions. Tests must validate expected behavior.",
-                    severity=Severity.HIGH,
-                    file_path=file_path,
-                    line_number=0,
-                    code_snippet="",
-                    remediation="""Add assertions to validate behavior:
+                    ))
+                else:
+                    # Use AST to find individual test blocks and check for assertions
+                    from fedramp_20x_mcp.analyzers.ast_utils import ASTParser, CodeLanguage
+                    
+                    try:
+                        parser = ASTParser(CodeLanguage.JAVASCRIPT)
+                        tree = parser.parse(code)
+                        
+                        # Find all call expressions that might be test blocks
+                        call_expressions = parser.find_nodes_by_type(tree.root_node, "call_expression")
+                        
+                        code_bytes = code.encode('utf8')
+                        for call_expr in call_expressions:
+                            # Get the function being called
+                            identifier_node = None
+                            for child in call_expr.children:
+                                if child.type == "identifier":
+                                    identifier_node = child
+                                    break
+                            
+                            if identifier_node:
+                                func_name = parser.get_node_text(identifier_node, code_bytes)
+                                
+                                # Check if it's a test block (describe, it, test)
+                                if func_name in ['describe', 'it', 'test']:
+                                    # Get the function body (arrow function or regular function)
+                                    has_assertions_in_block = False
+                                    block_code = parser.get_node_text(call_expr, code_bytes)
+                                    
+                                    # Check for assertions in this specific block
+                                    if re.search(r'(expect\(|assert\(|should\.)', block_code, re.IGNORECASE):
+                                        has_assertions_in_block = True
+                                    
+                                    if not has_assertions_in_block:
+                                        line_num = call_expr.start_point[0] + 1
+                                        findings.append(Finding(
+                                            ksi_id=self.KSI_ID,
+                                            title="Test Function Without Assertions",
+                                            description=f"Test block '{func_name}' at line {line_num} does not contain assertions. Tests must validate expected behavior.",
+                                            severity=Severity.HIGH,
+                                            file_path=file_path,
+                                            line_number=line_num,
+                                            code_snippet=block_code[:100] + "..." if len(block_code) > 100 else block_code,
+                                            remediation="""Add assertions to validate behavior:
 
 ```typescript
 test('user creation', async () => {
@@ -574,7 +709,34 @@ test('error handling', async () => {
     await expect(createUser('')).rejects.toThrow('Invalid email');
 });
 ```"""
-                ))
+                                        ))
+                    except Exception:
+                        # Fallback to regex if AST parsing fails
+                        has_assertions = bool(re.search(r'(expect\(|assert\(|should\.)', code, re.IGNORECASE))
+                        if not has_assertions:
+                            findings.append(Finding(
+                                ksi_id=self.KSI_ID,
+                                title="Test Function Without Assertions",
+                                description=f"Test file '{file_path}' does not contain assertions. Tests must validate expected behavior.",
+                                severity=Severity.HIGH,
+                                file_path=file_path,
+                                line_number=0,
+                                code_snippet="",
+                                remediation="""Add assertions to validate behavior:
+
+```typescript
+test('user creation', async () => {
+    const user = await createUser('test@example.com');
+    expect(user).toBeDefined();
+    expect(user.email).toBe('test@example.com');
+    expect(user.isActive).toBe(true);
+});
+
+test('error handling', async () => {
+    await expect(createUser('')).rejects.toThrow('Invalid email');
+});
+```"""
+                            ))
         else:
             # For non-test files, suggest test coverage
             if not re.search(r'(test|spec)', file_path, re.IGNORECASE):
@@ -1055,3 +1217,4 @@ security:scan:
         start = max(0, line_number - context - 1)
         end = min(len(lines), line_number + context)
         return '\n'.join(lines[start:end])
+

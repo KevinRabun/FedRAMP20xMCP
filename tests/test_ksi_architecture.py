@@ -20,9 +20,9 @@ import os
 
 # Add project root to path
 
-from src.fedramp_20x_mcp.analyzers.ksi.ksi_iam_06 import KSI_IAM_06_Analyzer
-from src.fedramp_20x_mcp.analyzers.ksi.factory import get_factory
-from src.fedramp_20x_mcp.analyzers.base import Severity
+from fedramp_20x_mcp.analyzers.ksi.ksi_iam_06 import KSI_IAM_06_Analyzer as KSI_IAM_06_Analyzer
+from fedramp_20x_mcp.analyzers.ksi.factory import get_factory
+from fedramp_20x_mcp.analyzers.base import Severity
 
 def test_ksi_iam_06_metadata():
     """Test KSI-IAM-06 metadata is correct from official source."""
@@ -42,10 +42,9 @@ def test_ksi_iam_06_metadata():
     assert "ac-2" in metadata['controls'], "Missing NIST control ac-2"
     assert "ac-7" in metadata['controls'], "Missing NIST control ac-7"
     
-    print("✓ All metadata verified against official FedRAMP 20x source")
+    print("[PASS] All metadata verified against official FedRAMP 20x source")
     print(f"  KSI: {metadata['ksi_id']} - {metadata['ksi_name']}")
     print(f"  NIST Controls: {', '.join(metadata['controls'])}")
-    return True
 
 def test_python_detection():
     """Test Python detection for KSI-IAM-06."""
@@ -73,10 +72,9 @@ INSTALLED_APPS = [
     assert finding.severity == Severity.HIGH, "Should be HIGH severity"
     assert "AXES_FAILURE_LIMIT" in finding.title, "Finding title should mention AXES_FAILURE_LIMIT"
     
-    print(f"✓ Detected {len(result.findings)} issue(s)")
+    print(f"[PASS] Detected {len(result.findings)} issue(s)")
     print(f"  Issue: {finding.title}")
     print(f"  Severity: {finding.severity.value}")
-    return True
 
 def test_csharp_detection():
     """Test C# detection for KSI-IAM-06."""
@@ -103,10 +101,9 @@ services.AddIdentity<ApplicationUser, IdentityRole>(options => {
     assert any("MaxFailedAccessAttempts" in t for t in titles), "Should detect missing MaxFailedAccessAttempts"
     assert any("lockout" in t.lower() for t in titles), "Should detect lockout issues"
     
-    print(f"✓ Detected {len(result.findings)} issue(s)")
+    print(f"[PASS] Detected {len(result.findings)} issue(s)")
     for finding in result.findings:
         print(f"  - {finding.title} ({finding.severity.value})")
-    return True
 
 def test_java_detection():
     """Test Java detection for KSI-IAM-06."""
@@ -143,9 +140,8 @@ public class CustomUserDetailsService implements UserDetailsService {
     assert "account lock" in finding.title.lower() or "account" in finding.title.lower(), \
         "Should detect missing account lock mechanism"
     
-    print(f"✓ Detected {len(result.findings)} issue(s)")
+    print(f"[PASS] Detected {len(result.findings)} issue(s)")
     print(f"  Issue: {finding.title}")
-    return True
 
 def test_typescript_detection():
     """Test TypeScript detection for KSI-IAM-06."""
@@ -180,10 +176,9 @@ app.post('/login', passport.authenticate('local'));
     
     assert has_rate_limit_finding or has_lockout_finding, "Should detect missing rate limiting or lockout"
     
-    print(f"✓ Detected {len(result.findings)} issue(s)")
+    print(f"[PASS] Detected {len(result.findings)} issue(s)")
     for finding in result.findings:
         print(f"  - {finding.title}")
-    return True
 
 def test_bicep_detection():
     """Test Bicep detection for KSI-IAM-06."""
@@ -214,9 +209,8 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2021-06-01' = {
     assert "sign" in finding.title.lower() or "monitor" in finding.title.lower(), \
         "Should detect missing sign-in monitoring"
     
-    print(f"✓ Detected {len(result.findings)} issue(s)")
+    print(f"[PASS] Detected {len(result.findings)} issue(s)")
     print(f"  Issue: {finding.title}")
-    return True
 
 def test_terraform_detection():
     """Test Terraform detection for KSI-IAM-06."""
@@ -244,9 +238,8 @@ resource "azurerm_log_analytics_workspace" "main" {
     assert "alert" in finding.title.lower() or "monitor" in finding.title.lower(), \
         "Should detect missing monitoring alerts"
     
-    print(f"✓ Detected {len(result.findings)} issue(s)")
+    print(f"[PASS] Detected {len(result.findings)} issue(s)")
     print(f"  Issue: {finding.title}")
-    return True
 
 def test_factory_registration():
     """Test factory registration and discovery."""
@@ -268,9 +261,8 @@ def test_factory_registration():
     assert metadata is not None, "Should retrieve metadata from factory"
     assert metadata['ksi_name'] == "Suspicious Activity", "Metadata should match"
     
-    print(f"✓ Factory registered {len(ksi_list)} KSI(s)")
+    print(f"[PASS] Factory registered {len(ksi_list)} KSI(s)")
     print(f"  Registered: {', '.join(ksi_list)}")
-    return True
 
 def test_factory_analyze():
     """Test factory analyze functionality."""
@@ -293,9 +285,8 @@ services.AddIdentity<ApplicationUser, IdentityRole>(options => {
     finding = result.findings[0]
     assert "20" in finding.description, "Should mention the weak threshold value"
     
-    print(f"✓ Factory analysis detected {len(result.findings)} issue(s)")
+    print(f"[PASS] Factory analysis detected {len(result.findings)} issue(s)")
     print(f"  Issue: {finding.title}")
-    return True
 
 def run_all_tests():
     """Run all KSI analyzer architecture tests."""
@@ -322,28 +313,28 @@ def run_all_tests():
     
     for name, test_func in tests:
         try:
-            if test_func():
-                passed += 1
-            else:
-                failed += 1
-                print(f"✗ {name} FAILED")
+            test_func()  # Test functions now use assertions, don't return values
+            passed += 1
+        except AssertionError as e:
+            failed += 1
+            print(f"[FAIL] {name} FAILED: {str(e)}")
         except Exception as e:
             failed += 1
-            print(f"✗ {name} FAILED: {str(e)}")
+            print(f"[FAIL] {name} FAILED: {str(e)}")
     
     print("\n" + "=" * 70)
     print(f"TEST RESULTS: {passed}/{len(tests)} passed")
     if failed == 0:
-        print("✓ ALL TESTS PASSED - KSI-centric architecture working correctly!")
+        print("[PASS] ALL TESTS PASSED - KSI-centric architecture working correctly!")
         print("\nArchitecture Benefits Demonstrated:")
-        print("  ✓ Self-contained KSI files with embedded official metadata")
-        print("  ✓ Single file per KSI (ksi_iam_06.py) contains ALL language support")
-        print("  ✓ Python, C#, Java, TypeScript, Bicep, Terraform in one analyzer")
-        print("  ✓ No external lookups needed - all KSI info in the file")
-        print("  ✓ Factory pattern for easy registration and discovery")
-        print("  ✓ Verified against official FedRAMP 20x source (version 25.11C)")
+        print("  [PASS] Self-contained KSI files with embedded official metadata")
+        print("  [PASS] Single file per KSI (ksi_iam_06.py) contains ALL language support")
+        print("  [PASS] Python, C#, Java, TypeScript, Bicep, Terraform in one analyzer")
+        print("  [PASS] No external lookups needed - all KSI info in the file")
+        print("  [PASS] Factory pattern for easy registration and discovery")
+        print("  [PASS] Verified against official FedRAMP 20x source (version 25.11C)")
     else:
-        print(f"✗ {failed} TEST(S) FAILED")
+        print(f"[FAIL] {failed} TEST(S) FAILED")
     print("=" * 70)
     
     return failed == 0
@@ -351,3 +342,4 @@ def run_all_tests():
 if __name__ == "__main__":
     success = run_all_tests()
     sys.exit(0 if success else 1)
+

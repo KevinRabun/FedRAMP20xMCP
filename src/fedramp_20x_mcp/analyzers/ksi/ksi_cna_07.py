@@ -52,17 +52,23 @@ class KSI_CNA_07_Analyzer(BaseKSIAnalyzer):
     FAMILY_NAME = "Cloud Native Architecture"
     IMPACT_LOW = True
     IMPACT_MODERATE = True
-    NIST_CONTROLS = ["ac-17.3", "cm-2", "pl-10"]
-    CODE_DETECTABLE = True
-    IMPLEMENTATION_STATUS = "IMPLEMENTED"
+    NIST_CONTROLS = [
+        ("ac-17.3", "Managed Access Control Points"),
+        ("cm-2", "Baseline Configuration"),
+        ("pl-10", "Baseline Selection")
+    ]
+    CODE_DETECTABLE = False
+    IMPLEMENTATION_STATUS = "NOT_IMPLEMENTED"
     RETIRED = False
     
-    def __init__(self):
+    def __init__(self, language=None, ksi_id: str = "", ksi_name: str = "", ksi_statement: str = ""):
+        """Initialize analyzer with backward-compatible API."""
         super().__init__(
-            ksi_id=self.KSI_ID,
-            ksi_name=self.KSI_NAME,
-            ksi_statement=self.KSI_STATEMENT
+            ksi_id=ksi_id or self.KSI_ID,
+            ksi_name=ksi_name or self.KSI_NAME,
+            ksi_statement=ksi_statement or self.KSI_STATEMENT
         )
+        self.direct_language = language
     
     # ============================================================================
     # APPLICATION LANGUAGE ANALYZERS
@@ -240,7 +246,7 @@ class KSI_CNA_07_Analyzer(BaseKSIAnalyzer):
                         "    // Or use UserAssigned for cross-resource scenarios:\n"
                         "    // type: 'UserAssigned'\n"
                         "    // userAssignedIdentities: {\n"
-                        "    //   '\${userAssignedIdentity.id}': {}\n"
+                        r"    //   '${userAssignedIdentity.id}': {}" + "\n"
                         "    // }\n"
                         "  }\n"
                         "  properties: {\n"
@@ -537,3 +543,4 @@ class KSI_CNA_07_Analyzer(BaseKSIAnalyzer):
         start = max(0, line_number - context - 1)
         end = min(len(lines), line_number + context)
         return '\n'.join(lines[start:end])
+

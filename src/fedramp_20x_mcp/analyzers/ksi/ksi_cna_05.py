@@ -8,6 +8,7 @@ Source: https://github.com/FedRAMP/docs/blob/main/data/FRMR.KSI.key-security-ind
 Version: 25.11C (Published: 2025-12-01)
 """
 
+import ast
 import re
 from typing import List, Optional, Dict, Any
 from ..base import Finding, Severity
@@ -16,7 +17,7 @@ from .base import BaseKSIAnalyzer
 
 class KSI_CNA_05_Analyzer(BaseKSIAnalyzer):
     """
-    Analyzer for KSI-CNA-05: Unwanted Activity
+    Enhanced Analyzer for KSI-CNA-05: Unwanted Activity
     
     **Official Statement:**
     Protect against denial of service attacks and other unwanted activity.
@@ -52,17 +53,23 @@ class KSI_CNA_05_Analyzer(BaseKSIAnalyzer):
     FAMILY_NAME = "Cloud Native Architecture"
     IMPACT_LOW = True
     IMPACT_MODERATE = True
-    NIST_CONTROLS = ["sc-5", "si-8", "si-8.2"]
+    NIST_CONTROLS = [
+        ("sc-5", "Denial-of-service Protection"),
+        ("si-8", "Spam Protection"),
+        ("si-8.2", "Automatic Updates")
+    ]
     CODE_DETECTABLE = True
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RETIRED = False
     
-    def __init__(self):
+    def __init__(self, language=None, ksi_id: str = "", ksi_name: str = "", ksi_statement: str = ""):
+        """Initialize analyzer with backward-compatible API."""
         super().__init__(
-            ksi_id=self.KSI_ID,
-            ksi_name=self.KSI_NAME,
-            ksi_statement=self.KSI_STATEMENT
+            ksi_id=ksi_id or self.KSI_ID,
+            ksi_name=ksi_name or self.KSI_NAME,
+            ksi_statement=ksi_statement or self.KSI_STATEMENT
         )
+        self.direct_language = language
     
     # ============================================================================
     # APPLICATION LANGUAGE ANALYZERS
@@ -70,20 +77,196 @@ class KSI_CNA_05_Analyzer(BaseKSIAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for KSI-CNA-05 compliance.
+        Analyze Python code for KSI-CNA-05 compliance using AST.
         
         Frameworks: Flask, Django, FastAPI, Azure SDK
         
-        TODO: Implement detection logic for:
-        - Protect against denial of service attacks and other unwanted activity....
+        Detects:
+        - Missing rate limiting middleware/decorators
+        - Flask apps without Flask-Limiter
+        - Django apps without rate limiting middleware
+        - FastAPI apps without rate limiting dependencies
         """
         findings = []
+        lines = code.split('\n')
         
-        # TODO: Implement Python-specific detection logic
-        # Example patterns to detect:
-        # - Configuration issues
-        # - Missing security controls
-        # - Framework-specific vulnerabilities
+        try:
+            tree = ast.parse(code)
+        except SyntaxError:
+            return self._python_regex_fallback(code, lines, file_path)
+        
+        # Pattern 1: Flask app without rate limiter
+        has_flask = False
+        has_limiter = False
+        flask_app_line = 0
+        
+        for node in ast.walk(tree):
+            # Check for Flask import
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
+                if isinstance(node, ast.Import):
+                    if any('flask' in alias.name.lower() for alias in node.names):
+                        has_flask = True
+                elif isinstance(node, ast.ImportFrom):
+                    if node.module and 'flask' in node.module.lower():
+                        has_flask = True
+                    # Check for Flask-Limiter
+                    if node.module and 'flask_limiter' in node.module.lower():
+                        has_limiter = True
+            
+            # Check for Flask app creation
+            if isinstance(node, ast.Call):
+                if isinstance(node.func, ast.Name) and node.func.id == 'Flask':
+                    flask_app_line = node.lineno
+        
+        if has_flask and not has_limiter and flask_app_line > 0:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="Flask Application Without Rate Limiting",
+                description=(
+                    f"Flask application at line {flask_app_line} missing rate limiting. "
+                    f"KSI-CNA-05 requires protection against DoS attacks (SC-5) - "
+                    f"Flask apps should use Flask-Limiter or similar middleware to prevent abuse."
+                ),
+                severity=Severity.HIGH,
+                file_path=file_path,
+                line_number=flask_app_line,
+                code_snippet=self._get_snippet(lines, flask_app_line, context=3),
+                remediation=(
+                    "Add Flask-Limiter for rate limiting:\n\n"
+                    "from flask import Flask\n"
+                    "from flask_limiter import Limiter\n"
+                    "from flask_limiter.util import get_remote_address\n\n"
+                    "app = Flask(__name__)\n\n"
+                    "# Rate limiter for DoS protection (SC-5, SI-8)\n"
+                    "limiter = Limiter(\n"
+                    "    app=app,\n"
+                    "    key_func=get_remote_address,\n"
+                    "    default_limits=['200 per day', '50 per hour'],\n"
+                    "    storage_uri='redis://localhost:6379'  # Distributed rate limiting\n"
+                    ")\n\n"
+                    "@app.route('/api/data')\n"
+                    "@limiter.limit('10 per minute')  # Per-endpoint limit\n"
+                    "def get_data():\n"
+                    "    return {'data': 'value'}\n\n"
+                    "Ref: Flask-Limiter (https://flask-limiter.readthedocs.io/)"
+                )
+            ))
+        
+        # Pattern 2: Django settings without throttling
+        has_django = 'django' in code.lower() or 'INSTALLED_APPS' in code
+        has_throttle = 'throttle' in code.lower() or 'ratelimit' in code.lower()
+        
+        if has_django and not has_throttle:
+            # Look for settings.py indicators
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Assign):
+                    for target in node.targets:
+                        if isinstance(target, ast.Name) and target.id in ['MIDDLEWARE', 'REST_FRAMEWORK']:
+                            findings.append(Finding(
+                                ksi_id=self.KSI_ID,
+                                title="Django Application Without Rate Limiting",
+                                description=(
+                                    f"Django configuration at line {node.lineno} missing rate limiting middleware. "
+                                    f"KSI-CNA-05 requires DoS protection (SC-5) - "
+                                    f"Django REST Framework should include throttling classes."
+                                ),
+                                severity=Severity.HIGH,
+                                file_path=file_path,
+                                line_number=node.lineno,
+                                code_snippet=self._get_snippet(lines, node.lineno, context=3),
+                                remediation=(
+                                    "Add Django REST Framework throttling:\n\n"
+                                    "# settings.py\n"
+                                    "REST_FRAMEWORK = {\n"
+                                    "    'DEFAULT_THROTTLE_CLASSES': [\n"
+                                    "        'rest_framework.throttling.AnonRateThrottle',  # Anonymous users\n"
+                                    "        'rest_framework.throttling.UserRateThrottle',  # Authenticated users\n"
+                                    "    ],\n"
+                                    "    'DEFAULT_THROTTLE_RATES': {\n"
+                                    "        'anon': '100/day',  # SC-5 DoS protection\n"
+                                    "        'user': '1000/day',\n"
+                                    "    }\n"
+                                    "}\n\n"
+                                    "# Or use django-ratelimit for function-based views:\n"
+                                    "from django_ratelimit.decorators import ratelimit\n\n"
+                                    "@ratelimit(key='ip', rate='10/m', method='GET')\n"
+                                    "def my_view(request):\n"
+                                    "    return JsonResponse({'data': 'value'})\n\n"
+                                    "Ref: Django REST Framework Throttling (https://www.django-rest-framework.org/api-guide/throttling/)"
+                                )
+                            ))
+                            break
+        
+        # Pattern 3: FastAPI app without rate limiting dependency
+        has_fastapi = False
+        has_slowapi = False
+        fastapi_app_line = 0
+        
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
+                if isinstance(node, ast.ImportFrom):
+                    if node.module and 'fastapi' in node.module.lower():
+                        has_fastapi = True
+                    if node.module and 'slowapi' in node.module.lower():
+                        has_slowapi = True
+            
+            if isinstance(node, ast.Call):
+                if isinstance(node.func, ast.Name) and node.func.id == 'FastAPI':
+                    fastapi_app_line = node.lineno
+        
+        if has_fastapi and not has_slowapi and fastapi_app_line > 0:
+            findings.append(Finding(
+                ksi_id=self.KSI_ID,
+                title="FastAPI Application Without Rate Limiting",
+                description=(
+                    f"FastAPI application at line {fastapi_app_line} missing rate limiting. "
+                    f"KSI-CNA-05 requires DoS protection (SC-5) - "
+                    f"FastAPI apps should use SlowAPI or similar middleware for rate limiting."
+                ),
+                severity=Severity.HIGH,
+                file_path=file_path,
+                line_number=fastapi_app_line,
+                code_snippet=self._get_snippet(lines, fastapi_app_line, context=3),
+                remediation=(
+                    "Add SlowAPI rate limiting middleware:\n\n"
+                    "from fastapi import FastAPI, Request\n"
+                    "from slowapi import Limiter, _rate_limit_exceeded_handler\n"
+                    "from slowapi.util import get_remote_address\n"
+                    "from slowapi.errors import RateLimitExceeded\n\n"
+                    "# Rate limiter for DoS protection (SC-5)\n"
+                    "limiter = Limiter(key_func=get_remote_address)\n"
+                    "app = FastAPI()\n"
+                    "app.state.limiter = limiter\n"
+                    "app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)\n\n"
+                    "@app.get('/api/data')\n"
+                    "@limiter.limit('10/minute')  # Per-endpoint rate limit\n"
+                    "async def get_data(request: Request):\n"
+                    "    return {'data': 'value'}\n\n"
+                    "Ref: SlowAPI (https://github.com/laurentS/slowapi)"
+                )
+            ))
+        
+        return findings
+    
+    def _python_regex_fallback(self, code: str, lines: List[str], file_path: str) -> List[Finding]:
+        """Fallback regex-based analysis when AST parsing fails."""
+        findings = []
+        
+        # Check for Flask without limiter
+        if 'flask' in code.lower() and 'flask_limiter' not in code.lower() and 'limiter' not in code.lower():
+            line_match = self._find_line(lines, r'Flask\s*\(')
+            if line_match:
+                line_num = line_match['line_num']
+                findings.append(Finding(
+                    ksi_id=self.KSI_ID,
+                    title="Flask Application Without Rate Limiting (Regex Fallback)",
+                    description=f"Flask app at line {line_num} may be missing rate limiting.",
+                    severity=Severity.HIGH,
+                    file_path=file_path,
+                    line_number=line_num,
+                    code_snippet=self._get_snippet(lines, line_num),
+                    remediation="Add Flask-Limiter for rate limiting"
+                ))
         
         return findings
     
@@ -93,12 +276,63 @@ class KSI_CNA_05_Analyzer(BaseKSIAnalyzer):
         
         Frameworks: ASP.NET Core, Entity Framework, Azure SDK
         
-        TODO: Implement detection logic for:
-        - Protect against denial of service attacks and other unwanted activity....
+        Detects:
+        - ASP.NET Core apps without rate limiting middleware
+        - Missing AspNetCoreRateLimit or similar packages
         """
         findings = []
+        lines = code.split('\n')
         
-        # TODO: Implement C#-specific detection logic
+        # Pattern 1: ASP.NET Core without rate limiting middleware
+        has_aspnetcore = re.search(r'using\s+Microsoft\.AspNetCore', code) or re.search(r'WebApplication\.', code)
+        has_ratelimit = re.search(r'AspNetCoreRateLimit|RateLimitMiddleware|UseRateLimiting', code, re.IGNORECASE)
+        
+        if has_aspnetcore and not has_ratelimit:
+            # Look for Program.cs or Startup.cs patterns
+            for i, line in enumerate(lines, 1):
+                if re.search(r'WebApplication\.CreateBuilder|builder\.Build\(\)', line):
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="ASP.NET Core Application Without Rate Limiting",
+                        description=(
+                            f"ASP.NET Core app at line {i} missing rate limiting middleware. "
+                            f"KSI-CNA-05 requires DoS protection (SC-5) - "
+                            f"add AspNetCoreRateLimit or built-in rate limiting."
+                        ),
+                        severity=Severity.HIGH,
+                        file_path=file_path,
+                        line_number=i,
+                        code_snippet=self._get_snippet(lines, i, context=3),
+                        remediation=(
+                            "Add ASP.NET Core rate limiting middleware:\n\n"
+                            "// Program.cs\n"
+                            "using AspNetCoreRateLimit;\n\n"
+                            "var builder = WebApplication.CreateBuilder(args);\n\n"
+                            "// Rate limiting for DoS protection (SC-5, SI-8)\n"
+                            "builder.Services.AddMemoryCache();\n"
+                            "builder.Services.Configure<IpRateLimitOptions>(options =>\n"
+                            "{\n"
+                            "    options.EnableEndpointRateLimiting = true;\n"
+                            "    options.StackBlockedRequests = false;\n"
+                            "    options.GeneralRules = new List<RateLimitRule>\n"
+                            "    {\n"
+                            "        new RateLimitRule\n"
+                            "        {\n"
+                            "            Endpoint = \"*\",\n"
+                            "            Period = \"1m\",\n"
+                            "            Limit = 100  // Max 100 requests per minute\n"
+                            "        }\n"
+                            "    };\n"
+                            "});\n\n"
+                            "builder.Services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();\n"
+                            "builder.Services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();\n"
+                            "builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();\n\n"
+                            "var app = builder.Build();\n\n"
+                            "app.UseIpRateLimiting();  // Enable rate limiting middleware\n\n"
+                            "Ref: AspNetCoreRateLimit (https://github.com/stefanprodan/AspNetCoreRateLimit)"
+                        )
+                    ))
+                    break
         
         return findings
     
@@ -108,27 +342,301 @@ class KSI_CNA_05_Analyzer(BaseKSIAnalyzer):
         
         Frameworks: Spring Boot, Spring Security, Azure SDK
         
-        TODO: Implement detection logic for:
-        - Protect against denial of service attacks and other unwanted activity....
+        Detects:
+        - Spring Boot apps without rate limiting (Bucket4j, Resilience4j)
+        - Missing @RateLimiter annotations
         """
         findings = []
+        lines = code.split('\n')
         
-        # TODO: Implement Java-specific detection logic
+        # Pattern 1: Spring Boot without rate limiting
+        has_springboot = re.search(r'import.*springframework\.boot', code) or re.search(r'@SpringBootApplication', code)
+        has_ratelimit = re.search(r'Bucket4j|RateLimiter|@RateLimiter|resilience4j', code, re.IGNORECASE)
+        
+        if has_springboot and not has_ratelimit:
+            for i, line in enumerate(lines, 1):
+                if re.search(r'@SpringBootApplication|@RestController', line):
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="Spring Boot Application Without Rate Limiting",
+                        description=(
+                            f"Spring Boot app at line {i} missing rate limiting. "
+                            f"KSI-CNA-05 requires DoS protection (SC-5) - "
+                            f"add Bucket4j or Resilience4j for rate limiting."
+                        ),
+                        severity=Severity.HIGH,
+                        file_path=file_path,
+                        line_number=i,
+                        code_snippet=self._get_snippet(lines, i, context=3),
+                        remediation=(
+                            "Add Resilience4j rate limiting:\n\n"
+                            "// Maven dependency\n"
+                            "// <dependency>\n"
+                            "//   <groupId>io.github.resilience4j</groupId>\n"
+                            "//   <artifactId>resilience4j-spring-boot2</artifactId>\n"
+                            "// </dependency>\n\n"
+                            "import io.github.resilience4j.ratelimiter.annotation.RateLimiter;\n"
+                            "import org.springframework.web.bind.annotation.*;\n\n"
+                            "@RestController\n"
+                            "@RequestMapping(\"/api\")\n"
+                            "public class ApiController {\n\n"
+                            "    @GetMapping(\"/data\")\n"
+                            "    @RateLimiter(name = \"apiLimiter\")  // DoS protection (SC-5)\n"
+                            "    public ResponseEntity<String> getData() {\n"
+                            "        return ResponseEntity.ok(\"data\");\n"
+                            "    }\n"
+                            "}\n\n"
+                            "// application.yml\n"
+                            "// resilience4j.ratelimiter:\n"
+                            "//   instances:\n"
+                            "//     apiLimiter:\n"
+                            "//       limitForPeriod: 10  # Max 10 requests\n"
+                            "//       limitRefreshPeriod: 1m  # Per minute\n"
+                            "//       timeoutDuration: 0s\n\n"
+                            "Ref: Resilience4j Rate Limiter (https://resilience4j.readme.io/docs/ratelimiter)"
+                        )
+                    ))
+                    break
         
         return findings
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze TypeScript/JavaScript code for KSI-CNA-05 compliance.
+        Analyze TypeScript/JavaScript code for KSI-CNA-05 compliance (AST-first).
         
-        Frameworks: Express, NestJS, Next.js, React, Angular, Azure SDK
+        Frameworks: Express, NestJS, Next.js
         
-        TODO: Implement detection logic for:
-        - Protect against denial of service attacks and other unwanted activity....
+        Detects:
+        - Express apps without express-rate-limit
+        - NestJS apps without @nestjs/throttler
         """
-        findings = []
+        # Try AST-based analysis first
+        from ..ast_utils import ASTParser, CodeLanguage
+        parser = ASTParser(CodeLanguage.JAVASCRIPT)
+        tree = parser.parse(code)
         
-        # TODO: Implement TypeScript-specific detection logic
+        if tree:
+            return self._analyze_typescript_ast(code, file_path, parser, tree)
+        else:
+            # Fallback to regex if AST parsing fails
+            return self._analyze_typescript_regex(code, file_path)
+    
+    def _analyze_typescript_ast(self, code: str, file_path: str, parser, tree) -> List[Finding]:
+        """AST-based TypeScript/JavaScript analysis for rate limiting."""
+        findings = []
+        lines = code.split('\n')
+        code_bytes = code.encode('utf8')
+        
+        # Check for framework imports
+        import_nodes = parser.find_nodes_by_type(tree.root_node, 'import_statement')
+        has_express = False
+        has_nestjs = False
+        has_ratelimit = False
+        has_throttler = False
+        
+        for import_node in import_nodes:
+            import_text = parser.get_node_text(import_node, code_bytes)
+            if 'express' in import_text and 'express-rate-limit' not in import_text:
+                has_express = True
+            if 'express-rate-limit' in import_text or 'rateLimit' in import_text or 'RateLimiterMiddleware' in import_text or 'RateLimiter' in import_text:
+                has_ratelimit = True
+            if '@nestjs/common' in import_text or '@nestjs/core' in import_text:
+                has_nestjs = True
+            if '@nestjs/throttler' in import_text or 'ThrottlerModule' in import_text:
+                has_throttler = True
+        
+        # Pattern 1: Express without rate limiting via call_expression (HIGH)
+        if has_express and not has_ratelimit:
+            call_nodes = parser.find_nodes_by_type(tree.root_node, 'call_expression')
+            for call_node in call_nodes:
+                call_text = parser.get_node_text(call_node, code_bytes)
+                # Check for express() or new Express()
+                if 'express()' in call_text or 'Express()' in call_text:
+                    line_num = code[:call_node.start_byte].count('\n') + 1
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="Express Application Without Rate Limiting",
+                        description=(
+                            f"Express app at line {line_num} missing rate limiting middleware. "
+                            f"KSI-CNA-05 requires DoS protection (SC-5) - "
+                            f"add express-rate-limit middleware."
+                        ),
+                        severity=Severity.HIGH,
+                        file_path=file_path,
+                        line_number=line_num,
+                        code_snippet=self._get_snippet(lines, line_num, context=3),
+                        remediation=(
+                            "Add express-rate-limit middleware:\n\n"
+                            "import express from 'express';\n"
+                            "import rateLimit from 'express-rate-limit';\n\n"
+                            "const app = express();\n\n"
+                            "// Rate limiter for DoS protection (SC-5, SI-8)\n"
+                            "const limiter = rateLimit({\n"
+                            "  windowMs: 1 * 60 * 1000,  // 1 minute\n"
+                            "  max: 100,  // Max 100 requests per window\n"
+                            "  standardHeaders: true,  // Return rate limit info in headers\n"
+                            "  legacyHeaders: false,\n"
+                            "  message: 'Too many requests, please try again later'\n"
+                            "});\n\n"
+                            "// Apply to all routes\n"
+                            "app.use(limiter);\n\n"
+                            "// Or apply to specific routes\n"
+                            "app.get('/api/data', limiter, (req, res) => {\n"
+                            "  res.json({ data: 'value' });\n"
+                            "});\n\n"
+                            "Ref: express-rate-limit (https://github.com/express-rate-limit/express-rate-limit)"
+                        )
+                    ))
+                    break
+        
+        # Pattern 2: NestJS without throttler via decorator_call_expression (HIGH)
+        if has_nestjs and not has_throttler:
+            # Look for @Module or @Controller decorators
+            decorator_nodes = parser.find_nodes_by_type(tree.root_node, 'decorator')
+            for decorator_node in decorator_nodes:
+                decorator_text = parser.get_node_text(decorator_node, code_bytes)
+                if '@Module' in decorator_text or '@Controller' in decorator_text:
+                    line_num = code[:decorator_node.start_byte].count('\n') + 1
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="NestJS Application Without Rate Limiting",
+                        description=(
+                            f"NestJS app at line {line_num} missing rate limiting. "
+                            f"KSI-CNA-05 requires DoS protection (SC-5) - "
+                            f"add @nestjs/throttler module."
+                        ),
+                        severity=Severity.HIGH,
+                        file_path=file_path,
+                        line_number=line_num,
+                        code_snippet=self._get_snippet(lines, line_num, context=3),
+                        remediation=(
+                            "Add NestJS Throttler module:\n\n"
+                            "// app.module.ts\n"
+                            "import { Module } from '@nestjs/common';\n"
+                            "import { ThrottlerModule } from '@nestjs/throttler';\n\n"
+                            "@Module({\n"
+                            "  imports: [\n"
+                            "    // Rate limiting for DoS protection (SC-5)\n"
+                            "    ThrottlerModule.forRoot({\n"
+                            "      ttl: 60,  // Time window in seconds\n"
+                            "      limit: 100,  // Max requests per window\n"
+                            "    }),\n"
+                            "  ],\n"
+                            "})\n"
+                            "export class AppModule {}\n\n"
+                            "// Use @Throttle() decorator on controllers/routes\n"
+                            "import { Throttle } from '@nestjs/throttler';\n\n"
+                            "@Controller('api')\n"
+                            "export class ApiController {\n"
+                            "  @Get('data')\n"
+                            "  @Throttle(10, 60)  // 10 requests per 60 seconds\n"
+                            "  getData() {\n"
+                            "    return { data: 'value' };\n"
+                            "  }\n"
+                            "}\n\n"
+                            "Ref: NestJS Throttler (https://docs.nestjs.com/security/rate-limiting)"
+                        )
+                    ))
+                    break
+        
+        return findings
+    
+    def _analyze_typescript_regex(self, code: str, file_path: str) -> List[Finding]:
+        """Regex fallback for TypeScript/JavaScript rate limiting analysis."""
+        findings = []
+        lines = code.split('\n')
+        
+        # Pattern 1: Express without rate limiting
+        has_express = re.search(r'import.*express|require\(["\']express["\']\)', code)
+        has_ratelimit = re.search(r'express-rate-limit|rateLimit|RateLimiterMiddleware', code, re.IGNORECASE)
+        
+        if has_express and not has_ratelimit:
+            for i, line in enumerate(lines, 1):
+                if re.search(r'express\(\)|new\s+Express\(\)', line):
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="Express Application Without Rate Limiting",
+                        description=(
+                            f"Express app at line {i} missing rate limiting middleware. "
+                            f"KSI-CNA-05 requires DoS protection (SC-5) - "
+                            f"add express-rate-limit middleware."
+                        ),
+                        severity=Severity.HIGH,
+                        file_path=file_path,
+                        line_number=i,
+                        code_snippet=self._get_snippet(lines, i, context=3),
+                        remediation=(
+                            "Add express-rate-limit middleware:\n\n"
+                            "import express from 'express';\n"
+                            "import rateLimit from 'express-rate-limit';\n\n"
+                            "const app = express();\n\n"
+                            "// Rate limiter for DoS protection (SC-5, SI-8)\n"
+                            "const limiter = rateLimit({\n"
+                            "  windowMs: 1 * 60 * 1000,  // 1 minute\n"
+                            "  max: 100,  // Max 100 requests per window\n"
+                            "  standardHeaders: true,  // Return rate limit info in headers\n"
+                            "  legacyHeaders: false,\n"
+                            "  message: 'Too many requests, please try again later'\n"
+                            "});\n\n"
+                            "// Apply to all routes\n"
+                            "app.use(limiter);\n\n"
+                            "// Or apply to specific routes\n"
+                            "app.get('/api/data', limiter, (req, res) => {\n"
+                            "  res.json({ data: 'value' });\n"
+                            "});\n\n"
+                            "Ref: express-rate-limit (https://github.com/express-rate-limit/express-rate-limit)"
+                        )
+                    ))
+                    break
+        
+        # Pattern 2: NestJS without throttler
+        has_nestjs = re.search(r'@nestjs/common|@Module\(|@Controller\(', code)
+        has_throttler = re.search(r'@nestjs/throttler|@Throttle\(|ThrottlerModule', code)
+        
+        if has_nestjs and not has_throttler:
+            for i, line in enumerate(lines, 1):
+                if re.search(r'@Module\(|@Controller\(', line):
+                    findings.append(Finding(
+                        ksi_id=self.KSI_ID,
+                        title="NestJS Application Without Rate Limiting",
+                        description=(
+                            f"NestJS app at line {i} missing rate limiting. "
+                            f"KSI-CNA-05 requires DoS protection (SC-5) - "
+                            f"add @nestjs/throttler module."
+                        ),
+                        severity=Severity.HIGH,
+                        file_path=file_path,
+                        line_number=i,
+                        code_snippet=self._get_snippet(lines, i, context=3),
+                        remediation=(
+                            "Add NestJS Throttler module:\n\n"
+                            "// app.module.ts\n"
+                            "import { Module } from '@nestjs/common';\n"
+                            "import { ThrottlerModule } from '@nestjs/throttler';\n\n"
+                            "@Module({\n"
+                            "  imports: [\n"
+                            "    // Rate limiting for DoS protection (SC-5)\n"
+                            "    ThrottlerModule.forRoot({\n"
+                            "      ttl: 60,  // Time window in seconds\n"
+                            "      limit: 100,  // Max requests per window\n"
+                            "    }),\n"
+                            "  ],\n"
+                            "})\n"
+                            "export class AppModule {}\n\n"
+                            "// Use @Throttle() decorator on controllers/routes\n"
+                            "import { Throttle } from '@nestjs/throttler';\n\n"
+                            "@Controller('api')\n"
+                            "export class ApiController {\n"
+                            "  @Get('data')\n"
+                            "  @Throttle(10, 60)  // 10 requests per 60 seconds\n"
+                            "  getData() {\n"
+                            "    return { data: 'value' };\n"
+                            "  }\n"
+                            "}\n\n"
+                            "Ref: NestJS Throttler (https://docs.nestjs.com/security/rate-limiting)"
+                        )
+                    ))
+                    break
         
         return findings
     
@@ -609,3 +1117,4 @@ class KSI_CNA_05_Analyzer(BaseKSIAnalyzer):
         start = max(0, line_number - context - 1)
         end = min(len(lines), line_number + context)
         return '\n'.join(lines[start:end])
+
