@@ -2,14 +2,14 @@
 
 ## Test Suite Overview
 
-The FedRAMP 20x MCP Server includes comprehensive test coverage across all functionality with **115 test files** validating **35 tools**, 329 requirements, 72 KSIs, 15 prompts, 23 templates, infrastructure code generation, and **AST-powered code analysis** supporting **6 languages** (Python, C#, Java, TypeScript/JavaScript, Bicep, Terraform) with tree-sitter semantic analysis.
+The FedRAMP 20x MCP Server includes comprehensive test coverage across all functionality with **121 test files** validating **36 tools**, 329 requirements, 72 KSIs, 15 prompts, 23 templates, infrastructure code generation, and **AST-powered code analysis** supporting **6 languages** (Python, C#, Java, TypeScript/JavaScript, Bicep, Terraform) with tree-sitter semantic analysis.
 
 ### Test Suite Metrics
 
-- **Total Tests:** 115 (100% pass rate)
+- **Total Tests:** 121 (100% pass rate)
 - **Test Categories:**
   - Core functionality: 13 tests (AST parsing, semantic analysis, interprocedural analysis)
-  - Tool functional: 9 tests (35 tools across 11 modules)
+  - Tool functional: 9 tests (36 tools across 12 modules)
   - Security: 2 tests (CVE vulnerability checking)
   - Resource validation: 3 tests (IaC generation, evidence automation)
   - KSI analyzers: 88 tests (100% coverage - all 72 KSI analyzers)
@@ -1133,7 +1133,7 @@ This section documents all 88 KSI analyzer test files, providing **100% test cov
 
 **All KSI Tests:**
 ```bash
-python tests/run_all_tests.py  # Runs all 115 tests including 88 KSI tests
+python tests/run_all_tests.py  # Runs all 121 tests including 88 KSI tests
 ```
 
 **Specific KSI Family:**
@@ -1290,7 +1290,7 @@ All tests passing as of December 3, 2025:
 - ✅ 24/24 tools functionally tested (100%)
 - ✅ 15/15 prompts validated (100%)
 - ✅ 23/23 templates validated (100%)
-- ✅ 35 tools registered across 11 modules
+- ✅ 36 tools registered across 12 modules
 - ✅ 5 programming languages supported (Python, C#, PowerShell, Java, TypeScript/JavaScript)
 - ⚠️ 6 tests failing (2 docs integration issues, 2 security tests need GITHUB_TOKEN, 2 analyzer/audit tests)
 
@@ -1457,14 +1457,14 @@ Current coverage: **100%** across all components
 ## Test Metrics
 
 ### Execution Time
-- **Total test suite:** 115 test files
+- **Total test suite:** 121 test files
 - **Total execution time:** ~791 seconds (~13 minutes)
 - **Average test time:** 6.9 seconds per test
-- **Pass rate:** 100% (115/115 passing)
+- **Pass rate:** 100% (121/121 passing)
 
 ### Test Distribution by Category
 - **Core functionality:** 13 tests (AST parsing, semantic analysis, interprocedural analysis)
-- **Tool functional:** 9 tests (35 tools across 11 modules)
+- **Tool functional:** 9 tests (36 tools across 12 modules)
 - **Security:** 2 tests (CVE vulnerability checking)
 - **Resource validation:** 3 tests (IaC generation, evidence automation, template variations)
 - **KSI analyzers:** 88 tests (100% coverage - all 72 KSI analyzers tested)
@@ -1488,7 +1488,7 @@ Current coverage: **100%** across all components
 - Implementation mapping tools: 24+ test cases
 - AST parsing: 15+ test cases across 6 languages
 - Semantic analysis: 12+ test cases for code analyzer infrastructure
-- **Total: 200+ test cases across 115 test files**
+- **Total: 200+ test cases across 121 test files**
 
 ### Detailed Test Results
 
@@ -1549,5 +1549,5 @@ Current coverage: **100%** across all components
 ---
 
 *Last Updated: January 2025*  
-*Status: 115/115 tests passing (100%) ✅*  
-*Coverage: 35 tools across 11 modules + 72/72 KSI analyzers (100%) + AST parsing for 6 languages*
+*Status: 121/121 tests passing (100%) ✅*  
+*Coverage: 36 tools across 12 modules + 72/72 KSI analyzers (100%) + AST parsing for 6 languages*
