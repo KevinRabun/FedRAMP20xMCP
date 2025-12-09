@@ -1212,36 +1212,45 @@ Get comprehensive architecture guidance for automated evidence collection system
 
 ## Available Prompts
 
-The server provides **9 prompts** for FedRAMP compliance workflows:
-> generate_implementation_questions with requirement_id="FRR-CCM-01"
-### Major Comprehensive Prompts
-**control_implementation** - Detailed guidance for implementing specific NIST 800-53 controls
+The server provides **15 prompts** for FedRAMP compliance workflows:
 
-**risk_assessment** - Framework for conducting FedRAMP-aligned risk assessments
-
-**continuous_monitoring** - Guide for establishing continuous monitoring programs
-
-**boundary_definition** - Help define authorization boundaries and interconnections
-
-### Major Comprehensive Prompts
+### Comprehensive Planning & Assessment Prompts
 
 **initial_assessment_roadmap** - Complete 6-phase roadmap for FedRAMP 20x authorization with checklists, deliverables, and critical success factors (engineering teams determine timelines)
 
-**quarterly_review_checklist** - Comprehensive checklist for FedRAMP 20x quarterly reviews (FRR-CCM-QR) covering all 72 KSIs, vulnerability review, and change review
-
-**api_design_guide** - Complete guide for Authorization Data Sharing API (FRR-ADS) with endpoints, authentication, OSCAL formats, and examples
-
-**ksi_implementation_priorities** - Prioritized guide for implementing all 72 Key Security Indicators across 8 priority phases with dependency mapping (engineering teams determine rollout timelines)
+**gap_analysis** - Detailed gap analysis framework comparing current state against FedRAMP 20x requirements with prioritization and remediation planning
 
 **vendor_evaluation** - Comprehensive vendor assessment framework with category-specific questions, scorecard template, and evaluation criteria
 
-**documentation_generator** - OSCAL SSP templates, procedure templates (VDR, ICP, SCN), and KSI implementation documentation templates
-
 **migration_from_rev5** - Detailed migration plan from FedRAMP Rev 5 to 20x with 7-phase approach, gap analysis, and requirement mapping (teams determine timelines and budgets)
+
+**significant_change_assessment** - Framework for evaluating significant changes per FRR-CCM-SC including impact analysis, testing requirements, and authorization update triggers
+
+### Implementation & Automation Prompts
+
+**ksi_implementation_priorities** - Prioritized guide for implementing all 72 Key Security Indicators across 8 priority phases with dependency mapping (engineering teams determine rollout timelines)
+
+**azure_ksi_automation** - **Complete guide for implementing all 72 KSIs using Microsoft, Azure, and M365 capabilities** including PowerShell scripts, Azure CLI commands, Microsoft Graph API integration, KQL queries, Azure Functions/Logic Apps, evidence collection framework, and integration with Defender suite, Entra ID, Key Vault, and Sentinel
+
+**api_design_guide** - Complete guide for Authorization Data Sharing API (FRR-ADS) with endpoints, authentication, OSCAL formats, and examples
+
+**authorization_boundary_review** - Guidance for defining and documenting authorization boundaries, system interconnections, and data flows per FedRAMP 20x requirements
+
+### Monitoring & Compliance Prompts
+
+**continuous_monitoring_setup** - Guide for establishing continuous monitoring programs aligned with FedRAMP 20x requirements including automation, metrics, and reporting
+
+**quarterly_review_checklist** - Comprehensive checklist for FedRAMP 20x quarterly reviews (FRR-CCM-QR) covering all 72 KSIs, vulnerability review, and change review
+
+**vulnerability_remediation_timeline** - Timeline and prioritization framework for vulnerability remediation aligned with FedRAMP 20x VDR requirements
+
+### Audit & Documentation Prompts
 
 **audit_preparation** - Comprehensive guide for FedRAMP 20x assessment preparation with evidence gathering, common findings, and interview prep (teams determine preparation timeline)
 
-**azure_ksi_automation** - **Complete guide for implementing all 72 KSIs using Microsoft, Azure, and M365 capabilities** including PowerShell scripts, Azure CLI commands, Microsoft Graph API integration, KQL queries, Azure Functions/Logic Apps, evidence collection framework, and integration with Defender suite, Entra ID, Key Vault, and Sentinel
+**ato_package_checklist** - Complete checklist for Authority to Operate (ATO) package preparation including all required artifacts, templates, and submission requirements
+
+**documentation_generator** - OSCAL SSP templates, procedure templates (VDR, ICP, SCN), and KSI implementation documentation templates
 
 ## Data Source
 
