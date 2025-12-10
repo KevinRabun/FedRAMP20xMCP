@@ -24,7 +24,7 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         data_loader: The data loader instance for accessing FedRAMP data
     """
     # Import all tool modules
-    from . import requirements, definitions, ksi, documentation, export, enhancements, evidence, analyzer, audit, security, ksi_status, validation
+    from . import requirements, definitions, ksi, frr, documentation, export, enhancements, evidence, analyzer, audit, security, ksi_status, validation
     from ..templates import get_infrastructure_template, get_code_template
     
     # Requirements tools
@@ -147,6 +147,135 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
             Evidence artifacts list with collection details
         """
         return await ksi.get_ksi_evidence_artifacts_impl(ksi_id, data_loader)
+    
+    # FRR (FedRAMP Requirements) tools
+    @mcp.tool()
+    async def analyze_frr_code(
+        frr_id: str,
+        code: str,
+        language: str,
+        file_path: Optional[str] = None
+    ) -> str:
+        """
+        Analyze code against a specific FedRAMP requirement (FRR).
+        
+        Detects compliance issues in application code, infrastructure as code,
+        or CI/CD pipelines for the specified FRR.
+        
+        Args:
+            frr_id: FRR identifier (e.g., "FRR-VDR-01", "FRR-RSC-01")
+            code: Code to analyze
+            language: Language/platform (python, csharp, java, typescript, bicep, terraform, 
+                     github-actions, azure-pipelines, gitlab-ci)
+            file_path: Optional file path for context
+        
+        Returns:
+            Analysis results with findings and recommendations
+        """
+        return await frr.analyze_frr_code_impl(frr_id, code, language, file_path, data_loader)
+    
+    @mcp.tool()
+    async def analyze_all_frrs(
+        code: str,
+        language: str,
+        file_path: Optional[str] = None
+    ) -> str:
+        """
+        Analyze code against all FedRAMP requirements.
+        
+        Performs comprehensive analysis across all 199 FRR requirements.
+        
+        Args:
+            code: Code to analyze
+            language: Language/platform
+            file_path: Optional file path for context
+        
+        Returns:
+            Complete analysis results grouped by family
+        """
+        return await frr.analyze_all_frrs_impl(code, language, file_path, data_loader)
+    
+    @mcp.tool()
+    async def analyze_frr_family(
+        family: str,
+        code: str,
+        language: str,
+        file_path: Optional[str] = None
+    ) -> str:
+        """
+        Analyze code against all requirements in a specific FRR family.
+        
+        Args:
+            family: Family code (VDR, RSC, UCM, SCN, ADS, CCM, MAS, ICP, FSI, PVA, KSI)
+            code: Code to analyze
+            language: Language/platform
+            file_path: Optional file path for context
+        
+        Returns:
+            Analysis results for the specified family
+        """
+        return await frr.analyze_frr_family_impl(family, code, language, file_path, data_loader)
+    
+    @mcp.tool()
+    async def list_frrs_by_family(family: str) -> str:
+        """
+        List all FRR requirements in a specific family.
+        
+        Shows implementation status and code detectability for each FRR.
+        
+        Args:
+            family: Family code (VDR, RSC, UCM, SCN, ADS, CCM, MAS, ICP, FSI, PVA, KSI)
+        
+        Returns:
+            List of FRRs with status indicators
+        """
+        return await frr.list_frrs_by_family_impl(family, data_loader)
+    
+    @mcp.tool()
+    async def get_frr_metadata(frr_id: str) -> str:
+        """
+        Get detailed metadata for a specific FRR.
+        
+        Returns NIST controls, related KSIs, impact levels, and detection strategy.
+        
+        Args:
+            frr_id: FRR identifier (e.g., "FRR-VDR-01")
+        
+        Returns:
+            Detailed FRR metadata
+        """
+        return await frr.get_frr_metadata_impl(frr_id, data_loader)
+    
+    @mcp.tool()
+    async def get_frr_evidence_automation(frr_id: str) -> str:
+        """
+        Get evidence automation recommendations for a specific FRR.
+        
+        Provides detailed guidance on automating evidence collection including:
+        - Azure services needed
+        - Collection methods and queries (KQL, REST API)
+        - Storage requirements
+        - Evidence artifacts to collect
+        
+        Args:
+            frr_id: FRR identifier (e.g., "FRR-VDR-01")
+        
+        Returns:
+            Evidence automation recommendations
+        """
+        return await frr.get_frr_evidence_automation_impl(frr_id, data_loader)
+    
+    @mcp.tool()
+    async def get_frr_implementation_status() -> str:
+        """
+        Get implementation status summary across all FRR analyzers.
+        
+        Shows statistics by family with implementation rates.
+        
+        Returns:
+            Status summary with family breakdown
+        """
+        return await frr.get_frr_implementation_status_impl(data_loader)
     
     # Documentation tools
     @mcp.tool()
