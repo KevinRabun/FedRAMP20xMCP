@@ -8,7 +8,7 @@ Automate management, protection, and regular rotation of digital keys, certifica
 """
 
 import re
-from typing import List, Set, Dict, Any
+from typing import List, Dict, Any
 from ..base import Finding, Severity, AnalysisResult
 from .base import BaseKSIAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
