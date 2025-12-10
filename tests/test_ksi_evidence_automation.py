@@ -288,8 +288,7 @@ def test_evidence_automation_completeness():
     collection_methods = recommendations.get('collection_methods', [])
     assert len(collection_methods) > 0, "Should have collection methods"
     
-    # Verify artifacts cover collection methods
-    artifact_names = [a['artifact_name'] for a in artifacts]
+    # Display collection methods
     for method in collection_methods:
         print(f"   - Collection method: {method['method']}")
     
