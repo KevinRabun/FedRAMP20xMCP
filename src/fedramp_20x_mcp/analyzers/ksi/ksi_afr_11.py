@@ -9,7 +9,7 @@ Enhanced with AST-based analysis where applicable, regex-based for IaC/CI-CD.
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -1301,3 +1301,150 @@ class KSI_AFR_11_Analyzer(BaseKSIAnalyzer):
                 ))
         
         return findings
+
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get recommendations for automating evidence collection for KSI-AFR-11.
+        
+        Returns:
+            Dict containing automation recommendations
+        """
+        return {
+            "ksi_id": self.ksi_id,
+            "ksi_name": "Using Cryptographic Modules",
+            "evidence_type": "config-based",
+            "automation_feasibility": "high",
+            "azure_services": [
+                "Azure Key Vault",
+                "Microsoft Defender for Cloud",
+                "Azure Policy",
+                "Azure Monitor",
+                "Microsoft Defender for DevOps"
+            ],
+            "collection_methods": [
+                "Azure Key Vault audit logs to track cryptographic key usage and FIPS 140-2/3 compliance",
+                "Defender for Cloud security recommendations for weak cryptography and TLS configurations",
+                "Azure Policy to enforce minimum TLS versions and approved cryptographic algorithms",
+                "Defender for DevOps code scanning to detect hardcoded secrets and weak crypto usage in source code"
+            ],
+            "implementation_steps": [
+                "1. Enable Azure Key Vault with FIPS 140-2 Level 2 validated HSMs: (a) Create Key Vault with premium SKU for HSM-backed keys, (b) Enable diagnostic logging for all key operations, (c) Configure RBAC with least privilege access",
+                "2. Deploy Azure Policy initiative 'FedRAMP Cryptographic Requirements': (a) Deny weak TLS (<1.2), (b) Audit weak hash algorithms (MD5, SHA1), (c) Require customer-managed keys for encryption at rest, (d) Enforce Key Vault soft-delete and purge protection",
+                "3. Enable Defender for Cloud cryptographic recommendations: (a) Activate 'Enable secure transfer to storage accounts' (enforce HTTPS), (b) Monitor 'TLS should be upgraded to latest version', (c) Track 'Sensitive data should be encrypted'",
+                "4. Integrate Defender for DevOps: (a) Enable secret scanning for all code repositories, (b) Detect hardcoded keys/passwords/certificates, (c) Identify weak crypto usage patterns (MD5, DES, RC4)",
+                "5. Build Azure Monitor workbook 'Cryptographic Compliance Dashboard': (a) Key Vault key usage metrics, (b) Policy compliance for crypto standards, (c) Defender recommendations for weak crypto, (d) Secret scanning findings from DevOps",
+                "6. Generate monthly evidence package via Azure Automation runbook: (a) Export Key Vault audit logs, (b) Export Policy compliance for crypto policies, (c) Export Defender crypto recommendations, (d) Export DevOps secret scanning results"
+            ],
+            "evidence_artifacts": [
+                "Azure Key Vault Audit Log showing all cryptographic operations with FIPS-validated key usage",
+                "Azure Policy Compliance Report for cryptographic requirements (TLS versions, approved algorithms, encryption enforcement)",
+                "Defender for Cloud Cryptographic Recommendations Report showing weak crypto detections and remediation status",
+                "Defender for DevOps Secret Scanning Report with hardcoded secret detections and resolution timeline",
+                "Cryptographic Compliance Dashboard from Azure Monitor with monthly snapshots of key usage and compliance metrics"
+            ],
+            "update_frequency": "monthly",
+            "responsible_party": "Cloud Security Team / Cryptography Officer"
+        }
+
+    def get_evidence_collection_queries(self) -> List[Dict[str, str]]:
+        """
+        Get specific queries for evidence collection automation.
+        
+        Returns:
+            List of query dictionaries
+        """
+        return [
+            {
+                "query_type": "Azure Monitor KQL",
+                "query_name": "Key Vault cryptographic operations audit",
+                "query": """AzureDiagnostics
+| where ResourceProvider == 'MICROSOFT.KEYVAULT'
+| where OperationName in ('SecretGet', 'KeyEncrypt', 'KeyDecrypt', 'KeySign', 'KeyVerify')
+| extend KeyType = tostring(parse_json(properties_s).keyType)
+| extend KeySize = toint(parse_json(properties_s).keySize)
+| summarize OperationCount = count(), UniqueCallers = dcount(CallerIPAddress) by OperationName, KeyType, KeySize, Resource
+| where KeySize >= 2048 or KeyType == 'RSA-HSM'  // FIPS-compliant key sizes
+| order by OperationCount desc""",
+                "purpose": "Audit all cryptographic operations using FIPS-validated keys in Azure Key Vault"
+            },
+            {
+                "query_type": "Azure Policy REST API",
+                "query_name": "Cryptographic policy compliance status",
+                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.PolicyInsights/policyStates/latest/summarize?api-version=2019-10-01&$filter=policyDefinitionCategory eq 'Security' and (policyDefinitionName contains 'TLS' or policyDefinitionName contains 'encryption')",
+                "purpose": "Retrieve policy compliance for cryptographic requirements (TLS versions, encryption standards)"
+            },
+            {
+                "query_type": "Microsoft Defender for Cloud REST API",
+                "query_name": "Weak cryptography recommendations",
+                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.Security/assessments?api-version=2020-01-01&$filter=properties/displayName contains 'TLS' or properties/displayName contains 'encryption' or properties/displayName contains 'cryptograph'",
+                "purpose": "Identify all Defender recommendations related to weak or non-compliant cryptographic configurations"
+            },
+            {
+                "query_type": "Microsoft Defender for DevOps REST API",
+                "query_name": "Secret scanning findings in code repositories",
+                "query": "GET https://api.github.com/repos/{owner}/{repo}/secret-scanning/alerts?state=open",
+                "purpose": "Retrieve all detected hardcoded secrets and cryptographic keys in source code repositories"
+            },
+            {
+                "query_type": "Azure Resource Graph KQL",
+                "query_name": "Resources with weak TLS configurations",
+                "query": """Resources
+| where type in ('microsoft.storage/storageaccounts', 'microsoft.web/sites', 'microsoft.sql/servers')
+| extend MinTLSVersion = case(
+    type == 'microsoft.storage/storageaccounts', properties.minimumTlsVersion,
+    type == 'microsoft.web/sites', properties.siteConfig.minTlsVersion,
+    type == 'microsoft.sql/servers', properties.minimalTlsVersion,
+    'unknown'
+)
+| where MinTLSVersion < '1.2' or MinTLSVersion == 'unknown'
+| project name, type, resourceGroup, MinTLSVersion, location
+| order by type asc""",
+                "purpose": "Identify Azure resources configured with weak TLS versions not compliant with FedRAMP UCM"
+            }
+        ]
+
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        """
+        Get descriptions of evidence artifacts to collect.
+        
+        Returns:
+            List of artifact dictionaries
+        """
+        return [
+            {
+                "artifact_name": "Azure Key Vault Cryptographic Operations Log",
+                "artifact_type": "Azure Monitor Logs Export",
+                "description": "Complete audit log of all cryptographic operations (encrypt, decrypt, sign, verify) using FIPS-validated keys",
+                "collection_method": "Azure Monitor KQL query exporting Key Vault diagnostic logs with operation details and key properties",
+                "storage_location": "Azure Log Analytics workspace with 12-month retention for compliance auditing"
+            },
+            {
+                "artifact_name": "Azure Policy Cryptographic Compliance Report",
+                "artifact_type": "Azure Policy Export",
+                "description": "Policy compliance report showing enforcement of TLS minimums, approved algorithms, and encryption requirements",
+                "collection_method": "Azure Policy Insights API to export compliance status for all crypto-related policies",
+                "storage_location": "Azure Storage Account with monthly compliance snapshots and historical tracking"
+            },
+            {
+                "artifact_name": "Defender for Cloud Cryptographic Recommendations",
+                "artifact_type": "Security Recommendations Export",
+                "description": "Report of all Defender recommendations related to weak cryptography, TLS upgrades, and encryption gaps",
+                "collection_method": "Microsoft Defender for Cloud REST API to retrieve and filter cryptographic security recommendations",
+                "storage_location": "Azure Storage Account with JSON exports organized by recommendation severity"
+            },
+            {
+                "artifact_name": "Defender for DevOps Secret Scanning Report",
+                "artifact_type": "Secret Scanning Alerts Export",
+                "description": "List of all detected hardcoded secrets, keys, and certificates in code repositories with resolution status",
+                "collection_method": "GitHub/Azure DevOps secret scanning API to export alert details with timestamps and remediation actions",
+                "storage_location": "Azure DevOps artifacts repository with automated tracking of resolution timeline"
+            },
+            {
+                "artifact_name": "Cryptographic Compliance Dashboard",
+                "artifact_type": "Azure Monitor Workbook",
+                "description": "Comprehensive dashboard showing Key Vault usage, TLS configurations, policy compliance, and weak crypto detections",
+                "collection_method": "Azure Monitor workbook aggregating data from Key Vault logs, Policy, Defender, and DevOps scanning",
+                "storage_location": "Azure Monitor Workbooks with monthly PDF exports archived to Storage Account"
+            }
+        ]
+    

@@ -9,7 +9,7 @@ Version: 25.11C (Published: 2025-12-01)
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -844,5 +844,134 @@ Reference: FRR-AFR-07"""
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
+
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get recommendations for automating evidence collection for KSI-AFR-07.
+        
+        Returns:
+            Dict containing automation recommendations
+        """
+        return {
+            "ksi_id": self.ksi_id,
+            "ksi_name": "Recommended Secure Configuration",
+            "evidence_type": "config-based",
+            "automation_feasibility": "high",
+            "azure_services": [
+                "Azure Policy",
+                "Microsoft Defender for Cloud",
+                "Azure Automation DSC",
+                "Azure DevOps",
+                "Azure Advisor"
+            ],
+            "collection_methods": [
+                "Azure Policy guest configuration to audit OS and application secure baseline compliance",
+                "Defender for Cloud secure score and recommendations for FedRAMP-aligned security configurations",
+                "Azure Automation DSC to enforce and report on configuration drift from secure baselines",
+                "Azure DevOps to maintain and version-control secure configuration documentation and standards"
+            ],
+            "implementation_steps": [
+                "1. Define FedRAMP Recommended Secure Configuration (RSC) baselines in Azure Policy guest configuration: (a) Windows Server hardening (CIS benchmarks), (b) Linux hardening (CIS benchmarks), (c) Azure PaaS service secure configurations",
+                "2. Assign Azure Policy initiatives: (a) Enable guest configuration VM extension on all VMs, (b) Apply FedRAMP High/Moderate baseline policies, (c) Configure audit-only mode initially for baseline assessment",
+                "3. Enable Defender for Cloud with FedRAMP security standards: (a) Activate FedRAMP High/Moderate regulatory compliance dashboard, (b) Configure secure score thresholds and alerts, (c) Enable auto-remediation for critical config gaps",
+                "4. Document secure configuration guidance in Azure DevOps: (a) Create wiki pages for each Azure service with FedRAMP-aligned configs, (b) Store IaC templates with secure-by-default settings, (c) Version control all baseline documents",
+                "5. Deploy Azure Automation DSC for configuration enforcement: (a) Author DSC configurations for Windows/Linux baselines, (b) Onboard all VMs to Automation State Configuration, (c) Monitor compliance reports",
+                "6. Generate monthly evidence package via Azure Automation runbook: (a) Export Policy compliance reports, (b) Export Defender secure score history, (c) Export DSC compliance status, (d) Package documentation from DevOps"
+            ],
+            "evidence_artifacts": [
+                "Azure Policy Compliance Report showing guest configuration audit results for secure baselines",
+                "Defender for Cloud Secure Score Report with FedRAMP regulatory compliance status",
+                "Azure Automation DSC Compliance Report showing configuration drift and remediation actions",
+                "Secure Configuration Documentation Package from Azure DevOps with baseline guides and IaC templates",
+                "Azure Advisor Recommendations Report filtered for security and FedRAMP-relevant configuration improvements"
+            ],
+            "update_frequency": "monthly",
+            "responsible_party": "Cloud Security Team / Configuration Management Team"
+        }
+
+    def get_evidence_collection_queries(self) -> List[Dict[str, str]]:
+        """
+        Get specific queries for evidence collection automation.
+        
+        Returns:
+            List of query dictionaries
+        """
+        return [
+            {
+                "query_type": "Azure Policy REST API",
+                "query_name": "Guest configuration compliance for secure baselines",
+                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.PolicyInsights/policyStates/latest/summarize?api-version=2019-10-01&$filter=policyDefinitionCategory eq 'Guest Configuration'",
+                "purpose": "Retrieve compliance status of VMs against FedRAMP secure configuration baselines"
+            },
+            {
+                "query_type": "Microsoft Defender for Cloud REST API",
+                "query_name": "FedRAMP regulatory compliance assessment",
+                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.Security/regulatoryComplianceStandards/FedRAMP-High/regulatoryComplianceControls?api-version=2019-01-01-preview",
+                "purpose": "Get FedRAMP regulatory compliance control assessment results from Defender for Cloud"
+            },
+            {
+                "query_type": "Azure Automation REST API",
+                "query_name": "DSC node compliance status",
+                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.Automation/automationAccounts/{automationAccount}/nodes?api-version=2019-06-01&$filter=properties/status eq 'Compliant' or properties/status eq 'NonCompliant'",
+                "purpose": "Retrieve DSC compliance status for all managed nodes against secure configuration baselines"
+            },
+            {
+                "query_type": "Azure Advisor REST API",
+                "query_name": "Security recommendations for configuration improvements",
+                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.Advisor/recommendations?api-version=2020-01-01&$filter=properties/category eq 'Security' and properties/impactedField eq 'Microsoft.Compute/virtualMachines'",
+                "purpose": "Identify security-related configuration recommendations from Azure Advisor for FedRAMP workloads"
+            },
+            {
+                "query_type": "Azure DevOps REST API",
+                "query_name": "Secure configuration documentation repository",
+                "query": "GET https://dev.azure.com/{organization}/{project}/_apis/git/repositories/FedRAMP-Secure-Configurations/items?scopePath=/RSC-Baselines&recursionLevel=Full&api-version=7.0",
+                "purpose": "Access version-controlled secure configuration documentation and baseline standards"
+            }
+        ]
+
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        """
+        Get descriptions of evidence artifacts to collect.
+        
+        Returns:
+            List of artifact dictionaries
+        """
+        return [
+            {
+                "artifact_name": "Azure Policy Guest Configuration Report",
+                "artifact_type": "Azure Policy Compliance Export",
+                "description": "Compliance report showing VM adherence to FedRAMP secure configuration baselines (CIS benchmarks, hardening standards)",
+                "collection_method": "Azure Policy Insights API to export guest configuration compliance data to JSON",
+                "storage_location": "Azure Storage Account with compliance report retention for 12 months"
+            },
+            {
+                "artifact_name": "Defender for Cloud Secure Score History",
+                "artifact_type": "Defender for Cloud Report",
+                "description": "Monthly secure score trends showing configuration security posture against FedRAMP standards",
+                "collection_method": "Microsoft Defender for Cloud REST API to retrieve secure score and control assessments",
+                "storage_location": "Azure Log Analytics workspace with historical secure score data"
+            },
+            {
+                "artifact_name": "Azure Automation DSC Compliance Report",
+                "artifact_type": "DSC State Configuration Report",
+                "description": "Report showing configuration drift detection and compliance status for all DSC-managed nodes",
+                "collection_method": "Azure Automation API to export DSC node compliance status with drift details",
+                "storage_location": "Azure Storage Account with monthly snapshots and CSV exports"
+            },
+            {
+                "artifact_name": "Secure Configuration Documentation Package",
+                "artifact_type": "Azure DevOps Repository Export",
+                "description": "Complete set of FedRAMP-aligned secure configuration guides, baseline documents, and IaC templates",
+                "collection_method": "Azure DevOps Git API to clone/export secure configuration repository with version history",
+                "storage_location": "Azure DevOps Repos with branch protection and required reviewers for RSC changes"
+            },
+            {
+                "artifact_name": "Azure Advisor Security Recommendations",
+                "artifact_type": "Azure Advisor Report",
+                "description": "Security-focused recommendations for configuration improvements aligned with FedRAMP requirements",
+                "collection_method": "Azure Advisor REST API to retrieve and filter security recommendations for production workloads",
+                "storage_location": "Azure Monitor Logs with Advisor recommendation ingestion and alerting"
+            }
+        ]
     
 
