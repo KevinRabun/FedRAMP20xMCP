@@ -17,7 +17,7 @@ Version: 25.11C (Published: 2025-12-01)
 """
 
 import re
-from typing import List, Optional, Dict, Any
+from typing import List, Dict, Any
 from ..base import Finding, Severity, AnalysisResult
 from .base import BaseKSIAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
