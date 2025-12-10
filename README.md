@@ -8,6 +8,29 @@
 
 An MCP (Model Context Protocol) server that provides access to FedRAMP 20x security requirements and controls with **Azure-first guidance**.
 
+## 🎉 What's New
+
+### ⭐ **Evidence Automation Complete (v1.4.0)**
+- **100% KSI Coverage Achieved**: All **65 active KSIs** now include comprehensive automated evidence collection guidance
+- **3 New MCP Tools**: `get_ksi_evidence_automation`, `get_ksi_evidence_queries`, `get_ksi_evidence_artifacts`
+- **Azure-Native Automation**: Each KSI provides 5 Azure services (Log Analytics, Resource Graph, Defender, Policy, Monitor) with ready-to-use queries (KQL, REST API, Resource Graph)
+- **Production-Ready Templates**: 5 artifacts per KSI with collection methods, formats, frequencies, retention policies
+- **Implementation Support**: Effort estimates, prerequisites, cost considerations, responsible parties for each KSI
+- **Quality Standards**: 4-5 collection methods per KSI, update frequencies (daily/weekly/monthly/quarterly), secure storage patterns
+
+**Families Covered (11/11):**
+- ✅ **IAM** (7 KSIs): MFA, Privilege, Session, Credential, User Termination, JIT, Shared Accounts
+- ✅ **CNA** (8 KSIs): Network Segmentation, TLS, Connection Logging, Azure Monitor, Key Vault, Secrets Detection, ACR, GitHub Security
+- ✅ **MLA** (5 KSIs): Log Aggregation, Retention, Tamper Detection, Search, Alerting
+- ✅ **INR** (3 KSIs): Response Plans, Incident Logging, After Action Reports
+- ✅ **AFR** (11 KSIs): Asset Discovery, SBOM, Pen Testing, Dev/Prod Separation, GitHub Actions Security, Container Scanning, etc.
+- ✅ **SVC** (9 KSIs): FIPS 140-3, API Authentication, Rate Limiting, Input Validation, Error Handling, Secrets Management, DoS Protection, Secrets Rotation, Dependencies
+- ✅ **CMT** (4 KSIs): Monitoring, Health Checks, Baselines, Drift Detection
+- ✅ **CED** (4 KSIs): FedRAMP Authorization Documents, System Boundary, SSP Updates, Continuous Delivery
+- ✅ **TPR** (2 KSIs): Supply Chain Risk Assessment, Supply Chain Risk Monitoring
+- ✅ **RPL** (4 KSIs): Recovery Objectives, Recovery Plans, System Backups, Recovery Testing
+- ✅ **PIY** (8 KSIs): Automated Inventory, Data Minimization, Vulnerability Disclosure, CISA Secure By Design, Security Evaluations, Investment Effectiveness, Supply Chain Risk, Executive Support
+
 ## Overview
 
 This server loads FedRAMP 20x data from the official [FedRAMP documentation repository](https://github.com/FedRAMP/docs) and provides tools for querying requirements by control, family, or keyword.
@@ -36,11 +59,12 @@ The server provides access to **329 requirements** across all 12 FedRAMP 20x doc
 
 ## Features
 
+- **🎯 Automated Evidence Collection (NEW)**: Complete automation guidance for all 65 active KSIs with Azure-native services, ready-to-use queries, and artifact specifications
 - **Query by Control**: Get detailed information about specific FedRAMP requirements
 - **Query by Family**: List all requirements within a family
 - **Keyword Search**: Search across all requirements using keywords
 - **FedRAMP Definitions**: Look up official FedRAMP term definitions
-- **Key Security Indicators**: Access and query FedRAMP Key Security Indicators (KSI)
+- **Key Security Indicators**: Access and query FedRAMP Key Security Indicators (KSI) with implementation status
 - **Documentation Search**: Search and retrieve official FedRAMP documentation markdown files
 - **Dynamic Content**: Automatically discovers and loads all markdown documentation files
 - **Implementation Planning**: Generate strategic interview questions to help product managers and engineers think through FedRAMP 20x implementation considerations
