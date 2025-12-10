@@ -6,7 +6,7 @@ Design systems to minimize the attack surface and minimize lateral movement if c
 This enhanced version uses AST parsing and semantic analysis for improved accuracy.
 """
 
-from typing import List, Set, Dict, Any
+from typing import List, Dict, Any
 from ..base import Finding, Severity, AnalysisResult
 from ..ast_utils import ASTParser, CodeLanguage
 from ..semantic_analysis import SemanticAnalyzer
