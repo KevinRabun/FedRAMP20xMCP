@@ -1098,3 +1098,269 @@ class KSI_CNA_05_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get Azure-specific recommendations for automating evidence collection for KSI-CNA-05.
+        
+        **KSI-CNA-05: Unwanted Activity**
+        Protect against denial of service attacks and other unwanted activity.
+        
+        Returns:
+            Dictionary with automation recommendations
+        """
+        return {
+            "ksi_id": "KSI-CNA-05",
+            "ksi_name": "Unwanted Activity",
+            "azure_services": [
+                {
+                    "service": "Azure DDoS Protection Standard",
+                    "purpose": "Protect against distributed denial of service attacks",
+                    "capabilities": [
+                        "Always-on traffic monitoring",
+                        "Automatic attack mitigation",
+                        "Attack analytics and metrics",
+                        "Cost protection guarantee"
+                    ]
+                },
+                {
+                    "service": "Azure Application Gateway / Front Door WAF",
+                    "purpose": "Application-layer DDoS and unwanted traffic protection",
+                    "capabilities": [
+                        "Rate limiting rules",
+                        "Bot protection",
+                        "Geo-filtering",
+                        "Custom WAF rules for unwanted traffic"
+                    ]
+                },
+                {
+                    "service": "Azure Firewall Premium",
+                    "purpose": "Network-level threat intelligence and filtering",
+                    "capabilities": [
+                        "Threat intelligence-based filtering",
+                        "IDPS (Intrusion Detection and Prevention)",
+                        "URL filtering for malicious sites",
+                        "TLS inspection"
+                    ]
+                },
+                {
+                    "service": "Azure Monitor / Log Analytics",
+                    "purpose": "Detect and alert on anomalous traffic patterns",
+                    "capabilities": [
+                        "Traffic anomaly detection",
+                        "DDoS mitigation logs",
+                        "WAF logs and analytics",
+                        "Custom alerts for unwanted activity"
+                    ]
+                },
+                {
+                    "service": "Microsoft Sentinel",
+                    "purpose": "SIEM-based correlation of unwanted activity across resources",
+                    "capabilities": [
+                        "DDoS attack correlation",
+                        "Threat intelligence integration",
+                        "Automated incident response",
+                        "Attack pattern analytics"
+                    ]
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "DDoS Attack Telemetry",
+                    "description": "Capture DDoS attack events, mitigation actions, and metrics",
+                    "automation": "DDoS Protection diagnostic logs",
+                    "frequency": "Continuous (with monthly reports)",
+                    "evidence_produced": "DDoS attack reports with mitigation effectiveness"
+                },
+                {
+                    "method": "WAF Blocked Requests Analysis",
+                    "description": "Track blocked malicious requests and bot activity",
+                    "automation": "WAF logs in Log Analytics",
+                    "frequency": "Daily",
+                    "evidence_produced": "WAF block summary with threat categories"
+                },
+                {
+                    "method": "Firewall Threat Intelligence Alerts",
+                    "description": "Document threats blocked by Firewall IDPS and threat intel",
+                    "automation": "Azure Firewall diagnostic logs",
+                    "frequency": "Daily",
+                    "evidence_produced": "Threat intelligence block report"
+                },
+                {
+                    "method": "Anomalous Traffic Detection",
+                    "description": "Identify and alert on unusual traffic patterns",
+                    "automation": "Azure Monitor alerts + Sentinel analytics rules",
+                    "frequency": "Continuous",
+                    "evidence_produced": "Anomaly detection alerts with investigation details"
+                }
+            ],
+            "automation_feasibility": "high",
+            "evidence_types": ["log-based", "metric-based"],
+            "implementation_guidance": {
+                "quick_start": "Enable DDoS Protection Standard on VNets, deploy WAF on App Gateway/Front Door, configure Firewall Premium with IDPS, send logs to Sentinel for correlation",
+                "azure_well_architected": "Follows Azure WAF reliability pillar for DoS resilience",
+                "compliance_mapping": "Addresses NIST controls sc-5, si-8, si-8.2 for DoS protection and spam filtering"
+            }
+        }
+    
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get specific Azure queries for collecting KSI-CNA-05 evidence.
+        """
+        return {
+            "ksi_id": "KSI-CNA-05",
+            "queries": [
+                {
+                    "name": "DDoS Attack Events",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace",
+                    "query": """
+                        AzureDiagnostics
+                        | where Category == 'DDoSProtectionNotifications' or Category == 'DDoSMitigationReports'
+                        | where TimeGenerated > ago(30d)
+                        | project TimeGenerated, ResourceId, MitigationStatus = iff(Category == 'DDoSMitigationReports', 'Mitigated', 'Detected'), Message
+                        | order by TimeGenerated desc
+                        """,
+                    "purpose": "Document DDoS attacks and mitigation effectiveness",
+                    "expected_result": "All attacks automatically mitigated by DDoS Protection"
+                },
+                {
+                    "name": "WAF Blocked Requests",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace",
+                    "query": """
+                        AzureDiagnostics
+                        | where Category == 'ApplicationGatewayFirewallLog' or Category == 'FrontdoorWebApplicationFirewallLog'
+                        | where action_s == 'Blocked' or action_s == 'Matched'
+                        | where TimeGenerated > ago(7d)
+                        | summarize BlockedRequests = count() by ruleId_s, Message, clientIp_s
+                        | order by BlockedRequests desc
+                        | take 100
+                        """,
+                    "purpose": "Show WAF effectiveness in blocking unwanted traffic",
+                    "expected_result": "Consistent blocking of malicious requests"
+                },
+                {
+                    "name": "Firewall Threat Intelligence Blocks",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace",
+                    "query": """
+                        AzureDiagnostics
+                        | where Category == 'AzureFirewallNetworkRule' or Category == 'AzureFirewallApplicationRule'
+                        | where msg_s contains 'Deny' or msg_s contains 'ThreatIntel'
+                        | where TimeGenerated > ago(7d)
+                        | summarize BlockedConnections = count() by ThreatCategory = iff(msg_s contains 'ThreatIntel', 'ThreatIntel', 'PolicyDeny'), SourceIP
+                        | order by BlockedConnections desc
+                        """,
+                    "purpose": "Track malicious traffic blocked by Firewall",
+                    "expected_result": "Threat intelligence effectively blocking known malicious IPs"
+                },
+                {
+                    "name": "Traffic Anomaly Detection",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace",
+                    "query": """
+                        AzureMetrics
+                        | where ResourceProvider == 'MICROSOFT.NETWORK'
+                        | where MetricName == 'ByteCount' or MetricName == 'PacketCount'
+                        | where TimeGenerated > ago(7d)
+                        | summarize TotalBytes = sum(Total), TotalPackets = sum(Count) by bin(TimeGenerated, 1h), ResourceId
+                        | extend BytesBaseline = avg(TotalBytes)
+                        | where TotalBytes > BytesBaseline * 5
+                        | project TimeGenerated, ResourceId, TotalBytes, BytesBaseline, AnomalyMultiplier = TotalBytes / BytesBaseline
+                        """,
+                    "purpose": "Detect unusual traffic spikes that may indicate attacks",
+                    "expected_result": "Anomalies detected and investigated"
+                },
+                {
+                    "name": "DDoS Protection Plan Status",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        resources
+                        | where type =~ 'Microsoft.Network/virtualNetworks'
+                        | extend ddosProtection = tobool(properties.enableDdosProtection)
+                        | extend ddosPlanId = tostring(properties.ddosProtectionPlan.id)
+                        | project name, resourceGroup, ddosProtection, ddosPlanId
+                        | where ddosProtection == false or isnull(ddosPlanId)
+                        """,
+                    "purpose": "Verify all VNets have DDoS Protection enabled",
+                    "expected_result": "100% of VNets protected by DDoS Protection Standard"
+                }
+            ],
+            "query_execution_guidance": {
+                "authentication": "Use Azure CLI or Managed Identity",
+                "permissions_required": [
+                    "Log Analytics Reader for DDoS and WAF logs",
+                    "Reader for Resource Graph queries",
+                    "Network Contributor for DDoS Protection configuration"
+                ],
+                "automation_tools": [
+                    "Azure CLI (az network ddos-protection, az monitor)",
+                    "PowerShell Az.Network module"
+                ]
+            }
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get descriptions of evidence artifacts for KSI-CNA-05.
+        """
+        return {
+            "ksi_id": "KSI-CNA-05",
+            "artifacts": [
+                {
+                    "name": "DDoS Attack and Mitigation Reports",
+                    "description": "Complete record of DDoS attacks with mitigation actions and effectiveness",
+                    "source": "Azure DDoS Protection diagnostic logs",
+                    "format": "JSON or CSV from Log Analytics",
+                    "collection_frequency": "Monthly (continuous monitoring)",
+                    "retention_period": "3 years",
+                    "automation": "Log Analytics scheduled export"
+                },
+                {
+                    "name": "WAF Block Log Summary",
+                    "description": "Analysis of blocked malicious requests and bot activity",
+                    "source": "Application Gateway / Front Door WAF logs",
+                    "format": "CSV with threat categorization",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "3 years",
+                    "automation": "KQL query + scheduled export"
+                },
+                {
+                    "name": "Firewall Threat Intelligence Block Report",
+                    "description": "Documentation of threats blocked by Firewall IDPS and threat intel",
+                    "source": "Azure Firewall diagnostic logs",
+                    "format": "CSV with IP reputation data",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "3 years",
+                    "automation": "Log Analytics export"
+                },
+                {
+                    "name": "Traffic Anomaly Detection Alerts",
+                    "description": "Record of anomalous traffic patterns with investigation outcomes",
+                    "source": "Azure Monitor alerts and Sentinel incidents",
+                    "format": "JSON incident records",
+                    "collection_frequency": "Continuous (with monthly summary)",
+                    "retention_period": "3 years",
+                    "automation": "Sentinel API export"
+                },
+                {
+                    "name": "DDoS Protection Configuration Evidence",
+                    "description": "Proof that all VNets are protected by DDoS Protection Standard",
+                    "source": "Azure Resource Graph",
+                    "format": "CSV configuration report",
+                    "collection_frequency": "Quarterly",
+                    "retention_period": "3 years",
+                    "automation": "Resource Graph scheduled query"
+                }
+            ],
+            "artifact_storage": {
+                "primary": "Azure Blob Storage with immutable storage",
+                "backup": "Azure Backup with GRS replication",
+                "access_control": "Azure RBAC with audit trail"
+            },
+            "compliance_mapping": {
+                "fedramp_controls": ["sc-5", "si-8", "si-8.2"],
+                "evidence_purpose": "Demonstrate protection against DoS attacks and unwanted traffic with automated mitigation"
+            }
+        }

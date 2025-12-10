@@ -2,7 +2,7 @@
 
 import ast
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 
@@ -466,11 +466,260 @@ class KSI_CMT_01_Analyzer(BaseKSIAnalyzer):
         
         return findings
     
-
+    def _get_snippet(self, lines: List[str], line_num: int, context: int = 3) -> str:
         """Get code snippet around line"""
         if not lines or line_num < 1:
             return ""
         start = max(0, line_num - context - 1)
         end = min(len(lines), line_num + context)
         return '\n'.join(lines[start:end])
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get Azure-specific recommendations for automating evidence collection for KSI-CMT-01.
+        
+        **KSI-CMT-01: Version Control and Change Logging**
+        Log and monitor modifications to the cloud service offering.
+        
+        Returns:
+            Dictionary with automation recommendations
+        """
+        return {
+            "ksi_id": "KSI-CMT-01",
+            "ksi_name": "Version Control and Change Logging",
+            "azure_services": [
+                {
+                    "service": "Azure DevOps / GitHub",
+                    "purpose": "Version control for all infrastructure and application code",
+                    "capabilities": [
+                        "Git version control with commit history",
+                        "Branch policies and approvals",
+                        "Pull request reviews",
+                        "Audit log of all changes"
+                    ]
+                },
+                {
+                    "service": "Azure Activity Log",
+                    "purpose": "Audit trail of all Azure resource modifications",
+                    "capabilities": [
+                        "Resource create/update/delete logging",
+                        "Who, what, when tracking",
+                        "Long-term retention (up to 90 days default, unlimited with export)",
+                        "Integration with Log Analytics"
+                    ]
+                },
+                {
+                    "service": "Azure Policy",
+                    "purpose": "Enforce version control and change management requirements",
+                    "capabilities": [
+                        "Require deployments via approved pipelines",
+                        "Audit manual changes",
+                        "Tag resources with change tracking metadata",
+                        "Compliance reporting"
+                    ]
+                },
+                {
+                    "service": "Azure Automation Change Tracking",
+                    "purpose": "Track configuration changes to VMs and software",
+                    "capabilities": [
+                        "File and registry change tracking",
+                        "Software inventory changes",
+                        "Service and daemon changes",
+                        "Change history and rollback"
+                    ]
+                },
+                {
+                    "service": "Azure Monitor",
+                    "purpose": "Comprehensive change monitoring and alerting",
+                    "capabilities": [
+                        "Configuration change alerts",
+                        "Deployment history tracking",
+                        "Change correlation and analytics",
+                        "Integration with SIEM"
+                    ]
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "Git Commit History Export",
+                    "description": "Export Git commit history showing all code changes with authors and timestamps",
+                    "automation": "Azure DevOps/GitHub API",
+                    "frequency": "Monthly",
+                    "evidence_produced": "Git commit log with change descriptions"
+                },
+                {
+                    "method": "Azure Resource Change History",
+                    "description": "Track all resource configuration changes via Activity Log",
+                    "automation": "Azure Activity Log queries",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Resource change audit trail"
+                },
+                {
+                    "method": "Deployment Pipeline Audit",
+                    "description": "Log all deployments showing approved pipelines were used",
+                    "automation": "Azure DevOps deployment history API",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Deployment audit log with approval evidence"
+                },
+                {
+                    "method": "Configuration Drift Detection",
+                    "description": "Detect manual changes not tracked in version control",
+                    "automation": "Azure Automation Change Tracking + Policy",
+                    "frequency": "Daily",
+                    "evidence_produced": "Configuration drift report with remediation"
+                }
+            ],
+            "automation_feasibility": "high",
+            "evidence_types": ["log-based", "config-based"],
+            "implementation_guidance": {
+                "quick_start": "Enforce Git for all code, enable Activity Log export to Log Analytics, configure Change Tracking, deploy Azure Policy for pipeline enforcement",
+                "azure_well_architected": "Follows Azure WAF operational excellence for change management and version control",
+                "compliance_mapping": "Addresses NIST controls au-2, cm-3, cm-3.2, cm-6 for change control and audit"
+            }
+        }
+    
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get specific Azure queries for collecting KSI-CMT-01 evidence.
+        """
+        return {
+            "ksi_id": "KSI-CMT-01",
+            "queries": [
+                {
+                    "name": "Git Commit History",
+                    "type": "azure_devops_api",
+                    "endpoint": "https://dev.azure.com/{org}/{project}/_apis/git/repositories/{repo}/commits?api-version=7.1",
+                    "method": "GET",
+                    "purpose": "Show all code changes with commit messages and authors",
+                    "expected_result": "Complete audit trail of code changes"
+                },
+                {
+                    "name": "Azure Resource Modifications",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace",
+                    "query": """
+                        AzureActivity
+                        | where TimeGenerated > ago(30d)
+                        | where OperationNameValue endswith '/WRITE' or OperationNameValue endswith '/DELETE'
+                        | project TimeGenerated, Caller, OperationNameValue, ResourceGroup, ResourceId, ActivityStatusValue
+                        | order by TimeGenerated desc
+                        """,
+                    "purpose": "Track all resource create/update/delete operations",
+                    "expected_result": "Complete audit trail with who/what/when"
+                },
+                {
+                    "name": "Deployment Pipeline History",
+                    "type": "azure_devops_api",
+                    "endpoint": "https://dev.azure.com/{org}/{project}/_apis/release/deployments?api-version=7.1",
+                    "method": "GET",
+                    "purpose": "Show all deployments via approved pipelines",
+                    "expected_result": "100% of changes via version-controlled pipelines"
+                },
+                {
+                    "name": "Configuration Change Tracking",
+                    "type": "kql",
+                    "workspace": "Log Analytics with Change Tracking",
+                    "query": """
+                        ConfigurationChange
+                        | where TimeGenerated > ago(7d)
+                        | summarize ChangeCount = count() by Computer, ConfigChangeType, ChangeCategory
+                        | order by ChangeCount desc
+                        """,
+                    "purpose": "Detect configuration changes on VMs",
+                    "expected_result": "All changes documented and authorized"
+                },
+                {
+                    "name": "Manual vs Pipeline Changes",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace",
+                    "query": """
+                        AzureActivity
+                        | where TimeGenerated > ago(30d)
+                        | where OperationNameValue endswith '/WRITE'
+                        | extend DeploymentMethod = iff(Caller contains 'azuredevops' or Caller contains 'github', 'Pipeline', 'Manual')
+                        | summarize ChangeCount = count() by DeploymentMethod
+                        | extend Percentage = round((ChangeCount * 100.0) / toscalar(AzureActivity | where TimeGenerated > ago(30d) | where OperationNameValue endswith '/WRITE' | count()), 2)
+                        """,
+                    "purpose": "Verify changes come from version-controlled pipelines",
+                    "expected_result": "Near 100% pipeline-driven changes"
+                }
+            ],
+            "query_execution_guidance": {
+                "authentication": "Use Azure CLI or Managed Identity",
+                "permissions_required": [
+                    "DevOps Project Reader for Git/pipeline data",
+                    "Log Analytics Reader for activity/change tracking queries",
+                    "Reader for Activity Log access"
+                ],
+                "automation_tools": [
+                    "Azure DevOps CLI extension",
+                    "Azure CLI (az monitor activity-log)",
+                    "PowerShell Az.Monitor module"
+                ]
+            }
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get descriptions of evidence artifacts for KSI-CMT-01.
+        """
+        return {
+            "ksi_id": "KSI-CMT-01",
+            "artifacts": [
+                {
+                    "name": "Git Commit History Report",
+                    "description": "Complete version control history with commit messages, authors, and timestamps",
+                    "source": "Azure DevOps / GitHub",
+                    "format": "CSV or JSON export",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "7 years",
+                    "automation": "Git API scheduled export"
+                },
+                {
+                    "name": "Azure Activity Log Archive",
+                    "description": "Complete audit trail of all Azure resource modifications",
+                    "source": "Azure Activity Log",
+                    "format": "JSON or CSV from Log Analytics",
+                    "collection_frequency": "Daily (continuous ingestion)",
+                    "retention_period": "7 years",
+                    "automation": "Log Analytics export"
+                },
+                {
+                    "name": "Deployment Pipeline Audit Log",
+                    "description": "Record of all deployments with approval and version control evidence",
+                    "source": "Azure DevOps / GitHub Actions",
+                    "format": "JSON deployment history",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "7 years",
+                    "automation": "DevOps API export"
+                },
+                {
+                    "name": "Configuration Change Report",
+                    "description": "VM and service configuration changes with change tracking",
+                    "source": "Azure Automation Change Tracking",
+                    "format": "CSV from Log Analytics",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "3 years",
+                    "automation": "Change Tracking API"
+                },
+                {
+                    "name": "Change Management Policy Configuration",
+                    "description": "Azure Policy definitions enforcing version control and pipeline usage",
+                    "source": "Azure Policy",
+                    "format": "JSON policy export",
+                    "collection_frequency": "Quarterly",
+                    "retention_period": "3 years",
+                    "automation": "Policy definition export"
+                }
+            ],
+            "artifact_storage": {
+                "primary": "Azure Blob Storage with immutable storage",
+                "backup": "Azure Backup with GRS replication",
+                "access_control": "Azure RBAC with audit trail"
+            },
+            "compliance_mapping": {
+                "fedramp_controls": ["au-2", "cm-3", "cm-3.2", "cm-6", "cm-8.3"],
+                "evidence_purpose": "Demonstrate all changes logged, version controlled, and tracked with complete audit trail"
+            }
+        }
 

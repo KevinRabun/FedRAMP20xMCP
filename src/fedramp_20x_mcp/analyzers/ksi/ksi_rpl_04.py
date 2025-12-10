@@ -9,7 +9,7 @@ Version: 25.11C (Published: 2025-12-01)
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 
@@ -265,5 +265,55 @@ class KSI_RPL_04_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
-    
 
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        return {
+            "ksi_id": self.ksi_id,
+            "ksi_name": "Recovery Testing",
+            "evidence_type": "log-based",
+            "automation_feasibility": "high",
+            "azure_services": ["Azure Site Recovery", "Azure DevOps", "Azure Monitor", "Power BI", "Microsoft Dataverse"],
+            "collection_methods": [
+                "Azure Site Recovery to execute quarterly DR test failovers with automated validation",
+                "Azure DevOps Pipelines to automate recovery test execution (backup restore, failover validation)",
+                "Azure Monitor to track recovery test results, execution time vs. RTO, and success/failure rates",
+                "Power BI to visualize recovery test history, RTO compliance trends, and recurring failures",
+                "Microsoft Dataverse to log recovery test outcomes with lessons learned and remediation tracking"
+            ],
+            "implementation_steps": [
+                "1. Schedule Azure Site Recovery test failovers: (a) Quarterly test failover schedule for all Tier 1/2 services, (b) Use isolated virtual networks to avoid production impact, (c) Validate application functionality post-failover (health checks, smoke tests), (d) Measure actual RTO vs. documented RTO, (e) Execute failback and cleanup",
+                "2. Automate recovery tests with Azure DevOps: (a) Create 'Recovery Test' pipeline triggered quarterly, (b) Steps: Initiate ASR test failover → Run automated smoke tests → Measure RTO → Capture results → Failback, (c) Publish test results to Azure DevOps Test Plans, (d) Create work items for failures requiring remediation",
+                "3. Track results with Azure Monitor: (a) Log ASR test failover executions with success/failure status, (b) Capture execution time and compare to RTO targets, (c) Alert on test failures or RTO breaches, (d) Generate quarterly test summary report",
+                "4. Build Power BI Recovery Test Dashboard: (a) Recovery test history by service and tier, (b) RTO compliance: Actual vs. Target (Green < 90%, Yellow 90-100%, Red > 100%), (c) Recurring failures and remediation status, (d) Test frequency compliance (quarterly target)",
+                "5. Log outcomes in Microsoft Dataverse: (a) Table: recovery_test_log with columns: testid, servicename, testdate, success, actual_rto, target_rto, failures, lessonslearned, remediation_status, (b) Automate record creation from DevOps pipeline results, (c) Track remediation items with due dates and ownership",
+                "6. Generate quarterly evidence package: (a) Export ASR test failover logs with execution details, (b) Export DevOps pipeline test results with smoke test outcomes, (c) Export Azure Monitor RTO compliance metrics, (d) Export Power BI dashboard showing >= 95% test success, (e) Export Dataverse recovery test log with lessons learned"
+            ],
+            "evidence_artifacts": [
+                "Azure Site Recovery Test Failover Logs showing quarterly DR tests with isolated networks and cleanup",
+                "Azure DevOps Recovery Test Pipeline Results with automated smoke tests and RTO measurements",
+                "Azure Monitor Recovery Test Report tracking success rates (>= 95%) and RTO compliance vs. targets",
+                "Power BI Recovery Test Dashboard visualizing test history, RTO trends, and recurring failure remediation",
+                "Microsoft Dataverse Recovery Test Log with test outcomes, lessons learned, and remediation tracking"
+            ],
+            "update_frequency": "quarterly",
+            "responsible_party": "Business Continuity Manager / DevOps Team"
+        }
+
+    def get_evidence_collection_queries(self) -> List[Dict[str, str]]:
+        return [
+            {"query_type": "Azure Site Recovery REST API", "query_name": "Test failover execution logs", "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.RecoveryServices/vaults/{vaultName}/replicationJobs?api-version=2022-10-01&$filter=contains(properties.activityId, 'TestFailover') and startTime ge {quarterStartDate}", "purpose": "Retrieve ASR test failover logs showing quarterly DR tests with execution details and cleanup status"},
+            {"query_type": "Azure DevOps REST API", "query_name": "Recovery test pipeline results", "query": "GET https://dev.azure.com/{organization}/{project}/_apis/pipelines/{pipelineId}/runs?api-version=7.0&$filter=createdDate ge {quarterStartDate}", "purpose": "Retrieve DevOps pipeline runs for Recovery Test pipelines with smoke test results and RTO measurements"},
+            {"query_type": "Azure Monitor KQL", "query_name": "Recovery test RTO compliance", "query": "AzureDiagnostics\n| where Category == 'AzureSiteRecoveryJobs' and OperationName contains 'TestFailover'\n| extend ActualRTO = DurationMs / 60000\n| join kind=inner (datatable(RecoveryPlanName:string, TargetRTO:int) ['Tier1-Recovery', 240, 'Tier2-Recovery', 1440]) on RecoveryPlanName\n| extend RTOCompliance = iff(ActualRTO <= TargetRTO, 'Pass', 'Fail')\n| summarize TotalTests = count(), Passed = countif(RTOCompliance == 'Pass'), Failed = countif(RTOCompliance == 'Fail'), AvgActualRTO = avg(ActualRTO) by RecoveryPlanName, bin(TimeGenerated, 90d)\n| extend ComplianceRate = round((todouble(Passed) / TotalTests) * 100, 2)", "purpose": "Calculate recovery test RTO compliance rates (>= 95% target) by comparing actual vs. target RTO"},
+            {"query_type": "Power BI REST API", "query_name": "Recovery test history and trends", "query": "POST https://api.powerbi.com/v1.0/myorg/datasets/{datasetId}/executeQueries\\nBody: {\\\"queries\\\": [{\\\"query\\\": \\\"EVALUATE SUMMARIZE(RecoveryTestLog, RecoveryTestLog[ServiceName], 'TotalTests', COUNT(RecoveryTestLog[TestID]), 'Successful', COUNTIF(RecoveryTestLog[Success] = TRUE), 'RTOCompliant', COUNTIF(RecoveryTestLog[ActualRTO] <= RecoveryTestLog[TargetRTO]), 'RemediationComplete', COUNTIF(RecoveryTestLog[RemediationStatus] = 'Completed'))\\\"}]}", "purpose": "Calculate recovery test success rates and RTO compliance trends for executive dashboard"},
+            {"query_type": "Microsoft Dataverse Web API", "query_name": "Recovery test log with lessons learned", "query": "GET https://{organization}.api.crm.dynamics.com/api/data/v9.2/recovery_test_log_records?$select=testid,servicename,testdate,success,actual_rto,target_rto,lessonslearned,remediation_status&$filter=testdate ge {quarterStartDate}", "purpose": "Retrieve recovery test outcomes with lessons learned and remediation tracking for continuous improvement"}
+        ]
+
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        return [
+            {"artifact_name": "Azure Site Recovery Test Failover Logs", "artifact_type": "DR Test Execution Logs", "description": "Complete test failover logs showing quarterly DR tests in isolated networks, application validation, and cleanup execution", "collection_method": "Azure Site Recovery REST API to export replicationJobs filtered for TestFailover operations", "storage_location": "Azure Storage Account with quarterly test logs for audit trail"},
+            {"artifact_name": "DevOps Recovery Test Pipeline Results", "artifact_type": "Automated Test Results", "description": "Pipeline execution results with automated smoke tests, RTO measurements (actual vs. target), and test outcome (Pass/Fail)", "collection_method": "Azure DevOps REST API to export pipeline runs for Recovery Test pipelines with test result details", "storage_location": "Azure DevOps Test Plans with historical test results and trend analysis"},
+            {"artifact_name": "Azure Monitor Recovery Test Report", "artifact_type": "RTO Compliance Report", "description": "Recovery test report showing success rates (>= 95% target), RTO compliance (actual vs. target), and test frequency compliance (quarterly)", "collection_method": "Azure Monitor KQL query calculating RTO compliance from AzureSiteRecoveryJobs logs", "storage_location": "Azure Log Analytics workspace with quarterly test summaries"},
+            {"artifact_name": "Power BI Recovery Test Dashboard", "artifact_type": "Test Analytics Dashboard", "description": "Dashboard showing recovery test history, RTO trends, recurring failures with remediation status, and test frequency compliance", "collection_method": "Power BI REST API to export dashboard metrics for recovery test success and RTO compliance", "storage_location": "SharePoint with quarterly PDF snapshots for executive reporting"},
+            {"artifact_name": "Dataverse Recovery Test Log", "artifact_type": "Test Outcome Database", "description": "Complete recovery test log with test outcomes, lessons learned, remediation items, and continuous improvement tracking", "collection_method": "Microsoft Dataverse Web API to export recovery_test_log_records with quarterly filter", "storage_location": "Microsoft Dataverse with automated integration from DevOps pipeline results"}
+        ]
+    

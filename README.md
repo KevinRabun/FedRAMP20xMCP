@@ -36,11 +36,12 @@ The server provides access to **329 requirements** across all 12 FedRAMP 20x doc
 
 ## Features
 
+- **🎯 Automated Evidence Collection (NEW)**: Complete automation guidance for all 65 active KSIs with Azure-native services, ready-to-use queries, and artifact specifications
 - **Query by Control**: Get detailed information about specific FedRAMP requirements
 - **Query by Family**: List all requirements within a family
 - **Keyword Search**: Search across all requirements using keywords
 - **FedRAMP Definitions**: Look up official FedRAMP term definitions
-- **Key Security Indicators**: Access and query FedRAMP Key Security Indicators (KSI)
+- **Key Security Indicators**: Access and query FedRAMP Key Security Indicators (KSI) with implementation status
 - **Documentation Search**: Search and retrieve official FedRAMP documentation markdown files
 - **Dynamic Content**: Automatically discovers and loads all markdown documentation files
 - **Implementation Planning**: Generate strategic interview questions to help product managers and engineers think through FedRAMP 20x implementation considerations
@@ -87,26 +88,13 @@ uv pip install -e .
 
 **Troubleshooting:** 
 
-If you get "Python was not found" errors:
-1. Ensure Python is installed and added to PATH
-2. Try using `python3` instead of `python`
-3. Or use the full path to python.exe in `.vscode/mcp.json`
-
-If the MCP server reports fewer than 72 KSIs:
-1. Check that all tree-sitter packages are installed: `pip list | grep tree-sitter`
-2. Reinstall dependencies: `pip install -e . --force-reinstall`
-3. Check server logs for import errors (logged to stderr)
+If you encounter issues, see [Advanced Setup Guide](docs/ADVANCED-SETUP.md#troubleshooting) for detailed troubleshooting steps.
 
 ## Security
 
 **Vulnerability Disclosure:** If you discover a security vulnerability, please see our [Security Policy](SECURITY.md) for responsible disclosure procedures (KSI-PIY-03).
 
-**Audit Logging:** All MCP server operations are logged to stderr for audit purposes (KSI-MLA-05):
-```python
-# Logs include timestamps, operation types, and outcomes
-2025-12-04 10:30:15 - fedramp_20x_mcp.data_loader - INFO - Loading FedRAMP controls from cache
-2025-12-04 10:30:16 - fedramp_20x_mcp.tools - INFO - Tool invoked: get_control(FRR-ADS-01)
-```
+**Audit Logging:** All MCP server operations are logged to stderr for audit purposes (KSI-MLA-05).
 
 **Security Features:**
 - ✅ No authentication required (local development tool)
@@ -213,389 +201,18 @@ Test the server using the MCP Inspector:
 npx @modelcontextprotocol/inspector python -m fedramp_20x_mcp
 ```
 
-### CI/CD Integration
+## Advanced Configuration
 
-The FedRAMP 20x MCP Server supports **two distinct usage models**:
+For CI/CD integration, multi-server setup with Azure and GitHub, or detailed troubleshooting, see:
 
-1. **Interactive Development** (VS Code + MCP): Real-time guidance for developers writing code
-2. **Automated CI/CD** (Direct Analyzer Use): Automated compliance checking in pipelines
-
-#### Why Two Models?
-
-**MCP Protocol Limitation:** The Model Context Protocol requires an LLM client (like Claude or GitHub Copilot) for human-in-the-loop interaction. This isn't available in automated CI/CD pipelines.
-
-**Solution:** Use the underlying analyzer classes directly in CI/CD scripts, bypassing the MCP layer entirely.
-
-#### Architecture Overview
-
-```
-┌─────────────────────────────────────┐
-│     Interactive Development         │
-│                                     │
-│  Developer → VS Code + Claude →     │
-│  MCP Server → Interactive Guidance  │
-└─────────────────────────────────────┘
-
-┌─────────────────────────────────────┐
-│        Automated CI/CD              │
-│                                     │
-│  Pipeline → Python Script →         │
-│  Import Analyzer Classes →          │
-│  Generate Reports → Gate Build      │
-└─────────────────────────────────────┘
-```
-
-#### GitHub Actions Integration
-
-Use the provided workflow to analyze pull requests automatically:
-
-**File:** `.github/workflows/fedramp-compliance-check.yml`
-
-```yaml
-name: FedRAMP 20x Compliance Check
-
-on:
-  pull_request:
-    branches: [main, develop]
-
-jobs:
-  analyze-python:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-      
-      - name: Install FedRAMP Analyzer
-        run: pip install fedramp-20x-mcp
-      
-      - name: Analyze Python Code
-        run: |
-          python -c "
-          from fedramp_20x_mcp.analyzers.python_analyzer import PythonAnalyzer
-          
-          analyzer = PythonAnalyzer()
-          result = analyzer.analyze(open('src/app.py').read(), 'src/app.py', [])
-          
-          # Print formatted report
-          print(result.pr_comment)
-          
-          # Exit with error if high-priority issues
-          if result.summary['high'] > 0:
-              exit(1)
-          "
-      
-      - name: Upload Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: compliance-report
-          path: '*-compliance-report.md'
-```
-
-**Complete Example:** See `.github/workflows/fedramp-compliance-check.yml` for a comprehensive workflow that analyzes:
-- Bicep infrastructure code
-- Terraform infrastructure code
-- Python application code
-- C# application code
-- Java application code
-- TypeScript/JavaScript application code
-
-#### Azure DevOps Integration
-
-Use the provided pipeline to analyze code in Azure DevOps:
-
-**File:** `.azuredevops/fedramp-compliance-pipeline.yml`
-
-```yaml
-trigger:
-  branches:
-    include: [main, develop]
-
-pool:
-  vmImage: 'ubuntu-latest'
-
-steps:
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '3.10'
-
-- script: |
-    pip install fedramp-20x-mcp
-  displayName: 'Install FedRAMP Analyzer'
-
-- task: PythonScript@0
-  displayName: 'Analyze Infrastructure'
-  inputs:
-    scriptSource: 'inline'
-    script: |
-      from fedramp_20x_mcp.analyzers.bicep_analyzer import BicepAnalyzer
-      
-      analyzer = BicepAnalyzer()
-      result = analyzer.analyze(open('main.bicep').read(), 'main.bicep')
-      
-      # Fail build on high-priority issues
-      if result.summary['high'] > 0:
-          exit(1)
-```
-
-**Complete Example:** See `.azuredevops/fedramp-compliance-pipeline.yml` for a full multi-stage pipeline.
-
-#### Standalone Python Script
-
-For custom CI/CD platforms or local testing:
-
-**File:** `examples/ci_cd_integration.py`
-
-```python
-from fedramp_20x_mcp.analyzers.python_analyzer import PythonAnalyzer
-from pathlib import Path
-
-# Initialize analyzer
-analyzer = PythonAnalyzer()
-
-# Analyze file
-code = Path('src/app.py').read_text()
-result = analyzer.analyze(code, 'src/app.py', [])
-
-# Check results
-print(f"High Priority: {result.summary['high']}")
-print(f"Medium Priority: {result.summary['medium']}")
-print(f"Low Priority: {result.summary['low']}")
-
-# Print formatted markdown report
-print(result.pr_comment)
-
-# Exit with error code if high-priority issues
-if result.summary['high'] > 0:
-    exit(1)
-```
-
-**Usage:**
-```bash
-# Analyze a single file
-python examples/ci_cd_integration.py src/app.py
-
-# Analyze entire directory
-python examples/ci_cd_integration.py infrastructure/
-
-# Generate JSON output
-python examples/ci_cd_integration.py src/ --format json > report.json
-```
-
-#### Available Analyzers
-
-Import and use analyzers directly in your CI/CD scripts:
-
-```python
-# Infrastructure Code Analyzers
-from fedramp_20x_mcp.analyzers.bicep_analyzer import BicepAnalyzer
-from fedramp_20x_mcp.analyzers.terraform_analyzer import TerraformAnalyzer
-
-# Application Code Analyzers
-from fedramp_20x_mcp.analyzers.python_analyzer import PythonAnalyzer
-from fedramp_20x_mcp.analyzers.csharp_analyzer import CSharpAnalyzer
-from fedramp_20x_mcp.analyzers.java_analyzer import JavaAnalyzer
-from fedramp_20x_mcp.analyzers.typescript_analyzer import TypeScriptAnalyzer
-```
-
-#### Analysis Result Structure
-
-All analyzers return an `AnalysisResult` object with:
-
-```python
-result = analyzer.analyze(code, filepath, dependencies)
-
-# Access findings
-for finding in result.findings:
-    print(f"{finding.requirement_id}: {finding.message}")
-    print(f"  Line {finding.line_number}: {finding.code_snippet}")
-    print(f"  Fix: {finding.recommendation}")
-
-# Summary counts
-print(result.summary)  # {"high": 2, "medium": 5, "low": 3}
-
-# Pre-formatted PR comment (markdown)
-print(result.pr_comment)
-
-# Dependencies checked (for app analyzers)
-print(result.dependencies_checked)
-```
-
-#### CI/CD Best Practices
-
-1. **Fail builds on high-priority issues**: Use exit codes to gate deployments
-2. **Upload reports as artifacts**: Save compliance reports for audit trails
-3. **Post PR comments**: Provide feedback directly in pull requests
-4. **Cache dependencies**: Speed up pipeline runs by caching the fedramp-20x-mcp package
-5. **Analyze changed files only**: Use git diff to target only modified files
-6. **Run in parallel**: Analyze different file types concurrently for faster results
-
-#### Pre-commit Hooks
-
-Analyze code locally before committing:
-
-```yaml
-# .pre-commit-config.yaml
-repos:
-  - repo: local
-    hooks:
-      - id: fedramp-compliance
-        name: FedRAMP 20x Compliance Check
-        entry: python examples/ci_cd_integration.py
-        language: python
-        types: [python]
-        pass_filenames: true
-```
-
-## Recommended MCP Server Setup
-
-For the best FedRAMP 20x compliance workflow, combine this server with other MCP servers that provide Azure and Microsoft context. Here's a complete configuration that includes Azure integration, Microsoft documentation, and GitHub access.
-
-### Complete .vscode/mcp.json Configuration
-
-Create or update `.vscode/mcp.json` in your project with this configuration:
-
-```jsonc
-{
-  "servers": {
-    // FedRAMP 20x Requirements & Documentation
-    "fedramp-20x-mcp": {
-      "type": "stdio",
-      "command": "${workspaceFolder}/.venv/Scripts/python.exe",  // Windows
-      // "command": "${workspaceFolder}/.venv/bin/python",       // macOS/Linux
-      "args": ["-m", "fedramp_20x_mcp"]
-    },
-    
-    // Azure Resources & Operations (Official Microsoft MCP Server)
-    "azure-mcp": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "@azure/mcp-server-azure"
-      ],
-      "env": {
-        "AZURE_SUBSCRIPTION_ID": "your-subscription-id-here"
-      }
-    },
-    
-    // Microsoft Documentation (Learn, Azure Docs, API References)
-    "microsoft-docs": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "@microsoft/mcp-server-docs"
-      ]
-    },
-    
-    // GitHub (for Azure samples, Bicep templates, FedRAMP examples)
-    "github": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-github"
-      ],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "your-github-token-here"
-      }
-    }
-  }
-}
-```
-
-### What Each Server Provides
-
-**fedramp-20x-mcp** (This Server)
-- 329 FedRAMP 20x requirements
-- 72 Key Security Indicators
-- 50 official definitions
-- Official markdown documentation files
-- Implementation examples and Azure guidance
-- Evidence collection automation tools
-- Compliance validation tools
-
-**azure-mcp** (Microsoft Official)
-- Query Azure resources (VMs, databases, networks)
-- Check Azure Policy compliance
-- Review Security Center/Defender alerts
-- Validate configurations against FedRAMP requirements
-- Real-time Azure resource inventory
-
-**microsoft-docs**
-- Azure service documentation
-- API references
-- Best practices guides
-- Architecture patterns
-- Security baselines
-
-**github**
-- Access Azure Quick Start templates
-- FedRAMP Bicep/Terraform examples
-- Azure sample applications
-- Community compliance patterns
-
-### Setup Steps
-
-1. **Configure Azure Authentication** (for azure-mcp):
-   ```bash
-   # Install Azure CLI if not already installed
-   # Login to Azure
-   az login
-   
-   # Set your subscription
-   az account set --subscription "your-subscription-id"
-   
-   # Add subscription ID to mcp.json
-   ```
-
-2. **Configure GitHub Token** (for github):
-   - Go to https://github.com/settings/tokens
-   - Create a Personal Access Token with `repo` scope
-   - Add token to mcp.json `GITHUB_PERSONAL_ACCESS_TOKEN`
-
-3. **Reload VS Code** to activate all servers
-
-4. **Grant Permissions** when VS Code prompts (first use)
-
-### Example Workflow with Multiple Servers
-
-```
-User: "Check if my Azure Key Vault configuration meets FedRAMP KSI-IAM-06 requirements"
-
-AI Assistant uses:
-1. fedramp-20x-mcp → Get KSI-IAM-06 requirements
-2. azure-mcp → Query actual Key Vault configuration
-3. microsoft-docs → Get Azure Key Vault security best practices
-4. Returns compliance analysis with gaps and remediation steps
-```
-
-### Simplified Setup (FedRAMP Only)
-
-If you only want FedRAMP requirements without Azure integration:
-
-```jsonc
-{
-  "servers": {
-    "fedramp-20x-mcp": {
-      "type": "stdio",
-      "command": "${workspaceFolder}/.venv/Scripts/python.exe",
-      "args": ["-m", "fedramp_20x_mcp"]
-    }
-  }
-}
-```
+- **[CI/CD Integration Guide](docs/CI-CD-INTEGRATION.md)** - Use analyzers in GitHub Actions, Azure DevOps, and other pipelines
+- **[Advanced Setup Guide](docs/ADVANCED-SETUP.md)** - Multi-server configuration, Azure integration, troubleshooting
 
 ## Available Tools
 
-The server provides **35 tools** organized into the following categories:
+The server provides **38 tools** organized into the following categories:
 
-**Core Tools (8):** Query requirements, definitions, and KSIs
+**Core Tools (11):** Query requirements, definitions, KSIs, and KSI evidence automation
 **Documentation Tools (3):** Search and retrieve FedRAMP documentation
 **Enhancement Tools (7):** Implementation examples, dependencies, effort estimation, architecture validation
 **Export Tools (3):** Excel/CSV export and KSI specification generation
@@ -652,6 +269,66 @@ Get detailed information about a specific Key Security Indicator.
 List all Key Security Indicators.
 
 **Returns:** Complete list of all Key Security Indicators with their names
+
+### get_ksi_evidence_automation
+Get comprehensive evidence automation recommendations for a specific KSI. **All 65 active KSIs** include complete automated evidence collection guidance.
+
+**Parameters:**
+- `ksi_id` (string): The KSI identifier (e.g., "KSI-IAM-01", "KSI-CNA-01")
+
+**Returns:** Comprehensive guidance for automating evidence collection including:
+- **Azure Services**: 5 Azure services per KSI (Log Analytics, Resource Graph, Defender for Cloud, Azure Policy, Azure Monitor, etc.) with specific configuration guidance
+- **Collection Methods**: 4-5 automated collection approaches (continuous monitoring, scheduled assessments, event-driven triggers, log aggregation)
+- **Storage Requirements**: Retention policies (30-90 days operational, 1-7 years compliance), encryption standards, access controls
+- **FRR-ADS Integration**: Machine-readable API endpoints for Authorization Data Sharing compliance
+- **Implementation Details**: Effort estimates, prerequisites, cost considerations, responsible parties (Security, DevOps, Compliance, Engineering)
+- **Code Examples**: Infrastructure-as-code templates (Bicep, Terraform) and automation scripts
+
+**Coverage:** 100% of active KSIs across all 11 families:
+- IAM (7): MFA, Privilege Management, Session Controls, Credential Lifecycle, User Termination, JIT Access, Shared Accounts
+- CNA (8): Network Segmentation, TLS Configuration, Connection Logging, Azure Monitor, Key Vault, Secrets Detection, Container Registry, GitHub Security
+- MLA (5): Log Aggregation, Retention, Tamper Detection, Search Capabilities, Alerting
+- INR (3): Incident Response Plans, Incident Logging, After Action Reports
+- AFR (11): Asset Discovery, SBOM, Penetration Testing, Dev/Prod Separation, GitHub Actions Security, Container Scanning, and more
+- SVC (9): FIPS 140-3 Cryptography, API Authentication, Rate Limiting, Input Validation, Error Handling, Secrets Management, DoS Protection, Secrets Rotation, Dependency Management
+- CMT (4): Continuous Monitoring, Health Checks, Configuration Baselines, Drift Detection
+- CED (4): Authorization Documents, System Boundary, SSP Updates, Continuous Delivery
+- TPR (2): Supply Chain Risk Assessment, Supply Chain Risk Monitoring
+- RPL (4): Recovery Objectives, Recovery Plans, System Backups, Recovery Testing
+- PIY (8): Automated Inventory, Data Minimization, Vulnerability Disclosure, Secure By Design, Security Evaluations, Investment Effectiveness, Supply Chain Risk, Executive Support
+
+**Example:** `get_ksi_evidence_automation("KSI-IAM-01")` returns automated evidence collection for phishing-resistant MFA including Entra ID Conditional Access policies, sign-in logs via Log Analytics, MFA method registration queries, and compliance reporting dashboards.
+
+### get_ksi_evidence_queries
+Get ready-to-use evidence collection queries for a specific KSI.
+
+**Parameters:**
+- `ksi_id` (string): The KSI identifier (e.g., "KSI-IAM-01", "KSI-CNA-01")
+
+**Returns:** Production-ready queries for collecting evidence from Azure (5 queries per KSI):
+- **KQL Queries**: Log Analytics/Azure Monitor Kusto queries for log analysis and metrics
+- **Azure Resource Graph**: Infrastructure and configuration state queries
+- **REST API**: Azure Resource Manager API calls for programmatic data retrieval
+- **Azure CLI**: Command-line scripts for evidence extraction
+- **PowerShell**: Azure PowerShell cmdlets for automated collection
+
+**Example:** `get_ksi_evidence_queries("KSI-CNA-01")` returns Resource Graph queries for NSG rules, Azure Firewall policies, virtual network configurations, subnet segmentation analysis, and network topology validation.
+
+### get_ksi_evidence_artifacts
+Get specifications for evidence artifacts to collect for a specific KSI.
+
+**Parameters:**
+- `ksi_id` (string): The KSI identifier (e.g., "KSI-IAM-01", "KSI-CNA-01")
+
+**Returns:** Detailed artifact specifications (5 artifacts per KSI):
+- **Artifact Names**: Specific evidence files/reports required (e.g., "MFA_Sign_In_Logs.csv", "NSG_Rule_Export.json")
+- **Collection Methods**: How to gather each artifact (automated export, API retrieval, dashboard screenshot, compliance report)
+- **File Formats**: CSV, JSON, PDF, PNG (dashboard screenshots), XLSX (compliance matrices)
+- **Update Frequencies**: Daily, weekly, monthly, or quarterly collection schedules based on requirement criticality
+- **Retention Requirements**: 30-90 days for operational data, 1-7 years for compliance evidence
+- **Storage Recommendations**: Azure Blob Storage with encryption, access logging, immutability policies
+
+**Example:** `get_ksi_evidence_artifacts("KSI-IAM-01")` returns sign-in logs (CSV, daily, 90 days), Conditional Access policy exports (JSON, weekly, 1 year), MFA method registration reports (XLSX, monthly, 3 years), authentication dashboard screenshots (PNG, quarterly, 1 year), and MFA compliance matrices (PDF, monthly, 7 years).
 
 ### compare_with_rev4
 Compare FedRAMP 20x with Rev 4/Rev 5 requirements for specific areas.
@@ -856,8 +533,6 @@ Generate strategic interview questions for product managers and engineers to fac
 ### analyze_infrastructure_code
 Analyze Infrastructure as Code (IaC) files for FedRAMP 20x compliance issues and provide actionable recommendations.
 
-> **📊 Current Coverage:** Phase 7 development with **40 out of 65 active KSIs implemented (61.5%)** across 7 implementation phases using **AST-powered semantic analysis**. **Maximum practical code-detectable coverage target: 55/65 (84.6%)** - the remaining 17 KSIs are organizational/policy requirements that cannot be detected through static code analysis. All analyzers use tree-sitter Abstract Syntax Tree parsing for accurate, context-aware detection with minimal false positives. Implemented KSIs cover identity & access management, service configuration, cloud & network architecture, third-party risk, change management, monitoring & logging, privacy controls, authorization evidence, and automated incident response. See `.github/copilot-instructions.md` for complete implementation status breakdown by family.
-
 **Parameters:**
 - `code` (string): The IaC code content to analyze
 - `file_type` (string): Type of IaC file - `"bicep"` or `"terraform"`
@@ -865,106 +540,26 @@ Analyze Infrastructure as Code (IaC) files for FedRAMP 20x compliance issues and
 - `context` (string, optional): Additional context about the code (e.g., PR description)
 
 **Returns:**
-- **findings**: Array of compliance findings with:
-  - `requirement_id`: FedRAMP requirement (e.g., KSI-MLA-05, KSI-SVC-06)
-  - `severity`: high/medium/low
-  - `title`: Finding summary
-  - `description`: Detailed issue description
-  - `file_path`: Location of the issue
-  - `line_number`: Approximate line number (if detected)
-  - `code_snippet`: Relevant code excerpt
-  - `recommendation`: Step-by-step fix with code examples
-  - `good_practice`: Boolean indicating if this is a positive finding
+- **findings**: Array of compliance findings with requirement IDs, severity, descriptions, and recommendations
 - **summary**: Counts of high/medium/low priority issues and good practices
 - **pr_comment**: Formatted markdown suitable for GitHub/ADO PR comments
 
-**Supported IaC Languages:**
+**Supported Languages:**
 - **Bicep**: Azure Resource Manager templates
 - **Terraform**: Azure RM provider resources
 
-**FedRAMP Requirements Checked (Phases 1-5):**
+**What It Checks:**
+Analyzes your infrastructure code against 40+ FedRAMP KSIs including:
+- Identity & Access Management (MFA, RBAC, privileged access)
+- Service Configuration (encryption, secrets management, backups)
+- Network Architecture (security groups, DDoS protection, segmentation)
+- Monitoring & Logging (diagnostic settings, audit logs, alerting)
+- DevSecOps (change management, vulnerability scanning, testing)
+- Privacy & Data Protection (data classification, retention policies)
+- Incident Response (detection, logging, automation)
+- Supply Chain Security (container scanning, trusted registries)
 
-**Phase 1 - Foundation:**
-- **KSI-MLA-05**: Diagnostic logging/audit logging
-- **KSI-SVC-06**: Key Vault secrets management
-- **KSI-CNA-01**: Network Security Groups
-- **KSI-IAM-03**: RBAC role assignments
-- **KSI-SVC-03**: Encryption configuration
-
-**Phase 2 - Critical Infrastructure:**
-- **KSI-IAM-02**: Multi-Factor Authentication enforcement
-- **KSI-IAM-06**: Privileged Identity Management (PIM) and JIT access
-- **KSI-CNA-02**: Container security and isolation
-- **KSI-CNA-04**: Immutable infrastructure and resource locks
-- **KSI-CNA-06**: API Gateway security policies
-- **KSI-SVC-04**: Backup and recovery configuration
-- **KSI-SVC-05**: Automated patch management
-- **KSI-MLA-01**: Centralized logging to SIEM
-- **KSI-MLA-02**: Audit log retention (≥90 days)
-
-**Phase 3 - Secure Coding:**
-- **KSI-SVC-01**: Error handling and logging
-- **KSI-SVC-02**: Input validation (SQL injection, command injection, path traversal)
-- **KSI-SVC-07**: Secure coding (avoiding eval/exec, secure random)
-- **KSI-PIY-01**: Data classification tagging
-- **KSI-PIY-03**: Privacy controls (retention, deletion, export)
-- **KSI-CNA-07**: Service mesh security configuration
-- **KSI-IAM-04**: Least privilege access (scoped permissions)
-- **KSI-IAM-07**: Session management (secure cookies, token rotation)
-
-**Phase 6A - Infrastructure Resilience & Security:**
-- **KSI-RPL-01**: Recovery objectives (RTO/RPO documentation)
-- **KSI-RPL-02**: Recovery plans (Site Recovery, DR orchestration)
-- **KSI-RPL-03**: System backups (Backup policies, 365-day retention)
-- **KSI-RPL-04**: Recovery testing (Automation, scheduled DR drills)
-- **KSI-CNA-03**: Traffic flow enforcement (Firewall, NSG flow logs, route tables)
-- **KSI-CNA-05**: DDoS protection (DDoS Protection Plan on VNets)
-- **KSI-IAM-05**: Least privilege access (RBAC, JIT access, managed identities)
-- **KSI-AFR-11**: FIPS cryptographic modules (Key Vault Premium, TLS 1.2+)
-
-**Phase 4 - DevSecOps Automation:**
-- **KSI-CMT-01**: Change management (PR triggers, branch protection)
-- **KSI-CMT-02**: Deployment procedures (approval gates, environments)
-- **KSI-CMT-03**: Automated testing in CI/CD
-- **KSI-AFR-01**: Vulnerability scanning (Trivy, Dependabot, Snyk)
-- **KSI-AFR-02**: Security remediation tracking
-- **KSI-CED-01**: Evidence collection and artifact retention
-
-**Phase 5 - Runtime Security & Monitoring:**
-- **KSI-MLA-03**: Security monitoring and alerting (Azure Monitor, Application Insights, alert rules)
-- **KSI-MLA-04**: Performance monitoring (Application Insights, autoscale, anomaly detection)
-- **KSI-MLA-06**: Log analysis automation (KQL queries, Sentinel analytics rules)
-- **KSI-INR-01**: Incident detection (Sentinel automation rules, incident creation)
-- **KSI-INR-02**: Incident response logging (diagnostic settings on Logic Apps)
-- **KSI-AFR-03**: Threat intelligence integration (Defender for Cloud, threat intel feeds)
-
-**Phase 6A - Infrastructure Resilience & Cryptography:**
-- **KSI-RPL-01**: Recovery objectives (RTO/RPO documentation)
-- **KSI-RPL-02**: Recovery plans (Site Recovery, DR orchestration)
-- **KSI-RPL-03**: System backups (Backup policies, 365-day retention)
-- **KSI-RPL-04**: Recovery testing (Automation, scheduled DR drills)
-- **KSI-CNA-03**: Traffic flow enforcement (Firewall, NSG flow logs)
-- **KSI-CNA-05**: DDoS protection (DDoS Protection Plan on VNets)
-- **KSI-IAM-05**: Least privilege access (RBAC, JIT, managed identities)
-- **KSI-AFR-11**: FIPS cryptographic modules (Key Vault Premium, TLS 1.2+)
-
-**Phase 6B - Advanced Infrastructure Security:**
-- **KSI-SVC-09**: Communication integrity (Application Gateway SSL, mTLS validation)
-- **KSI-SVC-10**: Data destruction (soft delete, lifecycle policies, immutability)
-- **KSI-MLA-07**: Event types monitoring (Data Collection Rules, comprehensive event taxonomy)
-- **KSI-MLA-08**: Log data access (RBAC on Log Analytics, private endpoints)
-- **KSI-AFR-07**: Secure configuration (HTTPS only, TLS 1.2+, disabled public access)
-- **KSI-CNA-08**: Microservices security (Istio service mesh, Dapr, API Management)
-- **KSI-INR-03**: Incident after-action reports (Logic Apps automation, Sentinel playbooks)
-- **KSI-CMT-04**: Change management procedures (change tags, deployment slots, Traffic Manager)
-
-**Phase 7 - Supply Chain & Third-Party Security:**
-- **KSI-TPR-03**: Supply chain risk mitigation (ACR trust policies, quarantine, image signing)
-- **KSI-TPR-04**: Third-party software monitoring (Defender for Cloud, vulnerability scanning, SIEM)
-
-> **✅ Maximum Practical Coverage Achieved:** 55 code-detectable KSIs out of 65 active (84.6%). Remaining 14 KSIs are organizational/policy requirements (AFR documentation, CED training, PIY program effectiveness) that cannot be detected through code analysis. See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for details.
-
-**Example usage:**
+**Example Usage:**
 ```bicep
 // This Bicep code will be flagged for missing diagnostic settings
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
@@ -1257,125 +852,15 @@ The server provides **15 prompts** for FedRAMP compliance workflows:
 Data is fetched from the official FedRAMP repository:
 https://github.com/FedRAMP/docs/tree/main/data
 
-## Development
+## Contributing
 
-### Running Tests
-
-The project includes comprehensive test coverage across all functionality:
-
-```bash
-# Run all tests
-pytest
-
-# Run with coverage report
-pytest --cov=src --cov-report=html
-
-# Run specific test suites
-python tests/test_loader.py                      # Data loading (329 requirements)
-python tests/test_definitions.py                 # Definitions & KSIs (50 + 72)
-python tests/test_docs_integration.py            # Documentation (15 files)
-python tests/test_implementation_questions.py    # Strategic questions
-python tests/test_tool_registration.py           # Architecture validation (35 tools)
-python tests/test_evidence_automation.py         # IaC generation (Bicep/Terraform/Code)
-python tests/test_all_tools.py                   # All tools comprehensive test
-```
-
-**Test Coverage (115 tests, 100% pass rate):**
-- ✅ **Core Functionality (13 tests):** AST parsing, semantic analysis, interprocedural analysis, code analyzer infrastructure
-- ✅ **Data Loading:** 329 requirements from 12 documents
-- ✅ **Definitions:** 50 FedRAMP terms
-- ✅ **KSIs:** 72 Key Security Indicators
-- ✅ **Documentation:** 15 official FedRAMP markdown files
-- ✅ **Tool Functional (9 tests):** All 35 tools across 11 modules
-- ✅ **Security (2 tests):** CVE vulnerability checking
-- ✅ **Resource Validation (3 tests):** IaC generation, evidence automation, template variations
-- ✅ **KSI Analyzers (88 tests):** 100% coverage - every KSI analyzer has test validation (55 implemented + 33 stub analyzers)
-- ✅ **IaC Generation:** Bicep & Terraform templates for IAM, MLA, AFR families
-- ✅ **Code Generation:** Python, C#, PowerShell, Java, TypeScript evidence collection code
-- ✅ **AST Parsing:** Tree-sitter integration for 6 languages with semantic analysis validation
-
-### Project Structure
-
-```
-FedRAMP20xMCP/
-├── src/
-│   └── fedramp_20x_mcp/    # Main package
-│       ├── __init__.py     # Package initialization
-│       ├── __main__.py     # Entry point for python -m
-│       ├── server.py       # MCP server entry point (270 lines, 15 prompts)
-│       ├── data_loader.py  # FedRAMP data fetching and caching
-│       ├── cve_fetcher.py  # CVE vulnerability data (GitHub Advisory + NVD)
-│       ├── templates/      # Infrastructure & code templates
-│       │   ├── __init__.py # Template loader functions
-│       │   ├── bicep/      # Bicep IaC templates (7 files)
-│       │   ├── terraform/  # Terraform IaC templates (7 files)
-│       │   └── code/       # Code generation templates (9 files: Python, C#, PowerShell, Java, TypeScript)
-│       ├── prompts/        # Prompt templates (15 files)
-│       │   └── __init__.py # Prompt loader function
-│       ├── tools/          # Tool modules (36 tools across 12 modules)
-│       │   ├── __init__.py # Tool registration system
-│       │   ├── requirements.py    # Core requirements tools (3)
-│       │   ├── definitions.py     # Definition lookup tools (3)
-│       │   ├── ksi.py             # KSI tools (2)
-│       │   ├── documentation.py   # Documentation tools (3)
-│       │   ├── export.py          # Export tools (3)
-│       │   ├── enhancements.py    # Enhancement tools (9)
-│       │   ├── evidence.py        # Evidence automation tools (3)
-│       │   ├── analyzer.py        # Code analysis tools (2)
-│       │   ├── validation.py      # Pre-generation validation tools (3)
-│       │   ├── security.py        # CVE vulnerability checking tools (2)
-│       │   ├── audit.py           # Coverage audit tools (2)
-│       │   └── ksi_status.py      # KSI implementation status tools (1)
-│       ├── analyzers/      # KSI-centric code analyzers
-│       │   ├── __init__.py
-│       │   ├── base.py     # Base classes (Finding, AnalysisResult, Severity)
-│       │   └── ksi/        # 72 KSI analyzer files + factory
-│       │       ├── __init__.py
-│       │       ├── base.py    # BaseKSIAnalyzer
-│       │       ├── factory.py # KSIAnalyzerFactory (singleton pattern)
-│       │       └── ksi_*.py   # Individual KSI analyzers (72 files)
-│       └── __fedramp_cache__/  # Runtime cache for FedRAMP data
-│       └── __cve_cache__/      # Runtime cache for CVE data
-├── tests/                   # Test suite (115+ test files)
-│   ├── __init__.py
-│   ├── test_loader.py      # Data loader tests (329 requirements)
-│   ├── test_definitions.py # Definition tool tests (50 definitions, 72 KSIs)
-│   ├── test_docs_integration.py  # Documentation integration tests
-│   ├── test_implementation_questions.py  # Implementation questions tests
-│   ├── test_tool_registration.py  # Tool architecture validation (36 tools, 12 modules)
-│   ├── test_evidence_automation.py  # IaC generation tests (Bicep/Terraform/Python/C#/PowerShell/Java/TypeScript)
-│   ├── test_code_analyzer.py  # KSI-centric analyzer tests (12 focused tests)
-│   ├── test_all_tools.py   # Comprehensive tool tests (all 36 tools)
-│   ├── test_*_tools.py     # Individual tool module tests (14 files)
-│   ├── test_cve_fetcher.py # CVE fetcher module tests
-│   ├── test_ksi_architecture.py  # KSI architecture validation
-│   └── test_*.py           # Additional test files
-├── .github/
-│   ├── workflows/          # CI/CD workflows
-│   │   ├── test.yml        # Test workflow (multi-platform)
-│   │   ├── publish.yml     # PyPI & MCP Registry publishing
-│   │   └── release.yml     # GitHub release workflow
-│   └── copilot-instructions.md  # GitHub Copilot context
-├── .vscode/
-│   ├── mcp.json            # VS Code MCP configuration
-│   └── settings.json.example
-├── pyproject.toml          # Project metadata and dependencies
-├── server.json             # MCP Registry metadata
-├── uv.lock                 # UV dependency lock file
-├── LICENSE                 # MIT License
-├── README.md               # This file
-├── CONTRIBUTING.md         # Contribution guidelines
-└── .gitignore              # Git exclusions (includes MCP tokens)
-```
-
-**Architecture Highlights:**
-- **Modular Design:** Tools organized into 12 logical modules by functionality
-- **Template System:** Reusable Bicep/Terraform templates for IaC generation
-- **Prompt Templates:** 15 external prompt files for easy updates without code changes
-- **KSI-Centric Analysis:** 72 dedicated KSI analyzer files with factory pattern
-- **AST-Powered:** Tree-sitter integration for accurate, semantic code analysis
-- **Clean Separation:** Organized codebase with clear module boundaries
-- **Registration Pattern:** Tools use `*_impl` functions with centralized registration
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
+- Development setup and testing
+- Security scanning requirements
+- Dependency management guidelines
+- Pull request process
+- Project structure and architecture
+- Complete test documentation
 
 ## Security
 

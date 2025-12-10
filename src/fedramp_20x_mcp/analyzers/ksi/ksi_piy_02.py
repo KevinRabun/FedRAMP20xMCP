@@ -1,7 +1,7 @@
 """KSI-PIY-02 Enhanced: Data Minimization"""
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -643,18 +643,69 @@ class KSI_PIY_02_Analyzer(BaseKSIAnalyzer):
             if pattern in line:
                 return i
         return 1
-    
 
+    def _get_code_snippet(self, lines: List[str], line_num: int, context: int = 2) -> str:
         """Get code snippet around line"""
         if not lines or line_num < 1:
             return ""
         start = max(0, line_num - context - 1)
         end = min(len(lines), line_num + context)
         return '\n'.join(lines[start:end])
-    
 
+    def _get_snippet_from_bytes(self, code: str, start_byte: int, end_byte: int, context: int = 50) -> str:
         """Get code snippet from byte positions with context"""
         snippet_start = max(0, start_byte - context)
         snippet_end = min(len(code), end_byte + context)
         return code[snippet_start:snippet_end]
+
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        return {
+            "ksi_id": self.ksi_id,
+            "ksi_name": "Data Minimization",
+            "evidence_type": "code-based",
+            "automation_feasibility": "medium",
+            "azure_services": ["Microsoft Purview", "Azure SQL Database", "Azure Policy", "GitHub Advanced Security", "Azure Monitor"],
+            "collection_methods": [
+                "Microsoft Purview Data Map to classify data assets and identify PII/sensitive data fields for minimization review",
+                "Azure SQL Database dynamic data masking and column-level encryption to enforce data minimization controls",
+                "Azure Policy to enforce data retention policies and prevent overly broad data queries",
+                "GitHub Advanced Security CodeQL scanning to detect overly broad SQL queries, excessive data collection, and missing retention policies in code",
+                "Azure Monitor to track data access patterns and alert on excessive data retrieval (e.g., SELECT * without filters)"
+            ],
+            "implementation_steps": [
+                "1. Enable Microsoft Purview Data Map: (a) Scan all data sources (Azure SQL, Cosmos DB, Storage, Dataverse), (b) Auto-classify sensitive data (SSN, email, credit card) using built-in classifiers, (c) Generate data minimization report: Total fields, Sensitive fields, Justification for retention, (d) Flag unjustified sensitive data for review",
+                "2. Enforce SQL data minimization controls: (a) Enable Azure SQL dynamic data masking for PII columns, (b) Implement column-level encryption for highly sensitive data, (c) Audit queries with SELECT * or missing WHERE clauses, (d) Require stored procedures with parameter validation to prevent overly broad queries",
+                "3. Configure Azure Policy for retention: (a) Policy: Require data retention tags on storage accounts and databases, (b) Policy: Require lifecycle management policies for blobs (auto-delete after retention period), (c) Policy: Audit databases without data classification, (d) Generate monthly retention compliance report",
+                "4. Enable GitHub Advanced Security CodeQL: (a) Scan for SQL injection and overly broad queries (SELECT * FROM users WHERE 1=1), (b) Detect excessive PII collection (>= 5 PII fields in single query), (c) Flag missing data retention policies in application code, (d) Require code review for queries accessing sensitive tables",
+                "5. Track with Azure Monitor: (a) Log Analytics: Query for SELECT * patterns in SQL audit logs, (b) Alert on queries returning > 10,000 rows (potential excessive data retrieval), (c) Track data access frequency by user and application, (d) Generate monthly data access pattern report",
+                "6. Generate quarterly evidence package: (a) Export Purview data classification report with sensitive data inventory, (b) Export Azure SQL masking/encryption configuration, (c) Export Policy retention compliance report, (d) Export GitHub CodeQL scan results for data minimization violations"
+            ],
+            "evidence_artifacts": [
+                "Microsoft Purview Data Classification Report identifying PII/sensitive data with justification for retention",
+                "Azure SQL Data Minimization Controls: Dynamic data masking and column-level encryption configurations",
+                "Azure Policy Retention Compliance Report enforcing data retention tags and lifecycle management policies",
+                "GitHub Advanced Security CodeQL Scan Results detecting overly broad queries and missing retention policies",
+                "Azure Monitor Data Access Pattern Report tracking excessive data retrieval and SELECT * query usage"
+            ],
+            "update_frequency": "quarterly",
+            "responsible_party": "Data Governance Team / Privacy Officer"
+        }
+
+    def get_evidence_collection_queries(self) -> List[Dict[str, str]]:
+        return [
+            {"query_type": "Microsoft Purview REST API", "query_name": "Data classification and sensitive data inventory", "query": "GET https://{purview-account}.purview.azure.com/catalog/api/atlas/v2/search/basic?query=*&classification=SensitiveData&limit=1000", "purpose": "Retrieve data classification report identifying PII/sensitive data fields for minimization review"},
+            {"query_type": "Azure SQL REST API", "query_name": "Dynamic data masking configuration", "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Sql/servers/{serverName}/databases/{databaseName}/dataMaskingPolicies/Default?api-version=2014-04-01", "purpose": "Retrieve dynamic data masking configuration showing PII columns protected by masking rules"},
+            {"query_type": "Azure Policy REST API", "query_name": "Data retention policy compliance", "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.PolicyInsights/policyStates/latest/queryResults?api-version=2019-10-01&$filter=policyDefinitionName eq 'require-data-retention-tags'", "purpose": "Retrieve policy compliance for data retention tagging and lifecycle management requirements"},
+            {"query_type": "GitHub REST API", "query_name": "CodeQL data minimization scan results", "query": "GET https://api.github.com/repos/{owner}/{repo}/code-scanning/alerts?state=open&tool_name=CodeQL&query=overly-broad-sql-query OR excessive-pii-collection OR missing-retention-policy", "purpose": "Retrieve CodeQL scan results detecting overly broad queries, excessive PII collection, and missing retention policies"},
+            {"query_type": "Azure Monitor KQL", "query_name": "Excessive data retrieval patterns", "query": "AzureDiagnostics\n| where Category == 'SQLSecurityAuditEvents'\n| where statement_s contains 'SELECT *' or statement_s !contains 'WHERE'\n| extend RowCount = toint(rows_affected_d)\n| where RowCount > 10000\n| summarize ExcessiveQueries = count(), TotalRows = sum(RowCount) by database_name_s, server_principal_name_s, bin(TimeGenerated, 1d)\n| extend AvgRowsPerQuery = round(TotalRows / ExcessiveQueries, 2)", "purpose": "Track queries with excessive data retrieval (> 10,000 rows) indicating potential data minimization violations"}
+        ]
+
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        return [
+            {"artifact_name": "Microsoft Purview Data Classification Report", "artifact_type": "Data Inventory with Sensitivity Classification", "description": "Complete data inventory showing PII/sensitive data fields with classification, retention justification, and minimization recommendations", "collection_method": "Microsoft Purview REST API to export data assets with SensitiveData classification", "storage_location": "Azure Storage Account with quarterly snapshots for data governance review"},
+            {"artifact_name": "Azure SQL Data Minimization Controls", "artifact_type": "Database Protection Configuration", "description": "Dynamic data masking rules and column-level encryption for PII columns preventing excessive data exposure", "collection_method": "Azure SQL REST API to export dataMaskingPolicies and transparent data encryption settings", "storage_location": "Azure Storage Account with configuration baselines for compliance verification"},
+            {"artifact_name": "Azure Policy Retention Compliance Report", "artifact_type": "Policy Compliance Report", "description": "Policy compliance for data retention tagging, lifecycle management, and data classification requirements (>= 95% target)", "collection_method": "Azure Policy REST API to retrieve policyStates for data retention policies", "storage_location": "Azure Storage Account with monthly compliance reports"},
+            {"artifact_name": "GitHub CodeQL Data Minimization Scan", "artifact_type": "Code Security Scan Results", "description": "CodeQL scan results detecting overly broad SQL queries, excessive PII collection (>= 5 fields), and missing retention policies in code", "collection_method": "GitHub REST API to export code-scanning alerts for data minimization violations", "storage_location": "GitHub Security tab with historical scan results and remediation tracking"},
+            {"artifact_name": "Azure Monitor Data Access Pattern Report", "artifact_type": "Data Access Audit Report", "description": "Report tracking excessive data retrieval patterns: SELECT * queries, queries without WHERE clauses, queries returning > 10,000 rows", "collection_method": "Azure Monitor KQL query analyzing SQL audit logs for excessive data retrieval", "storage_location": "Azure Log Analytics workspace with monthly access pattern summaries"}
+        ]
 

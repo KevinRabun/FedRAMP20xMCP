@@ -9,7 +9,7 @@ Version: 25.11C (Published: 2025-12-01)
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 
@@ -249,5 +249,55 @@ class KSI_PIY_07_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
-    
 
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        return {
+            "ksi_id": self.ksi_id,
+            "ksi_name": "Supply Chain Risk Management",
+            "evidence_type": "process-based",
+            "automation_feasibility": "high",
+            "azure_services": ["GitHub Advanced Security", "Azure DevOps", "Microsoft Defender for Cloud", "Microsoft Dataverse", "Power BI"],
+            "collection_methods": [
+                "GitHub Advanced Security Dependabot to detect vulnerable dependencies (CVE IDs) with automatic remediation PRs",
+                "Azure DevOps Boards to track supply chain risk decisions (approve/mitigate/reject) with risk assessment workflows",
+                "Microsoft Defender for Cloud supply chain recommendations to assess third-party integrations and API security",
+                "Microsoft Dataverse to maintain approved vendor registry with risk assessments and re-evaluation schedules",
+                "Power BI to visualize supply chain risk metrics: Vulnerable dependencies, vendor risk ratings, remediation velocity"
+            ],
+            "implementation_steps": [
+                "1. Enable GitHub Dependabot for dependency scanning: (a) Scan all repositories for vulnerable dependencies (npm, NuGet, Maven, pip), (b) Generate automatic remediation PRs for CVEs, (c) Require security approval for high-risk dependencies before merge, (d) Track time-to-remediate (target < 30 days for Critical CVEs)",
+                "2. Create Azure DevOps Supply Chain Risk workflow: (a) Work item type 'Supply Chain Risk Decision' with fields: VendorName, RiskType (Dependency/API/Integration), RiskRating (Critical/High/Medium/Low), Decision (Approve/Mitigate/Reject), Mitigation, ReviewDate, (b) Risk assessment template with NIST 800-161 criteria, (c) Require CISO approval for Critical/High risk decisions",
+                "3. Assess with Microsoft Defender for Cloud: (a) Defender supply chain recommendations for third-party API integrations, (b) Assess third-party service security posture (authentication, encryption, logging), (c) Validate third-party compliance certifications (SOC 2, ISO 27001, FedRAMP), (d) Track remediation of supply chain recommendations",
+                "4. Maintain vendor registry in Microsoft Dataverse: (a) Table: approved_vendors with columns: vendorid, vendorname, serviceprovided, riskscore, compliancecerts, lastsecurityreview, nextreviewdate, (b) Automate annual vendor re-assessment reminders, (c) Flag vendors with expired certifications or overdue reviews",
+                "5. Build Power BI Supply Chain Risk Dashboard: (a) Vulnerable dependencies by severity (Critical/High/Medium/Low), (b) Vendor risk distribution (Critical/High/Medium/Low), (c) Remediation velocity (time from CVE detection to fix), (d) Vendor compliance certification status",
+                "6. Generate quarterly evidence package: (a) Export GitHub Dependabot alerts and remediation PRs, (b) Export DevOps Supply Chain Risk Decision work items, (c) Export Defender supply chain recommendations, (d) Export Dataverse approved vendor registry, (e) Export Power BI dashboard showing supply chain risk management"
+            ],
+            "evidence_artifacts": [
+                "GitHub Dependabot Alerts and Remediation PRs showing vulnerable dependency detection and remediation velocity (< 30d for Critical)",
+                "Azure DevOps Supply Chain Risk Decision Work Items with risk assessments (NIST 800-161) and CISO approval for Critical/High risks",
+                "Microsoft Defender Supply Chain Recommendations assessing third-party API security, authentication, and compliance certifications",
+                "Microsoft Dataverse Approved Vendor Registry with risk scores, compliance certifications (SOC 2, ISO 27001), and annual re-assessment tracking",
+                "Power BI Supply Chain Risk Dashboard visualizing vulnerable dependencies, vendor risk ratings, and remediation velocity metrics"
+            ],
+            "update_frequency": "quarterly",
+            "responsible_party": "Supply Chain Risk Manager / CISO"
+        }
+
+    def get_evidence_collection_queries(self) -> List[Dict[str, str]]:
+        return [
+            {"query_type": "GitHub REST API", "query_name": "Dependabot alerts and remediation PRs", "query": "GET https://api.github.com/repos/{owner}/{repo}/dependabot/alerts?state=open\\nGET https://api.github.com/repos/{owner}/{repo}/pulls?head=dependabot", "purpose": "Retrieve Dependabot vulnerable dependency alerts (CVE IDs) and automatic remediation pull requests"},
+            {"query_type": "Azure DevOps REST API", "query_name": "Supply chain risk decisions", "query": "GET https://dev.azure.com/{organization}/{project}/_apis/wit/wiql?api-version=7.0\\nBody: {\\\"query\\\": \\\"SELECT [System.Id], [System.Title], [Custom.VendorName], [Custom.RiskType], [Custom.RiskRating], [Custom.Decision], [Custom.Mitigation] FROM WorkItems WHERE [System.WorkItemType] = 'Supply Chain Risk Decision' ORDER BY [Custom.RiskRating] DESC\\\"}", "purpose": "Retrieve supply chain risk decisions with risk assessments (NIST 800-161), CISO approvals, and mitigation strategies"},
+            {"query_type": "Microsoft Defender for Cloud REST API", "query_name": "Supply chain security recommendations", "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.Security/assessments?api-version=2021-06-01&$filter=contains(properties/displayName, 'supply chain') or contains(properties/displayName, 'third-party')", "purpose": "Retrieve Defender supply chain recommendations for third-party API integrations and service security"},
+            {"query_type": "Microsoft Dataverse Web API", "query_name": "Approved vendor registry with risk scores", "query": "GET https://{organization}.api.crm.dynamics.com/api/data/v9.2/approved_vendors?$select=vendorid,vendorname,serviceprovided,riskscore,compliancecerts,lastsecurityreview,nextreviewdate&$orderby=riskscore desc", "purpose": "Retrieve approved vendor registry with risk scores, compliance certifications, and re-assessment schedules"},
+            {"query_type": "Power BI REST API", "query_name": "Supply chain risk metrics", "query": "POST https://api.powerbi.com/v1.0/myorg/datasets/{datasetId}/executeQueries\\nBody: {\\\"queries\\\": [{\\\"query\\\": \\\"EVALUATE SUMMARIZE(SupplyChainRisk, SupplyChainRisk[RiskCategory], 'TotalRisks', COUNT(SupplyChainRisk[RiskID]), 'Critical', COUNTIF(SupplyChainRisk[RiskRating] = 'Critical'), 'High', COUNTIF(SupplyChainRisk[RiskRating] = 'High'), 'AvgRemediationDays', AVERAGE(SupplyChainRisk[RemediationDays]))\\\"}]}", "purpose": "Calculate supply chain risk metrics: Vulnerable dependencies, vendor risk distribution, remediation velocity"}
+        ]
+
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        return [
+            {"artifact_name": "GitHub Dependabot Alerts and Remediation PRs", "artifact_type": "Dependency Vulnerability Report", "description": "Dependabot alerts showing vulnerable dependencies (CVE IDs) with severity and automatic remediation PRs (< 30d for Critical)", "collection_method": "GitHub REST API to export dependabot alerts and remediation pull requests", "storage_location": "GitHub Security tab with historical vulnerability tracking and remediation velocity"},
+            {"artifact_name": "DevOps Supply Chain Risk Decisions", "artifact_type": "Risk Decision Registry", "description": "Supply chain risk decisions with NIST 800-161 assessments, risk ratings (Critical/High/Medium/Low), CISO approvals, and mitigation strategies", "collection_method": "Azure DevOps REST API to export Supply Chain Risk Decision work items", "storage_location": "Azure DevOps database with historical risk decisions and approval audit trail"},
+            {"artifact_name": "Defender Supply Chain Recommendations", "artifact_type": "Third-Party Security Assessment", "description": "Defender supply chain recommendations for third-party API integrations: authentication, encryption, logging, compliance certifications", "collection_method": "Microsoft Defender for Cloud REST API to export supply chain security assessments", "storage_location": "Azure Storage Account with quarterly supply chain assessment reports"},
+            {"artifact_name": "Dataverse Approved Vendor Registry", "artifact_type": "Vendor Risk Database", "description": "Approved vendor registry with risk scores, compliance certifications (SOC 2, ISO 27001, FedRAMP), and annual re-assessment schedules", "collection_method": "Microsoft Dataverse Web API to export approved_vendors with risk and compliance metadata", "storage_location": "Microsoft Dataverse with automated annual re-assessment reminders and expired certification alerts"},
+            {"artifact_name": "Power BI Supply Chain Risk Dashboard", "artifact_type": "Risk Metrics Dashboard", "description": "Dashboard showing vulnerable dependencies by severity, vendor risk distribution, remediation velocity (< 30d for Critical), and compliance certification status", "collection_method": "Power BI REST API to export supply chain risk metrics for executive reporting", "storage_location": "SharePoint with quarterly PDF snapshots for CISO and Board of Directors review"}
+        ]
+    

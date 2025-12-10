@@ -681,3 +681,244 @@ class KSI_SVC_01_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get Azure-specific recommendations for automating evidence collection for KSI-SVC-01.
+        
+        **KSI-SVC-01: Continuous Improvement**
+        Implement improvements based on persistent evaluation of information resources for opportunities to improve security.
+        
+        Returns:
+            Dictionary with automation recommendations
+        """
+        return {
+            "ksi_id": "KSI-SVC-01",
+            "ksi_name": "Continuous Improvement",
+            "azure_services": [
+                {
+                    "service": "Microsoft Defender for Cloud",
+                    "purpose": "Continuous security posture assessment with recommendations",
+                    "capabilities": [
+                        "Secure Score with improvement recommendations",
+                        "Security assessments and findings",
+                        "Recommendation prioritization",
+                        "Implementation tracking"
+                    ]
+                },
+                {
+                    "service": "Azure Advisor",
+                    "purpose": "Best practice recommendations across security, cost, performance",
+                    "capabilities": [
+                        "Security recommendations",
+                        "Operational excellence guidance",
+                        "Recommendation history",
+                        "Impact analysis"
+                    ]
+                },
+                {
+                    "service": "Azure Monitor Workbooks",
+                    "purpose": "Security metrics visualization and trend analysis",
+                    "capabilities": [
+                        "Security KPI dashboards",
+                        "Trend analysis over time",
+                        "Improvement tracking",
+                        "Custom metrics and queries"
+                    ]
+                },
+                {
+                    "service": "Azure DevOps / GitHub",
+                    "purpose": "Track security improvement tasks and implementation",
+                    "capabilities": [
+                        "Work item tracking for security improvements",
+                        "Sprint planning for remediation",
+                        "Implementation verification",
+                        "Audit trail of improvements"
+                    ]
+                },
+                {
+                    "service": "Azure Log Analytics",
+                    "purpose": "Query and analyze security improvement metrics",
+                    "capabilities": [
+                        "Custom KQL queries for trends",
+                        "Scheduled queries for automated reporting",
+                        "Alert on degradation",
+                        "Historical analysis"
+                    ]
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "Secure Score Trend Analysis",
+                    "description": "Track Defender for Cloud Secure Score over time showing continuous improvement",
+                    "automation": "Defender REST API with time-series analysis",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Secure Score trend report with improvement initiatives"
+                },
+                {
+                    "method": "Recommendation Implementation Tracking",
+                    "description": "Track implementation status of security recommendations",
+                    "automation": "Defender + Azure Advisor API queries",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Recommendation implementation report with closure rates"
+                },
+                {
+                    "method": "Security Improvement Work Items",
+                    "description": "Track security improvement backlog and completion",
+                    "automation": "Azure DevOps/GitHub API for security-tagged work items",
+                    "frequency": "Monthly",
+                    "evidence_produced": "Security improvement velocity report"
+                },
+                {
+                    "method": "Continuous Evaluation Documentation",
+                    "description": "Document regular security assessments and improvement decisions",
+                    "automation": "Automated report generation from assessment results",
+                    "frequency": "Quarterly",
+                    "evidence_produced": "Continuous improvement program documentation"
+                }
+            ],
+            "automation_feasibility": "high",
+            "evidence_types": ["log-based", "config-based", "process-based"],
+            "implementation_guidance": {
+                "quick_start": "Enable Defender for Cloud, configure Azure Advisor, create Workbooks for security metrics, integrate with DevOps for tracking improvements",
+                "azure_well_architected": "Follows Azure WAF operational excellence pillar for continuous improvement",
+                "compliance_mapping": "Addresses NIST controls cm-7.1, si-2.2, si-4, sr-10 for continuous monitoring and improvement"
+            }
+        }
+    
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get specific Azure queries for collecting KSI-SVC-01 evidence.
+        """
+        return {
+            "ksi_id": "KSI-SVC-01",
+            "queries": [
+                {
+                    "name": "Secure Score Trend",
+                    "type": "azure_rest_api",
+                    "endpoint": "/subscriptions/{subscriptionId}/providers/Microsoft.Security/secureScores?api-version=2020-01-01",
+                    "method": "GET",
+                    "purpose": "Show Defender for Cloud Secure Score over time",
+                    "expected_result": "Upward trend demonstrating continuous improvement"
+                },
+                {
+                    "name": "Active Security Recommendations",
+                    "type": "azure_rest_api",
+                    "endpoint": "/subscriptions/{subscriptionId}/providers/Microsoft.Security/assessments?api-version=2020-01-01",
+                    "method": "GET",
+                    "purpose": "List all security recommendations with status",
+                    "expected_result": "Decreasing number of high/medium recommendations over time"
+                },
+                {
+                    "name": "Azure Advisor Security Recommendations",
+                    "type": "azure_rest_api",
+                    "endpoint": "/subscriptions/{subscriptionId}/providers/Microsoft.Advisor/recommendations?api-version=2020-01-01&$filter=category eq 'Security'",
+                    "method": "GET",
+                    "purpose": "Show Advisor security recommendations and implementation status",
+                    "expected_result": "High implementation rate with documented exceptions"
+                },
+                {
+                    "name": "Security Improvement Work Items",
+                    "type": "azure_devops_api",
+                    "endpoint": "https://dev.azure.com/{org}/{project}/_apis/wit/wiql?api-version=7.1",
+                    "method": "POST",
+                    "query": "SELECT [System.Id], [System.Title], [System.State] FROM WorkItems WHERE [System.Tags] CONTAINS 'Security' AND [System.State] <> 'Removed'",
+                    "purpose": "Track security improvement initiatives in backlog",
+                    "expected_result": "Regular completion of security improvements"
+                },
+                {
+                    "name": "Security Assessment History",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace with Defender data",
+                    "query": """
+                        SecurityRecommendation
+                        | where TimeGenerated > ago(90d)
+                        | summarize RecommendationCount = dcount(RecommendationName), 
+                                    ImplementedCount = dcountif(RecommendationName, RecommendationState == 'Healthy')
+                                    by bin(TimeGenerated, 7d)
+                        | extend ImplementationRate = round((ImplementedCount * 100.0) / RecommendationCount, 2)
+                        | order by TimeGenerated asc
+                        """,
+                    "purpose": "Show recommendation implementation rate trend",
+                    "expected_result": "Increasing implementation rate over time"
+                }
+            ],
+            "query_execution_guidance": {
+                "authentication": "Use Azure CLI or Managed Identity",
+                "permissions_required": [
+                    "Security Reader for Defender API",
+                    "Reader for Advisor API",
+                    "DevOps Project Reader for work items",
+                    "Log Analytics Reader for KQL queries"
+                ],
+                "automation_tools": [
+                    "Azure CLI (az security, az advisor)",
+                    "PowerShell Az.Security module",
+                    "Azure DevOps CLI extension"
+                ]
+            }
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get descriptions of evidence artifacts for KSI-SVC-01.
+        """
+        return {
+            "ksi_id": "KSI-SVC-01",
+            "artifacts": [
+                {
+                    "name": "Secure Score Trend Report",
+                    "description": "Time-series analysis of Defender Secure Score showing continuous improvement",
+                    "source": "Microsoft Defender for Cloud",
+                    "format": "Excel with charts",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "3 years",
+                    "automation": "Defender API with PowerBI/Excel automation"
+                },
+                {
+                    "name": "Recommendation Implementation Report",
+                    "description": "Status of security recommendations with implementation tracking",
+                    "source": "Defender for Cloud + Azure Advisor",
+                    "format": "CSV with status tracking",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "3 years",
+                    "automation": "Combined API queries"
+                },
+                {
+                    "name": "Security Improvement Backlog",
+                    "description": "Work items tracking security improvements with velocity metrics",
+                    "source": "Azure DevOps / GitHub Issues",
+                    "format": "CSV with burndown charts",
+                    "collection_frequency": "Sprint cadence (2 weeks)",
+                    "retention_period": "3 years",
+                    "automation": "DevOps API queries"
+                },
+                {
+                    "name": "Continuous Improvement Program Documentation",
+                    "description": "Documented processes for regular security assessments and improvement cycles",
+                    "source": "Process documentation repository",
+                    "format": "Markdown/PDF in Git",
+                    "collection_frequency": "Quarterly (or on change)",
+                    "retention_period": "Permanent",
+                    "automation": "Version controlled in repository"
+                },
+                {
+                    "name": "Security Metrics Dashboard",
+                    "description": "Real-time dashboard showing security posture and improvement trends",
+                    "source": "Azure Monitor Workbook",
+                    "format": "Interactive dashboard",
+                    "collection_frequency": "Continuous (real-time)",
+                    "retention_period": "Persistent (workbook configuration)",
+                    "automation": "Azure Monitor Workbook"
+                }
+            ],
+            "artifact_storage": {
+                "primary": "Azure Blob Storage with immutable storage",
+                "backup": "Azure Backup with GRS replication",
+                "access_control": "Azure RBAC with audit trail"
+            },
+            "compliance_mapping": {
+                "fedramp_controls": ["cm-7.1", "si-2.2", "si-4", "sr-10"],
+                "evidence_purpose": "Demonstrate persistent security evaluation and continuous improvement program with metrics"
+            }
+        }

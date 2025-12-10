@@ -10,7 +10,7 @@ Version: 25.11C (Published: 2025-12-01)
 
 import ast
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 
@@ -1199,4 +1199,138 @@ security:scan:
         
         return findings
     
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get recommendations for automating evidence collection for KSI-CMT-03.
+        
+        Returns:
+            Dict containing automation recommendations
+        """
+        return {
+            "ksi_id": self.ksi_id,
+            "ksi_name": "Automated Testing and Validation",
+            "evidence_type": "log-based",
+            "automation_feasibility": "high",
+            "azure_services": [
+                "Azure DevOps Test Plans",
+                "Azure Pipelines",
+                "Azure Monitor",
+                "Microsoft Defender for Cloud",
+                "Azure Application Insights"
+            ],
+            "collection_methods": [
+                "Azure DevOps Test Plans to track test execution history with pass/fail rates and code coverage metrics",
+                "Azure Pipelines test results publishing to aggregate unit, integration, and security test outcomes",
+                "Azure Monitor Application Insights to track runtime validation and performance regression tests",
+                "Microsoft Defender for Cloud DevOps security scanning results (SAST, dependency scanning, secret detection)",
+                "Azure Artifacts to store and version test reports, coverage reports, and validation artifacts"
+            ],
+            "implementation_steps": [
+                "1. Configure Azure Pipelines with comprehensive test stages: (a) Unit tests (pytest, jest, xunit) with code coverage >= 80%, (b) Integration tests against Azure Test environment, (c) Security tests (SAST, dependency scanning, secret detection), (d) Performance regression tests with Application Insights",
+                "2. Enable Azure DevOps Test Plans reporting: (a) Publish test results to Test Plans after every pipeline run, (b) Track test pass rates, code coverage trends, and flaky tests, (c) Link test cases to user stories/requirements, (d) Generate monthly test execution reports",
+                "3. Integrate Microsoft Defender for DevOps: (a) Enable GitHub Advanced Security or Azure DevOps security scanning, (b) Configure SAST with Semgrep/CodeQL, (c) Enable dependency scanning with OWASP Dependency-Check, (d) Configure secret scanning with TruffleHog/Gitleaks, (e) Fail pipelines on HIGH/CRITICAL findings",
+                "4. Configure Azure Application Insights for runtime validation: (a) Synthetic monitoring with availability tests, (b) Performance regression detection with baseline metrics, (c) Custom validation metrics tracking business logic correctness, (d) Alert on validation failures",
+                "5. Build Azure Monitor workbook 'Testing and Validation Dashboard': (a) Test pass rate trends by pipeline and test type, (b) Code coverage trends over time, (c) Security scanning results (SAST, dependency, secret findings), (d) Performance regression detection, (e) Test execution duration and flakiness",
+                "6. Generate monthly evidence package: (a) Export Azure DevOps test execution logs with pass/fail details, (b) Export code coverage reports from Azure Artifacts, (c) Export Defender for DevOps scanning results, (d) Export Application Insights validation metrics"
+            ],
+            "evidence_artifacts": [
+                "Azure DevOps Test Execution Logs showing automated test results (unit, integration, security) with pass/fail rates",
+                "Code Coverage Reports from Azure Pipelines demonstrating >= 80% coverage requirement for critical code paths",
+                "Microsoft Defender for DevOps Scanning Results including SAST, dependency scanning, and secret detection findings",
+                "Azure Application Insights Runtime Validation Metrics tracking synthetic monitoring and performance regression tests",
+                "Testing and Validation Dashboard from Azure Monitor with monthly snapshots of test quality and security scanning coverage"
+            ],
+            "update_frequency": "monthly",
+            "responsible_party": "DevOps Team / Quality Assurance Team"
+        }
+
+    def get_evidence_collection_queries(self) -> List[Dict[str, str]]:
+        """
+        Get specific queries for evidence collection automation.
+        
+        Returns:
+            List of query dictionaries
+        """
+        return [
+            {
+                "query_type": "Azure DevOps REST API",
+                "query_name": "Test execution history with pass/fail rates",
+                "query": "GET https://dev.azure.com/{organization}/{project}/_apis/test/runs?api-version=7.0&includeRunDetails=true&$top=100",
+                "purpose": "Retrieve test execution history from Azure DevOps Test Plans showing automated test results and trends"
+            },
+            {
+                "query_type": "Azure DevOps REST API",
+                "query_name": "Code coverage trends from pipelines",
+                "query": "GET https://dev.azure.com/{organization}/{project}/_apis/test/codecoverage?api-version=7.0-preview.1&buildId={buildId}",
+                "purpose": "Retrieve code coverage metrics from Azure Pipelines to demonstrate testing thoroughness (target >= 80%)"
+            },
+            {
+                "query_type": "Microsoft Defender for Cloud REST API",
+                "query_name": "DevOps security scanning results (SAST, dependencies, secrets)",
+                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.Security/securityConnectors?api-version=2023-03-01",
+                "purpose": "Retrieve Defender for DevOps scanning results including SAST, dependency scanning, and secret detection"
+            },
+            {
+                "query_type": "Azure Monitor KQL",
+                "query_name": "Application Insights runtime validation and performance tests",
+                "query": """availabilityResults
+| where timestamp > ago(30d)
+| extend TestName = name, Success = tostring(success), Duration = duration
+| summarize TotalTests = count(), PassedTests = countif(Success == 'True'), AvgDuration = avg(Duration), MaxDuration = max(Duration) by TestName
+| extend PassRate = round((todouble(PassedTests) / TotalTests) * 100, 2)
+| order by PassRate asc, TotalTests desc""",
+                "purpose": "Track synthetic monitoring and runtime validation tests from Application Insights to ensure persistent validation"
+            },
+            {
+                "query_type": "Azure Pipelines REST API",
+                "query_name": "Pipeline test results aggregation",
+                "query": "GET https://dev.azure.com/{organization}/{project}/_apis/build/builds/{buildId}/Timeline?api-version=7.0",
+                "purpose": "Aggregate test results from pipeline runs including unit, integration, and security test outcomes"
+            }
+        ]
+
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        """
+        Get descriptions of evidence artifacts to collect.
+        
+        Returns:
+            List of artifact dictionaries
+        """
+        return [
+            {
+                "artifact_name": "Azure DevOps Test Execution Report",
+                "artifact_type": "Test Plans Export",
+                "description": "Comprehensive test execution logs showing automated test results (unit, integration, security) with pass/fail rates and trends",
+                "collection_method": "Azure DevOps REST API to retrieve test runs and aggregate pass/fail statistics by test type",
+                "storage_location": "Azure DevOps Test Plans with monthly reports exported to Azure Storage Account"
+            },
+            {
+                "artifact_name": "Code Coverage Trend Report",
+                "artifact_type": "Pipeline Artifacts",
+                "description": "Code coverage metrics from Azure Pipelines demonstrating >= 80% coverage for critical code paths",
+                "collection_method": "Azure DevOps REST API to retrieve code coverage data from pipeline builds and track trends",
+                "storage_location": "Azure Artifacts with coverage reports published as pipeline artifacts and archived monthly"
+            },
+            {
+                "artifact_name": "Defender for DevOps Security Scanning Report",
+                "artifact_type": "Security Scan Results",
+                "description": "Aggregated security scanning results including SAST findings, dependency vulnerabilities, and secrets detected",
+                "collection_method": "Microsoft Defender for Cloud REST API to export DevOps security scanning results by repository",
+                "storage_location": "Azure Storage Account with JSON exports organized by severity (CRITICAL, HIGH, MEDIUM, LOW)"
+            },
+            {
+                "artifact_name": "Application Insights Validation Metrics",
+                "artifact_type": "Azure Monitor Logs",
+                "description": "Runtime validation metrics including synthetic monitoring results and performance regression test data",
+                "collection_method": "Azure Monitor KQL query retrieving availability results and custom validation metrics from Application Insights",
+                "storage_location": "Azure Log Analytics workspace with 12-month retention and alerting for validation failures"
+            },
+            {
+                "artifact_name": "Testing and Validation Dashboard",
+                "artifact_type": "Azure Monitor Workbook",
+                "description": "Comprehensive dashboard showing test pass rates, code coverage trends, security scanning results, and runtime validation metrics",
+                "collection_method": "Azure Monitor workbook aggregating data from DevOps, Defender, and Application Insights",
+                "storage_location": "Azure Monitor Workbooks with monthly PDF snapshots archived for compliance auditing"
+            }
+        ]
 

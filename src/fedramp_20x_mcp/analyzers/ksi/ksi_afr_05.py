@@ -9,7 +9,7 @@ Version: 25.11C (Published: 2025-12-01)
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 
@@ -348,5 +348,149 @@ class KSI_AFR_05_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
+
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get recommendations for automating evidence collection for KSI-AFR-05.
+        
+        Returns:
+            Dict containing automation recommendations
+        """
+        return {
+            "ksi_id": self.ksi_id,
+            "ksi_name": "Significant Change Notifications",
+            "evidence_type": "process-based",
+            "automation_feasibility": "high",
+            "azure_services": [
+                "Azure Monitor",
+                "Azure Logic Apps",
+                "Azure DevOps",
+                "Azure Policy",
+                "Microsoft Sentinel"
+            ],
+            "collection_methods": [
+                "Azure Monitor alerts to detect significant infrastructure and configuration changes",
+                "Azure Logic Apps to automatically notify FedRAMP PMO and stakeholders of significant changes",
+                "Azure DevOps change tracking to document and categorize change requests as significant/routine",
+                "Azure Policy change logs to track policy assignments and modifications impacting security controls"
+            ],
+            "implementation_steps": [
+                "1. Define 'significant change' criteria in Azure DevOps: (a) Security control modifications, (b) Architecture changes, (c) New external connections, (d) Authorization boundary changes, (e) Cryptographic changes",
+                "2. Configure Azure Monitor alert rules for significant changes: (a) New resource deployments in production, (b) NSG/firewall rule modifications, (c) RBAC role assignment changes, (d) Key Vault access policy updates",
+                "3. Create Azure Logic App 'FedRAMP-Significant-Change-Notifier' triggered by Monitor alerts and DevOps change requests tagged 'Significant'",
+                "4. Logic App workflow: (a) Receive change notification, (b) Enrich with change details (what/when/who/why), (c) Email FedRAMP PMO and system owner, (d) Create tracking ticket in DevOps, (e) Log to Sentinel",
+                "5. Build Azure DevOps dashboard showing all significant changes with: (a) Change ID, (b) Date, (c) Description, (d) Notification sent date, (e) FedRAMP acknowledgment status",
+                "6. Generate monthly evidence report via Azure Automation runbook listing all significant changes and confirmation of FedRAMP notifications"
+            ],
+            "evidence_artifacts": [
+                "Significant Change Notification Log showing all changes reported to FedRAMP with timestamps and recipients",
+                "Azure Monitor Alert History for significant change detection rules with triggered incidents",
+                "Logic App Execution History showing all FedRAMP notification workflows with success/failure status",
+                "DevOps Change Request Dashboard displaying significant changes with FedRAMP notification confirmations",
+                "Email Archive of FedRAMP Notifications with delivery confirmations and read receipts"
+            ],
+            "update_frequency": "monthly",
+            "responsible_party": "Cloud Security Team / Change Management Team"
+        }
+
+    def get_evidence_collection_queries(self) -> List[Dict[str, str]]:
+        """
+        Get specific queries for evidence collection automation.
+        
+        Returns:
+            List of query dictionaries
+        """
+        return [
+            {
+                "query_type": "Azure Monitor KQL",
+                "query_name": "Significant change alerts triggered",
+                "query": """AzureActivity
+| where OperationNameValue in ('MICROSOFT.RESOURCES/DEPLOYMENTS/WRITE', 'MICROSOFT.NETWORK/NETWORKSECURITYGROUPS/WRITE', 'MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE', 'MICROSOFT.KEYVAULT/VAULTS/WRITE')
+| where ActivityStatusValue == 'Success'
+| where Properties has 'FedRAMP-Scope'
+| extend ChangeType = case(
+    OperationNameValue contains 'DEPLOYMENTS', 'Infrastructure Deployment',
+    OperationNameValue contains 'NETWORKSECURITY', 'Network Security Change',
+    OperationNameValue contains 'ROLEASSIGNMENTS', 'RBAC Change',
+    OperationNameValue contains 'KEYVAULT', 'Key Vault Change',
+    'Other'
+)
+| summarize ChangeCount = count(), LastChange = max(TimeGenerated) by ChangeType, Caller
+| order by ChangeCount desc""",
+                "purpose": "Identify all significant changes in production environment that trigger FedRAMP notification requirements"
+            },
+            {
+                "query_type": "Azure Logic Apps REST API",
+                "query_name": "Retrieve FedRAMP notification workflow runs",
+                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.Logic/workflows/FedRAMP-Significant-Change-Notifier/runs?api-version=2016-06-01&$filter=status eq 'Succeeded'",
+                "purpose": "Track all successful FedRAMP notification deliveries for audit evidence"
+            },
+            {
+                "query_type": "Azure DevOps REST API",
+                "query_name": "Get significant change requests",
+                "query": "GET https://dev.azure.com/{organization}/{project}/_apis/wit/wiql?api-version=7.0\nBody: {\"query\": \"SELECT [System.Id], [System.Title], [System.State], [Custom.FedRAMPNotificationDate] FROM WorkItems WHERE [System.WorkItemType] = 'Change Request' AND [System.Tags] CONTAINS 'Significant' AND [System.State] <> 'Closed' ORDER BY [System.CreatedDate] DESC\"}",
+                "purpose": "List all significant change requests and their FedRAMP notification status"
+            },
+            {
+                "query_type": "Azure Policy REST API",
+                "query_name": "Policy assignment changes",
+                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.Authorization/policyAssignments?api-version=2023-04-01&$filter=properties/enforcementMode eq 'Default'",
+                "purpose": "Track Azure Policy changes that may constitute significant security control modifications"
+            },
+            {
+                "query_type": "Microsoft Sentinel KQL",
+                "query_name": "FedRAMP notification audit trail",
+                "query": """FedRAMPChangeNotifications_CL
+| where NotificationType_s == 'Significant Change'
+| project TimeGenerated, ChangeID_s, ChangeDescription_s, NotificationSent_b, Recipients_s, AcknowledgmentReceived_b
+| order by TimeGenerated desc""",
+                "purpose": "Generate audit trail of all FedRAMP significant change notifications with acknowledgment status"
+            }
+        ]
+
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        """
+        Get descriptions of evidence artifacts to collect.
+        
+        Returns:
+            List of artifact dictionaries
+        """
+        return [
+            {
+                "artifact_name": "Significant Change Notification Log",
+                "artifact_type": "Microsoft Sentinel Custom Table",
+                "description": "Comprehensive log of all significant changes with notification timestamps, recipients, and acknowledgment status",
+                "collection_method": "Azure Logic App writes to Sentinel custom table 'FedRAMPChangeNotifications_CL' for each notification sent",
+                "storage_location": "Microsoft Sentinel workspace with 12-month retention and tamper protection"
+            },
+            {
+                "artifact_name": "Azure Monitor Alert History",
+                "artifact_type": "Azure Monitor Alerts Export",
+                "description": "History of all significant change detection alerts including triggered conditions and response actions",
+                "collection_method": "Azure Monitor REST API to export alert history filtered by 'FedRAMP-Significant-Change' tag",
+                "storage_location": "Azure Storage Account with JSON files organized by month"
+            },
+            {
+                "artifact_name": "Logic App Execution History",
+                "artifact_type": "Azure Logic Apps Run History",
+                "description": "Complete execution log of FedRAMP notification workflows showing success/failure and notification content",
+                "collection_method": "Azure Logic Apps REST API to retrieve run history with input/output details",
+                "storage_location": "Azure Monitor Logs with Logic Apps diagnostic settings enabled"
+            },
+            {
+                "artifact_name": "DevOps Change Request Dashboard",
+                "artifact_type": "Azure DevOps Dashboard",
+                "description": "Dashboard displaying all significant change requests with FedRAMP notification dates and acknowledgment tracking",
+                "collection_method": "Azure DevOps Boards queries with custom fields for FedRAMP notification metadata",
+                "storage_location": "Azure DevOps project dashboard exported as PDF monthly"
+            },
+            {
+                "artifact_name": "FedRAMP Notification Email Archive",
+                "artifact_type": "Microsoft 365 Email Archive",
+                "description": "Archive of all email notifications sent to FedRAMP PMO with delivery and read receipts",
+                "collection_method": "Microsoft Graph API to retrieve emails from shared mailbox 'fedramp-notifications@{org}.com' with metadata",
+                "storage_location": "Microsoft 365 Compliance Center with litigation hold and eDiscovery enabled"
+            }
+        ]
     
 

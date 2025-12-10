@@ -9,7 +9,7 @@ Version: 25.11C (Published: 2025-12-01)
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 
@@ -245,5 +245,55 @@ class KSI_PIY_05_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
-    
 
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        return {
+            "ksi_id": self.ksi_id,
+            "ksi_name": "Evaluate Implementations",
+            "evidence_type": "process-based",
+            "automation_feasibility": "high",
+            "azure_services": ["Azure DevOps", "Microsoft Defender for Cloud", "Azure Policy", "Power BI", "Azure Monitor"],
+            "collection_methods": [
+                "Azure DevOps to document evaluation methods in Design Review work items with Architecture Decision Records (ADRs)",
+                "Microsoft Defender for Cloud to evaluate implementation security posture with Secure Score and recommendations",
+                "Azure Policy to validate implementations meet baseline configurations and compliance standards",
+                "Power BI to track evaluation metrics: ADR completion rate, security score trends, policy compliance over time",
+                "Azure Monitor to track implementation validation frequency and identify unevaluated deployments"
+            ],
+            "implementation_steps": [
+                "1. Create Azure DevOps Design Review process: (a) Work item type 'Design Review' with fields: ServiceName, ArchitectureDiagram, SecurityControls, ComplianceRequirements, EvaluationMethod, ReviewDate, Approvers, (b) Require ADRs (Architecture Decision Records) documenting evaluation rationale, (c) Approval gate: Security Architect + Cloud Architect sign-off before implementation",
+                "2. Evaluate with Microsoft Defender for Cloud: (a) Run Defender assessment for new implementations (VMs, databases, storage, networking), (b) Validate Secure Score >= 80% before production deployment, (c) Remediate Critical/High recommendations within 30 days, (d) Re-evaluate quarterly and track score trends",
+                "3. Validate with Azure Policy: (a) Policy: Require baseline configurations (TLS 1.2+, HTTPS-only, private endpoints), (b) Policy: Require compliance tagging (NIST 800-53, FedRAMP), (c) Scan new deployments for policy violations within 24 hours, (d) Generate implementation compliance report",
+                "4. Build Power BI Evaluation Metrics Dashboard: (a) ADR completion rate by service (target 100%), (b) Security Score trends post-implementation (target >= 80%), (c) Policy compliance rate for new implementations (target >= 95%), (d) Time from deployment to evaluation (target < 7 days)",
+                "5. Track with Azure Monitor: (a) Log Design Review work item lifecycle (creation, approval, implementation), (b) Track Defender assessment frequency (target: quarterly), (c) Alert on unevaluated deployments (> 7 days old), (d) Generate quarterly evaluation effectiveness report",
+                "6. Generate quarterly evidence package: (a) Export DevOps Design Review work items with ADRs and approvals, (b) Export Defender Secure Score by service with recommendation compliance, (c) Export Azure Policy implementation compliance report, (d) Export Power BI dashboard showing >= 95% evaluation compliance"
+            ],
+            "evidence_artifacts": [
+                "Azure DevOps Design Review Work Items with Architecture Decision Records (ADRs) and security architect approvals",
+                "Microsoft Defender for Cloud Secure Score Report showing >= 80% score for new implementations with remediation tracking",
+                "Azure Policy Implementation Compliance Report validating baseline configurations and compliance tagging (>= 95%)",
+                "Power BI Evaluation Metrics Dashboard tracking ADR completion (100%), Secure Score trends, and evaluation timeliness (< 7d)",
+                "Azure Monitor Evaluation Frequency Report tracking Design Review lifecycle and unevaluated deployment alerts"
+            ],
+            "update_frequency": "quarterly",
+            "responsible_party": "Security Architect / Cloud Architect"
+        }
+
+    def get_evidence_collection_queries(self) -> List[Dict[str, str]]:
+        return [
+            {"query_type": "Azure DevOps REST API", "query_name": "Design Review work items with ADRs", "query": "GET https://dev.azure.com/{organization}/{project}/_apis/wit/wiql?api-version=7.0\\nBody: {\\\"query\\\": \\\"SELECT [System.Id], [System.Title], [Custom.ServiceName], [Custom.EvaluationMethod], [Custom.ReviewDate], [Custom.Approvers], [Custom.ADRComplete] FROM WorkItems WHERE [System.WorkItemType] = 'Design Review' ORDER BY [Custom.ReviewDate] DESC\\\"}", "purpose": "Retrieve Design Review work items with evaluation methods (ADRs) and security architect approvals"},
+            {"query_type": "Microsoft Defender for Cloud REST API", "query_name": "Secure Score by service with recommendations", "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.Security/secureScores/ascScore?api-version=2020-01-01&$expand=recommendations", "purpose": "Retrieve Secure Score for implementations with recommendation compliance (target >= 80%)"},
+            {"query_type": "Azure Policy REST API", "query_name": "Implementation policy compliance", "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.PolicyInsights/policyStates/latest/queryResults?api-version=2019-10-01&$filter=policyDefinitionName eq 'require-baseline-config' or policyDefinitionName eq 'require-compliance-tagging'", "purpose": "Retrieve policy compliance for new implementations (baseline configs, compliance tagging)"},
+            {"query_type": "Power BI REST API", "query_name": "Evaluation metrics and compliance rates", "query": "POST https://api.powerbi.com/v1.0/myorg/datasets/{datasetId}/executeQueries\\nBody: {\\\"queries\\\": [{\\\"query\\\": \\\"EVALUATE SUMMARIZE(EvaluationMetrics, EvaluationMetrics[ServiceName], 'TotalImplementations', COUNT(EvaluationMetrics[ImplementationID]), 'ADRComplete', COUNTIF(EvaluationMetrics[ADRComplete] = TRUE), 'SecureScoreAvg', AVERAGE(EvaluationMetrics[SecureScore]), 'PolicyCompliant', COUNTIF(EvaluationMetrics[PolicyCompliance] = 'Compliant'))\\\"}]}", "purpose": "Calculate evaluation metrics: ADR completion (100%), Secure Score avg (>= 80%), policy compliance (>= 95%)"},
+            {"query_type": "Azure Monitor KQL", "query_name": "Evaluation frequency and unevaluated deployments", "query": "AzureActivity\n| where OperationNameValue contains 'Microsoft.Resources/deployments/write'\n| join kind=leftouter (AzureDevOpsWorkItems\n    | where WorkItemType == 'Design Review') on $left.ResourceId == $right.ResourceId\n| extend Evaluated = iff(isnotnull(WorkItemId), 'Yes', 'No'), DaysSinceDeployment = datetime_diff('day', now(), TimeGenerated)\n| where Evaluated == 'No' and DaysSinceDeployment > 7\n| summarize UnevaluatedDeployments = count() by SubscriptionId, ResourceGroup, bin(TimeGenerated, 7d)", "purpose": "Track unevaluated deployments (> 7 days old) and evaluation frequency compliance"}
+        ]
+
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        return [
+            {"artifact_name": "DevOps Design Review Work Items", "artifact_type": "Design Review Documentation", "description": "Complete Design Review work items with Architecture Decision Records (ADRs), evaluation methods, and security architect approvals", "collection_method": "Azure DevOps REST API to export Design Review work items with ADR completion status", "storage_location": "Azure DevOps database with historical design review tracking and approval audit trail"},
+            {"artifact_name": "Defender Secure Score Report", "artifact_type": "Security Posture Evaluation", "description": "Secure Score by service (>= 80% target) with security recommendations and remediation tracking for new implementations", "collection_method": "Microsoft Defender for Cloud REST API to export secureScores with recommendation compliance", "storage_location": "Azure Storage Account with quarterly Secure Score snapshots and trend analysis"},
+            {"artifact_name": "Azure Policy Implementation Compliance Report", "artifact_type": "Configuration Validation Report", "description": "Policy compliance for new implementations: baseline configurations (TLS, HTTPS, private endpoints), compliance tagging (>= 95% target)", "collection_method": "Azure Policy REST API to retrieve policyStates for implementation validation policies", "storage_location": "Azure Storage Account with monthly implementation compliance reports"},
+            {"artifact_name": "Power BI Evaluation Metrics Dashboard", "artifact_type": "Evaluation Effectiveness Dashboard", "description": "Dashboard showing ADR completion (100%), Secure Score trends (>= 80%), policy compliance (>= 95%), evaluation timeliness (< 7d)", "collection_method": "Power BI REST API to export evaluation metrics for executive reporting", "storage_location": "SharePoint with quarterly PDF snapshots for architecture review board"},
+            {"artifact_name": "Azure Monitor Evaluation Frequency Report", "artifact_type": "Evaluation Tracking Report", "description": "Report tracking Design Review lifecycle, evaluation frequency (quarterly), and unevaluated deployments (> 7 days old)", "collection_method": "Azure Monitor KQL query analyzing deployment activity and Design Review work item correlation", "storage_location": "Azure Log Analytics workspace with quarterly evaluation effectiveness summaries"}
+        ]
+    

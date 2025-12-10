@@ -1029,3 +1029,144 @@ class KSI_SVC_08_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
+
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get recommendations for automating evidence collection for KSI-SVC-08.
+        
+        Returns:
+            Dict containing automation recommendations
+        """
+        return {
+            "ksi_id": self.ksi_id,
+            "ksi_name": "Shared Resources",
+            "evidence_type": "config-based",
+            "automation_feasibility": "high",
+            "azure_services": [
+                "Azure Policy",
+                "Azure Monitor",
+                "Azure Storage",
+                "Microsoft Defender for Cloud",
+                "Azure Backup"
+            ],
+            "collection_methods": [
+                "Azure Policy to enforce data sanitization and secure deletion configurations",
+                "Azure Storage lifecycle management policies to automatically purge residual data",
+                "Azure Monitor to track resource cleanup operations and detect data residue",
+                "Defender for Cloud recommendations for secure data handling in shared environments"
+            ],
+            "implementation_steps": [
+                "1. Configure Azure Storage lifecycle policies: (a) Auto-delete blob snapshots after retention period, (b) Move old data to Cool/Archive tiers before deletion, (c) Set blob soft-delete retention (7-90 days), (d) Enable versioning with cleanup automation",
+                "2. Deploy Azure Policy 'Secure Data Residue Management': (a) Audit storage accounts without soft-delete, (b) Require VM disk encryption for secure wipe, (c) Enforce SQL transparent data encryption for deleted databases, (d) Verify Key Vault key rotation on deletion",
+                "3. Build Azure Automation runbook 'Data-Residue-Scanner': (a) Identify orphaned disks/snapshots, (b) Check for unattached NICs with private IPs, (c) Scan for deleted resource metadata retention, (d) Alert on residual data exceeding 30 days",
+                "4. Create Azure Monitor workbook 'Shared Resource Cleanup Dashboard': (a) Track deleted resources with residual data, (b) Show cleanup SLAs (time to complete deletion), (c) Monitor soft-delete recoveries (potential data leaks), (d) Display orphaned resources by subscription",
+                "5. Integrate with Azure Backup: (a) Configure backup retention aligned with data retention policy, (b) Document backup purge procedures, (c) Validate backup copies are also securely deleted",
+                "6. Generate monthly evidence package via Azure Automation: (a) Export storage lifecycle execution logs, (b) Export Policy compliance for data residue controls, (c) Export orphaned resource reports, (d) Export deletion audit logs"
+            ],
+            "evidence_artifacts": [
+                "Azure Storage Lifecycle Management Execution Logs showing automated data purge operations",
+                "Azure Policy Compliance Report for data residue management and secure deletion requirements",
+                "Orphaned Resource Report from Azure Automation identifying residual data in shared environments",
+                "Azure Monitor Deletion Audit Logs tracking all resource deletions with completion timestamps",
+                "Backup Purge Documentation showing aligned retention policies and secure backup deletion procedures"
+            ],
+            "update_frequency": "monthly",
+            "responsible_party": "Cloud Operations Team / Data Stewardship Team"
+        }
+
+    def get_evidence_collection_queries(self) -> List[Dict[str, str]]:
+        """
+        Get specific queries for evidence collection automation.
+        
+        Returns:
+            List of query dictionaries
+        """
+        return [
+            {
+                "query_type": "Azure Resource Graph KQL",
+                "query_name": "Orphaned resources with potential data residue",
+                "query": """Resources
+| where type in ('microsoft.compute/disks', 'microsoft.compute/snapshots', 'microsoft.network/networkinterfaces', 'microsoft.storage/storageaccounts')
+| where properties.diskState == 'Unattached' or properties.provisioningState == 'Deleting' or properties.deleteRetentionPolicy.enabled == false
+| extend OrphanedDays = datetime_diff('day', now(), todatetime(properties.timeCreated))
+| where OrphanedDays > 30
+| project name, type, resourceGroup, OrphanedDays, location
+| order by OrphanedDays desc""",
+                "purpose": "Identify orphaned resources that may contain residual federal customer data beyond 30-day threshold"
+            },
+            {
+                "query_type": "Azure Monitor KQL",
+                "query_name": "Resource deletion completion audit",
+                "query": """AzureActivity
+| where OperationNameValue contains 'DELETE'
+| where ActivityStatusValue in ('Success', 'Failed')
+| extend DeletionDuration = datetime_diff('minute', TimeGenerated, EventSubmissionTimestamp)
+| summarize DeletionCount = count(), AvgDuration = avg(DeletionDuration), MaxDuration = max(DeletionDuration) by ResourceType = ResourceType, OperationNameValue
+| order by DeletionCount desc""",
+                "purpose": "Track resource deletion operations to ensure complete removal without residual data"
+            },
+            {
+                "query_type": "Azure Storage REST API",
+                "query_name": "Storage lifecycle policy execution history",
+                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{accountName}/managementPolicies/default?api-version=2023-01-01",
+                "purpose": "Retrieve storage lifecycle management policy configurations and execution logs for automated data purge"
+            },
+            {
+                "query_type": "Azure Policy REST API",
+                "query_name": "Data residue management policy compliance",
+                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.PolicyInsights/policyStates/latest/summarize?api-version=2019-10-01&$filter=policyDefinitionCategory eq 'Storage' and (policyDefinitionName contains 'soft-delete' or policyDefinitionName contains 'lifecycle')",
+                "purpose": "Assess policy compliance for data residue controls including soft-delete and lifecycle management"
+            },
+            {
+                "query_type": "Azure Backup REST API",
+                "query_name": "Backup retention and purge policy audit",
+                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.RecoveryServices/vaults?api-version=2023-01-01",
+                "purpose": "Audit backup vault retention policies to ensure backups are also purged in alignment with data deletion requests"
+            }
+        ]
+
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        """
+        Get descriptions of evidence artifacts to collect.
+        
+        Returns:
+            List of artifact dictionaries
+        """
+        return [
+            {
+                "artifact_name": "Storage Lifecycle Management Logs",
+                "artifact_type": "Azure Storage Execution Logs",
+                "description": "Logs showing automated lifecycle policy executions for blob deletion and tier transitions",
+                "collection_method": "Azure Storage REST API to retrieve lifecycle policy execution history with blob deletion counts",
+                "storage_location": "Azure Log Analytics workspace with storage diagnostic logs ingestion"
+            },
+            {
+                "artifact_name": "Data Residue Policy Compliance Report",
+                "artifact_type": "Azure Policy Report",
+                "description": "Policy compliance status for storage soft-delete, lifecycle management, and secure deletion configurations",
+                "collection_method": "Azure Policy Insights API to export compliance for data residue management policies",
+                "storage_location": "Azure Storage Account with monthly compliance reports in JSON format"
+            },
+            {
+                "artifact_name": "Orphaned Resource Inventory",
+                "artifact_type": "Azure Resource Graph Report",
+                "description": "List of orphaned disks, snapshots, and storage accounts with age and potential data residue risk",
+                "collection_method": "Azure Resource Graph KQL query executed monthly via Azure Automation runbook",
+                "storage_location": "Azure Storage Account with CSV exports organized by subscription and date"
+            },
+            {
+                "artifact_name": "Resource Deletion Audit Trail",
+                "artifact_type": "Azure Activity Log",
+                "description": "Complete audit log of all resource deletion operations with completion status and duration",
+                "collection_method": "Azure Monitor Activity Log API to export deletion events filtered by operation type",
+                "storage_location": "Azure Log Analytics workspace with 12-month retention for audit compliance"
+            },
+            {
+                "artifact_name": "Backup Purge Procedures Documentation",
+                "artifact_type": "Azure Backup Configuration Export",
+                "description": "Documentation of backup retention policies and procedures for secure backup deletion upon customer request",
+                "collection_method": "Azure Backup REST API to export vault configurations with retention settings",
+                "storage_location": "Azure DevOps wiki with version-controlled backup purge procedures"
+            }
+        ]
+    

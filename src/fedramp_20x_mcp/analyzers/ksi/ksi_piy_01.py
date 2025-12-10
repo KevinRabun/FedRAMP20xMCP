@@ -16,7 +16,7 @@ Version: 25.11C (Published: 2025-12-01)
 """
 
 import re
-from typing import List, Set
+from typing import List, Set, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -971,4 +971,55 @@ class KSI_PIY_01_Analyzer(BaseKSIAnalyzer):
         start = max(0, line_number - context - 1)
         end = min(len(lines), line_number + context)
         return '\n'.join(lines[start:end])
+
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        return {
+            "ksi_id": self.ksi_id,
+            "ksi_name": "Automated Inventory",
+            "evidence_type": "log-based",
+            "automation_feasibility": "high",
+            "azure_services": ["Azure Resource Graph", "Microsoft Defender for Cloud", "Azure Policy", "Power BI", "Azure Monitor"],
+            "collection_methods": [
+                "Azure Resource Graph to maintain real-time inventory of all Azure resources with tagging and compliance metadata",
+                "Microsoft Defender for Cloud to inventory compute, networking, data, and application resources with security posture",
+                "Azure Policy to enforce tagging standards and track compliance with inventory requirements",
+                "Power BI to visualize inventory trends, resource growth, and tag compliance rates",
+                "Azure Monitor to track inventory collection frequency and alert on inventory gaps or untagged resources"
+            ],
+            "implementation_steps": [
+                "1. Configure Azure Resource Graph inventory queries: (a) Daily KQL query: Resources | project name, type, location, subscriptionId, resourceGroup, tags, properties, (b) Export to Azure Storage as JSON/CSV for audit trail, (c) Tag resources with compliance metadata (Owner, CostCenter, DataClassification, Environment), (d) Validate required tags present (>= 95% compliance target)",
+                "2. Enable Microsoft Defender for Cloud asset inventory: (a) Activate Defender for all resource types (VMs, databases, storage, containers, Key Vault), (b) Collect security posture (Secure Score, recommendations, vulnerabilities), (c) Export inventory with security metadata via REST API, (d) Alert on unmonitored resources",
+                "3. Enforce tagging with Azure Policy: (a) Policy: Require tags on resource creation (Owner, CostCenter, DataClassification), (b) Policy: Deny resource creation if required tags missing, (c) Audit mode for existing resources with remediation tasks, (d) Generate monthly tag compliance report (>= 95% target)",
+                "4. Build Power BI Inventory Dashboard: (a) Resource count by type, subscription, and region, (b) Tag compliance rate (required vs. optional tags), (c) Resource growth trends (new/deleted/modified), (d) Heatmap showing untagged resources by owner",
+                "5. Track with Azure Monitor: (a) Log inventory collection executions (daily ARG queries, Defender sync), (b) Alert on inventory gaps (new resources without tags, unmonitored subscriptions), (c) Track inventory staleness (resources not scanned in > 24 hours), (d) Generate monthly inventory health report",
+                "6. Generate monthly evidence package: (a) Export Azure Resource Graph complete inventory with tags and compliance metadata, (b) Export Defender asset inventory with security posture, (c) Export Azure Policy tag compliance report (>= 95%), (d) Export Power BI dashboard showing real-time inventory visibility"
+            ],
+            "evidence_artifacts": [
+                "Azure Resource Graph Complete Inventory with tags, compliance metadata, and real-time resource status",
+                "Microsoft Defender for Cloud Asset Inventory with security posture, Secure Score, and vulnerability data",
+                "Azure Policy Tag Compliance Report showing >= 95% compliance with required tagging standards",
+                "Power BI Inventory Dashboard visualizing resource growth, tag compliance trends, and untagged resource identification",
+                "Azure Monitor Inventory Health Report tracking collection frequency, inventory gaps, and staleness alerts"
+            ],
+            "update_frequency": "monthly",
+            "responsible_party": "Cloud Operations Team / Asset Management"
+        }
+
+    def get_evidence_collection_queries(self) -> List[Dict[str, str]]:
+        return [
+            {"query_type": "Azure Resource Graph KQL", "query_name": "Complete resource inventory with tags", "query": "Resources\n| project id, name, type, location, subscriptionId, resourceGroup, tags, properties, tenantId\n| extend Owner = tags['Owner'], CostCenter = tags['CostCenter'], DataClassification = tags['DataClassification'], Environment = tags['Environment']\n| extend HasRequiredTags = iff(isnotnull(Owner) and isnotnull(CostCenter) and isnotnull(DataClassification), 'Compliant', 'Non-Compliant')\n| summarize TotalResources = count(), Compliant = countif(HasRequiredTags == 'Compliant'), NonCompliant = countif(HasRequiredTags == 'Non-Compliant') by type\n| extend ComplianceRate = round((todouble(Compliant) / TotalResources) * 100, 2)", "purpose": "Retrieve complete resource inventory with tagging compliance rates (>= 95% target)"},
+            {"query_type": "Microsoft Defender for Cloud REST API", "query_name": "Asset inventory with security posture", "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.Security/assets?api-version=2023-01-01&$expand=securityMetadata", "purpose": "Retrieve asset inventory with security posture (Secure Score, recommendations, vulnerabilities) from Defender for Cloud"},
+            {"query_type": "Azure Policy REST API", "query_name": "Tag compliance report", "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.PolicyInsights/policyStates/latest/queryResults?api-version=2019-10-01&$filter=policyDefinitionName eq 'require-resource-tags'", "purpose": "Retrieve policy compliance for tagging requirements showing compliant/non-compliant resources"},
+            {"query_type": "Power BI REST API", "query_name": "Inventory trends and tag compliance", "query": "POST https://api.powerbi.com/v1.0/myorg/datasets/{datasetId}/executeQueries\\nBody: {\\\"queries\\\": [{\\\"query\\\": \\\"EVALUATE SUMMARIZE(Inventory, Inventory[ResourceType], 'TotalResources', COUNT(Inventory[ResourceID]), 'Tagged', COUNTIF(Inventory[HasRequiredTags] = 'Compliant'), 'Untagged', COUNTIF(Inventory[HasRequiredTags] = 'Non-Compliant'), 'ComplianceRate', DIVIDE(COUNTIF(Inventory[HasRequiredTags] = 'Compliant'), COUNT(Inventory[ResourceID]), 0) * 100)\\\"}]}", "purpose": "Calculate inventory trends and tag compliance rates for executive dashboard"},
+            {"query_type": "Azure Monitor KQL", "query_name": "Inventory collection health tracking", "query": "AzureActivity\n| where OperationNameValue contains 'Microsoft.ResourceGraph/resources'\n| summarize InventoryQueries = count(), LastCollection = max(TimeGenerated) by SubscriptionId, bin(TimeGenerated, 1d)\n| extend StalenessHours = datetime_diff('hour', now(), LastCollection)\n| extend HealthStatus = iff(StalenessHours > 24, 'Stale', 'Healthy')", "purpose": "Track inventory collection frequency and identify stale inventories (> 24 hours)"}
+        ]
+
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        return [
+            {"artifact_name": "Azure Resource Graph Complete Inventory", "artifact_type": "Real-Time Inventory Database", "description": "Complete inventory of all Azure resources with tags (Owner, CostCenter, DataClassification, Environment), compliance metadata, and properties", "collection_method": "Azure Resource Graph KQL query exporting all resources with tag compliance validation", "storage_location": "Azure Storage Account with daily snapshots for audit trail and trend analysis"},
+            {"artifact_name": "Microsoft Defender Asset Inventory", "artifact_type": "Security Posture Inventory", "description": "Asset inventory with security posture data: Secure Score, recommendations, vulnerabilities, and threat intelligence", "collection_method": "Microsoft Defender for Cloud REST API to export assets with security metadata", "storage_location": "Azure Storage Account with monthly security posture snapshots"},
+            {"artifact_name": "Azure Policy Tag Compliance Report", "artifact_type": "Tagging Compliance Report", "description": "Policy compliance report showing >= 95% tag compliance with required tags (Owner, CostCenter, DataClassification)", "collection_method": "Azure Policy REST API to retrieve policyStates for tagging requirements", "storage_location": "Azure Storage Account with monthly compliance reports and remediation tracking"},
+            {"artifact_name": "Power BI Inventory Dashboard", "artifact_type": "Inventory Visualization", "description": "Dashboard showing resource count by type, tag compliance trends, resource growth/deletion, and untagged resource heatmap", "collection_method": "Power BI REST API to export dashboard metrics for inventory trends and compliance", "storage_location": "SharePoint with monthly PDF snapshots for executive reporting"},
+            {"artifact_name": "Azure Monitor Inventory Health Report", "artifact_type": "Collection Health Report", "description": "Inventory collection health tracking: collection frequency, inventory gaps, staleness alerts, and unmonitored subscriptions", "collection_method": "Azure Monitor KQL query tracking Resource Graph query executions and staleness", "storage_location": "Azure Log Analytics workspace with monthly inventory health summaries"}
+        ]
 

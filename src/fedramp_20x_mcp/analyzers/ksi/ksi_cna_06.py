@@ -496,3 +496,247 @@ class KSI_CNA_06_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get Azure-specific recommendations for automating evidence collection for KSI-CNA-06.
+        
+        **KSI-CNA-06: High Availability**
+        Design systems for high availability and rapid recovery.
+        
+        Returns:
+            Dictionary with automation recommendations
+        """
+        return {
+            "ksi_id": "KSI-CNA-06",
+            "ksi_name": "High Availability",
+            "azure_services": [
+                {
+                    "service": "Azure Availability Zones",
+                    "purpose": "Provide zone-redundant deployments for high availability",
+                    "capabilities": [
+                        "Zone-redundant VM deployments",
+                        "Zone-redundant storage (ZRS)",
+                        "Zone-redundant network resources",
+                        "99.99% SLA for zone-redundant services"
+                    ]
+                },
+                {
+                    "service": "Azure Site Recovery",
+                    "purpose": "Automate disaster recovery and failover",
+                    "capabilities": [
+                        "Automated replication to secondary region",
+                        "Orchestrated failover and failback",
+                        "Regular disaster recovery drills",
+                        "RTO/RPO tracking"
+                    ]
+                },
+                {
+                    "service": "Azure Load Balancer / Traffic Manager",
+                    "purpose": "Distribute traffic across healthy instances",
+                    "capabilities": [
+                        "Health probe monitoring",
+                        "Automatic failover to healthy backends",
+                        "Cross-region load balancing",
+                        "Session persistence"
+                    ]
+                },
+                {
+                    "service": "Azure Monitor",
+                    "purpose": "Track availability metrics and SLA compliance",
+                    "capabilities": [
+                        "Uptime monitoring",
+                        "Availability percentage tracking",
+                        "SLA compliance reporting",
+                        "RTO/RPO measurement"
+                    ]
+                },
+                {
+                    "service": "Azure Advisor",
+                    "purpose": "Provide high availability recommendations",
+                    "capabilities": [
+                        "Availability Zone recommendations",
+                        "Redundancy configuration guidance",
+                        "Single point of failure detection",
+                        "SLA improvement suggestions"
+                    ]
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "Availability Zone Usage Audit",
+                    "description": "Verify critical resources deployed across Availability Zones",
+                    "automation": "Azure Resource Graph queries",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Zone-redundancy configuration report"
+                },
+                {
+                    "method": "Disaster Recovery Test Results",
+                    "description": "Document DR drills and failover testing",
+                    "automation": "Azure Site Recovery test reports",
+                    "frequency": "Quarterly",
+                    "evidence_produced": "DR test execution logs with RTO/RPO measurements"
+                },
+                {
+                    "method": "Uptime and Availability Tracking",
+                    "description": "Measure actual system uptime vs SLA targets",
+                    "automation": "Azure Monitor metrics and alerts",
+                    "frequency": "Monthly",
+                    "evidence_produced": "Uptime percentage report with SLA compliance"
+                },
+                {
+                    "method": "High Availability Recommendations",
+                    "description": "Track and remediate Advisor HA recommendations",
+                    "automation": "Azure Advisor API",
+                    "frequency": "Monthly",
+                    "evidence_produced": "Advisor recommendation status report"
+                }
+            ],
+            "automation_feasibility": "high",
+            "evidence_types": ["config-based", "metric-based", "process-based"],
+            "implementation_guidance": {
+                "quick_start": "Deploy critical resources across Availability Zones, configure Site Recovery for DR, enable health probes on load balancers, track uptime with Monitor",
+                "azure_well_architected": "Follows Azure WAF reliability pillar for high availability",
+                "compliance_mapping": "Supports availability requirements (no specific NIST controls for KSI-CNA-06)"
+            }
+        }
+    
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get specific Azure queries for collecting KSI-CNA-06 evidence.
+        """
+        return {
+            "ksi_id": "KSI-CNA-06",
+            "queries": [
+                {
+                    "name": "Availability Zone Configuration",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        resources
+                        | where type in~ ('Microsoft.Compute/virtualMachines', 'Microsoft.Compute/virtualMachineScaleSets', 'Microsoft.Storage/storageAccounts', 'Microsoft.Network/publicIPAddresses')
+                        | extend zones = tostring(zones)
+                        | extend isZoneRedundant = iff(isnull(zones) or zones == '[]', false, true)
+                        | project name, type, resourceGroup, isZoneRedundant, zones
+                        | where isZoneRedundant == false
+                        """,
+                    "purpose": "Identify resources not using Availability Zones",
+                    "expected_result": "Critical resources deployed across multiple zones"
+                },
+                {
+                    "name": "Site Recovery Protection Status",
+                    "type": "azure_rest_api",
+                    "endpoint": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.RecoveryServices/vaults/{vaultName}/replicationProtectedItems?api-version=2023-08-01",
+                    "method": "GET",
+                    "purpose": "Verify critical VMs have Site Recovery enabled",
+                    "expected_result": "All critical VMs protected with replication"
+                },
+                {
+                    "name": "Uptime Percentage",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace",
+                    "query": """
+                        AzureMetrics
+                        | where ResourceProvider == 'MICROSOFT.COMPUTE' or ResourceProvider == 'MICROSOFT.WEB'
+                        | where MetricName == 'Availability' or MetricName == 'HealthStatus'
+                        | where TimeGenerated > ago(30d)
+                        | summarize Uptime = avg(Average) * 100 by ResourceId, bin(TimeGenerated, 1d)
+                        | summarize MonthlyUptime = avg(Uptime) by ResourceId
+                        | project ResourceId, MonthlyUptime, SLACompliant = iff(MonthlyUptime >= 99.9, 'Yes', 'No')
+                        """,
+                    "purpose": "Measure actual uptime vs SLA targets",
+                    "expected_result": "99.9%+ uptime for critical systems"
+                },
+                {
+                    "name": "DR Test Execution History",
+                    "type": "azure_rest_api",
+                    "endpoint": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.RecoveryServices/vaults/{vaultName}/replicationJobs?api-version=2023-08-01&$filter=properties/activityType eq 'TestFailover'",
+                    "method": "GET",
+                    "purpose": "Document regular DR testing with RTO/RPO measurements",
+                    "expected_result": "Quarterly DR tests completed successfully"
+                },
+                {
+                    "name": "Advisor High Availability Recommendations",
+                    "type": "azure_rest_api",
+                    "endpoint": "/subscriptions/{subscriptionId}/providers/Microsoft.Advisor/recommendations?api-version=2023-01-01&$filter=properties/category eq 'HighAvailability'",
+                    "method": "GET",
+                    "purpose": "Track unaddressed HA recommendations",
+                    "expected_result": "All high-priority HA recommendations remediated"
+                }
+            ],
+            "query_execution_guidance": {
+                "authentication": "Use Azure CLI or Managed Identity",
+                "permissions_required": [
+                    "Reader for Resource Graph and Advisor queries",
+                    "Site Recovery Operator for DR testing",
+                    "Monitoring Reader for uptime metrics"
+                ],
+                "automation_tools": [
+                    "Azure CLI (az monitor, az advisor)",
+                    "PowerShell Az.RecoveryServices module"
+                ]
+            }
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get descriptions of evidence artifacts for KSI-CNA-06.
+        """
+        return {
+            "ksi_id": "KSI-CNA-06",
+            "artifacts": [
+                {
+                    "name": "Availability Zone Configuration Report",
+                    "description": "Documentation of zone-redundant resource deployments",
+                    "source": "Azure Resource Graph",
+                    "format": "CSV with zone assignments",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "3 years",
+                    "automation": "Resource Graph scheduled query"
+                },
+                {
+                    "name": "Disaster Recovery Test Reports",
+                    "description": "DR drill results with RTO/RPO measurements and lessons learned",
+                    "source": "Azure Site Recovery",
+                    "format": "PDF test report with metrics",
+                    "collection_frequency": "Quarterly",
+                    "retention_period": "7 years",
+                    "automation": "Manual DR test + automated report generation"
+                },
+                {
+                    "name": "System Uptime and SLA Compliance Report",
+                    "description": "Actual uptime percentage vs SLA targets for critical systems",
+                    "source": "Azure Monitor",
+                    "format": "CSV with monthly uptime metrics",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "3 years",
+                    "automation": "Monitor metrics API + scheduled export"
+                },
+                {
+                    "name": "High Availability Architecture Diagrams",
+                    "description": "System architecture showing redundancy, failover, and recovery mechanisms",
+                    "source": "Documentation repository",
+                    "format": "Visio/Draw.io diagrams",
+                    "collection_frequency": "Quarterly (or on architecture changes)",
+                    "retention_period": "3 years",
+                    "automation": "Version-controlled in Git"
+                },
+                {
+                    "name": "Advisor HA Recommendation Tracking",
+                    "description": "Status of Azure Advisor high availability recommendations",
+                    "source": "Azure Advisor",
+                    "format": "CSV with remediation status",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "3 years",
+                    "automation": "Advisor API export"
+                }
+            ],
+            "artifact_storage": {
+                "primary": "Azure Blob Storage with immutable storage",
+                "backup": "Azure Backup with GRS replication",
+                "access_control": "Azure RBAC with audit trail"
+            },
+            "compliance_mapping": {
+                "fedramp_controls": [],
+                "evidence_purpose": "Demonstrate high availability design with zone redundancy, DR capability, and measured uptime"
+            }
+        }

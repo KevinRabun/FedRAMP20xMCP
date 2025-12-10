@@ -1080,3 +1080,268 @@ class KSI_CNA_08_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get Azure-specific recommendations for automating evidence collection for KSI-CNA-08.
+        
+        **KSI-CNA-08: Persistent Assessment and Automated Enforcement**
+        Use automated services to persistently assess the security posture of all machine-based 
+        information resources and automatically enforce their intended operational state.
+        
+        Returns:
+            Dictionary with automation recommendations
+        """
+        return {
+            "ksi_id": "KSI-CNA-08",
+            "ksi_name": "Persistent Assessment and Automated Enforcement",
+            "azure_services": [
+                {
+                    "service": "Microsoft Defender for Cloud",
+                    "purpose": "Continuous security posture assessment with Secure Score",
+                    "capabilities": [
+                        "Continuous security assessment",
+                        "Secure Score tracking",
+                        "Azure Security Benchmark compliance",
+                        "Automated recommendations"
+                    ]
+                },
+                {
+                    "service": "Azure Policy",
+                    "purpose": "Automated enforcement of desired configuration state",
+                    "capabilities": [
+                        "Continuous compliance assessment",
+                        "Automatic remediation (deployIfNotExists, modify)",
+                        "Deny non-compliant deployments",
+                        "Audit mode for assessment"
+                    ]
+                },
+                {
+                    "service": "Azure Automation State Configuration (DSC)",
+                    "purpose": "Continuously assess and enforce VM configuration state",
+                    "capabilities": [
+                        "Desired State Configuration enforcement",
+                        "Configuration drift detection",
+                        "Automatic configuration correction",
+                        "Compliance reporting"
+                    ]
+                },
+                {
+                    "service": "Azure Arc",
+                    "purpose": "Extend assessment and enforcement to hybrid/multi-cloud resources",
+                    "capabilities": [
+                        "Policy enforcement across hybrid resources",
+                        "Defender for Cloud coverage for Arc-enabled servers",
+                        "Configuration management",
+                        "Unified governance"
+                    ]
+                },
+                {
+                    "service": "Azure Monitor",
+                    "purpose": "Continuous monitoring with alerts on configuration drift",
+                    "capabilities": [
+                        "Configuration change detection",
+                        "Alert on non-compliance",
+                        "Compliance trend tracking",
+                        "Integration with remediation workflows"
+                    ]
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "Secure Score Trend Tracking",
+                    "description": "Monitor continuous security posture assessment via Secure Score",
+                    "automation": "Defender for Cloud API",
+                    "frequency": "Daily (continuous assessment)",
+                    "evidence_produced": "Secure Score history with improvement trends"
+                },
+                {
+                    "method": "Policy Compliance Assessment",
+                    "description": "Track continuous compliance with automated remediation status",
+                    "automation": "Azure Policy compliance data",
+                    "frequency": "Continuous (hourly aggregation)",
+                    "evidence_produced": "Policy compliance reports with remediation logs"
+                },
+                {
+                    "method": "Configuration Drift Detection",
+                    "description": "Identify resources that drift from desired state",
+                    "automation": "Azure Automation DSC + Change Tracking",
+                    "frequency": "Continuous (every 15 minutes)",
+                    "evidence_produced": "Configuration drift reports with auto-remediation logs"
+                },
+                {
+                    "method": "Automated Remediation Logs",
+                    "description": "Document automatic enforcement actions taken by Policy/DSC",
+                    "automation": "Azure Activity Log + Policy remediation tasks",
+                    "frequency": "Continuous",
+                    "evidence_produced": "Remediation execution history"
+                }
+            ],
+            "automation_feasibility": "high",
+            "evidence_types": ["config-based", "log-based", "metric-based"],
+            "implementation_guidance": {
+                "quick_start": "Enable Defender for Cloud, deploy Policy with automatic remediation, configure DSC for critical VMs, enable Arc for hybrid resources, track with Monitor alerts",
+                "azure_well_architected": "Follows Azure WAF operational excellence for continuous assessment and enforcement",
+                "compliance_mapping": "Addresses NIST controls ca-2.1, ca-7.1 for independent assessment"
+            }
+        }
+    
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get specific Azure queries for collecting KSI-CNA-08 evidence.
+        """
+        return {
+            "ksi_id": "KSI-CNA-08",
+            "queries": [
+                {
+                    "name": "Secure Score Over Time",
+                    "type": "azure_rest_api",
+                    "endpoint": "/subscriptions/{subscriptionId}/providers/Microsoft.Security/secureScores?api-version=2020-01-01",
+                    "method": "GET",
+                    "purpose": "Track continuous security posture improvement",
+                    "expected_result": "Increasing or stable high Secure Score"
+                },
+                {
+                    "name": "Policy Compliance with Automatic Remediation",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        policyresources
+                        | where type == 'microsoft.policyinsights/policystates'
+                        | extend hasAutoRemediation = tostring(properties.policyDefinitionAction) in ('deployIfNotExists', 'modify')
+                        | summarize TotalResources = count(),
+                                   CompliantResources = countif(properties.complianceState == 'Compliant'),
+                                   AutoRemediatedResources = countif(hasAutoRemediation and properties.complianceState == 'Compliant')
+                                   by PolicyName = tostring(properties.policyDefinitionName)
+                        | extend CompliancePercentage = round((CompliantResources * 100.0) / TotalResources, 2)
+                        | project PolicyName, TotalResources, CompliantResources, AutoRemediatedResources, CompliancePercentage
+                        | order by CompliancePercentage asc
+                        """,
+                    "purpose": "Verify policies with automatic enforcement are maintaining compliance",
+                    "expected_result": "High compliance percentage for policies with auto-remediation"
+                },
+                {
+                    "name": "DSC Configuration Compliance",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace",
+                    "query": """
+                        ConfigurationData
+                        | where TimeGenerated > ago(7d)
+                        | where ConfigDataType == 'ComplianceStatus'
+                        | summarize LastReport = max(TimeGenerated), CompliantCount = countif(IsCompliant == true), NonCompliantCount = countif(IsCompliant == false) by Computer
+                        | extend CompliancePercentage = round((CompliantCount * 100.0) / (CompliantCount + NonCompliantCount), 2)
+                        | project Computer, LastReport, CompliancePercentage, CompliantCount, NonCompliantCount
+                        | order by CompliancePercentage asc
+                        """,
+                    "purpose": "Show DSC maintaining desired configuration state",
+                    "expected_result": "High compliance percentage with recent assessments"
+                },
+                {
+                    "name": "Automated Remediation Activity",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace",
+                    "query": """
+                        AzureActivity
+                        | where TimeGenerated > ago(30d)
+                        | where OperationNameValue contains 'remediation' or Caller contains 'azure-policy'
+                        | where ActivityStatusValue == 'Succeeded'
+                        | summarize RemediationCount = count() by bin(TimeGenerated, 1d), ResourceGroup
+                        | order by TimeGenerated desc
+                        """,
+                    "purpose": "Document automatic enforcement actions",
+                    "expected_result": "Regular automated remediation activity"
+                },
+                {
+                    "name": "Configuration Drift Detection",
+                    "type": "kql",
+                    "workspace": "Log Analytics with Change Tracking",
+                    "query": """
+                        ConfigurationChange
+                        | where TimeGenerated > ago(7d)
+                        | where ChangeCategory in ('Files', 'Registry', 'Software', 'Services')
+                        | extend WasRemediated = iff(TimeGenerated < ago(1h), true, false)
+                        | summarize DriftCount = count(), RemediatedCount = countif(WasRemediated) by Computer, ChangeCategory
+                        | extend RemediationRate = round((RemediatedCount * 100.0) / DriftCount, 2)
+                        | project Computer, ChangeCategory, DriftCount, RemediatedCount, RemediationRate
+                        | order by RemediationRate asc
+                        """,
+                    "purpose": "Track configuration drift and auto-remediation effectiveness",
+                    "expected_result": "High remediation rate for detected drift"
+                }
+            ],
+            "query_execution_guidance": {
+                "authentication": "Use Azure CLI or Managed Identity",
+                "permissions_required": [
+                    "Security Reader for Defender for Cloud",
+                    "Policy Insights Data Reader for compliance data",
+                    "Log Analytics Reader for DSC and Change Tracking queries"
+                ],
+                "automation_tools": [
+                    "Azure CLI (az security, az policy)",
+                    "PowerShell Az.Security and Az.PolicyInsights modules"
+                ]
+            }
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get descriptions of evidence artifacts for KSI-CNA-08.
+        """
+        return {
+            "ksi_id": "KSI-CNA-08",
+            "artifacts": [
+                {
+                    "name": "Secure Score Trend Report",
+                    "description": "Historical tracking of continuous security posture assessment",
+                    "source": "Microsoft Defender for Cloud",
+                    "format": "CSV with daily Secure Score values",
+                    "collection_frequency": "Daily",
+                    "retention_period": "3 years",
+                    "automation": "Security API scheduled export"
+                },
+                {
+                    "name": "Policy Compliance and Remediation Report",
+                    "description": "Policy compliance status with automatic remediation execution logs",
+                    "source": "Azure Policy",
+                    "format": "JSON compliance report with remediation tasks",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "3 years",
+                    "automation": "Policy compliance API + Activity Log"
+                },
+                {
+                    "name": "DSC Configuration Compliance Report",
+                    "description": "Desired State Configuration compliance with drift detection and correction",
+                    "source": "Azure Automation State Configuration",
+                    "format": "CSV with compliance status per node",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "3 years",
+                    "automation": "Log Analytics query export"
+                },
+                {
+                    "name": "Automated Enforcement Activity Log",
+                    "description": "Complete log of automatic enforcement actions (Policy remediation, DSC corrections)",
+                    "source": "Azure Activity Log + Change Tracking",
+                    "format": "JSON activity log",
+                    "collection_frequency": "Daily (continuous ingestion)",
+                    "retention_period": "3 years",
+                    "automation": "Log Analytics export"
+                },
+                {
+                    "name": "Continuous Assessment Configuration",
+                    "description": "Documentation of continuous assessment and enforcement mechanisms in place",
+                    "source": "Azure Policy + Defender for Cloud configuration",
+                    "format": "JSON configuration export",
+                    "collection_frequency": "Quarterly",
+                    "retention_period": "3 years",
+                    "automation": "Resource configuration export"
+                }
+            ],
+            "artifact_storage": {
+                "primary": "Azure Blob Storage with immutable storage",
+                "backup": "Azure Backup with GRS replication",
+                "access_control": "Azure RBAC with audit trail"
+            },
+            "compliance_mapping": {
+                "fedramp_controls": ["ca-2.1", "ca-7.1"],
+                "evidence_purpose": "Demonstrate continuous security posture assessment and automated enforcement of desired state"
+            }
+        }

@@ -909,3 +909,290 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
+    
+    # ============================================================================
+    # EVIDENCE AUTOMATION METHODS
+    # ============================================================================
+    
+    def get_evidence_automation_recommendations(self) -> dict:
+        """
+        Get evidence automation recommendations for KSI-CNA-01 (Restrict Network Traffic).
+        
+        Returns structured guidance for automating evidence collection demonstrating
+        that network traffic is properly restricted with deny-by-default rules.
+        """
+        return {
+            "ksi_id": self.KSI_ID,
+            "ksi_name": self.KSI_NAME,
+            "evidence_type": "config-based",
+            "automation_feasibility": "high",
+            "azure_services": [
+                {
+                    "service": "Azure Resource Graph",
+                    "purpose": "Query NSG rules, firewall policies, and network configurations",
+                    "configuration": "Built-in service, requires Reader role on subscriptions",
+                    "cost": "Free (up to 15 requests/5 seconds per tenant)"
+                },
+                {
+                    "service": "Azure Network Watcher",
+                    "purpose": "Analyze effective NSG rules and network topology",
+                    "configuration": "Enable Network Watcher in each region",
+                    "cost": "~$0.50/day for NSG flow logs + storage costs"
+                },
+                {
+                    "service": "Azure Policy",
+                    "purpose": "Enforce and audit network security configurations",
+                    "configuration": "Assign built-in or custom policies for NSG compliance",
+                    "cost": "Free"
+                },
+                {
+                    "service": "Azure Blob Storage",
+                    "purpose": "Store network configuration snapshots and evidence",
+                    "configuration": "Use immutable storage with legal hold",
+                    "cost": "Archive tier: ~$0.002/GB/month"
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "NSG Rules Audit",
+                    "description": "Export all NSG rules and analyze for overly permissive configurations",
+                    "frequency": "Daily",
+                    "data_points": [
+                        "NSG rules with source = * or 0.0.0.0/0",
+                        "NSG rules with destination = * or 0.0.0.0/0",
+                        "Default deny rules presence",
+                        "Allow-by-exception rules documentation"
+                    ]
+                },
+                {
+                    "method": "Azure Firewall Policy Analysis",
+                    "description": "Review firewall rules for least privilege compliance",
+                    "frequency": "On-change + daily verification",
+                    "data_points": [
+                        "Firewall rule collections",
+                        "Application rules (FQDN-based filtering)",
+                        "Network rules (IP-based filtering)",
+                        "Threat intelligence mode"
+                    ]
+                },
+                {
+                    "method": "Service Endpoint Configuration",
+                    "description": "Verify subnet-level service endpoint restrictions",
+                    "frequency": "Weekly",
+                    "data_points": [
+                        "Enabled service endpoints per subnet",
+                        "Service endpoint policies applied",
+                        "Private endpoint usage vs public access"
+                    ]
+                },
+                {
+                    "method": "Network Topology Mapping",
+                    "description": "Document network segmentation and traffic flow",
+                    "frequency": "Monthly",
+                    "data_points": [
+                        "VNet peering connections",
+                        "Virtual network gateways",
+                        "Application Security Groups",
+                        "Network traffic isolation"
+                    ]
+                }
+            ],
+            "storage_requirements": {
+                "retention_period": "3 years minimum (FedRAMP Moderate)",
+                "format": "JSON (resource configurations) + PNG (network diagrams)",
+                "immutability": "Required for configuration snapshots",
+                "encryption": "AES-256 at rest, TLS 1.2+ in transit",
+                "estimated_size": "~100-500 MB/month (depends on resource count)"
+            },
+            "api_integration": {
+                "frr_ads_endpoints": [
+                    "/evidence/cna-01/nsg-rules",
+                    "/evidence/cna-01/firewall-policies",
+                    "/evidence/cna-01/network-topology"
+                ],
+                "authentication": "Azure AD OAuth 2.0 with client credentials",
+                "response_format": "JSON with FIPS 140-2 validated signatures",
+                "rate_limits": "Resource Graph: 15 requests/5 seconds per tenant"
+            },
+            "code_examples": {
+                "python": "Uses Azure SDK for Python - Resource Graph queries for NSG rules",
+                "csharp": "Uses Azure.ResourceManager SDK - network configuration export",
+                "powershell": "Uses Az.Network module - NSG compliance reporting",
+                "kusto": "Resource Graph queries (KQL) - network security analysis"
+            },
+            "infrastructure_templates": {
+                "bicep": "Deploys Storage Account, Function App for automated NSG audits",
+                "terraform": "Deploys Azure Monitor, Log Analytics for network monitoring"
+            },
+            "retention_policy": "3 years minimum per FedRAMP Moderate requirements",
+            "implementation_effort": "low",
+            "implementation_time": "1-2 weeks",
+            "prerequisites": [
+                "Azure subscription with Reader or Network Contributor role",
+                "Network Watcher enabled in monitored regions",
+                "Service principal with Resource Graph read permissions"
+            ],
+            "notes": "Evidence automation for KSI-CNA-01 is highly feasible using Azure Resource Graph and Network Watcher. Key evidence: (1) NSG rules showing deny-by-default configuration, (2) Firewall policies with specific allow rules, (3) Network topology diagrams showing segmentation. Source: Azure Well-Architected Framework - Security pillar (Network security)."
+        }
+    
+    def get_evidence_collection_queries(self) -> List[dict]:
+        """
+        Get Azure Resource Graph queries for collecting KSI-CNA-01 evidence.
+        """
+        return [
+            {
+                "name": "All NSG Rules Audit - Overly Permissive Detection",
+                "query_type": "resource_graph",
+                "query": """Resources
+| where type == 'microsoft.network/networksecuritygroups'
+| extend nsgName = name
+| mv-expand rules = properties.securityRules
+| extend ruleName = tostring(rules.name)
+| extend direction = tostring(rules.properties.direction)
+| extend access = tostring(rules.properties.access)
+| extend sourceAddress = tostring(rules.properties.sourceAddressPrefix)
+| extend destAddress = tostring(rules.properties.destinationAddressPrefix)
+| extend sourcePort = tostring(rules.properties.sourcePortRange)
+| extend destPort = tostring(rules.properties.destinationPortRange)
+| extend priority = toint(rules.properties.priority)
+| extend protocol = tostring(rules.properties.protocol)
+| where access == "Allow"
+| extend OverlyPermissive = case(
+    sourceAddress in ("*", "0.0.0.0/0", "Internet"), "CRITICAL - Source is ANY/Internet",
+    destAddress in ("*", "0.0.0.0/0", "Internet"), "HIGH - Destination is ANY/Internet",
+    destPort == "*", "MEDIUM - All ports allowed",
+    "OK - Specific rules"
+)
+| project subscriptionId, resourceGroup, nsgName, ruleName, direction, sourceAddress, destAddress, destPort, protocol, priority, OverlyPermissive
+| order by OverlyPermissive desc, priority asc""",
+                "data_source": "Azure Resource Graph",
+                "schedule": "daily",
+                "output_format": "json",
+                "description": "Identifies NSG rules that violate deny-by-default principle by allowing traffic from ANY source"
+            },
+            {
+                "name": "NSG Default Rules Verification",
+                "query_type": "resource_graph",
+                "query": """Resources
+| where type == 'microsoft.network/networksecuritygroups'
+| extend nsgName = name
+| mv-expand rules = properties.defaultSecurityRules
+| extend ruleName = tostring(rules.name)
+| extend direction = tostring(rules.properties.direction)
+| extend access = tostring(rules.properties.access)
+| extend priority = toint(rules.properties.priority)
+| where direction == "Inbound" and priority == 65500
+| extend DenyAllInbound = access == "Deny"
+| project subscriptionId, resourceGroup, nsgName, DenyAllInbound, ComplianceStatus = case(DenyAllInbound, "Compliant", "Non-Compliant")
+| summarize NSGCount = count(), CompliantCount = countif(ComplianceStatus == "Compliant") by subscriptionId
+| extend CompliancePercentage = (CompliantCount * 100.0) / NSGCount""",
+                "data_source": "Azure Resource Graph",
+                "schedule": "daily",
+                "output_format": "json",
+                "description": "Verifies that default deny-all-inbound rules are present on all NSGs"
+            },
+            {
+                "name": "Azure Firewall Policy Rules Export",
+                "query_type": "resource_graph",
+                "query": """Resources
+| where type == 'microsoft.network/firewallpolicies'
+| extend policyName = name
+| extend threatIntelMode = tostring(properties.threatIntelMode)
+| extend intrusionDetection = tostring(properties.intrusionDetection.mode)
+| mv-expand ruleCollections = properties.ruleCollectionGroups
+| project subscriptionId, resourceGroup, policyName, threatIntelMode, intrusionDetection, ruleCollections
+| extend ComplianceStatus = case(
+    threatIntelMode != "Alert" and threatIntelMode != "Deny", "Non-Compliant - Threat Intel Not Enabled",
+    "Compliant"
+)""",
+                "data_source": "Azure Resource Graph",
+                "schedule": "on-change + daily verification",
+                "output_format": "json",
+                "description": "Exports Azure Firewall policies to verify rule configurations and threat intelligence settings"
+            },
+            {
+                "name": "Service Endpoints and Private Endpoints Inventory",
+                "query_type": "resource_graph",
+                "query": """Resources
+| where type == 'microsoft.network/virtualnetworks'
+| mv-expand subnets = properties.subnets
+| extend subnetName = tostring(subnets.name)
+| extend serviceEndpoints = subnets.properties.serviceEndpoints
+| extend privateEndpoints = subnets.properties.privateEndpoints
+| extend serviceEndpointCount = array_length(serviceEndpoints)
+| extend privateEndpointCount = array_length(privateEndpoints)
+| project subscriptionId, resourceGroup, vnetName = name, subnetName, serviceEndpointCount, privateEndpointCount
+| extend NetworkIsolation = case(
+    serviceEndpointCount > 0 or privateEndpointCount > 0, "Isolated",
+    "Public - Review Required"
+)""",
+                "data_source": "Azure Resource Graph",
+                "schedule": "weekly",
+                "output_format": "json",
+                "description": "Inventories service endpoints and private endpoints to assess network isolation"
+            },
+            {
+                "name": "Network Effective Security Rules Analysis",
+                "query_type": "rest_api",
+                "query": """POST https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/networkInterfaces/{nicName}/effectiveNetworkSecurityGroups?api-version=2023-05-01
+Authorization: Bearer {token}
+
+# Returns effective NSG rules applied to a specific NIC, including inherited rules from subnets""",
+                "data_source": "Azure Network Watcher REST API",
+                "schedule": "weekly",
+                "output_format": "json",
+                "description": "Analyzes effective security rules on network interfaces to verify all applicable restrictions"
+            }
+        ]
+    
+    def get_evidence_artifacts(self) -> List[dict]:
+        """
+        Get list of evidence artifacts for KSI-CNA-01.
+        """
+        return [
+            {
+                "artifact_name": "nsg-rules-audit-report.json",
+                "artifact_type": "config",
+                "description": "Complete export of all NSG rules with overly permissive rule flagging",
+                "collection_method": "Azure Resource Graph query",
+                "format": "json",
+                "frequency": "daily",
+                "retention": "3 years"
+            },
+            {
+                "artifact_name": "azure-firewall-policies.json",
+                "artifact_type": "config",
+                "description": "Export of all Azure Firewall policies and rule collections",
+                "collection_method": "Azure Resource Graph query",
+                "format": "json",
+                "frequency": "on-change + daily verification",
+                "retention": "3 years (retain all historical versions)"
+            },
+            {
+                "artifact_name": "network-topology-diagram.png",
+                "artifact_type": "report",
+                "description": "Visual network topology showing VNets, subnets, NSGs, and traffic flow",
+                "collection_method": "Azure Network Watcher Topology API + rendering",
+                "format": "png",
+                "frequency": "monthly",
+                "retention": "3 years"
+            },
+            {
+                "artifact_name": "service-endpoints-inventory.csv",
+                "artifact_type": "config",
+                "description": "Inventory of service endpoints and private endpoints per subnet",
+                "collection_method": "Azure Resource Graph query",
+                "format": "csv",
+                "frequency": "weekly",
+                "retention": "3 years"
+            },
+            {
+                "artifact_name": "nsg-compliance-summary.json",
+                "artifact_type": "report",
+                "description": "Summary report showing NSG compliance percentage and non-compliant resources",
+                "collection_method": "Azure Policy compliance API + Resource Graph",
+                "format": "json",
+                "frequency": "daily",
+                "retention": "3 years"
+            }
+        ]

@@ -17,7 +17,7 @@ Version: 25.11C (Published: 2025-12-01)
 """
 
 import re
-from typing import List, Optional
+from typing import List, Dict, Any
 from ..base import Finding, Severity, AnalysisResult
 from .base import BaseKSIAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -707,6 +707,244 @@ class KSI_MLA_05_Analyzer(BaseKSIAnalyzer):
             prefix = "→ " if i == line_num - 1 else "  "
             snippet_lines.append(f"{i+1:4d} {prefix}{lines[i]}")
         return "\n".join(snippet_lines)
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get Azure-specific recommendations for automating evidence collection for KSI-MLA-05.
+        
+        **KSI-MLA-05: Infrastructure as Code**
+        Perform Infrastructure as Code and configuration evaluation and testing.
+        
+        Returns:
+            Dictionary with automation recommendations
+        """
+        return {
+            "ksi_id": "KSI-MLA-05",
+            "ksi_name": "Infrastructure as Code Testing",
+            "azure_services": [
+                {
+                    "service": "Azure DevOps",
+                    "purpose": "IaC pipeline testing and validation evidence",
+                    "capabilities": [
+                        "Pipeline test results for IaC validation",
+                        "Test execution history and trends",
+                        "Code coverage for infrastructure tests",
+                        "Pre-deployment validation gates"
+                    ]
+                },
+                {
+                    "service": "Azure Policy",
+                    "purpose": "Policy-driven IaC validation and compliance testing",
+                    "capabilities": [
+                        "Policy compliance testing before deployment",
+                        "Guest Configuration for validation",
+                        "What-if deployment analysis",
+                        "Remediation task tracking"
+                    ]
+                },
+                {
+                    "service": "Azure Resource Manager",
+                    "purpose": "Template validation and what-if analysis",
+                    "capabilities": [
+                        "ARM template validation API",
+                        "What-if deployment previews",
+                        "Resource change impact analysis",
+                        "Deployment preflight checks"
+                    ]
+                },
+                {
+                    "service": "Microsoft Defender for DevOps",
+                    "purpose": "Security scanning of IaC templates",
+                    "capabilities": [
+                        "IaC security misconfiguration detection",
+                        "Template hardening recommendations",
+                        "Pull request security checks",
+                        "Compliance validation"
+                    ]
+                },
+                {
+                    "service": "Azure Monitor",
+                    "purpose": "IaC testing metrics and deployment validation logs",
+                    "capabilities": [
+                        "Test execution logs",
+                        "Deployment validation results",
+                        "Configuration drift detection",
+                        "Test coverage metrics"
+                    ]
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "IaC Test Execution Evidence",
+                    "description": "Export pipeline test results showing IaC validation and testing (Terratest, Pester, pytest-terraform)",
+                    "automation": "Azure DevOps Test Results API",
+                    "frequency": "Per deployment",
+                    "evidence_produced": "Test execution reports with pass/fail status and coverage"
+                },
+                {
+                    "method": "Policy Validation Results",
+                    "description": "What-if deployment analysis and policy compliance validation before deployment",
+                    "automation": "Azure Policy what-if API and compliance scans",
+                    "frequency": "Per deployment",
+                    "evidence_produced": "Policy compliance report and what-if analysis results"
+                },
+                {
+                    "method": "Template Security Scan Results",
+                    "description": "Security scanning results from Defender for DevOps for IaC templates",
+                    "automation": "Defender for DevOps integration in pipelines",
+                    "frequency": "Per commit",
+                    "evidence_produced": "SARIF security scan results for Bicep/Terraform templates"
+                },
+                {
+                    "method": "Configuration Drift Detection",
+                    "description": "Detect and report configuration drift from IaC definitions",
+                    "automation": "Terraform state comparison or Azure Resource Graph",
+                    "frequency": "Daily",
+                    "evidence_produced": "Configuration drift report with remediation actions"
+                }
+            ],
+            "automation_feasibility": "high",
+            "evidence_types": ["log-based", "config-based"],
+            "implementation_guidance": {
+                "quick_start": "Enable IaC testing in CI/CD pipelines, configure Policy what-if validation, enable Defender for DevOps, implement drift detection",
+                "azure_well_architected": "Follows Azure WAF operational excellence for IaC testing and DevSecOps practices",
+                "compliance_mapping": "Addresses NIST controls ca-7, cm-2, cm-6, si-7.7"
+            }
+        }
+    
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get specific Azure queries for collecting KSI-MLA-05 evidence.
+        """
+        return {
+            "ksi_id": "KSI-MLA-05",
+            "queries": [
+                {
+                    "name": "IaC Pipeline Test Results",
+                    "type": "azure_devops_api",
+                    "endpoint": "https://dev.azure.com/{org}/{project}/_apis/test/runs?api-version=7.1",
+                    "method": "GET",
+                    "purpose": "Retrieve test execution results for IaC validation",
+                    "expected_result": "Test runs showing IaC validation with high pass rate"
+                },
+                {
+                    "name": "Policy What-If Deployment Results",
+                    "type": "azure_rest_api",
+                    "endpoint": "/subscriptions/{subscriptionId}/providers/Microsoft.Resources/deployments/{deploymentName}/whatIf?api-version=2021-04-01",
+                    "method": "POST",
+                    "purpose": "Show policy validation before deployment",
+                    "expected_result": "What-if analysis with policy compliance validation"
+                },
+                {
+                    "name": "IaC Security Scan Findings",
+                    "type": "github_api",
+                    "endpoint": "/repos/{owner}/{repo}/code-scanning/alerts",
+                    "method": "GET",
+                    "purpose": "Retrieve security findings from IaC template scanning",
+                    "expected_result": "Security scan results showing IaC template validation"
+                },
+                {
+                    "name": "Configuration Drift Detection",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace with change tracking",
+                    "query": """
+                        ConfigurationChange
+                        | where TimeGenerated > ago(7d)
+                        | where ConfigChangeType == 'Files' or ConfigChangeType == 'Software'
+                        | summarize ChangeCount = count() by Computer, ConfigChangeType
+                        | where ChangeCount > 0
+                        """,
+                    "purpose": "Detect configuration drift from IaC baseline",
+                    "expected_result": "Minimal drift with documented exceptions"
+                },
+                {
+                    "name": "Deployment Validation History",
+                    "type": "azure_rest_api",
+                    "endpoint": "/subscriptions/{subscriptionId}/providers/Microsoft.Resources/deployments?api-version=2021-04-01",
+                    "method": "GET",
+                    "purpose": "Show deployment validation and pre-flight checks",
+                    "expected_result": "Successful validation before deployments"
+                }
+            ],
+            "query_execution_guidance": {
+                "authentication": "Use Azure CLI or Managed Identity",
+                "permissions_required": [
+                    "DevOps Project Reader for test results",
+                    "Policy Reader for what-if analysis",
+                    "GitHub read:security_events for security scanning",
+                    "Log Analytics Reader for drift detection"
+                ],
+                "automation_tools": [
+                    "Azure CLI (az deployment, az policy)",
+                    "PowerShell Az.Resources module",
+                    "GitHub CLI for security scanning results"
+                ]
+            }
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get descriptions of evidence artifacts for KSI-MLA-05.
+        """
+        return {
+            "ksi_id": "KSI-MLA-05",
+            "artifacts": [
+                {
+                    "name": "IaC Test Execution Reports",
+                    "description": "Pipeline test results showing IaC validation testing (unit, integration, security)",
+                    "source": "Azure DevOps test results or GitHub Actions",
+                    "format": "JUnit XML or JSON test results",
+                    "collection_frequency": "Per deployment",
+                    "retention_period": "1 year",
+                    "automation": "Pipeline artifacts with test results"
+                },
+                {
+                    "name": "Policy Validation Reports",
+                    "description": "What-if deployment analysis and policy compliance checks",
+                    "source": "Azure Policy what-if API",
+                    "format": "JSON what-if results",
+                    "collection_frequency": "Per deployment",
+                    "retention_period": "1 year",
+                    "automation": "Pipeline stage output"
+                },
+                {
+                    "name": "IaC Security Scan Results",
+                    "description": "Security scanning results for Bicep/Terraform templates",
+                    "source": "Defender for DevOps or GitHub Advanced Security",
+                    "format": "SARIF format scan results",
+                    "collection_frequency": "Per commit",
+                    "retention_period": "1 year",
+                    "automation": "CI pipeline integration"
+                },
+                {
+                    "name": "Configuration Drift Report",
+                    "description": "Detected drift from IaC baseline with remediation tracking",
+                    "source": "Terraform state diff or Azure Resource Graph",
+                    "format": "CSV or JSON drift report",
+                    "collection_frequency": "Daily",
+                    "retention_period": "1 year",
+                    "automation": "Scheduled drift detection job"
+                },
+                {
+                    "name": "Deployment Validation Evidence",
+                    "description": "Pre-flight validation results and deployment history",
+                    "source": "Azure Resource Manager deployment logs",
+                    "format": "JSON deployment results",
+                    "collection_frequency": "Per deployment",
+                    "retention_period": "3 years",
+                    "automation": "ARM deployment API query"
+                }
+            ],
+            "artifact_storage": {
+                "primary": "Azure Blob Storage with immutable storage",
+                "backup": "Azure Backup with GRS replication",
+                "access_control": "Azure RBAC with audit trail"
+            },
+            "compliance_mapping": {
+                "fedramp_controls": ["ca-7", "cm-2", "cm-6", "si-7.7"],
+                "evidence_purpose": "Demonstrate IaC is tested, validated, and monitored for drift"
+            }
+        }
 
 
 def get_factory():

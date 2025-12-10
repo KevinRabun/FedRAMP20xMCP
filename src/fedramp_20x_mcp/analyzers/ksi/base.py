@@ -187,6 +187,96 @@ class BaseKSIAnalyzer(ABC):
         return self.CODE_DETECTABLE and not self.RETIRED
     
     # ============================================================================
+    # EVIDENCE AUTOMATION METHODS (Override in subclass to provide recommendations)
+    # ============================================================================
+    
+    def get_evidence_automation_recommendations(self) -> dict:
+        """
+        Get recommendations for automating evidence collection for this KSI.
+        
+        Override in subclass to provide KSI-specific guidance. Returns a structured
+        dictionary with evidence collection strategies, Azure services, code examples,
+        and deployment guidance.
+        
+        Returns:
+            Dictionary with evidence automation recommendations:
+            {
+                "ksi_id": str,
+                "ksi_name": str,
+                "evidence_type": str,  # "code-based", "log-based", "config-based", "metric-based", "process-based"
+                "automation_feasibility": str,  # "high", "medium", "low", "manual-only"
+                "azure_services": List[dict],  # Azure services for evidence collection
+                "collection_methods": List[dict],  # Methods for collecting evidence
+                "storage_requirements": dict,  # Evidence storage requirements
+                "api_integration": dict,  # FRR-ADS API integration guidance
+                "code_examples": dict,  # Code templates by language
+                "infrastructure_templates": dict,  # IaC templates
+                "retention_policy": str,  # Evidence retention requirements
+                "implementation_effort": str  # "low", "medium", "high"
+            }
+        """
+        return {
+            "ksi_id": self.KSI_ID,
+            "ksi_name": self.KSI_NAME,
+            "evidence_type": "process-based",
+            "automation_feasibility": "manual-only",
+            "azure_services": [],
+            "collection_methods": [],
+            "storage_requirements": {},
+            "api_integration": {},
+            "code_examples": {},
+            "infrastructure_templates": {},
+            "retention_policy": "Per FedRAMP requirements (minimum 3 years for moderate impact)",
+            "implementation_effort": "high",
+            "notes": "Override this method in subclass to provide KSI-specific evidence automation recommendations."
+        }
+    
+    def get_evidence_collection_queries(self) -> List[dict]:
+        """
+        Get Azure Resource Graph or KQL queries for collecting evidence.
+        
+        Override in subclass to provide KSI-specific queries for Azure Monitor,
+        Log Analytics, Resource Graph, or other Azure data sources.
+        
+        Returns:
+            List of query dictionaries:
+            [
+                {
+                    "name": str,  # Query name/purpose
+                    "query_type": str,  # "kusto", "resource_graph", "rest_api"
+                    "query": str,  # Actual query text
+                    "data_source": str,  # Azure service (e.g., "Log Analytics", "Resource Graph")
+                    "schedule": str,  # Collection frequency (e.g., "hourly", "daily")
+                    "output_format": str  # "json", "csv", "table"
+                }
+            ]
+        """
+        return []
+    
+    def get_evidence_artifacts(self) -> List[dict]:
+        """
+        Get list of evidence artifacts that should be collected for this KSI.
+        
+        Override in subclass to specify what evidence files, logs, configurations,
+        or reports are needed to demonstrate compliance.
+        
+        Returns:
+            List of artifact dictionaries:
+            [
+                {
+                    "artifact_name": str,  # Name of evidence artifact
+                    "artifact_type": str,  # "log", "config", "report", "screenshot", "policy"
+                    "description": str,  # What this artifact demonstrates
+                    "collection_method": str,  # How to collect it
+                    "format": str,  # File format (json, csv, pdf, etc.)
+                    "frequency": str,  # How often to collect (continuous, daily, monthly, on-demand)
+                    "retention": str  # How long to keep (e.g., "3 years")
+                }
+            ]
+        """
+        return []
+    
+    # ============================================================================
     # HELPER METHODS (Available to all subclasses)
     # ============================================================================
     

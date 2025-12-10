@@ -9,7 +9,7 @@ Version: 25.11C (Published: 2025-12-01)
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -1116,3 +1116,257 @@ class KSI_IAM_04_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get Azure-specific recommendations for automating evidence collection for KSI-IAM-04.
+        
+        **KSI-IAM-04: Just-in-Time Authorization**
+        Use a least-privileged, role and attribute-based, and just-in-time security authorization model.
+        
+        Returns:
+            Dictionary with automation recommendations
+        """
+        return {
+            "ksi_id": "KSI-IAM-04",
+            "ksi_name": "Just-in-Time Authorization",
+            "azure_services": [
+                {
+                    "service": "Azure AD Privileged Identity Management (PIM)",
+                    "purpose": "Just-in-time privileged access with time-bound elevation",
+                    "capabilities": [
+                        "Time-bound role activations",
+                        "Approval workflows for elevation",
+                        "MFA on activation",
+                        "Access reviews and audit logs"
+                    ]
+                },
+                {
+                    "service": "Azure RBAC",
+                    "purpose": "Role-based access control with least-privilege assignments",
+                    "capabilities": [
+                        "Fine-grained role assignments",
+                        "Custom roles for least privilege",
+                        "Deny assignments",
+                        "Conditional access integration"
+                    ]
+                },
+                {
+                    "service": "Azure AD Conditional Access",
+                    "purpose": "Attribute-based access control with context-aware policies",
+                    "capabilities": [
+                        "Location-based access",
+                        "Device compliance requirements",
+                        "Risk-based adaptive access",
+                        "Session controls"
+                    ]
+                },
+                {
+                    "service": "Azure Monitor",
+                    "purpose": "Audit JIT access activations and authorization decisions",
+                    "capabilities": [
+                        "PIM activation logs",
+                        "RBAC assignment changes",
+                        "Conditional Access decision logs",
+                        "Failed authorization attempts"
+                    ]
+                },
+                {
+                    "service": "Microsoft Graph",
+                    "purpose": "Programmatic access to PIM and RBAC configurations",
+                    "capabilities": [
+                        "Query eligible assignments",
+                        "Access package management",
+                        "Role assignment history",
+                        "Approval request tracking"
+                    ]
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "PIM Activation Monitoring",
+                    "description": "Track all JIT role activations with justification and duration",
+                    "automation": "Azure AD audit logs via KQL",
+                    "frequency": "Continuous (with daily reports)",
+                    "evidence_produced": "PIM activation log with approval evidence"
+                },
+                {
+                    "method": "RBAC Assignment Audit",
+                    "description": "Verify all permanent role assignments follow least-privilege principle",
+                    "automation": "Resource Graph queries for role assignments",
+                    "frequency": "Weekly",
+                    "evidence_produced": "RBAC assignment report with least-privilege analysis"
+                },
+                {
+                    "method": "Conditional Access Policy Compliance",
+                    "description": "Document attribute-based access policies and enforcement",
+                    "automation": "Microsoft Graph API for CA policies",
+                    "frequency": "Monthly",
+                    "evidence_produced": "CA policy configuration with coverage analysis"
+                },
+                {
+                    "method": "Access Review Results",
+                    "description": "Periodic access reviews demonstrating least-privilege maintenance",
+                    "automation": "Azure AD Access Reviews API",
+                    "frequency": "Quarterly",
+                    "evidence_produced": "Access review decisions and certifications"
+                }
+            ],
+            "automation_feasibility": "high",
+            "evidence_types": ["log-based", "config-based"],
+            "implementation_guidance": {
+                "quick_start": "Enable PIM for privileged roles, configure RBAC with least privilege, deploy Conditional Access policies, enable audit logging, schedule access reviews",
+                "azure_well_architected": "Follows Azure WAF security pillar for zero-trust and least-privilege access",
+                "compliance_mapping": "Addresses extensive NIST AC family controls (ac-2, ac-3, ac-4, ac-5, ac-6, etc.)"
+            }
+        }
+    
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get specific Azure queries for collecting KSI-IAM-04 evidence.
+        """
+        return {
+            "ksi_id": "KSI-IAM-04",
+            "queries": [
+                {
+                    "name": "PIM Role Activations",
+                    "type": "kql",
+                    "workspace": "Log Analytics with Azure AD logs",
+                    "query": """
+                        AuditLogs
+                        | where TimeGenerated > ago(30d)
+                        | where OperationName == 'Add member to role completed (PIM activation)'
+                        | extend RoleName = tostring(TargetResources[0].displayName)
+                        | extend UserPrincipal = tostring(InitiatedBy.user.userPrincipalName)
+                        | extend Justification = tostring(AdditionalDetails[0].value)
+                        | project TimeGenerated, UserPrincipal, RoleName, Justification, Duration
+                        | order by TimeGenerated desc
+                        """,
+                    "purpose": "Show JIT role activations with justifications",
+                    "expected_result": "All activations have justification and limited duration"
+                },
+                {
+                    "name": "Least-Privilege RBAC Analysis",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        authorizationresources
+                        | where type == 'microsoft.authorization/roleassignments'
+                        | extend roleDefinitionId = tostring(properties.roleDefinitionId)
+                        | extend principalType = tostring(properties.principalType)
+                        | join kind=inner (authorizationresources
+                            | where type == 'microsoft.authorization/roledefinitions'
+                            | extend roleDefinitionId = id
+                            | extend roleName = tostring(properties.roleName)
+                        ) on roleDefinitionId
+                        | summarize AssignmentCount = count() by roleName, principalType
+                        | where roleName in ('Owner', 'Contributor', 'User Access Administrator')
+                        | order by AssignmentCount desc
+                        """,
+                    "purpose": "Identify overly permissive role assignments",
+                    "expected_result": "Minimal assignments to high-privilege roles"
+                },
+                {
+                    "name": "Conditional Access Policy Coverage",
+                    "type": "microsoft_graph",
+                    "endpoint": "/identity/conditionalAccess/policies",
+                    "method": "GET",
+                    "purpose": "Show attribute-based access controls",
+                    "expected_result": "Comprehensive CA policies covering location, device, risk"
+                },
+                {
+                    "name": "PIM Eligible Assignments",
+                    "type": "microsoft_graph",
+                    "endpoint": "/privilegedAccess/azureResources/roleAssignmentRequests?$filter=assignmentState eq 'Eligible'",
+                    "method": "GET",
+                    "purpose": "List all JIT-eligible role assignments",
+                    "expected_result": "Privileged roles configured as eligible vs. permanent"
+                },
+                {
+                    "name": "Access Review Completion Status",
+                    "type": "microsoft_graph",
+                    "endpoint": "/identityGovernance/accessReviews/definitions",
+                    "method": "GET",
+                    "purpose": "Track access review cycles and decisions",
+                    "expected_result": "Regular access reviews with documented decisions"
+                }
+            ],
+            "query_execution_guidance": {
+                "authentication": "Use Azure CLI or Managed Identity",
+                "permissions_required": [
+                    "Log Analytics Reader for KQL queries",
+                    "Reader for Resource Graph queries",
+                    "PrivilegedAccess.Read.AzureResources for PIM queries",
+                    "Policy.Read.ConditionalAccess for CA policies",
+                    "AccessReview.Read.All for access reviews"
+                ],
+                "automation_tools": [
+                    "Azure CLI (az role assignment list)",
+                    "PowerShell Az.Resources module",
+                    "Microsoft Graph PowerShell SDK"
+                ]
+            }
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get descriptions of evidence artifacts for KSI-IAM-04.
+        """
+        return {
+            "ksi_id": "KSI-IAM-04",
+            "artifacts": [
+                {
+                    "name": "PIM Activation Log",
+                    "description": "Complete log of JIT role activations with justifications and durations",
+                    "source": "Azure AD Audit Logs",
+                    "format": "CSV from KQL query",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "7 years (access audit)",
+                    "automation": "Scheduled KQL query"
+                },
+                {
+                    "name": "Least-Privilege RBAC Report",
+                    "description": "Analysis of role assignments showing least-privilege adherence",
+                    "source": "Azure Resource Graph",
+                    "format": "CSV with analysis notes",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "3 years",
+                    "automation": "Resource Graph query with analysis template"
+                },
+                {
+                    "name": "Conditional Access Policy Configuration",
+                    "description": "Complete export of attribute-based access policies",
+                    "source": "Microsoft Graph API",
+                    "format": "JSON configuration export",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "3 years",
+                    "automation": "Graph API query"
+                },
+                {
+                    "name": "PIM Configuration Evidence",
+                    "description": "PIM role settings showing approval, MFA, and duration requirements",
+                    "source": "Microsoft Graph API",
+                    "format": "JSON export",
+                    "collection_frequency": "Quarterly",
+                    "retention_period": "3 years",
+                    "automation": "PowerShell script with Graph SDK"
+                },
+                {
+                    "name": "Access Review Certification Results",
+                    "description": "Quarterly access review results showing least-privilege maintenance",
+                    "source": "Azure AD Access Reviews",
+                    "format": "PDF certification report",
+                    "collection_frequency": "Quarterly",
+                    "retention_period": "7 years",
+                    "automation": "Access Reviews API with automated reporting"
+                }
+            ],
+            "artifact_storage": {
+                "primary": "Azure Blob Storage with immutable storage",
+                "backup": "Azure Backup with GRS replication",
+                "access_control": "Azure RBAC with audit trail"
+            },
+            "compliance_mapping": {
+                "fedramp_controls": ["ac-2", "ac-3", "ac-4", "ac-5", "ac-6", "ac-6.1", "ac-6.2", "ac-6.5", "ac-6.7", "ac-6.9"],
+                "evidence_purpose": "Demonstrate JIT, least-privilege, role-based, and attribute-based access control"
+            }
+        }

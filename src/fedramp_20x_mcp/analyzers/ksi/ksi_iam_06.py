@@ -16,7 +16,7 @@ Version: 25.11C (Published: 2025-12-01)
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity, AnalysisResult
 from .base import BaseKSIAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -543,6 +543,271 @@ class KSI_IAM_06_Analyzer(BaseKSIAnalyzer):
             if f'def {func_name}' in line or f'function {func_name}' in line:
                 return i
         return 1
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get Azure-specific recommendations for automating evidence collection for KSI-IAM-06.
+        
+        **KSI-IAM-06: Suspicious Activity**
+        Automatically disable or secure accounts with privileged access in response to suspicious activity.
+        
+        Returns:
+            Dictionary with automation recommendations
+        """
+        return {
+            "ksi_id": "KSI-IAM-06",
+            "ksi_name": "Suspicious Activity Response",
+            "azure_services": [
+                {
+                    "service": "Azure AD Identity Protection",
+                    "purpose": "Risk-based detection and automated response to suspicious sign-ins",
+                    "capabilities": [
+                        "Real-time risk detection",
+                        "Risk-based Conditional Access policies",
+                        "Automatic account blocking/MFA challenge",
+                        "Risk investigation and remediation"
+                    ]
+                },
+                {
+                    "service": "Microsoft Sentinel",
+                    "purpose": "Advanced threat detection and automated incident response",
+                    "capabilities": [
+                        "UEBA (User and Entity Behavior Analytics)",
+                        "Anomalous activity detection",
+                        "Automated playbooks for account disabling",
+                        "Incident tracking and investigation"
+                    ]
+                },
+                {
+                    "service": "Azure AD Smart Lockout",
+                    "purpose": "Automatically lock accounts after failed sign-in attempts",
+                    "capabilities": [
+                        "Failed sign-in threshold configuration",
+                        "Lockout duration settings",
+                        "Familiar vs. unfamiliar location detection",
+                        "Account unlock workflows"
+                    ]
+                },
+                {
+                    "service": "Azure Monitor",
+                    "purpose": "Alert on suspicious privileged account activity",
+                    "capabilities": [
+                        "Failed authentication alerts",
+                        "Unusual access pattern detection",
+                        "Privileged operation monitoring",
+                        "Automated response via Action Groups"
+                    ]
+                },
+                {
+                    "service": "Microsoft Defender for Cloud Apps",
+                    "purpose": "Cloud app activity monitoring and anomaly detection",
+                    "capabilities": [
+                        "Anomalous app usage detection",
+                        "Impossible travel alerts",
+                        "Session policy enforcement",
+                        "Automated account suspension"
+                    ]
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "Identity Protection Risk Event Monitoring",
+                    "description": "Track risk detections and automated responses",
+                    "automation": "Identity Protection API and Conditional Access logs",
+                    "frequency": "Continuous (real-time)",
+                    "evidence_produced": "Risk event log with automated response actions"
+                },
+                {
+                    "method": "Account Lockout Audit",
+                    "description": "Track account lockouts due to failed sign-in attempts",
+                    "automation": "Azure AD sign-in logs via KQL",
+                    "frequency": "Daily",
+                    "evidence_produced": "Account lockout report with remediation actions"
+                },
+                {
+                    "method": "Sentinel UEBA Incident Tracking",
+                    "description": "Monitor UEBA anomalies and automated incident response",
+                    "automation": "Sentinel incidents API",
+                    "frequency": "Continuous (with daily reports)",
+                    "evidence_produced": "Anomalous activity incidents with response playbooks executed"
+                },
+                {
+                    "method": "Privileged Account Activity Monitoring",
+                    "description": "Track privileged account usage patterns for anomalies",
+                    "automation": "Azure Monitor alerts and Log Analytics",
+                    "frequency": "Continuous (real-time alerts)",
+                    "evidence_produced": "Privileged account activity log with anomaly flags"
+                }
+            ],
+            "automation_feasibility": "high",
+            "evidence_types": ["log-based", "config-based"],
+            "implementation_guidance": {
+                "quick_start": "Enable Identity Protection with risk-based CA policies, configure Smart Lockout, deploy Sentinel with UEBA, set up privileged account monitoring alerts",
+                "azure_well_architected": "Follows Azure WAF security pillar for threat detection and automated response",
+                "compliance_mapping": "Addresses NIST controls ac-2, ac-2.1, ac-2.3, ac-2.13, ac-7 for account management and lockout"
+            }
+        }
+    
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get specific Azure queries for collecting KSI-IAM-06 evidence.
+        """
+        return {
+            "ksi_id": "KSI-IAM-06",
+            "queries": [
+                {
+                    "name": "Identity Protection Risk Detections",
+                    "type": "microsoft_graph",
+                    "endpoint": "/identityProtection/riskDetections?$filter=riskLevel eq 'high' or riskLevel eq 'medium'",
+                    "method": "GET",
+                    "purpose": "Show risk detections triggering automated responses",
+                    "expected_result": "Risk detections with automated remediation actions"
+                },
+                {
+                    "name": "Account Lockout Events",
+                    "type": "kql",
+                    "workspace": "Log Analytics with Azure AD logs",
+                    "query": """
+                        SigninLogs
+                        | where TimeGenerated > ago(30d)
+                        | where ResultType in (50053, 50057)  // Account locked/disabled
+                        | summarize LockoutCount = count(), LastLockout = max(TimeGenerated) 
+                                    by UserPrincipalName, IPAddress, Location
+                        | order by LockoutCount desc
+                        """,
+                    "purpose": "Track accounts locked due to suspicious activity",
+                    "expected_result": "Lockouts documented with investigation and remediation"
+                },
+                {
+                    "name": "Sentinel UEBA Incidents",
+                    "type": "kql",
+                    "workspace": "Azure Sentinel workspace",
+                    "query": """
+                        SecurityIncident
+                        | where TimeGenerated > ago(30d)
+                        | where Title contains 'Anomalous' or Title contains 'Suspicious'
+                        | where Severity in ('High', 'Medium')
+                        | summarize IncidentCount = count(), LastIncident = max(TimeGenerated)
+                                    by Title, Status
+                        | order by LastIncident desc
+                        """,
+                    "purpose": "Show anomalous activity detection and response",
+                    "expected_result": "Incidents investigated with documented outcomes"
+                },
+                {
+                    "name": "Risk-Based Conditional Access Blocks",
+                    "type": "kql",
+                    "workspace": "Log Analytics with Azure AD logs",
+                    "query": """
+                        SigninLogs
+                        | where TimeGenerated > ago(30d)
+                        | where ConditionalAccessStatus == 'failure'
+                        | where RiskLevelDuringSignIn in ('high', 'medium')
+                        | summarize BlockCount = count() by UserPrincipalName, RiskLevelDuringSignIn
+                        | order by BlockCount desc
+                        """,
+                    "purpose": "Show automated blocking of risky sign-ins",
+                    "expected_result": "High-risk sign-ins automatically blocked"
+                },
+                {
+                    "name": "Privileged Account Failed Sign-Ins",
+                    "type": "kql",
+                    "workspace": "Log Analytics with Azure AD logs",
+                    "query": """
+                        SigninLogs
+                        | where TimeGenerated > ago(7d)
+                        | where ResultType != 0  // Failed sign-ins
+                        | join kind=inner (
+                            IdentityInfo
+                            | where AssignedRoles contains 'Admin' or AssignedRoles contains 'Owner'
+                            | distinct AccountUPN
+                        ) on $left.UserPrincipalName == $right.AccountUPN
+                        | summarize FailedAttempts = count() by UserPrincipalName, IPAddress
+                        | where FailedAttempts > 3
+                        | order by FailedAttempts desc
+                        """,
+                    "purpose": "Detect brute force attempts on privileged accounts",
+                    "expected_result": "Automated lockout/alert on multiple failed attempts"
+                }
+            ],
+            "query_execution_guidance": {
+                "authentication": "Use Azure CLI or Managed Identity",
+                "permissions_required": [
+                    "IdentityRiskEvent.Read.All for Identity Protection",
+                    "Log Analytics Reader for KQL queries",
+                    "Sentinel Reader for incident queries"
+                ],
+                "automation_tools": [
+                    "Microsoft Graph PowerShell SDK",
+                    "Azure CLI (az monitor)",
+                    "PowerShell Az.SecurityInsights for Sentinel"
+                ]
+            }
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get descriptions of evidence artifacts for KSI-IAM-06.
+        """
+        return {
+            "ksi_id": "KSI-IAM-06",
+            "artifacts": [
+                {
+                    "name": "Identity Protection Risk Event Log",
+                    "description": "Complete log of risk detections with automated response actions",
+                    "source": "Azure AD Identity Protection",
+                    "format": "CSV from Graph API",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "7 years",
+                    "automation": "Graph API scheduled query"
+                },
+                {
+                    "name": "Account Lockout Incident Report",
+                    "description": "Report of accounts locked due to failed sign-in attempts",
+                    "source": "Azure AD Sign-in Logs",
+                    "format": "CSV with investigation notes",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "3 years",
+                    "automation": "KQL scheduled query"
+                },
+                {
+                    "name": "UEBA Anomaly Incident Log",
+                    "description": "Sentinel UEBA incidents with automated response playbook execution",
+                    "source": "Microsoft Sentinel",
+                    "format": "JSON incident export",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "7 years",
+                    "automation": "Sentinel API export"
+                },
+                {
+                    "name": "Risk-Based Access Block Report",
+                    "description": "Conditional Access blocks triggered by risk detections",
+                    "source": "Azure AD Sign-in Logs",
+                    "format": "CSV with risk levels",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "3 years",
+                    "automation": "KQL query"
+                },
+                {
+                    "name": "Suspicious Activity Response Configuration",
+                    "description": "Identity Protection policies and Conditional Access rules for automated response",
+                    "source": "Azure AD configuration",
+                    "format": "JSON configuration export",
+                    "collection_frequency": "Quarterly",
+                    "retention_period": "3 years",
+                    "automation": "Graph API policy export"
+                }
+            ],
+            "artifact_storage": {
+                "primary": "Azure Blob Storage with immutable storage",
+                "backup": "Azure Backup with GRS replication",
+                "access_control": "Azure RBAC with audit trail"
+            },
+            "compliance_mapping": {
+                "fedramp_controls": ["ac-2", "ac-2.1", "ac-2.3", "ac-2.13", "ac-7"],
+                "evidence_purpose": "Demonstrate automated account disabling/securing in response to suspicious activity"
+            }
+        }
 
 def get_factory():
     """Get KSI analyzer factory instance."""

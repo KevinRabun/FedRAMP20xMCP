@@ -1231,3 +1231,146 @@ class KSI_SVC_10_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
+
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get recommendations for automating evidence collection for KSI-SVC-10.
+        
+        Returns:
+            Dict containing automation recommendations
+        """
+        return {
+            "ksi_id": self.ksi_id,
+            "ksi_name": "Data Destruction",
+            "evidence_type": "process-based",
+            "automation_feasibility": "high",
+            "azure_services": [
+                "Azure Storage",
+                "Azure DevOps",
+                "Azure Automation",
+                "Azure Monitor",
+                "Microsoft Purview"
+            ],
+            "collection_methods": [
+                "Azure Storage soft-delete and lifecycle policies to enable controlled data destruction",
+                "Azure DevOps work items to track data destruction requests with approval workflows",
+                "Azure Automation runbooks to execute secure data wipe procedures per customer requests",
+                "Microsoft Purview data catalog to identify all data assets for comprehensive deletion"
+            ],
+            "implementation_steps": [
+                "1. Create Azure DevOps work item template 'Data Destruction Request': (a) Required fields: Customer name, Data location, Reason, Approver, Urgency, (b) Link to data inventory from Purview, (c) Automated routing to security/compliance teams",
+                "2. Build Azure Automation runbook 'Execute-Data-Destruction': (a) Input: Work item ID, Data location, Deletion scope (production/backup/all), (b) Logic: Validate approvals, Execute storage deletion, Purge backups if requested, Update work item with completion timestamp, (c) Output: Deletion certificate",
+                "3. Configure Azure Storage for secure deletion: (a) Enable blob soft-delete with 7-day recovery window, (b) Configure lifecycle management to transition to Cool tier before deletion, (c) Document permanent deletion procedures, (d) Enable storage analytics for audit trail",
+                "4. Integrate Microsoft Purview data lineage: (a) Tag all customer data assets with 'CustomerID', (b) Use Purview scan to identify all locations of customer data, (c) Generate deletion scope report showing production + backup locations",
+                "5. Create Azure Monitor workbook 'Data Destruction Tracking': (a) Active destruction requests (status, age), (b) Completed deletions (SLA compliance, time to delete), (c) Backup purge status, (d) Audit trail with approver names",
+                "6. Generate monthly evidence package: (a) Export all destruction work items with timelines, (b) Export storage deletion audit logs, (c) Export backup purge confirmations, (d) Export Purview data lineage showing complete removal"
+            ],
+            "evidence_artifacts": [
+                "Data Destruction Request Work Items from Azure DevOps with approval workflows and completion timestamps",
+                "Azure Storage Deletion Audit Logs showing all blob/file/queue/table deletions with user identities",
+                "Backup Purge Confirmation Reports documenting deletion of data from Azure Backup vaults",
+                "Microsoft Purview Data Lineage Report showing complete removal of customer data from all locations",
+                "Data Destruction Tracking Dashboard with SLA compliance metrics and audit trail"
+            ],
+            "update_frequency": "monthly",
+            "responsible_party": "Data Stewardship Team / Privacy Officer"
+        }
+
+    def get_evidence_collection_queries(self) -> List[Dict[str, str]]:
+        """
+        Get specific queries for evidence collection automation.
+        
+        Returns:
+            List of query dictionaries
+        """
+        return [
+            {
+                "query_type": "Azure DevOps REST API",
+                "query_name": "Data destruction request work items",
+                "query": "GET https://dev.azure.com/{organization}/{project}/_apis/wit/wiql?api-version=7.0\nBody: {\"query\": \"SELECT [System.Id], [System.Title], [System.State], [Custom.CustomerID], [Custom.DataLocation], [Custom.DeletionScope], [Custom.ApprovedBy], [Custom.CompletionDate] FROM WorkItems WHERE [System.WorkItemType] = 'Data Destruction Request' ORDER BY [System.CreatedDate] DESC\"}",
+                "purpose": "List all data destruction requests with status, approvals, and completion dates for audit trail"
+            },
+            {
+                "query_type": "Azure Monitor KQL",
+                "query_name": "Storage account deletion audit",
+                "query": """AzureDiagnostics
+| where ResourceType == 'STORAGEACCOUNTS'
+| where OperationName in ('Delete Blob', 'Delete File', 'Delete Queue', 'Delete Table', 'Delete Container')
+| extend CustomerID = tostring(parse_json(properties_s).CustomerID)
+| summarize DeletionCount = count(), FirstDeletion = min(TimeGenerated), LastDeletion = max(TimeGenerated) by CustomerID, Resource, Caller
+| order by LastDeletion desc""",
+                "purpose": "Track all storage deletions with customer attribution for data destruction evidence"
+            },
+            {
+                "query_type": "Azure Backup REST API",
+                "query_name": "Backup purge operations",
+                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.RecoveryServices/vaults?api-version=2023-01-01",
+                "purpose": "Retrieve backup vault operations to verify data purge from backup storage upon customer request"
+            },
+            {
+                "query_type": "Microsoft Purview REST API",
+                "query_name": "Customer data asset inventory and deletion verification",
+                "query": "POST https://{purview-account}.purview.azure.com/catalog/api/search/query?api-version=2022-03-01-preview\nBody: {\"keywords\": \"{CustomerID}\", \"filter\": {\"customAttributes\": {\"DataOwner\": \"{CustomerName}\"}}}",
+                "purpose": "Use Purview data catalog to identify all customer data assets and verify complete removal"
+            },
+            {
+                "query_type": "Azure Monitor KQL",
+                "query_name": "Data destruction SLA compliance",
+                "query": """let DestructionRequests = AzureDevOps_WorkItems_CL
+| where WorkItemType_s == 'Data Destruction Request'
+| extend RequestDate = todatetime(CreatedDate_s), CompletionDate = todatetime(CompletedDate_s)
+| extend DaysToComplete = datetime_diff('day', CompletionDate, RequestDate);
+DestructionRequests
+| summarize TotalRequests = count(), AvgDaysToComplete = avg(DaysToComplete), OnTimeDeletions = countif(DaysToComplete <= 7), LateDeletions = countif(DaysToComplete > 7) by bin(RequestDate, 30d)
+| extend SLAComplianceRate = round((todouble(OnTimeDeletions) / todouble(TotalRequests)) * 100, 2)
+| project RequestDate, TotalRequests, AvgDaysToComplete, OnTimeDeletions, LateDeletions, SLAComplianceRate
+| order by RequestDate desc""",
+                "purpose": "Calculate SLA compliance for data destruction requests (target: 7 days) for monthly reporting"
+            }
+        ]
+
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        """
+        Get descriptions of evidence artifacts to collect.
+        
+        Returns:
+            List of artifact dictionaries
+        """
+        return [
+            {
+                "artifact_name": "Data Destruction Request Work Items",
+                "artifact_type": "Azure DevOps Work Item Export",
+                "description": "Complete set of data destruction requests with customer details, approval chain, and completion timestamps",
+                "collection_method": "Azure DevOps REST API to export work items with full history and attachments",
+                "storage_location": "Azure DevOps database with work item retention and compliance hold"
+            },
+            {
+                "artifact_name": "Storage Account Deletion Audit Log",
+                "artifact_type": "Azure Diagnostic Logs",
+                "description": "Complete audit trail of all blob, file, queue, and table deletions with user identities and timestamps",
+                "collection_method": "Azure Monitor KQL query exporting storage analytics logs filtered by deletion operations",
+                "storage_location": "Azure Log Analytics workspace with 12-month retention for compliance"
+            },
+            {
+                "artifact_name": "Backup Purge Confirmation Report",
+                "artifact_type": "Azure Backup Report",
+                "description": "Report documenting purge of customer data from Azure Backup vaults including backup deletion timestamps",
+                "collection_method": "Azure Backup REST API to retrieve vault operations and recovery point deletions",
+                "storage_location": "Azure Storage Account with PDF reports organized by customer and date"
+            },
+            {
+                "artifact_name": "Purview Data Lineage Deletion Report",
+                "artifact_type": "Microsoft Purview Export",
+                "description": "Data lineage report showing all customer data assets before deletion and verification of complete removal",
+                "collection_method": "Microsoft Purview REST API to export data catalog with lineage and deletion verification",
+                "storage_location": "Azure Storage Account with JSON exports showing before/after data asset inventory"
+            },
+            {
+                "artifact_name": "Data Destruction SLA Compliance Dashboard",
+                "artifact_type": "Azure Monitor Workbook",
+                "description": "Dashboard tracking destruction request SLA compliance, average completion times, and audit trail",
+                "collection_method": "Azure Monitor workbook querying DevOps work items and storage deletion logs",
+                "storage_location": "Azure Monitor Workbooks with monthly snapshots archived as PDF for executive reporting"
+            }
+        ]
+    
