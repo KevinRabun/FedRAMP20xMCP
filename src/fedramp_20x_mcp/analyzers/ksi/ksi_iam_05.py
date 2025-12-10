@@ -9,7 +9,7 @@ Version: 25.11C (Published: 2025-12-01)
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -1040,3 +1040,268 @@ class KSI_IAM_05_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get Azure-specific recommendations for automating evidence collection for KSI-IAM-05.
+        
+        **KSI-IAM-05: Least Privilege**
+        Configure IAM with measures that always verify each user or device can only access resources they need.
+        
+        Returns:
+            Dictionary with automation recommendations
+        """
+        return {
+            "ksi_id": "KSI-IAM-05",
+            "ksi_name": "Least Privilege",
+            "azure_services": [
+                {
+                    "service": "Azure RBAC",
+                    "purpose": "Fine-grained role-based access control with least-privilege assignments",
+                    "capabilities": [
+                        "Built-in and custom roles",
+                        "Scope-based assignments (subscription/resource group/resource)",
+                        "Deny assignments for explicit restrictions",
+                        "Role assignment audit trail"
+                    ]
+                },
+                {
+                    "service": "Azure AD Entitlement Management",
+                    "purpose": "Automated access lifecycle with approval workflows",
+                    "capabilities": [
+                        "Access packages with resource bundles",
+                        "Time-limited access grants",
+                        "Approval workflows",
+                        "Automatic access removal"
+                    ]
+                },
+                {
+                    "service": "Azure AD Access Reviews",
+                    "purpose": "Periodic attestation of access rights",
+                    "capabilities": [
+                        "Scheduled access reviews",
+                        "Manager/owner attestation",
+                        "Automatic removal of unattested access",
+                        "Review history and compliance reports"
+                    ]
+                },
+                {
+                    "service": "Microsoft Defender for Cloud",
+                    "purpose": "Over-privileged access detection and recommendations",
+                    "capabilities": [
+                        "Excessive permissions identification",
+                        "Unused permissions detection",
+                        "Permission creep monitoring",
+                        "Least-privilege recommendations"
+                    ]
+                },
+                {
+                    "service": "Azure Monitor",
+                    "purpose": "Access pattern analysis and privilege escalation detection",
+                    "capabilities": [
+                        "Role assignment change logs",
+                        "Privilege escalation alerts",
+                        "Access pattern analytics",
+                        "Unused permission reports"
+                    ]
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "RBAC Least-Privilege Analysis",
+                    "description": "Analyze role assignments for excessive permissions",
+                    "automation": "Resource Graph queries with permission analysis",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Least-privilege compliance report with remediation recommendations"
+                },
+                {
+                    "method": "Access Review Attestation Results",
+                    "description": "Track periodic access reviews and attestation decisions",
+                    "automation": "Azure AD Access Reviews API",
+                    "frequency": "Per review cycle (typically quarterly)",
+                    "evidence_produced": "Access review completion and decision log"
+                },
+                {
+                    "method": "Entitlement Management Audit",
+                    "description": "Track access package assignments and lifecycle",
+                    "automation": "Microsoft Graph API for entitlement management",
+                    "frequency": "Monthly",
+                    "evidence_produced": "Access package assignments with expiration tracking"
+                },
+                {
+                    "method": "Privilege Escalation Monitoring",
+                    "description": "Detect and alert on privilege escalation attempts or grants",
+                    "automation": "Azure Monitor alerts on role assignment changes",
+                    "frequency": "Continuous (real-time alerts)",
+                    "evidence_produced": "Privilege escalation incident log"
+                }
+            ],
+            "automation_feasibility": "high",
+            "evidence_types": ["config-based", "log-based"],
+            "implementation_guidance": {
+                "quick_start": "Review RBAC assignments, configure Access Reviews, implement Entitlement Management, enable Defender recommendations, set up privilege escalation alerts",
+                "azure_well_architected": "Follows Azure WAF security pillar for least-privilege and zero-trust access",
+                "compliance_mapping": "Addresses extensive NIST AC family controls for least-privilege access"
+            }
+        }
+    
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get specific Azure queries for collecting KSI-IAM-05 evidence.
+        """
+        return {
+            "ksi_id": "KSI-IAM-05",
+            "queries": [
+                {
+                    "name": "Overly Permissive Role Assignments",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        authorizationresources
+                        | where type == 'microsoft.authorization/roleassignments'
+                        | extend roleDefinitionId = tostring(properties.roleDefinitionId)
+                        | join kind=inner (
+                            authorizationresources
+                            | where type == 'microsoft.authorization/roledefinitions'
+                            | extend roleDefinitionId = id
+                            | extend roleName = tostring(properties.roleName)
+                        ) on roleDefinitionId
+                        | where roleName in ('Owner', 'Contributor', 'User Access Administrator')
+                        | project principalId = tostring(properties.principalId), roleName, scope = tostring(properties.scope)
+                        | summarize HighPrivilegeRoles = count() by principalId
+                        | where HighPrivilegeRoles > 0
+                        """,
+                    "purpose": "Identify users/principals with high-privilege role assignments",
+                    "expected_result": "Minimal high-privilege assignments with business justification"
+                },
+                {
+                    "name": "Access Review Completion Status",
+                    "type": "microsoft_graph",
+                    "endpoint": "/identityGovernance/accessReviews/definitions?$expand=instances($expand=decisions)",
+                    "method": "GET",
+                    "purpose": "Show access review cycles and attestation completion",
+                    "expected_result": "Regular reviews with high completion rates"
+                },
+                {
+                    "name": "Entitlement Management Access Packages",
+                    "type": "microsoft_graph",
+                    "endpoint": "/identityGovernance/entitlementManagement/accessPackageAssignments?$expand=target,accessPackage",
+                    "method": "GET",
+                    "purpose": "Track access package assignments with time-bound access",
+                    "expected_result": "Active access packages with defined expiration"
+                },
+                {
+                    "name": "Unused Permission Detection",
+                    "type": "kql",
+                    "workspace": "Log Analytics with Azure Activity logs",
+                    "query": """
+                        AzureActivity
+                        | where TimeGenerated > ago(90d)
+                        | where Authorization has 'Microsoft.Authorization/roleAssignments'
+                        | summarize OperationCount = count() by Caller
+                        | join kind=rightouter (
+                            AzureActivity
+                            | where TimeGenerated > ago(1d)
+                            | distinct Caller
+                        ) on Caller
+                        | where OperationCount == 0 or isnull(OperationCount)
+                        | project Caller, UnusedDays = 90
+                        """,
+                    "purpose": "Identify principals with granted but unused permissions",
+                    "expected_result": "Periodic cleanup of unused permissions"
+                },
+                {
+                    "name": "Privilege Escalation Events",
+                    "type": "kql",
+                    "workspace": "Log Analytics with Azure Activity logs",
+                    "query": """
+                        AzureActivity
+                        | where TimeGenerated > ago(30d)
+                        | where OperationNameValue =~ 'MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE'
+                        | extend RoleName = tostring(parse_json(Properties).roleDefinitionName)
+                        | where RoleName in ('Owner', 'User Access Administrator')
+                        | project TimeGenerated, Caller, RoleName, ResourceGroup, SubscriptionId
+                        | order by TimeGenerated desc
+                        """,
+                    "purpose": "Detect high-privilege role assignments for investigation",
+                    "expected_result": "All escalations documented and justified"
+                }
+            ],
+            "query_execution_guidance": {
+                "authentication": "Use Azure CLI or Managed Identity",
+                "permissions_required": [
+                    "Reader for Resource Graph queries",
+                    "AccessReview.Read.All for access reviews",
+                    "EntitlementManagement.Read.All for access packages",
+                    "Log Analytics Reader for activity queries"
+                ],
+                "automation_tools": [
+                    "Azure CLI (az role assignment list)",
+                    "PowerShell Az.Resources module",
+                    "Microsoft Graph PowerShell SDK"
+                ]
+            }
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get descriptions of evidence artifacts for KSI-IAM-05.
+        """
+        return {
+            "ksi_id": "KSI-IAM-05",
+            "artifacts": [
+                {
+                    "name": "Least-Privilege RBAC Analysis Report",
+                    "description": "Analysis of role assignments identifying excessive permissions",
+                    "source": "Azure Resource Graph and Defender for Cloud",
+                    "format": "CSV with recommendations",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "3 years",
+                    "automation": "Resource Graph query with analysis template"
+                },
+                {
+                    "name": "Access Review Attestation Results",
+                    "description": "Quarterly access reviews with manager/owner attestations",
+                    "source": "Azure AD Access Reviews",
+                    "format": "PDF certification report",
+                    "collection_frequency": "Quarterly",
+                    "retention_period": "7 years",
+                    "automation": "Access Reviews API export"
+                },
+                {
+                    "name": "Entitlement Management Report",
+                    "description": "Access package assignments with lifecycle tracking",
+                    "source": "Azure AD Entitlement Management",
+                    "format": "CSV with expiration dates",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "3 years",
+                    "automation": "Graph API scheduled query"
+                },
+                {
+                    "name": "Privilege Escalation Incident Log",
+                    "description": "Log of high-privilege role assignments with justification",
+                    "source": "Azure Activity Log",
+                    "format": "CSV with investigation notes",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "7 years",
+                    "automation": "KQL query with alert integration"
+                },
+                {
+                    "name": "Unused Permissions Report",
+                    "description": "Principals with granted but unused permissions for cleanup",
+                    "source": "Azure Activity Log analysis",
+                    "format": "CSV with usage statistics",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "1 year",
+                    "automation": "Custom KQL query analysis"
+                }
+            ],
+            "artifact_storage": {
+                "primary": "Azure Blob Storage with immutable storage",
+                "backup": "Azure Backup with GRS replication",
+                "access_control": "Azure RBAC with audit trail"
+            },
+            "compliance_mapping": {
+                "fedramp_controls": ["ac-2.5", "ac-2.6", "ac-3", "ac-6", "ac-12"],
+                "evidence_purpose": "Demonstrate least-privilege access control with periodic reviews and unused permission cleanup"
+            }
+        }

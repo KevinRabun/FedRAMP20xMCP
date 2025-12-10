@@ -10,7 +10,7 @@ Version: 25.11C (Published: 2025-12-01)
 
 import re
 import ast
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -1256,3 +1256,261 @@ class KSI_SVC_02_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get Azure-specific recommendations for automating evidence collection for KSI-SVC-02.
+        
+        **KSI-SVC-02: Network Encryption**
+        Encrypt or otherwise secure network traffic.
+        
+        Returns:
+            Dictionary with automation recommendations
+        """
+        return {
+            "ksi_id": "KSI-SVC-02",
+            "ksi_name": "Network Encryption",
+            "azure_services": [
+                {
+                    "service": "Azure Application Gateway / Front Door",
+                    "purpose": "TLS termination and end-to-end encryption for web traffic",
+                    "capabilities": [
+                        "TLS 1.2/1.3 enforcement",
+                        "End-to-end TLS encryption",
+                        "Certificate management",
+                        "WAF integration"
+                    ]
+                },
+                {
+                    "service": "Azure VPN Gateway",
+                    "purpose": "Encrypted site-to-site and point-to-site connectivity",
+                    "capabilities": [
+                        "IPsec/IKE encryption",
+                        "TLS for P2S VPN",
+                        "Strong cipher suites",
+                        "Connection logging"
+                    ]
+                },
+                {
+                    "service": "Azure ExpressRoute",
+                    "purpose": "Private connectivity with optional encryption (MACsec)",
+                    "capabilities": [
+                        "MACsec layer-2 encryption",
+                        "IPsec over ExpressRoute",
+                        "Private peering",
+                        "Traffic isolation"
+                    ]
+                },
+                {
+                    "service": "Azure Policy",
+                    "purpose": "Enforce TLS/encryption requirements across resources",
+                    "capabilities": [
+                        "Require HTTPS-only for storage/apps",
+                        "Minimum TLS version enforcement",
+                        "Audit non-encrypted connections",
+                        "Deny HTTP-only resources"
+                    ]
+                },
+                {
+                    "service": "Microsoft Defender for Cloud",
+                    "purpose": "Detect unencrypted traffic and weak cipher usage",
+                    "capabilities": [
+                        "TLS version recommendations",
+                        "Unencrypted endpoint detection",
+                        "Weak cipher identification",
+                        "Certificate expiration alerts"
+                    ]
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "TLS Configuration Audit",
+                    "description": "Verify all endpoints enforce TLS 1.2+ with strong ciphers",
+                    "automation": "Resource Graph queries for TLS settings",
+                    "frequency": "Weekly",
+                    "evidence_produced": "TLS configuration compliance report"
+                },
+                {
+                    "method": "HTTPS-Only Enforcement Verification",
+                    "description": "Verify all web apps and storage accounts enforce HTTPS-only",
+                    "automation": "Azure Policy compliance scans",
+                    "frequency": "Daily",
+                    "evidence_produced": "HTTPS enforcement compliance report"
+                },
+                {
+                    "method": "VPN Encryption Validation",
+                    "description": "Verify VPN connections use approved encryption algorithms",
+                    "automation": "VPN Gateway configuration export",
+                    "frequency": "Monthly",
+                    "evidence_produced": "VPN encryption configuration report"
+                },
+                {
+                    "method": "Certificate Expiration Monitoring",
+                    "description": "Track SSL/TLS certificate expiration dates",
+                    "automation": "Azure Monitor alerts on certificate expiration",
+                    "frequency": "Continuous (with monthly reports)",
+                    "evidence_produced": "Certificate inventory with expiration tracking"
+                }
+            ],
+            "automation_feasibility": "high",
+            "evidence_types": ["config-based", "log-based"],
+            "implementation_guidance": {
+                "quick_start": "Enable HTTPS-only on web apps/storage, configure App Gateway with TLS 1.2+, deploy Azure Policy for encryption enforcement, monitor with Defender",
+                "azure_well_architected": "Follows Azure WAF security pillar for data protection in transit",
+                "compliance_mapping": "Addresses NIST controls sc-8, sc-8.1, sc-13 for transmission confidentiality"
+            }
+        }
+    
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get specific Azure queries for collecting KSI-SVC-02 evidence.
+        """
+        return {
+            "ksi_id": "KSI-SVC-02",
+            "queries": [
+                {
+                    "name": "Web App HTTPS-Only Configuration",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        resources
+                        | where type =~ 'Microsoft.Web/sites'
+                        | extend httpsOnly = tobool(properties.httpsOnly)
+                        | extend minTlsVersion = tostring(properties.siteConfig.minTlsVersion)
+                        | project name, resourceGroup, httpsOnly, minTlsVersion, location
+                        | where httpsOnly == false or minTlsVersion < '1.2'
+                        """,
+                    "purpose": "Identify web apps not enforcing HTTPS-only or using old TLS",
+                    "expected_result": "All web apps with httpsOnly=true and minTlsVersion >= 1.2"
+                },
+                {
+                    "name": "Storage Account Secure Transfer",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        resources
+                        | where type =~ 'Microsoft.Storage/storageAccounts'
+                        | extend supportsHttpsTrafficOnly = tobool(properties.supportsHttpsTrafficOnly)
+                        | extend minimumTlsVersion = tostring(properties.minimumTlsVersion)
+                        | project name, resourceGroup, supportsHttpsTrafficOnly, minimumTlsVersion
+                        | where supportsHttpsTrafficOnly == false or minimumTlsVersion < 'TLS1_2'
+                        """,
+                    "purpose": "Verify storage accounts require secure transfer (HTTPS)",
+                    "expected_result": "All storage accounts with secure transfer enabled and TLS 1.2+"
+                },
+                {
+                    "name": "Application Gateway TLS Policy",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        resources
+                        | where type =~ 'Microsoft.Network/applicationGateways'
+                        | extend sslPolicy = tostring(properties.sslPolicy.policyType)
+                        | extend minProtocolVersion = tostring(properties.sslPolicy.minProtocolVersion)
+                        | project name, resourceGroup, sslPolicy, minProtocolVersion
+                        | where minProtocolVersion < 'TLSv1_2' or isnull(minProtocolVersion)
+                        """,
+                    "purpose": "Verify App Gateways enforce TLS 1.2+",
+                    "expected_result": "All gateways with predefined TLS policy or custom TLS 1.2+"
+                },
+                {
+                    "name": "VPN Gateway Encryption Configuration",
+                    "type": "azure_rest_api",
+                    "endpoint": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworkGateways/{gatewayName}?api-version=2023-05-01",
+                    "method": "GET",
+                    "purpose": "Verify VPN gateways use approved IPsec/IKE policies",
+                    "expected_result": "Strong encryption algorithms (AES256, SHA256+)"
+                },
+                {
+                    "name": "Certificate Expiration Status",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace",
+                    "query": """
+                        AzureActivity
+                        | where TimeGenerated > ago(30d)
+                        | where OperationNameValue contains 'CERTIFICATE'
+                        | extend CertName = tostring(parse_json(Properties).certificateName)
+                        | extend ExpiryDate = tostring(parse_json(Properties).expiryDate)
+                        | where isnotempty(ExpiryDate)
+                        | project TimeGenerated, CertName, ExpiryDate, ResourceGroup
+                        | where todatetime(ExpiryDate) < now() + 90d
+                        | order by ExpiryDate asc
+                        """,
+                    "purpose": "Identify certificates expiring soon",
+                    "expected_result": "All certificates renewed before expiration"
+                }
+            ],
+            "query_execution_guidance": {
+                "authentication": "Use Azure CLI or Managed Identity",
+                "permissions_required": [
+                    "Reader for Resource Graph queries",
+                    "Network Contributor for VPN configuration",
+                    "Log Analytics Reader for certificate monitoring"
+                ],
+                "automation_tools": [
+                    "Azure CLI (az network, az webapp)",
+                    "PowerShell Az.Network and Az.Websites modules"
+                ]
+            }
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get descriptions of evidence artifacts for KSI-SVC-02.
+        """
+        return {
+            "ksi_id": "KSI-SVC-02",
+            "artifacts": [
+                {
+                    "name": "TLS Configuration Compliance Report",
+                    "description": "Complete audit of TLS settings across all endpoints",
+                    "source": "Azure Resource Graph and Defender for Cloud",
+                    "format": "CSV with compliance status",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "3 years",
+                    "automation": "Resource Graph scheduled queries"
+                },
+                {
+                    "name": "HTTPS-Only Enforcement Evidence",
+                    "description": "Verification that all web apps and storage enforce HTTPS",
+                    "source": "Azure Policy compliance data",
+                    "format": "CSV compliance report",
+                    "collection_frequency": "Daily",
+                    "retention_period": "3 years",
+                    "automation": "Policy compliance export"
+                },
+                {
+                    "name": "VPN Encryption Configuration",
+                    "description": "VPN Gateway IPsec/IKE policy configurations",
+                    "source": "Azure Network Gateway configuration",
+                    "format": "JSON configuration export",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "3 years",
+                    "automation": "REST API configuration export"
+                },
+                {
+                    "name": "Certificate Inventory and Expiration Tracking",
+                    "description": "All SSL/TLS certificates with expiration dates",
+                    "source": "Azure Key Vault and App Service certificates",
+                    "format": "CSV with renewal tracking",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "3 years",
+                    "automation": "Azure Monitor alerts + scheduled queries"
+                },
+                {
+                    "name": "Network Encryption Policy Configuration",
+                    "description": "Azure Policy definitions enforcing encryption requirements",
+                    "source": "Azure Policy",
+                    "format": "JSON policy export",
+                    "collection_frequency": "Quarterly",
+                    "retention_period": "3 years",
+                    "automation": "Policy definition export"
+                }
+            ],
+            "artifact_storage": {
+                "primary": "Azure Blob Storage with immutable storage",
+                "backup": "Azure Backup with GRS replication",
+                "access_control": "Azure RBAC with audit trail"
+            },
+            "compliance_mapping": {
+                "fedramp_controls": ["sc-8", "sc-8.1", "sc-13", "sc-20", "sc-23"],
+                "evidence_purpose": "Demonstrate network traffic encryption using TLS 1.2+ and strong cipher suites"
+            }
+        }

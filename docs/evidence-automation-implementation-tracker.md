@@ -3,19 +3,20 @@
 ## Progress Overview
 
 **Total Active KSIs:** 65  
-**Implemented:** 19 (29.2%)  
-**Remaining:** 46 (70.8%)
+**Implemented:** 23 (35.4%)  
+**Remaining:** 42 (64.6%)
 
 **Target:** Implement evidence automation for all 65 active KSIs
 
 **Phase 1 Complete:** All 10 high-priority KSIs implemented ✅  
-**MLA Family Complete:** All 5 MLA KSIs implemented ✅
+**MLA Family Complete:** All 5 MLA KSIs implemented ✅  
+**INR Family Complete:** All 1 INR KSI implemented ✅
 
 ---
 
 ## Implementation Status by Family
 
-### ✅ IAM - Identity and Access Management (4/7 = 57.1%)
+### ✅ IAM - Identity and Access Management (6/7 = 85.7%)
 
 - [x] **KSI-IAM-01** - Phishing-Resistant MFA ✅ COMPLETE
   - Evidence Type: log-based
@@ -49,8 +50,22 @@
   - Queries: 5 (1 KQL, 1 Resource Graph, 3 Graph API)
   - Artifacts: 5
 
-- [ ] **KSI-IAM-05** - Access Review
-- [ ] **KSI-IAM-06** - Suspicious Activity Detection
+- [x] **KSI-IAM-05** - Least Privilege ✅ COMPLETE
+  - Evidence Type: config-based, log-based
+  - Automation Feasibility: high
+  - Implementation Effort: medium
+  - Azure Services: 5 (RBAC, Entitlement Management, Access Reviews, Defender, Monitor)
+  - Queries: 5 (2 Resource Graph, 2 KQL, 1 Graph API)
+  - Artifacts: 5
+
+- [x] **KSI-IAM-06** - Suspicious Activity Response ✅ COMPLETE
+  - Evidence Type: log-based, config-based
+  - Automation Feasibility: high
+  - Implementation Effort: medium
+  - Azure Services: 5 (Identity Protection, Sentinel, Smart Lockout, Monitor, Defender for Cloud Apps)
+  - Queries: 5 (3 Graph API, 2 KQL)
+  - Artifacts: 5
+
 - [ ] **KSI-IAM-07** - Just-in-Time Access
 
 ### ✅ CNA - Cloud Native Architecture (4/8 = 50%)
@@ -162,7 +177,7 @@
   - Queries: 5 (1 REST API, 1 Graph API, 2 KQL, 1 Resource Graph)
   - Artifacts: 5
 
-### SVC - Service Management (3/9 = 33.3%)
+### SVC - Service Management (4/9 = 44.4%)
 
 - [x] **KSI-SVC-01** - Continuous Improvement ✅ COMPLETE
   - Evidence Type: log-based, config-based, process-based
@@ -171,7 +186,13 @@
   - Azure Services: 5 (Defender for Cloud, Advisor, Monitor Workbooks, DevOps/GitHub, Log Analytics)
   - Queries: 5 (2 REST API, 1 DevOps API, 1 KQL, 1 custom)
   - Artifacts: 5
-- [ ] **KSI-SVC-02** - Change Management
+- [x] **KSI-SVC-02** - Network Encryption ✅ COMPLETE
+  - Evidence Type: config-based, log-based
+  - Automation Feasibility: high
+  - Implementation Effort: low
+  - Azure Services: 5 (App Gateway/Front Door, VPN Gateway, ExpressRoute, Policy, Defender for Cloud)
+  - Queries: 5 (3 Resource Graph, 1 REST API, 1 KQL)
+  - Artifacts: 5
 - [ ] **KSI-SVC-03** - Service Catalog
 - [x] **KSI-SVC-04** - Configuration Automation ✅ COMPLETE
   - Evidence Type: config-based, log-based
@@ -204,9 +225,15 @@
 - [ ] **KSI-PIY-07** - Data Breach Response
 - [ ] **KSI-PIY-08** - Privacy Training
 
-### CMT - Configuration Management (0/4 = 0%)
+### CMT - Configuration Management (1/4 = 25%)
 
-- [ ] **KSI-CMT-01** - Configuration Management Plan
+- [x] **KSI-CMT-01** - Version Control and Change Logging ✅ COMPLETE
+  - Evidence Type: log-based, config-based
+  - Automation Feasibility: high
+  - Implementation Effort: low
+  - Azure Services: 5 (DevOps/GitHub, Activity Log, Policy, Automation Change Tracking, Monitor)
+  - Queries: 5 (1 DevOps API, 3 KQL, 1 custom)
+  - Artifacts: 5
 - [ ] **KSI-CMT-02** - Baseline Configuration
 - [ ] **KSI-CMT-03** - Configuration Change Control
 - [ ] **KSI-CMT-04** - Security Impact Analysis
@@ -264,25 +291,25 @@ These KSIs have high automation potential and are commonly required:
 
 **Phase 1 Achievement:** All high-priority KSIs with maximum automation potential are complete!
 
-### Phase 2: Medium Automation (Target: Next 15 KSIs)
+### Phase 2: Medium Automation (In Progress - 13/X KSIs)
 
 These require more manual processes but have automation components:
 
-11. **KSI-IAM-03** - Identity Lifecycle Management
-12. **KSI-IAM-04** - Session Management
-13. **KSI-IAM-05** - Access Review
-14. **KSI-IAM-06** - Suspicious Activity Detection
-15. **KSI-CNA-02** - Immutable Infrastructure
-16. **KSI-CNA-04** - Container Security
-17. **KSI-CNA-05** - API Security
-18. **KSI-SVC-01** - Service Catalog
-19. **KSI-SVC-02** - Change Management
-20. **KSI-SVC-05** - Configuration Baseline
-21. **KSI-SVC-07** - Dependency Management
-22. **KSI-CED-02** - Credential Rotation
-23. **KSI-CED-03** - Secret Management
-24. **KSI-AFR-02** - Continuous Monitoring
-25. **KSI-AFR-03** - Significant Change Notification
+1. ✅ **KSI-IAM-03** - Identity Lifecycle Management
+2. ✅ **KSI-IAM-04** - Session Management
+3. ✅ **KSI-IAM-05** - Least Privilege
+4. ✅ **KSI-IAM-06** - Suspicious Activity Response
+5. ✅ **KSI-CNA-02** - Minimize Attack Surface
+6. ✅ **KSI-CNA-04** - Immutable Infrastructure
+7. **KSI-CNA-05** - API Security
+8. ✅ **KSI-SVC-01** - Continuous Improvement
+9. ✅ **KSI-SVC-02** - Network Encryption
+10. **KSI-SVC-05** - Configuration Baseline
+11. **KSI-SVC-07** - Dependency Management
+12. **KSI-CED-02** - Credential Rotation
+13. **KSI-CED-03** - Secret Management
+14. **KSI-AFR-02** - Continuous Monitoring
+15. **KSI-AFR-03** - Significant Change Notification
 
 ### Phase 3: Process-Heavy (Remaining KSIs)
 
