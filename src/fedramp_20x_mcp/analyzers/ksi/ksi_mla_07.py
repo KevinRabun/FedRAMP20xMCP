@@ -2,7 +2,7 @@
 
 import ast
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 
@@ -471,4 +471,244 @@ class KSI_MLA_07_Analyzer(BaseKSIAnalyzer):
         start = max(0, line_num - context - 1)
         end = min(len(lines), line_num + context)
         return '\n'.join(lines[start:end])
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get Azure-specific recommendations for automating evidence collection for KSI-MLA-07.
+        
+        **KSI-MLA-07: Event Types**
+        Maintain a list of information resources and event types that will be monitored, logged, and audited.
+        
+        Returns:
+            Dictionary with automation recommendations
+        """
+        return {
+            "ksi_id": "KSI-MLA-07",
+            "ksi_name": "Event Types",
+            "azure_services": [
+                {
+                    "service": "Azure Monitor",
+                    "purpose": "Comprehensive event type logging and monitoring configuration",
+                    "capabilities": [
+                        "Diagnostic settings for all resource types",
+                        "Activity log event categories",
+                        "Metric alerts for event monitoring",
+                        "Log Analytics workspace event ingestion"
+                    ]
+                },
+                {
+                    "service": "Azure Sentinel",
+                    "purpose": "Security event type collection and SIEM analysis",
+                    "capabilities": [
+                        "Data connectors for event ingestion",
+                        "Analytics rules for event detection",
+                        "Event taxonomy and classification",
+                        "Incident correlation across event types"
+                    ]
+                },
+                {
+                    "service": "Azure Policy",
+                    "purpose": "Enforce diagnostic settings for event logging",
+                    "capabilities": [
+                        "Require diagnostic settings on all resources",
+                        "Validate event log categories enabled",
+                        "Audit non-compliant resources",
+                        "Automated remediation for missing logs"
+                    ]
+                },
+                {
+                    "service": "Azure Resource Graph",
+                    "purpose": "Inventory of resources and their logging configurations",
+                    "capabilities": [
+                        "Query diagnostic settings across subscriptions",
+                        "List all resource types with logging",
+                        "Identify resources without event logging",
+                        "Export resource inventory for audit"
+                    ]
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "Event Type Inventory Documentation",
+                    "description": "Maintain documented list of monitored event types per resource category",
+                    "automation": "Export diagnostic settings and data collection rules",
+                    "frequency": "Quarterly",
+                    "evidence_produced": "Event type matrix showing resource types and logged events"
+                },
+                {
+                    "method": "Diagnostic Settings Compliance Scan",
+                    "description": "Verify all resources have appropriate diagnostic settings enabled",
+                    "automation": "Azure Policy compliance scan",
+                    "frequency": "Daily",
+                    "evidence_produced": "Resource compliance report for event logging"
+                },
+                {
+                    "method": "Log Ingestion Verification",
+                    "description": "Confirm events are being ingested for all defined event types",
+                    "automation": "KQL queries checking log ingestion per source",
+                    "frequency": "Daily",
+                    "evidence_produced": "Log ingestion health report"
+                },
+                {
+                    "method": "Event Coverage Gap Analysis",
+                    "description": "Identify resources or event types not being monitored",
+                    "automation": "Resource Graph query for resources without logging",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Gap analysis report with remediation plan"
+                }
+            ],
+            "automation_feasibility": "high",
+            "evidence_types": ["config-based", "log-based"],
+            "implementation_guidance": {
+                "quick_start": "Deploy Azure Policy for diagnostic settings, configure Log Analytics workspace, enable Sentinel data connectors, document event type taxonomy",
+                "azure_well_architected": "Follows Azure WAF operational excellence and security pillars for comprehensive monitoring",
+                "compliance_mapping": "Addresses NIST controls au-2, au-7.1, au-12, si-4.4, si-4.5, ac-2.4, ac-6.9"
+            }
+        }
+    
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get specific Azure queries for collecting KSI-MLA-07 evidence.
+        """
+        return {
+            "ksi_id": "KSI-MLA-07",
+            "queries": [
+                {
+                    "name": "Resource Diagnostic Settings Inventory",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        resources
+                        | join kind=leftouter (
+                            resources
+                            | where type == 'microsoft.insights/diagnosticsettings'
+                            | extend targetResourceId = tolower(split(id, '/providers/microsoft.insights/')[0])
+                            | project targetResourceId, diagnosticId=id
+                        ) on $left.id == $right.targetResourceId
+                        | where type !in ('microsoft.resources/subscriptions', 'microsoft.resources/resourcegroups')
+                        | project name, type, resourceGroup, hasDiagnostics=isnotempty(diagnosticId)
+                        | summarize Total=count(), WithDiagnostics=countif(hasDiagnostics) by type
+                        | extend CoveragePercent = round((WithDiagnostics * 100.0) / Total, 2)
+                        """,
+                    "purpose": "Show event logging coverage across resource types",
+                    "expected_result": "High coverage percentage with documented exceptions"
+                },
+                {
+                    "name": "Log Ingestion Health by Event Type",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace",
+                    "query": """
+                        union *
+                        | where TimeGenerated > ago(24h)
+                        | summarize EventCount = count() by $table, Type
+                        | order by EventCount desc
+                        """,
+                    "purpose": "Verify events are being ingested across all event types",
+                    "expected_result": "Active ingestion for all defined event types"
+                },
+                {
+                    "name": "Sentinel Data Connectors Status",
+                    "type": "kql",
+                    "workspace": "Azure Sentinel workspace",
+                    "query": """
+                        SecurityEvent
+                        | where TimeGenerated > ago(24h)
+                        | summarize EventCount = count(), LastEvent = max(TimeGenerated) by Computer, EventID
+                        | where EventCount > 0
+                        | summarize ConnectedSources = dcount(Computer)
+                        """,
+                    "purpose": "Show active security event ingestion from all sources",
+                    "expected_result": "All expected sources reporting events"
+                },
+                {
+                    "name": "Activity Log Event Categories",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace",
+                    "query": """
+                        AzureActivity
+                        | where TimeGenerated > ago(7d)
+                        | summarize EventCount = count() by CategoryValue, OperationNameValue
+                        | order by EventCount desc
+                        | take 50
+                        """,
+                    "purpose": "Show breadth of activity log event types being captured",
+                    "expected_result": "Diverse event categories covering administrative, security, policy operations"
+                }
+            ],
+            "query_execution_guidance": {
+                "authentication": "Use Azure CLI or Managed Identity",
+                "permissions_required": [
+                    "Reader for Resource Graph queries",
+                    "Log Analytics Reader for KQL queries",
+                    "Sentinel Reader for data connector status"
+                ],
+                "automation_tools": [
+                    "Azure CLI (az monitor, az graph)",
+                    "PowerShell Az.Monitor and Az.ResourceGraph modules"
+                ]
+            }
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get descriptions of evidence artifacts for KSI-MLA-07.
+        """
+        return {
+            "ksi_id": "KSI-MLA-07",
+            "artifacts": [
+                {
+                    "name": "Event Type Matrix",
+                    "description": "Documented matrix of resource types and their monitored event categories",
+                    "source": "Diagnostic settings configuration",
+                    "format": "Excel or CSV matrix",
+                    "collection_frequency": "Quarterly (or on change)",
+                    "retention_period": "3 years",
+                    "automation": "Resource Graph query with documentation template"
+                },
+                {
+                    "name": "Diagnostic Settings Compliance Report",
+                    "description": "Report showing diagnostic settings coverage across all resources",
+                    "source": "Azure Policy compliance data",
+                    "format": "CSV from Resource Graph",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "1 year",
+                    "automation": "Scheduled Resource Graph query"
+                },
+                {
+                    "name": "Log Ingestion Health Dashboard",
+                    "description": "Real-time dashboard showing event ingestion status by type",
+                    "source": "Log Analytics",
+                    "format": "Azure Workbook",
+                    "collection_frequency": "Continuous (real-time)",
+                    "retention_period": "Persistent (configuration stored)",
+                    "automation": "Azure Monitor Workbook"
+                },
+                {
+                    "name": "Event Coverage Gap Analysis",
+                    "description": "Quarterly analysis of resources or event types not being monitored",
+                    "source": "Resource Graph and Log Analytics",
+                    "format": "PDF report with remediation plan",
+                    "collection_frequency": "Quarterly",
+                    "retention_period": "3 years",
+                    "automation": "Automated gap analysis with Power BI or custom script"
+                },
+                {
+                    "name": "Sentinel Data Connector Configuration",
+                    "description": "Export of all Sentinel data connectors and event collection rules",
+                    "source": "Azure Sentinel configuration",
+                    "format": "JSON configuration export",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "3 years",
+                    "automation": "Sentinel ARM template export"
+                }
+            ],
+            "artifact_storage": {
+                "primary": "Azure Blob Storage with immutable storage",
+                "backup": "Azure Backup with GRS replication",
+                "access_control": "Azure RBAC with audit trail"
+            },
+            "compliance_mapping": {
+                "fedramp_controls": ["au-2", "au-7.1", "au-12", "si-4.4", "si-4.5", "ac-2.4", "ac-6.9"],
+                "evidence_purpose": "Demonstrate comprehensive event type monitoring and logging"
+            }
+        }
 
