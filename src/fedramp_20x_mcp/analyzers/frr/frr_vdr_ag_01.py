@@ -58,7 +58,9 @@ class FRR_VDR_AG_01_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        # TODO: Add NIST controls (e.g., ("RA-5", "Vulnerability Monitoring and Scanning"))
+        ("RA-5", "Vulnerability Monitoring and Scanning"),
+        ("SI-2", "Flaw Remediation"),
+        ("CA-7", "Continuous Monitoring"),
     ]
     CODE_DETECTABLE = "No"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"

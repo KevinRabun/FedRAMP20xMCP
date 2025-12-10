@@ -57,9 +57,11 @@ class FRR_RSC_04_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        # TODO: Add NIST controls (e.g., ("RA-5", "Vulnerability Monitoring and Scanning"))
+        ("CM-7", "Least Functionality"),
+        ("CM-6", "Configuration Settings"),
+        ("SC-7", "Boundary Protection"),
     ]
-    CODE_DETECTABLE = "Partial"
+    CODE_DETECTABLE = "No"
     IMPLEMENTATION_STATUS = "PARTIAL"
     RELATED_KSIS = [
         # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")

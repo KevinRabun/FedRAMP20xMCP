@@ -71,7 +71,7 @@ class FRR_UCM_02_Analyzer(BaseFRRAnalyzer):
         ("SC-12", "Cryptographic Key Establishment and Management"),
         ("IA-7", "Cryptographic Module Authentication")
     ]
-    CODE_DETECTABLE = True
+    CODE_DETECTABLE = "Yes"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = ["KSI-CNA-05", "KSI-IAM-03"]
     

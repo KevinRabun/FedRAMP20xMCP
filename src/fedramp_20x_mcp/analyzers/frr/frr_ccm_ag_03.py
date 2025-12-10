@@ -58,7 +58,10 @@ class FRR_CCM_AG_03_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = False
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        # TODO: Add NIST controls (e.g., ("RA-5", "Vulnerability Monitoring and Scanning"))
+        ("CA-7", "Continuous Monitoring"),
+        ("CA-2", "Control Assessments"),
+        ("SI-4", "System Monitoring"),
+        ("PM-31", "Continuous Monitoring Strategy"),
     ]
     CODE_DETECTABLE = "No"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"

@@ -77,7 +77,7 @@ class FRR_VDR_01_Analyzer(BaseFRRAnalyzer):
         ("SI-2", "Flaw Remediation"),
         ("CA-7", "Continuous Monitoring")
     ]
-    CODE_DETECTABLE = True
+    CODE_DETECTABLE = "Yes"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = ["KSI-AFR-04", "KSI-PIY-06", "KSI-SVC-08", "KSI-TPR-04"]
     

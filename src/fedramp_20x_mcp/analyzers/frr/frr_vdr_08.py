@@ -69,7 +69,7 @@ class FRR_VDR_08_Analyzer(BaseFRRAnalyzer):
         ("SC-7", "Boundary Protection"),
         ("AC-4", "Information Flow Enforcement")
     ]
-    CODE_DETECTABLE = True
+    CODE_DETECTABLE = "Yes"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = ["KSI-CNA-01", "KSI-CNA-02", "KSI-AFR-04"]
     

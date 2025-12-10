@@ -58,7 +58,9 @@ class FRR_SCN_AD_01_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        # TODO: Add NIST controls (e.g., ("RA-5", "Vulnerability Monitoring and Scanning"))
+        ("IR-6", "Incident Reporting"),
+        ("PM-15", "Security and Privacy Groups and Associations"),
+        ("CP-2", "Contingency Plan"),
     ]
     CODE_DETECTABLE = "No"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"

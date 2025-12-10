@@ -58,7 +58,9 @@ class FRR_FSI_10_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        # TODO: Add NIST controls (e.g., ("RA-5", "Vulnerability Monitoring and Scanning"))
+        ("SA-9", "External System Services"),
+        ("CA-3", "Information Exchange"),
+        ("SC-7", "Boundary Protection"),
     ]
     CODE_DETECTABLE = "No"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"

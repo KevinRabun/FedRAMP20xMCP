@@ -58,9 +58,11 @@ class FRR_MAS_02_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        # TODO: Add NIST controls (e.g., ("RA-5", "Vulnerability Monitoring and Scanning"))
+        ("PM-5", "System Inventory"),
+        ("CM-8", "System Component Inventory"),
+        ("SA-4", "Acquisition Process"),
     ]
-    CODE_DETECTABLE = "Partial"
+    CODE_DETECTABLE = "No"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
         # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")

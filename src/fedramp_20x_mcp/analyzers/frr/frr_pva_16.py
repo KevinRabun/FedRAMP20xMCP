@@ -58,7 +58,9 @@ class FRR_PVA_16_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        # TODO: Add NIST controls (e.g., ("RA-5", "Vulnerability Monitoring and Scanning"))
+        ("CA-2", "Control Assessments"),
+        ("CA-7", "Continuous Monitoring"),
+        ("CA-8", "Penetration Testing"),
     ]
     CODE_DETECTABLE = "No"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"

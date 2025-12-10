@@ -58,9 +58,11 @@ class FRR_UCM_03_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = False
     NIST_CONTROLS = [
-        # TODO: Add NIST controls (e.g., ("RA-5", "Vulnerability Monitoring and Scanning"))
+        ("SC-13", "Cryptographic Protection"),
+        ("SC-12", "Cryptographic Key Establishment and Management"),
+        ("IA-7", "Cryptographic Module Authentication"),
     ]
-    CODE_DETECTABLE = "Partial"
+    CODE_DETECTABLE = "No"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
         # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")

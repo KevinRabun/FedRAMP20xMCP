@@ -58,7 +58,10 @@ class FRR_ADS_EX_01_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        # TODO: Add NIST controls (e.g., ("RA-5", "Vulnerability Monitoring and Scanning"))
+        ("PM-9", "Risk Management Strategy"),
+        ("PL-2", "System Security Plan"),
+        ("SA-4", "Acquisition Process"),
+        ("SA-9", "External System Services"),
     ]
     CODE_DETECTABLE = "No"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"

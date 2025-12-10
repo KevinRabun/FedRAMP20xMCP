@@ -67,7 +67,7 @@ class FRR_UCM_01_Analyzer(BaseFRRAnalyzer):
         ("SC-13", "Cryptographic Protection"),
         ("SA-4(9)", "Functions, Ports, Protocols, and Services in Use")
     ]
-    CODE_DETECTABLE = "Partial"
+    CODE_DETECTABLE = "No"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = ["KSI-AFR-01"]
     
