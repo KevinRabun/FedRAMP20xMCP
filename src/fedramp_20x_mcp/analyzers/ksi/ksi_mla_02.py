@@ -15,7 +15,7 @@ Version: 25.11C (Published: 2025-12-01)
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 
@@ -318,6 +318,282 @@ class KSI_MLA_02_Analyzer(BaseKSIAnalyzer):
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         return []
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get Azure-specific recommendations for automating evidence collection for KSI-MLA-02.
+        
+        **KSI-MLA-02: Audit Logging**
+        Regularly review and audit logs.
+        
+        Returns:
+            Dictionary with automation recommendations including:
+            - azure_services: List of Azure services for evidence collection
+            - collection_methods: Methods to collect evidence
+            - automation_feasibility: Level of automation possible (high/medium/low/manual-only)
+            - evidence_types: Types of evidence (log-based, config-based, metric-based, process-based)
+        """
+        return {
+            "ksi_id": "KSI-MLA-02",
+            "ksi_name": "Audit Logging",
+            "azure_services": [
+                {
+                    "service": "Azure Monitor",
+                    "purpose": "Centralized log review and audit trail access",
+                    "capabilities": [
+                        "Query audit logs across all Azure resources",
+                        "Review diagnostic settings for log retention",
+                        "Access activity logs and resource logs"
+                    ]
+                },
+                {
+                    "service": "Azure Log Analytics",
+                    "purpose": "Advanced log querying and audit analysis",
+                    "capabilities": [
+                        "KQL queries for audit pattern detection",
+                        "Custom log retention policies",
+                        "Audit log correlation and analysis"
+                    ]
+                },
+                {
+                    "service": "Azure Storage",
+                    "purpose": "Immutable log retention for audit compliance",
+                    "capabilities": [
+                        "Immutable blob storage for audit logs",
+                        "Legal hold and time-based retention",
+                        "Versioning and soft delete for audit trails"
+                    ]
+                },
+                {
+                    "service": "Azure Sentinel",
+                    "purpose": "Security audit and incident correlation",
+                    "capabilities": [
+                        "Automated audit rule evaluation",
+                        "Security event correlation",
+                        "Compliance dashboard for audit status"
+                    ]
+                },
+                {
+                    "service": "Azure Policy",
+                    "purpose": "Enforce audit logging requirements",
+                    "capabilities": [
+                        "Enforce diagnostic settings on all resources",
+                        "Validate log retention policies",
+                        "Audit non-compliant resource configurations"
+                    ]
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "Audit Log Retention Validation",
+                    "description": "Query Azure Storage and Log Analytics to verify audit logs are retained per policy",
+                    "automation": "KQL and Resource Graph queries",
+                    "frequency": "Daily",
+                    "evidence_produced": "Log retention policy compliance report"
+                },
+                {
+                    "method": "Audit Review Evidence",
+                    "description": "Export audit logs showing regular review activities (queries executed, alerts triggered)",
+                    "automation": "Azure Monitor audit log export",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Audit review activity report"
+                },
+                {
+                    "method": "Immutability Verification",
+                    "description": "Validate immutable storage configuration for audit logs",
+                    "automation": "Azure Storage API queries",
+                    "frequency": "Monthly",
+                    "evidence_produced": "Storage immutability configuration report"
+                },
+                {
+                    "method": "Diagnostic Settings Audit",
+                    "description": "Verify all resources have diagnostic settings enabled for audit logging",
+                    "automation": "Azure Policy compliance scan",
+                    "frequency": "Daily",
+                    "evidence_produced": "Resource diagnostic settings compliance report"
+                }
+            ],
+            "automation_feasibility": "high",
+            "evidence_types": ["log-based", "config-based"],
+            "implementation_guidance": {
+                "quick_start": "Deploy Azure Policy to enforce diagnostic settings, configure Log Analytics workspace with retention policies, enable Azure Sentinel for audit correlation",
+                "azure_well_architected": "Follows Azure Well-Architected Framework operational excellence and security pillars for audit logging",
+                "compliance_mapping": "Addresses NIST controls ac-2.4, ac-6.9, au-2, au-6, au-6.1, si-4, si-4.4"
+            }
+        }
+    
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get specific Azure queries for collecting KSI-MLA-02 evidence.
+        
+        Returns:
+            Dictionary with executable queries for evidence collection
+        """
+        return {
+            "ksi_id": "KSI-MLA-02",
+            "queries": [
+                {
+                    "name": "Audit Log Retention Policy Status",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        resources
+                        | where type == 'microsoft.operationalinsights/workspaces'
+                        | extend retentionDays = properties.retentionInDays
+                        | project name, resourceGroup, retentionDays, location
+                        | where retentionDays < 90
+                        """,
+                    "purpose": "Identify Log Analytics workspaces with insufficient audit log retention",
+                    "expected_result": "Empty result set indicates compliance (all workspaces have 90+ days retention)"
+                },
+                {
+                    "name": "Resources Without Diagnostic Settings",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        resources
+                        | where type !in ('microsoft.resources/resourcegroups', 'microsoft.resources/subscriptions')
+                        | project id, name, type, resourceGroup
+                        | join kind=leftouter (
+                            resources
+                            | where type == 'microsoft.insights/diagnosticsettings'
+                            | extend targetResourceId = tolower(split(id, '/providers/microsoft.insights/')[0])
+                            | project targetResourceId
+                        ) on $left.id == $right.targetResourceId
+                        | where isnull(targetResourceId)
+                        """,
+                    "purpose": "Find resources missing diagnostic settings for audit logging",
+                    "expected_result": "Empty result set indicates full compliance"
+                },
+                {
+                    "name": "Immutable Storage Configuration",
+                    "type": "azure_rest_api",
+                    "endpoint": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Storage/storageAccounts/{accountName}/blobServices/default/containers/{containerName}/immutabilityPolicies/default",
+                    "method": "GET",
+                    "api_version": "2023-01-01",
+                    "purpose": "Verify immutable storage policy for audit logs",
+                    "expected_result": "Policy with state='Locked' and immutabilityPeriod >= 2555 days (7 years)"
+                },
+                {
+                    "name": "Audit Review Activity Evidence",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace with audit logs",
+                    "query": """
+                        AzureActivity
+                        | where TimeGenerated > ago(7d)
+                        | where OperationNameValue contains "Microsoft.OperationalInsights/workspaces/query"
+                        | summarize QueryCount=count(), LastQueryTime=max(TimeGenerated) by Caller, OperationNameValue
+                        | order by QueryCount desc
+                        """,
+                    "purpose": "Demonstrate regular audit log review activity",
+                    "expected_result": "Multiple queries from authorized personnel within past 7 days"
+                },
+                {
+                    "name": "Security Alert Review Evidence",
+                    "type": "kql",
+                    "workspace": "Azure Sentinel workspace",
+                    "query": """
+                        SecurityAlert
+                        | where TimeGenerated > ago(30d)
+                        | extend ReviewedBy = tostring(ExtendedProperties.ReviewedBy)
+                        | extend ReviewedDate = todatetime(ExtendedProperties.ReviewedDate)
+                        | where isnotempty(ReviewedBy)
+                        | summarize AlertsReviewed=count(), LastReviewDate=max(ReviewedDate) by ReviewedBy
+                        | order by LastReviewDate desc
+                        """,
+                    "purpose": "Demonstrate security alert review as part of audit process",
+                    "expected_result": "Regular review activity by security team members"
+                }
+            ],
+            "query_execution_guidance": {
+                "authentication": "Use Azure CLI (az login) or Managed Identity for query execution",
+                "permissions_required": [
+                    "Reader role on subscriptions for Resource Graph queries",
+                    "Log Analytics Reader for KQL queries",
+                    "Storage Account Contributor for immutability policy queries"
+                ],
+                "automation_tools": [
+                    "Azure Resource Graph Explorer (portal)",
+                    "Azure CLI (az graph query)",
+                    "PowerShell Az.ResourceGraph module",
+                    "Python azure-mgmt-resourcegraph SDK"
+                ]
+            }
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get descriptions of evidence artifacts for KSI-MLA-02.
+        
+        Returns:
+            Dictionary describing evidence artifacts to collect
+        """
+        return {
+            "ksi_id": "KSI-MLA-02",
+            "artifacts": [
+                {
+                    "name": "Log Retention Policy Configuration",
+                    "description": "Export of all Log Analytics workspace retention settings showing compliance with retention requirements",
+                    "source": "Azure Monitor / Log Analytics",
+                    "format": "JSON export from Azure Resource Graph query",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "7 years (audit evidence)",
+                    "automation": "Scheduled Azure Automation runbook or Azure Function"
+                },
+                {
+                    "name": "Diagnostic Settings Compliance Report",
+                    "description": "List of all Azure resources with their diagnostic settings status",
+                    "source": "Azure Policy compliance scan",
+                    "format": "CSV or JSON export from Azure Policy",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "1 year",
+                    "automation": "Azure Policy export via REST API"
+                },
+                {
+                    "name": "Immutable Storage Evidence",
+                    "description": "Configuration snapshots of immutable blob storage policies for audit logs",
+                    "source": "Azure Storage Management API",
+                    "format": "JSON configuration export",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "7 years",
+                    "automation": "PowerShell script or Azure Function"
+                },
+                {
+                    "name": "Audit Review Activity Report",
+                    "description": "Log of queries executed against audit logs, showing regular review activity",
+                    "source": "Azure Activity Log and Log Analytics query history",
+                    "format": "CSV export from KQL query results",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "3 years",
+                    "automation": "Scheduled KQL query with email/storage export"
+                },
+                {
+                    "name": "Security Alert Review Evidence",
+                    "description": "Documentation of security alerts reviewed as part of audit process",
+                    "source": "Azure Sentinel incident management",
+                    "format": "JSON export of incident review metadata",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "3 years",
+                    "automation": "Azure Sentinel automation rule or Logic App"
+                },
+                {
+                    "name": "Audit Log Sample Archive",
+                    "description": "Quarterly snapshots of audit logs demonstrating retention and integrity",
+                    "source": "Azure Storage immutable blobs",
+                    "format": "Compressed log files (.gz or .zip)",
+                    "collection_frequency": "Quarterly",
+                    "retention_period": "7 years",
+                    "automation": "Azure Storage lifecycle management policy"
+                }
+            ],
+            "artifact_storage": {
+                "primary": "Azure Blob Storage with immutable storage and legal hold",
+                "backup": "Azure Backup with GRS replication",
+                "access_control": "Azure RBAC with audit trail of access"
+            },
+            "compliance_mapping": {
+                "fedramp_controls": ["au-2", "au-6", "au-6.1", "ac-2.4", "ac-6.9", "si-4", "si-4.4"],
+                "evidence_purpose": "Demonstrate regular audit log review and retention compliance"
+            }
+        }
     
 
         """Get surrounding context lines."""

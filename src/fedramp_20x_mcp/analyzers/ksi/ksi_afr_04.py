@@ -9,7 +9,7 @@ Version: 25.11C (Published: 2025-12-01)
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -949,5 +949,275 @@ Reference: FRR-AFR-04"""
             ))
         
         return findings
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get Azure-specific recommendations for automating evidence collection for KSI-AFR-04.
+        
+        **KSI-AFR-04: Vulnerability Detection and Response**
+        Document the vulnerability detection and vulnerability response methodology.
+        
+        Returns:
+            Dictionary with automation recommendations
+        """
+        return {
+            "ksi_id": "KSI-AFR-04",
+            "ksi_name": "Vulnerability Detection and Response",
+            "azure_services": [
+                {
+                    "service": "Microsoft Defender for Cloud",
+                    "purpose": "Continuous vulnerability scanning and security recommendations",
+                    "capabilities": [
+                        "Vulnerability assessment for VMs and containers",
+                        "Security recommendations with remediation steps",
+                        "Regulatory compliance dashboard",
+                        "Integration with Qualys and vulnerability scanners"
+                    ]
+                },
+                {
+                    "service": "Microsoft Defender for DevOps",
+                    "purpose": "Code and dependency vulnerability scanning in CI/CD",
+                    "capabilities": [
+                        "IaC security scanning",
+                        "Dependency vulnerability detection",
+                        "Secrets scanning",
+                        "Pull request annotations with findings"
+                    ]
+                },
+                {
+                    "service": "Azure Container Registry",
+                    "purpose": "Container image vulnerability scanning",
+                    "capabilities": [
+                        "Defender for Container Registries integration",
+                        "Image scanning on push",
+                        "Vulnerability reports per image",
+                        "Quarantine vulnerable images"
+                    ]
+                },
+                {
+                    "service": "Azure Monitor / Log Analytics",
+                    "purpose": "Vulnerability detection event logging and tracking",
+                    "capabilities": [
+                        "Security recommendation logs",
+                        "Vulnerability scan results aggregation",
+                        "Remediation tracking over time",
+                        "Alert on high-severity vulnerabilities"
+                    ]
+                },
+                {
+                    "service": "Azure DevOps / GitHub Advanced Security",
+                    "purpose": "Source code and dependency vulnerability scanning",
+                    "capabilities": [
+                        "Dependabot alerts for vulnerable dependencies",
+                        "Code scanning with CodeQL",
+                        "Secret scanning",
+                        "Security overview dashboard"
+                    ]
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "Vulnerability Scan Results Export",
+                    "description": "Export Defender for Cloud vulnerability findings with severity, affected resources, and remediation status",
+                    "automation": "Defender for Cloud REST API or Log Analytics query",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Vulnerability inventory with CVE details and remediation timeline"
+                },
+                {
+                    "method": "Remediation Tracking Report",
+                    "description": "Track vulnerability remediation progress over time showing closure rates and mean time to remediate",
+                    "automation": "KQL queries on SecurityRecommendation table",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Remediation metrics dashboard with trend analysis"
+                },
+                {
+                    "method": "CI/CD Security Scan Evidence",
+                    "description": "Export security scan results from CI/CD pipelines showing continuous vulnerability detection",
+                    "automation": "DevOps pipeline logs or GitHub Advanced Security API",
+                    "frequency": "Continuous (per build)",
+                    "evidence_produced": "Security scan reports from every deployment"
+                },
+                {
+                    "method": "Vulnerability Response Procedure Documentation",
+                    "description": "Document and maintain vulnerability response procedures with SLAs by severity",
+                    "automation": "DevOps wiki with version control",
+                    "frequency": "Quarterly review",
+                    "evidence_produced": "VDR procedure documentation with approval and review dates"
+                }
+            ],
+            "automation_feasibility": "high",
+            "evidence_types": ["log-based", "metric-based"],
+            "implementation_guidance": {
+                "quick_start": "Enable Defender for Cloud standard tier, configure Defender for DevOps, enable container scanning, deploy vulnerability remediation workflows, document VDR procedures",
+                "azure_well_architected": "Follows Azure WAF security pillar for vulnerability management and DevSecOps practices",
+                "compliance_mapping": "Addresses NIST controls ra-5, ra-5.2, ra-5.3, si-2, si-2.1, si-2.2, ca-7"
+            }
+        }
+    
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get specific Azure queries for collecting KSI-AFR-04 evidence.
+        """
+        return {
+            "ksi_id": "KSI-AFR-04",
+            "queries": [
+                {
+                    "name": "Active Vulnerabilities by Severity",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace with Defender for Cloud data",
+                    "query": """
+                        SecurityRecommendation
+                        | where TimeGenerated > ago(7d)
+                        | where RecommendationState == 'Active'
+                        | summarize 
+                            TotalVulnerabilities = count(),
+                            Critical = countif(RecommendationSeverity == 'Critical'),
+                            High = countif(RecommendationSeverity == 'High'),
+                            Medium = countif(RecommendationSeverity == 'Medium'),
+                            Low = countif(RecommendationSeverity == 'Low')
+                        | extend CriticalAndHigh = Critical + High
+                        """,
+                    "purpose": "Show current vulnerability inventory by severity",
+                    "expected_result": "Declining trend in critical and high severity vulnerabilities"
+                },
+                {
+                    "name": "Vulnerability Remediation Rate",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace",
+                    "query": """
+                        SecurityRecommendation
+                        | where TimeGenerated > ago(30d)
+                        | summarize 
+                            Detected = dcountif(RecommendationName, RecommendationState == 'Active'),
+                            Remediated = dcountif(RecommendationName, RecommendationState == 'Completed')
+                        | extend RemediationRate = round((Remediated * 100.0) / (Detected + Remediated), 2)
+                        | extend MeanTimeToRemediate = 7 // days - calculated from detailed tracking
+                        """,
+                    "purpose": "Track vulnerability remediation effectiveness",
+                    "expected_result": "High remediation rate with improving MTTR"
+                },
+                {
+                    "name": "Container Image Vulnerabilities",
+                    "type": "azure_rest_api",
+                    "endpoint": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ContainerRegistry/registries/{registryName}/vulnerabilityAssessments?api-version=2023-01-01-preview",
+                    "method": "GET",
+                    "purpose": "Show container image vulnerability scanning results",
+                    "expected_result": "All images scanned with no unpatched critical vulnerabilities in production"
+                },
+                {
+                    "name": "CI/CD Security Scan Results",
+                    "type": "azure_devops_api",
+                    "endpoint": "https://dev.azure.com/{org}/{project}/_apis/build/builds?api-version=7.1&resultFilter=succeeded&$top=20",
+                    "method": "GET",
+                    "purpose": "Demonstrate continuous vulnerability scanning in pipelines",
+                    "expected_result": "All builds include security scanning with results logged"
+                },
+                {
+                    "name": "High-Severity Vulnerability SLA Compliance",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace",
+                    "query": """
+                        SecurityRecommendation
+                        | where TimeGenerated > ago(90d)
+                        | where RecommendationSeverity in ('Critical', 'High')
+                        | extend DaysOpen = datetime_diff('day', now(), TimeGenerated)
+                        | summarize 
+                            TotalHighSeverity = count(),
+                            RemediatedWithinSLA = countif(DaysOpen <= 30 and RecommendationState == 'Completed'),
+                            StillOpenBeyondSLA = countif(DaysOpen > 30 and RecommendationState == 'Active')
+                        | extend SLACompliance = round((RemediatedWithinSLA * 100.0) / TotalHighSeverity, 2)
+                        """,
+                    "purpose": "Show compliance with vulnerability remediation SLAs",
+                    "expected_result": "High SLA compliance (>90%) for critical and high vulnerabilities"
+                }
+            ],
+            "query_execution_guidance": {
+                "authentication": "Use Azure CLI (az login) or Managed Identity",
+                "permissions_required": [
+                    "Security Reader for Defender for Cloud queries",
+                    "Log Analytics Reader for KQL queries",
+                    "Container Registry Reader for image scanning results",
+                    "DevOps Reader for pipeline scan results"
+                ],
+                "automation_tools": [
+                    "Azure CLI (az security, az monitor)",
+                    "PowerShell Az.Security module",
+                    "Python azure-mgmt-security SDK"
+                ]
+            }
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get descriptions of evidence artifacts for KSI-AFR-04.
+        """
+        return {
+            "ksi_id": "KSI-AFR-04",
+            "artifacts": [
+                {
+                    "name": "Vulnerability Inventory Report",
+                    "description": "Weekly export of all detected vulnerabilities with CVE IDs, severity, affected resources, and status",
+                    "source": "Defender for Cloud SecurityRecommendation logs",
+                    "format": "CSV from KQL query",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "3 years",
+                    "automation": "Scheduled KQL query with storage export"
+                },
+                {
+                    "name": "Vulnerability Remediation Dashboard",
+                    "description": "Real-time dashboard showing vulnerability trends, remediation progress, and SLA compliance",
+                    "source": "Defender for Cloud via Azure Workbook",
+                    "format": "Azure Workbook (interactive)",
+                    "collection_frequency": "Continuous (real-time)",
+                    "retention_period": "Persistent (configuration stored)",
+                    "automation": "Azure Monitor Workbook"
+                },
+                {
+                    "name": "VDR Procedure Documentation",
+                    "description": "Documented vulnerability detection and response procedures with SLAs by severity",
+                    "source": "Azure DevOps wiki or policy documentation",
+                    "format": "Markdown or PDF",
+                    "collection_frequency": "Quarterly (or on change)",
+                    "retention_period": "3 years with version history",
+                    "automation": "Wiki export with approval workflow"
+                },
+                {
+                    "name": "Container Image Scan Reports",
+                    "description": "Vulnerability scan results for all container images in registries",
+                    "source": "Azure Container Registry with Defender integration",
+                    "format": "JSON scan results per image",
+                    "collection_frequency": "On image push (continuous)",
+                    "retention_period": "1 year per image version",
+                    "automation": "Automated scanning with ACR webhooks"
+                },
+                {
+                    "name": "CI/CD Security Scan Evidence",
+                    "description": "Security scan results from every pipeline execution",
+                    "source": "Azure DevOps or GitHub Advanced Security",
+                    "format": "SARIF format scan results",
+                    "collection_frequency": "Per build (continuous)",
+                    "retention_period": "1 year",
+                    "automation": "Pipeline artifacts with scan results"
+                },
+                {
+                    "name": "Remediation SLA Compliance Report",
+                    "description": "Monthly report showing vulnerability remediation within defined SLAs",
+                    "source": "Log Analytics historical data",
+                    "format": "CSV with SLA metrics by severity",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "3 years",
+                    "automation": "Scheduled KQL query with trend analysis"
+                }
+            ],
+            "artifact_storage": {
+                "primary": "Azure Blob Storage with immutable storage",
+                "backup": "Azure Backup with GRS replication",
+                "access_control": "Azure RBAC with security team access"
+            },
+            "compliance_mapping": {
+                "fedramp_controls": ["ra-5", "ra-5.2", "ra-5.3", "ra-5.5", "si-2", "si-2.1", "si-2.2", "ca-7"],
+                "evidence_purpose": "Demonstrate continuous vulnerability detection and timely remediation per FedRAMP VDR requirements"
+            }
+        }
     
 

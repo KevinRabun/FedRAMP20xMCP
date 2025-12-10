@@ -9,7 +9,7 @@ Version: 25.11C (Published: 2025-12-01)
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 
@@ -394,3 +394,283 @@ class KSI_INR_01_Analyzer(BaseKSIAnalyzer):
         
         return findings
     
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get Azure-specific recommendations for automating evidence collection for KSI-INR-01.
+        
+        **KSI-INR-01: Incident Response Procedure**
+        Always follow a documented incident response procedure.
+        
+        Returns:
+            Dictionary with automation recommendations
+        """
+        return {
+            "ksi_id": "KSI-INR-01",
+            "ksi_name": "Incident Response Procedure",
+            "azure_services": [
+                {
+                    "service": "Azure Sentinel",
+                    "purpose": "Security incident detection, investigation, and response orchestration",
+                    "capabilities": [
+                        "Automated incident creation from security alerts",
+                        "Incident response playbooks (Logic Apps)",
+                        "Investigation graph and timeline",
+                        "Incident status tracking and documentation"
+                    ]
+                },
+                {
+                    "service": "Azure Logic Apps",
+                    "purpose": "Automated incident response workflows following documented procedures",
+                    "capabilities": [
+                        "Playbook execution for incident response steps",
+                        "Integration with ticketing systems",
+                        "Automated notifications and escalations",
+                        "Evidence collection and preservation"
+                    ]
+                },
+                {
+                    "service": "Azure Monitor",
+                    "purpose": "Incident detection through alerts and log correlation",
+                    "capabilities": [
+                        "Alert rules for incident triggers",
+                        "Action groups for automated response",
+                        "Log Analytics for incident investigation",
+                        "Diagnostic data for root cause analysis"
+                    ]
+                },
+                {
+                    "service": "Microsoft Defender for Cloud",
+                    "purpose": "Security incident detection and initial response recommendations",
+                    "capabilities": [
+                        "Security alerts with MITRE ATT&CK mapping",
+                        "Automated response recommendations",
+                        "Integration with Sentinel for escalation",
+                        "Threat intelligence correlation"
+                    ]
+                },
+                {
+                    "service": "Azure DevOps / Service Now",
+                    "purpose": "Incident ticket tracking and procedure documentation",
+                    "capabilities": [
+                        "Work item tracking for incident response",
+                        "Procedure documentation in wikis",
+                        "Runbook storage and version control",
+                        "Post-incident review tracking"
+                    ]
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "Incident Response Execution Evidence",
+                    "description": "Export Sentinel incident records showing documented procedure followed (playbook execution, investigation steps, resolution)",
+                    "automation": "Sentinel incident export via REST API or KQL",
+                    "frequency": "Monthly",
+                    "evidence_produced": "Incident log with procedure compliance documentation"
+                },
+                {
+                    "method": "Playbook Execution Logs",
+                    "description": "Query Logic Apps run history to demonstrate automated response procedures executed",
+                    "automation": "Logic Apps REST API or Azure Monitor logs",
+                    "frequency": "Monthly",
+                    "evidence_produced": "Playbook execution report with timestamps and outcomes"
+                },
+                {
+                    "method": "Incident Response Time Metrics",
+                    "description": "Calculate and report incident response SLA compliance (detection, response, resolution times)",
+                    "automation": "KQL queries on Sentinel incident data",
+                    "frequency": "Monthly",
+                    "evidence_produced": "Incident response metrics dashboard and compliance report"
+                },
+                {
+                    "method": "Procedure Documentation Validation",
+                    "description": "Verify incident response procedures are documented and accessible in runbooks/wikis",
+                    "automation": "DevOps wiki API or documentation repository scan",
+                    "frequency": "Quarterly",
+                    "evidence_produced": "Runbook inventory with last update dates and review status"
+                }
+            ],
+            "automation_feasibility": "high",
+            "evidence_types": ["log-based", "process-based"],
+            "implementation_guidance": {
+                "quick_start": "Deploy Sentinel with incident response playbooks, configure Logic Apps for automated procedures, enable Defender for Cloud integration, document runbooks in DevOps wiki",
+                "azure_well_architected": "Follows Azure WAF operational excellence for automated incident response and reliability principles",
+                "compliance_mapping": "Addresses NIST controls ir-4, ir-4.1, ir-6, ir-6.1, ir-7, ir-8"
+            }
+        }
+    
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get specific Azure queries for collecting KSI-INR-01 evidence.
+        """
+        return {
+            "ksi_id": "KSI-INR-01",
+            "queries": [
+                {
+                    "name": "Incident Response Execution Evidence",
+                    "type": "kql",
+                    "workspace": "Azure Sentinel workspace",
+                    "query": """
+                        SecurityIncident
+                        | where TimeGenerated > ago(30d)
+                        | extend PlaybooksRun = array_length(parse_json(AdditionalData).alertProductNames)
+                        | project 
+                            IncidentNumber,
+                            Title,
+                            Severity,
+                            Status,
+                            CreatedTime = TimeGenerated,
+                            ClosedTime,
+                            Owner,
+                            PlaybooksRun,
+                            TimeToResolve = datetime_diff('hour', ClosedTime, TimeGenerated)
+                        | order by CreatedTime desc
+                        """,
+                    "purpose": "Demonstrate incidents were handled following documented procedures",
+                    "expected_result": "Incidents with assigned owners, playbook executions, and timely resolution"
+                },
+                {
+                    "name": "Playbook Execution History",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace with Logic Apps diagnostics",
+                    "query": """
+                        AzureDiagnostics
+                        | where ResourceProvider == 'MICROSOFT.LOGIC'
+                        | where Category == 'WorkflowRuntime'
+                        | where TimeGenerated > ago(30d)
+                        | where resource_workflowName_s contains 'IR-' or resource_workflowName_s contains 'IncidentResponse'
+                        | summarize 
+                            TotalRuns = count(),
+                            SuccessfulRuns = countif(status_s == 'Succeeded'),
+                            FailedRuns = countif(status_s == 'Failed')
+                            by resource_workflowName_s
+                        | extend SuccessRate = round((SuccessfulRuns * 100.0) / TotalRuns, 2)
+                        """,
+                    "purpose": "Show automated incident response procedures executed via playbooks",
+                    "expected_result": "Regular playbook executions with high success rate"
+                },
+                {
+                    "name": "Incident Response SLA Compliance",
+                    "type": "kql",
+                    "workspace": "Azure Sentinel workspace",
+                    "query": """
+                        SecurityIncident
+                        | where TimeGenerated > ago(90d)
+                        | extend TimeToFirstResponse = datetime_diff('minute', FirstModifiedTime, CreatedTime)
+                        | extend TimeToResolution = datetime_diff('hour', ClosedTime, CreatedTime)
+                        | summarize 
+                            TotalIncidents = count(),
+                            AvgTimeToFirstResponse = avg(TimeToFirstResponse),
+                            AvgTimeToResolution = avg(TimeToResolution),
+                            Within1HourResponse = countif(TimeToFirstResponse <= 60),
+                            Within24HourResolution = countif(TimeToResolution <= 24)
+                            by Severity
+                        | extend ResponseSLACompliance = round((Within1HourResponse * 100.0) / TotalIncidents, 2)
+                        """,
+                    "purpose": "Demonstrate incident response procedures meet defined SLAs",
+                    "expected_result": "High SLA compliance rates indicating effective procedures"
+                },
+                {
+                    "name": "Incident Runbook Inventory",
+                    "type": "azure_devops_api",
+                    "endpoint": "https://dev.azure.com/{org}/{project}/_apis/wiki/wikis/{wikiId}/pages?api-version=7.1",
+                    "method": "GET",
+                    "purpose": "Verify documented incident response procedures exist and are maintained",
+                    "expected_result": "Comprehensive runbook documentation with recent review dates"
+                },
+                {
+                    "name": "Sentinel Playbook Configuration",
+                    "type": "azure_rest_api",
+                    "endpoint": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Logic/workflows?api-version=2019-05-01",
+                    "method": "GET",
+                    "purpose": "Inventory automated incident response playbooks",
+                    "expected_result": "Multiple playbooks configured for different incident types"
+                }
+            ],
+            "query_execution_guidance": {
+                "authentication": "Use Azure CLI (az login) or Managed Identity",
+                "permissions_required": [
+                    "Sentinel Reader for incident queries",
+                    "Log Analytics Reader for playbook execution logs",
+                    "Logic App Operator for playbook inventory",
+                    "DevOps Reader for runbook documentation"
+                ],
+                "automation_tools": [
+                    "Azure CLI (az sentinel, az monitor)",
+                    "PowerShell Az.Sentinel and Az.LogicApp modules",
+                    "Python azure-mgmt-securityinsight SDK"
+                ]
+            }
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get descriptions of evidence artifacts for KSI-INR-01.
+        """
+        return {
+            "ksi_id": "KSI-INR-01",
+            "artifacts": [
+                {
+                    "name": "Incident Response Log",
+                    "description": "Monthly export of all security incidents with response actions and outcomes",
+                    "source": "Azure Sentinel SecurityIncident table",
+                    "format": "CSV from KQL query with incident details",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "7 years (incident records)",
+                    "automation": "Scheduled KQL query with email and storage delivery"
+                },
+                {
+                    "name": "Playbook Execution Report",
+                    "description": "Monthly report of automated incident response playbook executions",
+                    "source": "Logic Apps diagnostic logs via Log Analytics",
+                    "format": "CSV with playbook name, execution count, success rate",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "3 years",
+                    "automation": "Scheduled KQL query"
+                },
+                {
+                    "name": "Incident Response SLA Dashboard",
+                    "description": "Real-time dashboard showing incident response time metrics and SLA compliance",
+                    "source": "Sentinel incidents via Azure Workbook",
+                    "format": "Azure Workbook (interactive dashboard)",
+                    "collection_frequency": "Continuous (real-time)",
+                    "retention_period": "Persistent (configuration stored)",
+                    "automation": "Azure Monitor Workbook with auto-refresh"
+                },
+                {
+                    "name": "Incident Response Runbook Documentation",
+                    "description": "Documented incident response procedures and playbooks",
+                    "source": "Azure DevOps wiki or GitHub documentation",
+                    "format": "Markdown or PDF export",
+                    "collection_frequency": "Quarterly (or on update)",
+                    "retention_period": "3 years with version history",
+                    "automation": "DevOps wiki export or GitHub repository snapshot"
+                },
+                {
+                    "name": "Playbook Configuration Inventory",
+                    "description": "Complete inventory of automated incident response playbooks",
+                    "source": "Logic Apps configuration via REST API",
+                    "format": "JSON export of workflow definitions",
+                    "collection_frequency": "Quarterly",
+                    "retention_period": "3 years",
+                    "automation": "Azure CLI or PowerShell script"
+                },
+                {
+                    "name": "Post-Incident Review Reports",
+                    "description": "Documentation of lessons learned and procedure improvements from major incidents",
+                    "source": "DevOps work items or manual documentation",
+                    "format": "PDF or Word documents",
+                    "collection_frequency": "Per incident (major incidents only)",
+                    "retention_period": "7 years",
+                    "automation": "Semi-automated via work item template"
+                }
+            ],
+            "artifact_storage": {
+                "primary": "Azure Blob Storage with immutable storage",
+                "backup": "Azure Backup with GRS replication",
+                "access_control": "Azure RBAC with security team access"
+            },
+            "compliance_mapping": {
+                "fedramp_controls": ["ir-4", "ir-4.1", "ir-6", "ir-6.1", "ir-7", "ir-8"],
+                "evidence_purpose": "Demonstrate documented incident response procedures are followed consistently"
+            }
+        }

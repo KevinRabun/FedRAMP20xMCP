@@ -1673,3 +1673,322 @@ class KSI_CNA_03_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get Azure-specific recommendations for automating evidence collection for KSI-CNA-03.
+        
+        **KSI-CNA-03: Enforce Traffic Flow**
+        Use logical networking and related capabilities to enforce traffic flow controls.
+        
+        Returns:
+            Dictionary with automation recommendations including:
+            - azure_services: List of Azure services for evidence collection
+            - collection_methods: Methods to collect evidence
+            - automation_feasibility: Level of automation possible (high/medium/low/manual-only)
+            - evidence_types: Types of evidence (log-based, config-based, metric-based, process-based)
+        """
+        return {
+            "ksi_id": "KSI-CNA-03",
+            "ksi_name": "Enforce Traffic Flow",
+            "azure_services": [
+                {
+                    "service": "Azure Network Watcher",
+                    "purpose": "Traffic flow monitoring and network topology visualization",
+                    "capabilities": [
+                        "NSG flow logs for traffic analysis",
+                        "Traffic Analytics for pattern detection",
+                        "Network topology visualization",
+                        "Connection Monitor for connectivity validation"
+                    ]
+                },
+                {
+                    "service": "Azure Firewall",
+                    "purpose": "Centralized traffic filtering and logging",
+                    "capabilities": [
+                        "Application and network rule enforcement",
+                        "Threat intelligence-based filtering",
+                        "Detailed traffic logs for compliance evidence",
+                        "DNS proxy with filtering capabilities"
+                    ]
+                },
+                {
+                    "service": "Azure Policy",
+                    "purpose": "Enforce network security configurations",
+                    "capabilities": [
+                        "Require NSG on all subnets",
+                        "Enforce service endpoints and private links",
+                        "Validate network isolation configurations",
+                        "Audit non-compliant network resources"
+                    ]
+                },
+                {
+                    "service": "Azure Monitor / Log Analytics",
+                    "purpose": "Centralized network traffic logging and analysis",
+                    "capabilities": [
+                        "Ingest NSG flow logs and Azure Firewall logs",
+                        "KQL queries for traffic pattern analysis",
+                        "Alert on policy violations",
+                        "Historical traffic flow reports"
+                    ]
+                },
+                {
+                    "service": "Azure Resource Graph",
+                    "purpose": "Network configuration inventory and compliance",
+                    "capabilities": [
+                        "Query NSG rules across subscriptions",
+                        "Identify resources without network controls",
+                        "Validate subnet isolation configurations",
+                        "Export network security posture"
+                    ]
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "NSG Flow Log Analysis",
+                    "description": "Collect and analyze NSG flow logs to demonstrate traffic flow controls in effect",
+                    "automation": "Network Watcher Flow Logs exported to Log Analytics",
+                    "frequency": "Daily",
+                    "evidence_produced": "Traffic flow patterns and blocked traffic report"
+                },
+                {
+                    "method": "Network Topology Validation",
+                    "description": "Export network topology showing logical network segmentation and isolation",
+                    "automation": "Network Watcher topology API or Azure Resource Graph",
+                    "frequency": "Monthly",
+                    "evidence_produced": "Network architecture diagram with flow controls documented"
+                },
+                {
+                    "method": "Firewall Rule Compliance Audit",
+                    "description": "Validate Azure Firewall and NSG rules align with traffic flow policy",
+                    "automation": "Azure Policy compliance scan + Resource Graph queries",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Firewall rule inventory and compliance status"
+                },
+                {
+                    "method": "Service Endpoint and Private Link Validation",
+                    "description": "Verify PaaS resources use private connectivity instead of public endpoints",
+                    "automation": "Resource Graph query for private endpoint usage",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Private connectivity compliance report"
+                }
+            ],
+            "automation_feasibility": "high",
+            "evidence_types": ["log-based", "config-based"],
+            "implementation_guidance": {
+                "quick_start": "Enable NSG flow logs on all subnets, deploy Azure Firewall with logging, configure Azure Policy for network controls, use Traffic Analytics for visibility",
+                "azure_well_architected": "Follows Azure WAF security pillar for network segmentation and zero trust architecture",
+                "compliance_mapping": "Addresses NIST controls sc-7, sc-7.7, sc-8, ac-17.3, ca-9, sc-4, sc-10, ac-12"
+            }
+        }
+    
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get specific Azure queries for collecting KSI-CNA-03 evidence.
+        
+        Returns:
+            Dictionary with executable queries for evidence collection
+        """
+        return {
+            "ksi_id": "KSI-CNA-03",
+            "queries": [
+                {
+                    "name": "Subnets Without NSG",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        resources
+                        | where type == 'microsoft.network/virtualnetworks'
+                        | mvexpand subnet = properties.subnets
+                        | extend subnetName = tostring(subnet.name)
+                        | extend nsgId = tostring(subnet.properties.networkSecurityGroup.id)
+                        | where isempty(nsgId)
+                        | project vnetName=name, resourceGroup, subnetName, location
+                        """,
+                    "purpose": "Identify subnets without Network Security Groups (traffic flow controls missing)",
+                    "expected_result": "Empty result set indicates all subnets have NSGs"
+                },
+                {
+                    "name": "NSG Flow Logs Status",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        resources
+                        | where type == 'microsoft.network/networkwatchers/flowlogs'
+                        | extend enabled = tostring(properties.enabled)
+                        | extend targetNSG = tostring(properties.targetResourceId)
+                        | project name, resourceGroup, enabled, targetNSG, location
+                        | where enabled != 'true'
+                        """,
+                    "purpose": "Verify NSG flow logging is enabled for traffic visibility",
+                    "expected_result": "Empty result set indicates all NSGs have flow logging enabled"
+                },
+                {
+                    "name": "Public IP Resources Without NSG Protection",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        resources
+                        | where type == 'microsoft.network/publicipaddresses'
+                        | join kind=leftouter (
+                            resources
+                            | where type == 'microsoft.network/networkinterfaces'
+                            | mvexpand ipconfig = properties.ipConfigurations
+                            | extend publicIpId = tostring(ipconfig.properties.publicIPAddress.id)
+                            | extend nsgId = tostring(properties.networkSecurityGroup.id)
+                            | project publicIpId, nsgId
+                        ) on $left.id == $right.publicIpId
+                        | where isempty(nsgId)
+                        | project name, resourceGroup, location, ipAddress=properties.ipAddress
+                        """,
+                    "purpose": "Find public IPs without NSG protection (traffic flow not controlled)",
+                    "expected_result": "Empty or minimal result set with documented exceptions"
+                },
+                {
+                    "name": "PaaS Resources Without Private Endpoint",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        resources
+                        | where type in (
+                            'microsoft.storage/storageaccounts',
+                            'microsoft.sql/servers',
+                            'microsoft.keyvault/vaults',
+                            'microsoft.cognitiveservices/accounts'
+                        )
+                        | join kind=leftouter (
+                            resources
+                            | where type == 'microsoft.network/privateendpoints'
+                            | mvexpand privatelinkservice = properties.privateLinkServiceConnections
+                            | extend targetResourceId = tolower(privatelinkservice.properties.privateLinkServiceId)
+                            | project targetResourceId
+                        ) on $left.id == $right.targetResourceId
+                        | where isempty(targetResourceId)
+                        | project name, type, resourceGroup, location
+                        """,
+                    "purpose": "Identify PaaS resources not using private endpoints (traffic flows over public internet)",
+                    "expected_result": "Empty or minimal result set with documented public access justifications"
+                },
+                {
+                    "name": "Azure Firewall Traffic Analysis",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace with Azure Firewall logs",
+                    "query": """
+                        AzureDiagnostics
+                        | where Category == 'AzureFirewallApplicationRule' or Category == 'AzureFirewallNetworkRule'
+                        | where TimeGenerated > ago(7d)
+                        | extend Action = column_ifexists('msg_s', '')
+                        | extend SourceIP = column_ifexists('SourceIP', '')
+                        | extend DestinationIP = column_ifexists('DestinationIP', '')
+                        | summarize 
+                            AllowedConnections = countif(Action contains 'Allow'),
+                            DeniedConnections = countif(Action contains 'Deny')
+                        | extend TotalConnections = AllowedConnections + DeniedConnections
+                        | extend DenialRate = round((DeniedConnections * 100.0) / TotalConnections, 2)
+                        """,
+                    "purpose": "Demonstrate active traffic flow enforcement via Azure Firewall",
+                    "expected_result": "Consistent denial rate showing policies are actively enforced"
+                },
+                {
+                    "name": "NSG Denied Traffic Evidence",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace with NSG flow logs",
+                    "query": """
+                        AzureNetworkAnalytics_CL
+                        | where TimeGenerated > ago(7d)
+                        | where FlowStatus_s == 'D' // Denied flows
+                        | summarize DeniedFlows = count() by NSGName_s, DestPort_d, DestIP_s
+                        | order by DeniedFlows desc
+                        | take 20
+                        """,
+                    "purpose": "Demonstrate NSG rules actively blocking traffic per policy",
+                    "expected_result": "Blocked traffic patterns consistent with security policy"
+                }
+            ],
+            "query_execution_guidance": {
+                "authentication": "Use Azure CLI (az login) or Managed Identity",
+                "permissions_required": [
+                    "Reader role on subscriptions for Resource Graph queries",
+                    "Network Contributor for Network Watcher queries",
+                    "Log Analytics Reader for KQL queries"
+                ],
+                "automation_tools": [
+                    "Azure Resource Graph Explorer",
+                    "Azure CLI (az graph query, az network watcher)",
+                    "PowerShell Az.Network and Az.ResourceGraph modules",
+                    "Python azure-mgmt-network and azure-mgmt-resourcegraph SDKs"
+                ]
+            }
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get descriptions of evidence artifacts for KSI-CNA-03.
+        
+        Returns:
+            Dictionary describing evidence artifacts to collect
+        """
+        return {
+            "ksi_id": "KSI-CNA-03",
+            "artifacts": [
+                {
+                    "name": "Network Topology Diagram",
+                    "description": "Visual representation of network architecture showing logical segmentation and traffic flow controls",
+                    "source": "Azure Network Watcher Topology API",
+                    "format": "JSON topology data + generated diagram (PNG/SVG)",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "3 years (quarterly snapshots)",
+                    "automation": "Azure Automation runbook or Azure Function with Network Watcher API"
+                },
+                {
+                    "name": "NSG Configuration Export",
+                    "description": "Complete export of all NSG rules showing traffic flow restrictions",
+                    "source": "Azure Resource Graph",
+                    "format": "JSON or CSV with NSG rules inventory",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "3 years",
+                    "automation": "Scheduled Resource Graph query exported to Blob Storage"
+                },
+                {
+                    "name": "NSG Flow Log Analysis Report",
+                    "description": "Summary of allowed and denied traffic patterns demonstrating active enforcement",
+                    "source": "Log Analytics (NSG flow logs via Traffic Analytics)",
+                    "format": "CSV report with traffic statistics",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "1 year",
+                    "automation": "Scheduled KQL query with export to storage"
+                },
+                {
+                    "name": "Azure Firewall Rule Inventory",
+                    "description": "Export of all Azure Firewall application and network rules",
+                    "source": "Azure Firewall configuration",
+                    "format": "JSON firewall policy export",
+                    "collection_frequency": "Monthly (or on change)",
+                    "retention_period": "3 years",
+                    "automation": "Azure CLI or PowerShell script"
+                },
+                {
+                    "name": "Private Endpoint Compliance Report",
+                    "description": "List of PaaS resources with private endpoint status",
+                    "source": "Azure Resource Graph",
+                    "format": "CSV with resource inventory and private connectivity status",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "1 year",
+                    "automation": "Resource Graph query via Azure Automation"
+                },
+                {
+                    "name": "Traffic Flow Enforcement Evidence",
+                    "description": "Samples of blocked traffic showing traffic flow policies in effect",
+                    "source": "Log Analytics (Azure Firewall logs and NSG flow logs)",
+                    "format": "CSV with blocked connection samples",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "1 year",
+                    "automation": "KQL query extracting denied traffic patterns"
+                }
+            ],
+            "artifact_storage": {
+                "primary": "Azure Blob Storage with immutable storage",
+                "backup": "Azure Backup with GRS replication",
+                "access_control": "Azure RBAC with audit trail"
+            },
+            "compliance_mapping": {
+                "fedramp_controls": ["sc-7", "sc-7.7", "sc-8", "ac-17.3", "ca-9", "sc-4", "sc-10", "ac-12"],
+                "evidence_purpose": "Demonstrate logical network segmentation and traffic flow controls are implemented and enforced"
+            }
+        }

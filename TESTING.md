@@ -2,19 +2,20 @@
 
 ## Test Suite Overview
 
-The FedRAMP 20x MCP Server includes comprehensive test coverage across all functionality with **121 test files** validating **36 tools**, 329 requirements, 72 KSIs, 15 prompts, 23 templates, infrastructure code generation, and **AST-powered code analysis** supporting **6 languages** (Python, C#, Java, TypeScript/JavaScript, Bicep, Terraform) with tree-sitter semantic analysis.
+The FedRAMP 20x MCP Server includes comprehensive test coverage across all functionality with **122 test files** validating **38 tools**, 329 requirements, 72 KSIs, 15 prompts, 23 templates, infrastructure code generation, **evidence automation**, and **AST-powered code analysis** supporting **6 languages** (Python, C#, Java, TypeScript/JavaScript, Bicep, Terraform) with tree-sitter semantic analysis.
 
 ### Test Suite Metrics
 
-- **Total Tests:** 121 (100% pass rate)
+- **Total Tests:** 122 (100% pass rate)
 - **Test Categories:**
   - Core functionality: 13 tests (AST parsing, semantic analysis, interprocedural analysis)
-  - Tool functional: 9 tests (36 tools across 12 modules)
+  - Tool functional: 10 tests (38 tools across 12 modules)
   - Security: 2 tests (CVE vulnerability checking)
   - Resource validation: 3 tests (IaC generation, evidence automation)
   - KSI analyzers: 88 tests (100% coverage - all 72 KSI analyzers)
-- **Total Execution Time:** ~791 seconds (~13 minutes)
-- **Average Test Time:** 6.9 seconds per test
+  - Evidence automation: 1 test (KSI evidence automation features)
+- **Total Execution Time:** ~800 seconds (~13 minutes)
+- **Average Test Time:** 6.6 seconds per test
 - **Coverage Achievement:** 100% KSI analyzer coverage (72/72)
 
 ## Test Files
@@ -278,6 +279,70 @@ python tests/test_ksi_tools.py
 - ✅ get_documentation_file_impl for file retrieval
 - ✅ list_documentation_files_impl for all 15 files
 - ✅ Integration workflow testing
+
+**Run:**
+```bash
+python tests/test_documentation_tools.py
+```
+
+### 12. test_ksi_evidence_automation.py ⭐ NEW - EVIDENCE AUTOMATION
+**Purpose:** Tests the new KSI evidence automation features
+
+**Coverage:**
+- ✅ Base evidence automation methods in BaseKSIAnalyzer
+- ✅ KSI-IAM-01 evidence automation implementation
+- ✅ KSI-IAM-01 evidence collection queries (KQL, REST API)
+- ✅ KSI-IAM-01 evidence artifacts list
+- ✅ KSI-CNA-01 evidence automation implementation
+- ✅ KSI-CNA-01 evidence collection queries (Resource Graph)
+- ✅ Factory evidence automation access
+- ✅ Default implementation for non-implemented KSIs
+- ✅ Evidence automation completeness validation
+- ✅ MCP tool: get_ksi_evidence_automation
+- ✅ MCP tool: get_ksi_evidence_queries
+- ✅ MCP tool: get_ksi_evidence_artifacts
+
+**Test Scenarios:**
+- All three evidence methods return structured data
+- Azure services recommendations include service names, configuration, cost
+- Collection methods include frequency and data points
+- Queries are categorized by type (kusto, resource_graph, rest_api)
+- Artifacts specify collection method, format, frequency, retention
+- Tools handle invalid KSI IDs gracefully
+
+**Run:**
+```bash
+python tests/test_ksi_evidence_automation.py
+```
+
+**Sample Output:**
+```
+======================================================================
+KSI EVIDENCE AUTOMATION TEST SUITE
+======================================================================
+
+=== Test: Base Analyzer Methods ===
+OK: All base methods present
+
+=== Test: KSI-IAM-01 Evidence Automation ===
+OK: Found 4 Azure services
+OK: Found 3 collection methods
+
+=== Test: KSI-IAM-01 Evidence Queries ===
+OK: Found 4 evidence collection queries
+   - KQL queries: 2
+   - REST API queries: 2
+
+=== Test: KSI-IAM-01 Evidence Artifacts ===
+OK: Found 5 evidence artifacts
+   - Types: config, report, log
+
+======================================================================
+TEST RESULTS: 12 passed, 0 failed
+======================================================================
+
+ALL TESTS PASSED ✓
+```
 
 **Run:**
 ```bash

@@ -1412,3 +1412,251 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
+    
+    # ============================================================================
+    # EVIDENCE AUTOMATION METHODS
+    # ============================================================================
+    
+    def get_evidence_automation_recommendations(self) -> dict:
+        """
+        Get evidence automation recommendations for KSI-IAM-01 (Phishing-Resistant MFA).
+        
+        Returns structured guidance for automating evidence collection demonstrating
+        that phishing-resistant MFA is enforced for all user authentication.
+        """
+        return {
+            "ksi_id": self.KSI_ID,
+            "ksi_name": self.KSI_NAME,
+            "evidence_type": "log-based",
+            "automation_feasibility": "high",
+            "azure_services": [
+                {
+                    "service": "Azure AD Sign-in Logs",
+                    "purpose": "Track authentication events with MFA details",
+                    "configuration": "Enable Azure AD Premium P1/P2 for sign-in logs",
+                    "cost": "Included with Azure AD Premium licensing"
+                },
+                {
+                    "service": "Azure Monitor / Log Analytics",
+                    "purpose": "Query and analyze authentication logs",
+                    "configuration": "Connect Azure AD logs to Log Analytics workspace",
+                    "cost": "Pay-per-GB ingestion + retention"
+                },
+                {
+                    "service": "Azure Blob Storage",
+                    "purpose": "Long-term evidence storage (3+ years)",
+                    "configuration": "Use immutable storage with legal hold or time-based retention",
+                    "cost": "Archive tier: ~$0.002/GB/month"
+                },
+                {
+                    "service": "Microsoft Graph API",
+                    "purpose": "Query Conditional Access policies and authentication methods",
+                    "configuration": "Service principal with Policy.Read.All and AuditLog.Read.All permissions",
+                    "cost": "Free (included with Azure AD)"
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "Sign-in Log Analysis",
+                    "description": "Query Azure AD sign-in logs to verify MFA usage and authentication methods",
+                    "frequency": "Daily",
+                    "data_points": [
+                        "Authentication methods used (FIDO2, certificate, WHfB)",
+                        "MFA success/failure rates",
+                        "Users bypassing MFA (if any)",
+                        "Authentication strength applied"
+                    ]
+                },
+                {
+                    "method": "Conditional Access Policy Audit",
+                    "description": "Export and verify Conditional Access policies require phishing-resistant MFA",
+                    "frequency": "On-change + weekly verification",
+                    "data_points": [
+                        "Policy configurations requiring MFA",
+                        "Authentication strength requirements",
+                        "User/group assignments",
+                        "Policy state (enabled/disabled)"
+                    ]
+                },
+                {
+                    "method": "Authentication Methods Report",
+                    "description": "Track registered authentication methods per user",
+                    "frequency": "Weekly",
+                    "data_points": [
+                        "Users with FIDO2 keys registered",
+                        "Users with certificate-based auth",
+                        "Users with Windows Hello for Business",
+                        "Users without phishing-resistant methods"
+                    ]
+                }
+            ],
+            "storage_requirements": {
+                "retention_period": "3 years minimum (FedRAMP Moderate)",
+                "format": "JSON (structured logs) + CSV (reports)",
+                "immutability": "Required - use Azure Blob immutable storage with WORM",
+                "encryption": "AES-256 at rest, TLS 1.2+ in transit",
+                "estimated_size": "~10-50 MB/day for 1000 users (sign-in logs)"
+            },
+            "api_integration": {
+                "frr_ads_endpoints": [
+                    "/evidence/iam-01/signin-logs",
+                    "/evidence/iam-01/conditional-access-policies",
+                    "/evidence/iam-01/authentication-methods"
+                ],
+                "authentication": "Azure AD OAuth 2.0 with client credentials",
+                "response_format": "JSON with FIPS 140-2 validated signatures",
+                "rate_limits": "Follow Microsoft Graph API limits (varies by license)"
+            },
+            "code_examples": {
+                "python": "Uses Azure SDK for Python - query sign-in logs and CA policies",
+                "csharp": "Uses Microsoft.Graph SDK - automated evidence collection service",
+                "powershell": "Uses Microsoft.Graph PowerShell - scheduled evidence export",
+                "kusto": "KQL queries for Log Analytics - sign-in analysis"
+            },
+            "infrastructure_templates": {
+                "bicep": "Deploys Log Analytics workspace, Storage Account, Function App for automation",
+                "terraform": "Deploys Azure Monitor, Blob Storage, automation resources"
+            },
+            "retention_policy": "3 years minimum per FedRAMP Moderate requirements",
+            "implementation_effort": "medium",
+            "implementation_time": "2-4 weeks",
+            "prerequisites": [
+                "Azure AD Premium P1 or P2 license",
+                "Log Analytics workspace",
+                "Service principal with appropriate permissions",
+                "Conditional Access policies already configured"
+            ],
+            "notes": "Evidence automation for KSI-IAM-01 is highly feasible. Azure AD provides comprehensive logging of authentication events including MFA method details. Key evidence: (1) Sign-in logs showing phishing-resistant MFA usage, (2) Conditional Access policies requiring MFA, (3) Authentication methods registered per user."
+        }
+    
+    def get_evidence_collection_queries(self) -> List[dict]:
+        """
+        Get Azure KQL queries for collecting KSI-IAM-01 evidence.
+        """
+        return [
+            {
+                "name": "MFA Authentication Methods Used (Last 30 Days)",
+                "query_type": "kusto",
+                "query": """SigninLogs
+| where TimeGenerated > ago(30d)
+| where ResultType == 0  // Successful sign-ins
+| extend MfaDetail = tostring(parse_json(AuthenticationDetails)[0].authenticationMethod)
+| extend AuthenticationMethod = case(
+    MfaDetail contains "FIDO2", "FIDO2 Security Key (Phishing-Resistant)",
+    MfaDetail contains "Certificate", "Certificate-Based Auth (Phishing-Resistant)",
+    MfaDetail contains "WindowsHello", "Windows Hello for Business (Phishing-Resistant)",
+    MfaDetail contains "Authenticator", "Microsoft Authenticator (OTP - Not Phishing-Resistant)",
+    MfaDetail contains "SMS", "SMS OTP (Not Phishing-Resistant)",
+    "Other/Unknown"
+)
+| summarize SignInCount = count(), UniqueUsers = dcount(UserPrincipalName) by AuthenticationMethod
+| extend ComplianceStatus = case(
+    AuthenticationMethod contains "Phishing-Resistant", "Compliant",
+    "Non-Compliant"
+)
+| order by SignInCount desc""",
+                "data_source": "Log Analytics - SigninLogs",
+                "schedule": "daily",
+                "output_format": "json",
+                "description": "Analyzes sign-in logs to identify which MFA methods are being used and whether they are phishing-resistant"
+            },
+            {
+                "name": "Users Without Phishing-Resistant MFA Registered",
+                "query_type": "kusto",
+                "query": """// This query requires Azure AD audit logs in Log Analytics
+AuditLogs
+| where TimeGenerated > ago(1d)
+| where OperationName == "User registered security info"
+| extend AuthMethod = tostring(parse_json(TargetResources)[0].modifiedProperties)
+| extend UserPrincipalName = tostring(parse_json(TargetResources)[0].userPrincipalName)
+| extend HasFIDO2 = AuthMethod contains "FIDO2"
+| extend HasCert = AuthMethod contains "Certificate"
+| extend HasWHfB = AuthMethod contains "WindowsHelloForBusiness"
+| extend HasPhishingResistant = HasFIDO2 or HasCert or HasWHfB
+| where not(HasPhishingResistant)
+| project TimeGenerated, UserPrincipalName, AuthMethod, ComplianceStatus = "Non-Compliant - Missing Phishing-Resistant MFA"
+| distinct UserPrincipalName, ComplianceStatus""",
+                "data_source": "Log Analytics - AuditLogs",
+                "schedule": "weekly",
+                "output_format": "json",
+                "description": "Identifies users who have not registered phishing-resistant MFA methods"
+            },
+            {
+                "name": "Conditional Access Policy Compliance Check",
+                "query_type": "rest_api",
+                "query": """GET https://graph.microsoft.com/v1.0/identity/conditionalAccess/policies
+Authorization: Bearer {token}
+
+# Filter for policies requiring MFA
+GET https://graph.microsoft.com/v1.0/identity/conditionalAccess/policies?$filter=grantControls/builtInControls/any(c: c eq 'mfa')&$select=displayName,state,grantControls,conditions""",
+                "data_source": "Microsoft Graph API",
+                "schedule": "on-change + daily verification",
+                "output_format": "json",
+                "description": "Retrieves all Conditional Access policies requiring MFA to verify enforcement"
+            },
+            {
+                "name": "Authentication Strength Policy Analysis",
+                "query_type": "rest_api",
+                "query": """GET https://graph.microsoft.com/v1.0/identity/conditionalAccess/authenticationStrength/policies
+Authorization: Bearer {token}
+
+# Get policy details including allowed authentication methods
+GET https://graph.microsoft.com/v1.0/identity/conditionalAccess/authenticationStrength/policies/{id}?$expand=allowedCombinations""",
+                "data_source": "Microsoft Graph API",
+                "schedule": "weekly",
+                "output_format": "json",
+                "description": "Analyzes authentication strength policies to verify they require phishing-resistant methods"
+            }
+        ]
+    
+    def get_evidence_artifacts(self) -> List[dict]:
+        """
+        Get list of evidence artifacts for KSI-IAM-01.
+        """
+        return [
+            {
+                "artifact_name": "azure-ad-signin-logs-mfa-summary.json",
+                "artifact_type": "log",
+                "description": "30-day summary of authentication methods used, showing percentage of phishing-resistant MFA",
+                "collection_method": "KQL query against SigninLogs in Log Analytics",
+                "format": "json",
+                "frequency": "daily",
+                "retention": "3 years"
+            },
+            {
+                "artifact_name": "conditional-access-policies-export.json",
+                "artifact_type": "config",
+                "description": "Export of all Conditional Access policies showing MFA requirements",
+                "collection_method": "Microsoft Graph API - GET /identity/conditionalAccess/policies",
+                "format": "json",
+                "frequency": "on-change + weekly verification",
+                "retention": "3 years (retain all historical versions)"
+            },
+            {
+                "artifact_name": "authentication-methods-report.csv",
+                "artifact_type": "report",
+                "description": "Per-user report showing registered authentication methods and compliance status",
+                "collection_method": "Microsoft Graph API - GET /reports/authenticationMethods/userRegistrationDetails",
+                "format": "csv",
+                "frequency": "weekly",
+                "retention": "3 years"
+            },
+            {
+                "artifact_name": "mfa-non-compliant-users.json",
+                "artifact_type": "report",
+                "description": "List of users without phishing-resistant MFA registered",
+                "collection_method": "KQL query against AuditLogs + Graph API",
+                "format": "json",
+                "frequency": "weekly",
+                "retention": "3 years"
+            },
+            {
+                "artifact_name": "authentication-strength-policies.json",
+                "artifact_type": "config",
+                "description": "Export of authentication strength policies showing required MFA methods",
+                "collection_method": "Microsoft Graph API - GET /identity/conditionalAccess/authenticationStrength/policies",
+                "format": "json",
+                "frequency": "on-change + weekly verification",
+                "retention": "3 years"
+            }
+        ]

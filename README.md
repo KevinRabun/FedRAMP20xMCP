@@ -593,9 +593,9 @@ If you only want FedRAMP requirements without Azure integration:
 
 ## Available Tools
 
-The server provides **35 tools** organized into the following categories:
+The server provides **38 tools** organized into the following categories:
 
-**Core Tools (8):** Query requirements, definitions, and KSIs
+**Core Tools (11):** Query requirements, definitions, KSIs, and KSI evidence automation
 **Documentation Tools (3):** Search and retrieve FedRAMP documentation
 **Enhancement Tools (7):** Implementation examples, dependencies, effort estimation, architecture validation
 **Export Tools (3):** Excel/CSV export and KSI specification generation
@@ -652,6 +652,50 @@ Get detailed information about a specific Key Security Indicator.
 List all Key Security Indicators.
 
 **Returns:** Complete list of all Key Security Indicators with their names
+
+### get_ksi_evidence_automation
+Get evidence automation recommendations for a specific KSI.
+
+**Parameters:**
+- `ksi_id` (string): The KSI identifier (e.g., "KSI-IAM-01", "KSI-CNA-01")
+
+**Returns:** Comprehensive guidance for automating evidence collection including:
+- Azure services needed (Log Analytics, Resource Graph, Storage, etc.)
+- Collection methods and schedules
+- Storage requirements and retention policies
+- FRR-ADS API integration details
+- Code examples and infrastructure templates
+- Implementation effort estimates and prerequisites
+
+**Example:** Use `get_ksi_evidence_automation("KSI-IAM-01")` to get detailed automation guidance for phishing-resistant MFA evidence collection.
+
+### get_ksi_evidence_queries
+Get evidence collection queries for a specific KSI.
+
+**Parameters:**
+- `ksi_id` (string): The KSI identifier (e.g., "KSI-IAM-01", "KSI-CNA-01")
+
+**Returns:** Ready-to-use queries for collecting evidence from Azure:
+- KQL queries for Log Analytics
+- Azure Resource Graph queries
+- REST API calls for Microsoft Graph
+- Query descriptions and usage guidance
+
+**Example:** Use `get_ksi_evidence_queries("KSI-CNA-01")` to get NSG rule audit queries and network security analysis queries.
+
+### get_ksi_evidence_artifacts
+Get list of evidence artifacts to collect for a specific KSI.
+
+**Parameters:**
+- `ksi_id` (string): The KSI identifier (e.g., "KSI-IAM-01", "KSI-CNA-01")
+
+**Returns:** Detailed information about what artifacts to collect:
+- Artifact names and types (logs, configs, reports)
+- Collection methods and frequency
+- File formats and retention requirements
+- Storage recommendations
+
+**Example:** Use `get_ksi_evidence_artifacts("KSI-IAM-01")` to get the list of sign-in logs, CA policies, and authentication method reports needed.
 
 ### compare_with_rev4
 Compare FedRAMP 20x with Rev 4/Rev 5 requirements for specific areas.

@@ -8,7 +8,7 @@ Automate management, protection, and regular rotation of digital keys, certifica
 """
 
 import re
-from typing import List, Set, Dict
+from typing import List, Set, Dict, Any
 from ..base import Finding, Severity, AnalysisResult
 from .base import BaseKSIAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -1114,6 +1114,277 @@ class KSI_SVC_06_Analyzer(BaseKSIAnalyzer):
         start = max(0, line_number - context - 1)
         end = min(len(lines), line_number + context)
         return '\n'.join(lines[start:end])
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get Azure-specific recommendations for automating evidence collection for KSI-SVC-06.
+        
+        **KSI-SVC-06: Secret Management**
+        Automate management, protection, and regular rotation of digital keys, certificates, and other secrets.
+        
+        Returns:
+            Dictionary with automation recommendations
+        """
+        return {
+            "ksi_id": "KSI-SVC-06",
+            "ksi_name": "Secret Management",
+            "azure_services": [
+                {
+                    "service": "Azure Key Vault",
+                    "purpose": "Centralized secret, key, and certificate storage with FIPS 140-2 compliance",
+                    "capabilities": [
+                        "Secret storage with versioning",
+                        "Automated certificate lifecycle management",
+                        "Managed HSM for cryptographic key protection",
+                        "Soft delete and purge protection",
+                        "RBAC and audit logging for secret access"
+                    ]
+                },
+                {
+                    "service": "Azure Monitor / Log Analytics",
+                    "purpose": "Secret access audit logging and rotation monitoring",
+                    "capabilities": [
+                        "Key Vault diagnostic logs for secret access",
+                        "Secret expiration monitoring",
+                        "Rotation compliance tracking",
+                        "Anomaly detection for secret usage patterns"
+                    ]
+                },
+                {
+                    "service": "Azure Policy",
+                    "purpose": "Enforce Key Vault security configuration standards",
+                    "capabilities": [
+                        "Require soft delete and purge protection",
+                        "Enforce RBAC over access policies",
+                        "Validate network access restrictions",
+                        "Audit non-compliant Key Vault configurations"
+                    ]
+                },
+                {
+                    "service": "Microsoft Defender for Cloud",
+                    "purpose": "Secret security posture and vulnerability scanning",
+                    "capabilities": [
+                        "Detect hardcoded secrets in code repositories",
+                        "Recommend Key Vault for secret storage",
+                        "Monitor certificate expiration",
+                        "Identify overprivileged secret access"
+                    ]
+                },
+                {
+                    "service": "Azure Managed Identity",
+                    "purpose": "Eliminate credentials for Azure service authentication",
+                    "capabilities": [
+                        "Passwordless authentication to Azure services",
+                        "Automatic credential lifecycle management",
+                        "Integration with Key Vault for secret retrieval",
+                        "Audit trail of identity-based access"
+                    ]
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "Key Vault Configuration Audit",
+                    "description": "Export all Key Vault configurations showing security settings (soft delete, purge protection, RBAC, network rules)",
+                    "automation": "Resource Graph query or Azure CLI",
+                    "frequency": "Monthly",
+                    "evidence_produced": "Key Vault security configuration compliance report"
+                },
+                {
+                    "method": "Secret Access Audit Log",
+                    "description": "Query Key Vault diagnostic logs for secret access patterns and privileged operations",
+                    "automation": "Log Analytics KQL queries",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Secret access activity report with anomaly highlights"
+                },
+                {
+                    "method": "Secret Expiration and Rotation Report",
+                    "description": "Monitor secret and certificate expiration dates, track rotation compliance",
+                    "automation": "Key Vault REST API or Azure Monitor alerts",
+                    "frequency": "Daily",
+                    "evidence_produced": "Secret rotation compliance report with expiring credentials"
+                },
+                {
+                    "method": "Hardcoded Secret Detection",
+                    "description": "Scan code repositories for hardcoded secrets using Defender for Cloud or GitHub Advanced Security",
+                    "automation": "Microsoft Defender for DevOps integration",
+                    "frequency": "Continuous (on commit)",
+                    "evidence_produced": "Code scanning report with secret exposure findings"
+                }
+            ],
+            "automation_feasibility": "high",
+            "evidence_types": ["config-based", "log-based"],
+            "implementation_guidance": {
+                "quick_start": "Deploy Key Vault with soft delete and purge protection, enable diagnostic logging, use Managed Identity for authentication, configure secret rotation policies, enable Defender for DevOps",
+                "azure_well_architected": "Follows Azure WAF security pillar for secure secrets management and zero trust principles",
+                "compliance_mapping": "Addresses NIST controls ac-17.2, ia-5.2, ia-5.6, sc-12, sc-17"
+            }
+        }
+    
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get specific Azure queries for collecting KSI-SVC-06 evidence.
+        """
+        return {
+            "ksi_id": "KSI-SVC-06",
+            "queries": [
+                {
+                    "name": "Key Vault Security Configuration",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        resources
+                        | where type == 'microsoft.keyvault/vaults'
+                        | extend softDeleteEnabled = tostring(properties.enableSoftDelete)
+                        | extend purgeProtection = tostring(properties.enablePurgeProtection)
+                        | extend rbacEnabled = tostring(properties.enableRbacAuthorization)
+                        | extend publicAccess = tostring(properties.publicNetworkAccess)
+                        | project name, resourceGroup, softDeleteEnabled, purgeProtection, rbacEnabled, publicAccess, location
+                        | where softDeleteEnabled != 'true' or purgeProtection != 'true' or rbacEnabled != 'true'
+                        """,
+                    "purpose": "Identify Key Vaults with suboptimal security configuration",
+                    "expected_result": "Empty result set indicates all Key Vaults properly configured"
+                },
+                {
+                    "name": "Secret Access Audit Trail",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace with Key Vault diagnostic logs",
+                    "query": """
+                        AzureDiagnostics
+                        | where ResourceType == "VAULTS"
+                        | where OperationName == "SecretGet" or OperationName == "SecretList"
+                        | where TimeGenerated > ago(7d)
+                        | summarize AccessCount = count(), LastAccess = max(TimeGenerated) by CallerIPAddress, identity_claim_upn_s, id_s
+                        | order by AccessCount desc
+                        """,
+                    "purpose": "Demonstrate secret access is audited and monitored",
+                    "expected_result": "Logs showing controlled secret access by authorized identities"
+                },
+                {
+                    "name": "Expiring Secrets and Certificates",
+                    "type": "azure_rest_api",
+                    "endpoint": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/secrets?api-version=7.4",
+                    "method": "GET",
+                    "purpose": "Identify secrets approaching expiration requiring rotation",
+                    "expected_result": "List of secrets with expiration dates, minimal near-expiring items"
+                },
+                {
+                    "name": "Managed Identity Usage",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        resources
+                        | where type in ('microsoft.compute/virtualmachines', 'microsoft.web/sites', 'microsoft.containerinstance/containergroups')
+                        | extend hasIdentity = isnotempty(identity)
+                        | extend identityType = tostring(identity.type)
+                        | project name, type, resourceGroup, hasIdentity, identityType
+                        | where hasIdentity == false
+                        """,
+                    "purpose": "Find resources not using Managed Identity (may be using credentials)",
+                    "expected_result": "Minimal resources without Managed Identity where applicable"
+                },
+                {
+                    "name": "Secret Rotation Compliance",
+                    "type": "kql",
+                    "workspace": "Log Analytics with Key Vault logs",
+                    "query": """
+                        AzureDiagnostics
+                        | where ResourceType == "VAULTS"
+                        | where OperationName == "SecretSet"
+                        | where TimeGenerated > ago(90d)
+                        | summarize LastRotation = max(TimeGenerated), RotationCount = count() by id_s
+                        | extend DaysSinceRotation = datetime_diff('day', now(), LastRotation)
+                        | where DaysSinceRotation > 90
+                        """,
+                    "purpose": "Identify secrets not rotated within policy (e.g., 90 days)",
+                    "expected_result": "Empty or minimal result set indicating active rotation"
+                }
+            ],
+            "query_execution_guidance": {
+                "authentication": "Use Azure CLI (az login) with Key Vault permissions or Managed Identity",
+                "permissions_required": [
+                    "Reader role for Resource Graph queries",
+                    "Key Vault Reader for configuration queries",
+                    "Log Analytics Reader for KQL queries",
+                    "Key Vault Secrets User for secret metadata (not values)"
+                ],
+                "automation_tools": [
+                    "Azure CLI (az keyvault, az graph)",
+                    "PowerShell Az.KeyVault and Az.Monitor modules",
+                    "Python azure-keyvault-secrets and azure-identity SDKs"
+                ]
+            }
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get descriptions of evidence artifacts for KSI-SVC-06.
+        """
+        return {
+            "ksi_id": "KSI-SVC-06",
+            "artifacts": [
+                {
+                    "name": "Key Vault Security Configuration Report",
+                    "description": "Complete inventory of all Key Vaults with security settings (soft delete, purge protection, RBAC, network access)",
+                    "source": "Azure Resource Graph",
+                    "format": "CSV from Resource Graph query",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "3 years",
+                    "automation": "Scheduled Resource Graph query export to Blob Storage"
+                },
+                {
+                    "name": "Secret Access Audit Log",
+                    "description": "Historical log of all secret access operations with caller identity and IP address",
+                    "source": "Key Vault diagnostic logs in Log Analytics",
+                    "format": "CSV from KQL query",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "7 years (audit evidence)",
+                    "automation": "Scheduled KQL query with long-term storage export"
+                },
+                {
+                    "name": "Secret Rotation Compliance Report",
+                    "description": "Report showing secret rotation dates and compliance with rotation policy",
+                    "source": "Key Vault audit logs and secret metadata",
+                    "format": "JSON with secret rotation dates and compliance status",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "1 year",
+                    "automation": "PowerShell or Python script querying Key Vault API"
+                },
+                {
+                    "name": "Expiring Credentials Report",
+                    "description": "List of secrets and certificates approaching expiration",
+                    "source": "Key Vault REST API",
+                    "format": "CSV with expiration dates and days until expiry",
+                    "collection_frequency": "Daily",
+                    "retention_period": "1 year",
+                    "automation": "Azure Function with alert on near-expiring items"
+                },
+                {
+                    "name": "Hardcoded Secret Scan Results",
+                    "description": "Security scanning results from code repositories for hardcoded secrets",
+                    "source": "Microsoft Defender for DevOps or GitHub Advanced Security",
+                    "format": "JSON SARIF format from security scanning",
+                    "collection_frequency": "Continuous (on commit)",
+                    "retention_period": "1 year",
+                    "automation": "CI/CD pipeline integration with security scanning"
+                },
+                {
+                    "name": "Managed Identity Usage Report",
+                    "description": "Inventory of Azure resources with Managed Identity enabled vs. credential-based authentication",
+                    "source": "Azure Resource Graph",
+                    "format": "CSV from Resource Graph query",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "1 year",
+                    "automation": "Scheduled Resource Graph query"
+                }
+            ],
+            "artifact_storage": {
+                "primary": "Azure Blob Storage with immutable storage",
+                "backup": "Azure Backup with GRS replication",
+                "access_control": "Azure RBAC with audit trail"
+            },
+            "compliance_mapping": {
+                "fedramp_controls": ["ac-17.2", "ia-5.2", "ia-5.6", "sc-12", "sc-17"],
+                "evidence_purpose": "Demonstrate automated secret management, rotation, and protection using Azure Key Vault"
+            }
+        }
 
 
 def create_analyzer(language: str) -> KSI_SVC_06_Analyzer:

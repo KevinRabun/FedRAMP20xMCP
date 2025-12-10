@@ -91,6 +91,63 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         """
         return await ksi.get_ksi_implementation_summary_impl(data_loader)
     
+    @mcp.tool()
+    async def get_ksi_evidence_automation(ksi_id: str) -> str:
+        """
+        Get evidence automation recommendations for a specific KSI.
+        
+        Provides detailed guidance on automating evidence collection including:
+        - Azure services needed
+        - Collection methods and schedules
+        - Storage requirements and retention
+        - FRR-ADS API integration
+        - Code examples and infrastructure templates
+        - Implementation effort and prerequisites
+        
+        Args:
+            ksi_id: The KSI identifier (e.g., "KSI-IAM-01", "KSI-CNA-01")
+        
+        Returns:
+            Comprehensive evidence automation recommendations
+        """
+        return await ksi.get_ksi_evidence_automation_impl(ksi_id, data_loader)
+    
+    @mcp.tool()
+    async def get_ksi_evidence_queries(ksi_id: str) -> str:
+        """
+        Get evidence collection queries for a specific KSI.
+        
+        Returns ready-to-use queries for collecting evidence from Azure:
+        - KQL queries for Log Analytics
+        - Azure Resource Graph queries
+        - REST API calls for Microsoft Graph
+        
+        Args:
+            ksi_id: The KSI identifier (e.g., "KSI-IAM-01", "KSI-CNA-01")
+        
+        Returns:
+            Collection queries with descriptions and usage guidance
+        """
+        return await ksi.get_ksi_evidence_queries_impl(ksi_id, data_loader)
+    
+    @mcp.tool()
+    async def get_ksi_evidence_artifacts(ksi_id: str) -> str:
+        """
+        Get list of evidence artifacts to collect for a specific KSI.
+        
+        Returns detailed information about what artifacts to collect:
+        - Artifact names and types (logs, configs, reports)
+        - Collection methods and frequency
+        - File formats and retention requirements
+        
+        Args:
+            ksi_id: The KSI identifier (e.g., "KSI-IAM-01", "KSI-CNA-01")
+        
+        Returns:
+            Evidence artifacts list with collection details
+        """
+        return await ksi.get_ksi_evidence_artifacts_impl(ksi_id, data_loader)
+    
     # Documentation tools
     @mcp.tool()
     async def search_documentation(keywords: str) -> str:

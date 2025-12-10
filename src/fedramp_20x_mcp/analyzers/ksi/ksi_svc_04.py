@@ -953,3 +953,282 @@ class KSI_SVC_04_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get Azure-specific recommendations for automating evidence collection for KSI-SVC-04.
+        
+        **KSI-SVC-04: Configuration Automation**
+        Manage configuration of machine-based information resources using automation.
+        
+        Returns:
+            Dictionary with automation recommendations including:
+            - azure_services: List of Azure services for evidence collection
+            - collection_methods: Methods to collect evidence
+            - automation_feasibility: Level of automation possible (high/medium/low/manual-only)
+            - evidence_types: Types of evidence (log-based, config-based, metric-based, process-based)
+        """
+        return {
+            "ksi_id": "KSI-SVC-04",
+            "ksi_name": "Configuration Automation",
+            "azure_services": [
+                {
+                    "service": "Azure Automation",
+                    "purpose": "Configuration management and automation runbook evidence",
+                    "capabilities": [
+                        "Runbook execution logs and schedules",
+                        "Desired State Configuration (DSC) compliance reports",
+                        "Change tracking and inventory",
+                        "Update management automation"
+                    ]
+                },
+                {
+                    "service": "Azure Policy",
+                    "purpose": "Policy-driven configuration enforcement",
+                    "capabilities": [
+                        "Guest Configuration for machine compliance",
+                        "Automated remediation of non-compliant configurations",
+                        "Configuration compliance reporting",
+                        "Policy assignment and effect tracking"
+                    ]
+                },
+                {
+                    "service": "Azure Arc",
+                    "purpose": "Hybrid and multi-cloud configuration management",
+                    "capabilities": [
+                        "Unified management for Azure and non-Azure machines",
+                        "Policy and configuration extension to on-premises",
+                        "Centralized inventory and compliance",
+                        "Update management across hybrid infrastructure"
+                    ]
+                },
+                {
+                    "service": "Azure Monitor / Log Analytics",
+                    "purpose": "Configuration change audit trail and compliance logging",
+                    "capabilities": [
+                        "Change Tracking logs for configuration modifications",
+                        "Automation job execution logs",
+                        "DSC compliance state tracking",
+                        "Configuration drift detection"
+                    ]
+                },
+                {
+                    "service": "Azure DevOps / GitHub Actions",
+                    "purpose": "Infrastructure as Code (IaC) pipeline evidence",
+                    "capabilities": [
+                        "Pipeline run history for infrastructure deployments",
+                        "Terraform/Bicep state management",
+                        "Automated testing and validation logs",
+                        "Pull request approvals for configuration changes"
+                    ]
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "Runbook Execution Evidence",
+                    "description": "Export Azure Automation runbook execution history showing automated configuration management",
+                    "automation": "Azure Monitor logs query for automation jobs",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Runbook execution report with job status, schedules, and outcomes"
+                },
+                {
+                    "method": "DSC Compliance Reporting",
+                    "description": "Query Azure Automation DSC compliance status for all managed nodes",
+                    "automation": "Azure Automation API or PowerShell queries",
+                    "frequency": "Daily",
+                    "evidence_produced": "DSC node compliance report showing configuration state"
+                },
+                {
+                    "method": "Guest Configuration Compliance",
+                    "description": "Export Azure Policy Guest Configuration compliance data for machine-level settings",
+                    "automation": "Azure Policy compliance scan export",
+                    "frequency": "Daily",
+                    "evidence_produced": "Machine configuration compliance report"
+                },
+                {
+                    "method": "Change Tracking Analysis",
+                    "description": "Query Change Tracking solution for configuration modifications and trends",
+                    "automation": "Log Analytics KQL queries",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Configuration change inventory with before/after snapshots"
+                }
+            ],
+            "automation_feasibility": "high",
+            "evidence_types": ["log-based", "config-based"],
+            "implementation_guidance": {
+                "quick_start": "Deploy Azure Automation with DSC, enable Guest Configuration policies, configure Change Tracking in Log Analytics, use IaC pipelines for all infrastructure changes",
+                "azure_well_architected": "Follows Azure WAF operational excellence for automated operations and configuration management",
+                "compliance_mapping": "Addresses NIST controls cm-2, cm-2.2, cm-2.3, cm-6, cm-7.1, ac-2.4"
+            }
+        }
+    
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get specific Azure queries for collecting KSI-SVC-04 evidence.
+        
+        Returns:
+            Dictionary with executable queries for evidence collection
+        """
+        return {
+            "ksi_id": "KSI-SVC-04",
+            "queries": [
+                {
+                    "name": "Azure Automation Runbook Execution History",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace linked to Azure Automation",
+                    "query": """
+                        AzureDiagnostics
+                        | where ResourceProvider == "MICROSOFT.AUTOMATION"
+                        | where Category == "JobLogs" or Category == "JobStreams"
+                        | where TimeGenerated > ago(30d)
+                        | summarize 
+                            JobCount = dcount(JobId_g),
+                            SuccessfulJobs = countif(ResultType == "Completed"),
+                            FailedJobs = countif(ResultType == "Failed")
+                            by RunbookName_s, ResourceGroup
+                        | extend SuccessRate = round((SuccessfulJobs * 100.0) / JobCount, 2)
+                        | order by JobCount desc
+                        """,
+                    "purpose": "Demonstrate active use of automation for configuration management",
+                    "expected_result": "Regular runbook executions with high success rate"
+                },
+                {
+                    "name": "DSC Node Compliance Status",
+                    "type": "azure_rest_api",
+                    "endpoint": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Automation/automationAccounts/{accountName}/nodes",
+                    "method": "GET",
+                    "api_version": "2023-11-01",
+                    "purpose": "Verify nodes are managed by DSC and compliance state",
+                    "expected_result": "Nodes with 'Compliant' status for DSC configurations"
+                },
+                {
+                    "name": "Guest Configuration Compliance",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        policyresources
+                        | where type == 'microsoft.guestconfiguration/guestconfigurationassignments'
+                        | extend complianceStatus = tostring(properties.complianceStatus)
+                        | extend assignmentName = tostring(properties.assignmentName)
+                        | project vmName=split(id, '/')[8], assignmentName, complianceStatus, resourceGroup
+                        | summarize 
+                            TotalAssignments = count(),
+                            CompliantAssignments = countif(complianceStatus == 'Compliant'),
+                            NonCompliantAssignments = countif(complianceStatus == 'NonCompliant')
+                            by vmName, resourceGroup
+                        """,
+                    "purpose": "Show machine configuration management via Azure Policy Guest Configuration",
+                    "expected_result": "High compliance rate across managed machines"
+                },
+                {
+                    "name": "Configuration Change Tracking",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace with Change Tracking enabled",
+                    "query": """
+                        ConfigurationChange
+                        | where TimeGenerated > ago(7d)
+                        | where ConfigChangeType in ('Software', 'Files', 'Registry', 'WindowsServices', 'Daemons')
+                        | summarize ChangeCount = count() by Computer, ConfigChangeType, ChangeCategory
+                        | order by ChangeCount desc
+                        """,
+                    "purpose": "Track configuration changes to demonstrate automated monitoring",
+                    "expected_result": "Change history showing automated configuration management activity"
+                },
+                {
+                    "name": "IaC Pipeline Execution Evidence",
+                    "type": "azure_devops_api",
+                    "endpoint": "https://dev.azure.com/{organization}/{project}/_apis/pipelines/{pipelineId}/runs?api-version=7.1-preview.1",
+                    "method": "GET",
+                    "purpose": "Show infrastructure deployments via automated IaC pipelines",
+                    "expected_result": "Regular pipeline runs deploying infrastructure configurations"
+                }
+            ],
+            "query_execution_guidance": {
+                "authentication": "Use Azure CLI (az login) or Managed Identity",
+                "permissions_required": [
+                    "Reader role for Log Analytics and Automation queries",
+                    "Policy Reader for Guest Configuration compliance",
+                    "DevOps Reader for pipeline execution history"
+                ],
+                "automation_tools": [
+                    "Azure CLI (az monitor, az automation, az policy)",
+                    "PowerShell Az.Automation and Az.Monitor modules",
+                    "Python azure-mgmt-automation SDK"
+                ]
+            }
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get descriptions of evidence artifacts for KSI-SVC-04.
+        
+        Returns:
+            Dictionary describing evidence artifacts to collect
+        """
+        return {
+            "ksi_id": "KSI-SVC-04",
+            "artifacts": [
+                {
+                    "name": "Runbook Automation Report",
+                    "description": "Monthly report of all configuration management runbooks with execution statistics",
+                    "source": "Azure Automation job logs via Log Analytics",
+                    "format": "CSV with runbook name, execution count, success rate, last run date",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "1 year",
+                    "automation": "Scheduled KQL query with CSV export to Blob Storage"
+                },
+                {
+                    "name": "DSC Compliance Report",
+                    "description": "Current compliance state of all DSC-managed nodes",
+                    "source": "Azure Automation DSC node API",
+                    "format": "JSON export from Azure Automation REST API",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "1 year",
+                    "automation": "PowerShell script or Azure Function calling Automation API"
+                },
+                {
+                    "name": "Guest Configuration Compliance Report",
+                    "description": "Machine-level configuration compliance via Azure Policy Guest Configuration",
+                    "source": "Azure Policy compliance data",
+                    "format": "CSV from Resource Graph query",
+                    "collection_frequency": "Daily",
+                    "retention_period": "1 year",
+                    "automation": "Scheduled Resource Graph query export"
+                },
+                {
+                    "name": "Configuration Change Inventory",
+                    "description": "Historical log of configuration changes tracked by Change Tracking solution",
+                    "source": "Log Analytics Change Tracking logs",
+                    "format": "CSV from KQL query results",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "1 year",
+                    "automation": "Scheduled KQL query with storage export"
+                },
+                {
+                    "name": "IaC Pipeline History",
+                    "description": "Infrastructure deployment pipeline runs showing automated configuration management",
+                    "source": "Azure DevOps or GitHub Actions",
+                    "format": "JSON export from pipeline API",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "1 year",
+                    "automation": "API query via Azure DevOps CLI or GitHub API"
+                },
+                {
+                    "name": "Configuration Drift Report",
+                    "description": "Detected configuration drift from desired state with remediation actions",
+                    "source": "Azure Automation DSC or Azure Policy",
+                    "format": "JSON with drift details and remediation status",
+                    "collection_frequency": "Daily",
+                    "retention_period": "1 year",
+                    "automation": "Automated drift detection with alert and export"
+                }
+            ],
+            "artifact_storage": {
+                "primary": "Azure Blob Storage with immutable storage",
+                "backup": "Azure Backup with GRS replication",
+                "access_control": "Azure RBAC with audit trail"
+            },
+            "compliance_mapping": {
+                "fedramp_controls": ["cm-2", "cm-2.2", "cm-2.3", "cm-6", "cm-7.1", "ac-2.4", "pl-9", "pl-10"],
+                "evidence_purpose": "Demonstrate automated configuration management for machine-based resources"
+            }
+        }

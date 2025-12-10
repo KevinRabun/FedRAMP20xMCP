@@ -8,7 +8,7 @@ Enhanced with AST-based analysis where applicable, regex-based for IaC/CI-CD.
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 from ..ast_utils import CodeLanguage
@@ -655,3 +655,278 @@ class KSI_IAM_02_Analyzer(BaseKSIAnalyzer):
         # GitLab CI uses GitLab's authentication
         # No specific findings for this KSI in CI/CD context
         return findings
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get Azure-specific recommendations for automating evidence collection for KSI-IAM-02.
+        
+        **KSI-IAM-02: Passwordless Authentication**
+        Use secure passwordless methods for user authentication and authorization when feasible, 
+        otherwise enforce strong passwords with MFA.
+        
+        Returns:
+            Dictionary with automation recommendations including:
+            - azure_services: List of Azure services for evidence collection
+            - collection_methods: Methods to collect evidence
+            - automation_feasibility: Level of automation possible (high/medium/low/manual-only)
+            - evidence_types: Types of evidence (log-based, config-based, metric-based, process-based)
+        """
+        return {
+            "ksi_id": "KSI-IAM-02",
+            "ksi_name": "Passwordless Authentication",
+            "azure_services": [
+                {
+                    "service": "Microsoft Entra ID (Azure AD)",
+                    "purpose": "Passwordless authentication methods and policy enforcement",
+                    "capabilities": [
+                        "FIDO2 security key registration and usage logs",
+                        "Windows Hello for Business enrollment",
+                        "Microsoft Authenticator passwordless sign-ins",
+                        "Password policy enforcement when passwords required"
+                    ]
+                },
+                {
+                    "service": "Azure AD Privileged Identity Management (PIM)",
+                    "purpose": "Privileged access with passwordless MFA requirements",
+                    "capabilities": [
+                        "Enforce passwordless MFA for privileged roles",
+                        "Just-in-time access with strong authentication",
+                        "Audit privileged authentication methods"
+                    ]
+                },
+                {
+                    "service": "Azure AD Conditional Access",
+                    "purpose": "Policy enforcement for authentication methods",
+                    "capabilities": [
+                        "Require specific authentication methods",
+                        "Block legacy password-only authentication",
+                        "Context-aware authentication requirements"
+                    ]
+                },
+                {
+                    "service": "Azure Monitor / Log Analytics",
+                    "purpose": "Authentication method usage tracking and compliance",
+                    "capabilities": [
+                        "Query sign-in logs for authentication methods",
+                        "Track passwordless vs password-based authentication",
+                        "Monitor MFA usage when passwords required"
+                    ]
+                },
+                {
+                    "service": "Microsoft Graph API",
+                    "purpose": "Programmatic authentication policy and usage retrieval",
+                    "capabilities": [
+                        "List authentication methods per user",
+                        "Query authentication method policies",
+                        "Export registration campaign results"
+                    ]
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "Passwordless Authentication Usage Analysis",
+                    "description": "Query sign-in logs to measure percentage of passwordless vs password-based authentications",
+                    "automation": "KQL queries against Azure AD sign-in logs",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Authentication method distribution report"
+                },
+                {
+                    "method": "Authentication Method Registration Status",
+                    "description": "Export list of users with passwordless methods registered (FIDO2, Windows Hello, Authenticator app)",
+                    "automation": "Microsoft Graph API query",
+                    "frequency": "Monthly",
+                    "evidence_produced": "User authentication method inventory"
+                },
+                {
+                    "method": "Password Policy Enforcement Validation",
+                    "description": "For users still using passwords, verify strong password policies and MFA enforcement",
+                    "automation": "Azure AD policy export and compliance check",
+                    "frequency": "Monthly",
+                    "evidence_produced": "Password policy compliance report"
+                },
+                {
+                    "method": "Conditional Access Policy Review",
+                    "description": "Export and validate CA policies requiring passwordless or MFA",
+                    "automation": "Microsoft Graph API or Azure portal export",
+                    "frequency": "Monthly",
+                    "evidence_produced": "Conditional Access policy configuration export"
+                }
+            ],
+            "automation_feasibility": "high",
+            "evidence_types": ["log-based", "config-based"],
+            "implementation_guidance": {
+                "quick_start": "Enable Azure AD passwordless authentication methods, configure Conditional Access to prefer passwordless, deploy PIM for privileged roles, monitor via Log Analytics",
+                "azure_well_architected": "Follows Azure WAF security pillar best practices for identity and access management",
+                "compliance_mapping": "Addresses NIST controls ia-2.1, ia-2.2, ia-2.8, ia-5.1, ia-5.2, ia-5.6"
+            }
+        }
+    
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get specific Azure queries for collecting KSI-IAM-02 evidence.
+        
+        Returns:
+            Dictionary with executable queries for evidence collection
+        """
+        return {
+            "ksi_id": "KSI-IAM-02",
+            "queries": [
+                {
+                    "name": "Passwordless Authentication Usage Rate",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace with Azure AD sign-in logs",
+                    "query": """
+                        SigninLogs
+                        | where TimeGenerated > ago(30d)
+                        | extend AuthMethod = tostring(parse_json(AuthenticationDetails)[0].authenticationMethod)
+                        | extend IsPasswordless = AuthMethod in ('FIDO2', 'WindowsHelloForBusiness', 'MicrosoftAuthenticatorPasswordless', 'Certificate')
+                        | summarize 
+                            TotalSignIns = count(),
+                            PasswordlessSignIns = countif(IsPasswordless == true),
+                            PasswordBasedSignIns = countif(IsPasswordless == false)
+                        | extend PasswordlessPercentage = round((PasswordlessSignIns * 100.0) / TotalSignIns, 2)
+                        """,
+                    "purpose": "Measure adoption rate of passwordless authentication methods",
+                    "expected_result": "Increasing percentage of passwordless sign-ins over time"
+                },
+                {
+                    "name": "Users with Passwordless Methods Registered",
+                    "type": "microsoft_graph",
+                    "endpoint": "/users?$select=id,userPrincipalName,displayName&$expand=authentication/methods",
+                    "method": "GET",
+                    "api_version": "v1.0",
+                    "purpose": "Identify users with FIDO2, Windows Hello, or Authenticator passwordless methods",
+                    "expected_result": "Majority of users have at least one passwordless method registered"
+                },
+                {
+                    "name": "Password Policy Configuration",
+                    "type": "microsoft_graph",
+                    "endpoint": "/policies/authenticationMethodsPolicy",
+                    "method": "GET",
+                    "api_version": "v1.0",
+                    "purpose": "Validate password policy requires minimum length, complexity, and MFA when passwords used",
+                    "expected_result": "Policy enforces minimum 14 characters, complexity requirements, and MFA"
+                },
+                {
+                    "name": "Conditional Access Policies for Authentication",
+                    "type": "microsoft_graph",
+                    "endpoint": "/identity/conditionalAccess/policies",
+                    "method": "GET",
+                    "api_version": "v1.0",
+                    "purpose": "Verify CA policies require MFA or passwordless authentication",
+                    "expected_result": "Policies exist requiring MFA for all users, preferring passwordless methods"
+                },
+                {
+                    "name": "PIM Roles with MFA Requirement",
+                    "type": "microsoft_graph",
+                    "endpoint": "/privilegedAccess/azureResources/roleSettings?$filter=resourceId eq '{resource}'",
+                    "method": "GET",
+                    "api_version": "v1.0",
+                    "purpose": "Verify privileged roles require MFA (preferably passwordless)",
+                    "expected_result": "All privileged roles configured with MFA requirement"
+                },
+                {
+                    "name": "Legacy Authentication Detection",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace with Azure AD sign-in logs",
+                    "query": """
+                        SigninLogs
+                        | where TimeGenerated > ago(7d)
+                        | where ClientAppUsed in ('Exchange ActiveSync', 'Other clients', 'IMAP', 'POP', 'SMTP', 'Authenticated SMTP')
+                        | summarize Attempts = count() by UserPrincipalName, ClientAppUsed, AppDisplayName
+                        | order by Attempts desc
+                        """,
+                    "purpose": "Identify users still using legacy authentication (should be blocked)",
+                    "expected_result": "Zero or declining legacy authentication attempts"
+                }
+            ],
+            "query_execution_guidance": {
+                "authentication": "Use Azure CLI (az login) with appropriate privileges or Managed Identity",
+                "permissions_required": [
+                    "Global Reader or Security Reader for Azure AD queries",
+                    "Log Analytics Reader for KQL queries",
+                    "Policy.Read.All and UserAuthenticationMethod.Read.All for Graph API queries"
+                ],
+                "automation_tools": [
+                    "Azure CLI with az ad and az monitor extensions",
+                    "PowerShell with Microsoft.Graph and Az.Monitor modules",
+                    "Python with microsoft-graph SDK and azure-monitor-query"
+                ]
+            }
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get descriptions of evidence artifacts for KSI-IAM-02.
+        
+        Returns:
+            Dictionary describing evidence artifacts to collect
+        """
+        return {
+            "ksi_id": "KSI-IAM-02",
+            "artifacts": [
+                {
+                    "name": "Passwordless Authentication Adoption Report",
+                    "description": "Monthly report showing percentage of sign-ins using passwordless methods vs passwords",
+                    "source": "Azure AD sign-in logs via Log Analytics",
+                    "format": "CSV with time series data and trend analysis",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "3 years",
+                    "automation": "Scheduled KQL query exported to Azure Storage"
+                },
+                {
+                    "name": "User Authentication Method Inventory",
+                    "description": "Complete list of all users with their registered authentication methods",
+                    "source": "Microsoft Graph API",
+                    "format": "JSON export from Graph API query",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "1 year (monthly snapshots)",
+                    "automation": "PowerShell or Python script via Graph API"
+                },
+                {
+                    "name": "Password Policy Configuration",
+                    "description": "Azure AD password policy settings and enforcement status",
+                    "source": "Azure AD Authentication Methods Policy",
+                    "format": "JSON policy export",
+                    "collection_frequency": "Quarterly (or on change)",
+                    "retention_period": "3 years",
+                    "automation": "Graph API export via Azure Automation runbook"
+                },
+                {
+                    "name": "Conditional Access Policy Export",
+                    "description": "All CA policies related to authentication method requirements",
+                    "source": "Azure AD Conditional Access",
+                    "format": "JSON policy definitions",
+                    "collection_frequency": "Monthly (or on change)",
+                    "retention_period": "3 years",
+                    "automation": "Graph API or Azure CLI export"
+                },
+                {
+                    "name": "PIM Role Authentication Requirements",
+                    "description": "Privileged role settings showing MFA enforcement",
+                    "source": "Azure AD Privileged Identity Management",
+                    "format": "JSON configuration export",
+                    "collection_frequency": "Quarterly",
+                    "retention_period": "3 years",
+                    "automation": "Graph API privilegedAccess query"
+                },
+                {
+                    "name": "Legacy Authentication Block Evidence",
+                    "description": "Report showing legacy authentication attempts (should be zero or declining)",
+                    "source": "Azure AD sign-in logs",
+                    "format": "CSV from KQL query",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "1 year",
+                    "automation": "Scheduled Log Analytics query with alert on non-zero results"
+                }
+            ],
+            "artifact_storage": {
+                "primary": "Azure Blob Storage with immutable storage",
+                "backup": "Azure Backup with GRS replication",
+                "access_control": "Azure RBAC with audit trail"
+            },
+            "compliance_mapping": {
+                "fedramp_controls": ["ia-2.1", "ia-2.2", "ia-2.8", "ia-5.1", "ia-5.2", "ia-5.6"],
+                "evidence_purpose": "Demonstrate passwordless authentication adoption or strong password+MFA enforcement"
+            }
+        }

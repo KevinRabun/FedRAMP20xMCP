@@ -1049,6 +1049,312 @@ class KSI_MLA_01_Analyzer(BaseKSIAnalyzer):
         return []
     
     # ============================================================================
+    # EVIDENCE AUTOMATION METHODS
+    # ============================================================================
+    
+    def get_evidence_automation_recommendations(self) -> dict:
+        """
+        Get evidence automation recommendations for KSI-MLA-01 (SIEM).
+        
+        Returns structured guidance for automating evidence collection demonstrating
+        centralized, tamper-resistant logging in a SIEM system.
+        """
+        return {
+            "ksi_id": self.KSI_ID,
+            "ksi_name": self.KSI_NAME,
+            "evidence_type": "log-based",
+            "automation_feasibility": "high",
+            "azure_services": [
+                {
+                    "service": "Azure Sentinel (Microsoft Sentinel)",
+                    "purpose": "Cloud-native SIEM for centralized security event management",
+                    "configuration": "Deploy Sentinel workspace, connect data sources, enable analytics rules",
+                    "cost": "~$2.46/GB ingestion + $0.10/GB retention (after 90 days)"
+                },
+                {
+                    "service": "Azure Log Analytics Workspace",
+                    "purpose": "Central repository for all logs with tamper-resistant storage",
+                    "configuration": "Create workspace with 730-day retention, enable workspace protection",
+                    "cost": "~$2.76/GB ingestion + $0.12/GB retention after 31 days"
+                },
+                {
+                    "service": "Azure Monitor",
+                    "purpose": "Collect diagnostic logs from all Azure resources",
+                    "configuration": "Enable diagnostic settings on all resources to send to Log Analytics",
+                    "cost": "Included with Log Analytics ingestion costs"
+                },
+                {
+                    "service": "Azure Blob Storage (Immutable)",
+                    "purpose": "Long-term tamper-proof archive storage for logs (3+ years)",
+                    "configuration": "Configure immutable blob storage with time-based retention policy",
+                    "cost": "Archive tier: ~$0.002/GB/month"
+                },
+                {
+                    "service": "Azure Policy",
+                    "purpose": "Enforce diagnostic settings on all resources automatically",
+                    "configuration": "Assign built-in policy 'Deploy Diagnostic Settings to Log Analytics'",
+                    "cost": "Free"
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "Log Ingestion Validation",
+                    "description": "Verify all Azure resources send diagnostic logs to centralized SIEM",
+                    "frequency": "daily",
+                    "data_points": [
+                        "Number of resources with diagnostic settings enabled",
+                        "Log ingestion rate (GB/day) by resource type",
+                        "Resources missing diagnostic settings",
+                        "Log categories enabled per resource",
+                        "Retention periods configured"
+                    ]
+                },
+                {
+                    "method": "SIEM Configuration Audit",
+                    "description": "Export Sentinel workspace configuration and analytics rules",
+                    "frequency": "on-change + weekly verification",
+                    "data_points": [
+                        "Sentinel workspace settings (retention, quotas)",
+                        "Data connectors enabled",
+                        "Analytics rules (detection rules)",
+                        "Automation rules and playbooks",
+                        "Workspace access controls (RBAC)"
+                    ]
+                },
+                {
+                    "method": "Tamper-Resistance Verification",
+                    "description": "Validate immutability and protection settings on log storage",
+                    "frequency": "weekly",
+                    "data_points": [
+                        "Workspace protection status (enabled/disabled)",
+                        "Immutable blob storage policies",
+                        "Legal hold status on archive storage",
+                        "Delete retention policies",
+                        "Audit logs for log deletion attempts"
+                    ]
+                },
+                {
+                    "method": "Log Completeness Analysis",
+                    "description": "Analyze log coverage across all system components",
+                    "frequency": "daily",
+                    "data_points": [
+                        "Unique resource IDs sending logs",
+                        "Expected vs actual log sources",
+                        "Log gaps (time periods with missing logs)",
+                        "Resource types without logging enabled",
+                        "Application instrumentation coverage"
+                    ]
+                }
+            ],
+            "storage_requirements": {
+                "retention_period": "3 years minimum (FedRAMP Moderate) - recommend Log Analytics (2 years) + Blob Archive (1+ year)",
+                "format": "JSON (structured logs in Log Analytics) + CEF/Syslog formats",
+                "immutability": "Required - enable workspace protection and immutable blob storage",
+                "encryption": "AES-256 at rest (automatic), TLS 1.2+ in transit",
+                "estimated_size": "Varies significantly - estimate 50-200 GB/day for 1000 VMs/containers + applications"
+            },
+            "api_integration": {
+                "frr_ads_endpoints": [
+                    "/evidence/mla-01/sentinel-configuration",
+                    "/evidence/mla-01/diagnostic-settings",
+                    "/evidence/mla-01/log-ingestion-stats",
+                    "/evidence/mla-01/tamper-resistance-status"
+                ],
+                "authentication": "Azure AD OAuth 2.0 with client credentials",
+                "response_format": "JSON with FIPS 140-2 validated signatures",
+                "rate_limits": "Azure Management API: 12,000 reads per hour"
+            },
+            "code_examples": {
+                "python": "Uses Azure SDK for Python - query diagnostic settings and Log Analytics ingestion",
+                "csharp": "Uses Azure.ResourceManager SDK - validate SIEM configuration",
+                "powershell": "Uses Az.Monitor module - audit diagnostic settings compliance",
+                "kusto": "KQL queries for log ingestion analysis and coverage validation"
+            },
+            "infrastructure_templates": {
+                "bicep": "Deploys Sentinel workspace, Log Analytics, diagnostic settings policy",
+                "terraform": "Deploys Azure Monitor infrastructure with mandatory logging"
+            },
+            "retention_policy": "3 years minimum per FedRAMP Moderate - use tiered storage (hot + archive)",
+            "implementation_effort": "medium",
+            "implementation_time": "2-4 weeks for full deployment across all resources",
+            "prerequisites": [
+                "Azure subscription with Log Analytics and Sentinel licensing",
+                "Inventory of all resources requiring logging",
+                "Service principal with Monitoring Contributor and Log Analytics Contributor roles",
+                "Storage account for long-term archive",
+                "Network connectivity from all resources to Log Analytics endpoints"
+            ],
+            "notes": "Evidence automation for KSI-MLA-01 is highly feasible using Azure Sentinel and Log Analytics. Key evidence: (1) Diagnostic settings on all resources, (2) Sentinel workspace configuration, (3) Log ingestion rates and coverage, (4) Tamper-resistance settings (workspace protection + immutable storage). Reference: Azure Well-Architected Framework - Security pillar (Logging and monitoring)."
+        }
+    
+    def get_evidence_collection_queries(self) -> List[dict]:
+        """
+        Get Azure queries for collecting KSI-MLA-01 evidence.
+        """
+        return [
+            {
+                "name": "Resources with Diagnostic Settings Enabled",
+                "query_type": "resource_graph",
+                "query": """Resources
+| where type != 'microsoft.insights/diagnosticsettings'
+| extend hasSettings = iif(isnotnull(properties.diagnosticSettings), 'Yes', 'No')
+| join kind=leftouter (
+    resources
+    | where type == 'microsoft.insights/diagnosticsettings'
+    | extend targetResourceId = tolower(split(id, '/providers/microsoft.insights')[0])
+    | summarize DiagnosticSettingsCount = count() by targetResourceId
+) on $left.id == $right.targetResourceId
+| extend LoggingEnabled = iif(DiagnosticSettingsCount > 0, 'Enabled', 'Missing')
+| project subscriptionId, resourceGroup, type, name, location, LoggingEnabled, DiagnosticSettingsCount
+| summarize TotalResources = count(), WithLogging = countif(LoggingEnabled == 'Enabled'), WithoutLogging = countif(LoggingEnabled == 'Missing') by subscriptionId, type
+| extend CompliancePercentage = (WithLogging * 100.0) / TotalResources
+| order by WithoutLogging desc""",
+                "data_source": "Azure Resource Graph",
+                "schedule": "daily",
+                "output_format": "json",
+                "description": "Identifies Azure resources that are missing diagnostic settings for centralized logging"
+            },
+            {
+                "name": "Log Analytics Workspace Configuration",
+                "query_type": "rest_api",
+                "query": """GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.OperationalInsights/workspaces/{workspaceName}?api-version=2022-10-01
+Authorization: Bearer {token}
+
+# Response includes:
+# - Retention period (properties.retentionInDays)
+# - Daily quota (properties.workspaceCapping.dailyQuotaGb)
+# - Workspace protection (properties.features.enableDataExport)""",
+                "data_source": "Azure Management API",
+                "schedule": "on-change + weekly verification",
+                "output_format": "json",
+                "description": "Exports Log Analytics workspace configuration including retention and protection settings"
+            },
+            {
+                "name": "Log Ingestion Statistics (Last 30 Days)",
+                "query_type": "kusto",
+                "query": """Usage
+| where TimeGenerated > ago(30d)
+| where IsBillable == true
+| summarize TotalGB = sum(Quantity) / 1000, AvgDailyGB = avg(Quantity) / 1000 by DataType
+| extend DataType = iif(DataType == '', 'Unknown', DataType)
+| order by TotalGB desc
+| extend Cost = TotalGB * 2.76  // Approximate cost at $2.76/GB
+| project DataType, TotalGB = round(TotalGB, 2), AvgDailyGB = round(AvgDailyGB, 2), EstimatedCost = round(Cost, 2)""",
+                "data_source": "Log Analytics - Usage table",
+                "schedule": "daily",
+                "output_format": "json",
+                "description": "Analyzes log ingestion volume by data type to validate centralized logging coverage"
+            },
+            {
+                "name": "Sentinel Data Connectors Status",
+                "query_type": "rest_api",
+                "query": """GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.OperationalInsights/workspaces/{workspaceName}/providers/Microsoft.SecurityInsights/dataConnectors?api-version=2023-02-01
+Authorization: Bearer {token}
+
+# Lists all Sentinel data connectors and their connection status""",
+                "data_source": "Sentinel Management API",
+                "schedule": "daily",
+                "output_format": "json",
+                "description": "Validates that Sentinel data connectors are properly configured and active"
+            },
+            {
+                "name": "Diagnostic Settings Compliance by Resource Type",
+                "query_type": "resource_graph",
+                "query": """resources
+| where type == 'microsoft.insights/diagnosticsettings'
+| extend targetResourceId = tolower(substring(id, 0, indexof(id, '/providers/microsoft.insights')))
+| join kind=rightouter (
+    resources
+    | where type !in ('microsoft.insights/diagnosticsettings', 'microsoft.resources/tags')
+    | project id, type, name, resourceGroup, subscriptionId
+) on $left.targetResourceId == $right.id
+| extend HasDiagnosticSettings = iif(isnotnull(targetResourceId), 'Yes', 'No')
+| summarize Total = count(), Compliant = countif(HasDiagnosticSettings == 'Yes'), NonCompliant = countif(HasDiagnosticSettings == 'No') by type
+| extend ComplianceRate = round((Compliant * 100.0) / Total, 1)
+| where NonCompliant > 0
+| order by NonCompliant desc""",
+                "data_source": "Azure Resource Graph",
+                "schedule": "daily",
+                "output_format": "json",
+                "description": "Shows compliance rate for diagnostic settings by resource type, highlighting gaps"
+            },
+            {
+                "name": "Workspace Protection and Immutability Status",
+                "query_type": "rest_api",
+                "query": """# Log Analytics Workspace Protection
+GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.OperationalInsights/workspaces/{workspaceName}?api-version=2022-10-01
+
+# Check immutable blob storage for archive logs
+GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Storage/storageAccounts/{storageAccountName}/blobServices/default/containers/{containerName}/immutabilityPolicies/default?api-version=2023-01-01""",
+                "data_source": "Azure Management API",
+                "schedule": "weekly",
+                "output_format": "json",
+                "description": "Validates tamper-resistance settings on workspace protection and blob immutability policies"
+            }
+        ]
+    
+    def get_evidence_artifacts(self) -> List[dict]:
+        """
+        Get list of evidence artifacts for KSI-MLA-01.
+        """
+        return [
+            {
+                "artifact_name": "sentinel-workspace-configuration.json",
+                "artifact_type": "config",
+                "description": "Complete Sentinel workspace configuration including retention, data connectors, analytics rules",
+                "collection_method": "Azure Management API - GET workspace details + list data connectors",
+                "format": "json",
+                "frequency": "on-change + weekly verification",
+                "retention": "3 years (retain all historical versions)"
+            },
+            {
+                "artifact_name": "diagnostic-settings-inventory.json",
+                "artifact_type": "config",
+                "description": "Inventory of all Azure resources with their diagnostic settings status",
+                "collection_method": "Azure Resource Graph query - enumerate resources and diagnostic settings",
+                "format": "json",
+                "frequency": "daily",
+                "retention": "3 years"
+            },
+            {
+                "artifact_name": "log-ingestion-statistics.json",
+                "artifact_type": "report",
+                "description": "30-day log ingestion volume by data type showing centralized logging coverage",
+                "collection_method": "KQL query against Usage table in Log Analytics",
+                "format": "json",
+                "frequency": "daily",
+                "retention": "3 years"
+            },
+            {
+                "artifact_name": "workspace-protection-status.json",
+                "artifact_type": "config",
+                "description": "Tamper-resistance settings including workspace protection and immutable storage policies",
+                "collection_method": "Azure Management API - workspace features + blob immutability policies",
+                "format": "json",
+                "frequency": "weekly",
+                "retention": "3 years"
+            },
+            {
+                "artifact_name": "non-compliant-resources.csv",
+                "artifact_type": "report",
+                "description": "List of resources missing diagnostic settings for centralized logging",
+                "collection_method": "Azure Resource Graph query - resources without diagnostic settings",
+                "format": "csv",
+                "frequency": "daily",
+                "retention": "3 years"
+            },
+            {
+                "artifact_name": "sentinel-analytics-rules.json",
+                "artifact_type": "config",
+                "description": "Export of all Sentinel detection rules demonstrating active threat detection",
+                "collection_method": "Sentinel Management API - GET analytics rules",
+                "format": "json",
+                "frequency": "on-change + weekly verification",
+                "retention": "3 years (retain all historical versions)"
+            }
+        ]
+    
+    # ============================================================================
     # HELPER METHODS
     # ============================================================================
     
