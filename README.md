@@ -10,7 +10,7 @@ An MCP (Model Context Protocol) server that provides access to FedRAMP 20x secur
 
 ## 🎉 What's New
 
-### ⭐ **Evidence Automation Complete (v1.4.0)**
+### ⭐ **Evidence Automation Complete**
 - **100% KSI Coverage Achieved**: All **65 active KSIs** now include comprehensive automated evidence collection guidance
 - **3 New MCP Tools**: `get_ksi_evidence_automation`, `get_ksi_evidence_queries`, `get_ksi_evidence_artifacts`
 - **Azure-Native Automation**: Each KSI provides 5 Azure services (Log Analytics, Resource Graph, Defender, Policy, Monitor) with ready-to-use queries (KQL, REST API, Resource Graph)
