@@ -46,6 +46,13 @@ FedRAMP 20x requires **machine-readable** formats (JSON/XML/structured data) for
 - Code analyzers in `analyzers/ksi/` directory (72 KSI analyzer files + factory + base)
 - CVE fetcher module: `cve_fetcher.py` - Live vulnerability data from GitHub Advisory Database / NVD
 
+## Azure Service Recommendations
+**Microsoft Defender for Cloud:** Recommended (not mandatory) for FedRAMP 20x compliance
+- **Where mentioned:** ~8-10 KSIs across AFR, PIY, TPR families
+- **Why recommended:** Native Azure integration, FedRAMP authorized, streamlines vulnerability scanning, security posture management, and automated evidence collection
+- **Alternatives:** Qualys, Tenable (vulnerability scanning); Azure Policy (compliance); Azure Resource Graph + custom scripts (inventory)
+- **Guidance:** Use Defender for Cloud unless you have existing security tooling or specific requirements for alternative solutions
+
 **Analyzer Architecture (KSI-Centric):**
 - `analyzers/base.py` - Base classes (Finding, AnalysisResult, Severity)
 - `analyzers/ksi/base.py` - BaseKSIAnalyzer class for all KSI analyzers

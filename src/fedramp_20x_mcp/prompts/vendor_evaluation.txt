@@ -79,7 +79,8 @@ I'll help you evaluate vendors and tools for FedRAMP 20x compatibility.
 - How do you handle zero-day vulnerabilities?
 
 **Top Vendors:**
-- Microsoft Defender for Cloud (FedRAMP authorized, Azure-native)
+- Microsoft Defender for Cloud ⭐ RECOMMENDED (FedRAMP authorized, Azure-native, covers ~8-10 KSIs)
+  - *Note: Not mandatory - choose based on your specific requirements and existing tooling*
 - Tenable.io (FedRAMP authorized)
 - Qualys (FedRAMP authorized)
 - Snyk (code and container scanning)

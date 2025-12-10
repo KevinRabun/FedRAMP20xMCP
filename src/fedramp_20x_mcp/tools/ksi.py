@@ -274,7 +274,8 @@ async def get_ksi_evidence_automation_impl(ksi_id: str, data_loader) -> str:
         
         # Azure Services
         if recommendations.get('azure_services'):
-            result += "## Azure Services Required\n\n"
+            result += "## Azure Services\n\n"
+            result += "*Note: Microsoft Defender for Cloud is recommended (not mandatory) for streamlining compliance. Alternative tools like Qualys, Tenable, or Trivy can be used for vulnerability scanning.*\n\n"
             for svc in recommendations['azure_services']:
                 result += f"### {svc['service']}\n"
                 result += f"- **Purpose:** {svc['purpose']}\n"

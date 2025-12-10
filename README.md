@@ -277,7 +277,8 @@ Get comprehensive evidence automation recommendations for a specific KSI. **All 
 - `ksi_id` (string): The KSI identifier (e.g., "KSI-IAM-01", "KSI-CNA-01")
 
 **Returns:** Comprehensive guidance for automating evidence collection including:
-- **Azure Services**: 5 Azure services per KSI (Log Analytics, Resource Graph, Defender for Cloud, Azure Policy, Azure Monitor, etc.) with specific configuration guidance
+- **Azure Services**: 5 Azure services per KSI (Log Analytics, Resource Graph, Azure Policy, Azure Monitor, etc.) with specific configuration guidance
+  - *Note: Microsoft Defender for Cloud is recommended (not mandatory) for ~8-10 KSIs to streamline vulnerability scanning, security posture management, and compliance monitoring. Alternative tools (Qualys, Tenable, Trivy) can be used.*
 - **Collection Methods**: 4-5 automated collection approaches (continuous monitoring, scheduled assessments, event-driven triggers, log aggregation)
 - **Storage Requirements**: Retention policies (30-90 days operational, 1-7 years compliance), encryption standards, access controls
 - **FRR-ADS Integration**: Machine-readable API endpoints for Authorization Data Sharing compliance

@@ -301,7 +301,9 @@ resource diagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' 
 
 **Key Microsoft Services for FedRAMP 20x:**
 - **Microsoft Sentinel** - SIEM/SOAR (KSI-MLA)
-- **Microsoft Defender for Cloud** - Security posture management (KSI-AFR, KSI-CNA)
+- **Microsoft Defender for Cloud** - ⭐ RECOMMENDED (not mandatory) for security posture management (KSI-AFR, KSI-CNA)
+  - Alternative options: Qualys, Tenable, or Trivy for vulnerability scanning; Azure Policy for compliance
+  - Benefits: Native Azure integration, FedRAMP authorized, automated evidence collection for ~8-10 KSIs
 - **Microsoft Entra ID** (formerly Azure AD) - Identity & Access (KSI-IAM)
 - **Azure Policy** - Configuration compliance (KSI-PIY, KSI-CMT)
 - **Azure Monitor & Log Analytics** - Logging & monitoring (KSI-MLA)
