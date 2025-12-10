@@ -8,29 +8,6 @@
 
 An MCP (Model Context Protocol) server that provides access to FedRAMP 20x security requirements and controls with **Azure-first guidance**.
 
-## 🎉 What's New
-
-### ⭐ **Evidence Automation Complete**
-- **100% KSI Coverage Achieved**: All **65 active KSIs** now include comprehensive automated evidence collection guidance
-- **3 New MCP Tools**: `get_ksi_evidence_automation`, `get_ksi_evidence_queries`, `get_ksi_evidence_artifacts`
-- **Azure-Native Automation**: Each KSI provides 5 Azure services (Log Analytics, Resource Graph, Defender, Policy, Monitor) with ready-to-use queries (KQL, REST API, Resource Graph)
-- **Production-Ready Templates**: 5 artifacts per KSI with collection methods, formats, frequencies, retention policies
-- **Implementation Support**: Effort estimates, prerequisites, cost considerations, responsible parties for each KSI
-- **Quality Standards**: 4-5 collection methods per KSI, update frequencies (daily/weekly/monthly/quarterly), secure storage patterns
-
-**Families Covered (11/11):**
-- ✅ **IAM** (7 KSIs): MFA, Privilege, Session, Credential, User Termination, JIT, Shared Accounts
-- ✅ **CNA** (8 KSIs): Network Segmentation, TLS, Connection Logging, Azure Monitor, Key Vault, Secrets Detection, ACR, GitHub Security
-- ✅ **MLA** (5 KSIs): Log Aggregation, Retention, Tamper Detection, Search, Alerting
-- ✅ **INR** (3 KSIs): Response Plans, Incident Logging, After Action Reports
-- ✅ **AFR** (11 KSIs): Asset Discovery, SBOM, Pen Testing, Dev/Prod Separation, GitHub Actions Security, Container Scanning, etc.
-- ✅ **SVC** (9 KSIs): FIPS 140-3, API Authentication, Rate Limiting, Input Validation, Error Handling, Secrets Management, DoS Protection, Secrets Rotation, Dependencies
-- ✅ **CMT** (4 KSIs): Monitoring, Health Checks, Baselines, Drift Detection
-- ✅ **CED** (4 KSIs): FedRAMP Authorization Documents, System Boundary, SSP Updates, Continuous Delivery
-- ✅ **TPR** (2 KSIs): Supply Chain Risk Assessment, Supply Chain Risk Monitoring
-- ✅ **RPL** (4 KSIs): Recovery Objectives, Recovery Plans, System Backups, Recovery Testing
-- ✅ **PIY** (8 KSIs): Automated Inventory, Data Minimization, Vulnerability Disclosure, CISA Secure By Design, Security Evaluations, Investment Effectiveness, Supply Chain Risk, Executive Support
-
 ## Overview
 
 This server loads FedRAMP 20x data from the official [FedRAMP documentation repository](https://github.com/FedRAMP/docs) and provides tools for querying requirements by control, family, or keyword.
@@ -678,48 +655,64 @@ List all Key Security Indicators.
 **Returns:** Complete list of all Key Security Indicators with their names
 
 ### get_ksi_evidence_automation
-Get evidence automation recommendations for a specific KSI.
+Get comprehensive evidence automation recommendations for a specific KSI. **All 65 active KSIs** include complete automated evidence collection guidance.
 
 **Parameters:**
 - `ksi_id` (string): The KSI identifier (e.g., "KSI-IAM-01", "KSI-CNA-01")
 
 **Returns:** Comprehensive guidance for automating evidence collection including:
-- Azure services needed (Log Analytics, Resource Graph, Storage, etc.)
-- Collection methods and schedules
-- Storage requirements and retention policies
-- FRR-ADS API integration details
-- Code examples and infrastructure templates
-- Implementation effort estimates and prerequisites
+- **Azure Services**: 5 Azure services per KSI (Log Analytics, Resource Graph, Defender for Cloud, Azure Policy, Azure Monitor, etc.) with specific configuration guidance
+- **Collection Methods**: 4-5 automated collection approaches (continuous monitoring, scheduled assessments, event-driven triggers, log aggregation)
+- **Storage Requirements**: Retention policies (30-90 days operational, 1-7 years compliance), encryption standards, access controls
+- **FRR-ADS Integration**: Machine-readable API endpoints for Authorization Data Sharing compliance
+- **Implementation Details**: Effort estimates, prerequisites, cost considerations, responsible parties (Security, DevOps, Compliance, Engineering)
+- **Code Examples**: Infrastructure-as-code templates (Bicep, Terraform) and automation scripts
 
-**Example:** Use `get_ksi_evidence_automation("KSI-IAM-01")` to get detailed automation guidance for phishing-resistant MFA evidence collection.
+**Coverage:** 100% of active KSIs across all 11 families:
+- IAM (7): MFA, Privilege Management, Session Controls, Credential Lifecycle, User Termination, JIT Access, Shared Accounts
+- CNA (8): Network Segmentation, TLS Configuration, Connection Logging, Azure Monitor, Key Vault, Secrets Detection, Container Registry, GitHub Security
+- MLA (5): Log Aggregation, Retention, Tamper Detection, Search Capabilities, Alerting
+- INR (3): Incident Response Plans, Incident Logging, After Action Reports
+- AFR (11): Asset Discovery, SBOM, Penetration Testing, Dev/Prod Separation, GitHub Actions Security, Container Scanning, and more
+- SVC (9): FIPS 140-3 Cryptography, API Authentication, Rate Limiting, Input Validation, Error Handling, Secrets Management, DoS Protection, Secrets Rotation, Dependency Management
+- CMT (4): Continuous Monitoring, Health Checks, Configuration Baselines, Drift Detection
+- CED (4): Authorization Documents, System Boundary, SSP Updates, Continuous Delivery
+- TPR (2): Supply Chain Risk Assessment, Supply Chain Risk Monitoring
+- RPL (4): Recovery Objectives, Recovery Plans, System Backups, Recovery Testing
+- PIY (8): Automated Inventory, Data Minimization, Vulnerability Disclosure, Secure By Design, Security Evaluations, Investment Effectiveness, Supply Chain Risk, Executive Support
+
+**Example:** `get_ksi_evidence_automation("KSI-IAM-01")` returns automated evidence collection for phishing-resistant MFA including Entra ID Conditional Access policies, sign-in logs via Log Analytics, MFA method registration queries, and compliance reporting dashboards.
 
 ### get_ksi_evidence_queries
-Get evidence collection queries for a specific KSI.
+Get ready-to-use evidence collection queries for a specific KSI.
 
 **Parameters:**
 - `ksi_id` (string): The KSI identifier (e.g., "KSI-IAM-01", "KSI-CNA-01")
 
-**Returns:** Ready-to-use queries for collecting evidence from Azure:
-- KQL queries for Log Analytics
-- Azure Resource Graph queries
-- REST API calls for Microsoft Graph
-- Query descriptions and usage guidance
+**Returns:** Production-ready queries for collecting evidence from Azure (5 queries per KSI):
+- **KQL Queries**: Log Analytics/Azure Monitor Kusto queries for log analysis and metrics
+- **Azure Resource Graph**: Infrastructure and configuration state queries
+- **REST API**: Azure Resource Manager API calls for programmatic data retrieval
+- **Azure CLI**: Command-line scripts for evidence extraction
+- **PowerShell**: Azure PowerShell cmdlets for automated collection
 
-**Example:** Use `get_ksi_evidence_queries("KSI-CNA-01")` to get NSG rule audit queries and network security analysis queries.
+**Example:** `get_ksi_evidence_queries("KSI-CNA-01")` returns Resource Graph queries for NSG rules, Azure Firewall policies, virtual network configurations, subnet segmentation analysis, and network topology validation.
 
 ### get_ksi_evidence_artifacts
-Get list of evidence artifacts to collect for a specific KSI.
+Get specifications for evidence artifacts to collect for a specific KSI.
 
 **Parameters:**
 - `ksi_id` (string): The KSI identifier (e.g., "KSI-IAM-01", "KSI-CNA-01")
 
-**Returns:** Detailed information about what artifacts to collect:
-- Artifact names and types (logs, configs, reports)
-- Collection methods and frequency
-- File formats and retention requirements
-- Storage recommendations
+**Returns:** Detailed artifact specifications (5 artifacts per KSI):
+- **Artifact Names**: Specific evidence files/reports required (e.g., "MFA_Sign_In_Logs.csv", "NSG_Rule_Export.json")
+- **Collection Methods**: How to gather each artifact (automated export, API retrieval, dashboard screenshot, compliance report)
+- **File Formats**: CSV, JSON, PDF, PNG (dashboard screenshots), XLSX (compliance matrices)
+- **Update Frequencies**: Daily, weekly, monthly, or quarterly collection schedules based on requirement criticality
+- **Retention Requirements**: 30-90 days for operational data, 1-7 years for compliance evidence
+- **Storage Recommendations**: Azure Blob Storage with encryption, access logging, immutability policies
 
-**Example:** Use `get_ksi_evidence_artifacts("KSI-IAM-01")` to get the list of sign-in logs, CA policies, and authentication method reports needed.
+**Example:** `get_ksi_evidence_artifacts("KSI-IAM-01")` returns sign-in logs (CSV, daily, 90 days), Conditional Access policy exports (JSON, weekly, 1 year), MFA method registration reports (XLSX, monthly, 3 years), authentication dashboard screenshots (PNG, quarterly, 1 year), and MFA compliance matrices (PDF, monthly, 7 years).
 
 ### compare_with_rev4
 Compare FedRAMP 20x with Rev 4/Rev 5 requirements for specific areas.
