@@ -520,3 +520,253 @@ class KSI_CNA_07_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get Azure-specific recommendations for automating evidence collection for KSI-CNA-07.
+        
+        **KSI-CNA-07: Best Practices**
+        Ensure cloud-native information resources are implemented based on host provider's best practices and documented guidance.
+        
+        Returns:
+            Dictionary with automation recommendations
+        """
+        return {
+            "ksi_id": "KSI-CNA-07",
+            "ksi_name": "Best Practices",
+            "azure_services": [
+                {
+                    "service": "Azure Advisor",
+                    "purpose": "Provide personalized best practice recommendations across all pillars",
+                    "capabilities": [
+                        "Cost optimization recommendations",
+                        "Security best practices",
+                        "Reliability improvements",
+                        "Operational excellence guidance",
+                        "Performance optimization"
+                    ]
+                },
+                {
+                    "service": "Azure Policy",
+                    "purpose": "Enforce Azure best practices through policy definitions",
+                    "capabilities": [
+                        "Built-in policy initiatives (Azure Security Benchmark, CIS)",
+                        "Compliance dashboards",
+                        "Automatic remediation",
+                        "Audit mode for best practice adherence"
+                    ]
+                },
+                {
+                    "service": "Microsoft Defender for Cloud",
+                    "purpose": "Assess security posture against Azure Security Benchmark",
+                    "capabilities": [
+                        "Secure Score tracking",
+                        "Azure Security Benchmark compliance",
+                        "Best practice recommendations",
+                        "Regulatory compliance mapping"
+                    ]
+                },
+                {
+                    "service": "Azure Well-Architected Review",
+                    "purpose": "Systematic assessment against Well-Architected Framework",
+                    "capabilities": [
+                        "Pillar-based assessment",
+                        "Workload evaluation",
+                        "Prioritized recommendations",
+                        "Continuous improvement tracking"
+                    ]
+                },
+                {
+                    "service": "Azure Monitor Workbooks",
+                    "purpose": "Track and visualize best practice compliance",
+                    "capabilities": [
+                        "Custom compliance dashboards",
+                        "Trend analysis",
+                        "Resource compliance visualization",
+                        "Executive reporting"
+                    ]
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "Advisor Best Practice Recommendations",
+                    "description": "Track all active Advisor recommendations and remediation status",
+                    "automation": "Azure Advisor API",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Advisor recommendation status report"
+                },
+                {
+                    "method": "Policy Compliance Assessment",
+                    "description": "Measure compliance with Azure best practice policy initiatives",
+                    "automation": "Azure Policy compliance API",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Policy compliance report with remediation tracking"
+                },
+                {
+                    "method": "Secure Score Tracking",
+                    "description": "Monitor Secure Score and Azure Security Benchmark compliance",
+                    "automation": "Defender for Cloud API",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Secure Score trend report"
+                },
+                {
+                    "method": "Well-Architected Assessment Results",
+                    "description": "Document periodic Well-Architected Framework reviews",
+                    "automation": "Azure Well-Architected Review tool + manual assessment",
+                    "frequency": "Quarterly",
+                    "evidence_produced": "WAF assessment report with recommendations"
+                }
+            ],
+            "automation_feasibility": "high",
+            "evidence_types": ["config-based", "process-based"],
+            "implementation_guidance": {
+                "quick_start": "Enable Advisor recommendations, deploy Azure Security Benchmark policy initiative, track Secure Score in Defender, conduct quarterly WAF assessments",
+                "azure_well_architected": "Directly implements Azure WAF guidance for continuous improvement",
+                "compliance_mapping": "Addresses NIST controls ac-17.3, cm-2, pl-10 for baseline configuration and best practices"
+            }
+        }
+    
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get specific Azure queries for collecting KSI-CNA-07 evidence.
+        """
+        return {
+            "ksi_id": "KSI-CNA-07",
+            "queries": [
+                {
+                    "name": "Advisor Recommendations by Category",
+                    "type": "azure_rest_api",
+                    "endpoint": "/subscriptions/{subscriptionId}/providers/Microsoft.Advisor/recommendations?api-version=2023-01-01",
+                    "method": "GET",
+                    "purpose": "List all active Advisor recommendations across all categories",
+                    "expected_result": "Track and remediate high-impact recommendations"
+                },
+                {
+                    "name": "Policy Compliance Status",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        policyresources
+                        | where type == 'microsoft.policyinsights/policystates'
+                        | where properties.policyDefinitionAction == 'audit' or properties.policyDefinitionAction == 'deny'
+                        | summarize CompliantResources = countif(properties.complianceState == 'Compliant'),
+                                   NonCompliantResources = countif(properties.complianceState == 'NonCompliant')
+                                   by PolicyName = tostring(properties.policyDefinitionName)
+                        | extend CompliancePercentage = round((CompliantResources * 100.0) / (CompliantResources + NonCompliantResources), 2)
+                        | project PolicyName, CompliantResources, NonCompliantResources, CompliancePercentage
+                        | order by CompliancePercentage asc
+                        """,
+                    "purpose": "Measure compliance with Azure best practice policies",
+                    "expected_result": "High compliance percentage for all best practice policies"
+                },
+                {
+                    "name": "Secure Score",
+                    "type": "azure_rest_api",
+                    "endpoint": "/subscriptions/{subscriptionId}/providers/Microsoft.Security/secureScores?api-version=2020-01-01",
+                    "method": "GET",
+                    "purpose": "Track Secure Score and Azure Security Benchmark compliance",
+                    "expected_result": "Increasing Secure Score trend"
+                },
+                {
+                    "name": "Defender Recommendations",
+                    "type": "azure_rest_api",
+                    "endpoint": "/subscriptions/{subscriptionId}/providers/Microsoft.Security/assessments?api-version=2021-06-01",
+                    "method": "GET",
+                    "purpose": "List security recommendations from Defender for Cloud",
+                    "expected_result": "Track remediation of unhealthy assessments"
+                },
+                {
+                    "name": "Resource Tagging Compliance",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        resources
+                        | where type !contains 'microsoft.insights' and type !contains 'microsoft.alertsmanagement'
+                        | extend HasRequiredTags = iff(
+                            isnotnull(tags['Environment']) and 
+                            isnotnull(tags['Owner']) and 
+                            isnotnull(tags['CostCenter']),
+                            'Yes', 'No'
+                        )
+                        | summarize TotalResources = count(), TaggedResources = countif(HasRequiredTags == 'Yes')
+                        | extend TaggingCompliance = round((TaggedResources * 100.0) / TotalResources, 2)
+                        """,
+                    "purpose": "Verify resources follow Azure tagging best practices",
+                    "expected_result": "High percentage of resources with required tags"
+                }
+            ],
+            "query_execution_guidance": {
+                "authentication": "Use Azure CLI or Managed Identity",
+                "permissions_required": [
+                    "Reader for Advisor and Security assessments",
+                    "Policy Insights Data Reader for policy compliance",
+                    "Security Reader for Defender for Cloud data"
+                ],
+                "automation_tools": [
+                    "Azure CLI (az advisor, az policy, az security)",
+                    "PowerShell Az.Advisor and Az.Security modules"
+                ]
+            }
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get descriptions of evidence artifacts for KSI-CNA-07.
+        """
+        return {
+            "ksi_id": "KSI-CNA-07",
+            "artifacts": [
+                {
+                    "name": "Azure Advisor Best Practice Report",
+                    "description": "Complete list of Advisor recommendations with remediation status",
+                    "source": "Azure Advisor",
+                    "format": "CSV with recommendation categories and priority",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "3 years",
+                    "automation": "Advisor API scheduled export"
+                },
+                {
+                    "name": "Azure Policy Compliance Dashboard",
+                    "description": "Compliance status for Azure best practice policy initiatives",
+                    "source": "Azure Policy",
+                    "format": "JSON compliance report",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "3 years",
+                    "automation": "Policy compliance API export"
+                },
+                {
+                    "name": "Secure Score Trend Report",
+                    "description": "Historical Secure Score tracking with Azure Security Benchmark compliance",
+                    "source": "Microsoft Defender for Cloud",
+                    "format": "CSV with score history",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "3 years",
+                    "automation": "Security API + Log Analytics export"
+                },
+                {
+                    "name": "Well-Architected Framework Assessment",
+                    "description": "Comprehensive WAF assessment results across all five pillars",
+                    "source": "Azure Well-Architected Review",
+                    "format": "PDF assessment report",
+                    "collection_frequency": "Quarterly",
+                    "retention_period": "5 years",
+                    "automation": "Manual assessment + automated report generation"
+                },
+                {
+                    "name": "Best Practice Implementation Plan",
+                    "description": "Roadmap for addressing identified best practice gaps",
+                    "source": "Project management tool / documentation",
+                    "format": "Excel/Project plan with timelines",
+                    "collection_frequency": "Quarterly",
+                    "retention_period": "3 years",
+                    "automation": "Version-controlled in Git"
+                }
+            ],
+            "artifact_storage": {
+                "primary": "Azure Blob Storage with immutable storage",
+                "backup": "Azure Backup with GRS replication",
+                "access_control": "Azure RBAC with audit trail"
+            },
+            "compliance_mapping": {
+                "fedramp_controls": ["ac-17.3", "cm-2", "pl-10"],
+                "evidence_purpose": "Demonstrate systematic adherence to Azure best practices and continuous improvement"
+            }
+        }

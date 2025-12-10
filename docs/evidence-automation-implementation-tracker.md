@@ -3,20 +3,21 @@
 ## Progress Overview
 
 **Total Active KSIs:** 65  
-**Implemented:** 23 (35.4%)  
-**Remaining:** 42 (64.6%)
+**Implemented:** 27 (41.5%)  
+**Remaining:** 38 (58.5%)
 
 **Target:** Implement evidence automation for all 65 active KSIs
 
 **Phase 1 Complete:** All 10 high-priority KSIs implemented ✅  
 **MLA Family Complete:** All 5 MLA KSIs implemented ✅  
-**INR Family Complete:** All 1 INR KSI implemented ✅
+**INR Family Complete:** All 1 INR KSI implemented ✅  
+**IAM Family Complete:** All 7 IAM KSIs implemented ✅
 
 ---
 
 ## Implementation Status by Family
 
-### ✅ IAM - Identity and Access Management (6/7 = 85.7%)
+### ✅ IAM - Identity and Access Management (7/7 = 100% COMPLETE)
 
 - [x] **KSI-IAM-01** - Phishing-Resistant MFA ✅ COMPLETE
   - Evidence Type: log-based
@@ -66,9 +67,15 @@
   - Queries: 5 (3 Graph API, 2 KQL)
   - Artifacts: 5
 
-- [ ] **KSI-IAM-07** - Just-in-Time Access
+- [x] **KSI-IAM-07** - Automated Account Management ✅ COMPLETE
+  - Evidence Type: log-based, config-based
+  - Automation Feasibility: high
+  - Implementation Effort: medium
+  - Azure Services: 5 (Lifecycle Workflows, Governance, Automation, SCIM, Monitor)
+  - Queries: 5 (3 Graph API, 2 KQL)
+  - Artifacts: 5
 
-### ✅ CNA - Cloud Native Architecture (4/8 = 50%)
+### ✅ CNA - Cloud Native Architecture (7/8 = 87.5%)
 
 - [x] **KSI-CNA-01** - Restrict Network Traffic ✅ COMPLETE
   - Evidence Type: config-based
@@ -102,17 +109,31 @@
   - Queries: 5 (2 Resource Graph, 1 REST API, 1 DevOps API, 1 KQL)
   - Artifacts: 5
 
-- [ ] **KSI-CNA-05** - API Security
-- [ ] **KSI-CNA-06** - Container Security
-- [ ] **KSI-CNA-07** - Serverless Security
+- [x] **KSI-CNA-05** - Unwanted Activity (DDoS Protection) ✅ COMPLETE
+  - Evidence Type: log-based, metric-based
+  - Automation Feasibility: high
+  - Implementation Effort: medium
+  - Azure Services: 5 (DDoS Protection, App Gateway/Front Door WAF, Firewall Premium, Monitor, Sentinel)
+  - Queries: 5 (4 KQL, 1 Resource Graph)
+  - Artifacts: 5
+
+- [x] **KSI-CNA-06** - High Availability ✅ COMPLETE
+  - Evidence Type: config-based, metric-based, process-based
+  - Automation Feasibility: high
+  - Implementation Effort: medium
+  - Azure Services: 5 (Availability Zones, Site Recovery, Load Balancer/Traffic Manager, Monitor, Advisor)
+  - Queries: 5 (2 Resource Graph, 2 REST API, 1 KQL)
+  - Artifacts: 5
+
+- [x] **KSI-CNA-07** - Best Practices ✅ COMPLETE
+  - Evidence Type: config-based, process-based
+  - Automation Feasibility: high
+  - Implementation Effort: low
+  - Azure Services: 5 (Advisor, Policy, Defender for Cloud, WAF Review, Monitor Workbooks)
+  - Queries: 5 (3 REST API, 2 Resource Graph)
+  - Artifacts: 5
+
 - [ ] **KSI-CNA-08** - Cloud-Native Patterns
-- [x] **KSI-CNA-03** - Infrastructure as Code ✅
-  - Services: 5 (Network Watcher, Firewall, Policy, Monitor, Resource Graph)
-  - Methods: 4
-  - Queries: 6
-  - Artifacts: 6
-- [ ] **KSI-CNA-04** - Container Security
-- [ ] **KSI-CNA-05** - API Security
 - [ ] **KSI-CNA-06** - Microservices Security
 - [ ] **KSI-CNA-07** - Service Mesh Security
 - [ ] **KSI-CNA-08** - Zero Trust Architecture

@@ -12,7 +12,7 @@ NIST Controls: ac-2.2, ac-2.3, ac-2.13, ac-6.7, ia-4.4, ia-12, ia-12.2, ia-12.3,
 
 import ast
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity, AnalysisResult
 from .base import BaseKSIAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -1158,3 +1158,254 @@ class KSI_IAM_07_Analyzer(BaseKSIAnalyzer):
         findings = []
         # No applicable patterns for GitLab CI
         return findings
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get Azure-specific recommendations for automating evidence collection for KSI-IAM-07.
+        
+        **KSI-IAM-07: Automated Account Management**
+        Securely manage the lifecycle and privileges of all accounts, roles, and groups, using automation.
+        
+        Returns:
+            Dictionary with automation recommendations
+        """
+        return {
+            "ksi_id": "KSI-IAM-07",
+            "ksi_name": "Automated Account Management",
+            "azure_services": [
+                {
+                    "service": "Microsoft Entra ID Lifecycle Workflows",
+                    "purpose": "Automate joiner-mover-leaver account lifecycle processes",
+                    "capabilities": [
+                        "Automated user provisioning and deprovisioning",
+                        "Scheduled account reviews and cleanup",
+                        "Group membership automation",
+                        "Custom workflows for lifecycle events"
+                    ]
+                },
+                {
+                    "service": "Microsoft Entra ID Governance",
+                    "purpose": "Automate access reviews and entitlement management",
+                    "capabilities": [
+                        "Automated access reviews for privileged roles",
+                        "Entitlement management with approval workflows",
+                        "Automated role assignment based on attributes",
+                        "Separation of duties enforcement"
+                    ]
+                },
+                {
+                    "service": "Azure Automation",
+                    "purpose": "Execute automated account management scripts and runbooks",
+                    "capabilities": [
+                        "Scheduled runbooks for account audits",
+                        "Inactive account detection and disabling",
+                        "Automated role assignment cleanup",
+                        "Integration with HR systems"
+                    ]
+                },
+                {
+                    "service": "Microsoft Entra ID SCIM Provisioning",
+                    "purpose": "Automate user provisioning across connected systems",
+                    "capabilities": [
+                        "Automated sync from HR systems",
+                        "Cross-system account lifecycle sync",
+                        "Attribute-based provisioning rules",
+                        "Audit trail of provisioning events"
+                    ]
+                },
+                {
+                    "service": "Azure Monitor",
+                    "purpose": "Track and alert on account lifecycle events",
+                    "capabilities": [
+                        "Alerts for manual account modifications",
+                        "Account lifecycle event logging",
+                        "Orphaned account detection",
+                        "Compliance reporting"
+                    ]
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "Lifecycle Workflow Execution Logs",
+                    "description": "Track all automated provisioning/deprovisioning events",
+                    "automation": "Entra ID audit logs via Graph API",
+                    "frequency": "Continuous (with monthly reports)",
+                    "evidence_produced": "Workflow execution history with timestamps"
+                },
+                {
+                    "method": "Access Review Results",
+                    "description": "Document automated access reviews and their outcomes",
+                    "automation": "Entra ID Governance API",
+                    "frequency": "Quarterly (per review cycle)",
+                    "evidence_produced": "Access review reports with approvals/removals"
+                },
+                {
+                    "method": "Inactive Account Report",
+                    "description": "Identify and track disabled inactive accounts",
+                    "automation": "Azure Automation runbook + Graph API",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Inactive account list with last sign-in dates"
+                },
+                {
+                    "method": "SCIM Provisioning Audit",
+                    "description": "Track automated provisioning events from HR systems",
+                    "automation": "Entra ID provisioning logs",
+                    "frequency": "Daily",
+                    "evidence_produced": "Provisioning event log with success/failure status"
+                }
+            ],
+            "automation_feasibility": "high",
+            "evidence_types": ["log-based", "config-based"],
+            "implementation_guidance": {
+                "quick_start": "Enable Lifecycle Workflows for joiner/leaver, configure Access Reviews for privileged roles, deploy Automation runbook for inactive accounts, integrate HR via SCIM",
+                "azure_well_architected": "Follows Azure WAF operational excellence for automated governance",
+                "compliance_mapping": "Addresses NIST controls ac-2.2, ac-2.3, ac-2.13, ac-6.7 for automated account lifecycle"
+            }
+        }
+    
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get specific Azure queries for collecting KSI-IAM-07 evidence.
+        """
+        return {
+            "ksi_id": "KSI-IAM-07",
+            "queries": [
+                {
+                    "name": "Lifecycle Workflow Execution History",
+                    "type": "graph_api",
+                    "endpoint": "https://graph.microsoft.com/v1.0/identityGovernance/lifecycleWorkflows/workflows/{workflowId}/runs",
+                    "method": "GET",
+                    "purpose": "Track automated provisioning/deprovisioning workflows",
+                    "expected_result": "All joiner/leaver events automated via workflows"
+                },
+                {
+                    "name": "Access Review Results",
+                    "type": "graph_api",
+                    "endpoint": "https://graph.microsoft.com/v1.0/identityGovernance/accessReviews/definitions/{reviewId}/instances/{instanceId}/decisions",
+                    "method": "GET",
+                    "purpose": "Document automated access reviews for privileged accounts",
+                    "expected_result": "Quarterly reviews completed with documented decisions"
+                },
+                {
+                    "name": "Inactive User Accounts",
+                    "type": "graph_api",
+                    "endpoint": "https://graph.microsoft.com/v1.0/users?$filter=signInActivity/lastSignInDateTime lt {90DaysAgo} and accountEnabled eq true",
+                    "method": "GET",
+                    "purpose": "Identify accounts inactive for 90+ days that should be disabled",
+                    "expected_result": "Minimal or zero inactive accounts (automated cleanup)"
+                },
+                {
+                    "name": "SCIM Provisioning Events",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace",
+                    "query": """
+                        AuditLogs
+                        | where TimeGenerated > ago(30d)
+                        | where Category == 'ProvisioningManagement'
+                        | where OperationName in ('User created', 'User deleted', 'User updated')
+                        | extend ProvisioningSource = tostring(parse_json(AdditionalDetails)[0].value)
+                        | where ProvisioningSource contains 'SCIM' or ProvisioningSource contains 'HR'
+                        | project TimeGenerated, OperationName, Identity, TargetResources, Result
+                        | order by TimeGenerated desc
+                        """,
+                    "purpose": "Track automated user provisioning from HR systems",
+                    "expected_result": "All account changes via SCIM/HR integration"
+                },
+                {
+                    "name": "Manual Account Modifications",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace",
+                    "query": """
+                        AuditLogs
+                        | where TimeGenerated > ago(7d)
+                        | where Category == 'UserManagement'
+                        | where OperationName in ('Add user', 'Delete user', 'Update user')
+                        | extend InitiatedBy = tostring(parse_json(InitiatedBy).user.userPrincipalName)
+                        | where InitiatedBy !contains 'automation' and InitiatedBy !contains 'service'
+                        | project TimeGenerated, OperationName, InitiatedBy, TargetResources
+                        | summarize ManualChanges = count() by bin(TimeGenerated, 1d)
+                        | order by TimeGenerated desc
+                        """,
+                    "purpose": "Detect manual account changes (should be minimal)",
+                    "expected_result": "Near-zero manual changes (except break-glass)"
+                }
+            ],
+            "query_execution_guidance": {
+                "authentication": "Use Azure CLI or Managed Identity",
+                "permissions_required": [
+                    "IdentityGovernance.Read.All for Lifecycle Workflows and Access Reviews",
+                    "User.Read.All for user account queries",
+                    "AuditLog.Read.All for provisioning audit logs",
+                    "Log Analytics Reader for KQL queries"
+                ],
+                "automation_tools": [
+                    "Microsoft Graph PowerShell SDK",
+                    "Azure CLI (az rest for Graph API)",
+                    "Azure Automation runbooks"
+                ]
+            }
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get descriptions of evidence artifacts for KSI-IAM-07.
+        """
+        return {
+            "ksi_id": "KSI-IAM-07",
+            "artifacts": [
+                {
+                    "name": "Lifecycle Workflow Configuration and Execution Logs",
+                    "description": "Documentation of automated joiner/mover/leaver workflows with execution history",
+                    "source": "Entra ID Lifecycle Workflows",
+                    "format": "JSON from Graph API",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "3 years",
+                    "automation": "Graph API scheduled export"
+                },
+                {
+                    "name": "Access Review Reports",
+                    "description": "Automated access review results for privileged accounts and roles",
+                    "source": "Entra ID Governance",
+                    "format": "CSV with decisions and approvers",
+                    "collection_frequency": "Quarterly (per review cycle)",
+                    "retention_period": "7 years",
+                    "automation": "Graph API export after review completion"
+                },
+                {
+                    "name": "Inactive Account Remediation Log",
+                    "description": "Record of automated detection and disabling of inactive accounts",
+                    "source": "Azure Automation + Graph API",
+                    "format": "CSV with account details and actions taken",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "3 years",
+                    "automation": "Automation runbook output"
+                },
+                {
+                    "name": "SCIM Provisioning Audit Trail",
+                    "description": "Complete log of automated provisioning events from HR systems",
+                    "source": "Entra ID Provisioning Logs",
+                    "format": "JSON or CSV from Log Analytics",
+                    "collection_frequency": "Daily (continuous ingestion)",
+                    "retention_period": "3 years",
+                    "automation": "Log Analytics export"
+                },
+                {
+                    "name": "Automation Coverage Report",
+                    "description": "Percentage of account lifecycle events handled by automation vs. manual",
+                    "source": "Entra ID Audit Logs",
+                    "format": "CSV with automation metrics",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "3 years",
+                    "automation": "Custom KQL query + Power BI report"
+                }
+            ],
+            "artifact_storage": {
+                "primary": "Azure Blob Storage with immutable storage",
+                "backup": "Azure Backup with GRS replication",
+                "access_control": "Azure RBAC with audit trail"
+            },
+            "compliance_mapping": {
+                "fedramp_controls": ["ac-2.2", "ac-2.3", "ac-2.13", "ac-6.7", "ia-4.4", "ia-12"],
+                "evidence_purpose": "Demonstrate automated account lifecycle management with minimal manual intervention"
+            }
+        }
