@@ -3,8 +3,8 @@
 ## Progress Overview
 
 **Total Active KSIs:** 65  
-**Implemented:** 30 (46.2%)  
-**Remaining:** 35 (53.8%)
+**Implemented:** 34 (52.3%)  
+**Remaining:** 31 (47.7%)
 
 **Target:** Implement evidence automation for all 65 active KSIs
 
@@ -145,11 +145,30 @@
 - [ ] **KSI-CNA-07** - Service Mesh Security
 - [ ] **KSI-CNA-08** - Zero Trust Architecture
 
-### AFR - Authorization Framework (2/11 = 18%)
+### AFR - Authorization Framework (6/11 = 54.5%)
 
-- [ ] **KSI-AFR-01** - Minimum Assessment Scope (MAS)
-- [ ] **KSI-AFR-02** - Continuous Monitoring
-- [ ] **KSI-AFR-03** - Significant Change Notification (SCN)
+- [x] **KSI-AFR-01** - Minimum Assessment Scope (MAS) ✅ COMPLETE
+  - Evidence Type: process-based
+  - Automation Feasibility: high
+  - Implementation Effort: medium
+  - Azure Services: 5 (Policy, Monitor, DevOps, Resource Graph, Defender)
+  - Queries: 5 (2 Resource Graph, 1 Policy, 1 Monitor KQL, 1 DevOps API)
+  - Artifacts: 5
+- [x] **KSI-AFR-02** - Key Security Indicators (Meta-KSI) ✅ COMPLETE
+  - Evidence Type: process-based
+  - Automation Feasibility: high
+  - Implementation Effort: low
+  - Azure Services: 5 (Monitor, Automation, DevOps, Logic Apps, Storage)
+  - Queries: 5 (3 Azure KQL, 1 Storage API, 1 DevOps API)
+  - Artifacts: 5
+  - Special Note: Meta-KSI addressed by implementing all other 64 KSIs
+- [x] **KSI-AFR-03** - Authorization Data Sharing ✅ COMPLETE
+  - Evidence Type: process-based
+  - Automation Feasibility: high
+  - Implementation Effort: medium
+  - Azure Services: 5 (Monitor, DevOps, Storage, Purview, Logic Apps)
+  - Queries: 5 (1 DevOps API, 1 Purview API, 1 Monitor KQL, 2 Resource Graph)
+  - Artifacts: 5
 - [x] **KSI-AFR-04** - Vulnerability Detection and Response (VDR) ✅ COMPLETE
   - Evidence Type: log-based, metric-based
   - Automation Feasibility: high
@@ -157,7 +176,13 @@
   - Azure Services: 5 (Defender for Cloud, Defender for DevOps, ACR, Monitor, DevOps)
   - Queries: 5 (3 KQL, 1 REST API, 1 DevOps API)
   - Artifacts: 6
-- [ ] **KSI-AFR-05** - Security Control Monitoring (SCN)
+- [x] **KSI-AFR-05** - Significant Change Notifications (SCN) ✅ COMPLETE
+  - Evidence Type: process-based
+  - Automation Feasibility: high
+  - Implementation Effort: high
+  - Azure Services: 5 (Monitor, Logic Apps, DevOps, Policy, Sentinel)
+  - Queries: 5 (2 Azure KQL, 1 Logic Apps API, 1 DevOps API, 1 Policy API)
+  - Artifacts: 5
 - [x] **KSI-AFR-06** - Collaborative Continuous Monitoring (CCM) ✅ COMPLETE
   - Evidence Type: log-based, metric-based, config-based
   - Automation Feasibility: high
