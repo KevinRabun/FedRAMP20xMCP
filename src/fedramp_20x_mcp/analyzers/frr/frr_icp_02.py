@@ -61,7 +61,7 @@ class FRR_ICP_02_Analyzer(BaseFRRAnalyzer):
         # TODO: Add NIST controls (e.g., ("RA-5", "Vulnerability Monitoring and Scanning"))
     ]
     CODE_DETECTABLE = "No"
-    IMPLEMENTATION_STATUS = "PARTIAL"
+    IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
         # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
     ]

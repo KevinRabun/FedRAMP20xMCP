@@ -60,8 +60,8 @@ class FRR_VDR_TF_LO_03_Analyzer(BaseFRRAnalyzer):
     NIST_CONTROLS = [
         # TODO: Add NIST controls (e.g., ("RA-5", "Vulnerability Monitoring and Scanning"))
     ]
-    CODE_DETECTABLE = "Unknown"
-    IMPLEMENTATION_STATUS = "PARTIAL"
+    CODE_DETECTABLE = "Partial"
+    IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
         # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
     ]

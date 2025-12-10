@@ -60,10 +60,10 @@ class FRR_ADS_01_Analyzer(BaseFRRAnalyzer):
     NIST_CONTROLS = [
         # TODO: Add NIST controls (e.g., ("RA-5", "Vulnerability Monitoring and Scanning"))
     ]
-    CODE_DETECTABLE = "Unknown"
-    IMPLEMENTATION_STATUS = "PARTIAL"
+    CODE_DETECTABLE = "Partial"
+    IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-AFR-01",  # Automated FedRAMP Data Publication
     ]
     
     def __init__(self):
@@ -74,82 +74,82 @@ class FRR_ADS_01_Analyzer(BaseFRRAnalyzer):
             frr_statement=self.FRR_STATEMENT
         )
     
+    def analyze_documentation(self, content: str, file_path: str = "") -> List[Finding]:
+        """
+        Analyze documentation for public information about cloud service offering.
+        
+        Checks for:
+        - Human-readable documentation (README, website)
+        - Machine-readable formats (JSON, YAML, OSCAL)
+        - Service information completeness
+        """
+        findings = []
+        
+        # Only analyze documentation files
+        doc_keywords = ['readme', 'index', 'about', 'service', 'offering', 'fedramp', 'oscal', 'ssp']
+        if not any(keyword in file_path.lower() for keyword in doc_keywords):
+            return findings
+        
+        content_lower = content.lower()
+        
+        # Check for machine-readable format indicators
+        has_machine_readable = any(fmt in content_lower for fmt in [
+            'oscal', 'json', 'yaml', 'api endpoint', 'schema', 'openapi', 'swagger'
+        ])
+        
+        # Check for service offering information
+        has_service_info = any(info in content_lower for info in [
+            'cloud service', 'fedramp authorized', 'service offering',
+            'authorized services', 'impact level', 'authorization boundary'
+        ])
+        
+        if not has_machine_readable and len(content) > 100:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID,
+                requirement_id=self.FRR_ID,
+                title="Missing machine-readable format documentation",
+                description=f"Documentation in '{file_path}' lacks references to machine-readable formats. FRR-ADS-01 requires public information in both human-readable AND machine-readable formats (e.g., OSCAL, JSON schema).",
+                severity=Severity.MEDIUM,
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Add machine-readable format: 1) Publish OSCAL SSP/SAP/SAR, 2) Provide JSON/YAML API endpoint, 3) Include schema documentation, 4) Reference public FedRAMP marketplace entry"
+            ))
+        
+        if not has_service_info and len(content) > 100:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID,
+                requirement_id=self.FRR_ID,
+                title="Missing cloud service offering information",
+                description=f"Documentation in '{file_path}' does not describe cloud service offering details. FRR-ADS-01 requires public sharing of service information.",
+                severity=Severity.HIGH,
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Document: 1) Service name and description, 2) FedRAMP authorization status, 3) Impact levels, 4) Authorized services list, 5) Authorization boundary"
+            ))
+        
+        return findings
+    
     # ============================================================================
     # APPLICATION CODE ANALYZERS (AST-first for supported languages)
     # ============================================================================
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Python code for FRR-ADS-01 compliance using AST.
-        
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
+        """FRR-ADS-01 is documentation-focused, not application code."""
+        return []
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for FRR-ADS-01 compliance using AST.
-        
-        TODO: Implement C# analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        """FRR-ADS-01 is documentation-focused, not application code."""
+        return []
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for FRR-ADS-01 compliance using AST.
-        
-        TODO: Implement Java analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        """FRR-ADS-01 is documentation-focused, not application code."""
+        return []
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for FRR-ADS-01 compliance using AST.
-        
-        TODO: Implement TypeScript analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
-        return findings
+        """FRR-ADS-01 is documentation-focused, not application code."""
+        return []
     
     # ============================================================================
     # INFRASTRUCTURE AS CODE ANALYZERS (Regex-based)
@@ -191,42 +191,16 @@ class FRR_ADS_01_Analyzer(BaseFRRAnalyzer):
     # ============================================================================
     
     def analyze_github_actions(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitHub Actions workflow for FRR-ADS-01 compliance.
-        
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        """FRR-ADS-01 is documentation-focused, not CI/CD."""
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Azure Pipelines YAML for FRR-ADS-01 compliance.
-        
-        TODO: Implement Azure Pipelines analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        """FRR-ADS-01 is documentation-focused, not CI/CD."""
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitLab CI YAML for FRR-ADS-01 compliance.
-        
-        TODO: Implement GitLab CI analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        """FRR-ADS-01 is documentation-focused, not CI/CD."""
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
@@ -235,44 +209,48 @@ class FRR_ADS_01_Analyzer(BaseFRRAnalyzer):
     def get_evidence_automation_recommendations(self) -> dict:
         """
         Get recommendations for automating evidence collection for FRR-ADS-01.
-        
-        TODO: Add evidence collection guidance
         """
         return {
             'frr_id': self.FRR_ID,
             'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
+            'code_detectable': 'Partial',
+            'automation_approach': 'Automated documentation scanning for public information completeness, combined with manual verification of publication channels',
             'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+                'README.md or public documentation',
+                'OSCAL SSP/SAP/SAR files (machine-readable)',
+                'Public website content (human-readable)',
+                'FedRAMP Marketplace listing',
+                'JSON/YAML service schema files',
+                'API documentation (OpenAPI/Swagger)',
+                'Service catalog or offerings page'
             ],
             'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+                'Documentation scan: Check for both human-readable and machine-readable formats',
+                'Web scrape: Verify public accessibility of documentation',
+                'FedRAMP API: GET marketplace listing status',
+                'Git repository: List documentation files (README, OSCAL, schemas)',
+                'Website crawl: Validate service offering information is publicly available'
             ],
             'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
+                '1. Verify documentation is publicly accessible (no authentication required)',
+                '2. Check for both human-readable (HTML/MD) and machine-readable (OSCAL/JSON) formats',
+                '3. Confirm service offering details are complete (name, impact level, boundary)',
+                '4. Validate FedRAMP Marketplace listing matches documentation',
+                '5. Ensure documentation is up-to-date (review timestamp/version)',
+                '6. Verify all required information elements are present per FRR-ADS-01'
             ],
             'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
+                'GitHub Pages / Azure Static Web Apps - for public documentation hosting',
+                'FedRAMP Marketplace - official public listing',
+                'OSCAL Tools - for machine-readable format generation',
+                'Documentation generators (Sphinx, MkDocs, Docusaurus)',
+                'CI/CD pipelines - auto-publish documentation on updates'
             ],
             'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                'OSCAL format export for automated compliance reporting',
+                'FedRAMP Marketplace API for status verification',
+                'Documentation as code - version control integration',
+                'Automated documentation testing in CI/CD',
+                'Public website monitoring for availability'
             ]
         }
