@@ -642,8 +642,6 @@ Analyze CI/CD pipeline configurations for FedRAMP 20x DevSecOps compliance.
 - **KSI-AFR-02**: Security finding remediation (blocking on vulnerabilities, automated issue creation)
 - **KSI-CED-01**: Continuous evidence collection (artifact uploads, test results, retention policies)
 
-> **📈 Next:** Phase 5 will add 6 more KSIs for Runtime Security & Monitoring (51% total coverage). See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for details.
-
 **Example usage:**
 ```yaml
 # GitHub Actions workflow that will be flagged for missing security scans
@@ -663,8 +661,6 @@ jobs:
 ```
 
 > **💡 Result:** Analyzer recommends adding Trivy container scanning, unit test execution, security gates, and artifact uploads for compliance evidence.
-
-> **📈 Next:** Phase 5 will add 6 more KSIs for Runtime Security & Monitoring (51% total coverage). See [ANALYZER_ROADMAP.md](ANALYZER_ROADMAP.md) for details.
 
 **Example usage:**
 ```python
