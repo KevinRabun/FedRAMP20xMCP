@@ -1068,32 +1068,27 @@ class KSI_MLA_01_Analyzer(BaseKSIAnalyzer):
                 {
                     "service": "Azure Sentinel (Microsoft Sentinel)",
                     "purpose": "Cloud-native SIEM for centralized security event management",
-                    "configuration": "Deploy Sentinel workspace, connect data sources, enable analytics rules",
-                    "cost": "~$2.46/GB ingestion + $0.10/GB retention (after 90 days)"
+                    "configuration": "Deploy Sentinel workspace, connect data sources, enable analytics rules"
                 },
                 {
                     "service": "Azure Log Analytics Workspace",
                     "purpose": "Central repository for all logs with tamper-resistant storage",
-                    "configuration": "Create workspace with 730-day retention, enable workspace protection",
-                    "cost": "~$2.76/GB ingestion + $0.12/GB retention after 31 days"
+                    "configuration": "Create workspace with 730-day retention, enable workspace protection"
                 },
                 {
                     "service": "Azure Monitor",
                     "purpose": "Collect diagnostic logs from all Azure resources",
-                    "configuration": "Enable diagnostic settings on all resources to send to Log Analytics",
-                    "cost": "Included with Log Analytics ingestion costs"
+                    "configuration": "Enable diagnostic settings on all resources to send to Log Analytics"
                 },
                 {
                     "service": "Azure Blob Storage (Immutable)",
                     "purpose": "Long-term tamper-proof archive storage for logs (3+ years)",
-                    "configuration": "Configure immutable blob storage with time-based retention policy",
-                    "cost": "Archive tier: ~$0.002/GB/month"
+                    "configuration": "Configure immutable blob storage with time-based retention policy"
                 },
                 {
                     "service": "Azure Policy",
                     "purpose": "Enforce diagnostic settings on all resources automatically",
-                    "configuration": "Assign built-in policy 'Deploy Diagnostic Settings to Log Analytics'",
-                    "cost": "Free"
+                    "configuration": "Assign built-in policy 'Deploy Diagnostic Settings to Log Analytics'"
                 }
             ],
             "collection_methods": [
@@ -1238,8 +1233,7 @@ Authorization: Bearer {token}
 | summarize TotalGB = sum(Quantity) / 1000, AvgDailyGB = avg(Quantity) / 1000 by DataType
 | extend DataType = iif(DataType == '', 'Unknown', DataType)
 | order by TotalGB desc
-| extend Cost = TotalGB * 2.76  // Approximate cost at $2.76/GB
-| project DataType, TotalGB = round(TotalGB, 2), AvgDailyGB = round(AvgDailyGB, 2), EstimatedCost = round(Cost, 2)""",
+| project DataType, TotalGB = round(TotalGB, 2), AvgDailyGB = round(AvgDailyGB, 2)""",
                 "data_source": "Log Analytics - Usage table",
                 "schedule": "daily",
                 "output_format": "json",

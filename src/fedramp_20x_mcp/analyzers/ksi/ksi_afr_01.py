@@ -219,32 +219,27 @@ class KSI_AFR_01_Analyzer(BaseKSIAnalyzer):
                 {
                     "service": "Azure Policy",
                     "purpose": "Enforce FedRAMP scope tagging and track compliance",
-                    "configuration": "Create policy definition requiring 'FedRAMP-Scope' and 'Impact-Level' tags on all resources. Assign policy at subscription or management group level. Configure compliance reporting dashboard.",
-                    "cost": "Free - included with Azure subscription"
+                    "configuration": "Create policy definition requiring 'FedRAMP-Scope' and 'Impact-Level' tags on all resources. Assign policy at subscription or management group level. Configure compliance reporting dashboard."
                 },
                 {
                     "service": "Azure Resource Graph",
                     "purpose": "Query and inventory all in-scope Azure resources",
-                    "configuration": "Use KQL queries to filter resources by FedRAMP scope tags. Export results to CSV/JSON for evidence artifacts. Schedule queries via Azure Automation runbooks.",
-                    "cost": "Free for first 1000 queries/month, then $0.001 per query"
+                    "configuration": "Use KQL queries to filter resources by FedRAMP scope tags. Export results to CSV/JSON for evidence artifacts. Schedule queries via Azure Automation runbooks."
                 },
                 {
                     "service": "Azure Monitor",
                     "purpose": "Create workbooks documenting assessment boundaries and network architecture",
-                    "configuration": "Design workbooks with sections for resource inventory, network diagrams, data flows, and external connections. Integrate with Resource Graph and Network Watcher for live data.",
-                    "cost": "Free for workbooks; network monitoring data ingestion to Log Analytics ~$2-5/GB"
+                    "configuration": "Design workbooks with sections for resource inventory, network diagrams, data flows, and external connections. Integrate with Resource Graph and Network Watcher for live data."
                 },
                 {
                     "service": "Azure DevOps",
                     "purpose": "Version-controlled storage for assessment scope documentation",
-                    "configuration": "Create wiki pages documenting FedRAMP assessment scope. Use repos for architecture diagrams and data flow documentation. Enable automated updates from Resource Graph queries.",
-                    "cost": "Free tier available (5 users); Basic plan $6/user/month"
+                    "configuration": "Create wiki pages documenting FedRAMP assessment scope. Use repos for architecture diagrams and data flow documentation. Enable automated updates from Resource Graph queries."
                 },
                 {
                     "service": "Microsoft Defender for Cloud",
                     "purpose": "Identify all Azure resources and their security posture within scope",
-                    "configuration": "Enable Defender for Cloud at subscription level. Use inventory blade to view all resources. Export inventory data via Azure Resource Graph integration.",
-                    "cost": "Free tier available; paid plans ~$15/server/month for enhanced features"
+                    "configuration": "Enable Defender for Cloud at subscription level. Use inventory blade to view all resources. Export inventory data via Azure Resource Graph integration."
                 }
             ],
             "collection_methods": [

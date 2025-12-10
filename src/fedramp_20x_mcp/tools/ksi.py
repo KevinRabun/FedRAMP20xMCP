@@ -279,8 +279,7 @@ async def get_ksi_evidence_automation_impl(ksi_id: str, data_loader) -> str:
             for svc in recommendations['azure_services']:
                 result += f"### {svc['service']}\n"
                 result += f"- **Purpose:** {svc['purpose']}\n"
-                result += f"- **Configuration:** {svc['configuration']}\n"
-                result += f"- **Cost:** {svc['cost']}\n\n"
+                result += f"- **Configuration:** {svc['configuration']}\n\n"
         
         # Collection Methods
         if recommendations.get('collection_methods'):

@@ -930,26 +930,22 @@ class KSI_CNA_01_Analyzer(BaseKSIAnalyzer):
                 {
                     "service": "Azure Resource Graph",
                     "purpose": "Query NSG rules, firewall policies, and network configurations",
-                    "configuration": "Built-in service, requires Reader role on subscriptions",
-                    "cost": "Free (up to 15 requests/5 seconds per tenant)"
+                    "configuration": "Built-in service, requires Reader role on subscriptions"
                 },
                 {
                     "service": "Azure Network Watcher",
                     "purpose": "Analyze effective NSG rules and network topology",
-                    "configuration": "Enable Network Watcher in each region",
-                    "cost": "~$0.50/day for NSG flow logs + storage costs"
+                    "configuration": "Enable Network Watcher in each region"
                 },
                 {
                     "service": "Azure Policy",
                     "purpose": "Enforce and audit network security configurations",
-                    "configuration": "Assign built-in or custom policies for NSG compliance",
-                    "cost": "Free"
+                    "configuration": "Assign built-in or custom policies for NSG compliance"
                 },
                 {
                     "service": "Azure Blob Storage",
                     "purpose": "Store network configuration snapshots and evidence",
-                    "configuration": "Use immutable storage with legal hold",
-                    "cost": "Archive tier: ~$0.002/GB/month"
+                    "configuration": "Use immutable storage with legal hold"
                 }
             ],
             "collection_methods": [

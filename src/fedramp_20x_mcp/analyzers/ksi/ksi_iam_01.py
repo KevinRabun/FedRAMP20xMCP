@@ -1433,26 +1433,22 @@ class KSI_IAM_01_Analyzer(BaseKSIAnalyzer):
                 {
                     "service": "Azure AD Sign-in Logs",
                     "purpose": "Track authentication events with MFA details",
-                    "configuration": "Enable Azure AD Premium P1/P2 for sign-in logs",
-                    "cost": "Included with Azure AD Premium licensing"
+                    "configuration": "Enable Azure AD Premium P1/P2 for sign-in logs"
                 },
                 {
                     "service": "Azure Monitor / Log Analytics",
                     "purpose": "Query and analyze authentication logs",
-                    "configuration": "Connect Azure AD logs to Log Analytics workspace",
-                    "cost": "Pay-per-GB ingestion + retention"
+                    "configuration": "Connect Azure AD logs to Log Analytics workspace"
                 },
                 {
                     "service": "Azure Blob Storage",
                     "purpose": "Long-term evidence storage (3+ years)",
-                    "configuration": "Use immutable storage with legal hold or time-based retention",
-                    "cost": "Archive tier: ~$0.002/GB/month"
+                    "configuration": "Use immutable storage with legal hold or time-based retention"
                 },
                 {
                     "service": "Microsoft Graph API",
                     "purpose": "Query Conditional Access policies and authentication methods",
-                    "configuration": "Service principal with Policy.Read.All and AuditLog.Read.All permissions",
-                    "cost": "Free (included with Azure AD)"
+                    "configuration": "Service principal with Policy.Read.All and AuditLog.Read.All permissions"
                 }
             ],
             "collection_methods": [

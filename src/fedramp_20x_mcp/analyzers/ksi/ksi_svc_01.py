@@ -702,32 +702,27 @@ class KSI_SVC_01_Analyzer(BaseKSIAnalyzer):
                 {
                     "service": "Microsoft Defender for Cloud",
                     "purpose": "Continuous security posture assessment with recommendations",
-                    "configuration": "Enable Defender for Cloud with Standard tier for comprehensive security recommendations and Secure Score tracking",
-                    "cost": "~$15/server/month + $10/app service/month (variable by resource type)"
+                    "configuration": "Enable Defender for Cloud with Standard tier for comprehensive security recommendations and Secure Score tracking"
                 },
                 {
                     "service": "Azure Advisor",
                     "purpose": "Best practice recommendations across security, cost, performance",
-                    "configuration": "Built-in service, no configuration needed. Review recommendations in Azure Portal > Advisor > Security",
-                    "cost": "Free (included with Azure subscription)"
+                    "configuration": "Built-in service, no configuration needed. Review recommendations in Azure Portal > Advisor > Security"
                 },
                 {
                     "service": "Azure Monitor Workbooks",
                     "purpose": "Security metrics visualization and trend analysis",
-                    "configuration": "Create custom workbooks from Defender for Cloud data with KQL queries for security trends",
-                    "cost": "Free (data storage charged separately in Log Analytics)"
+                    "configuration": "Create custom workbooks from Defender for Cloud data with KQL queries for security trends"
                 },
                 {
                     "service": "Azure DevOps / GitHub",
                     "purpose": "Track security improvement tasks and implementation",
-                    "configuration": "Create project/repository with security improvement backlog items tagged for tracking velocity",
-                    "cost": "Azure DevOps Basic Plan free for up to 5 users; GitHub Free"
+                    "configuration": "Create project/repository with security improvement backlog items tagged for tracking velocity"
                 },
                 {
                     "service": "Azure Log Analytics",
                     "purpose": "Query and analyze security improvement metrics",
-                    "configuration": "Connect Defender for Cloud and other security services to Log Analytics workspace for unified querying",
-                    "cost": "~$2-5/GB ingested (varies by region and commit tier)"
+                    "configuration": "Connect Defender for Cloud and other security services to Log Analytics workspace for unified querying"
                 }
             ],
             "collection_methods": [
