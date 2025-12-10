@@ -1,8 +1,8 @@
 # FRR Analyzer Implementation Tracker
 
 **Total FRR Requirements:** 199  
-**Implemented:** 1  
-**Progress:** 0.5%
+**Implemented:** 2  
+**Progress:** 1.0%
 
 **Last Updated:** 2025-12-10
 
@@ -33,15 +33,15 @@
 | RSC    | 10    | 0           | ~9            | ~1                        |
 | SCN    | 22    | 0           | ~22           | ~0                        |
 | UCM    | 4     | 0           | ~2            | ~2                        |
-| VDR    | 57    | 1           | ~52           | ~4                        |
-| **Total** | **199** | **1** | **~189** | **~9** |
+| VDR    | 57    | 2           | ~52           | ~3                        |
+| **Total** | **199** | **2** | **~189** | **~8** |
 
 ---
 
 ## Implementation Priority Queue
 
 ### High Priority (Code-Detectable, High Impact)
-1. FRR-VDR-08 - Internet-Reachable Vulnerabilities (IaC detection)
+1. ✅ FRR-VDR-08 - Internet-Reachable Vulnerabilities (IaC detection) **COMPLETE**
 2. FRR-UCM-02 - Use of Validated Cryptographic Modules (FIPS detection)
 3. FRR-RSC-04 - Secure Defaults on Provisioning (IaC secure defaults)
 
@@ -259,7 +259,7 @@
 | FRR-VDR-05 | Grouping Vulnerabilities | 📄 PROCESS_BASED | No | Grouping procedure requirement |
 | FRR-VDR-06 | Evaluate False Positives | 📄 PROCESS_BASED | No | Evaluation procedure requirement |
 | FRR-VDR-07 | Evaluate Exploitability | 📄 PROCESS_BASED | No | Exploitability assessment requirement |
-| FRR-VDR-08 | Evaluate Internet-Reachability | 📋 PLANNED | Yes | Can detect internet-facing resources in IaC |
+| FRR-VDR-08 | Evaluate Internet-Reachability | ✅ IMPLEMENTED | Yes | **COMPLETE** - Detects public IPs, LBs, open NSG rules in Bicep/Terraform |
 | FRR-VDR-09 | Estimate Potential Adverse Impact | 📄 PROCESS_BASED | No | Impact assessment requirement |
 | FRR-VDR-10 | Evaluation Factors | 📄 PROCESS_BASED | No | Evaluation framework guidance |
 | FRR-VDR-11 | Documenting Reasons | 📄 PROCESS_BASED | No | Documentation requirement |

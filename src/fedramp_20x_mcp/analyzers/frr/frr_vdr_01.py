@@ -1,13 +1,14 @@
 """
 FRR-VDR-01: Vulnerability Detection
 
-Implement automated vulnerability detection capabilities for infrastructure, 
-container images, application code, and dependencies. Scanning must be continuous 
-and integrated into CI/CD pipelines.
+Providers MUST systematically detect vulnerabilities for cloud service offerings 
+using automated tooling, including vulnerability scanning for infrastructure, 
+container images, application code, and dependencies.
 
 Official FedRAMP 20x Requirement
 Source: FRR-VDR (Vulnerability Detection and Response) family
-Related KSIs: KSI-AFR-04, KSI-PIY-06, KSI-SVC-08, KSI-TPR-04
+Primary Keyword: MUST
+Impact Levels: Low, Moderate, High
 """
 
 import re
@@ -21,15 +22,18 @@ class FRR_VDR_01_Analyzer(BaseFRRAnalyzer):
     Analyzer for FRR-VDR-01: Vulnerability Detection
     
     **Official Statement:**
-    Implement automated vulnerability detection capabilities including vulnerability 
-    scanning for infrastructure, container images, application code, and dependencies.
-    Scanning must be continuous and integrated into the development lifecycle.
+    Providers MUST systematically detect vulnerabilities for cloud service offerings 
+    using automated tooling, including vulnerability scanning for infrastructure, 
+    container images, application code, and dependencies.
     
     **Family:** VDR - Vulnerability Detection and Response
+    
+    **Primary Keyword:** MUST
     
     **Impact Levels:**
     - Low: Yes
     - Moderate: Yes
+    - High: Yes
     
     **NIST Controls:**
     - RA-5: Vulnerability Monitoring and Scanning
@@ -45,7 +49,7 @@ class FRR_VDR_01_Analyzer(BaseFRRAnalyzer):
     - KSI-SVC-08: Secure Dependencies
     - KSI-TPR-04: Software Bill of Materials
     
-    **Detectability:** Code-Detectable
+    **Detectability:** Code-Detectable (CI/CD & IaC)
     
     **Detection Strategy:**
     Analyze CI/CD pipelines and infrastructure code for:
@@ -53,16 +57,18 @@ class FRR_VDR_01_Analyzer(BaseFRRAnalyzer):
     - Absence of container image scanning
     - Lack of SAST/DAST tools
     - Missing dependency scanning
-    - No automated scanning frequency configuration
+    - No automated scanning in IaC deployments
     """
     
     FRR_ID = "FRR-VDR-01"
     FRR_NAME = "Vulnerability Detection"
-    FRR_STATEMENT = """Implement automated vulnerability detection capabilities including vulnerability scanning for infrastructure, container images, application code, and dependencies. Scanning must be continuous and integrated into the development lifecycle per FedRAMP Vulnerability Detection and Response (VDR) requirements."""
+    FRR_STATEMENT = """Providers MUST systematically detect vulnerabilities for cloud service offerings using automated tooling, including vulnerability scanning for infrastructure, container images, application code, and dependencies."""
     FAMILY = "VDR"
     FAMILY_NAME = "Vulnerability Detection and Response"
+    PRIMARY_KEYWORD = "MUST"
     IMPACT_LOW = True
     IMPACT_MODERATE = True
+    IMPACT_HIGH = True
     NIST_CONTROLS = [
         ("RA-5", "Vulnerability Monitoring and Scanning"),
         ("RA-5(2)", "Update Vulnerabilities to Be Scanned"),
@@ -75,7 +81,7 @@ class FRR_VDR_01_Analyzer(BaseFRRAnalyzer):
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = ["KSI-AFR-04", "KSI-PIY-06", "KSI-SVC-08", "KSI-TPR-04"]
     
-    # Known vulnerability scanning tools
+    # Known vulnerability scanning tools by category
     VULN_SCANNERS = {
         'container': ['trivy', 'snyk', 'aqua', 'anchore', 'grype', 'clair'],
         'sast': ['sonarqube', 'codeclimate', 'semgrep', 'checkmarx', 'fortify'],
@@ -586,6 +592,26 @@ Reference: FRR-VDR-01, KSI-AFR-04, NIST CA-7"""
                 "storage_location": "Version control repository with tags for quarterly reviews"
             }
         ]
+    
+    # ============================================================================
+    # APPLICATION CODE ANALYZERS (Not primary focus for FRR-VDR-01)
+    # ============================================================================
+    
+    def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
+        """FRR-VDR-01 focuses on CI/CD and IaC scanning. No application code detection."""
+        return []
+    
+    def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
+        """FRR-VDR-01 focuses on CI/CD and IaC scanning. No application code detection."""
+        return []
+    
+    def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
+        """FRR-VDR-01 focuses on CI/CD and IaC scanning. No application code detection."""
+        return []
+    
+    def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
+        """FRR-VDR-01 focuses on CI/CD and IaC scanning. No application code detection."""
+        return []
     
     # ============================================================================
     # UTILITY METHODS
