@@ -215,12 +215,6 @@ az deployment sub create \
                logAnalyticsWorkspaceId=$LOG_ANALYTICS_ID
 ```
 
-**Cost Considerations:**
-- Defender for Cloud pricing is per-resource: https://azure.microsoft.com/pricing/details/defender-for-cloud/
-- Typical costs: $15/server/month, $10/app service/month, $15/SQL server/month
-- Storage: $10/storage account/month + $0.15/GB scanned
-- Containers: $7/vCore/month for AKS
-
 **Alternative Tools:**
 If not using Defender for Cloud, consider:
 - **Qualys** or **Tenable** for vulnerability scanning

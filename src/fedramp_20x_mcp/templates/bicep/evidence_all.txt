@@ -370,17 +370,6 @@ az deployment sub create \
 
 **Scope:** Enterprise-scale, multi-region, GRC integration, automated compliance.
 
-**Cost Estimate:**
-- Core Infrastructure: ~$1,000-2,000/month
-- Log Analytics (730 days): ~$500-1,500/month
-- Storage (GRS, 7 years): ~$500-1,000/month
-- Category Function Apps (11): ~$3,300-5,500/month
-- API Management: ~$250-500/month
-- Data Factory: ~$100-300/month
-- Power BI Embedded: ~$200-500/month
-- Azure Front Door: ~$300-600/month
-- **Total:** ~$6,000-12,000/month
-
 **Features:**
 - Multi-region deployment for disaster recovery
 - Centralized Log Analytics with Sentinel
@@ -391,17 +380,9 @@ az deployment sub create \
 - Global load balancing with Azure Front Door
 - Complete automation for all 65 active KSIs
 
-**Implementation Timeline:**
-- Phase 1 (Month 1-2): Core infrastructure + IAM/MLA categories
-- Phase 2 (Month 3-4): AFR/CNA/SVC categories
-- Phase 3 (Month 5-6): PIY/CMT/INR/TPR/RPL/CED categories
-- Phase 4 (Month 7-8): Multi-region + GRC integration
-- Phase 5 (Month 9-12): Power BI dashboards + optimization
-
 **Prerequisites:**
 - Azure subscription with Owner role
-- Budget approval (~$75K-$150K/year)
-- Dedicated compliance engineering team (3-5 people)
+- Dedicated compliance engineering team
 - Executive sponsorship for enterprise-scale deployment
 
 **Migration Path:** Start with `evidence_minimal.bicep` → `evidence_single_ksi.bicep` → `evidence_category.bicep` → `evidence_all.bicep` as organization matures.

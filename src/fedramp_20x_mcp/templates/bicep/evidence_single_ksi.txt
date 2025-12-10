@@ -633,14 +633,6 @@ az deployment group create \
 
 **Scope:** Suitable for enterprise deployments, regulated environments, critical KSIs.
 
-**Cost Estimate:**
-- Log Analytics: ~$10-50/GB ingested
-- Storage Account (GRS): ~$0.02/GB + geo-replication
-- Premium Function Plan: ~$150-300/month
-- Application Insights: ~$2-10/GB
-- Key Vault: ~$0.03/10K operations
-- **Total:** ~$300-500/month per KSI
-
 **Features:**
 - Geo-redundant storage for disaster recovery
 - Immutability policies (WORM storage)

@@ -233,7 +233,7 @@ terraform apply \
   -var="log_retention_days=365" \
   -var="evidence_retention_days=2555" \
   -var="enable_sentinel=true" \
-  -var="alert_email=security@example.com"
+  -var='alert_email=security@example.com'
 ```
 
-**Cost:** ~$300-500/month per KSI | **Purpose:** Production-grade single KSI evidence collection
+**Purpose:** Production-grade single KSI evidence collection

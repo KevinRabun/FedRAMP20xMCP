@@ -3,7 +3,7 @@
 ```hcl
 # evidence_minimal.tf - Minimal Evidence Collection Architecture
 # Quick-start architecture for pilot FedRAMP 20x evidence collection projects
-# Suitable for: Initial testing, proof-of-concept, small teams (1-5 KSIs)
+# Suitable for: Initial testing, proof-of-concept, 1-5 KSIs
 #
 # FedRAMP 20x KSI Alignment:
 # - KSI-MLA-01: Log aggregation and centralized logging
@@ -398,14 +398,7 @@ terraform output
 
 **Purpose:** Minimal evidence collection architecture for pilot FedRAMP 20x projects.
 
-**Scope:** Suitable for 1-5 KSIs, small teams, initial testing.
-
-**Cost Estimate:**
-- Log Analytics: ~$2-5/GB ingested
-- Storage Account: ~$0.02/GB/month (Hot tier)
-- Azure Function: ~$0.20/million executions (Consumption plan)
-- Event Grid: ~$0.60/million operations
-- **Total:** ~$50-100/month for typical pilot usage
+**Scope:** Suitable for 1-5 KSIs, initial testing.
 
 **Next Steps:**
 1. Deploy infrastructure using Terraform commands above

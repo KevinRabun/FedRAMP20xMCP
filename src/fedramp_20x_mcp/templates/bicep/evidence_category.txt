@@ -654,17 +654,9 @@ az deployment group create \
 
 **Purpose:** Enterprise architecture for all KSIs in one category (e.g., all 7 IAM KSIs).
 
-**Scope:** 5-15 KSIs in same category, cost optimization through resource sharing.
+**Scope:** 5-15 KSIs in same category, resource optimization through shared infrastructure.
 
-**Cost Estimate:**
-- Log Analytics: ~$20-100/GB
-- Storage (GRS): ~$50-200/month
-- Premium Function (EP2): ~$300-500/month
-- Automation: ~$5-20/month
-- Application Insights: ~$10-50/month
-- **Total:** ~$400-900/month per category (vs $2,000-5,000 for individual KSI deployments)
-
-**Cost Savings:** ~50-70% compared to individual KSI architectures.
+**Benefits:** ~50-70% resource efficiency compared to individual KSI architectures.
 
 **Supported Categories:**
 - IAM (7 KSIs), MLA (5 KSIs), AFR (11 KSIs), CNA (8 KSIs), SVC (9 KSIs)

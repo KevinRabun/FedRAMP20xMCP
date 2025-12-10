@@ -264,8 +264,4 @@ terraform apply \
 
 **Scope:** Enterprise-scale, multi-region, GRC integration, automated compliance.
 
-**Cost Estimate:** ~$6,000-12,000/month (~$75K-$150K/year)
-
-**Implementation:** Phase 1-5 over 12 months, requires 3-5 person compliance engineering team.
-
 **Migration Path:** Start minimal → single-ksi → category → all as organization matures.

@@ -290,4 +290,4 @@ terraform apply \
   -var='alert_email=security@example.com'
 ```
 
-**Cost:** ~$400-900/month per category | **Savings:** 50-70% vs individual KSI deployments
+**Benefits:** 50-70% resource optimization vs individual KSI deployments
