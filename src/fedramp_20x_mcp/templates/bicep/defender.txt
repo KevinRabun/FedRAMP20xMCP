@@ -5,6 +5,20 @@
 // main.bicep - Microsoft Defender for Cloud Configuration
 // Enables Defender plans for comprehensive security posture management
 // and vulnerability scanning across Azure resources
+//
+// FedRAMP 20x KSI Alignment:
+// - KSI-AFR-01: Vulnerability scanning and asset discovery
+// - KSI-AFR-04: Vulnerability detection and remediation tracking
+// - KSI-AFR-06: Continuous security assessments
+// - KSI-AFR-07: Security posture and secure score monitoring
+// - KSI-AFR-09: Compliance dashboard and regulatory mapping
+// - KSI-AFR-11: Cryptographic module recommendations
+// - KSI-PIY-01: Asset inventory and data classification
+// - KSI-PIY-05: Security evaluation for new implementations
+// - KSI-PIY-06: Security investment effectiveness metrics
+// - KSI-PIY-07: Supply chain risk assessment
+// - KSI-PIY-08: Executive security engagement metrics
+// - KSI-TPR-04: Supply chain risk monitoring
 
 targetScope = 'subscription'
 
@@ -30,6 +44,7 @@ resource securityContact 'Microsoft.Security/securityContacts@2023-12-01-preview
 }
 
 // Enable Defender for Servers (VMs and VM Scale Sets)
+// Supports: KSI-AFR-01 (vulnerability scanning), KSI-AFR-04 (vulnerability detection)
 resource defenderForServers 'Microsoft.Security/pricings@2024-01-01' = {
   name: 'VirtualMachines'
   properties: {
@@ -71,6 +86,7 @@ resource defenderForOssDatabases 'Microsoft.Security/pricings@2024-01-01' = {
 }
 
 // Enable Defender for Storage
+// Supports: KSI-AFR-01 (asset discovery), KSI-PIY-01 (data classification)
 resource defenderForStorage 'Microsoft.Security/pricings@2024-01-01' = {
   name: 'StorageAccounts'
   properties: {
@@ -92,6 +108,7 @@ resource defenderForStorage 'Microsoft.Security/pricings@2024-01-01' = {
 }
 
 // Enable Defender for Containers (AKS, ACR, running containers)
+// Supports: KSI-AFR-01 (container vulnerability scanning), KSI-TPR-04 (supply chain monitoring)
 resource defenderForContainers 'Microsoft.Security/pricings@2024-01-01' = {
   name: 'Containers'
   properties: {
