@@ -3,8 +3,8 @@
 ## Progress Overview
 
 **Total Active KSIs:** 65  
-**Implemented:** 14 (21.5%)  
-**Remaining:** 51 (78.5%)
+**Implemented:** 16 (24.6%)  
+**Remaining:** 49 (75.4%)
 
 **Target:** Implement evidence automation for all 65 active KSIs
 
@@ -15,7 +15,7 @@
 
 ## Implementation Status by Family
 
-### ✅ IAM - Identity and Access Management (2/7 = 28.6%)
+### ✅ IAM - Identity and Access Management (4/7 = 57.1%)
 
 - [x] **KSI-IAM-01** - Phishing-Resistant MFA ✅ COMPLETE
   - Evidence Type: log-based
@@ -32,8 +32,23 @@
   - Azure Services: 5 (Entra ID, PIM, Conditional Access, Monitor, Graph API)
   - Queries: 6 (2 KQL, 4 Graph API)
   - Artifacts: 6
-- [ ] **KSI-IAM-03** - Identity Lifecycle Management
-- [ ] **KSI-IAM-04** - Session Management
+
+- [x] **KSI-IAM-03** - Non-User Accounts ✅ COMPLETE
+  - Evidence Type: config-based, log-based
+  - Automation Feasibility: high
+  - Implementation Effort: medium
+  - Azure Services: 5 (Managed Identity, Service Principals, Key Vault, Monitor, Policy)
+  - Queries: 5 (2 Resource Graph, 2 KQL, 1 Graph API)
+  - Artifacts: 5
+
+- [x] **KSI-IAM-04** - Just-in-Time Authorization ✅ COMPLETE
+  - Evidence Type: log-based, config-based
+  - Automation Feasibility: high
+  - Implementation Effort: high
+  - Azure Services: 5 (PIM, RBAC, Conditional Access, Monitor, Graph)
+  - Queries: 5 (1 KQL, 1 Resource Graph, 3 Graph API)
+  - Artifacts: 5
+
 - [ ] **KSI-IAM-05** - Access Review
 - [ ] **KSI-IAM-06** - Suspicious Activity Detection
 - [ ] **KSI-IAM-07** - Just-in-Time Access

@@ -9,7 +9,7 @@ Version: 25.11C (Published: 2025-12-01)
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -1257,3 +1257,264 @@ class KSI_IAM_03_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get Azure-specific recommendations for automating evidence collection for KSI-IAM-03.
+        
+        **KSI-IAM-03: Non-User Accounts**
+        Enforce appropriately secure authentication methods for non-user accounts and services.
+        
+        Returns:
+            Dictionary with automation recommendations
+        """
+        return {
+            "ksi_id": "KSI-IAM-03",
+            "ksi_name": "Non-User Accounts",
+            "azure_services": [
+                {
+                    "service": "Azure Managed Identity",
+                    "purpose": "Secure authentication for applications without managing credentials",
+                    "capabilities": [
+                        "System-assigned and user-assigned identities",
+                        "Automatic credential rotation",
+                        "Integration with Azure services and RBAC",
+                        "No secrets in code or configuration"
+                    ]
+                },
+                {
+                    "service": "Azure AD Service Principals",
+                    "purpose": "Manage service account authentication and authorization",
+                    "capabilities": [
+                        "Certificate-based authentication",
+                        "Federated credentials (workload identity)",
+                        "Service principal audit logs",
+                        "Credential expiration tracking"
+                    ]
+                },
+                {
+                    "service": "Azure Key Vault",
+                    "purpose": "Store service account credentials when Managed Identity not available",
+                    "capabilities": [
+                        "Secure secret storage",
+                        "Access policies for service principals",
+                        "Secret rotation tracking",
+                        "Certificate management for service accounts"
+                    ]
+                },
+                {
+                    "service": "Azure Monitor",
+                    "purpose": "Audit and monitor service account authentication activity",
+                    "capabilities": [
+                        "Sign-in logs for service principals",
+                        "Failed authentication attempts",
+                        "Service account usage patterns",
+                        "Anomaly detection"
+                    ]
+                },
+                {
+                    "service": "Azure Policy",
+                    "purpose": "Enforce Managed Identity usage and prevent password-based authentication",
+                    "capabilities": [
+                        "Require Managed Identity for VM/container apps",
+                        "Audit resources not using Managed Identity",
+                        "Block storage account key access",
+                        "Enforce workload identity federation"
+                    ]
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "Managed Identity Inventory",
+                    "description": "Export all Managed Identities and their role assignments",
+                    "automation": "Resource Graph query for Managed Identities",
+                    "frequency": "Daily",
+                    "evidence_produced": "Complete inventory of service identities"
+                },
+                {
+                    "method": "Service Principal Authentication Monitoring",
+                    "description": "Monitor service principal sign-ins and authentication methods",
+                    "automation": "Azure AD sign-in logs via KQL",
+                    "frequency": "Continuous (with weekly reports)",
+                    "evidence_produced": "Service account authentication activity report"
+                },
+                {
+                    "method": "Credential Expiration Tracking",
+                    "description": "Track service principal credentials and certificate expiration dates",
+                    "automation": "Microsoft Graph API queries",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Credential expiration report with rotation status"
+                },
+                {
+                    "method": "Managed Identity Policy Compliance",
+                    "description": "Audit resources for Managed Identity usage vs. password-based auth",
+                    "automation": "Azure Policy compliance scans",
+                    "frequency": "Daily",
+                    "evidence_produced": "Policy compliance report for service authentication"
+                }
+            ],
+            "automation_feasibility": "high",
+            "evidence_types": ["config-based", "log-based"],
+            "implementation_guidance": {
+                "quick_start": "Deploy Managed Identities, migrate from service principal passwords to certificates/workload identity, enable Azure Policy for enforcement, configure sign-in log monitoring",
+                "azure_well_architected": "Follows Azure WAF security pillar for identity and zero-trust principles",
+                "compliance_mapping": "Addresses NIST controls ac-2, ac-2.2, ac-4, ac-6.5, ia-3, ia-5.2, ra-5.5"
+            }
+        }
+    
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get specific Azure queries for collecting KSI-IAM-03 evidence.
+        """
+        return {
+            "ksi_id": "KSI-IAM-03",
+            "queries": [
+                {
+                    "name": "Managed Identity Inventory",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        resources
+                        | where type == 'microsoft.managedidentity/userassignedidentities' 
+                            or identity has 'SystemAssigned'
+                        | extend identityType = iff(type == 'microsoft.managedidentity/userassignedidentities', 'User-Assigned', 'System-Assigned')
+                        | project name, resourceGroup, location, identityType, id
+                        | order by identityType, name
+                        """,
+                    "purpose": "List all Managed Identities in the environment",
+                    "expected_result": "Comprehensive inventory with identity types"
+                },
+                {
+                    "name": "Service Principal Sign-Ins",
+                    "type": "kql",
+                    "workspace": "Log Analytics with Azure AD logs",
+                    "query": """
+                        AADServicePrincipalSignInLogs
+                        | where TimeGenerated > ago(30d)
+                        | summarize SignInCount = count(), LastSignIn = max(TimeGenerated), 
+                                    SuccessCount = countif(ResultType == 0),
+                                    FailureCount = countif(ResultType != 0)
+                                    by ServicePrincipalName, AppId
+                        | extend SuccessRate = round((SuccessCount * 100.0) / SignInCount, 2)
+                        | order by SignInCount desc
+                        """,
+                    "purpose": "Monitor service principal authentication activity",
+                    "expected_result": "Active service principals with high success rates"
+                },
+                {
+                    "name": "Service Principal Credential Expiration",
+                    "type": "microsoft_graph",
+                    "endpoint": "/servicePrincipals?$select=id,appDisplayName,keyCredentials,passwordCredentials",
+                    "method": "GET",
+                    "purpose": "Track service principal credentials and expiration dates",
+                    "expected_result": "No expired credentials, documented rotation schedule"
+                },
+                {
+                    "name": "Managed Identity Policy Compliance",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        policyresources
+                        | where type == 'microsoft.policyinsights/policystates'
+                        | where properties.policyDefinitionName contains 'managed-identity' or properties.policyDefinitionName contains 'service-principal'
+                        | summarize CompliantCount = countif(properties.complianceState == 'Compliant'),
+                                    NonCompliantCount = countif(properties.complianceState == 'NonCompliant')
+                                    by tostring(properties.policyDefinitionName)
+                        | extend ComplianceRate = round((CompliantCount * 100.0) / (CompliantCount + NonCompliantCount), 2)
+                        """,
+                    "purpose": "Show policy compliance for Managed Identity usage",
+                    "expected_result": "High compliance rates with documented exceptions"
+                },
+                {
+                    "name": "Failed Service Principal Authentications",
+                    "type": "kql",
+                    "workspace": "Log Analytics with Azure AD logs",
+                    "query": """
+                        AADServicePrincipalSignInLogs
+                        | where TimeGenerated > ago(7d)
+                        | where ResultType != 0
+                        | summarize FailureCount = count(), ErrorCodes = make_set(ResultType) by ServicePrincipalName, AppId
+                        | order by FailureCount desc
+                        | take 20
+                        """,
+                    "purpose": "Detect authentication failures for service accounts",
+                    "expected_result": "Minimal failures with investigation of anomalies"
+                }
+            ],
+            "query_execution_guidance": {
+                "authentication": "Use Azure CLI or Managed Identity",
+                "permissions_required": [
+                    "Reader for Resource Graph queries",
+                    "Log Analytics Reader for KQL queries",
+                    "Application.Read.All and Directory.Read.All for Graph API",
+                    "Policy Reader for compliance queries"
+                ],
+                "automation_tools": [
+                    "Azure CLI (az ad sp list, az identity list)",
+                    "PowerShell Az.Resources and Az.ManagedServiceIdentity modules",
+                    "Microsoft Graph PowerShell SDK"
+                ]
+            }
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get descriptions of evidence artifacts for KSI-IAM-03.
+        """
+        return {
+            "ksi_id": "KSI-IAM-03",
+            "artifacts": [
+                {
+                    "name": "Managed Identity Inventory Report",
+                    "description": "Complete inventory of all Managed Identities and their assignments",
+                    "source": "Azure Resource Graph",
+                    "format": "CSV from Resource Graph query",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "1 year",
+                    "automation": "Scheduled Resource Graph query"
+                },
+                {
+                    "name": "Service Principal Authentication Report",
+                    "description": "Service account sign-in activity showing authentication methods and success rates",
+                    "source": "Azure AD Sign-in Logs",
+                    "format": "CSV from KQL query",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "1 year",
+                    "automation": "Log Analytics scheduled query"
+                },
+                {
+                    "name": "Credential Expiration Tracking Report",
+                    "description": "Service principal credentials with expiration dates and rotation status",
+                    "source": "Microsoft Graph API",
+                    "format": "JSON export",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "3 years",
+                    "automation": "PowerShell script with Graph SDK"
+                },
+                {
+                    "name": "Managed Identity Policy Compliance Report",
+                    "description": "Resources using Managed Identity vs. password-based authentication",
+                    "source": "Azure Policy",
+                    "format": "CSV compliance report",
+                    "collection_frequency": "Daily",
+                    "retention_period": "1 year",
+                    "automation": "Azure Policy compliance export"
+                },
+                {
+                    "name": "Service Account Security Baseline",
+                    "description": "Documented standard for service account authentication methods",
+                    "source": "Configuration documentation",
+                    "format": "Markdown or PDF",
+                    "collection_frequency": "Quarterly (or on change)",
+                    "retention_period": "3 years",
+                    "automation": "Maintained in Git repository"
+                }
+            ],
+            "artifact_storage": {
+                "primary": "Azure Blob Storage with immutable storage",
+                "backup": "Azure Backup with GRS replication",
+                "access_control": "Azure RBAC with audit trail"
+            },
+            "compliance_mapping": {
+                "fedramp_controls": ["ac-2", "ac-2.2", "ac-4", "ac-6.5", "ia-3", "ia-5.2", "ra-5.5"],
+                "evidence_purpose": "Demonstrate secure authentication for service accounts using Managed Identity and certificate-based methods"
+            }
+        }
