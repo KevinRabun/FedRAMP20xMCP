@@ -919,3 +919,253 @@ class KSI_CNA_04_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get Azure-specific recommendations for automating evidence collection for KSI-CNA-04.
+        
+        **KSI-CNA-04: Immutable Infrastructure**
+        Use immutable infrastructure with strictly defined functionality and privileges by default.
+        
+        Returns:
+            Dictionary with automation recommendations
+        """
+        return {
+            "ksi_id": "KSI-CNA-04",
+            "ksi_name": "Immutable Infrastructure",
+            "azure_services": [
+                {
+                    "service": "Azure Virtual Machine Scale Sets",
+                    "purpose": "Deploy immutable VM instances from versioned images",
+                    "capabilities": [
+                        "Image-based deployment (no in-place updates)",
+                        "Automatic instance replacement",
+                        "Rolling upgrades with new images",
+                        "Azure Compute Gallery integration"
+                    ]
+                },
+                {
+                    "service": "Azure Kubernetes Service (AKS)",
+                    "purpose": "Container-based immutable infrastructure",
+                    "capabilities": [
+                        "Immutable container images",
+                        "Declarative configuration",
+                        "Image pull policies",
+                        "Node pool upgrades (replace, not patch)"
+                    ]
+                },
+                {
+                    "service": "Azure Container Registry",
+                    "purpose": "Immutable container image storage with image signing",
+                    "capabilities": [
+                        "Content trust and image signing",
+                        "Immutable image tags",
+                        "Vulnerability scanning",
+                        "Image retention policies"
+                    ]
+                },
+                {
+                    "service": "Azure DevOps / GitHub Actions",
+                    "purpose": "Automated immutable infrastructure deployment pipelines",
+                    "capabilities": [
+                        "Infrastructure as Code deployment",
+                        "Image building and versioning",
+                        "Blue/green deployments",
+                        "Automated testing before deployment"
+                    ]
+                },
+                {
+                    "service": "Azure Policy",
+                    "purpose": "Enforce immutability and prevent configuration drift",
+                    "capabilities": [
+                        "Deny VM extensions (prevent runtime changes)",
+                        "Require approved images only",
+                        "Audit configuration changes",
+                        "Enforce image signing"
+                    ]
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "Image-Based Deployment Verification",
+                    "description": "Verify all infrastructure uses immutable images (not runtime configuration)",
+                    "automation": "Resource Graph queries for image sources",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Infrastructure deployment method report"
+                },
+                {
+                    "method": "Configuration Drift Detection",
+                    "description": "Detect any runtime changes violating immutability",
+                    "automation": "Azure Policy compliance + Azure Automation State Configuration",
+                    "frequency": "Daily",
+                    "evidence_produced": "Configuration drift report with remediation"
+                },
+                {
+                    "method": "Image Provenance Tracking",
+                    "description": "Track container/VM image provenance and signing",
+                    "automation": "Azure Container Registry + Compute Gallery queries",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Image provenance report with signature verification"
+                },
+                {
+                    "method": "Deployment Pipeline Audit",
+                    "description": "Verify all deployments use IaC pipelines (no manual changes)",
+                    "automation": "Azure DevOps/GitHub Actions deployment history",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Deployment audit log showing IaC-driven changes only"
+                }
+            ],
+            "automation_feasibility": "high",
+            "evidence_types": ["config-based", "log-based"],
+            "implementation_guidance": {
+                "quick_start": "Deploy VMSS/AKS with image-based updates, enable Azure Policy to block runtime changes, configure ACR content trust, implement IaC-driven deployment pipelines",
+                "azure_well_architected": "Follows Azure WAF operational excellence for immutable infrastructure and automated deployment",
+                "compliance_mapping": "Addresses NIST controls cm-2, si-3 for baseline configuration and malicious code protection"
+            }
+        }
+    
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get specific Azure queries for collecting KSI-CNA-04 evidence.
+        """
+        return {
+            "ksi_id": "KSI-CNA-04",
+            "queries": [
+                {
+                    "name": "VM Image-Based Deployment Status",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        resources
+                        | where type =~ 'Microsoft.Compute/virtualMachineScaleSets' or type =~ 'Microsoft.Compute/virtualMachines'
+                        | extend imageRef = tostring(properties.virtualMachineProfile.storageProfile.imageReference) ?? tostring(properties.storageProfile.imageReference)
+                        | extend deploymentMethod = iff(isnotempty(imageRef), 'Image-Based', 'Custom/Unknown')
+                        | summarize Count = count() by type, deploymentMethod
+                        """,
+                    "purpose": "Verify resources use image-based deployment",
+                    "expected_result": "All compute resources deployed from images"
+                },
+                {
+                    "name": "Azure Policy Immutability Compliance",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        policyresources
+                        | where type == 'microsoft.policyinsights/policystates'
+                        | where properties.policyDefinitionName contains 'image' or properties.policyDefinitionName contains 'extension'
+                        | summarize CompliantCount = countif(properties.complianceState == 'Compliant'),
+                                    NonCompliantCount = countif(properties.complianceState == 'NonCompliant')
+                                    by tostring(properties.policyDefinitionName)
+                        | extend ComplianceRate = round((CompliantCount * 100.0) / (CompliantCount + NonCompliantCount), 2)
+                        """,
+                    "purpose": "Show policy compliance for immutability requirements",
+                    "expected_result": "High compliance with immutability policies"
+                },
+                {
+                    "name": "Container Image Signing Verification",
+                    "type": "azure_rest_api",
+                    "endpoint": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ContainerRegistry/registries/{registryName}/contentTrust?api-version=2021-09-01",
+                    "method": "GET",
+                    "purpose": "Verify container registries enforce image signing",
+                    "expected_result": "Content trust enabled on all registries"
+                },
+                {
+                    "name": "IaC Deployment Pipeline History",
+                    "type": "azure_devops_api",
+                    "endpoint": "https://dev.azure.com/{org}/{project}/_apis/build/builds?api-version=7.1",
+                    "method": "GET",
+                    "purpose": "Show all deployments use automated IaC pipelines",
+                    "expected_result": "100% pipeline-driven deployments, no manual changes"
+                },
+                {
+                    "name": "Configuration Change Audit",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace",
+                    "query": """
+                        AzureActivity
+                        | where TimeGenerated > ago(30d)
+                        | where OperationNameValue contains 'MICROSOFT.COMPUTE/VIRTUALMACHINES/WRITE'
+                        | where Caller !contains 'azuredevops' and Caller !contains 'github'
+                        | summarize ManualChanges = count() by Caller, ResourceGroup
+                        | order by ManualChanges desc
+                        """,
+                    "purpose": "Detect manual configuration changes (should be none)",
+                    "expected_result": "Zero manual changes, all via IaC pipelines"
+                }
+            ],
+            "query_execution_guidance": {
+                "authentication": "Use Azure CLI or Managed Identity",
+                "permissions_required": [
+                    "Reader for Resource Graph queries",
+                    "Container Registry Reader for ACR queries",
+                    "DevOps Project Reader for pipeline data",
+                    "Log Analytics Reader for activity logs"
+                ],
+                "automation_tools": [
+                    "Azure CLI (az vm, az acr, az graph)",
+                    "PowerShell Az.Compute and Az.ContainerRegistry modules"
+                ]
+            }
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get descriptions of evidence artifacts for KSI-CNA-04.
+        """
+        return {
+            "ksi_id": "KSI-CNA-04",
+            "artifacts": [
+                {
+                    "name": "Immutable Infrastructure Deployment Report",
+                    "description": "Report showing all infrastructure deployed from versioned images",
+                    "source": "Azure Resource Graph",
+                    "format": "CSV with image provenance",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "1 year",
+                    "automation": "Scheduled Resource Graph query"
+                },
+                {
+                    "name": "Configuration Drift Report",
+                    "description": "Detection of any runtime configuration changes violating immutability",
+                    "source": "Azure Policy and Automation State Configuration",
+                    "format": "CSV with remediation actions",
+                    "collection_frequency": "Daily",
+                    "retention_period": "1 year",
+                    "automation": "Policy compliance export + DSC reports"
+                },
+                {
+                    "name": "Container Image Signing Evidence",
+                    "description": "Proof of image signing and content trust enforcement",
+                    "source": "Azure Container Registry",
+                    "format": "JSON with signature verification",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "3 years",
+                    "automation": "ACR REST API queries"
+                },
+                {
+                    "name": "IaC Deployment Audit Log",
+                    "description": "Complete history of infrastructure deployments via IaC pipelines",
+                    "source": "Azure DevOps / GitHub Actions",
+                    "format": "JSON deployment history",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "3 years",
+                    "automation": "Pipeline API queries"
+                },
+                {
+                    "name": "Immutability Policy Configuration",
+                    "description": "Azure Policy definitions enforcing immutable infrastructure",
+                    "source": "Azure Policy",
+                    "format": "JSON policy export",
+                    "collection_frequency": "Quarterly",
+                    "retention_period": "3 years",
+                    "automation": "Policy definition export"
+                }
+            ],
+            "artifact_storage": {
+                "primary": "Azure Blob Storage with immutable storage",
+                "backup": "Azure Backup with GRS replication",
+                "access_control": "Azure RBAC with audit trail"
+            },
+            "compliance_mapping": {
+                "fedramp_controls": ["cm-2", "si-3"],
+                "evidence_purpose": "Demonstrate immutable infrastructure using image-based deployment with no runtime configuration changes"
+            }
+        }

@@ -3,8 +3,8 @@
 ## Progress Overview
 
 **Total Active KSIs:** 65  
-**Implemented:** 16 (24.6%)  
-**Remaining:** 49 (75.4%)
+**Implemented:** 19 (29.2%)  
+**Remaining:** 46 (70.8%)
 
 **Target:** Implement evidence automation for all 65 active KSIs
 
@@ -53,7 +53,7 @@
 - [ ] **KSI-IAM-06** - Suspicious Activity Detection
 - [ ] **KSI-IAM-07** - Just-in-Time Access
 
-### ✅ CNA - Cloud Native Architecture (2/8 = 25%)
+### ✅ CNA - Cloud Native Architecture (4/8 = 50%)
 
 - [x] **KSI-CNA-01** - Restrict Network Traffic ✅ COMPLETE
   - Evidence Type: config-based
@@ -63,7 +63,14 @@
   - Queries: 5 (4 Resource Graph, 1 REST API)
   - Artifacts: 5
 
-- [ ] **KSI-CNA-02** - Immutable Infrastructure
+- [x] **KSI-CNA-02** - Minimize Attack Surface ✅ COMPLETE
+  - Evidence Type: config-based, log-based
+  - Automation Feasibility: high
+  - Implementation Effort: medium
+  - Azure Services: 5 (Firewall, NSG, Private Link, Bastion, Defender for Cloud)
+  - Queries: 5 (3 Resource Graph, 1 REST API, 1 custom)
+  - Artifacts: 5
+
 - [x] **KSI-CNA-03** - Infrastructure as Code ✅ COMPLETE
   - Evidence Type: config-based, log-based
   - Automation Feasibility: high
@@ -72,7 +79,18 @@
   - Queries: 6 (4 Resource Graph, 2 KQL)
   - Artifacts: 6
 
-- [ ] **KSI-CNA-02** - Immutable Infrastructure
+- [x] **KSI-CNA-04** - Immutable Infrastructure ✅ COMPLETE
+  - Evidence Type: config-based, log-based
+  - Automation Feasibility: high
+  - Implementation Effort: medium
+  - Azure Services: 5 (VMSS, AKS, ACR, DevOps/GitHub, Policy)
+  - Queries: 5 (2 Resource Graph, 1 REST API, 1 DevOps API, 1 KQL)
+  - Artifacts: 5
+
+- [ ] **KSI-CNA-05** - API Security
+- [ ] **KSI-CNA-06** - Container Security
+- [ ] **KSI-CNA-07** - Serverless Security
+- [ ] **KSI-CNA-08** - Cloud-Native Patterns
 - [x] **KSI-CNA-03** - Infrastructure as Code ✅
   - Services: 5 (Network Watcher, Firewall, Policy, Monitor, Resource Graph)
   - Methods: 4
@@ -144,10 +162,17 @@
   - Queries: 5 (1 REST API, 1 Graph API, 2 KQL, 1 Resource Graph)
   - Artifacts: 5
 
-### SVC - Service Management (0/9 = 0%)
+### SVC - Service Management (3/9 = 33.3%)
 
-- [ ] **KSI-SVC-01** - Service Catalog
+- [x] **KSI-SVC-01** - Continuous Improvement ✅ COMPLETE
+  - Evidence Type: log-based, config-based, process-based
+  - Automation Feasibility: high
+  - Implementation Effort: medium
+  - Azure Services: 5 (Defender for Cloud, Advisor, Monitor Workbooks, DevOps/GitHub, Log Analytics)
+  - Queries: 5 (2 REST API, 1 DevOps API, 1 KQL, 1 custom)
+  - Artifacts: 5
 - [ ] **KSI-SVC-02** - Change Management
+- [ ] **KSI-SVC-03** - Service Catalog
 - [x] **KSI-SVC-04** - Configuration Automation ✅ COMPLETE
   - Evidence Type: config-based, log-based
   - Automation Feasibility: high

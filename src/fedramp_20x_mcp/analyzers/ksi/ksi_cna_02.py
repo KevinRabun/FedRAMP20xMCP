@@ -6,7 +6,7 @@ Design systems to minimize the attack surface and minimize lateral movement if c
 This enhanced version uses AST parsing and semantic analysis for improved accuracy.
 """
 
-from typing import List, Set
+from typing import List, Set, Dict, Any
 from ..base import Finding, Severity, AnalysisResult
 from ..ast_utils import ASTParser, CodeLanguage
 from ..semantic_analysis import SemanticAnalyzer
@@ -450,6 +450,274 @@ class KSI_CNA_02_Analyzer(BaseKSIAnalyzer):
                         ))
         
         return findings
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get Azure-specific recommendations for automating evidence collection for KSI-CNA-02.
+        
+        **KSI-CNA-02: Minimize the Attack Surface**
+        Design systems to minimize the attack surface and minimize lateral movement if compromised.
+        
+        Returns:
+            Dictionary with automation recommendations
+        """
+        return {
+            "ksi_id": "KSI-CNA-02",
+            "ksi_name": "Minimize the Attack Surface",
+            "azure_services": [
+                {
+                    "service": "Azure Firewall",
+                    "purpose": "Centralized network traffic filtering with threat intelligence",
+                    "capabilities": [
+                        "Application and network-level filtering",
+                        "Threat intelligence-based filtering",
+                        "Outbound SNAT and inbound DNAT",
+                        "Deny-by-default with allow exceptions"
+                    ]
+                },
+                {
+                    "service": "Azure Network Security Groups (NSG)",
+                    "purpose": "Subnet and NIC-level traffic filtering to minimize exposed services",
+                    "capabilities": [
+                        "Inbound/outbound security rules",
+                        "Service tags for simplified rules",
+                        "Flow logs for traffic analysis",
+                        "Application Security Groups for micro-segmentation"
+                    ]
+                },
+                {
+                    "service": "Azure Private Link",
+                    "purpose": "Eliminate public endpoints and reduce attack surface",
+                    "capabilities": [
+                        "Private connectivity to PaaS services",
+                        "Disable public network access",
+                        "Private endpoints in VNet",
+                        "No internet exposure"
+                    ]
+                },
+                {
+                    "service": "Azure Bastion",
+                    "purpose": "Secure RDP/SSH without exposing VMs to internet",
+                    "capabilities": [
+                        "Browser-based RDP/SSH",
+                        "No public IP on VMs",
+                        "MFA integration",
+                        "Session recording"
+                    ]
+                },
+                {
+                    "service": "Microsoft Defender for Cloud",
+                    "purpose": "Attack surface analysis and hardening recommendations",
+                    "capabilities": [
+                        "Attack path analysis",
+                        "Security posture assessment",
+                        "Adaptive network hardening",
+                        "Just-in-time VM access"
+                    ]
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "Network Exposure Analysis",
+                    "description": "Identify public-facing resources and unnecessary exposed services",
+                    "automation": "Resource Graph queries for public IPs and NSG rules",
+                    "frequency": "Daily",
+                    "evidence_produced": "Network exposure report with remediation recommendations"
+                },
+                {
+                    "method": "Attack Path Analysis",
+                    "description": "Defender for Cloud attack path mapping showing lateral movement risks",
+                    "automation": "Defender for Cloud REST API",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Attack path visualization with risk prioritization"
+                },
+                {
+                    "method": "Private Link Adoption Tracking",
+                    "description": "Monitor adoption of Private Link vs. public endpoints",
+                    "automation": "Resource Graph query for private endpoints",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Private Link coverage report"
+                },
+                {
+                    "method": "Adaptive Network Hardening",
+                    "description": "Defender recommendations for NSG rule hardening",
+                    "automation": "Defender for Cloud API for hardening recommendations",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Network hardening recommendations with implementation status"
+                }
+            ],
+            "automation_feasibility": "high",
+            "evidence_types": ["config-based", "log-based"],
+            "implementation_guidance": {
+                "quick_start": "Deploy Azure Firewall with deny-by-default, enable Private Link, configure NSGs with least privilege, enable Defender attack path analysis",
+                "azure_well_architected": "Follows Azure WAF security pillar for defense-in-depth and zero-trust",
+                "compliance_mapping": "Addresses NIST controls ac-17.3, sc-7.3, sc-7.4, sc-7.5, si-10, si-11"
+            }
+        }
+    
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get specific Azure queries for collecting KSI-CNA-02 evidence.
+        """
+        return {
+            "ksi_id": "KSI-CNA-02",
+            "queries": [
+                {
+                    "name": "Public-Facing Resources Inventory",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        resources
+                        | where type =~ 'Microsoft.Network/publicIPAddresses'
+                        | join kind=inner (
+                            resources
+                            | where isnotnull(properties.ipConfiguration)
+                            | extend publicIpId = tostring(properties.ipConfiguration.id)
+                        ) on $left.id == $right.publicIpId
+                        | project name, resourceGroup, publicIpAddress = properties.ipAddress, attachedTo = split(publicIpId, '/')[8]
+                        | order by name
+                        """,
+                    "purpose": "Identify all resources with public IP addresses",
+                    "expected_result": "Minimal public exposure with documented business justification"
+                },
+                {
+                    "name": "Private Link Adoption Status",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        resources
+                        | where type =~ 'Microsoft.Network/privateEndpoints'
+                        | extend serviceName = tostring(properties.privateLinkServiceConnections[0].properties.privateLinkServiceId)
+                        | summarize PrivateEndpointCount = count() by subscriptionId
+                        | join kind=leftouter (
+                            resources
+                            | where type in~ ('Microsoft.Storage/storageAccounts', 'Microsoft.KeyVault/vaults', 'Microsoft.Sql/servers')
+                            | summarize TotalPaaSResources = count() by subscriptionId
+                        ) on subscriptionId
+                        | extend PrivateLinkAdoption = round((PrivateEndpointCount * 100.0) / TotalPaaSResources, 2)
+                        """,
+                    "purpose": "Show Private Link adoption to eliminate public endpoints",
+                    "expected_result": "High adoption rate with plan for remaining public services"
+                },
+                {
+                    "name": "NSG Rule Permissiveness Analysis",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        resources
+                        | where type =~ 'Microsoft.Network/networkSecurityGroups'
+                        | mvexpand rules = properties.securityRules
+                        | where rules.properties.access == 'Allow'
+                        | where rules.properties.direction == 'Inbound'
+                        | where rules.properties.sourceAddressPrefix in ('*', 'Internet', '0.0.0.0/0')
+                        | project nsgName = name, ruleName = rules.name, 
+                                  destinationPort = rules.properties.destinationPortRange,
+                                  protocol = rules.properties.protocol
+                        | order by nsgName
+                        """,
+                    "purpose": "Identify overly permissive NSG rules (allow from internet)",
+                    "expected_result": "Minimal 'any' source rules with business justification"
+                },
+                {
+                    "name": "Defender Attack Path Analysis",
+                    "type": "azure_rest_api",
+                    "endpoint": "/subscriptions/{subscriptionId}/providers/Microsoft.Security/attackPaths?api-version=2023-01-01-preview",
+                    "method": "GET",
+                    "purpose": "Show potential attack paths and lateral movement risks",
+                    "expected_result": "No critical attack paths or documented mitigation plans"
+                },
+                {
+                    "name": "Azure Bastion Deployment Coverage",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        resources
+                        | where type =~ 'Microsoft.Network/bastionHosts'
+                        | summarize BastionCount = count() by subscriptionId
+                        | join kind=rightouter (
+                            resources
+                            | where type =~ 'Microsoft.Compute/virtualMachines'
+                            | summarize VMCount = count() by subscriptionId
+                        ) on subscriptionId
+                        | extend HasBastion = BastionCount > 0
+                        """,
+                    "purpose": "Verify Azure Bastion deployment to eliminate direct RDP/SSH exposure",
+                    "expected_result": "Bastion deployed in subscriptions with VMs"
+                }
+            ],
+            "query_execution_guidance": {
+                "authentication": "Use Azure CLI or Managed Identity",
+                "permissions_required": [
+                    "Reader for Resource Graph queries",
+                    "Security Reader for Defender API",
+                    "Network Contributor for NSG analysis"
+                ],
+                "automation_tools": [
+                    "Azure CLI (az network, az graph)",
+                    "PowerShell Az.Network and Az.ResourceGraph modules"
+                ]
+            }
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get descriptions of evidence artifacts for KSI-CNA-02.
+        """
+        return {
+            "ksi_id": "KSI-CNA-02",
+            "artifacts": [
+                {
+                    "name": "Network Exposure Report",
+                    "description": "Inventory of public-facing resources with attack surface analysis",
+                    "source": "Azure Resource Graph",
+                    "format": "CSV with risk assessment",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "1 year",
+                    "automation": "Scheduled Resource Graph query"
+                },
+                {
+                    "name": "Attack Path Analysis Report",
+                    "description": "Defender for Cloud attack path visualization showing lateral movement risks",
+                    "source": "Microsoft Defender for Cloud",
+                    "format": "PDF with risk prioritization",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "3 years",
+                    "automation": "Defender API with automated reporting"
+                },
+                {
+                    "name": "Private Link Adoption Report",
+                    "description": "Coverage analysis of Private Link vs. public endpoints",
+                    "source": "Azure Resource Graph",
+                    "format": "CSV with trend analysis",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "1 year",
+                    "automation": "Resource Graph query"
+                },
+                {
+                    "name": "NSG Rule Audit Report",
+                    "description": "Analysis of NSG rules identifying overly permissive configurations",
+                    "source": "Azure Resource Graph and Network Watcher",
+                    "format": "CSV with recommendations",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "1 year",
+                    "automation": "Automated NSG analysis script"
+                },
+                {
+                    "name": "Adaptive Network Hardening Recommendations",
+                    "description": "Defender-generated recommendations for NSG hardening",
+                    "source": "Microsoft Defender for Cloud",
+                    "format": "JSON with implementation tracking",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "1 year",
+                    "automation": "Defender REST API"
+                }
+            ],
+            "artifact_storage": {
+                "primary": "Azure Blob Storage with immutable storage",
+                "backup": "Azure Backup with GRS replication",
+                "access_control": "Azure RBAC with audit trail"
+            },
+            "compliance_mapping": {
+                "fedramp_controls": ["ac-17.3", "sc-7.3", "sc-7.4", "sc-7.5", "si-10", "si-11"],
+                "evidence_purpose": "Demonstrate minimized attack surface through network segmentation, private connectivity, and hardened access controls"
+            }
+        }
 
 
 def create_analyzer(language: str) -> KSI_CNA_02_Analyzer:
