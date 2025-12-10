@@ -782,3 +782,259 @@ class KSI_SVC_05_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get Azure-specific recommendations for automating evidence collection for KSI-SVC-05.
+        
+        **KSI-SVC-05: Resource Integrity**
+        Use cryptographic methods to validate the integrity of machine-based information resources.
+        
+        Returns:
+            Dictionary with automation recommendations
+        """
+        return {
+            "ksi_id": "KSI-SVC-05",
+            "ksi_name": "Resource Integrity",
+            "azure_services": [
+                {
+                    "service": "Azure Policy with Integrity Validation",
+                    "purpose": "Enforce integrity validation requirements across resources",
+                    "capabilities": [
+                        "Require integrity monitoring extensions",
+                        "Validate signed container images",
+                        "Audit unsigned deployments",
+                        "Enforce checksum validation"
+                    ]
+                },
+                {
+                    "service": "Microsoft Defender for Cloud",
+                    "purpose": "File integrity monitoring and change detection",
+                    "capabilities": [
+                        "File Integrity Monitoring (FIM) for critical files",
+                        "Baseline configuration validation",
+                        "Anomaly detection for unauthorized changes",
+                        "Alert on integrity violations"
+                    ]
+                },
+                {
+                    "service": "Azure Container Registry",
+                    "purpose": "Container image signing and validation",
+                    "capabilities": [
+                        "Content Trust (image signing with Notary)",
+                        "Vulnerability scanning",
+                        "Image quarantine for unsigned images",
+                        "Signature validation enforcement"
+                    ]
+                },
+                {
+                    "service": "Azure Key Vault",
+                    "purpose": "Secure storage of signing keys and certificates",
+                    "capabilities": [
+                        "HSM-backed key storage",
+                        "Key versioning and rotation",
+                        "Access logging",
+                        "Integration with signing workflows"
+                    ]
+                },
+                {
+                    "service": "Azure Automation Change Tracking",
+                    "purpose": "Track and validate file/software changes",
+                    "capabilities": [
+                        "File hash tracking",
+                        "Software inventory with version validation",
+                        "Change alerting",
+                        "Integrity baseline comparison"
+                    ]
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "File Integrity Monitoring Reports",
+                    "description": "Track cryptographic hash changes for critical system files",
+                    "automation": "Defender for Cloud FIM",
+                    "frequency": "Continuous (with daily summaries)",
+                    "evidence_produced": "FIM change reports with hash validation"
+                },
+                {
+                    "method": "Container Image Signature Validation",
+                    "description": "Verify all deployed container images are signed and trusted",
+                    "automation": "Azure Container Registry webhooks + Policy",
+                    "frequency": "Continuous (per deployment)",
+                    "evidence_produced": "Image signature validation logs"
+                },
+                {
+                    "method": "Software Integrity Baseline",
+                    "description": "Validate installed software against approved baseline with checksums",
+                    "automation": "Azure Automation Change Tracking",
+                    "frequency": "Weekly",
+                    "evidence_produced": "Software inventory with hash validation"
+                },
+                {
+                    "method": "Code Signing Validation",
+                    "description": "Verify deployment artifacts are signed with trusted certificates",
+                    "automation": "Azure DevOps/GitHub pipeline checks",
+                    "frequency": "Per deployment",
+                    "evidence_produced": "Build and deployment logs with signature verification"
+                }
+            ],
+            "automation_feasibility": "high",
+            "evidence_types": ["log-based", "config-based"],
+            "implementation_guidance": {
+                "quick_start": "Enable FIM in Defender for Cloud, configure Content Trust in ACR, implement code signing in CI/CD, enable Change Tracking for software inventory",
+                "azure_well_architected": "Follows Azure WAF security pillar for integrity validation",
+                "compliance_mapping": "Addresses NIST controls cm-2.2, cm-8.3, sc-13, si-7, si-7.1 for integrity validation"
+            }
+        }
+    
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get specific Azure queries for collecting KSI-SVC-05 evidence.
+        """
+        return {
+            "ksi_id": "KSI-SVC-05",
+            "queries": [
+                {
+                    "name": "File Integrity Monitoring Changes",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace",
+                    "query": """
+                        SecurityEvent
+                        | where EventID == 4663 or EventID == 4656
+                        | where TimeGenerated > ago(7d)
+                        | extend FilePath = extract(@'ObjectName\\s+(.+)', 1, tostring(EventData))
+                        | where FilePath contains '/etc/' or FilePath contains '/bin/' or FilePath contains 'C:\\\\Windows\\\\System32'
+                        | summarize ChangeCount = count(), LastChange = max(TimeGenerated) by Computer, FilePath
+                        | order by ChangeCount desc
+                        """,
+                    "purpose": "Detect unauthorized changes to critical system files",
+                    "expected_result": "Minimal or zero unauthorized changes"
+                },
+                {
+                    "name": "Container Image Signature Status",
+                    "type": "azure_rest_api",
+                    "endpoint": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ContainerRegistry/registries/{registryName}/contentTrust?api-version=2023-07-01",
+                    "method": "GET",
+                    "purpose": "Verify Content Trust is enabled for container images",
+                    "expected_result": "All registries have Content Trust enabled"
+                },
+                {
+                    "name": "Unsigned Container Deployments",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace",
+                    "query": """
+                        ContainerLog
+                        | where TimeGenerated > ago(7d)
+                        | where LogEntry contains 'image' and LogEntry contains 'pull'
+                        | extend ImageName = extract(@'Pulling from (.+)', 1, LogEntry)
+                        | where ImageName !contains '@sha256'
+                        | summarize UnsignedPulls = count() by ImageName, Computer
+                        | order by UnsignedPulls desc
+                        """,
+                    "purpose": "Detect container deployments without signature validation",
+                    "expected_result": "All images pulled with SHA256 digest (signed)"
+                },
+                {
+                    "name": "Software Integrity Baseline Compliance",
+                    "type": "kql",
+                    "workspace": "Log Analytics with Change Tracking",
+                    "query": """
+                        ConfigurationData
+                        | where ConfigDataType == 'Software'
+                        | where TimeGenerated > ago(7d)
+                        | extend HasValidHash = iff(isnotempty(SoftwareHash), true, false)
+                        | summarize SoftwareCount = count(), WithHash = countif(HasValidHash) by Computer
+                        | extend IntegrityPercentage = round((WithHash * 100.0) / SoftwareCount, 2)
+                        | project Computer, SoftwareCount, WithHash, IntegrityPercentage
+                        | order by IntegrityPercentage asc
+                        """,
+                    "purpose": "Verify software inventory includes integrity checksums",
+                    "expected_result": "High percentage of software with validated hashes"
+                },
+                {
+                    "name": "Code Signing Validation in Deployments",
+                    "type": "azure_devops_api",
+                    "endpoint": "https://dev.azure.com/{org}/{project}/_apis/build/builds?api-version=7.1&$top=100",
+                    "method": "GET",
+                    "purpose": "Verify build artifacts are signed during CI/CD",
+                    "expected_result": "All builds include signature validation steps"
+                }
+            ],
+            "query_execution_guidance": {
+                "authentication": "Use Azure CLI or Managed Identity",
+                "permissions_required": [
+                    "Log Analytics Reader for FIM and Change Tracking queries",
+                    "Container Registry Contributor for Content Trust configuration",
+                    "DevOps Build Reader for pipeline validation"
+                ],
+                "automation_tools": [
+                    "Azure CLI (az acr, az monitor)",
+                    "PowerShell Az.ContainerRegistry module",
+                    "Azure DevOps CLI extension"
+                ]
+            }
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get descriptions of evidence artifacts for KSI-SVC-05.
+        """
+        return {
+            "ksi_id": "KSI-SVC-05",
+            "artifacts": [
+                {
+                    "name": "File Integrity Monitoring Report",
+                    "description": "Change tracking for critical system files with cryptographic hash validation",
+                    "source": "Microsoft Defender for Cloud FIM",
+                    "format": "CSV with file paths, hashes, and change timestamps",
+                    "collection_frequency": "Daily",
+                    "retention_period": "3 years",
+                    "automation": "Log Analytics scheduled export"
+                },
+                {
+                    "name": "Container Image Signature Validation Logs",
+                    "description": "Proof that all deployed container images are signed and validated",
+                    "source": "Azure Container Registry + Kubernetes audit logs",
+                    "format": "JSON logs with signature verification status",
+                    "collection_frequency": "Continuous (per deployment)",
+                    "retention_period": "3 years",
+                    "automation": "ACR webhook + Log Analytics"
+                },
+                {
+                    "name": "Software Integrity Baseline Report",
+                    "description": "Approved software inventory with cryptographic checksums",
+                    "source": "Azure Automation Change Tracking",
+                    "format": "CSV with software names, versions, and SHA256 hashes",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "3 years",
+                    "automation": "Change Tracking API export"
+                },
+                {
+                    "name": "Code Signing Certificate and Process Documentation",
+                    "description": "Documentation of code signing infrastructure and certificate chain",
+                    "source": "Azure Key Vault + CI/CD pipeline configuration",
+                    "format": "PDF documentation with certificate details",
+                    "collection_frequency": "Quarterly (or on certificate renewal)",
+                    "retention_period": "5 years",
+                    "automation": "Key Vault export + manual documentation"
+                },
+                {
+                    "name": "Integrity Validation Policy Configuration",
+                    "description": "Azure Policy definitions enforcing integrity validation requirements",
+                    "source": "Azure Policy",
+                    "format": "JSON policy export",
+                    "collection_frequency": "Quarterly",
+                    "retention_period": "3 years",
+                    "automation": "Policy definition export"
+                }
+            ],
+            "artifact_storage": {
+                "primary": "Azure Blob Storage with immutable storage",
+                "backup": "Azure Backup with GRS replication",
+                "access_control": "Azure RBAC with audit trail"
+            },
+            "compliance_mapping": {
+                "fedramp_controls": ["cm-2.2", "cm-8.3", "sc-13", "sc-23", "si-7", "si-7.1", "sr-10"],
+                "evidence_purpose": "Demonstrate cryptographic validation of resource integrity across infrastructure and applications"
+            }
+        }

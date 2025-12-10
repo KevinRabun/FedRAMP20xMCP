@@ -3,15 +3,16 @@
 ## Progress Overview
 
 **Total Active KSIs:** 65  
-**Implemented:** 27 (41.5%)  
-**Remaining:** 38 (58.5%)
+**Implemented:** 30 (46.2%)  
+**Remaining:** 35 (53.8%)
 
 **Target:** Implement evidence automation for all 65 active KSIs
 
 **Phase 1 Complete:** All 10 high-priority KSIs implemented ✅  
 **MLA Family Complete:** All 5 MLA KSIs implemented ✅  
 **INR Family Complete:** All 1 INR KSI implemented ✅  
-**IAM Family Complete:** All 7 IAM KSIs implemented ✅
+**IAM Family Complete:** All 7 IAM KSIs implemented ✅  
+**CNA Family Complete:** All 8 CNA KSIs implemented ✅
 
 ---
 
@@ -75,7 +76,7 @@
   - Queries: 5 (3 Graph API, 2 KQL)
   - Artifacts: 5
 
-### ✅ CNA - Cloud Native Architecture (7/8 = 87.5%)
+### ✅ CNA - Cloud Native Architecture (8/8 = 100% COMPLETE)
 
 - [x] **KSI-CNA-01** - Restrict Network Traffic ✅ COMPLETE
   - Evidence Type: config-based
@@ -133,7 +134,13 @@
   - Queries: 5 (3 REST API, 2 Resource Graph)
   - Artifacts: 5
 
-- [ ] **KSI-CNA-08** - Cloud-Native Patterns
+- [x] **KSI-CNA-08** - Persistent Assessment and Automated Enforcement ✅ COMPLETE
+  - Evidence Type: config-based, log-based, metric-based
+  - Automation Feasibility: high
+  - Implementation Effort: medium
+  - Azure Services: 5 (Defender for Cloud, Policy, Automation DSC, Arc, Monitor)
+  - Queries: 5 (2 REST API, 2 Resource Graph, 1 KQL)
+  - Artifacts: 5
 - [ ] **KSI-CNA-06** - Microservices Security
 - [ ] **KSI-CNA-07** - Service Mesh Security
 - [ ] **KSI-CNA-08** - Zero Trust Architecture
@@ -198,7 +205,7 @@
   - Queries: 5 (1 REST API, 1 Graph API, 2 KQL, 1 Resource Graph)
   - Artifacts: 5
 
-### SVC - Service Management (4/9 = 44.4%)
+### SVC - Service Management (6/9 = 66.7%)
 
 - [x] **KSI-SVC-01** - Continuous Improvement ✅ COMPLETE
   - Evidence Type: log-based, config-based, process-based
@@ -214,7 +221,7 @@
   - Azure Services: 5 (App Gateway/Front Door, VPN Gateway, ExpressRoute, Policy, Defender for Cloud)
   - Queries: 5 (3 Resource Graph, 1 REST API, 1 KQL)
   - Artifacts: 5
-- [ ] **KSI-SVC-03** - Service Catalog
+- [ ] **KSI-SVC-03** - RETIRED (superseded by KSI-AFR-11)
 - [x] **KSI-SVC-04** - Configuration Automation ✅ COMPLETE
   - Evidence Type: config-based, log-based
   - Automation Feasibility: high
@@ -222,7 +229,13 @@
   - Azure Services: 5 (Automation, Policy, Arc, Monitor, DevOps)
   - Queries: 5 (2 KQL, 1 REST API, 1 Resource Graph, 1 DevOps API)
   - Artifacts: 6
-- [ ] **KSI-SVC-05** - Configuration Baseline
+- [x] **KSI-SVC-05** - Resource Integrity ✅ COMPLETE
+  - Evidence Type: log-based, config-based
+  - Automation Feasibility: high
+  - Implementation Effort: medium
+  - Azure Services: 5 (Policy, Defender for Cloud FIM, ACR, Key Vault, Change Tracking)
+  - Queries: 5 (3 KQL, 1 REST API, 1 DevOps API)
+  - Artifacts: 5
 - [x] **KSI-SVC-06** - Secret Management ✅ COMPLETE
   - Evidence Type: config-based, log-based
   - Automation Feasibility: high
@@ -230,7 +243,13 @@
   - Azure Services: 5 (Key Vault, Monitor, Policy, Defender for Cloud, Managed Identity)
   - Queries: 5 (2 Resource Graph, 2 KQL, 1 REST API)
   - Artifacts: 6
-- [ ] **KSI-SVC-07** - Dependency Management
+- [x] **KSI-SVC-07** - Patching ✅ COMPLETE
+  - Evidence Type: log-based, config-based, process-based
+  - Automation Feasibility: high
+  - Implementation Effort: medium
+  - Azure Services: 5 (Update Manager, Defender for Cloud, Policy, Automation, Monitor)
+  - Queries: 5 (3 KQL, 1 REST API, 1 Resource Graph)
+  - Artifacts: 5
 - [ ] **KSI-SVC-08** - Resource Management
 - [ ] **KSI-SVC-09** - Communication Validation
 - [ ] **KSI-SVC-10** - Data Deletion

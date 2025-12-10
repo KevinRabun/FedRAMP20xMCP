@@ -490,3 +490,271 @@ class KSI_SVC_07_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get Azure-specific recommendations for automating evidence collection for KSI-SVC-07.
+        
+        **KSI-SVC-07: Patching**
+        Use a consistent, risk-informed approach for applying security patches.
+        
+        Returns:
+            Dictionary with automation recommendations
+        """
+        return {
+            "ksi_id": "KSI-SVC-07",
+            "ksi_name": "Patching",
+            "azure_services": [
+                {
+                    "service": "Azure Update Manager",
+                    "purpose": "Centralized patch management for VMs and Arc-enabled servers",
+                    "capabilities": [
+                        "Automated patch assessment",
+                        "Scheduled patching with maintenance windows",
+                        "Patch compliance reporting",
+                        "Support for Windows and Linux"
+                    ]
+                },
+                {
+                    "service": "Microsoft Defender for Cloud",
+                    "purpose": "Vulnerability assessment and patch recommendations",
+                    "capabilities": [
+                        "Missing patch detection",
+                        "Vulnerability prioritization (CVSS scores)",
+                        "Risk-based patch recommendations",
+                        "Integration with Update Manager"
+                    ]
+                },
+                {
+                    "service": "Azure Policy",
+                    "purpose": "Enforce patch compliance requirements",
+                    "capabilities": [
+                        "Audit unpatched resources",
+                        "Require automatic updates enabled",
+                        "Tag resources by patch criticality",
+                        "Compliance reporting"
+                    ]
+                },
+                {
+                    "service": "Azure Automation",
+                    "purpose": "Orchestrate complex patching workflows",
+                    "capabilities": [
+                        "Pre/post-patch script execution",
+                        "Phased rollout automation",
+                        "Rollback procedures",
+                        "Integration with change management"
+                    ]
+                },
+                {
+                    "service": "Azure Monitor",
+                    "purpose": "Track patch deployment and compliance",
+                    "capabilities": [
+                        "Patch deployment status tracking",
+                        "Compliance trend analysis",
+                        "Alert on missing critical patches",
+                        "SLA tracking for patch timelines"
+                    ]
+                }
+            ],
+            "collection_methods": [
+                {
+                    "method": "Patch Compliance Assessment",
+                    "description": "Identify missing patches with risk-based prioritization",
+                    "automation": "Azure Update Manager + Defender for Cloud",
+                    "frequency": "Daily",
+                    "evidence_produced": "Patch compliance report with CVSS scores"
+                },
+                {
+                    "method": "Patch Deployment History",
+                    "description": "Track all patch deployments with success/failure status",
+                    "automation": "Update Manager deployment logs",
+                    "frequency": "Per deployment (continuous)",
+                    "evidence_produced": "Patch deployment logs with timeline"
+                },
+                {
+                    "method": "Patching SLA Compliance",
+                    "description": "Measure patch deployment against risk-based SLAs (critical: 30 days, high: 60 days)",
+                    "automation": "Azure Monitor workbook",
+                    "frequency": "Monthly",
+                    "evidence_produced": "SLA compliance report by severity"
+                },
+                {
+                    "method": "Patch Exception and Deferral Tracking",
+                    "description": "Document approved patch exceptions with risk acceptance",
+                    "automation": "Azure DevOps/ServiceNow integration",
+                    "frequency": "Monthly",
+                    "evidence_produced": "Patch exception log with approvals"
+                }
+            ],
+            "automation_feasibility": "high",
+            "evidence_types": ["log-based", "config-based", "process-based"],
+            "implementation_guidance": {
+                "quick_start": "Enable Update Manager for all VMs, configure automatic assessment, define risk-based patching schedules (critical patches within 30 days), track with Defender and Monitor",
+                "azure_well_architected": "Follows Azure WAF operational excellence for systematic patch management",
+                "compliance_mapping": "Addresses NIST controls ca-7.4, ra-5, ra-7 for vulnerability monitoring and risk-informed patching"
+            }
+        }
+    
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get specific Azure queries for collecting KSI-SVC-07 evidence.
+        """
+        return {
+            "ksi_id": "KSI-SVC-07",
+            "queries": [
+                {
+                    "name": "Missing Patches by Severity",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace",
+                    "query": """
+                        Update
+                        | where TimeGenerated > ago(1d)
+                        | where UpdateState == 'Needed' or Classification == 'Security Updates'
+                        | extend Severity = iff(KBID contains 'Critical', 'Critical', iff(KBID contains 'Important', 'High', 'Medium'))
+                        | summarize MissingPatches = count() by Computer, Severity, Classification
+                        | order by Severity asc, MissingPatches desc
+                        """,
+                    "purpose": "Identify missing security patches with risk-based prioritization",
+                    "expected_result": "Minimal critical/high severity missing patches"
+                },
+                {
+                    "name": "Patch Deployment Success Rate",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace",
+                    "query": """
+                        Update
+                        | where TimeGenerated > ago(30d)
+                        | where UpdateState == 'Installed'
+                        | summarize SuccessfulPatches = count() by bin(TimeGenerated, 1d)
+                        | join kind=leftouter (
+                            Update
+                            | where TimeGenerated > ago(30d)
+                            | where UpdateState == 'Failed'
+                            | summarize FailedPatches = count() by bin(TimeGenerated, 1d)
+                        ) on TimeGenerated
+                        | extend TotalAttempts = SuccessfulPatches + FailedPatches
+                        | extend SuccessRate = round((SuccessfulPatches * 100.0) / TotalAttempts, 2)
+                        | project TimeGenerated, SuccessfulPatches, FailedPatches, SuccessRate
+                        | order by TimeGenerated desc
+                        """,
+                    "purpose": "Track patch deployment success rate",
+                    "expected_result": "High success rate (>95%) for patch deployments"
+                },
+                {
+                    "name": "Patching SLA Compliance",
+                    "type": "kql",
+                    "workspace": "Log Analytics workspace",
+                    "query": """
+                        Update
+                        | where TimeGenerated > ago(90d)
+                        | where UpdateState == 'Needed'
+                        | extend DaysOutstanding = datetime_diff('day', now(), TimeGenerated)
+                        | extend Severity = iff(Classification contains 'Critical', 'Critical', iff(Classification contains 'Important', 'High', 'Medium'))
+                        | extend SLATarget = iff(Severity == 'Critical', 30, iff(Severity == 'High', 60, 90))
+                        | extend WithinSLA = iff(DaysOutstanding <= SLATarget, 'Yes', 'No')
+                        | summarize TotalPatches = count(), WithinSLA = countif(WithinSLA == 'Yes') by Severity
+                        | extend SLACompliance = round((WithinSLA * 100.0) / TotalPatches, 2)
+                        | project Severity, TotalPatches, WithinSLA, SLACompliance
+                        """,
+                    "purpose": "Measure patching against risk-based SLA targets",
+                    "expected_result": "High SLA compliance (critical: 30d, high: 60d, medium: 90d)"
+                },
+                {
+                    "name": "Defender for Cloud Vulnerability Recommendations",
+                    "type": "azure_rest_api",
+                    "endpoint": "/subscriptions/{subscriptionId}/providers/Microsoft.Security/assessments?api-version=2021-06-01&$filter=properties/displayName contains 'patch'",
+                    "method": "GET",
+                    "purpose": "Get prioritized patch recommendations from Defender",
+                    "expected_result": "All high-priority vulnerabilities addressed"
+                },
+                {
+                    "name": "Update Manager Configuration Status",
+                    "type": "azure_resource_graph",
+                    "query": """
+                        resources
+                        | where type =~ 'Microsoft.Compute/virtualMachines'
+                        | extend hasUpdateManagement = isnotnull(properties.osProfile.windowsConfiguration.patchSettings) or isnotnull(properties.osProfile.linuxConfiguration.patchSettings)
+                        | project name, resourceGroup, hasUpdateManagement, osType = tostring(properties.storageProfile.osDisk.osType)
+                        | where hasUpdateManagement == false
+                        """,
+                    "purpose": "Verify all VMs enrolled in Update Manager",
+                    "expected_result": "100% of VMs have Update Manager enabled"
+                }
+            ],
+            "query_execution_guidance": {
+                "authentication": "Use Azure CLI or Managed Identity",
+                "permissions_required": [
+                    "Log Analytics Reader for Update Management queries",
+                    "Security Reader for Defender vulnerability data",
+                    "Reader for Resource Graph queries"
+                ],
+                "automation_tools": [
+                    "Azure CLI (az vm update, az security)",
+                    "PowerShell Az.Maintenance module"
+                ]
+            }
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get descriptions of evidence artifacts for KSI-SVC-07.
+        """
+        return {
+            "ksi_id": "KSI-SVC-07",
+            "artifacts": [
+                {
+                    "name": "Patch Compliance Report",
+                    "description": "Missing patches by severity with risk-based prioritization (CVSS scores)",
+                    "source": "Azure Update Manager + Defender for Cloud",
+                    "format": "CSV with patch details, severity, and SLA status",
+                    "collection_frequency": "Weekly",
+                    "retention_period": "3 years",
+                    "automation": "Update Manager API + Log Analytics"
+                },
+                {
+                    "name": "Patch Deployment History",
+                    "description": "Complete log of patch deployments with success/failure status",
+                    "source": "Azure Update Manager deployment logs",
+                    "format": "JSON deployment logs",
+                    "collection_frequency": "Continuous (per deployment)",
+                    "retention_period": "3 years",
+                    "automation": "Log Analytics export"
+                },
+                {
+                    "name": "Patching SLA Compliance Report",
+                    "description": "Measurement of patch deployment against risk-based SLAs (critical: 30 days, high: 60 days, medium: 90 days)",
+                    "source": "Azure Monitor workbook",
+                    "format": "CSV with SLA compliance by severity",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "3 years",
+                    "automation": "Monitor workbook scheduled export"
+                },
+                {
+                    "name": "Patch Exception and Deferral Log",
+                    "description": "Documented exceptions with risk acceptance and business justification",
+                    "source": "Change management system (ServiceNow/Azure DevOps)",
+                    "format": "CSV with approval workflow",
+                    "collection_frequency": "Monthly",
+                    "retention_period": "5 years",
+                    "automation": "ServiceNow/DevOps API export"
+                },
+                {
+                    "name": "Patching Policy and Procedures",
+                    "description": "Documented risk-informed patching approach with timelines",
+                    "source": "Policy documentation repository",
+                    "format": "PDF policy document",
+                    "collection_frequency": "Annually (or on policy changes)",
+                    "retention_period": "7 years",
+                    "automation": "Version-controlled in Git"
+                }
+            ],
+            "artifact_storage": {
+                "primary": "Azure Blob Storage with immutable storage",
+                "backup": "Azure Backup with GRS replication",
+                "access_control": "Azure RBAC with audit trail"
+            },
+            "compliance_mapping": {
+                "fedramp_controls": ["ca-7.4", "ra-5", "ra-7"],
+                "evidence_purpose": "Demonstrate consistent, risk-informed approach to security patching with SLA compliance"
+            }
+        }
