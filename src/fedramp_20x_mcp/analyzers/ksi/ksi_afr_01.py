@@ -214,18 +214,84 @@ class KSI_AFR_01_Analyzer(BaseKSIAnalyzer):
             "ksi_name": "Minimum Assessment Scope",
             "evidence_type": "process-based",
             "automation_feasibility": "high",
+            "implementation_effort": "medium",
             "azure_services": [
-                "Azure Policy",
-                "Azure Monitor",
-                "Azure DevOps",
-                "Azure Resource Graph",
-                "Microsoft Defender for Cloud"
+                {
+                    "service": "Azure Policy",
+                    "purpose": "Enforce FedRAMP scope tagging and track compliance",
+                    "configuration": "Create policy definition requiring 'FedRAMP-Scope' and 'Impact-Level' tags on all resources. Assign policy at subscription or management group level. Configure compliance reporting dashboard.",
+                    "cost": "Free - included with Azure subscription"
+                },
+                {
+                    "service": "Azure Resource Graph",
+                    "purpose": "Query and inventory all in-scope Azure resources",
+                    "configuration": "Use KQL queries to filter resources by FedRAMP scope tags. Export results to CSV/JSON for evidence artifacts. Schedule queries via Azure Automation runbooks.",
+                    "cost": "Free for first 1000 queries/month, then $0.001 per query"
+                },
+                {
+                    "service": "Azure Monitor",
+                    "purpose": "Create workbooks documenting assessment boundaries and network architecture",
+                    "configuration": "Design workbooks with sections for resource inventory, network diagrams, data flows, and external connections. Integrate with Resource Graph and Network Watcher for live data.",
+                    "cost": "Free for workbooks; network monitoring data ingestion to Log Analytics ~$2-5/GB"
+                },
+                {
+                    "service": "Azure DevOps",
+                    "purpose": "Version-controlled storage for assessment scope documentation",
+                    "configuration": "Create wiki pages documenting FedRAMP assessment scope. Use repos for architecture diagrams and data flow documentation. Enable automated updates from Resource Graph queries.",
+                    "cost": "Free tier available (5 users); Basic plan $6/user/month"
+                },
+                {
+                    "service": "Microsoft Defender for Cloud",
+                    "purpose": "Identify all Azure resources and their security posture within scope",
+                    "configuration": "Enable Defender for Cloud at subscription level. Use inventory blade to view all resources. Export inventory data via Azure Resource Graph integration.",
+                    "cost": "Free tier available; paid plans ~$15/server/month for enhanced features"
+                }
             ],
             "collection_methods": [
-                "Azure Policy compliance reports for resource inventory and tagging",
-                "Azure Resource Graph queries to identify all in-scope Azure resources",
-                "Azure Monitor workbooks to document assessment boundaries and system components",
-                "Azure DevOps wikis/repos to maintain assessment scope documentation with version control"
+                {
+                    "method": "Azure Policy Compliance Reports",
+                    "description": "Generate automated compliance reports showing which resources have proper FedRAMP scope tags. Demonstrates enforcement of assessment boundary controls.",
+                    "frequency": "Daily",
+                    "data_points": [
+                        "Total resources in scope (with FedRAMP-Scope=true tag)",
+                        "Non-compliant resources (missing required tags)",
+                        "Compliance percentage by subscription and resource group",
+                        "New resources added to scope in last 24 hours"
+                    ]
+                },
+                {
+                    "method": "Azure Resource Graph Inventory Queries",
+                    "description": "Use KQL queries to export comprehensive inventory of all in-scope Azure resources, grouped by type and location. Provides evidence of complete assessment scope coverage.",
+                    "frequency": "Daily",
+                    "data_points": [
+                        "Resource name, type, location, resource group",
+                        "FedRAMP scope tag values",
+                        "Impact level classification",
+                        "Subscription ID and hierarchy"
+                    ]
+                },
+                {
+                    "method": "Azure Monitor Workbooks",
+                    "description": "Interactive workbooks documenting assessment boundaries, network architecture, data flows, and external connections. Provides visual evidence of system boundaries.",
+                    "frequency": "Weekly (or after architecture changes)",
+                    "data_points": [
+                        "Network topology diagrams",
+                        "Data flow maps showing internal/external connections",
+                        "Resource inventory by service type",
+                        "External integration points and APIs"
+                    ]
+                },
+                {
+                    "method": "Azure DevOps Version-Controlled Documentation",
+                    "description": "Maintain assessment scope documentation in Azure DevOps wiki and repos with full version history. Demonstrates controlled change management for scope updates.",
+                    "frequency": "Monthly (or after scope changes)",
+                    "data_points": [
+                        "Assessment scope definition document",
+                        "System architecture diagrams",
+                        "Change history and approvals",
+                        "Automated updates from Resource Graph queries"
+                    ]
+                }
             ],
             "implementation_steps": [
                 "1. Tag all in-scope Azure resources with 'FedRAMP-Scope: true' and 'Impact-Level: Moderate/High'",

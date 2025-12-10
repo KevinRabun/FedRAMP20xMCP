@@ -695,56 +695,39 @@ class KSI_SVC_01_Analyzer(BaseKSIAnalyzer):
         return {
             "ksi_id": "KSI-SVC-01",
             "ksi_name": "Continuous Improvement",
+            "evidence_type": "Configuration and Process Evidence",
+            "automation_feasibility": "high",
+            "implementation_effort": "medium",
             "azure_services": [
                 {
                     "service": "Microsoft Defender for Cloud",
                     "purpose": "Continuous security posture assessment with recommendations",
-                    "capabilities": [
-                        "Secure Score with improvement recommendations",
-                        "Security assessments and findings",
-                        "Recommendation prioritization",
-                        "Implementation tracking"
-                    ]
+                    "configuration": "Enable Defender for Cloud with Standard tier for comprehensive security recommendations and Secure Score tracking",
+                    "cost": "~$15/server/month + $10/app service/month (variable by resource type)"
                 },
                 {
                     "service": "Azure Advisor",
                     "purpose": "Best practice recommendations across security, cost, performance",
-                    "capabilities": [
-                        "Security recommendations",
-                        "Operational excellence guidance",
-                        "Recommendation history",
-                        "Impact analysis"
-                    ]
+                    "configuration": "Built-in service, no configuration needed. Review recommendations in Azure Portal > Advisor > Security",
+                    "cost": "Free (included with Azure subscription)"
                 },
                 {
                     "service": "Azure Monitor Workbooks",
                     "purpose": "Security metrics visualization and trend analysis",
-                    "capabilities": [
-                        "Security KPI dashboards",
-                        "Trend analysis over time",
-                        "Improvement tracking",
-                        "Custom metrics and queries"
-                    ]
+                    "configuration": "Create custom workbooks from Defender for Cloud data with KQL queries for security trends",
+                    "cost": "Free (data storage charged separately in Log Analytics)"
                 },
                 {
                     "service": "Azure DevOps / GitHub",
                     "purpose": "Track security improvement tasks and implementation",
-                    "capabilities": [
-                        "Work item tracking for security improvements",
-                        "Sprint planning for remediation",
-                        "Implementation verification",
-                        "Audit trail of improvements"
-                    ]
+                    "configuration": "Create project/repository with security improvement backlog items tagged for tracking velocity",
+                    "cost": "Azure DevOps Basic Plan free for up to 5 users; GitHub Free"
                 },
                 {
                     "service": "Azure Log Analytics",
                     "purpose": "Query and analyze security improvement metrics",
-                    "capabilities": [
-                        "Custom KQL queries for trends",
-                        "Scheduled queries for automated reporting",
-                        "Alert on degradation",
-                        "Historical analysis"
-                    ]
+                    "configuration": "Connect Defender for Cloud and other security services to Log Analytics workspace for unified querying",
+                    "cost": "~$2-5/GB ingested (varies by region and commit tier)"
                 }
             ],
             "collection_methods": [
@@ -777,8 +760,6 @@ class KSI_SVC_01_Analyzer(BaseKSIAnalyzer):
                     "evidence_produced": "Continuous improvement program documentation"
                 }
             ],
-            "automation_feasibility": "high",
-            "evidence_types": ["log-based", "config-based", "process-based"],
             "implementation_guidance": {
                 "quick_start": "Enable Defender for Cloud, configure Azure Advisor, create Workbooks for security metrics, integrate with DevOps for tracking improvements",
                 "azure_well_architected": "Follows Azure WAF operational excellence pillar for continuous improvement",

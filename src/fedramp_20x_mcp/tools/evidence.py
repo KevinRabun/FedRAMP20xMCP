@@ -304,19 +304,28 @@ This architecture automates evidence collection for all FedRAMP 20x KSIs, provid
     if scope == "minimal":
         result += """## Minimal Viable Architecture
 
+**Purpose:** Quick-start pilot for automated evidence collection covering core FedRAMP 20x KSIs.
+
 ### Components
-1. **Azure Log Analytics** - Central logging repository
-2. **Azure Blob Storage** - Evidence storage with immutability
-3. **Azure Function** - Scheduled evidence collection
-4. **Managed Identity** - Secure authentication
+1. **Azure Log Analytics** - Central logging repository (supports KSI-MLA-01, KSI-MLA-02)
+2. **Azure Blob Storage** - Evidence storage with immutability (supports KSI-CED-01, FRR-ADS)
+3. **Azure Function** - Scheduled evidence collection (supports KSI-CMT-01)
+4. **Managed Identity** - Secure authentication (supports KSI-IAM-05)
 
 ### Data Flow
 ```
 Azure Resources → Log Analytics → Azure Function (daily) → Blob Storage → FRR-ADS API
 ```
 
+### KSI Coverage Examples
+- **KSI-MLA-01** (Log Aggregation): Log Analytics workspace with diagnostic settings
+- **KSI-MLA-02** (Retention): 730-day retention policy
+- **KSI-CED-01** (Evidence Collection): Automated blob storage uploads
+- **KSI-IAM-05** (Managed Identity): Service accounts use managed identities
+- **FRR-ADS** (Authorization Data Sharing): Machine-readable API endpoints
+
 ### Setup Time: 2-3 days
-### Covers: 40-50 KSIs
+### Covers: 40-50 KSIs across IAM, MLA, CED, CMT families
 
 ### Quick Start
 ```bash
@@ -335,39 +344,47 @@ Use `get_infrastructure_code_for_ksi` and `get_evidence_collection_code` for imp
     elif scope == "single-ksi":
         result += """## Single KSI Architecture
 
-For implementing evidence collection for a single KSI:
+**Purpose:** Production-grade evidence collection for a specific FedRAMP 20x KSI.
+
+For implementing evidence collection for a single KSI (e.g., KSI-IAM-01, KSI-MLA-01, KSI-CNA-01):
 
 ### Components
-1. **Data Source** - The Azure resource being monitored (e.g., Entra ID, Key Vault)
-2. **Collection Logic** - Script/Function to gather evidence
-3. **Evidence Storage** - Blob container for this KSI's evidence
-4. **Scheduler** - Timer trigger or schedule
+1. **Data Source** - The Azure resource being monitored (e.g., Microsoft Entra ID for KSI-IAM-01, Log Analytics for KSI-MLA-01)
+2. **Collection Logic** - Script/Function to gather evidence (supports specific KSI requirements)
+3. **Evidence Storage** - Blob container for this KSI's evidence (supports FRR-ADS machine-readable format)
+4. **Scheduler** - Timer trigger or schedule (compliance-appropriate frequency)
 
 ### Architecture Pattern
 ```
 ┌─────────────────┐
-│  Azure Resource │ (Data Source)
+│  Azure Resource │ (Data Source for specific KSI)
 │  (e.g., Entra)  │
 └────────┬────────┘
-         │ API Query
+         │ API Query (KSI-specific)
          ▼
 ┌─────────────────┐
-│ Azure Function  │ (Collection Logic)
+│ Azure Function  │ (Collection Logic - KSI requirements)
 │ or Automation   │
 └────────┬────────┘
-         │ Store Evidence
+         │ Store Evidence (FRR-ADS compliant)
          ▼
 ┌─────────────────┐
 │  Blob Storage   │ (Evidence Repository)
-│  /ksi-iam-01/   │
+│  /ksi-iam-01/   │ (example path structure)
 └─────────────────┘
 ```
 
+### KSI-Specific Examples
+- **KSI-IAM-01** (Phishing-Resistant MFA): Collect Entra ID Conditional Access policies and sign-in logs
+- **KSI-MLA-01** (Log Aggregation): Export Log Analytics diagnostic settings and workspace configuration
+- **KSI-CNA-01** (Network Segmentation): Export NSG rules, Azure Firewall policies, virtual network configs
+
 ### Implementation Steps
-1. Use `get_infrastructure_code_for_ksi(ksi_id)` to deploy infrastructure
-2. Use `get_evidence_collection_code(ksi_id, language)` to implement collection
-3. Test manually, then enable scheduling
-4. Monitor for 1 week before marking as production-ready
+1. Use `get_infrastructure_code_for_ksi(ksi_id)` to deploy KSI-specific infrastructure
+2. Use `get_evidence_collection_code(ksi_id, language)` to implement collection logic
+3. Test manually, validate evidence format against FRR-ADS requirements
+4. Enable scheduling with appropriate frequency (daily, weekly, monthly based on KSI)
+5. Monitor for 1 week before marking as production-ready
 
 ### Timeline: 1-2 days per KSI
 """
@@ -379,6 +396,8 @@ For implementing evidence collection by KSI category (IAM, MLA, etc.):
 ### Architecture by Category
 
 #### 1. IAM (Identity & Access Management) - 7 KSIs
+Supports KSI-IAM-01 through KSI-IAM-07 (MFA, Privileged Access, Session Management, etc.)
+
 ```
 Microsoft Entra ID → Microsoft Graph API → Evidence Collector → Blob Storage
                                                     ↓
@@ -387,8 +406,11 @@ Microsoft Entra ID → Microsoft Graph API → Evidence Collector → Blob Stora
 **Collection Method:** Microsoft Graph API queries
 **Frequency:** Daily
 **Storage:** /iam-evidence/
+**KSI Coverage:** KSI-IAM-01 (MFA), KSI-IAM-02 (Privileged Access), KSI-IAM-04 (Session Termination), KSI-IAM-05 (Re-authentication)
 
 #### 2. MLA (Monitoring, Logging & Analysis) - 8 KSIs
+Supports KSI-MLA-01 through KSI-MLA-08 (Log Aggregation, Retention, Analysis, SIEM, etc.)
+
 ```
 All Azure Resources → Log Analytics Workspace → KQL Queries → Evidence Export
                                                        ↓
@@ -397,31 +419,40 @@ All Azure Resources → Log Analytics Workspace → KQL Queries → Evidence Exp
 **Collection Method:** Kusto (KQL) queries
 **Frequency:** Continuous ingestion, daily export
 **Storage:** /mla-evidence/
+**KSI Coverage:** KSI-MLA-01 (Log Aggregation), KSI-MLA-02 (SIEM Integration), KSI-MLA-07 (Retention 2 years), KSI-MLA-08 (Protected Logs)
 
 #### 3. AFR (Authorization Framework) - 11 KSIs
+Supports KSI-AFR-01 through KSI-AFR-11 (Assessment Scope, Vulnerability Scanning, Asset Management, etc.)
+
 ```
 Multiple Sources → Aggregation Function → Unified Evidence Format → Blob Storage
-  ├─ Defender for Cloud (vulnerabilities)
-  ├─ Policy Compliance (assessments)
-  ├─ Log Analytics (CCM data)
-  └─ Azure Resource Graph (inventory)
+  ├─ Defender for Cloud (vulnerabilities) - KSI-AFR-04
+  ├─ Policy Compliance (assessments) - KSI-AFR-01
+  ├─ Log Analytics (CCM data) - KSI-AFR-03
+  └─ Azure Resource Graph (inventory) - KSI-AFR-02
 ```
 **Collection Method:** Multiple APIs aggregated
 **Frequency:** Daily
 **Storage:** /afr-evidence/
+**KSI Coverage:** KSI-AFR-01 (Assessment Scope), KSI-AFR-02 (Asset Inventory), KSI-AFR-03 (Continuous Monitoring), KSI-AFR-04 (Vulnerability Detection)
 
 #### 4. CNA (Cloud Native Architecture) - 8 KSIs
+Supports KSI-CNA-01 through KSI-CNA-08 (Network Segmentation, Encryption, Secure Configuration, etc.)
+
 ```
 AKS Cluster → Container Insights → Log Analytics → Evidence Collector
-     ├─ Network Policies
-     ├─ Pod Security Standards
-     └─ Policy Enforcement (OPA/Kyverno)
+     ├─ Network Policies (KSI-CNA-01)
+     ├─ Pod Security Standards (KSI-CNA-04)
+     └─ Policy Enforcement/OPA/Kyverno (KSI-CNA-06)
 ```
 **Collection Method:** Kubernetes API + Container Insights
 **Frequency:** Continuous monitoring, daily summary
 **Storage:** /cna-evidence/
+**KSI Coverage:** KSI-CNA-01 (Network Segmentation), KSI-CNA-03 (Data-at-Rest Encryption), KSI-CNA-04 (Secure Configuration), KSI-CNA-06 (Container Policy)
 
 #### 5. RPL (Recovery & Planning) - 4 KSIs
+Supports KSI-RPL-01 through KSI-RPL-04 (Backup, Disaster Recovery, Business Continuity, etc.)
+
 ```
 Recovery Services Vault → Backup Reports API → Evidence Collector → Blob Storage
 Azure Site Recovery → Replication Status API →
@@ -429,6 +460,7 @@ Azure Site Recovery → Replication Status API →
 **Collection Method:** Backup/DR APIs
 **Frequency:** Daily
 **Storage:** /rpl-evidence/
+**KSI Coverage:** KSI-RPL-01 (Automated Backups), KSI-RPL-02 (DR Testing), KSI-RPL-03 (Business Continuity), KSI-RPL-04 (Recovery Time Objectives)
 
 ### Implementation Approach
 1. Deploy category infrastructure (use `get_infrastructure_code_for_ksi`)
