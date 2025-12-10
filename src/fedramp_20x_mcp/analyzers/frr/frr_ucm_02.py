@@ -688,10 +688,13 @@ class FRR_UCM_02_Analyzer(BaseFRRAnalyzer):
                 # Check for encryption configuration in next 30 lines
                 snippet_start = max(1, i - 2)
                 snippet_end = min(len(lines), i + 30)
-                snippet = '\n'.join(lines[snippet_start-1:snippet_end])
+                # Filter out comment lines before checking
+                snippet_lines = [l for l in lines[snippet_start-1:snippet_end] if not re.match(r'^\s*//', l)]
+                snippet = '\n'.join(snippet_lines)
                 
-                # Check if requireInfrastructureEncryption is enabled
-                if 'requireInfrastructureEncryption' not in snippet or re.search(r'requireInfrastructureEncryption:\s*false', snippet):
+                # Check if requireInfrastructureEncryption is enabled (must be explicitly true)
+                has_infra_encryption = re.search(r'requireInfrastructureEncryption:\s*true', snippet, re.IGNORECASE)
+                if not has_infra_encryption:
                     findings.append(Finding(
                         ksi_id=self.FRR_ID,
                         requirement_id=self.FRR_ID,
@@ -712,8 +715,8 @@ class FRR_UCM_02_Analyzer(BaseFRRAnalyzer):
                 snippet_end = min(len(lines), i + 25)
                 snippet = '\n'.join(lines[snippet_start-1:snippet_end])
                 
-                # Check SKU - Premium supports HSM backing
-                if re.search(r"sku:\s*{\s*name:\s*'standard'", snippet, re.IGNORECASE):
+                # Check SKU - Premium supports HSM backing (handle multi-line with flexible whitespace)
+                if re.search(r"name:\s*'standard'", snippet, re.IGNORECASE | re.MULTILINE):
                     findings.append(Finding(
                         ksi_id=self.FRR_ID,
                         requirement_id=self.FRR_ID,
@@ -744,10 +747,15 @@ class FRR_UCM_02_Analyzer(BaseFRRAnalyzer):
         storage_pattern = r'resource\s+"azurerm_storage_account"'
         for i, line in enumerate(lines, 1):
             if re.search(storage_pattern, line):
+                snippet_start = max(0, i - 1)
                 snippet_end = min(len(lines), i + 25)
-                snippet = '\n'.join(lines[i:snippet_end])
+                # Filter out comment lines before checking
+                snippet_lines = [l for l in lines[snippet_start:snippet_end] if not re.match(r'^\s*#', l)]
+                snippet = '\n'.join(snippet_lines)
                 
-                if 'infrastructure_encryption_enabled' not in snippet or re.search(r'infrastructure_encryption_enabled\s*=\s*false', snippet):
+                # Must have infrastructure_encryption_enabled = true explicitly
+                has_infra_encryption = re.search(r'infrastructure_encryption_enabled\s*=\s*true', snippet, re.IGNORECASE)
+                if not has_infra_encryption:
                     findings.append(Finding(
                         ksi_id=self.FRR_ID,
                         requirement_id=self.FRR_ID,
