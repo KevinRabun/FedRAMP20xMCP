@@ -10,7 +10,7 @@ Version: 25.11C (Published: 2025-12-01)
 
 import re
 import ast
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 
@@ -595,3 +595,155 @@ class KSI_SVC_09_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
+
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get recommendations for automating evidence collection for KSI-SVC-09.
+        
+        Returns:
+            Dict containing automation recommendations
+        """
+        return {
+            "ksi_id": self.ksi_id,
+            "ksi_name": "Communication Integrity",
+            "evidence_type": "log-based",
+            "automation_feasibility": "high",
+            "azure_services": [
+                "Azure Application Gateway",
+                "Azure Front Door",
+                "Azure Policy",
+                "Azure Monitor",
+                "Microsoft Defender for Cloud"
+            ],
+            "collection_methods": [
+                "Azure Application Gateway and Front Door WAF logs to track TLS handshakes and certificate validation",
+                "Azure Policy to enforce minimum TLS versions and mutual TLS (mTLS) authentication",
+                "Azure Monitor to track message integrity failures and certificate validation errors",
+                "Defender for Cloud recommendations for weak TLS/SSL configurations and missing integrity controls"
+            ],
+            "implementation_steps": [
+                "1. Enable Azure Application Gateway with mutual TLS: (a) Configure TLS termination with minimum TLS 1.2, (b) Enable client certificate authentication, (c) Configure trusted root certificate chain, (d) Enable WAF for request/response inspection",
+                "2. Deploy Azure Policy initiative 'Communication Integrity Controls': (a) Audit services without HTTPS enforcement, (b) Require TLS >= 1.2 for all external endpoints, (c) Deny weak cipher suites, (d) Audit missing certificate pinning",
+                "3. Configure Azure Front Door end-to-end TLS: (a) Enable HTTPS-only mode, (b) Configure custom domain with TLS certificate, (c) Enable origin certificate validation, (d) Configure health probes with integrity checks",
+                "4. Build Azure Monitor workbook 'Communication Integrity Dashboard': (a) TLS version distribution, (b) Certificate validation failures, (c) Cipher suite usage, (d) Message integrity check failures, (e) mTLS adoption rate",
+                "5. Enable diagnostic logging for all gateway/Front Door resources: (a) ApplicationGatewayAccessLog, (b) ApplicationGatewayFirewallLog, (c) Front Door access logs with TLS details",
+                "6. Generate monthly evidence package via Azure Automation: (a) Export gateway/Front Door TLS metrics, (b) Export Policy compliance for integrity controls, (c) Export Defender TLS/SSL recommendations, (d) Export certificate validation logs"
+            ],
+            "evidence_artifacts": [
+                "Application Gateway/Front Door TLS Handshake Logs showing certificate validation and cipher negotiation",
+                "Azure Policy Compliance Report for communication integrity requirements (TLS versions, mTLS, HTTPS enforcement)",
+                "Azure Monitor Certificate Validation Error Logs tracking integrity check failures",
+                "Defender for Cloud TLS/SSL Recommendations Report identifying weak configurations",
+                "Communication Integrity Dashboard from Azure Monitor with monthly snapshots of TLS adoption and compliance"
+            ],
+            "update_frequency": "monthly",
+            "responsible_party": "Cloud Security Team / Network Operations Team"
+        }
+
+    def get_evidence_collection_queries(self) -> List[Dict[str, str]]:
+        """
+        Get specific queries for evidence collection automation.
+        
+        Returns:
+            List of query dictionaries
+        """
+        return [
+            {
+                "query_type": "Azure Monitor KQL",
+                "query_name": "TLS handshake and certificate validation audit",
+                "query": """AzureDiagnostics
+| where ResourceType in ('APPLICATIONGATEWAYS', 'FRONTDOORS')
+| where Category in ('ApplicationGatewayAccessLog', 'ApplicationGatewayFirewallLog', 'FrontDoorAccessLog')
+| extend TLSVersion = tostring(parse_json(tlsVersion_s))
+| extend CertValidation = tostring(parse_json(sslValidation_s))
+| summarize HandshakeCount = count(), FailedValidations = countif(CertValidation == 'Failed'), TLSVersions = make_set(TLSVersion) by Resource, bin(TimeGenerated, 1d)
+| order by TimeGenerated desc""",
+                "purpose": "Track TLS handshakes and certificate validation to ensure communication integrity"
+            },
+            {
+                "query_type": "Azure Policy REST API",
+                "query_name": "Communication integrity policy compliance",
+                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.PolicyInsights/policyStates/latest/summarize?api-version=2019-10-01&$filter=policyDefinitionCategory eq 'Network' and (policyDefinitionName contains 'TLS' or policyDefinitionName contains 'HTTPS')",
+                "purpose": "Retrieve policy compliance for TLS versions, HTTPS enforcement, and communication integrity controls"
+            },
+            {
+                "query_type": "Azure Resource Graph KQL",
+                "query_name": "Services without HTTPS/TLS enforcement",
+                "query": """Resources
+| where type in ('microsoft.web/sites', 'microsoft.storage/storageaccounts', 'microsoft.sql/servers', 'microsoft.network/applicationgateways')
+| extend HTTPSOnly = case(
+    type == 'microsoft.web/sites', properties.httpsOnly,
+    type == 'microsoft.storage/storageaccounts', properties.supportsHttpsTrafficOnly,
+    type == 'microsoft.sql/servers', properties.minimalTlsVersion,
+    type == 'microsoft.network/applicationgateways', properties.sslPolicy.minProtocolVersion,
+    'unknown'
+)
+| where HTTPSOnly == false or HTTPSOnly < '1.2' or HTTPSOnly == 'unknown'
+| project name, type, resourceGroup, HTTPSOnly, location
+| order by type asc""",
+                "purpose": "Identify Azure services without HTTPS/TLS enforcement for communication integrity gaps"
+            },
+            {
+                "query_type": "Microsoft Defender for Cloud REST API",
+                "query_name": "TLS/SSL security recommendations",
+                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.Security/assessments?api-version=2020-01-01&$filter=properties/displayName contains 'TLS' or properties/displayName contains 'SSL' or properties/displayName contains 'certificate'",
+                "purpose": "Retrieve Defender recommendations for weak TLS/SSL configurations impacting communication integrity"
+            },
+            {
+                "query_type": "Azure Monitor KQL",
+                "query_name": "Message integrity check failures",
+                "query": """AzureDiagnostics
+| where ResourceType in ('APPLICATIONGATEWAYS', 'FRONTDOORS')
+| where httpStatus_d >= 400 or tlsHandshakeStatus_s == 'Failed'
+| extend FailureReason = coalesce(errorInfo_s, httpStatusDetails_s, 'Unknown')
+| summarize FailureCount = count() by Resource, FailureReason, bin(TimeGenerated, 1h)
+| order by FailureCount desc""",
+                "purpose": "Detect message integrity check failures and TLS handshake errors indicating potential tampering"
+            }
+        ]
+
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        """
+        Get descriptions of evidence artifacts to collect.
+        
+        Returns:
+            List of artifact dictionaries
+        """
+        return [
+            {
+                "artifact_name": "Application Gateway/Front Door TLS Logs",
+                "artifact_type": "Azure Diagnostic Logs",
+                "description": "Complete logs of TLS handshakes, certificate validation, and cipher suite negotiation for all gateway traffic",
+                "collection_method": "Azure Monitor KQL query exporting ApplicationGatewayAccessLog and FrontDoorAccessLog with TLS details",
+                "storage_location": "Azure Log Analytics workspace with 12-month retention for compliance auditing"
+            },
+            {
+                "artifact_name": "Communication Integrity Policy Compliance Report",
+                "artifact_type": "Azure Policy Report",
+                "description": "Policy compliance status for TLS versions, HTTPS enforcement, and mTLS requirements",
+                "collection_method": "Azure Policy Insights API to export compliance for communication integrity policies",
+                "storage_location": "Azure Storage Account with monthly compliance snapshots"
+            },
+            {
+                "artifact_name": "Certificate Validation Error Logs",
+                "artifact_type": "Azure Monitor Logs",
+                "description": "Logs of certificate validation failures and message integrity check errors",
+                "collection_method": "Azure Monitor KQL query filtering for TLS handshake failures and certificate validation errors",
+                "storage_location": "Azure Log Analytics workspace with alerting for critical validation failures"
+            },
+            {
+                "artifact_name": "Defender TLS/SSL Recommendations Report",
+                "artifact_type": "Security Recommendations Export",
+                "description": "Report of all Defender for Cloud recommendations related to weak TLS/SSL configurations and missing integrity controls",
+                "collection_method": "Microsoft Defender for Cloud REST API to retrieve and filter TLS/SSL security recommendations",
+                "storage_location": "Azure Storage Account with JSON exports organized by severity"
+            },
+            {
+                "artifact_name": "Communication Integrity Dashboard",
+                "artifact_type": "Azure Monitor Workbook",
+                "description": "Comprehensive dashboard showing TLS version adoption, certificate validation status, cipher usage, and integrity failures",
+                "collection_method": "Azure Monitor workbook aggregating data from Application Gateway, Front Door, and Policy compliance",
+                "storage_location": "Azure Monitor Workbooks with monthly PDF exports archived to Storage Account"
+            }
+        ]
+    
