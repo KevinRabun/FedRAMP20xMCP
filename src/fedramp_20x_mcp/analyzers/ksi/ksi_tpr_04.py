@@ -8,7 +8,7 @@ Enhanced with AST-based analysis where applicable.
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 from ..ast_utils import CodeLanguage
@@ -402,3 +402,141 @@ class KSI_TPR_04_Analyzer(BaseKSIAnalyzer):
             ))
         
         return findings
+
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get recommendations for automating evidence collection for KSI-TPR-04.
+        
+        Returns:
+            Dict containing automation recommendations
+        """
+        return {
+            "ksi_id": self.ksi_id,
+            "ksi_name": "Supply Chain Risk Monitoring",
+            "evidence_type": "log-based",
+            "automation_feasibility": "high",
+            "azure_services": [
+                "Microsoft Defender for Cloud",
+                "GitHub Advanced Security",
+                "Azure Container Registry",
+                "Azure Monitor",
+                "Azure Logic Apps"
+            ],
+            "collection_methods": [
+                "GitHub Dependabot and Advanced Security to automatically detect vulnerable dependencies with CVE alerts",
+                "Azure Container Registry vulnerability scanning with Microsoft Defender for Containers integration",
+                "Microsoft Defender for Cloud continuous assessment of third-party software risks across Azure resources",
+                "Azure Monitor alerts to notify security team of new HIGH/CRITICAL CVEs in production dependencies",
+                "Azure Logic Apps to automate vendor notification workflows when upstream vulnerabilities are detected"
+            ],
+            "implementation_steps": [
+                "1. Enable GitHub Dependabot across all repositories: (a) Configure Dependabot version updates with daily security-only checks, (b) Enable Dependabot alerts with email/Slack notifications, (c) Set auto-merge rules for LOW severity patches, (d) Require PR approval for MEDIUM/HIGH/CRITICAL patches",
+                "2. Activate Azure Container Registry vulnerability scanning: (a) Enable Microsoft Defender for Containers for all ACR instances, (b) Configure continuous scanning for all pushed images, (c) Set image quarantine policies for HIGH/CRITICAL findings, (d) Generate weekly vulnerability scan reports",
+                "3. Deploy Microsoft Defender for Cloud continuous monitoring: (a) Enable Defender for Servers, Containers, App Service, and Databases, (b) Configure vulnerability assessment agents on all VMs, (c) Set alert rules for new CVEs in installed packages, (d) Integrate with Azure Sentinel for centralized alerting",
+                "4. Create Azure Monitor alert rules for supply chain risks: (a) Alert on Dependabot CVE detection (HIGH/CRITICAL severity), (b) Alert on ACR quarantined images due to vulnerabilities, (c) Alert on Defender recommendations for outdated/vulnerable software, (d) Route alerts to security team via email, Teams, or PagerDuty",
+                "5. Build Azure Logic App vendor notification workflow: (a) Triggered by Defender/Dependabot CVE alerts, (b) Query vendor contract database for notification requirements, (c) Send automated email to vendor with CVE details and remediation request, (d) Create tracking ticket in Azure DevOps, (e) Set 7-day follow-up reminder",
+                "6. Generate monthly evidence package: (a) Export Dependabot security alerts with remediation status, (b) Export ACR vulnerability scan results with quarantine logs, (c) Export Defender for Cloud continuous assessment findings, (d) Export vendor notification logs with response tracking"
+            ],
+            "evidence_artifacts": [
+                "GitHub Dependabot Security Alerts with CVE details, severity ratings, and remediation tracking (patched/deferred/accepted risk)",
+                "Azure Container Registry Vulnerability Scan Results showing continuous monitoring of all container images with quarantine logs",
+                "Microsoft Defender for Cloud Continuous Assessment Report identifying third-party software vulnerabilities across Azure resources",
+                "Azure Monitor Alert History for supply chain CVE notifications and automated vendor communications",
+                "Vendor Notification Tracking Log from Azure Logic Apps showing upstream vulnerability communications and response SLAs"
+            ],
+            "update_frequency": "monthly",
+            "responsible_party": "DevSecOps Team / Vulnerability Management Team"
+        }
+
+    def get_evidence_collection_queries(self) -> List[Dict[str, str]]:
+        """
+        Get specific queries for evidence collection automation.
+        
+        Returns:
+            List of query dictionaries
+        """
+        return [
+            {
+                "query_type": "GitHub REST API",
+                "query_name": "Dependabot security alerts with CVE tracking",
+                "query": "GET https://api.github.com/repos/{owner}/{repo}/dependabot/alerts?state=open,fixed&severity=critical,high",
+                "purpose": "Retrieve Dependabot security alerts showing automated CVE detection and remediation tracking"
+            },
+            {
+                "query_type": "Azure Container Registry REST API",
+                "query_name": "Container image vulnerability scan results",
+                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ContainerRegistry/registries/{registryName}/listUsages?api-version=2023-01-01-preview",
+                "purpose": "Retrieve ACR vulnerability scan results showing continuous monitoring of container images"
+            },
+            {
+                "query_type": "Microsoft Defender for Cloud REST API",
+                "query_name": "Continuous assessment findings for third-party software",
+                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.Security/assessments?api-version=2020-01-01&$filter=properties/status/code eq 'Unhealthy' and properties/displayName contains 'vulnerabilities'",
+                "purpose": "Retrieve Defender continuous assessment findings identifying vulnerable third-party software"
+            },
+            {
+                "query_type": "Azure Monitor KQL",
+                "query_name": "Supply chain CVE alert history",
+                "query": """AzureActivity
+| where OperationNameValue contains 'Microsoft.Security/assessments/write' or OperationNameValue contains 'Microsoft.ContainerRegistry/registries/quarantineRead'
+| extend AlertType = case(
+    OperationNameValue contains 'assessments', 'Defender CVE Alert',
+    OperationNameValue contains 'quarantine', 'ACR Image Quarantine',
+    'Other'
+)
+| summarize AlertCount = count(), LastAlert = max(TimeGenerated) by AlertType, ResourceGroup, bin(TimeGenerated, 1d)
+| order by LastAlert desc""",
+                "purpose": "Track history of supply chain CVE alerts and automated responses (Defender, ACR quarantine)"
+            },
+            {
+                "query_type": "Azure Logic Apps REST API",
+                "query_name": "Vendor notification workflow execution logs",
+                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Logic/workflows/{workflowName}/runs?api-version=2016-06-01&$filter=status eq 'Succeeded'",
+                "purpose": "Retrieve vendor notification workflow logs showing automated communications for upstream vulnerabilities"
+            }
+        ]
+
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        """
+        Get descriptions of evidence artifacts to collect.
+        
+        Returns:
+            List of artifact dictionaries
+        """
+        return [
+            {
+                "artifact_name": "GitHub Dependabot Security Alerts Report",
+                "artifact_type": "CVE Alert Export",
+                "description": "Complete list of Dependabot security alerts with CVE details, severity ratings, and remediation status (patched/deferred/accepted)",
+                "collection_method": "GitHub REST API to retrieve Dependabot alerts filtered by severity (CRITICAL, HIGH)",
+                "storage_location": "Azure Storage Account with monthly exports showing CVE detection and remediation timelines"
+            },
+            {
+                "artifact_name": "Azure Container Registry Vulnerability Scan Results",
+                "artifact_type": "Container Security Report",
+                "description": "Vulnerability scan results for all container images with continuous monitoring status and quarantine logs",
+                "collection_method": "Azure Container Registry REST API to retrieve vulnerability assessments from Microsoft Defender integration",
+                "storage_location": "Azure Storage Account with weekly scan results and quarantine event logs"
+            },
+            {
+                "artifact_name": "Defender for Cloud Continuous Assessment Report",
+                "artifact_type": "Security Assessment Export",
+                "description": "Continuous assessment findings identifying third-party software vulnerabilities across all Azure resources",
+                "collection_method": "Microsoft Defender for Cloud REST API to export unhealthy vulnerability assessments",
+                "storage_location": "Azure Storage Account with JSON exports organized by resource type and severity"
+            },
+            {
+                "artifact_name": "Azure Monitor Supply Chain Alert History",
+                "artifact_type": "Alert Log Export",
+                "description": "History of supply chain CVE alerts from Defender and ACR with automated response tracking",
+                "collection_method": "Azure Monitor KQL query exporting alert history for CVE detection and quarantine events",
+                "storage_location": "Azure Log Analytics workspace with 12-month retention and alert correlation"
+            },
+            {
+                "artifact_name": "Vendor Notification Workflow Logs",
+                "artifact_type": "Azure Logic Apps Execution History",
+                "description": "Logs of automated vendor notifications for upstream vulnerabilities including response tracking and SLA compliance",
+                "collection_method": "Azure Logic Apps REST API to retrieve workflow execution history with success/failure status",
+                "storage_location": "Azure Storage Account with workflow run history and vendor response timestamps"
+            }
+        ]

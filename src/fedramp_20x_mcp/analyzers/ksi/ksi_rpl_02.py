@@ -9,7 +9,7 @@ Version: 25.11C (Published: 2025-12-01)
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 
@@ -278,5 +278,55 @@ class KSI_RPL_02_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
-    
 
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        return {
+            "ksi_id": self.ksi_id,
+            "ksi_name": "Recovery Plan",
+            "evidence_type": "process-based",
+            "automation_feasibility": "high",
+            "azure_services": ["Azure Site Recovery", "Azure DevOps", "SharePoint", "Power Automate", "Azure Monitor"],
+            "collection_methods": [
+                "Azure Site Recovery to define and maintain recovery plans with step-by-step runbooks",
+                "Azure DevOps to store recovery procedures as living documentation with version control",
+                "SharePoint to publish recovery plans with approval workflows and annual review requirements",
+                "Power Automate to trigger recovery plan updates when infrastructure changes occur",
+                "Azure Monitor to track recovery plan execution metrics (success rate, execution time)"
+            ],
+            "implementation_steps": [
+                "1. Build Azure Site Recovery Plans: (a) Create recovery plans per tier (Tier1-Critical, Tier2-Important, Tier3-Normal), (b) Define sequenced recovery steps (start VMs, restore databases, validate connectivity, failover traffic), (c) Add manual approval gates for production failover, (d) Document rollback procedures",
+                "2. Store runbooks in Azure DevOps: (a) Create Wiki pages for each recovery plan with Markdown runbooks, (b) Include prerequisites, step-by-step instructions, rollback procedures, contact escalation, (c) Link to ASR recovery plans via resource IDs, (d) Require pull request approval for updates",
+                "3. Configure SharePoint recovery plan library: (a) Publish approved recovery plans to SharePoint, (b) Approval workflow: Service Owner → SOC Manager → CISO, (c) Set annual review reminders with escalation if overdue, (d) Track plan version history and approval dates",
+                "4. Build Power Automate update workflow: (a) Trigger on Azure Resource Graph changes (VM added/removed, network topology change), (b) Create DevOps work item 'Review Recovery Plan' assigned to service owner, (c) Send reminder emails at 7 days and 14 days if not completed, (d) Update Dataverse with plan review status",
+                "5. Track execution with Azure Monitor: (a) Log ASR recovery plan executions (test or production), (b) Capture execution time, success/failure status, manual approvals, (c) Alert on recovery plan failures or RTO breaches, (d) Generate monthly execution summary report",
+                "6. Generate quarterly evidence package: (a) Export ASR recovery plans with runbook steps, (b) Export DevOps Wiki recovery procedures with version history, (c) Export SharePoint approval records showing annual reviews, (d) Export Azure Monitor execution logs with success rates"
+            ],
+            "evidence_artifacts": [
+                "Azure Site Recovery Plans with sequenced recovery steps, manual approval gates, and rollback procedures",
+                "Azure DevOps Wiki Recovery Runbooks with step-by-step instructions, prerequisites, and contact escalation",
+                "SharePoint Recovery Plan Library with approval workflows and annual review tracking",
+                "Power Automate Update Workflow Logs showing automated recovery plan reviews triggered by infrastructure changes",
+                "Azure Monitor Recovery Execution Report tracking test and production recovery plan executions with success rates"
+            ],
+            "update_frequency": "quarterly",
+            "responsible_party": "Business Continuity Manager / Service Owner"
+        }
+
+    def get_evidence_collection_queries(self) -> List[Dict[str, str]]:
+        return [
+            {"query_type": "Azure Site Recovery REST API", "query_name": "Recovery plans with runbook steps", "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.RecoveryServices/vaults/{vaultName}/replicationRecoveryPlans?api-version=2022-10-01", "purpose": "Retrieve ASR recovery plans with sequenced steps, approval gates, and failover procedures"},
+            {"query_type": "Azure DevOps REST API", "query_name": "Recovery procedure Wiki pages", "query": "GET https://dev.azure.com/{organization}/{project}/_apis/wiki/wikis/{wikiIdentifier}/pages?path=/Recovery-Plans&api-version=7.0&recursionLevel=Full", "purpose": "Retrieve recovery runbooks from DevOps Wiki with version history and update tracking"},
+            {"query_type": "SharePoint REST API", "query_name": "Recovery plan library with approval", "query": "GET https://{tenant}.sharepoint.com/sites/{site}/_api/web/lists/getbytitle('Recovery Plans')/items?$select=Title,ServiceName,ApprovalStatus,ApprovedBy,LastReviewDate,NextReviewDate", "purpose": "Retrieve published recovery plans with approval workflow history and annual review tracking"},
+            {"query_type": "Power Automate REST API", "query_name": "Recovery plan update workflow logs", "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Logic/workflows/{workflowName}/runs?api-version=2016-06-01&$filter=status eq 'Succeeded'", "purpose": "Retrieve workflow logs showing automated recovery plan reviews triggered by infrastructure changes"},
+            {"query_type": "Azure Monitor KQL", "query_name": "Recovery plan execution metrics", "query": "AzureDiagnostics\n| where Category == 'AzureSiteRecoveryJobs'\n| where OperationName contains 'RecoveryPlan'\n| summarize TotalExecutions = count(), Successful = countif(ResultType == 'Success'), Failed = countif(ResultType == 'Failure'), AvgDurationMinutes = avg(DurationMs) / 60000 by RecoveryPlanName, bin(TimeGenerated, 30d)\n| extend SuccessRate = round((todouble(Successful) / TotalExecutions) * 100, 2)", "purpose": "Track recovery plan execution success rates and duration to validate RTO compliance"}
+        ]
+
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        return [
+            {"artifact_name": "Azure Site Recovery Plans", "artifact_type": "Recovery Configuration", "description": "Complete recovery plans with sequenced steps (VM start, database restore, traffic failover), manual approval gates, and rollback procedures", "collection_method": "Azure Site Recovery REST API to export replicationRecoveryPlans with full runbook details", "storage_location": "Azure Storage Account with quarterly snapshots for version tracking"},
+            {"artifact_name": "DevOps Wiki Recovery Runbooks", "artifact_type": "Procedure Documentation", "description": "Step-by-step recovery procedures with prerequisites, execution instructions, rollback steps, and contact escalation", "collection_method": "Azure DevOps REST API to export Wiki pages from /Recovery-Plans with version history", "storage_location": "Azure DevOps Wiki with Git version control for change tracking"},
+            {"artifact_name": "SharePoint Recovery Plan Library", "artifact_type": "Approved Documentation Repository", "description": "Published recovery plans with approval workflows (Service Owner → SOC → CISO) and annual review tracking", "collection_method": "SharePoint REST API to retrieve recovery plan documents with approval metadata and review dates", "storage_location": "SharePoint Online with version history and approval workflow audit trail"},
+            {"artifact_name": "Power Automate Update Workflow Logs", "artifact_type": "Process Automation Logs", "description": "Logs of automated recovery plan reviews triggered by Azure Resource Graph topology changes (VMs added/removed)", "collection_method": "Power Automate REST API to retrieve workflow execution history with success/failure status", "storage_location": "Azure Storage Account with workflow run logs for process audit"},
+            {"artifact_name": "Azure Monitor Recovery Execution Report", "artifact_type": "Execution Metrics", "description": "Recovery plan execution metrics showing success rates (>= 95% target), duration vs. RTO, and test/production executions", "collection_method": "Azure Monitor KQL query calculating execution success rates and duration from AzureSiteRecoveryJobs logs", "storage_location": "Azure Log Analytics workspace with monthly execution summaries"}
+        ]
+    

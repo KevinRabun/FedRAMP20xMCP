@@ -9,7 +9,7 @@ Version: 25.11C (Published: 2025-12-01)
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -652,3 +652,133 @@ class KSI_TPR_03_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
+
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get recommendations for automating evidence collection for KSI-TPR-03.
+        
+        Returns:
+            Dict containing automation recommendations
+        """
+        return {
+            "ksi_id": self.ksi_id,
+            "ksi_name": "Supply Chain Risk Management",
+            "evidence_type": "process-based",
+            "automation_feasibility": "high",
+            "azure_services": [
+                "Microsoft Defender for Cloud",
+                "Azure DevOps",
+                "Microsoft Purview",
+                "Azure Policy",
+                "Microsoft Dataverse"
+            ],
+            "collection_methods": [
+                "Microsoft Defender for Cloud supply chain security recommendations (vulnerable dependencies, container images, OSS risks)",
+                "Azure DevOps Boards to track vendor assessments, SBOM generation, and supply chain risk remediation work items",
+                "Microsoft Purview Data Map to inventory third-party data integrations and assess data sharing risks",
+                "Azure Policy to enforce SBOM requirements and approved vendor lists for cloud resources",
+                "Microsoft Dataverse to centralize vendor risk assessments, audit logs, and mitigation tracking"
+            ],
+            "implementation_steps": [
+                "1. Enable Microsoft Defender for Cloud supply chain protection: (a) Activate Defender for Containers with vulnerability scanning, (b) Enable Defender for DevOps with dependency scanning (GitHub/Azure Repos), (c) Configure SBOM generation in build pipelines, (d) Set critical/high vulnerability blocking policies",
+                "2. Create Azure DevOps Boards supply chain risk tracking: (a) Work item template 'Vendor Risk Assessment' with fields: Vendor name, Risk level, Assessment date, Approver, Mitigation plan, (b) Work item template 'Supply Chain Incident' for upstream vulnerabilities, (c) Automated creation from Defender alerts, (d) Link to remediation PRs and deployments",
+                "3. Configure Microsoft Purview for third-party data lineage: (a) Scan data sources to identify third-party integrations (APIs, SaaS, data feeds), (b) Tag third-party data assets with vendor classification, (c) Track data sharing agreements and compliance requirements, (d) Generate monthly third-party data flow reports",
+                "4. Deploy Azure Policy initiative 'Supply Chain Security Controls': (a) Require SBOM metadata tags on container images, (b) Audit resources deployed from unapproved registries, (c) Deny deployment of images with HIGH/CRITICAL vulnerabilities, (d) Require vendor approval tags on third-party resources",
+                "5. Build Microsoft Dataverse Vendor Risk Table: (a) Columns: VendorID, VendorName, RiskLevel, AssessmentDate, Assessor, Findings, MitigationStatus, NextReviewDate, (b) Automate vendor review reminders via Power Automate, (c) Integrate with Defender alerts for real-time risk updates, (d) Track SBOM completeness and vulnerability remediation SLAs",
+                "6. Generate quarterly evidence package: (a) Export Defender supply chain security findings with remediation status, (b) Export DevOps vendor assessment work items with completion proofs, (c) Export Purview third-party data lineage reports, (d) Export Dataverse vendor risk assessments with mitigation tracking"
+            ],
+            "evidence_artifacts": [
+                "Microsoft Defender for Cloud Supply Chain Security Report showing vulnerable dependencies and container image risks",
+                "Azure DevOps Vendor Risk Assessment Work Items with approval workflows and mitigation plans",
+                "Microsoft Purview Third-Party Data Lineage Report identifying all external data integrations and sharing agreements",
+                "Azure Policy Compliance Report for supply chain controls (SBOM requirements, approved vendor lists, vulnerability blocking)",
+                "Microsoft Dataverse Vendor Risk Registry with assessment history, risk ratings, and continuous monitoring status"
+            ],
+            "update_frequency": "quarterly",
+            "responsible_party": "Vendor Risk Management Team / Supply Chain Security Team"
+        }
+
+    def get_evidence_collection_queries(self) -> List[Dict[str, str]]:
+        """
+        Get specific queries for evidence collection automation.
+        
+        Returns:
+            List of query dictionaries
+        """
+        return [
+            {
+                "query_type": "Microsoft Defender for Cloud REST API",
+                "query_name": "Supply chain security findings (dependencies, container vulnerabilities)",
+                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.Security/assessments?api-version=2020-01-01&$filter=properties/displayName contains 'vulnerabilities' or properties/displayName contains 'supply chain'",
+                "purpose": "Retrieve supply chain security findings including vulnerable dependencies and container image risks"
+            },
+            {
+                "query_type": "Azure DevOps REST API",
+                "query_name": "Vendor risk assessment work items",
+                "query": "GET https://dev.azure.com/{organization}/{project}/_apis/wit/wiql?api-version=7.0\nBody: {\"query\": \"SELECT [System.Id], [System.Title], [Custom.VendorName], [Custom.RiskLevel], [Custom.AssessmentDate], [Custom.MitigationStatus] FROM WorkItems WHERE [System.WorkItemType] = 'Vendor Risk Assessment' ORDER BY [Custom.AssessmentDate] DESC\"}",
+                "purpose": "Retrieve vendor risk assessment work items with approval workflows and mitigation tracking"
+            },
+            {
+                "query_type": "Microsoft Purview REST API",
+                "query_name": "Third-party data integration inventory",
+                "query": "POST https://{purview-account}.purview.azure.com/catalog/api/search/query?api-version=2022-03-01-preview\nBody: {\"keywords\": \"*\", \"filter\": {\"classifications\": [\"ThirdPartyData\"], \"entityType\": [\"azure_sql_table\", \"azure_storage_blob\", \"azure_data_lake\"]}}",
+                "purpose": "Identify all third-party data integrations and assess data sharing risks using Purview Data Map"
+            },
+            {
+                "query_type": "Azure Policy REST API",
+                "query_name": "Supply chain security policy compliance",
+                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.PolicyInsights/policyStates/latest/summarize?api-version=2019-10-01&$filter=policyDefinitionCategory eq 'Security' and (policyDefinitionName contains 'SBOM' or policyDefinitionName contains 'ContainerRegistry')",
+                "purpose": "Retrieve policy compliance for supply chain security controls (SBOM, approved registries, vulnerability blocking)"
+            },
+            {
+                "query_type": "Microsoft Dataverse Web API",
+                "query_name": "Vendor risk registry with assessment history",
+                "query": "GET https://{organization}.api.crm.dynamics.com/api/data/v9.2/vendor_risk_records?$select=vendorid,vendorname,risklevel,assessmentdate,mitigationstatus,nextreviewdate&$filter=assessmentdate ge {quarterStartDate}&$orderby=risklevel desc,assessmentdate desc",
+                "purpose": "Retrieve vendor risk assessments with prioritized mitigation tracking for quarterly reporting"
+            }
+        ]
+
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        """
+        Get descriptions of evidence artifacts to collect.
+        
+        Returns:
+            List of artifact dictionaries
+        """
+        return [
+            {
+                "artifact_name": "Defender Supply Chain Security Report",
+                "artifact_type": "Security Assessment Export",
+                "description": "Comprehensive report of supply chain vulnerabilities including dependencies, container images, and SBOM coverage",
+                "collection_method": "Microsoft Defender for Cloud REST API to retrieve supply chain security assessments and remediation status",
+                "storage_location": "Azure Storage Account with quarterly exports organized by severity (CRITICAL, HIGH, MEDIUM)"
+            },
+            {
+                "artifact_name": "Azure DevOps Vendor Risk Assessment Work Items",
+                "artifact_type": "Work Item Export",
+                "description": "Complete set of vendor risk assessments with approval workflows, risk ratings, and mitigation plans",
+                "collection_method": "Azure DevOps REST API to export vendor risk assessment work items with full history",
+                "storage_location": "Azure DevOps database with 7-year retention for vendor assessment audit trail"
+            },
+            {
+                "artifact_name": "Purview Third-Party Data Lineage Report",
+                "artifact_type": "Data Governance Export",
+                "description": "Data lineage report identifying all third-party integrations, data flows, and sharing agreements",
+                "collection_method": "Microsoft Purview REST API to export data catalog with third-party classification and lineage",
+                "storage_location": "Azure Storage Account with JSON exports showing external data dependencies"
+            },
+            {
+                "artifact_name": "Azure Policy Supply Chain Compliance Report",
+                "artifact_type": "Policy Compliance Export",
+                "description": "Policy compliance status for supply chain security controls (SBOM requirements, approved vendors, vulnerability blocking)",
+                "collection_method": "Azure Policy Insights API to export compliance for supply chain security initiative",
+                "storage_location": "Azure Storage Account with monthly compliance snapshots and non-compliant resource lists"
+            },
+            {
+                "artifact_name": "Dataverse Vendor Risk Registry",
+                "artifact_type": "Vendor Assessment Database",
+                "description": "Centralized vendor risk registry with assessment history, risk ratings, mitigation tracking, and review schedules",
+                "collection_method": "Microsoft Dataverse Web API to export vendor_risk_records with quarterly assessments",
+                "storage_location": "Microsoft Dataverse with automated backup to Azure Storage for audit retention"
+            }
+        ]

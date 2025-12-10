@@ -9,7 +9,7 @@ Version: 25.11C (Published: 2025-12-01)
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 
@@ -257,5 +257,55 @@ class KSI_PIY_04_Analyzer(BaseKSIAnalyzer):
         # TODO: Implement GitLab CI detection if applicable
         
         return findings
-    
 
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        return {
+            "ksi_id": self.ksi_id,
+            "ksi_name": "CISA Secure By Design",
+            "evidence_type": "code-based",
+            "automation_feasibility": "high",
+            "azure_services": ["GitHub Advanced Security", "Azure DevOps", "Microsoft Defender for Cloud", "Power BI", "Azure Monitor"],
+            "collection_methods": [
+                "GitHub Advanced Security to enforce Secure By Design principles with SAST (CodeQL), SCA (Dependabot), and secret scanning in CI/CD",
+                "Azure DevOps Secure Development Lifecycle (SDL) templates with mandatory security gates (SAST, DAST, SCA) before production",
+                "Microsoft Defender for Cloud to validate secure-by-default configurations in Azure resources (e.g., HTTPS-only, TLS 1.2+, private endpoints)",
+                "Power BI to track SDL metrics: Security gate pass rates, vulnerability remediation velocity, SDL training completion",
+                "Azure Monitor to track security tool execution (SAST/DAST/SCA scan frequency, findings trends, remediation time)"
+            ],
+            "implementation_steps": [
+                "1. Enable GitHub Advanced Security in CI/CD: (a) CodeQL SAST scanning on every pull request with required status checks, (b) Dependabot SCA scanning with automatic PRs for vulnerable dependencies, (c) Secret scanning with push protection to prevent credential commits, (d) Require security approvals for critical findings before merge",
+                "2. Implement Azure DevOps SDL gates: (a) Pre-deployment gate: SAST scan with zero Critical/High findings, (b) Pre-deployment gate: SCA scan with zero Critical vulnerabilities (CVE), (c) Pre-deployment gate: DAST scan with zero Critical web vulnerabilities (OWASP Top 10), (d) Track gate failures and remediation time",
+                "3. Enforce Defender secure-by-default configs: (a) Policy: Require HTTPS-only for App Services and Storage Accounts, (b) Policy: Require TLS 1.2+ for all services, (c) Policy: Require private endpoints for PaaS services, (d) Policy: Require managed identity (no connection strings/keys in code), (e) Generate monthly secure config compliance report",
+                "4. Build Power BI SDL Metrics Dashboard: (a) Security gate pass rates by service (target >= 95%), (b) Vulnerability remediation velocity: Time from detection to fix (target < 30 days for Critical), (c) SDL training completion rate (target 100% annually), (d) Secure-by-default configuration compliance (target >= 99%)",
+                "5. Track with Azure Monitor: (a) Log security tool executions (CodeQL, Dependabot, DAST scan frequency), (b) Track findings trends (new vulnerabilities detected, remediated, open), (c) Alert on security gate failures or stale vulnerabilities (> 90 days open), (d) Generate quarterly SDL effectiveness report",
+                "6. Generate quarterly evidence package: (a) Export GitHub Security scan results (SAST, SCA, secrets), (b) Export Azure DevOps SDL gate metrics (pass/fail rates), (c) Export Defender secure config compliance report, (d) Export Power BI SDL dashboard showing >= 95% security gate compliance"
+            ],
+            "evidence_artifacts": [
+                "GitHub Advanced Security Scan Results: SAST (CodeQL), SCA (Dependabot), and secret scanning findings with remediation tracking",
+                "Azure DevOps SDL Gate Metrics: Security gate pass/fail rates (SAST, SCA, DAST) with remediation velocity tracking",
+                "Microsoft Defender Secure-by-Default Configuration Report: HTTPS-only, TLS 1.2+, private endpoints, managed identity compliance",
+                "Power BI SDL Metrics Dashboard: Security gate compliance (>= 95%), remediation velocity (< 30d for Critical), training completion (100%)",
+                "Azure Monitor Security Tool Execution Report: SAST/SCA/DAST scan frequency, findings trends, and remediation time tracking"
+            ],
+            "update_frequency": "quarterly",
+            "responsible_party": "DevSecOps Team / Application Security"
+        }
+
+    def get_evidence_collection_queries(self) -> List[Dict[str, str]]:
+        return [
+            {"query_type": "GitHub REST API", "query_name": "Advanced Security scan results", "query": "GET https://api.github.com/repos/{owner}/{repo}/code-scanning/alerts?state=open&tool_name=CodeQL\\nGET https://api.github.com/repos/{owner}/{repo}/dependabot/alerts?state=open\\nGET https://api.github.com/repos/{owner}/{repo}/secret-scanning/alerts?state=open", "purpose": "Retrieve GitHub Security scan results: CodeQL SAST findings, Dependabot SCA vulnerabilities, secret scanning alerts"},
+            {"query_type": "Azure DevOps REST API", "query_name": "SDL gate pass/fail metrics", "query": "GET https://dev.azure.com/{organization}/{project}/_apis/build/builds?api-version=7.0&statusFilter=completed\\nBody: Filter for builds with security gates (SAST, SCA, DAST) and calculate pass/fail rates", "purpose": "Retrieve DevOps pipeline builds with security gate results (pass/fail) and remediation tracking"},
+            {"query_type": "Microsoft Defender for Cloud REST API", "query_name": "Secure-by-default configuration compliance", "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.Security/assessments?api-version=2021-06-01&$filter=contains(properties/displayName, 'HTTPS-only') or contains(properties/displayName, 'TLS') or contains(properties/displayName, 'private endpoint')", "purpose": "Retrieve Defender assessments for secure-by-default configurations (HTTPS-only, TLS 1.2+, private endpoints)"},
+            {"query_type": "Power BI REST API", "query_name": "SDL metrics and remediation velocity", "query": "POST https://api.powerbi.com/v1.0/myorg/datasets/{datasetId}/executeQueries\\nBody: {\\\"queries\\\": [{\\\"query\\\": \\\"EVALUATE SUMMARIZE(SDLMetrics, SDLMetrics[ServiceName], 'TotalBuilds', COUNT(SDLMetrics[BuildID]), 'SecurityGatePassed', COUNTIF(SDLMetrics[SecurityGateStatus] = 'Pass'), 'AvgRemediationDays', AVERAGE(SDLMetrics[RemediationDays]), 'TrainingComplete', COUNTIF(SDLMetrics[SDLTrainingComplete] = TRUE))\\\"}]}", "purpose": "Calculate SDL metrics: Security gate pass rates (>= 95%), remediation velocity (< 30d for Critical), training completion (100%)"},
+            {"query_type": "Azure Monitor KQL", "query_name": "Security tool execution and findings trends", "query": "AzureDevOpsPipelines\n| where PipelineName contains 'Security' or PipelineName contains 'SAST' or PipelineName contains 'SCA'\n| extend ToolType = case(PipelineName contains 'SAST', 'SAST', PipelineName contains 'SCA', 'SCA', PipelineName contains 'DAST', 'DAST', 'Other')\n| summarize TotalScans = count(), CriticalFindings = sumif(FindingCount, Severity == 'Critical'), HighFindings = sumif(FindingCount, Severity == 'High'), AvgRemediationDays = avg(RemediationDays) by ToolType, bin(TimeGenerated, 30d)", "purpose": "Track security tool execution frequency, findings trends, and remediation velocity for SDL effectiveness"}
+        ]
+
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        return [
+            {"artifact_name": "GitHub Advanced Security Scan Results", "artifact_type": "Code Security Scan Reports", "description": "Complete scan results: CodeQL SAST findings, Dependabot SCA vulnerabilities (CVE IDs), secret scanning alerts with remediation status", "collection_method": "GitHub REST API to export code-scanning, dependabot, and secret-scanning alerts", "storage_location": "GitHub Security tab with historical scan results and automated remediation PRs"},
+            {"artifact_name": "DevOps SDL Gate Metrics", "artifact_type": "Security Gate Compliance Report", "description": "SDL gate pass/fail rates (SAST, SCA, DAST) with target >= 95%, remediation velocity (< 30d for Critical), and gate failure root causes", "collection_method": "Azure DevOps REST API to export pipeline builds with security gate results and remediation tracking", "storage_location": "Azure DevOps analytics database with quarterly SDL compliance reports"},
+            {"artifact_name": "Defender Secure-by-Default Configuration Report", "artifact_type": "Infrastructure Security Compliance", "description": "Compliance report for secure-by-default configurations: HTTPS-only, TLS 1.2+, private endpoints, managed identity (target >= 99%)", "collection_method": "Microsoft Defender for Cloud REST API to export secure configuration assessments", "storage_location": "Azure Storage Account with monthly secure config compliance snapshots"},
+            {"artifact_name": "Power BI SDL Metrics Dashboard", "artifact_type": "SDL Effectiveness Dashboard", "description": "Dashboard showing security gate pass rates (>= 95%), remediation velocity (< 30d Critical), SDL training completion (100%), and secure config compliance (>= 99%)", "collection_method": "Power BI REST API to export SDL metrics for executive reporting", "storage_location": "SharePoint with quarterly PDF snapshots for CISO review"},
+            {"artifact_name": "Azure Monitor Security Tool Execution Report", "artifact_type": "Tool Execution and Trends Report", "description": "Report tracking SAST/SCA/DAST scan frequency, findings trends (new/remediated/open), and remediation velocity over time", "collection_method": "Azure Monitor KQL query analyzing pipeline execution logs and security findings", "storage_location": "Azure Log Analytics workspace with quarterly SDL effectiveness summaries"}
+        ]
+    

@@ -31,7 +31,7 @@ References:
 - Azure WAF Reliability: https://learn.microsoft.com/azure/well-architected/reliability/backup-and-disaster-recovery
 """
 
-from typing import List, Dict
+from typing import List, Dict, Any
 import re
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
@@ -1478,12 +1478,63 @@ class KSI_RPL_03_Analyzer(BaseKSIAnalyzer):
                 if re.search(pattern, line, re.IGNORECASE):
                     return i
         return 1
-    
 
+    def _get_code_snippet(self, lines: List[str], line_number: int, context: int = 2) -> str:
         """Get code snippet around line number."""
         if line_number == 0:
             line_number = 1
         start = max(0, line_number - context - 1)
         end = min(len(lines), line_number + context)
         return '\n'.join(lines[start:end])
+
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        return {
+            "ksi_id": self.ksi_id,
+            "ksi_name": "System Backups",
+            "evidence_type": "log-based",
+            "automation_feasibility": "high",
+            "azure_services": ["Azure Backup", "Azure Site Recovery", "Azure Monitor", "Azure Policy", "Azure Resource Graph"],
+            "collection_methods": [
+                "Azure Backup to perform automated daily backups with geo-redundant replication and 30+ day retention",
+                "Azure Site Recovery to replicate VMs and databases to secondary region with continuous replication",
+                "Azure Monitor to track backup job success rates (>= 99% target), backup size, and restore test results",
+                "Azure Policy to enforce backup enablement, retention periods, and geo-redundancy requirements",
+                "Azure Resource Graph to inventory all backup-protected resources and identify unprotected resources"
+            ],
+            "implementation_steps": [
+                "1. Configure Azure Backup policies: (a) Daily backup schedule for VMs, SQL, and Azure Files, (b) Retention: 30 days daily, 12 months monthly, 7 years annual, (c) Enable geo-redundant storage (GRS) for backup vaults, (d) Tag backup policies with compliance requirements (FedRAMP, NIST CP-9)",
+                "2. Enable Azure Site Recovery replication: (a) Continuous replication for Tier 1 VMs to secondary region, (b) Application-consistent snapshots for SQL and other stateful applications, (c) Validate replication lag < 5 minutes (RPO compliance), (d) Test failover quarterly",
+                "3. Build Azure Monitor backup dashboard: (a) Backup job success rate by resource (target >= 99%), (b) Backup size growth trends and capacity planning alerts, (c) Restore test results with RTO compliance tracking, (d) Alert on backup failures or missing backups",
+                "4. Enforce with Azure Policy: (a) Policy: Require Azure Backup enabled for all VMs, (b) Policy: Require geo-redundant storage for backup vaults, (c) Policy: Require 30+ day retention for all backups, (d) Policy: Require backup encryption enabled, (e) Generate compliance reports monthly",
+                "5. Inventory with Azure Resource Graph: (a) Query all VMs, SQL databases, and storage accounts, (b) Cross-reference with Azure Backup protected items, (c) Flag unprotected resources with alerts, (d) Generate inventory report: Total resources, Protected, Unprotected, Compliance rate",
+                "6. Generate monthly evidence package: (a) Export Azure Backup job history with success rates, (b) Export ASR replication status, (c) Export Azure Monitor backup metrics, (d) Export Policy compliance report, (e) Export Resource Graph inventory showing >= 99% backup coverage"
+            ],
+            "evidence_artifacts": [
+                "Azure Backup Job History showing daily backups with geo-redundant replication and 30+ day retention",
+                "Azure Site Recovery Replication Status showing continuous replication with < 5 minute RPO",
+                "Azure Monitor Backup Dashboard showing >= 99% backup success rate and restore test validation",
+                "Azure Policy Compliance Report enforcing backup enablement, retention, and geo-redundancy",
+                "Azure Resource Graph Backup Coverage Inventory showing >= 99% of resources protected by backups"
+            ],
+            "update_frequency": "monthly",
+            "responsible_party": "Infrastructure Team / Backup Administrator"
+        }
+
+    def get_evidence_collection_queries(self) -> List[Dict[str, str]]:
+        return [
+            {"query_type": "Azure Backup REST API", "query_name": "Backup job history with success rates", "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.RecoveryServices/vaults/{vaultName}/backupJobs?api-version=2023-06-01&$filter=startTime ge {monthStartDate}", "purpose": "Retrieve backup job history showing daily backups, success/failure status, and backup size"},
+            {"query_type": "Azure Site Recovery REST API", "query_name": "ASR replication health and RPO", "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.RecoveryServices/vaults/{vaultName}/replicationFabrics/{fabricName}/replicationProtectionContainers/{protectionContainerName}/replicationProtectedItems?api-version=2022-10-01", "purpose": "Retrieve ASR replication status showing replication health, RPO lag, and last recovery point"},
+            {"query_type": "Azure Monitor KQL", "query_name": "Backup success rate and restore tests", "query": "AddonAzureBackupJobs\n| where TimeGenerated >= ago(30d)\n| summarize TotalBackups = count(), Successful = countif(JobStatus == 'Completed'), Failed = countif(JobStatus == 'Failed'), RestoreTests = countif(JobOperation == 'Restore') by DataSourceType, bin(TimeGenerated, 1d)\n| extend SuccessRate = round((todouble(Successful) / TotalBackups) * 100, 2)", "purpose": "Calculate backup success rates (>= 99% target) and track restore test execution"},
+            {"query_type": "Azure Policy REST API", "query_name": "Backup policy compliance", "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.PolicyInsights/policyStates/latest/queryResults?api-version=2019-10-01&$filter=policyDefinitionName eq 'require-backup-enabled' or policyDefinitionName eq 'require-geo-redundancy'", "purpose": "Retrieve policy compliance for backup enablement, geo-redundancy, and retention requirements"},
+            {"query_type": "Azure Resource Graph KQL", "query_name": "Backup coverage inventory", "query": "Resources\n| where type =~ 'microsoft.compute/virtualmachines' or type =~ 'microsoft.sql/servers/databases' or type =~ 'microsoft.storage/storageaccounts'\n| join kind=leftouter (RecoveryServicesResources\n    | where type =~ 'microsoft.recoveryservices/vaults/backupfabrics/protectioncontainers/protecteditems'\n    | project protectedResourceId = tolower(properties.sourceResourceId), backupEnabled = 'true') on $left.id == $right.protectedResourceId\n| summarize TotalResources = count(), Protected = countif(backupEnabled == 'true'), Unprotected = countif(isnull(backupEnabled)) by type\n| extend CoverageRate = round((todouble(Protected) / TotalResources) * 100, 2)", "purpose": "Calculate backup coverage rate (>= 99% target) showing protected vs. unprotected resources"}
+        ]
+
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        return [
+            {"artifact_name": "Azure Backup Job History", "artifact_type": "Backup Execution Logs", "description": "Complete backup job history showing daily backups with geo-redundant replication, 30+ day retention, and success/failure status", "collection_method": "Azure Backup REST API to export backupJobs with monthly filter for job history", "storage_location": "Azure Storage Account with 7-year retention for FedRAMP audit requirements"},
+            {"artifact_name": "Azure Site Recovery Replication Status", "artifact_type": "Replication Health Report", "description": "ASR replication status showing continuous replication, replication health (Normal/Warning/Critical), and RPO lag (< 5 minutes target)", "collection_method": "Azure Site Recovery REST API to export replicationProtectedItems with replication metrics", "storage_location": "Azure Storage Account with monthly snapshots for trend analysis"},
+            {"artifact_name": "Azure Monitor Backup Dashboard", "artifact_type": "Backup Metrics Dashboard", "description": "Dashboard showing backup success rates (>= 99%), backup size trends, restore test results, and RTO compliance validation", "collection_method": "Azure Monitor KQL query calculating backup success rates from AddonAzureBackupJobs logs", "storage_location": "Azure Log Analytics workspace with monthly backup summaries and PDF exports"},
+            {"artifact_name": "Azure Policy Compliance Report", "artifact_type": "Configuration Enforcement Report", "description": "Policy compliance for backup enablement, geo-redundancy, 30+ day retention, and backup encryption requirements", "collection_method": "Azure Policy REST API to retrieve policy state for backup enforcement policies", "storage_location": "Azure Storage Account with monthly compliance snapshots"},
+            {"artifact_name": "Azure Resource Graph Backup Coverage Inventory", "artifact_type": "Backup Coverage Report", "description": "Inventory showing >= 99% backup coverage: Total resources, Protected resources, Unprotected resources, Coverage rate by resource type", "collection_method": "Azure Resource Graph KQL query joining Resources with RecoveryServicesResources to calculate coverage", "storage_location": "Azure Storage Account with monthly inventory snapshots and unprotected resource alerts"}
+        ]
 
