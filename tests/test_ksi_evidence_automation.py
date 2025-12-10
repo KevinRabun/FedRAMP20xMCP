@@ -244,28 +244,29 @@ def test_factory_evidence_automation():
 
 
 def test_default_implementation():
-    """Test default evidence automation for non-implemented KSIs."""
-    print("\n=== Test: Default Evidence Automation ===")
+    """Test that all active KSIs have evidence automation implemented."""
+    print("\n=== Test: Default Implementation ===")
     
     factory = get_factory()
     
-    # Find a non-implemented KSI
-    not_implemented = None
-    for ksi_id, analyzer in factory._analyzers.items():
-        if analyzer.IMPLEMENTATION_STATUS == "NOT_IMPLEMENTED" and not analyzer.RETIRED:
-            not_implemented = analyzer
-            break
+    # Count active KSIs with automation
+    active_with_automation = 0
+    active_without_automation = []
     
-    if not_implemented:
-        recommendations = not_implemented.get_evidence_automation_recommendations()
-        
-        # Should return default template
-        assert recommendations['automation_feasibility'] == 'manual-only', "Default should be manual-only"
-        assert 'Override this method' in recommendations.get('notes', ''), "Should have default note"
-        
-        print(f"OK: Default implementation works for {not_implemented.KSI_ID}")
+    for ksi_id, analyzer in factory._analyzers.items():
+        if not analyzer.RETIRED:
+            recommendations = analyzer.get_evidence_automation_recommendations()
+            if recommendations.get('automation_feasibility') != 'manual-only':
+                active_with_automation += 1
+            else:
+                active_without_automation.append(ksi_id)
+    
+    # All 65 active KSIs should have evidence automation
+    if len(active_without_automation) > 0:
+        print(f"FAIL: {len(active_without_automation)} active KSIs missing automation: {', '.join(active_without_automation[:5])}")
+        assert False, f"{len(active_without_automation)} active KSIs without automation"
     else:
-        print("SKIP: No non-implemented KSIs found")
+        print(f"OK: All {active_with_automation} active KSIs have evidence automation implemented")
 
 
 def test_evidence_automation_completeness():
