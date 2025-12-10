@@ -1,0 +1,214 @@
+````plaintext
+## Bicep Template
+
+```bicep
+// main.bicep - Microsoft Defender for Cloud Configuration
+// Enables Defender plans for comprehensive security posture management
+// and vulnerability scanning across Azure resources
+
+targetScope = 'subscription'
+
+param location string = deployment().location
+param defenderEmailContact string
+param defenderPhoneContact string = ''
+
+// Security contact configuration
+resource securityContact 'Microsoft.Security/securityContacts@2023-12-01-preview' = {
+  name: 'default'
+  properties: {
+    emails: defenderEmailContact
+    phone: defenderPhoneContact
+    alertNotifications: {
+      state: 'On'
+      minimalSeverity: 'Medium'
+    }
+    notificationsByRole: {
+      state: 'On'
+      roles: ['Owner', 'Contributor']
+    }
+  }
+}
+
+// Enable Defender for Servers (VMs and VM Scale Sets)
+resource defenderForServers 'Microsoft.Security/pricings@2024-01-01' = {
+  name: 'VirtualMachines'
+  properties: {
+    pricingTier: 'Standard'
+    subPlan: 'P2'  // P2 includes vulnerability assessment, JIT access, file integrity monitoring
+  }
+}
+
+// Enable Defender for App Service
+resource defenderForAppService 'Microsoft.Security/pricings@2024-01-01' = {
+  name: 'AppServices'
+  properties: {
+    pricingTier: 'Standard'
+  }
+}
+
+// Enable Defender for Azure SQL Databases
+resource defenderForSqlServers 'Microsoft.Security/pricings@2024-01-01' = {
+  name: 'SqlServers'
+  properties: {
+    pricingTier: 'Standard'
+  }
+}
+
+// Enable Defender for SQL Servers on VMs
+resource defenderForSqlServerVms 'Microsoft.Security/pricings@2024-01-01' = {
+  name: 'SqlServerVirtualMachines'
+  properties: {
+    pricingTier: 'Standard'
+  }
+}
+
+// Enable Defender for Open-Source Relational Databases
+resource defenderForOssDatabases 'Microsoft.Security/pricings@2024-01-01' = {
+  name: 'OpenSourceRelationalDatabases'
+  properties: {
+    pricingTier: 'Standard'
+  }
+}
+
+// Enable Defender for Storage
+resource defenderForStorage 'Microsoft.Security/pricings@2024-01-01' = {
+  name: 'StorageAccounts'
+  properties: {
+    pricingTier: 'Standard'
+    extensions: [
+      {
+        name: 'OnUploadMalwareScanning'
+        isEnabled: 'True'
+        additionalExtensionProperties: {
+          CapGBPerMonthPerStorageAccount: '5000'
+        }
+      }
+      {
+        name: 'SensitiveDataDiscovery'
+        isEnabled: 'True'
+      }
+    ]
+  }
+}
+
+// Enable Defender for Containers (AKS, ACR, running containers)
+resource defenderForContainers 'Microsoft.Security/pricings@2024-01-01' = {
+  name: 'Containers'
+  properties: {
+    pricingTier: 'Standard'
+    extensions: [
+      {
+        name: 'ContainerRegistriesVulnerabilityAssessments'
+        isEnabled: 'True'
+      }
+    ]
+  }
+}
+
+// Enable Defender for Key Vault
+resource defenderForKeyVault 'Microsoft.Security/pricings@2024-01-01' = {
+  name: 'KeyVaults'
+  properties: {
+    pricingTier: 'Standard'
+  }
+}
+
+// Enable Defender for Resource Manager
+resource defenderForArm 'Microsoft.Security/pricings@2024-01-01' = {
+  name: 'Arm'
+  properties: {
+    pricingTier: 'Standard'
+  }
+}
+
+// Enable Defender for DNS
+resource defenderForDns 'Microsoft.Security/pricings@2024-01-01' = {
+  name: 'Dns'
+  properties: {
+    pricingTier: 'Standard'
+  }
+}
+
+// Enable Defender for Cosmos DB
+resource defenderForCosmosDb 'Microsoft.Security/pricings@2024-01-01' = {
+  name: 'CosmosDbs'
+  properties: {
+    pricingTier: 'Standard'
+  }
+}
+
+// Auto-provisioning settings - Deploy Log Analytics agent to VMs
+resource autoProvisioning 'Microsoft.Security/autoProvisioningSettings@2017-08-01-preview' = {
+  name: 'default'
+  properties: {
+    autoProvision: 'On'
+  }
+}
+
+// Link to Log Analytics workspace for Defender data collection
+resource workspaceSetting 'Microsoft.Security/workspaceSettings@2017-08-01-preview' = {
+  name: 'default'
+  properties: {
+    workspaceId: logAnalyticsWorkspaceId
+    scope: subscription().id
+  }
+}
+
+// Parameters
+param logAnalyticsWorkspaceId string
+
+// Outputs
+output securityContactId string = securityContact.id
+output defenderPlansEnabled array = [
+  'VirtualMachines'
+  'AppServices'
+  'SqlServers'
+  'SqlServerVirtualMachines'
+  'OpenSourceRelationalDatabases'
+  'StorageAccounts'
+  'Containers'
+  'KeyVaults'
+  'Arm'
+  'Dns'
+  'CosmosDbs'
+]
+```
+
+## Usage Notes
+
+**FedRAMP Alignment:**
+- Enables Defender across ~8-10 KSIs (AFR, PIY, TPR families)
+- Supports automated vulnerability scanning (KSI-AFR-01, KSI-AFR-04)
+- Enables security posture management (KSI-PIY-01, KSI-TPR-04)
+- Provides compliance dashboards for evidence collection
+
+**Deployment:**
+```bash
+# Set parameters
+DEFENDER_EMAIL="security@example.com"
+DEFENDER_PHONE="+1-555-0100"
+LOG_ANALYTICS_ID="/subscriptions/{sub-id}/resourceGroups/{rg}/providers/Microsoft.OperationalInsights/workspaces/{workspace}"
+
+# Deploy at subscription scope
+az deployment sub create \
+  --location eastus \
+  --template-file main.bicep \
+  --parameters defenderEmailContact=$DEFENDER_EMAIL \
+               defenderPhoneContact=$DEFENDER_PHONE \
+               logAnalyticsWorkspaceId=$LOG_ANALYTICS_ID
+```
+
+**Cost Considerations:**
+- Defender for Cloud pricing is per-resource: https://azure.microsoft.com/pricing/details/defender-for-cloud/
+- Typical costs: $15/server/month, $10/app service/month, $15/SQL server/month
+- Storage: $10/storage account/month + $0.15/GB scanned
+- Containers: $7/vCore/month for AKS
+
+**Alternative Tools:**
+If not using Defender for Cloud, consider:
+- **Qualys** or **Tenable** for vulnerability scanning
+- **Azure Policy** for compliance monitoring
+- **Azure Resource Graph** for inventory management
+- **Trivy** or **Snyk** for container scanning
+
+````

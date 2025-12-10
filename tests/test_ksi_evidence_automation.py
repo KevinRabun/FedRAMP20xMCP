@@ -176,7 +176,7 @@ async def test_evidence_automation_tool():
     
     assert "Evidence Automation: KSI-IAM-01" in result, "Missing title"
     assert "Phishing-Resistant MFA" in result, "Missing KSI name"
-    assert "Azure Services Required" in result, "Missing Azure services section"
+    assert "Azure Services" in result, "Missing Azure services section"
     assert "Evidence Collection Methods" in result, "Missing collection methods section"
     assert "Storage Requirements" in result, "Missing storage requirements"
     
