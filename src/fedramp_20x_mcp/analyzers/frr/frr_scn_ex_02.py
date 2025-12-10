@@ -49,7 +49,7 @@ class FRR_SCN_EX_02_Analyzer(BaseFRRAnalyzer):
     """
     
     FRR_ID = "FRR-SCN-EX-02"
-    FRR_NAME = "N/A"
+    FRR_NAME = None
     FRR_STATEMENT = """Providers MAY execute _significant changes_ (including _transformative_ changes) during an emergency or incident without meeting Significant Change Notification requirements in advance ONLY if absolutely necessary. In such emergencies, providers MUST follow all relevant procedures, notify all necessary parties, retroactively provide all Significant Change Notification materials, and complete appropriate assessment after the incident."""
     FAMILY = "SCN"
     FAMILY_NAME = "SCN"

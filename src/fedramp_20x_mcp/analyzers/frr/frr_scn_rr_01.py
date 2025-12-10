@@ -49,7 +49,7 @@ class FRR_SCN_RR_01_Analyzer(BaseFRRAnalyzer):
     """
     
     FRR_ID = "FRR-SCN-RR-01"
-    FRR_NAME = "N/A"
+    FRR_NAME = None
     FRR_STATEMENT = """Providers SHOULD NOT make formal Significant Change Notifications for _routine recurring_ changes; this type of change is exempted from the notification requirements of this process."""
     FAMILY = "SCN"
     FAMILY_NAME = "SCN"

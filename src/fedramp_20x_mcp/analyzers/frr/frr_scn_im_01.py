@@ -49,7 +49,7 @@ class FRR_SCN_IM_01_Analyzer(BaseFRRAnalyzer):
     """
     
     FRR_ID = "FRR-SCN-IM-01"
-    FRR_NAME = "N/A"
+    FRR_NAME = None
     FRR_STATEMENT = """Providers MUST follow the legacy Significant Change Request process or full re-authorization for _impact categorization_ changes, with advance approval from an identified lead agency, until further notice."""
     FAMILY = "SCN"
     FAMILY_NAME = "SCN"

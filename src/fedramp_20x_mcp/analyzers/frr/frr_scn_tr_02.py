@@ -49,7 +49,7 @@ class FRR_SCN_TR_02_Analyzer(BaseFRRAnalyzer):
     """
     
     FRR_ID = "FRR-SCN-TR-02"
-    FRR_NAME = "N/A"
+    FRR_NAME = None
     FRR_STATEMENT = """Providers MUST notify all necessary parties of initial plans for _transformative_ changes at least 30 business days before starting _transformative_ changes."""
     FAMILY = "SCN"
     FAMILY_NAME = "SCN"

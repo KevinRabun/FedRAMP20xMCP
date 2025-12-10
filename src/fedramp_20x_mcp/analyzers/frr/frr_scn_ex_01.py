@@ -49,7 +49,7 @@ class FRR_SCN_EX_01_Analyzer(BaseFRRAnalyzer):
     """
     
     FRR_ID = "FRR-SCN-EX-01"
-    FRR_NAME = "N/A"
+    FRR_NAME = None
     FRR_STATEMENT = """Providers MAY be required to delay _significant changes_ beyond the standard Significant Change Notification period and/or submit _significant changes_ for approval in advance as a condition of a formal FedRAMP Corrective Action Plan or other agreement."""
     FAMILY = "SCN"
     FAMILY_NAME = "SCN"

@@ -49,7 +49,7 @@ class FRR_SCN_08_Analyzer(BaseFRRAnalyzer):
     """
     
     FRR_ID = "FRR-SCN-08"
-    FRR_NAME = "N/A"
+    FRR_NAME = None
     FRR_STATEMENT = """Providers MUST make ALL Significant Change Notifications and related audit records available in similar human-readable and compatible _machine-readable_ formats."""
     FAMILY = "SCN"
     FAMILY_NAME = "SCN"

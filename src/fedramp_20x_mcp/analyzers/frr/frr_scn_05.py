@@ -49,7 +49,7 @@ class FRR_SCN_05_Analyzer(BaseFRRAnalyzer):
     """
     
     FRR_ID = "FRR-SCN-05"
-    FRR_NAME = "N/A"
+    FRR_NAME = None
     FRR_STATEMENT = """Providers MUST keep historical Significant Change Notifications available to all necessary parties at least until the service completes its next annual assessment."""
     FAMILY = "SCN"
     FAMILY_NAME = "SCN"

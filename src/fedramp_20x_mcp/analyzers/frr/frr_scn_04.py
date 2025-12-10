@@ -49,7 +49,7 @@ class FRR_SCN_04_Analyzer(BaseFRRAnalyzer):
     """
     
     FRR_ID = "FRR-SCN-04"
-    FRR_NAME = "N/A"
+    FRR_NAME = None
     FRR_STATEMENT = """Providers MUST maintain auditable records of these activities and make them available to all necessary parties."""
     FAMILY = "SCN"
     FAMILY_NAME = "SCN"

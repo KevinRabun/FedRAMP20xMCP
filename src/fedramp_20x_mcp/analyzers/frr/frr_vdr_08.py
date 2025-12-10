@@ -57,7 +57,7 @@ class FRR_VDR_08_Analyzer(BaseFRRAnalyzer):
     
     FRR_ID = "FRR-VDR-08"
     FRR_NAME = "Evaluate Internet-Reachability"
-    FRR_STATEMENT = """Providers MUST evaluate detected vulnerabilities, considering the context of the cloud service offering, to determine if they are internet-reachable vulnerabilities."""
+    FRR_STATEMENT = """Providers MUST evaluate _detected vulnerabilities_, considering the context of the _cloud service offering_, to determine if they are _internet-reachable vulnerabilities_."""
     FAMILY = "VDR"
     FAMILY_NAME = "Vulnerability Detection and Response"
     PRIMARY_KEYWORD = "MUST"

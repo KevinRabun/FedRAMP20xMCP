@@ -49,7 +49,7 @@ class FRR_SCN_TR_07_Analyzer(BaseFRRAnalyzer):
     """
     
     FRR_ID = "FRR-SCN-TR-07"
-    FRR_NAME = "N/A"
+    FRR_NAME = None
     FRR_STATEMENT = """Providers MUST allow agency customers to OPT OUT of _transformative_ changes whenever feasible."""
     FAMILY = "SCN"
     FAMILY_NAME = "SCN"

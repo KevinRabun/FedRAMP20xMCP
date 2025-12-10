@@ -49,7 +49,7 @@ class FRR_SCN_TR_01_Analyzer(BaseFRRAnalyzer):
     """
     
     FRR_ID = "FRR-SCN-TR-01"
-    FRR_NAME = "N/A"
+    FRR_NAME = None
     FRR_STATEMENT = """Providers SHOULD engage a third-party assessor to review the scope and impact of the planned change before starting _transformative_ changes if human validation is necessary. This review SHOULD be limited to security decisions that require human validation. Providers MUST document this decision and justification."""
     FAMILY = "SCN"
     FAMILY_NAME = "SCN"

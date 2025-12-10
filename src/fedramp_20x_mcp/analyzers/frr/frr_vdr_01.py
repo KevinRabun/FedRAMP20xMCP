@@ -62,7 +62,7 @@ class FRR_VDR_01_Analyzer(BaseFRRAnalyzer):
     
     FRR_ID = "FRR-VDR-01"
     FRR_NAME = "Vulnerability Detection"
-    FRR_STATEMENT = """Providers MUST systematically detect vulnerabilities for cloud service offerings using automated tooling, including vulnerability scanning for infrastructure, container images, application code, and dependencies."""
+    FRR_STATEMENT = """Providers MUST systematically, _persistently_, and _promptly_ discover and identify _vulnerabilities_ within their _cloud service offering_ using appropriate techniques such as assessment, scanning, threat intelligence, vulnerability disclosure mechanisms, bug bounties, supply chain monitoring, and other relevant capabilities; this process is called _vulnerability detection_."""
     FAMILY = "VDR"
     FAMILY_NAME = "Vulnerability Detection and Response"
     PRIMARY_KEYWORD = "MUST"

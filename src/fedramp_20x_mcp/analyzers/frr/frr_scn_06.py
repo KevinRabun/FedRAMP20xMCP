@@ -49,7 +49,7 @@ class FRR_SCN_06_Analyzer(BaseFRRAnalyzer):
     """
     
     FRR_ID = "FRR-SCN-06"
-    FRR_NAME = "N/A"
+    FRR_NAME = None
     FRR_STATEMENT = """All parties SHOULD follow FedRAMP's best practices and technical assistance on _significant change_ assessment and notification where applicable."""
     FAMILY = "SCN"
     FAMILY_NAME = "SCN"

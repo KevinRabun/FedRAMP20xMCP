@@ -49,7 +49,7 @@ class FRR_SCN_10_Analyzer(BaseFRRAnalyzer):
     """
     
     FRR_ID = "FRR-SCN-10"
-    FRR_NAME = "N/A"
+    FRR_NAME = None
     FRR_STATEMENT = """Providers MAY include additional relevant information in Significant Change Notifications."""
     FAMILY = "SCN"
     FAMILY_NAME = "SCN"

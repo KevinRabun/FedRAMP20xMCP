@@ -56,7 +56,7 @@ class FRR_KSI_02_Analyzer(BaseFRRAnalyzer):
     PRIMARY_KEYWORD = "MUST"
     IMPACT_LOW = True
     IMPACT_MODERATE = True
-    IMPACT_HIGH = False
+    IMPACT_HIGH = False  # Not applicable for this requirement
     NIST_CONTROLS = [
         # TODO: Add NIST controls (e.g., ("RA-5", "Vulnerability Monitoring and Scanning"))
     ]

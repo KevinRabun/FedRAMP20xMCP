@@ -49,7 +49,7 @@ class FRR_SCN_AD_01_Analyzer(BaseFRRAnalyzer):
     """
     
     FRR_ID = "FRR-SCN-AD-01"
-    FRR_NAME = "N/A"
+    FRR_NAME = None
     FRR_STATEMENT = """Providers MUST notify all necessary parties within ten business days after finishing _adaptive_ changes, also including the following information:"""
     FAMILY = "SCN"
     FAMILY_NAME = "SCN"

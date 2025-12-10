@@ -49,7 +49,7 @@ class FRR_SCN_TR_06_Analyzer(BaseFRRAnalyzer):
     """
     
     FRR_ID = "FRR-SCN-TR-06"
-    FRR_NAME = "N/A"
+    FRR_NAME = None
     FRR_STATEMENT = """Providers MUST publish updated service documentation and other materials to reflect _transformative_ changes within 30 business days after finishing _transformative_ changes."""
     FAMILY = "SCN"
     FAMILY_NAME = "SCN"

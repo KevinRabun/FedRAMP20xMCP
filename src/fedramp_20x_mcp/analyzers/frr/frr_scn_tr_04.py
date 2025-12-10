@@ -49,7 +49,7 @@ class FRR_SCN_TR_04_Analyzer(BaseFRRAnalyzer):
     """
     
     FRR_ID = "FRR-SCN-TR-04"
-    FRR_NAME = "N/A"
+    FRR_NAME = None
     FRR_STATEMENT = """Providers MUST notify all necessary parties within 5 business days after finishing _transformative_ changes, also including the following information:"""
     FAMILY = "SCN"
     FAMILY_NAME = "SCN"

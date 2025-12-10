@@ -49,7 +49,7 @@ class FRR_SCN_07_Analyzer(BaseFRRAnalyzer):
     """
     
     FRR_ID = "FRR-SCN-07"
-    FRR_NAME = "N/A"
+    FRR_NAME = None
     FRR_STATEMENT = """Providers MAY notify necessary parties in a variety of ways as long as the mechanism for notification is clearly documented and easily accessible."""
     FAMILY = "SCN"
     FAMILY_NAME = "SCN"
