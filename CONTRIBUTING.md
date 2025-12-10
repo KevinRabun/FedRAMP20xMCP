@@ -145,6 +145,109 @@ npx @modelcontextprotocol/inspector python -m fedramp_20x_mcp
 
 **Security Best Practice:** Never use `"alwaysAllow"` in MCP configurations that will be shared. Users should explicitly grant permissions.
 
+## Running Tests
+
+The project includes comprehensive test coverage across all functionality. See [TESTING.md](TESTING.md) for complete test documentation.
+
+### Quick Test Commands
+
+```bash
+# Run all tests
+pytest
+
+# Run with coverage report
+pytest --cov=src --cov-report=html
+
+# Run specific test suites
+python tests/test_loader.py                      # Data loading (329 requirements)
+python tests/test_definitions.py                 # Definitions & KSIs (50 + 72)
+python tests/test_docs_integration.py            # Documentation (15 files)
+python tests/test_implementation_questions.py    # Strategic questions
+python tests/test_tool_registration.py           # Architecture validation (38 tools)
+python tests/test_ksi_evidence_automation.py     # Evidence automation (65 KSIs)
+python tests/test_all_tools.py                   # All tools comprehensive test
+```
+
+### Test Coverage Metrics
+
+- **Total Tests:** 122 (100% pass rate)
+- **Test Categories:** Core functionality, tool functional, security, resource validation, KSI analyzers, evidence automation
+- **Coverage Achievement:** 100% KSI analyzer coverage (72/72)
+
+See [TESTING.md](TESTING.md) for detailed test documentation including:
+- Test file descriptions
+- Coverage details
+- AST parsing and semantic analysis tests
+- KSI-specific analyzer tests
+- Running individual test suites
+
+## Project Structure
+
+```
+FedRAMP20xMCP/
+├── src/
+│   └── fedramp_20x_mcp/    # Main package
+│       ├── __init__.py     # Package initialization
+│       ├── __main__.py     # Entry point for python -m
+│       ├── server.py       # MCP server entry point (270 lines, 15 prompts)
+│       ├── data_loader.py  # FedRAMP data fetching and caching
+│       ├── cve_fetcher.py  # CVE vulnerability data (GitHub Advisory + NVD)
+│       ├── templates/      # Infrastructure & code templates
+│       │   ├── __init__.py # Template loader functions
+│       │   ├── bicep/      # Bicep IaC templates (7 files)
+│       │   ├── terraform/  # Terraform IaC templates (7 files)
+│       │   └── code/       # Code generation templates (9 files)
+│       ├── prompts/        # Prompt templates (15 files)
+│       ├── tools/          # Tool modules (36 tools across 12 modules)
+│       │   ├── __init__.py # Tool registration system
+│       │   ├── requirements.py    # Core requirements tools (3)
+│       │   ├── definitions.py     # Definition lookup tools (3)
+│       │   ├── ksi.py             # KSI tools (2)
+│       │   ├── documentation.py   # Documentation tools (3)
+│       │   ├── export.py          # Export tools (3)
+│       │   ├── enhancements.py    # Enhancement tools (9)
+│       │   ├── evidence.py        # Evidence automation tools (3)
+│       │   ├── analyzer.py        # Code analysis tools (2)
+│       │   ├── validation.py      # Pre-generation validation tools (3)
+│       │   ├── security.py        # CVE vulnerability checking tools (2)
+│       │   ├── audit.py           # Coverage audit tools (2)
+│       │   └── ksi_status.py      # KSI implementation status tools (1)
+│       └── analyzers/      # KSI-centric code analyzers
+│           ├── __init__.py
+│           ├── base.py     # Base classes (Finding, AnalysisResult, Severity)
+│           └── ksi/        # 72 KSI analyzer files + factory
+│               ├── __init__.py
+│               ├── base.py    # BaseKSIAnalyzer
+│               ├── factory.py # KSIAnalyzerFactory (singleton pattern)
+│               └── ksi_*.py   # Individual KSI analyzers (72 files)
+├── tests/                   # Test suite (122 test files)
+├── docs/                    # Additional documentation
+│   ├── CI-CD-INTEGRATION.md # CI/CD integration guide
+│   └── ADVANCED-SETUP.md    # Advanced MCP configuration
+├── .github/
+│   ├── workflows/          # CI/CD workflows
+│   └── copilot-instructions.md  # GitHub Copilot context
+├── .vscode/
+│   ├── mcp.json            # VS Code MCP configuration
+│   └── settings.json.example
+├── pyproject.toml          # Project metadata and dependencies
+├── server.json             # MCP Registry metadata
+├── README.md               # User documentation
+├── CONTRIBUTING.md         # This file
+├── TESTING.md              # Test documentation
+└── SECURITY.md             # Security policy
+
+```
+
+**Architecture Highlights:**
+- **Modular Design:** Tools organized into 12 logical modules by functionality
+- **Template System:** Reusable Bicep/Terraform templates for IaC generation
+- **Prompt Templates:** 15 external prompt files for easy updates without code changes
+- **KSI-Centric Analysis:** 72 dedicated KSI analyzer files with factory pattern
+- **AST-Powered:** Tree-sitter integration for accurate, semantic code analysis
+- **Clean Separation:** Organized codebase with clear module boundaries
+- **Registration Pattern:** Tools use `*_impl` functions with centralized registration
+
 ## Code Style
 
 - Follow PEP 8 conventions
