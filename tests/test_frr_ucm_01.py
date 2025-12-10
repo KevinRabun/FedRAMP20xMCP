@@ -148,10 +148,15 @@ def test_analyzer_metadata():
     
     assert analyzer.FRR_ID == "FRR-UCM-01", "FRR_ID should be FRR-UCM-01"
     assert analyzer.FAMILY == "UCM", "Family should be UCM"
-    assert analyzer.TITLE == "Cryptographic Module Documentation", "Title mismatch"
-    assert "SC-13" in analyzer.NIST_CONTROLS, "Should reference SC-13"
-    assert len(analyzer.DETECTION_METHODS) > 0, "Should have detection methods"
-    assert len(analyzer.EVIDENCE_ARTIFACTS) > 0, "Should have evidence artifacts"
+    assert analyzer.FRR_NAME == "Cryptographic Module Documentation", "Name mismatch"
+    assert analyzer.PRIMARY_KEYWORD == "MUST", "Keyword should be MUST"
+    assert analyzer.IMPACT_LOW == True, "Impact Low should be True"
+    assert analyzer.IMPACT_MODERATE == True, "Impact Moderate should be True"
+    assert analyzer.IMPACT_HIGH == True, "Impact High should be True"
+    
+    # Check evidence automation
+    evidence = analyzer.get_evidence_automation_recommendations()
+    assert evidence['frr_id'] == "FRR-UCM-01", "Evidence FRR ID mismatch"
     
     print("✓ test_analyzer_metadata PASSED")
 

@@ -77,155 +77,155 @@ class FRR_ADS_03_Analyzer(BaseFRRAnalyzer):
     # APPLICATION CODE ANALYZERS (AST-first for supported languages)
     # ============================================================================
     
-    def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
+    def analyze_documentation(self, content: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-ADS-03 compliance using AST.
+        Analyze documentation for FRR-ADS-03 compliance - service list with impact levels.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Checks for:
+        - Presence of service/feature list
+        - Impact level designation (Low, Moderate, High)
+        - Clear service names
+        - Completeness indicators
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
+        # Only analyze documentation files
+        doc_keywords = ['readme', 'services', 'features', 'authorization', 'compliance', 'fedramp']
+        if not any(keyword in file_path.lower() for keyword in doc_keywords):
+            return findings
         
-        # TODO: Implement regex fallback
+        lines = content.split('\n')
+        content_lower = content.lower()
+        
+        # Check for service list indicators
+        has_service_list = any(indicator in content_lower for indicator in [
+            'service list', 'feature list', 'included services', 'authorized services',
+            'services included', 'service offering', 'features included'
+        ])
+        
+        # Check for impact level mentions
+        has_impact_levels = any(level in content_lower for level in [
+            'impact level', 'low impact', 'moderate impact', 'high impact',
+            'fips 199', 'security categorization'
+        ])
+        
+        # Check for specific service names (Azure, AWS, GCP - require specific product names)
+        # Note: We require specific product names like "Azure Key Vault", "AWS Lambda", not just "storage" or "database"
+        has_service_names = any(service in content for service in [
+            # Azure specific services
+            'Azure Virtual Machines', 'Azure Storage', 'Azure SQL', 'Azure Key Vault',
+            'Azure App Service', 'Azure Functions', 'Azure Kubernetes Service', 'AKS',
+            'Azure Container', 'Azure Monitor', 'Azure Application Insights',
+            # AWS specific services
+            'Amazon EC2', 'AWS EC2', 'Amazon S3', 'AWS S3', 'Amazon RDS', 'AWS RDS',
+            'AWS Lambda', 'AWS CloudFormation', 'Amazon CloudWatch', 'AWS CloudWatch',
+            'AWS Elastic Beanstalk', 'Amazon EKS', 'AWS EKS',
+            # GCP specific services
+            'Google Compute Engine', 'GCE', 'Google Cloud Storage', 'GCS',
+            'Google Kubernetes Engine', 'GKE', 'Cloud Functions', 'Cloud Run'
+        ])
+        
+        if not has_service_list:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID,
+                requirement_id=self.FRR_ID,
+                title="Missing service list documentation",
+                description=f"File '{file_path}' does not appear to contain a detailed list of services included in the cloud service offering. FRR-ADS-03 requires providers to share a detailed list of specific services.",
+                severity=Severity.HIGH,
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="""Add a comprehensive service list to your documentation. Example:
+
+## Services Included in FedRAMP Authorization
+
+### High Impact Level
+- Azure Virtual Machines (all SKUs)
+- Azure Key Vault (Premium tier)
+- Azure Storage (all tiers)
+
+### Moderate Impact Level
+- Azure App Service
+- Azure Functions
+- Azure Container Instances
+
+### Services NOT Included
+- Azure DevOps
+- Microsoft 365 services"""
+            ))
+        
+        if has_service_list and not has_impact_levels:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID,
+                requirement_id=self.FRR_ID,
+                title="Service list missing impact level designation",
+                description=f"File '{file_path}' contains a service list but does not clearly indicate which impact levels apply. FRR-ADS-03 requires service lists to include impact level information.",
+                severity=Severity.MEDIUM,
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Clearly indicate which services are authorized at which impact levels (Low, Moderate, High)"
+            ))
+        
+        # Check for vague service names separately (this applies even if impact levels are present)
+        if has_service_list and not has_service_names:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID,
+                requirement_id=self.FRR_ID,
+                title="Service list lacks specific service names",
+                description=f"File '{file_path}' has a service list but uses vague descriptions. FRR-ADS-03 requires 'clear feature or service names that align with standard public marketing materials'.",
+                severity=Severity.MEDIUM,
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Use specific service names (e.g., 'Azure Key Vault', 'Amazon RDS') rather than generic terms like 'database service' or 'storage'"
+            ))
+        
         return findings
+    
+    def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
+        """FRR-ADS-03 is documentation-focused, not code analysis."""
+        return []
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for FRR-ADS-03 compliance using AST.
-        
-        TODO: Implement C# analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        """FRR-ADS-03 is documentation-focused, not code analysis."""
+        return []
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for FRR-ADS-03 compliance using AST.
-        
-        TODO: Implement Java analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        """FRR-ADS-03 is documentation-focused, not code analysis."""
+        return []
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for FRR-ADS-03 compliance using AST.
-        
-        TODO: Implement TypeScript analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
-        return findings
+        """FRR-ADS-03 is documentation-focused, not code analysis."""
+        return []
     
     # ============================================================================
     # INFRASTRUCTURE AS CODE ANALYZERS (Regex-based)
     # ============================================================================
     
     def analyze_bicep(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Bicep infrastructure code for FRR-ADS-03 compliance.
-        
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        """FRR-ADS-03 is documentation-focused, not IaC analysis."""
+        return []
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Terraform infrastructure code for FRR-ADS-03 compliance.
-        
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        """FRR-ADS-03 is documentation-focused, not IaC analysis."""
+        return []
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
     # ============================================================================
     
     def analyze_github_actions(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitHub Actions workflow for FRR-ADS-03 compliance.
-        
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        """FRR-ADS-03 is documentation-focused, not CI/CD analysis."""
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Azure Pipelines YAML for FRR-ADS-03 compliance.
-        
-        TODO: Implement Azure Pipelines analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        """FRR-ADS-03 is documentation-focused, not CI/CD analysis."""
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitLab CI YAML for FRR-ADS-03 compliance.
-        
-        TODO: Implement GitLab CI analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        """FRR-ADS-03 is documentation-focused, not CI/CD analysis."""
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
@@ -233,21 +233,42 @@ class FRR_ADS_03_Analyzer(BaseFRRAnalyzer):
     
     def get_evidence_automation_recommendations(self) -> dict:
         """
-        Get recommendations for automating evidence collection.
+        Get recommendations for automating evidence collection for FRR-ADS-03.
         
-        TODO: Add evidence collection guidance
+        This is a documentation requirement - automated checking ensures service
+        lists are published and maintained with proper impact level designations.
         """
         return {
             'frr_id': self.FRR_ID,
             'frr_name': self.FRR_NAME,
-            'automation_approach': 'TODO: Describe how to automate evidence collection',
+            'code_detectable': 'Partial',
+            'automation_approach': 'Automated documentation scanning for service lists with impact level designations',
             'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
+                'README.md or SERVICES.md containing service list',
+                'Authorization package with service inventory',
+                'Public-facing documentation URLs',
+                'Service catalog or feature matrix'
             ],
             'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
+                'Documentation scan results showing service list presence',
+                'Verification that impact levels (Low/Moderate/High) are specified',
+                'List of services with their authorization scope'
+            ],
+            'manual_validation_steps': [
+                '1. Review README.md for service list section',
+                '2. Verify each service has clear name matching public marketing',
+                '3. Confirm impact level designation for each service',
+                '4. Check that excluded services are explicitly listed',
+                '5. Validate completeness - can customer determine scope without contacting provider?'
             ],
             'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
+                'GitHub Pages - for publishing service documentation',
+                'Azure Static Web Apps - for hosting service catalogs',
+                'Trust Center platforms - for centralized authorization data'
+            ],
+            'integration_points': [
+                'Export to OSCAL SSP (System Security Plan) format',
+                'Link to public trust center URLs',
+                'CI/CD checks to validate documentation completeness'
             ]
         }

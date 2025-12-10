@@ -10,8 +10,116 @@ from fedramp_20x_mcp.analyzers.frr.frr_ads_03 import FRR_ADS_03_Analyzer
 from fedramp_20x_mcp.analyzers.base import Severity
 
 
-# TODO: Implement tests for FRR-ADS-03
-# Follow the pattern from test_frr_vdr_08.py and test_frr_ucm_02.py
+def test_complete_service_list():
+    """Test that complete service list with impact levels passes."""
+    analyzer = FRR_ADS_03_Analyzer()
+    content = """
+# FedRAMP Authorization Scope
+
+## Services Included in Authorization
+
+### High Impact Level
+- Azure Virtual Machines (all SKUs, all regions)
+- Azure Key Vault Premium (HSM-backed)
+- Azure Storage (all tiers: Blob, File, Queue, Table)
+- Azure SQL Database
+- Azure Kubernetes Service (AKS)
+
+### Moderate Impact Level
+- Azure App Service (Web Apps, API Apps, Mobile Apps)
+- Azure Functions (all hosting plans)
+- Azure Container Instances
+- Azure Container Registry
+- Azure Service Bus
+
+### Low Impact Level
+- Azure Monitor
+- Azure Log Analytics
+- Application Insights
+
+### Services NOT Included in Authorization
+- Azure DevOps (separate authorization)
+- Microsoft 365 services
+- Dynamics 365
+"""
+    findings = analyzer.analyze_documentation(content, "README.md")
+    assert len(findings) == 0, f"Complete service list should have no findings, got {len(findings)}"
+    print("✓ test_complete_service_list PASSED")
+
+
+def test_missing_service_list():
+    """Test detection of missing service list."""
+    analyzer = FRR_ADS_03_Analyzer()
+    content = """
+# Cloud Service
+
+Welcome to our cloud service platform. We provide enterprise-grade solutions.
+
+## Features
+- Scalable infrastructure
+- High availability
+- 24/7 support
+"""
+    findings = analyzer.analyze_documentation(content, "README.md")
+    assert len(findings) > 0, "Should detect missing service list"
+    assert any("Missing service list" in f.title for f in findings), "Should flag missing service list"
+    assert findings[0].severity == Severity.HIGH, "Missing service list should be HIGH severity"
+    print("✓ test_missing_service_list PASSED")
+
+
+def test_service_list_without_impact_levels():
+    """Test detection of service list missing impact level designation."""
+    analyzer = FRR_ADS_03_Analyzer()
+    content = """
+# Services Included in FedRAMP Authorization
+
+Our cloud service offering includes the following services:
+- Virtual Machines
+- Storage accounts
+- Database services
+- Networking components
+- Identity and access management
+
+All services are fully managed and highly available.
+"""
+    findings = analyzer.analyze_documentation(content, "SERVICES.md")
+    assert len(findings) > 0, "Should detect missing impact levels"
+    assert any("impact level" in f.title.lower() for f in findings), "Should flag missing impact levels"
+    print("✓ test_service_list_without_impact_levels PASSED")
+
+
+def test_vague_service_names():
+    """Test detection of vague service descriptions."""
+    analyzer = FRR_ADS_03_Analyzer()
+    content = """
+# Service List - High Impact Level
+
+Our authorized services include:
+- Compute services
+- Storage solutions
+- Database offerings
+- Network services
+"""
+    findings = analyzer.analyze_documentation(content, "README.md")
+    assert len(findings) > 0, "Should detect vague service names"
+    assert any("specific service names" in f.title.lower() for f in findings), "Should flag vague names"
+    print("✓ test_vague_service_names PASSED")
+
+
+def test_non_documentation_file_ignored():
+    """Test that non-documentation files are ignored."""
+    analyzer = FRR_ADS_03_Analyzer()
+    code = """
+import azure.storage
+import azure.keyvault
+
+def deploy_resources():
+    # Deploy various Azure services
+    pass
+"""
+    findings = analyzer.analyze_documentation(code, "deploy.py")
+    assert len(findings) == 0, "Non-documentation files should be ignored"
+    print("✓ test_non_documentation_file_ignored PASSED")
 
 
 def test_analyzer_metadata():
@@ -20,11 +128,12 @@ def test_analyzer_metadata():
     
     assert analyzer.FRR_ID == "FRR-ADS-03", "FRR_ID should be FRR-ADS-03"
     assert analyzer.FAMILY == "ADS", "Family should be ADS"
-    assert analyzer.FRR_NAME == "Detailed Service List", "Title mismatch"
-    assert analyzer.PRIMARY_KEYWORD == "MUST", "Keyword mismatch"
-    assert analyzer.IMPACT_LOW == True, "Impact Low mismatch"
-    assert analyzer.IMPACT_MODERATE == True, "Impact Moderate mismatch"
-    assert analyzer.IMPACT_HIGH == True, "Impact High mismatch"
+    assert analyzer.FRR_NAME == "Detailed Service List", "Name mismatch"
+    assert analyzer.PRIMARY_KEYWORD == "MUST", "Keyword should be MUST"
+    assert analyzer.IMPACT_LOW == True, "Impact Low should be True"
+    assert analyzer.IMPACT_MODERATE == True, "Impact Moderate should be True"
+    assert analyzer.IMPACT_HIGH == True, "Impact High should be True"
+    assert analyzer.CODE_DETECTABLE == "Partial", "Code detectable should be Partial"
     
     print("✓ test_analyzer_metadata PASSED")
 
@@ -35,30 +144,23 @@ def test_evidence_automation_recommendations():
     
     recommendations = analyzer.get_evidence_automation_recommendations()
     assert recommendations['frr_id'] == "FRR-ADS-03", "FRR_ID mismatch"
-    # TODO: Add more assertions for evidence recommendations
+    assert recommendations['code_detectable'] == "Partial", "Should be Partial"
+    assert len(recommendations['evidence_artifacts']) > 0, "Should have evidence artifacts"
+    assert len(recommendations['manual_validation_steps']) > 0, "Should have validation steps"
     
     print("✓ test_evidence_automation_recommendations PASSED")
-
-
-# TODO: Add language-specific tests
-# Examples:
-# - test_python_detection()
-# - test_csharp_detection()
-# - test_java_detection()
-# - test_typescript_detection()
-# - test_bicep_detection()
-# - test_terraform_detection()
-# - test_github_actions_detection()
-# - test_azure_pipelines_detection()
-# - test_compliant_code_passes()
 
 
 def run_all_tests():
     """Run all FRR-ADS-03 tests."""
     test_functions = [
+        ("Complete service list", test_complete_service_list),
+        ("Missing service list", test_missing_service_list),
+        ("Service list without impact levels", test_service_list_without_impact_levels),
+        ("Vague service names", test_vague_service_names),
+        ("Non-documentation file ignored", test_non_documentation_file_ignored),
         ("Analyzer metadata", test_analyzer_metadata),
         ("Evidence automation recommendations", test_evidence_automation_recommendations),
-        # TODO: Add more test functions
     ]
     
     passed = 0

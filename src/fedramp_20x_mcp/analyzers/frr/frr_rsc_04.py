@@ -78,77 +78,20 @@ class FRR_RSC_04_Analyzer(BaseFRRAnalyzer):
     # ============================================================================
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Python code for FRR-RSC-04 compliance using AST.
-        
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
+        """FRR-RSC-04 focuses on IaC provisioning, not application code."""
+        return []
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for FRR-RSC-04 compliance using AST.
-        
-        TODO: Implement C# analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        """FRR-RSC-04 focuses on IaC provisioning, not application code."""
+        return []
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for FRR-RSC-04 compliance using AST.
-        
-        TODO: Implement Java analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        """FRR-RSC-04 focuses on IaC provisioning, not application code."""
+        return []
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for FRR-RSC-04 compliance using AST.
-        
-        TODO: Implement TypeScript analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
-        return findings
+        """FRR-RSC-04 focuses on IaC provisioning, not application code."""
+        return []
     
     # ============================================================================
     # INFRASTRUCTURE AS CODE ANALYZERS (Regex-based)
@@ -158,16 +101,51 @@ class FRR_RSC_04_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Bicep infrastructure code for FRR-RSC-04 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        Checks for:
+        - Admin accounts without MFA/strong authentication
+        - Weak password policies
+        - Overly permissive role assignments for admin accounts
+        - Missing security settings on privileged identities
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
+        # Check for SQL admin accounts without secure defaults
+        sql_admin_pattern = r"administratorLogin\s*:\s*'([^']*)'"  
+        for i, line in enumerate(lines, start=1):
+            # Check for hardcoded admin usernames (insecure)
+            if re.search(sql_admin_pattern, line):
+                if re.search(r"administratorLogin\s*:\s*'(admin|sa|root|administrator)'", line, re.IGNORECASE):
+                    findings.append(Finding(
+                        ksi_id=self.FRR_ID,
+                        requirement_id=self.FRR_ID,
+                        title="Insecure default admin username",
+                        description=f"Line {i} uses a common/default admin username. FRR-RSC-04 requires secure defaults for privileged accounts.",
+                        severity=Severity.HIGH,
+                        file_path=file_path,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Use a non-default, organization-specific admin username and configure with secure settings (MFA, least privilege, audit logging)"
+                    ))
+            
+            # Check for admin users without MFA requirement  
+            if 'Microsoft.Sql/servers' in line and i > 1:
+                # Look ahead for admin configuration
+                context_lines = lines[max(0, i-5):min(len(lines), i+10)]
+                context = '\n'.join(context_lines)
+                
+                if 'administratorLogin' in context and 'azureADOnlyAuthentication' not in context:
+                    findings.append(Finding(
+                        ksi_id=self.FRR_ID,
+                        requirement_id=self.FRR_ID,
+                        title="Missing Azure AD authentication for SQL admin",
+                        description=f"SQL Server resource at line {i} does not enforce Azure AD-only authentication. FRR-RSC-04 requires secure defaults for admin accounts.",
+                        severity=Severity.MEDIUM,
+                        file_path=file_path,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Set 'azureADOnlyAuthentication: true' to enforce MFA and strong authentication for admin access"
+                    ))
         
         return findings
     
@@ -175,14 +153,57 @@ class FRR_RSC_04_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Terraform infrastructure code for FRR-RSC-04 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        Checks for:
+        - IAM users/roles with admin access but insecure defaults
+        - Missing MFA requirements for privileged accounts
+        - Weak password policies
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement Terraform regex patterns
+        # Check for IAM users or policy attachments with admin access but no MFA
+        full_code = '\n'.join(lines)
+        
+        for i, line in enumerate(lines, start=1):
+            # Check for AdministratorAccess policy attachments
+            if 'AdministratorAccess' in line:
+                # Look for MFA requirement in entire file
+                if 'aws:MultiFactorAuthPresent' not in full_code and 'aws_iam_user_mfa_device' not in full_code:
+                    findings.append(Finding(
+                        ksi_id=self.FRR_ID,
+                        requirement_id=self.FRR_ID,
+                        title="Admin IAM user without MFA requirement",
+                        description=f"IAM configuration with AdministratorAccess at line {i} does not enforce MFA. FRR-RSC-04 requires secure defaults for privileged accounts.",
+                        severity=Severity.HIGH,
+                        file_path=file_path,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Add MFA requirement via IAM policy condition 'aws:MultiFactorAuthPresent': 'true' or use aws_iam_user_mfa_device resource"
+                    ))
+            
+            # Check for password policies
+            if 'aws_iam_account_password_policy' in line:
+                context_start = i
+                context_end = min(len(lines), i + 15)
+                context_lines = lines[context_start:context_end]
+                context = '\n'.join(context_lines)
+                
+                # Check for weak password policy
+                if 'minimum_password_length' in context:
+                    match = re.search(r'minimum_password_length\s*=\s*(\d+)', context)
+                    if match and int(match.group(1)) < 14:
+                        findings.append(Finding(
+                            ksi_id=self.FRR_ID,
+                            requirement_id=self.FRR_ID,
+                            title="Weak password length requirement",
+                            description=f"Password policy at line {i} allows passwords shorter than 14 characters. FRR-RSC-04 requires secure defaults.",
+                            severity=Severity.MEDIUM,
+                            file_path=file_path,
+                            line_number=i,
+                            code_snippet=line.strip(),
+                            recommendation="Set minimum_password_length to at least 14 characters for privileged accounts"
+                        ))
+        
         return findings
     
     # ============================================================================
@@ -190,42 +211,16 @@ class FRR_RSC_04_Analyzer(BaseFRRAnalyzer):
     # ============================================================================
     
     def analyze_github_actions(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitHub Actions workflow for FRR-RSC-04 compliance.
-        
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        """FRR-RSC-04 focuses on resource provisioning, not CI/CD workflows."""
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Azure Pipelines YAML for FRR-RSC-04 compliance.
-        
-        TODO: Implement Azure Pipelines analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        """FRR-RSC-04 focuses on resource provisioning, not CI/CD workflows."""
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitLab CI YAML for FRR-RSC-04 compliance.
-        
-        TODO: Implement GitLab CI analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        """FRR-RSC-04 focuses on resource provisioning, not CI/CD workflows."""
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
@@ -233,21 +228,46 @@ class FRR_RSC_04_Analyzer(BaseFRRAnalyzer):
     
     def get_evidence_automation_recommendations(self) -> dict:
         """
-        Get recommendations for automating evidence collection.
-        
-        TODO: Add evidence collection guidance
+        Get recommendations for automating evidence collection for secure provisioning defaults.
         """
         return {
             'frr_id': self.FRR_ID,
             'frr_name': self.FRR_NAME,
-            'automation_approach': 'TODO: Describe how to automate evidence collection',
+            'code_detectable': 'Partial',
+            'automation_approach': 'Automated IaC scanning for secure defaults on privileged account provisioning, combined with configuration exports from IAM systems',
             'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
+                'Bicep/Terraform templates for privileged account provisioning',
+                'IAM policy configurations (Azure AD, AWS IAM)',
+                'Password policy settings',
+                'MFA enforcement status for admin accounts',
+                'Role/privilege assignment records for top-level accounts',
+                'Account provisioning audit logs'
             ],
             'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
+                'Bicep/Terraform scan: Check for admin account resources with secure defaults',
+                'Azure: Get-AzADUser | Where-Object {$_.IsAdmin} | Get-MFA Status',
+                'AWS: aws iam list-users --query "Users[?contains(AttachedPolicies, \'AdministratorAccess\')]"',
+                'KQL: AzureActivity | where OperationNameValue contains "MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE" and Properties contains "Owner" or Properties contains "Administrator"'
+            ],
+            'manual_validation_steps': [
+                '1. Export current IAM/AAD configuration for all privileged accounts',
+                '2. Verify each admin account has MFA/strong auth enabled',
+                '3. Check password policies meet minimum requirements (14+ chars, complexity, rotation)',
+                '4. Review role assignments to ensure least privilege',
+                '5. Validate that provisioning templates use secure defaults',
+                '6. Document any exceptions with risk acceptance'
             ],
             'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
+                'Azure Policy: Enforce secure defaults via policy',
+                'Azure AD Conditional Access: MFA enforcement',
+                'AWS Config Rules: IAM password policy compliance',
+                'Azure Privileged Identity Management (PIM): JIT admin access',
+                'Terraform Sentinel: Policy-as-code for secure provisioning'
+            ],
+            'integration_points': [
+                'OSCAL SSP: Document provisioning security controls',
+                'CI/CD: Pre-deployment validation of IaC templates',
+                'SIEM: Alert on admin account provisioning without secure defaults',
+                'Identity Governance: Periodic access reviews for privileged accounts'
             ]
         }
