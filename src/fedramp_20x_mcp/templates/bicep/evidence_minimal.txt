@@ -1,0 +1,403 @@
+## Bicep Template
+
+```bicep
+// evidence_minimal.bicep - Minimal Evidence Collection Architecture
+// Quick-start architecture for pilot FedRAMP 20x evidence collection projects
+// Suitable for: Initial testing, proof-of-concept, small teams (1-5 KSIs)
+//
+// FedRAMP 20x KSI Alignment:
+// - KSI-MLA-01: Log aggregation and centralized logging
+// - KSI-MLA-02: Log retention policies
+// - KSI-CED-01: Continuous evidence collection
+// - FRR-ADS: Authorization Data Sharing (machine-readable evidence)
+//
+// Architecture Components:
+// 1. Log Analytics Workspace - Centralized log collection and analysis
+// 2. Storage Account - Evidence artifact storage with retention
+// 3. Azure Function - Scheduled evidence collection automation
+// 4. Event Grid - Notifications for evidence collection events
+// 5. Managed Identity - Secure authentication for evidence collectors
+
+targetScope = 'resourceGroup'
+
+@description('Location for all resources')
+param location string = resourceGroup().location
+
+@description('Unique suffix for resource naming')
+param nameSuffix string = uniqueString(resourceGroup().id)
+
+@description('Log retention in days (30-730)')
+@minValue(30)
+@maxValue(730)
+param logRetentionDays int = 90
+
+@description('Evidence retention in days (365-2555)')
+@minValue(365)
+@maxValue(2555)
+param evidenceRetentionDays int = 365
+
+// ============================================================================
+// Log Analytics Workspace - Centralized Logging (KSI-MLA-01, KSI-MLA-02)
+// ============================================================================
+
+// Supports: KSI-MLA-01 (log aggregation), KSI-MLA-02 (retention policies)
+resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+  name: 'law-evidence-${nameSuffix}'
+  location: location
+  properties: {
+    sku: {
+      name: 'PerGB2018'
+    }
+    retentionInDays: logRetentionDays
+    features: {
+      enableLogAccessUsingOnlyResourcePermissions: true
+    }
+    publicNetworkAccessForIngestion: 'Enabled'
+    publicNetworkAccessForQuery: 'Enabled'
+  }
+}
+
+// ============================================================================
+// Storage Account - Evidence Artifact Storage (KSI-CED-01, FRR-ADS)
+// ============================================================================
+
+// Supports: KSI-CED-01 (continuous evidence collection), FRR-ADS (machine-readable evidence)
+resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: 'stevidence${nameSuffix}'
+  location: location
+  sku: {
+    name: 'Standard_LRS'
+  }
+  kind: 'StorageV2'
+  properties: {
+    accessTier: 'Hot'
+    supportsHttpsTrafficOnly: true
+    minimumTlsVersion: 'TLS1_2'
+    allowBlobPublicAccess: false
+    encryption: {
+      services: {
+        blob: {
+          enabled: true
+          keyType: 'Account'
+        }
+      }
+      keySource: 'Microsoft.Storage'
+    }
+    networkAcls: {
+      defaultAction: 'Allow'
+      bypass: 'AzureServices'
+    }
+  }
+}
+
+// Evidence container with immutability
+resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-01-01' = {
+  parent: storageAccount
+  name: 'default'
+}
+
+resource evidenceContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
+  parent: blobService
+  name: 'evidence-artifacts'
+  properties: {
+    publicAccess: 'None'
+    metadata: {
+      purpose: 'FedRAMP 20x evidence storage'
+      retention: '${evidenceRetentionDays} days'
+    }
+  }
+}
+
+// Lifecycle management for evidence retention
+resource lifecyclePolicy 'Microsoft.Storage/storageAccounts/managementPolicies@2023-01-01' = {
+  parent: storageAccount
+  name: 'default'
+  properties: {
+    policy: {
+      rules: [
+        {
+          enabled: true
+          name: 'DeleteOldEvidence'
+          type: 'Lifecycle'
+          definition: {
+            actions: {
+              baseBlob: {
+                delete: {
+                  daysAfterModificationGreaterThan: evidenceRetentionDays
+                }
+              }
+            }
+            filters: {
+              blobTypes: ['blockBlob']
+              prefixMatch: ['evidence-artifacts/']
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+// ============================================================================
+// Managed Identity - Secure Authentication (KSI-IAM-05)
+// ============================================================================
+
+// Supports: KSI-IAM-05 (service accounts use managed identities, not credentials)
+resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: 'id-evidence-collector-${nameSuffix}'
+  location: location
+}
+
+// Grant Storage Blob Data Contributor to managed identity
+resource storageRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storageAccount.id, managedIdentity.id, 'StorageBlobDataContributor')
+  scope: storageAccount
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe') // Storage Blob Data Contributor
+    principalId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// Grant Log Analytics Reader to managed identity
+resource logAnalyticsRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(logAnalytics.id, managedIdentity.id, 'LogAnalyticsReader')
+  scope: logAnalytics
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '73c42c96-874c-492b-b04d-ab87d138a893') // Log Analytics Reader
+    principalId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// ============================================================================
+// Azure Function - Evidence Collection Automation (KSI-CED-01)
+// ============================================================================
+
+// App Service Plan for Azure Function
+resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
+  name: 'asp-evidence-${nameSuffix}'
+  location: location
+  sku: {
+    name: 'Y1' // Consumption plan
+    tier: 'Dynamic'
+  }
+  properties: {
+    reserved: true // Linux
+  }
+}
+
+// Function App
+resource functionApp 'Microsoft.Web/sites@2022-09-01' = {
+  name: 'func-evidence-${nameSuffix}'
+  location: location
+  kind: 'functionapp,linux'
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${managedIdentity.id}': {}
+    }
+  }
+  properties: {
+    serverFarmId: appServicePlan.id
+    httpsOnly: true
+    siteConfig: {
+      linuxFxVersion: 'PYTHON|3.11'
+      appSettings: [
+        {
+          name: 'AzureWebJobsStorage'
+          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${storageAccount.listKeys().keys[0].value}'
+        }
+        {
+          name: 'FUNCTIONS_EXTENSION_VERSION'
+          value: '~4'
+        }
+        {
+          name: 'FUNCTIONS_WORKER_RUNTIME'
+          value: 'python'
+        }
+        {
+          name: 'LOG_ANALYTICS_WORKSPACE_ID'
+          value: logAnalytics.properties.customerId
+        }
+        {
+          name: 'STORAGE_ACCOUNT_NAME'
+          value: storageAccount.name
+        }
+        {
+          name: 'EVIDENCE_CONTAINER_NAME'
+          value: evidenceContainer.name
+        }
+        {
+          name: 'MANAGED_IDENTITY_CLIENT_ID'
+          value: managedIdentity.properties.clientId
+        }
+      ]
+      ftpsState: 'Disabled'
+      minTlsVersion: '1.2'
+    }
+  }
+}
+
+// ============================================================================
+// Event Grid - Evidence Collection Notifications (KSI-MLA-05)
+// ============================================================================
+
+resource eventGridTopic 'Microsoft.EventGrid/systemTopics@2023-12-15-preview' = {
+  name: 'evgt-evidence-${nameSuffix}'
+  location: location
+  properties: {
+    source: storageAccount.id
+    topicType: 'Microsoft.Storage.StorageAccounts'
+  }
+}
+
+// Event subscription for blob created events
+resource eventSubscription 'Microsoft.EventGrid/systemTopics/eventSubscriptions@2023-12-15-preview' = {
+  parent: eventGridTopic
+  name: 'evidence-uploaded'
+  properties: {
+    destination: {
+      endpointType: 'WebHook'
+      properties: {
+        endpointUrl: 'https://${functionApp.properties.defaultHostName}/api/evidence-notification'
+      }
+    }
+    filter: {
+      includedEventTypes: [
+        'Microsoft.Storage.BlobCreated'
+      ]
+      subjectBeginsWith: '/blobServices/default/containers/${evidenceContainer.name}/'
+    }
+    eventDeliverySchema: 'EventGridSchema'
+  }
+}
+
+// ============================================================================
+// Diagnostic Settings - Audit Logging (KSI-MLA-05)
+// ============================================================================
+
+resource storageDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  scope: storageAccount
+  name: 'storage-diagnostics'
+  properties: {
+    workspaceId: logAnalytics.id
+    logs: [
+      {
+        category: 'StorageWrite'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: logRetentionDays
+        }
+      }
+      {
+        category: 'StorageDelete'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: logRetentionDays
+        }
+      }
+    ]
+    metrics: [
+      {
+        category: 'Transaction'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: logRetentionDays
+        }
+      }
+    ]
+  }
+}
+
+resource functionDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  scope: functionApp
+  name: 'function-diagnostics'
+  properties: {
+    workspaceId: logAnalytics.id
+    logs: [
+      {
+        category: 'FunctionAppLogs'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: logRetentionDays
+        }
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: logRetentionDays
+        }
+      }
+    ]
+  }
+}
+
+// ============================================================================
+// Outputs
+// ============================================================================
+
+output logAnalyticsWorkspaceId string = logAnalytics.id
+output logAnalyticsWorkspaceName string = logAnalytics.name
+output storageAccountName string = storageAccount.name
+output evidenceContainerName string = evidenceContainer.name
+output functionAppName string = functionApp.name
+output managedIdentityId string = managedIdentity.id
+output managedIdentityClientId string = managedIdentity.properties.clientId
+```
+
+## Deployment Instructions
+
+```bash
+# Create resource group
+az group create --name rg-evidence-minimal --location eastus
+
+# Deploy template
+az deployment group create \
+  --resource-group rg-evidence-minimal \
+  --template-file evidence_minimal.bicep \
+  --parameters logRetentionDays=90 evidenceRetentionDays=365
+
+# Get outputs
+az deployment group show \
+  --resource-group rg-evidence-minimal \
+  --name evidence_minimal \
+  --query properties.outputs
+```
+
+## Usage Notes
+
+**Purpose:** Minimal evidence collection architecture for pilot FedRAMP 20x projects.
+
+**Scope:** Suitable for 1-5 KSIs, small teams, initial testing.
+
+**Cost Estimate:**
+- Log Analytics: ~$2-5/GB ingested
+- Storage Account: ~$0.02/GB/month (Hot tier)
+- Azure Function: ~$0.20/million executions (Consumption plan)
+- Event Grid: ~$0.60/million operations
+- **Total:** ~$50-100/month for typical pilot usage
+
+**Next Steps:**
+1. Deploy infrastructure using commands above
+2. Deploy evidence collection code to Azure Function
+3. Configure KSI-specific evidence collectors
+4. Test evidence collection and storage
+5. Scale to single-ksi or category architecture as needed
+
+**Limitations:**
+- Single region deployment
+- Basic retention (no immutability policies)
+- Consumption plan (limited concurrent executions)
+- No high availability
+- No disaster recovery
+
+**Upgrade Path:** Migrate to `evidence_single_ksi.bicep` for production workloads.

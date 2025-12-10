@@ -1,0 +1,407 @@
+## Bicep Template
+
+```bicep
+// evidence_all.bicep - Enterprise-Wide Evidence Collection Architecture
+// Complete architecture for all 72 FedRAMP 20x KSIs across all 11 categories
+// Suitable for: Enterprise-scale, multi-region, GRC tool integration, complete automation
+//
+// FedRAMP 20x Complete Coverage:
+// - All 11 KSI categories (IAM, MLA, AFR, CNA, SVC, PIY, CMT, INR, TPR, RPL, CED)
+// - All 65 active KSIs + 7 retired KSIs (for historical reference)
+// - Multi-region deployment for high availability
+// - Integration with GRC tools (ServiceNow, Archer, AuditBoard)
+// - Automated compliance reporting and dashboards
+//
+// Architecture Components:
+// 1. Multi-region Log Analytics with cross-region replication
+// 2. Geo-redundant storage with cross-region failover
+// 3. Azure Front Door for global load balancing
+// 4. Multiple Function Apps per category with autoscaling
+// 5. Azure Data Factory for evidence orchestration
+// 6. Power BI workspace for compliance dashboards
+// 7. API Management for external integrations
+
+targetScope = 'subscription'
+
+@description('Primary region for deployment')
+param primaryLocation string = 'eastus'
+
+@description('Secondary region for disaster recovery')
+param secondaryLocation string = 'westus2'
+
+@description('Unique suffix for resource naming')
+param nameSuffix string = uniqueString(subscription().subscriptionId)
+
+@description('Log retention in days (730 for 2 years)')
+param logRetentionDays int = 730
+
+@description('Evidence retention in days (2555 for 7 years)')
+param evidenceRetentionDays int = 2555
+
+@description('Enable multi-region deployment')
+param enableMultiRegion bool = true
+
+@description('Enable Microsoft Sentinel')
+param enableSentinel bool = true
+
+@description('Enable Power BI for dashboards')
+param enablePowerBI bool = true
+
+@description('Enable API Management for integrations')
+param enableAPIManagement bool = true
+
+@description('Email for operational alerts')
+param alertEmail string
+
+@description('GRC tool webhook URL (optional)')
+param grcWebhookUrl string = ''
+
+// ============================================================================
+// Resource Groups - Category-Based Organization
+// ============================================================================
+
+resource rgCore 'Microsoft.Resources/resourceGroups@2023-07-01' = {
+  name: 'rg-evidence-core-${nameSuffix}'
+  location: primaryLocation
+  tags: {
+    Purpose: 'FedRAMP 20x Evidence Collection'
+    Scope: 'Enterprise-Wide'
+    CostCenter: 'Security-Compliance'
+  }
+}
+
+resource rgIAM 'Microsoft.Resources/resourceGroups@2023-07-01' = {
+  name: 'rg-evidence-iam-${nameSuffix}'
+  location: primaryLocation
+}
+
+resource rgMLA 'Microsoft.Resources/resourceGroups@2023-07-01' = {
+  name: 'rg-evidence-mla-${nameSuffix}'
+  location: primaryLocation
+}
+
+resource rgAFR 'Microsoft.Resources/resourceGroups@2023-07-01' = {
+  name: 'rg-evidence-afr-${nameSuffix}'
+  location: primaryLocation
+}
+
+resource rgCNA 'Microsoft.Resources/resourceGroups@2023-07-01' = {
+  name: 'rg-evidence-cna-${nameSuffix}'
+  location: primaryLocation
+}
+
+resource rgSVC 'Microsoft.Resources/resourceGroups@2023-07-01' = {
+  name: 'rg-evidence-svc-${nameSuffix}'
+  location: primaryLocation
+}
+
+// Additional resource groups for PIY, CMT, INR, TPR, RPL, CED categories...
+
+// ============================================================================
+// Core Infrastructure - Centralized Log Analytics
+// ============================================================================
+
+module coreLogAnalytics 'modules/evidence_core_logging.bicep' = {
+  name: 'core-log-analytics'
+  scope: rgCore
+  params: {
+    location: primaryLocation
+    nameSuffix: nameSuffix
+    logRetentionDays: logRetentionDays
+    enableSentinel: enableSentinel
+  }
+}
+
+// Secondary region for disaster recovery
+module secondaryLogAnalytics 'modules/evidence_core_logging.bicep' = if (enableMultiRegion) {
+  name: 'secondary-log-analytics'
+  scope: rgCore
+  params: {
+    location: secondaryLocation
+    nameSuffix: '${nameSuffix}-dr'
+    logRetentionDays: logRetentionDays
+    enableSentinel: false // Sentinel only in primary
+  }
+}
+
+// ============================================================================
+// Core Infrastructure - Centralized Storage
+// ============================================================================
+
+module coreStorage 'modules/evidence_core_storage.bicep' = {
+  name: 'core-storage'
+  scope: rgCore
+  params: {
+    location: primaryLocation
+    nameSuffix: nameSuffix
+    evidenceRetentionDays: evidenceRetentionDays
+    enableGeoReplication: enableMultiRegion
+  }
+}
+
+// ============================================================================
+// Category Deployments - Modular Architecture
+// ============================================================================
+
+// IAM Category (7 KSIs)
+module iamCategory 'evidence_category.bicep' = {
+  name: 'category-iam'
+  scope: rgIAM
+  params: {
+    location: primaryLocation
+    nameSuffix: nameSuffix
+    ksiCategory: 'IAM'
+    ksiList: [
+      'KSI-IAM-01' // Phishing-resistant MFA
+      'KSI-IAM-02' // Privilege management
+      'KSI-IAM-03' // Session controls
+      'KSI-IAM-04' // Least privilege
+      'KSI-IAM-05' // Service accounts
+      'KSI-IAM-06' // User termination
+      'KSI-IAM-07' // JIT access
+    ]
+    logRetentionDays: logRetentionDays
+    evidenceRetentionDays: evidenceRetentionDays
+    enableSentinel: false // Use centralized Sentinel
+    alertEmail: alertEmail
+  }
+}
+
+// MLA Category (5 KSIs)
+module mlaCategory 'evidence_category.bicep' = {
+  name: 'category-mla'
+  scope: rgMLA
+  params: {
+    location: primaryLocation
+    nameSuffix: nameSuffix
+    ksiCategory: 'MLA'
+    ksiList: [
+      'KSI-MLA-01' // Log aggregation
+      'KSI-MLA-02' // Log retention
+      'KSI-MLA-05' // Tamper detection
+      'KSI-MLA-07' // Search capabilities
+      'KSI-MLA-08' // Alerting
+    ]
+    logRetentionDays: logRetentionDays
+    evidenceRetentionDays: evidenceRetentionDays
+    enableSentinel: false
+    alertEmail: alertEmail
+  }
+}
+
+// AFR Category (11 KSIs)
+module afrCategory 'evidence_category.bicep' = {
+  name: 'category-afr'
+  scope: rgAFR
+  params: {
+    location: primaryLocation
+    nameSuffix: nameSuffix
+    ksiCategory: 'AFR'
+    ksiList: [
+      'KSI-AFR-01' // Asset discovery
+      'KSI-AFR-02' // SBOM
+      'KSI-AFR-03' // Penetration testing
+      'KSI-AFR-04' // Vulnerability detection
+      'KSI-AFR-05' // Dev/prod separation
+      'KSI-AFR-06' // Security assessments
+      'KSI-AFR-07' // Secure score
+      'KSI-AFR-08' // Compliance dashboard
+      'KSI-AFR-09' // GitHub Actions security
+      'KSI-AFR-10' // Container scanning
+      'KSI-AFR-11' // Crypto modules
+    ]
+    logRetentionDays: logRetentionDays
+    evidenceRetentionDays: evidenceRetentionDays
+    enableSentinel: false
+    alertEmail: alertEmail
+  }
+}
+
+// CNA Category (8 KSIs)
+module cnaCategory 'evidence_category.bicep' = {
+  name: 'category-cna'
+  scope: rgCNA
+  params: {
+    location: primaryLocation
+    nameSuffix: nameSuffix
+    ksiCategory: 'CNA'
+    ksiList: [
+      'KSI-CNA-01' // Network segmentation
+      'KSI-CNA-02' // TLS configuration
+      'KSI-CNA-03' // Microservices security
+      'KSI-CNA-04' // Connection logging
+      'KSI-CNA-05' // Azure Monitor integration
+      'KSI-CNA-06' // Key Vault usage
+      'KSI-CNA-07' // Service mesh
+      'KSI-CNA-08' // Container registry
+    ]
+    logRetentionDays: logRetentionDays
+    evidenceRetentionDays: evidenceRetentionDays
+    enableSentinel: false
+    alertEmail: alertEmail
+  }
+}
+
+// SVC Category (9 KSIs)
+module svcCategory 'evidence_category.bicep' = {
+  name: 'category-svc'
+  scope: rgSVC
+  params: {
+    location: primaryLocation
+    nameSuffix: nameSuffix
+    ksiCategory: 'SVC'
+    ksiList: [
+      'KSI-SVC-01' // Error handling
+      'KSI-SVC-02' // Input validation
+      'KSI-SVC-04' // Rate limiting
+      'KSI-SVC-05' // API authentication
+      'KSI-SVC-06' // Secrets management
+      'KSI-SVC-07' // Secure coding
+      'KSI-SVC-08' // Dependency security
+      'KSI-SVC-09' // DoS protection
+      'KSI-SVC-10' // Secrets rotation
+    ]
+    logRetentionDays: logRetentionDays
+    evidenceRetentionDays: evidenceRetentionDays
+    enableSentinel: false
+    alertEmail: alertEmail
+  }
+}
+
+// Additional category deployments: PIY (8 KSIs), CMT (4 KSIs), INR (3 KSIs), TPR (2 KSIs), RPL (4 KSIs), CED (4 KSIs)
+
+// ============================================================================
+// API Management - External Integrations (KSI-CED-01, FRR-ADS)
+// ============================================================================
+
+module apiManagement 'modules/evidence_api_management.bicep' = if (enableAPIManagement) {
+  name: 'api-management'
+  scope: rgCore
+  params: {
+    location: primaryLocation
+    nameSuffix: nameSuffix
+    publisherEmail: alertEmail
+    logAnalyticsWorkspaceId: coreLogAnalytics.outputs.workspaceId
+  }
+}
+
+// ============================================================================
+// Azure Data Factory - Evidence Orchestration
+// ============================================================================
+
+module dataFactory 'modules/evidence_orchestration.bicep' = {
+  name: 'data-factory'
+  scope: rgCore
+  params: {
+    location: primaryLocation
+    nameSuffix: nameSuffix
+    storageAccountName: coreStorage.outputs.storageAccountName
+  }
+}
+
+// ============================================================================
+// Power BI Workspace - Compliance Dashboards
+// ============================================================================
+
+module powerBI 'modules/evidence_powerbi.bicep' = if (enablePowerBI) {
+  name: 'powerbi-workspace'
+  scope: rgCore
+  params: {
+    nameSuffix: nameSuffix
+    logAnalyticsWorkspaceId: coreLogAnalytics.outputs.workspaceId
+  }
+}
+
+// ============================================================================
+// Azure Front Door - Global Load Balancing
+// ============================================================================
+
+module frontDoor 'modules/evidence_frontdoor.bicep' = if (enableMultiRegion) {
+  name: 'front-door'
+  scope: rgCore
+  params: {
+    nameSuffix: nameSuffix
+    primaryFunctionAppName: iamCategory.outputs.functionAppName
+    secondaryFunctionAppName: '' // Reference secondary region function app
+  }
+}
+
+// ============================================================================
+// Outputs
+// ============================================================================
+
+output coreLogAnalyticsWorkspaceId string = coreLogAnalytics.outputs.workspaceId
+output coreStorageAccountName string = coreStorage.outputs.storageAccountName
+output apiManagementUrl string = enableAPIManagement ? apiManagement.outputs.gatewayUrl : ''
+output powerBIWorkspaceId string = enablePowerBI ? powerBI.outputs.workspaceId : ''
+output frontDoorEndpoint string = enableMultiRegion ? frontDoor.outputs.endpoint : ''
+output categoryResourceGroups array = [
+  rgIAM.name
+  rgMLA.name
+  rgAFR.name
+  rgCNA.name
+  rgSVC.name
+]
+```
+
+## Deployment Instructions
+
+```bash
+# Deploy enterprise-wide evidence collection for all 72 KSIs
+az deployment sub create \
+  --location eastus \
+  --template-file evidence_all.bicep \
+  --parameters \
+    primaryLocation='eastus' \
+    secondaryLocation='westus2' \
+    logRetentionDays=730 \
+    evidenceRetentionDays=2555 \
+    enableMultiRegion=true \
+    enableSentinel=true \
+    enablePowerBI=true \
+    enableAPIManagement=true \
+    alertEmail='security@example.com' \
+    grcWebhookUrl='https://grc-tool.example.com/webhook'
+```
+
+## Usage Notes
+
+**Purpose:** Complete enterprise architecture for all 72 FedRAMP 20x KSIs.
+
+**Scope:** Enterprise-scale, multi-region, GRC integration, automated compliance.
+
+**Cost Estimate:**
+- Core Infrastructure: ~$1,000-2,000/month
+- Log Analytics (730 days): ~$500-1,500/month
+- Storage (GRS, 7 years): ~$500-1,000/month
+- Category Function Apps (11): ~$3,300-5,500/month
+- API Management: ~$250-500/month
+- Data Factory: ~$100-300/month
+- Power BI Embedded: ~$200-500/month
+- Azure Front Door: ~$300-600/month
+- **Total:** ~$6,000-12,000/month
+
+**Features:**
+- Multi-region deployment for disaster recovery
+- Centralized Log Analytics with Sentinel
+- Category-based resource organization (11 categories)
+- API Management for GRC tool integration
+- Power BI dashboards for compliance reporting
+- Azure Data Factory for evidence orchestration
+- Global load balancing with Azure Front Door
+- Complete automation for all 65 active KSIs
+
+**Implementation Timeline:**
+- Phase 1 (Month 1-2): Core infrastructure + IAM/MLA categories
+- Phase 2 (Month 3-4): AFR/CNA/SVC categories
+- Phase 3 (Month 5-6): PIY/CMT/INR/TPR/RPL/CED categories
+- Phase 4 (Month 7-8): Multi-region + GRC integration
+- Phase 5 (Month 9-12): Power BI dashboards + optimization
+
+**Prerequisites:**
+- Azure subscription with Owner role
+- Budget approval (~$75K-$150K/year)
+- Dedicated compliance engineering team (3-5 people)
+- Executive sponsorship for enterprise-scale deployment
+
+**Migration Path:** Start with `evidence_minimal.bicep` → `evidence_single_ksi.bicep` → `evidence_category.bicep` → `evidence_all.bicep` as organization matures.

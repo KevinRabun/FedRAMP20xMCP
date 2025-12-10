@@ -1,0 +1,271 @@
+## Terraform Template
+
+```hcl
+# evidence_all.tf - Enterprise-Wide Evidence Collection Architecture
+# See Bicep equivalent (evidence_all.txt) for detailed documentation
+# Complete architecture for all 72 FedRAMP 20x KSIs across all 11 categories
+
+terraform {
+  required_version = ">= 1.5"
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 3.0"
+    }
+  }
+}
+
+provider "azurerm" {
+  features {}
+  subscription_id = var.subscription_id
+}
+
+# Variables
+variable "subscription_id" { type = string }
+variable "primary_location" { type = string; default = "eastus" }
+variable "secondary_location" { type = string; default = "westus2" }
+variable "log_retention_days" { type = number; default = 730 }
+variable "evidence_retention_days" { type = number; default = 2555 }
+variable "enable_multi_region" { type = bool; default = true }
+variable "enable_sentinel" { type = bool; default = true }
+variable "enable_powerbi" { type = bool; default = true }
+variable "enable_api_management" { type = bool; default = true }
+variable "alert_email" { type = string }
+variable "grc_webhook_url" { type = string; default = "" }
+
+locals {
+  name_suffix = substr(md5(var.subscription_id), 0, 8)
+}
+
+# ============================================================================
+# Resource Groups - Category-Based Organization
+# ============================================================================
+
+resource "azurerm_resource_group" "core" {
+  name     = "rg-evidence-core-${local.name_suffix}"
+  location = var.primary_location
+
+  tags = {
+    Purpose    = "FedRAMP 20x Evidence Collection"
+    Scope      = "Enterprise-Wide"
+    CostCenter = "Security-Compliance"
+  }
+}
+
+resource "azurerm_resource_group" "categories" {
+  for_each = toset(["IAM", "MLA", "AFR", "CNA", "SVC", "PIY", "CMT", "INR", "TPR", "RPL", "CED"])
+  name     = "rg-evidence-${lower(each.value)}-${local.name_suffix}"
+  location = var.primary_location
+}
+
+# ============================================================================
+# Core Infrastructure - Centralized Log Analytics
+# ============================================================================
+
+# Supports: KSI-MLA-01 (log aggregation), KSI-MLA-02 (retention policies)
+resource "azurerm_log_analytics_workspace" "core_primary" {
+  name                = "law-core-${local.name_suffix}"
+  location            = var.primary_location
+  resource_group_name = azurerm_resource_group.core.name
+  sku                 = "PerGB2018"
+  retention_in_days   = var.log_retention_days
+}
+
+resource "azurerm_log_analytics_workspace" "core_secondary" {
+  count               = var.enable_multi_region ? 1 : 0
+  name                = "law-core-${local.name_suffix}-dr"
+  location            = var.secondary_location
+  resource_group_name = azurerm_resource_group.core.name
+  sku                 = "PerGB2018"
+  retention_in_days   = var.log_retention_days
+}
+
+# ============================================================================
+# Core Infrastructure - Centralized Storage
+# ============================================================================
+
+# Supports: KSI-CED-01 (continuous evidence collection), FRR-ADS (machine-readable evidence)
+resource "azurerm_storage_account" "core" {
+  name                     = "stcore${local.name_suffix}"
+  location                 = var.primary_location
+  resource_group_name      = azurerm_resource_group.core.name
+  account_tier             = "Standard"
+  account_replication_type = var.enable_multi_region ? "GRS" : "LRS"
+  access_tier              = "Cool"
+  min_tls_version          = "TLS1_2"
+
+  blob_properties {
+    versioning_enabled            = true
+    change_feed_enabled           = true
+    change_feed_retention_in_days = 365
+    delete_retention_policy { days = 90 }
+    container_delete_retention_policy { days = 90 }
+  }
+}
+
+# ============================================================================
+# Category Deployments - Modular Architecture
+# ============================================================================
+
+# IAM Category (7 KSIs)
+module "iam_category" {
+  source = "./modules/evidence_category"
+
+  resource_group_name      = azurerm_resource_group.categories["IAM"].name
+  location                 = var.primary_location
+  ksi_category             = "IAM"
+  ksi_list                 = ["KSI-IAM-01", "KSI-IAM-02", "KSI-IAM-03", "KSI-IAM-04", "KSI-IAM-05", "KSI-IAM-06", "KSI-IAM-07"]
+  log_retention_days       = var.log_retention_days
+  evidence_retention_days  = var.evidence_retention_days
+  alert_email              = var.alert_email
+  name_suffix              = local.name_suffix
+}
+
+# MLA Category (5 KSIs)
+module "mla_category" {
+  source = "./modules/evidence_category"
+
+  resource_group_name      = azurerm_resource_group.categories["MLA"].name
+  location                 = var.primary_location
+  ksi_category             = "MLA"
+  ksi_list                 = ["KSI-MLA-01", "KSI-MLA-02", "KSI-MLA-05", "KSI-MLA-07", "KSI-MLA-08"]
+  log_retention_days       = var.log_retention_days
+  evidence_retention_days  = var.evidence_retention_days
+  alert_email              = var.alert_email
+  name_suffix              = local.name_suffix
+}
+
+# AFR Category (11 KSIs)
+module "afr_category" {
+  source = "./modules/evidence_category"
+
+  resource_group_name      = azurerm_resource_group.categories["AFR"].name
+  location                 = var.primary_location
+  ksi_category             = "AFR"
+  ksi_list                 = ["KSI-AFR-01", "KSI-AFR-02", "KSI-AFR-03", "KSI-AFR-04", "KSI-AFR-05", "KSI-AFR-06", "KSI-AFR-07", "KSI-AFR-08", "KSI-AFR-09", "KSI-AFR-10", "KSI-AFR-11"]
+  log_retention_days       = var.log_retention_days
+  evidence_retention_days  = var.evidence_retention_days
+  alert_email              = var.alert_email
+  name_suffix              = local.name_suffix
+}
+
+# CNA Category (8 KSIs)
+module "cna_category" {
+  source = "./modules/evidence_category"
+
+  resource_group_name      = azurerm_resource_group.categories["CNA"].name
+  location                 = var.primary_location
+  ksi_category             = "CNA"
+  ksi_list                 = ["KSI-CNA-01", "KSI-CNA-02", "KSI-CNA-03", "KSI-CNA-04", "KSI-CNA-05", "KSI-CNA-06", "KSI-CNA-07", "KSI-CNA-08"]
+  log_retention_days       = var.log_retention_days
+  evidence_retention_days  = var.evidence_retention_days
+  alert_email              = var.alert_email
+  name_suffix              = local.name_suffix
+}
+
+# SVC Category (9 KSIs)
+module "svc_category" {
+  source = "./modules/evidence_category"
+
+  resource_group_name      = azurerm_resource_group.categories["SVC"].name
+  location                 = var.primary_location
+  ksi_category             = "SVC"
+  ksi_list                 = ["KSI-SVC-01", "KSI-SVC-02", "KSI-SVC-04", "KSI-SVC-05", "KSI-SVC-06", "KSI-SVC-07", "KSI-SVC-08", "KSI-SVC-09", "KSI-SVC-10"]
+  log_retention_days       = var.log_retention_days
+  evidence_retention_days  = var.evidence_retention_days
+  alert_email              = var.alert_email
+  name_suffix              = local.name_suffix
+}
+
+# Additional modules for PIY, CMT, INR, TPR, RPL, CED categories...
+
+# ============================================================================
+# API Management - External Integrations (Optional)
+# ============================================================================
+
+resource "azurerm_api_management" "evidence" {
+  count               = var.enable_api_management ? 1 : 0
+  name                = "apim-evidence-${local.name_suffix}"
+  location            = var.primary_location
+  resource_group_name = azurerm_resource_group.core.name
+  publisher_name      = "FedRAMP Evidence Collection"
+  publisher_email     = var.alert_email
+  sku_name            = "Developer_1"
+}
+
+# ============================================================================
+# Azure Data Factory - Evidence Orchestration
+# ============================================================================
+
+resource "azurerm_data_factory" "evidence" {
+  name                = "adf-evidence-${local.name_suffix}"
+  location            = var.primary_location
+  resource_group_name = azurerm_resource_group.core.name
+
+  identity {
+    type = "SystemAssigned"
+  }
+}
+
+# ============================================================================
+# Outputs
+# ============================================================================
+
+output "core_log_analytics_workspace_id" {
+  description = "Core Log Analytics Workspace ID"
+  value       = azurerm_log_analytics_workspace.core_primary.id
+}
+
+output "core_storage_account_name" {
+  description = "Core Storage Account Name"
+  value       = azurerm_storage_account.core.name
+}
+
+output "api_management_url" {
+  description = "API Management Gateway URL"
+  value       = var.enable_api_management ? azurerm_api_management.evidence[0].gateway_url : ""
+}
+
+output "category_resource_groups" {
+  description = "Category Resource Group Names"
+  value       = [for rg in azurerm_resource_group.categories : rg.name]
+}
+
+output "iam_function_app_name" {
+  description = "IAM Category Function App Name"
+  value       = module.iam_category.function_app_name
+}
+
+output "data_factory_name" {
+  description = "Data Factory Name"
+  value       = azurerm_data_factory.evidence.name
+}
+```
+
+## Deployment Instructions
+
+```bash
+# Initialize with backend configuration
+terraform init
+
+# Deploy enterprise-wide evidence collection
+terraform apply \
+  -var="subscription_id=<your-subscription-id>" \
+  -var="primary_location=eastus" \
+  -var="secondary_location=westus2" \
+  -var="enable_multi_region=true" \
+  -var="enable_api_management=true" \
+  -var="alert_email=security@example.com"
+```
+
+## Usage Notes
+
+**Purpose:** Complete enterprise architecture for all 72 FedRAMP 20x KSIs.
+
+**Scope:** Enterprise-scale, multi-region, GRC integration, automated compliance.
+
+**Cost Estimate:** ~$6,000-12,000/month (~$75K-$150K/year)
+
+**Implementation:** Phase 1-5 over 12 months, requires 3-5 person compliance engineering team.
+
+**Migration Path:** Start minimal → single-ksi → category → all as organization matures.

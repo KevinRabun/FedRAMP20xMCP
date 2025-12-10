@@ -1,0 +1,293 @@
+## Terraform Template
+
+```hcl
+# evidence_category.tf - Category-Wide Evidence Collection Architecture
+# See Bicep equivalent (evidence_category.txt) for detailed documentation
+# Enterprise architecture for one KSI category (5-15 KSIs)
+
+terraform {
+  required_version = ">= 1.5"
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 3.0"
+    }
+  }
+}
+
+provider "azurerm" {
+  features {}
+}
+
+# Variables
+variable "location" { type = string; default = "eastus" }
+variable "resource_group_name" { type = string }
+variable "ksi_category" {
+  type        = string
+  description = "KSI category (IAM, MLA, AFR, CNA, SVC, PIY, CMT, INR, TPR, RPL, CED)"
+  validation {
+    condition     = contains(["IAM", "MLA", "AFR", "CNA", "SVC", "PIY", "CMT", "INR", "TPR", "RPL", "CED"], var.ksi_category)
+    error_message = "Invalid KSI category."
+  }
+}
+variable "ksi_list" {
+  type        = list(string)
+  description = "List of KSI IDs in this category"
+}
+variable "log_retention_days" { type = number; default = 365 }
+variable "evidence_retention_days" { type = number; default = 2555 }
+variable "enable_sentinel" { type = bool; default = true }
+variable "enable_automation" { type = bool; default = true }
+variable "alert_email" { type = string }
+
+resource "random_string" "suffix" {
+  length  = 8
+  special = false
+  upper   = false
+}
+
+data "azurerm_resource_group" "evidence" {
+  name = var.resource_group_name
+}
+
+data "azurerm_client_config" "current" {}
+
+# Category-wide Log Analytics
+# Supports: KSI-MLA-01 (log aggregation), KSI-MLA-02 (retention policies)
+resource "azurerm_log_analytics_workspace" "category" {
+  name                = "law-${lower(var.ksi_category)}-${random_string.suffix.result}"
+  location            = var.location
+  resource_group_name = data.azurerm_resource_group.evidence.name
+  sku                 = "PerGB2018"
+  retention_in_days   = var.log_retention_days
+  daily_quota_gb      = 10 # Cost control
+}
+
+# Shared Storage Account with GRS
+# Supports: KSI-CED-01 (continuous evidence collection), KSI-MLA-05 (tamper detection)
+resource "azurerm_storage_account" "category" {
+  name                     = "${lower(var.ksi_category)}st${random_string.suffix.result}"
+  location                 = var.location
+  resource_group_name      = data.azurerm_resource_group.evidence.name
+  account_tier             = "Standard"
+  account_replication_type = "GRS"
+  access_tier              = "Cool"
+  min_tls_version          = "TLS1_2"
+
+  blob_properties {
+    versioning_enabled            = true
+    change_feed_enabled           = true
+    change_feed_retention_in_days = 365
+    delete_retention_policy { days = 90 }
+    container_delete_retention_policy { days = 90 }
+  }
+}
+
+# Create container for each KSI
+resource "azurerm_storage_container" "ksi_evidence" {
+  for_each              = toset(var.ksi_list)
+  name                  = "evidence-${lower(each.value)}"
+  storage_account_name  = azurerm_storage_account.category.name
+  container_access_type = "private"
+
+  metadata = {
+    category = var.ksi_category
+    ksi      = each.value
+    retention = "${var.evidence_retention_days} days"
+  }
+}
+
+# Dead-letter container
+resource "azurerm_storage_container" "deadletter" {
+  name                  = "deadletter-${lower(var.ksi_category)}"
+  storage_account_name  = azurerm_storage_account.category.name
+  container_access_type = "private"
+}
+
+# Lifecycle management
+resource "azurerm_storage_management_policy" "category" {
+  storage_account_id = azurerm_storage_account.category.id
+
+  rule {
+    name    = "ArchiveOldEvidence"
+    enabled = true
+
+    filters {
+      blob_types   = ["blockBlob"]
+      prefix_match = ["evidence-"]
+    }
+
+    actions {
+      base_blob {
+        tier_to_archive_after_days_since_modification_greater_than = 365
+        delete_after_days_since_modification_greater_than          = var.evidence_retention_days
+      }
+    }
+  }
+}
+
+# Shared Key Vault
+# Supports: KSI-IAM-05 (centralized secrets management with RBAC)
+resource "azurerm_key_vault" "category" {
+  name                       = "kv-${lower(var.ksi_category)}-${random_string.suffix.result}"
+  location                   = var.location
+  resource_group_name        = data.azurerm_resource_group.evidence.name
+  tenant_id                  = data.azurerm_client_config.current.tenant_id
+  sku_name                   = "standard"
+  soft_delete_retention_days = 90
+  purge_protection_enabled   = true
+  enable_rbac_authorization  = true
+}
+
+# Category-wide Managed Identity
+resource "azurerm_user_assigned_identity" "category_collector" {
+  name                = "id-${lower(var.ksi_category)}-collector-${random_string.suffix.result}"
+  location            = var.location
+  resource_group_name = data.azurerm_resource_group.evidence.name
+}
+
+# Role assignments
+resource "azurerm_role_assignment" "storage_contributor" {
+  scope                = azurerm_storage_account.category.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = azurerm_user_assigned_identity.category_collector.principal_id
+}
+
+resource "azurerm_role_assignment" "log_contributor" {
+  scope                = azurerm_log_analytics_workspace.category.id
+  role_definition_name = "Log Analytics Contributor"
+  principal_id         = azurerm_user_assigned_identity.category_collector.principal_id
+}
+
+resource "azurerm_role_assignment" "keyvault_secrets" {
+  scope                = azurerm_key_vault.category.id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = azurerm_user_assigned_identity.category_collector.principal_id
+}
+
+# Application Insights
+resource "azurerm_application_insights" "category" {
+  name                = "appi-${lower(var.ksi_category)}-${random_string.suffix.result}"
+  location            = var.location
+  resource_group_name = data.azurerm_resource_group.evidence.name
+  workspace_id        = azurerm_log_analytics_workspace.category.id
+  application_type    = "web"
+  retention_in_days   = var.log_retention_days
+}
+
+# Larger Premium Function Plan for multiple KSI collectors
+resource "azurerm_service_plan" "category" {
+  name                     = "asp-${lower(var.ksi_category)}-${random_string.suffix.result}"
+  location                 = var.location
+  resource_group_name      = data.azurerm_resource_group.evidence.name
+  os_type                  = "Linux"
+  sku_name                 = "EP2"
+  maximum_elastic_worker_count = 30
+}
+
+resource "azurerm_linux_function_app" "category" {
+  name                       = "func-${lower(var.ksi_category)}-${random_string.suffix.result}"
+  location                   = var.location
+  resource_group_name        = data.azurerm_resource_group.evidence.name
+  service_plan_id            = azurerm_service_plan.category.id
+  storage_account_name       = azurerm_storage_account.category.name
+  storage_account_access_key = azurerm_storage_account.category.primary_access_key
+  https_only                 = true
+
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.category_collector.id]
+  }
+
+  site_config {
+    application_stack { python_version = "3.11" }
+    always_on           = true
+    ftps_state          = "Disabled"
+    minimum_tls_version = "1.2"
+  }
+
+  app_settings = {
+    "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.category.instrumentation_key
+    "LOG_ANALYTICS_WORKSPACE_ID"     = azurerm_log_analytics_workspace.category.workspace_id
+    "STORAGE_ACCOUNT_NAME"           = azurerm_storage_account.category.name
+    "KEY_VAULT_NAME"                 = azurerm_key_vault.category.name
+    "MANAGED_IDENTITY_CLIENT_ID"     = azurerm_user_assigned_identity.category_collector.client_id
+    "KSI_CATEGORY"                   = var.ksi_category
+    "KSI_LIST"                       = join(",", var.ksi_list)
+  }
+}
+
+# Azure Automation (optional)
+# Supports: KSI-CED-01 (automated scheduled evidence collection)
+resource "azurerm_automation_account" "category" {
+  count               = var.enable_automation ? 1 : 0
+  name                = "aa-${lower(var.ksi_category)}-${random_string.suffix.result}"
+  location            = var.location
+  resource_group_name = data.azurerm_resource_group.evidence.name
+  sku_name            = "Basic"
+
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.category_collector.id]
+  }
+}
+
+# Event Grid
+resource "azurerm_eventgrid_system_topic" "category" {
+  name                   = "evgt-${lower(var.ksi_category)}-${random_string.suffix.result}"
+  location               = var.location
+  resource_group_name    = data.azurerm_resource_group.evidence.name
+  source_arm_resource_id = azurerm_storage_account.category.id
+  topic_type             = "Microsoft.Storage.StorageAccounts"
+}
+
+# Alerts
+resource "azurerm_monitor_action_group" "category" {
+  name                = "ag-${lower(var.ksi_category)}-${random_string.suffix.result}"
+  resource_group_name = data.azurerm_resource_group.evidence.name
+  short_name          = substr(var.ksi_category, 0, 12)
+
+  email_receiver {
+    name          = "EmailAdmin"
+    email_address = var.alert_email
+  }
+}
+
+# Diagnostic settings
+resource "azurerm_monitor_diagnostic_setting" "storage" {
+  name                       = "storage-diagnostics"
+  target_resource_id         = azurerm_storage_account.category.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.category.id
+
+  enabled_log { category = "StorageRead" }
+  enabled_log { category = "StorageWrite" }
+  enabled_log { category = "StorageDelete" }
+  metric { category = "Transaction"; enabled = true }
+}
+
+# Outputs
+output "log_analytics_workspace_id" { value = azurerm_log_analytics_workspace.category.id }
+output "storage_account_name" { value = azurerm_storage_account.category.name }
+output "key_vault_name" { value = azurerm_key_vault.category.name }
+output "function_app_name" { value = azurerm_linux_function_app.category.name }
+output "automation_account_name" {
+  value = var.enable_automation ? azurerm_automation_account.category[0].name : ""
+}
+output "managed_identity_id" { value = azurerm_user_assigned_identity.category_collector.id }
+output "evidence_containers" {
+  value = [for c in azurerm_storage_container.ksi_evidence : c.name]
+}
+```
+
+## Usage
+
+```bash
+# Example: Deploy IAM category with 7 KSIs
+terraform apply \
+  -var='resource_group_name=rg-evidence-iam' \
+  -var='ksi_category=IAM' \
+  -var='ksi_list=["KSI-IAM-01","KSI-IAM-02","KSI-IAM-03","KSI-IAM-04","KSI-IAM-05","KSI-IAM-06","KSI-IAM-07"]' \
+  -var='alert_email=security@example.com'
+```
+
+**Cost:** ~$400-900/month per category | **Savings:** 50-70% vs individual KSI deployments

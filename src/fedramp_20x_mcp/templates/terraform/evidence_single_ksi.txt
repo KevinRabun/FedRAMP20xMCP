@@ -1,0 +1,239 @@
+## Terraform Template
+
+```hcl
+# evidence_single_ksi.tf - Single-KSI Production Evidence Collection Architecture
+# See Bicep equivalent (evidence_single_ksi.txt) for detailed documentation
+# Production architecture for one KSI with monitoring, security, and high availability
+
+terraform {
+  required_version = ">= 1.5"
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 3.0"
+    }
+  }
+}
+
+provider "azurerm" {
+  features {}
+}
+
+# Variables
+variable "location" { type = string; default = "eastus" }
+variable "resource_group_name" { type = string }
+variable "ksi_id" { type = string; description = "KSI identifier (e.g., KSI-IAM-01)" }
+variable "log_retention_days" { type = number; default = 365 }
+variable "evidence_retention_days" { type = number; default = 2555 }
+variable "enable_sentinel" { type = bool; default = true }
+variable "alert_email" { type = string }
+
+resource "random_string" "suffix" {
+  length  = 8
+  special = false
+  upper   = false
+}
+
+data "azurerm_resource_group" "evidence" {
+  name = var.resource_group_name
+}
+
+# Log Analytics with Sentinel integration
+# Supports: KSI-MLA-01 (log aggregation), KSI-MLA-02 (retention policies)
+resource "azurerm_log_analytics_workspace" "ksi" {
+  name                = "law-${lower(var.ksi_id)}-${random_string.suffix.result}"
+  location            = var.location
+  resource_group_name = data.azurerm_resource_group.evidence.name
+  sku                 = "PerGB2018"
+  retention_in_days   = var.log_retention_days
+}
+
+# Storage Account with GRS and immutability
+# Supports: KSI-CED-01 (continuous evidence collection), KSI-MLA-05 (tamper detection)
+resource "azurerm_storage_account" "ksi" {
+  name                     = replace("st${lower(var.ksi_id)}${random_string.suffix.result}", "-", "")
+  location                 = var.location
+  resource_group_name      = data.azurerm_resource_group.evidence.name
+  account_tier             = "Standard"
+  account_replication_type = "GRS"
+  access_tier              = "Cool"
+  min_tls_version          = "TLS1_2"
+
+  blob_properties {
+    versioning_enabled            = true
+    change_feed_enabled           = true
+    change_feed_retention_in_days = 90
+    delete_retention_policy { days = 30 }
+    container_delete_retention_policy { days = 30 }
+  }
+}
+
+resource "azurerm_storage_container" "evidence" {
+  name                  = "evidence-${lower(var.ksi_id)}"
+  storage_account_name  = azurerm_storage_account.ksi.name
+  container_access_type = "private"
+
+  metadata = {
+    ksi              = var.ksi_id
+    retention        = "${var.evidence_retention_days} days"
+    complianceLevel = "FedRAMP-High"
+  }
+}
+
+# Key Vault for secrets management
+# Supports: KSI-IAM-05 (centralized secrets management with RBAC)
+resource "azurerm_key_vault" "ksi" {
+  name                       = "kv-${lower(var.ksi_id)}-${random_string.suffix.result}"
+  location                   = var.location
+  resource_group_name        = data.azurerm_resource_group.evidence.name
+  tenant_id                  = data.azurerm_client_config.current.tenant_id
+  sku_name                   = "standard"
+  soft_delete_retention_days = 90
+  purge_protection_enabled   = true
+  enable_rbac_authorization  = true
+}
+
+data "azurerm_client_config" "current" {}
+
+# Managed Identity
+# Supports: KSI-IAM-05 (service accounts use managed identities, not credentials)
+resource "azurerm_user_assigned_identity" "ksi_collector" {
+  name                = "id-${lower(var.ksi_id)}-collector-${random_string.suffix.result}"
+  location            = var.location
+  resource_group_name = data.azurerm_resource_group.evidence.name
+}
+
+# Role assignments
+resource "azurerm_role_assignment" "storage_contributor" {
+  scope                = azurerm_storage_account.ksi.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = azurerm_user_assigned_identity.ksi_collector.principal_id
+}
+
+resource "azurerm_role_assignment" "log_reader" {
+  scope                = azurerm_log_analytics_workspace.ksi.id
+  role_definition_name = "Log Analytics Reader"
+  principal_id         = azurerm_user_assigned_identity.ksi_collector.principal_id
+}
+
+resource "azurerm_role_assignment" "keyvault_secrets" {
+  scope                = azurerm_key_vault.ksi.id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = azurerm_user_assigned_identity.ksi_collector.principal_id
+}
+
+# Application Insights
+resource "azurerm_application_insights" "ksi" {
+  name                = "appi-${lower(var.ksi_id)}-${random_string.suffix.result}"
+  location            = var.location
+  resource_group_name = data.azurerm_resource_group.evidence.name
+  workspace_id        = azurerm_log_analytics_workspace.ksi.id
+  application_type    = "web"
+  retention_in_days   = var.log_retention_days
+}
+
+# Premium Function App
+resource "azurerm_service_plan" "ksi" {
+  name                = "asp-${lower(var.ksi_id)}-${random_string.suffix.result}"
+  location            = var.location
+  resource_group_name = data.azurerm_resource_group.evidence.name
+  os_type             = "Linux"
+  sku_name            = "EP1"
+}
+
+resource "azurerm_linux_function_app" "ksi" {
+  name                       = "func-${lower(var.ksi_id)}-${random_string.suffix.result}"
+  location                   = var.location
+  resource_group_name        = data.azurerm_resource_group.evidence.name
+  service_plan_id            = azurerm_service_plan.ksi.id
+  storage_account_name       = azurerm_storage_account.ksi.name
+  storage_account_access_key = azurerm_storage_account.ksi.primary_access_key
+  https_only                 = true
+
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.ksi_collector.id]
+  }
+
+  site_config {
+    application_stack { python_version = "3.11" }
+    always_on         = true
+    ftps_state        = "Disabled"
+    minimum_tls_version = "1.2"
+    http2_enabled     = true
+  }
+
+  app_settings = {
+    "APPINSIGHTS_INSTRUMENTATIONKEY"        = azurerm_application_insights.ksi.instrumentation_key
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.ksi.connection_string
+    "LOG_ANALYTICS_WORKSPACE_ID"            = azurerm_log_analytics_workspace.ksi.workspace_id
+    "STORAGE_ACCOUNT_NAME"                  = azurerm_storage_account.ksi.name
+    "EVIDENCE_CONTAINER_NAME"               = azurerm_storage_container.evidence.name
+    "KEY_VAULT_NAME"                        = azurerm_key_vault.ksi.name
+    "MANAGED_IDENTITY_CLIENT_ID"            = azurerm_user_assigned_identity.ksi_collector.client_id
+    "KSI_ID"                                = var.ksi_id
+  }
+}
+
+# Event Grid with dead-letter queue
+resource "azurerm_storage_container" "deadletter" {
+  name                  = "deadletter-${lower(var.ksi_id)}"
+  storage_account_name  = azurerm_storage_account.ksi.name
+  container_access_type = "private"
+}
+
+resource "azurerm_eventgrid_system_topic" "ksi" {
+  name                   = "evgt-${lower(var.ksi_id)}-${random_string.suffix.result}"
+  location               = var.location
+  resource_group_name    = data.azurerm_resource_group.evidence.name
+  source_arm_resource_id = azurerm_storage_account.ksi.id
+  topic_type             = "Microsoft.Storage.StorageAccounts"
+}
+
+# Alert rules
+# Supports: KSI-INR-02 (incident detection and alerting)
+resource "azurerm_monitor_action_group" "ksi" {
+  name                = "ag-${lower(var.ksi_id)}-${random_string.suffix.result}"
+  resource_group_name = data.azurerm_resource_group.evidence.name
+  short_name          = substr(var.ksi_id, 0, 12)
+
+  email_receiver {
+    name          = "EmailAdmin"
+    email_address = var.alert_email
+  }
+}
+
+# Diagnostic settings
+resource "azurerm_monitor_diagnostic_setting" "storage" {
+  name                       = "storage-diagnostics"
+  target_resource_id         = azurerm_storage_account.ksi.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.ksi.id
+
+  enabled_log { category = "StorageRead" }
+  enabled_log { category = "StorageWrite" }
+  enabled_log { category = "StorageDelete" }
+  metric { category = "Transaction"; enabled = true }
+}
+
+# Outputs
+output "log_analytics_workspace_id" { value = azurerm_log_analytics_workspace.ksi.id }
+output "storage_account_name" { value = azurerm_storage_account.ksi.name }
+output "evidence_container_name" { value = azurerm_storage_container.evidence.name }
+output "key_vault_name" { value = azurerm_key_vault.ksi.name }
+output "function_app_name" { value = azurerm_linux_function_app.ksi.name }
+output "managed_identity_id" { value = azurerm_user_assigned_identity.ksi_collector.id }
+```
+
+## Usage
+
+```bash
+terraform apply \
+  -var="resource_group_name=rg-evidence-ksi-iam-01" \
+  -var="ksi_id=KSI-IAM-01" \
+  -var="log_retention_days=365" \
+  -var="evidence_retention_days=2555" \
+  -var="enable_sentinel=true" \
+  -var="alert_email=security@example.com"
+```
+
+**Cost:** ~$300-500/month per KSI | **Purpose:** Production-grade single KSI evidence collection

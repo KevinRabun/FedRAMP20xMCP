@@ -1,0 +1,417 @@
+## Terraform Template
+
+```hcl
+# evidence_minimal.tf - Minimal Evidence Collection Architecture
+# Quick-start architecture for pilot FedRAMP 20x evidence collection projects
+# Suitable for: Initial testing, proof-of-concept, small teams (1-5 KSIs)
+#
+# FedRAMP 20x KSI Alignment:
+# - KSI-MLA-01: Log aggregation and centralized logging
+# - KSI-MLA-02: Log retention policies
+# - KSI-CED-01: Continuous evidence collection
+# - FRR-ADS: Authorization Data Sharing (machine-readable evidence)
+
+terraform {
+  required_version = ">= 1.5"
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 3.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.0"
+    }
+  }
+}
+
+provider "azurerm" {
+  features {
+    key_vault {
+      purge_soft_delete_on_destroy = false
+    }
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }
+  }
+}
+
+# ============================================================================
+# Variables
+# ============================================================================
+
+variable "location" {
+  description = "Azure region for resources"
+  type        = string
+  default     = "eastus"
+}
+
+variable "resource_group_name" {
+  description = "Resource group name"
+  type        = string
+}
+
+variable "log_retention_days" {
+  description = "Log retention in days (30-730)"
+  type        = number
+  default     = 90
+  validation {
+    condition     = var.log_retention_days >= 30 && var.log_retention_days <= 730
+    error_message = "Log retention must be between 30 and 730 days."
+  }
+}
+
+variable "evidence_retention_days" {
+  description = "Evidence retention in days (365-2555)"
+  type        = number
+  default     = 365
+  validation {
+    condition     = var.evidence_retention_days >= 365 && var.evidence_retention_days <= 2555
+    error_message = "Evidence retention must be between 365 and 2555 days."
+  }
+}
+
+# ============================================================================
+# Random Suffix
+# ============================================================================
+
+resource "random_string" "suffix" {
+  length  = 8
+  special = false
+  upper   = false
+}
+
+# ============================================================================
+# Resource Group
+# ============================================================================
+
+data "azurerm_resource_group" "evidence" {
+  name = var.resource_group_name
+}
+
+# ============================================================================
+# Log Analytics Workspace - Centralized Logging (KSI-MLA-01, KSI-MLA-02)
+# ============================================================================
+
+# Supports: KSI-MLA-01 (log aggregation), KSI-MLA-02 (retention policies)
+resource "azurerm_log_analytics_workspace" "evidence" {
+  name                = "law-evidence-${random_string.suffix.result}"
+  location            = var.location
+  resource_group_name = data.azurerm_resource_group.evidence.name
+  sku                 = "PerGB2018"
+  retention_in_days   = var.log_retention_days
+
+  tags = {
+    Purpose = "FedRAMP 20x Evidence Collection"
+    Scope   = "Minimal"
+  }
+}
+
+# ============================================================================
+# Storage Account - Evidence Artifact Storage (KSI-CED-01, FRR-ADS)
+# ============================================================================
+
+# Supports: KSI-CED-01 (continuous evidence collection), FRR-ADS (machine-readable evidence)
+resource "azurerm_storage_account" "evidence" {
+  name                            = "stevidence${random_string.suffix.result}"
+  location                        = var.location
+  resource_group_name             = data.azurerm_resource_group.evidence.name
+  account_tier                    = "Standard"
+  account_replication_type        = "LRS"
+  access_tier                     = "Hot"
+  enable_https_traffic_only       = true
+  min_tls_version                 = "TLS1_2"
+  allow_nested_items_to_be_public = false
+
+  blob_properties {
+    delete_retention_policy {
+      days = 30
+    }
+    container_delete_retention_policy {
+      days = 30
+    }
+  }
+
+  tags = {
+    Purpose = "FedRAMP 20x Evidence Storage"
+  }
+}
+
+resource "azurerm_storage_container" "evidence" {
+  name                  = "evidence-artifacts"
+  storage_account_name  = azurerm_storage_account.evidence.name
+  container_access_type = "private"
+
+  metadata = {
+    purpose   = "FedRAMP 20x evidence storage"
+    retention = "${var.evidence_retention_days} days"
+  }
+}
+
+resource "azurerm_storage_management_policy" "evidence" {
+  storage_account_id = azurerm_storage_account.evidence.id
+
+  rule {
+    name    = "DeleteOldEvidence"
+    enabled = true
+
+    filters {
+      blob_types   = ["blockBlob"]
+      prefix_match = ["evidence-artifacts/"]
+    }
+
+    actions {
+      base_blob {
+        delete_after_days_since_modification_greater_than = var.evidence_retention_days
+      }
+    }
+  }
+}
+
+# ============================================================================
+# Managed Identity - Secure Authentication (KSI-IAM-05)
+# ============================================================================
+
+# Supports: KSI-IAM-05 (service accounts use managed identities, not credentials)
+resource "azurerm_user_assigned_identity" "evidence_collector" {
+  name                = "id-evidence-collector-${random_string.suffix.result}"
+  location            = var.location
+  resource_group_name = data.azurerm_resource_group.evidence.name
+
+  tags = {
+    Purpose = "Evidence Collection Identity"
+  }
+}
+
+# Grant Storage Blob Data Contributor role
+resource "azurerm_role_assignment" "storage_contributor" {
+  scope                = azurerm_storage_account.evidence.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = azurerm_user_assigned_identity.evidence_collector.principal_id
+}
+
+# Grant Log Analytics Reader role
+resource "azurerm_role_assignment" "log_reader" {
+  scope                = azurerm_log_analytics_workspace.evidence.id
+  role_definition_name = "Log Analytics Reader"
+  principal_id         = azurerm_user_assigned_identity.evidence_collector.principal_id
+}
+
+# ============================================================================
+# Azure Function - Evidence Collection Automation (KSI-CED-01)
+# ============================================================================
+
+resource "azurerm_service_plan" "evidence" {
+  name                = "asp-evidence-${random_string.suffix.result}"
+  location            = var.location
+  resource_group_name = data.azurerm_resource_group.evidence.name
+  os_type             = "Linux"
+  sku_name            = "Y1" # Consumption plan
+
+  tags = {
+    Purpose = "Evidence Collection Functions"
+  }
+}
+
+resource "azurerm_linux_function_app" "evidence" {
+  name                       = "func-evidence-${random_string.suffix.result}"
+  location                   = var.location
+  resource_group_name        = data.azurerm_resource_group.evidence.name
+  service_plan_id            = azurerm_service_plan.evidence.id
+  storage_account_name       = azurerm_storage_account.evidence.name
+  storage_account_access_key = azurerm_storage_account.evidence.primary_access_key
+  https_only                 = true
+
+  identity {
+    type = "UserAssigned"
+    identity_ids = [
+      azurerm_user_assigned_identity.evidence_collector.id
+    ]
+  }
+
+  site_config {
+    application_stack {
+      python_version = "3.11"
+    }
+    ftps_state        = "Disabled"
+    minimum_tls_version = "1.2"
+  }
+
+  app_settings = {
+    "FUNCTIONS_WORKER_RUNTIME"       = "python"
+    "LOG_ANALYTICS_WORKSPACE_ID"     = azurerm_log_analytics_workspace.evidence.workspace_id
+    "STORAGE_ACCOUNT_NAME"           = azurerm_storage_account.evidence.name
+    "EVIDENCE_CONTAINER_NAME"        = azurerm_storage_container.evidence.name
+    "MANAGED_IDENTITY_CLIENT_ID"     = azurerm_user_assigned_identity.evidence_collector.client_id
+  }
+
+  tags = {
+    Purpose = "Evidence Collection Automation"
+  }
+}
+
+# ============================================================================
+# Event Grid - Evidence Collection Notifications (KSI-MLA-05)
+# ============================================================================
+
+resource "azurerm_eventgrid_system_topic" "evidence" {
+  name                   = "evgt-evidence-${random_string.suffix.result}"
+  location               = var.location
+  resource_group_name    = data.azurerm_resource_group.evidence.name
+  source_arm_resource_id = azurerm_storage_account.evidence.id
+  topic_type             = "Microsoft.Storage.StorageAccounts"
+
+  tags = {
+    Purpose = "Evidence Event Processing"
+  }
+}
+
+resource "azurerm_eventgrid_system_topic_event_subscription" "evidence_uploaded" {
+  name                = "evidence-uploaded"
+  system_topic        = azurerm_eventgrid_system_topic.evidence.name
+  resource_group_name = data.azurerm_resource_group.evidence.name
+
+  webhook_endpoint {
+    url = "https://${azurerm_linux_function_app.evidence.default_hostname}/api/evidence-notification"
+  }
+
+  included_event_types = [
+    "Microsoft.Storage.BlobCreated"
+  ]
+
+  subject_filter {
+    subject_begins_with = "/blobServices/default/containers/${azurerm_storage_container.evidence.name}/"
+  }
+
+  retry_policy {
+    max_delivery_attempts = 30
+    event_time_to_live    = 1440
+  }
+}
+
+# ============================================================================
+# Diagnostic Settings - Audit Logging (KSI-MLA-05)
+# ============================================================================
+
+resource "azurerm_monitor_diagnostic_setting" "storage" {
+  name                       = "storage-diagnostics"
+  target_resource_id         = azurerm_storage_account.evidence.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.evidence.id
+
+  enabled_log {
+    category = "StorageWrite"
+  }
+
+  enabled_log {
+    category = "StorageDelete"
+  }
+
+  metric {
+    category = "Transaction"
+    enabled  = true
+  }
+}
+
+resource "azurerm_monitor_diagnostic_setting" "function" {
+  name                       = "function-diagnostics"
+  target_resource_id         = azurerm_linux_function_app.evidence.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.evidence.id
+
+  enabled_log {
+    category = "FunctionAppLogs"
+  }
+
+  metric {
+    category = "AllMetrics"
+    enabled  = true
+  }
+}
+
+# ============================================================================
+# Outputs
+# ============================================================================
+
+output "log_analytics_workspace_id" {
+  description = "Log Analytics Workspace ID"
+  value       = azurerm_log_analytics_workspace.evidence.id
+}
+
+output "log_analytics_workspace_name" {
+  description = "Log Analytics Workspace Name"
+  value       = azurerm_log_analytics_workspace.evidence.name
+}
+
+output "storage_account_name" {
+  description = "Storage Account Name"
+  value       = azurerm_storage_account.evidence.name
+}
+
+output "evidence_container_name" {
+  description = "Evidence Container Name"
+  value       = azurerm_storage_container.evidence.name
+}
+
+output "function_app_name" {
+  description = "Function App Name"
+  value       = azurerm_linux_function_app.evidence.name
+}
+
+output "managed_identity_id" {
+  description = "Managed Identity Resource ID"
+  value       = azurerm_user_assigned_identity.evidence_collector.id
+}
+
+output "managed_identity_client_id" {
+  description = "Managed Identity Client ID"
+  value       = azurerm_user_assigned_identity.evidence_collector.client_id
+}
+```
+
+## Deployment Instructions
+
+```bash
+# Initialize Terraform
+terraform init
+
+# Create resource group
+az group create --name rg-evidence-minimal --location eastus
+
+# Plan deployment
+terraform plan \
+  -var="resource_group_name=rg-evidence-minimal" \
+  -var="location=eastus" \
+  -var="log_retention_days=90" \
+  -var="evidence_retention_days=365"
+
+# Apply deployment
+terraform apply \
+  -var="resource_group_name=rg-evidence-minimal" \
+  -var="location=eastus" \
+  -var="log_retention_days=90" \
+  -var="evidence_retention_days=365"
+
+# View outputs
+terraform output
+```
+
+## Usage Notes
+
+**Purpose:** Minimal evidence collection architecture for pilot FedRAMP 20x projects.
+
+**Scope:** Suitable for 1-5 KSIs, small teams, initial testing.
+
+**Cost Estimate:**
+- Log Analytics: ~$2-5/GB ingested
+- Storage Account: ~$0.02/GB/month (Hot tier)
+- Azure Function: ~$0.20/million executions (Consumption plan)
+- Event Grid: ~$0.60/million operations
+- **Total:** ~$50-100/month for typical pilot usage
+
+**Next Steps:**
+1. Deploy infrastructure using Terraform commands above
+2. Deploy evidence collection code to Azure Function
+3. Configure KSI-specific evidence collectors
+4. Test evidence collection and storage
+5. Scale to single-ksi or category architecture as needed
+
+**Upgrade Path:** Migrate to `evidence_single_ksi.tf` for production workloads.
