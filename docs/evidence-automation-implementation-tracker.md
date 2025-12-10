@@ -3,8 +3,8 @@
 ## Progress Overview
 
 **Total Active KSIs:** 65  
-**Implemented:** 42 (64.6%)  
-**Remaining:** 23 (35.4%)
+**Implemented:** 45 (69.2%)  
+**Remaining:** 20 (30.8%)
 
 **Target:** Implement evidence automation for all 65 active KSIs
 
@@ -14,7 +14,8 @@
 **IAM Family Complete:** All 7 IAM KSIs implemented ✅  
 **CNA Family Complete:** All 8 CNA KSIs implemented ✅  
 **AFR Family Complete:** All 11 AFR KSIs implemented ✅  
-**SVC Family Complete:** All 9 SVC KSIs implemented ✅
+**SVC Family Complete:** All 9 SVC KSIs implemented ✅  
+**CMT Family Complete:** All 4 CMT KSIs implemented ✅
 
 ---
 
@@ -343,7 +344,7 @@
 - [ ] **KSI-PIY-07** - Data Breach Response
 - [ ] **KSI-PIY-08** - Privacy Training
 
-### CMT - Configuration Management (1/4 = 25%)
+### CMT - Configuration Management (4/4 = 100% COMPLETE)
 
 - [x] **KSI-CMT-01** - Version Control and Change Logging ✅ COMPLETE
   - Evidence Type: log-based, config-based
@@ -352,9 +353,27 @@
   - Azure Services: 5 (DevOps/GitHub, Activity Log, Policy, Automation Change Tracking, Monitor)
   - Queries: 5 (1 DevOps API, 3 KQL, 1 custom)
   - Artifacts: 5
-- [ ] **KSI-CMT-02** - Baseline Configuration
-- [ ] **KSI-CMT-03** - Configuration Change Control
-- [ ] **KSI-CMT-04** - Security Impact Analysis
+- [x] **KSI-CMT-02** - Redeployment / Immutable Infrastructure ✅ COMPLETE
+  - Evidence Type: config-based
+  - Automation Feasibility: high
+  - Implementation Effort: medium
+  - Azure Services: 5 (Container Registry, Policy, Resource Manager, DevOps, Monitor)
+  - Queries: 5 (ACR API, Resource Graph KQL, DevOps API, Monitor KQL, Policy API)
+  - Artifacts: 5
+- [x] **KSI-CMT-03** - Automated Testing and Validation ✅ COMPLETE
+  - Evidence Type: log-based
+  - Automation Feasibility: high
+  - Implementation Effort: medium
+  - Azure Services: 5 (DevOps Test Plans, Pipelines, Monitor, Defender for Cloud, Application Insights)
+  - Queries: 5 (2 DevOps API, Defender API, Monitor KQL, Pipelines API)
+  - Artifacts: 5
+- [x] **KSI-CMT-04** - Change Management Procedure ✅ COMPLETE
+  - Evidence Type: process-based
+  - Automation Feasibility: high
+  - Implementation Effort: high
+  - Azure Services: 5 (DevOps Boards, Pipelines, Policy, Activity Log, Monitor)
+  - Queries: 5 (DevOps API, Pipelines API, 2 Monitor KQL, Policy API)
+  - Artifacts: 5
 
 ### RPL - Recovery & Planning (0/4 = 0%)
 

@@ -10,7 +10,7 @@ Version: 25.11C (Published: 2025-12-01)
 
 import ast
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 
@@ -824,3 +824,147 @@ class KSI_CMT_04_Analyzer(BaseKSIAnalyzer):
             ))
         
         return findings
+
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get recommendations for automating evidence collection for KSI-CMT-04.
+        
+        Returns:
+            Dict containing automation recommendations
+        """
+        return {
+            "ksi_id": self.ksi_id,
+            "ksi_name": "Change Management Procedure",
+            "evidence_type": "process-based",
+            "automation_feasibility": "high",
+            "azure_services": [
+                "Azure DevOps Boards",
+                "Azure Pipelines",
+                "Azure Policy",
+                "Azure Activity Log",
+                "Azure Monitor"
+            ],
+            "collection_methods": [
+                "Azure DevOps Boards work item tracking to document change requests with approval workflows and change impact analysis",
+                "Azure Pipelines deployment gates and approvals to enforce manual review for production changes",
+                "Azure Policy to require change tickets before infrastructure modifications (tag enforcement with ChangeTicketID)",
+                "Azure Activity Log to audit all infrastructure changes and correlate with approved change requests",
+                "Azure Monitor to track change management metrics (lead time, approval time, change failure rate)"
+            ],
+            "implementation_steps": [
+                "1. Create Azure DevOps work item template 'Change Request': (a) Required fields: Change description, Impact assessment, Rollback plan, Approver, Target date, (b) Automated routing to CAB (Change Advisory Board), (c) Link to pull requests and deployment pipelines, (d) Automated status updates on deployment completion",
+                "2. Configure Azure Pipelines with manual approval gates: (a) Pre-deployment approval for production environment (require CAB member approval), (b) Post-deployment approval for change validation, (c) Block deployment until change ticket is linked, (d) Auto-comment deployment results to change ticket",
+                "3. Deploy Azure Policy 'Change Management Enforcement': (a) Require 'ChangeTicketID' tag on all resources, (b) Audit resources modified without change ticket correlation, (c) Deny critical resource creation without change management tag, (d) Alert on policy violations with remediation workflow",
+                "4. Configure Azure Activity Log integration with Azure DevOps: (a) Export Activity Log to Log Analytics, (b) Build Logic App to correlate Activity Log changes with DevOps change tickets, (c) Alert on changes without corresponding approved tickets, (d) Generate weekly exception reports",
+                "5. Build Azure Monitor workbook 'Change Management KPIs': (a) Change request volume and approval rates, (b) Average lead time (request to approval to deployment), (c) Change success rate (successful vs. rolled back), (d) Emergency change frequency, (e) Policy compliance for change ticket tagging",
+                "6. Generate monthly evidence package: (a) Export all change requests with approval history, (b) Export Activity Log with change ticket correlation, (c) Export Policy compliance for change management tagging, (d) Export change management KPI dashboard"
+            ],
+            "evidence_artifacts": [
+                "Azure DevOps Change Request Work Items with approval workflows, impact analysis, and deployment correlation",
+                "Azure Pipelines Deployment Approval Logs showing CAB review and sign-off before production changes",
+                "Azure Activity Log Change Correlation Report mapping infrastructure changes to approved change tickets",
+                "Azure Policy Compliance Report for change management tagging and enforcement (ChangeTicketID requirement)",
+                "Change Management KPI Dashboard from Azure Monitor with monthly metrics (lead time, success rate, emergency changes)"
+            ],
+            "update_frequency": "monthly",
+            "responsible_party": "Change Advisory Board (CAB) / DevOps Team"
+        }
+
+    def get_evidence_collection_queries(self) -> List[Dict[str, str]]:
+        """
+        Get specific queries for evidence collection automation.
+        
+        Returns:
+            List of query dictionaries
+        """
+        return [
+            {
+                "query_type": "Azure DevOps REST API",
+                "query_name": "Change request work items with approval history",
+                "query": "GET https://dev.azure.com/{organization}/{project}/_apis/wit/wiql?api-version=7.0\\nBody: {\\\"query\\\": \\\"SELECT [System.Id], [System.Title], [System.State], [Custom.ChangeType], [Custom.ImpactAssessment], [Custom.ApprovedBy], [Custom.DeploymentDate] FROM WorkItems WHERE [System.WorkItemType] = 'Change Request' ORDER BY [System.CreatedDate] DESC\\\"}",
+                "purpose": "Retrieve all change requests with approval history to demonstrate documented change management procedure"
+            },
+            {
+                "query_type": "Azure Pipelines REST API",
+                "query_name": "Production deployment approvals",
+                "query": "GET https://dev.azure.com/{organization}/{project}/_apis/pipelines/{pipelineId}/runs?api-version=7.0",
+                "purpose": "Retrieve pipeline runs with approval gates showing manual CAB review before production deployment"
+            },
+            {
+                "query_type": "Azure Monitor KQL",
+                "query_name": "Activity Log changes correlated with change tickets",
+                "query": """AzureActivity
+| where OperationNameValue contains 'write' or OperationNameValue contains 'delete'
+| where ActivityStatusValue == 'Success'
+| extend ChangeTicketID = tostring(parse_json(Properties).tags.ChangeTicketID)
+| summarize ChangeCount = count(), WithTicket = countif(isnotnull(ChangeTicketID)), WithoutTicket = countif(isnull(ChangeTicketID)) by bin(TimeGenerated, 1d), Caller
+| extend ComplianceRate = round((todouble(WithTicket) / ChangeCount) * 100, 2)
+| order by TimeGenerated desc""",
+                "purpose": "Audit infrastructure changes and calculate compliance rate for change ticket correlation (target >= 95%)"
+            },
+            {
+                "query_type": "Azure Policy REST API",
+                "query_name": "Change management tagging policy compliance",
+                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.PolicyInsights/policyStates/latest/summarize?api-version=2019-10-01&$filter=policyDefinitionName eq 'Require-ChangeTicketID-Tag'",
+                "purpose": "Retrieve policy compliance for change management tagging requirement (all resources must have ChangeTicketID tag)"
+            },
+            {
+                "query_type": "Azure Monitor KQL",
+                "query_name": "Change management KPIs (lead time, success rate)",
+                "query": """let ChangeRequests = AzureDevOps_WorkItems_CL
+| where WorkItemType_s == 'Change Request'
+| extend RequestDate = todatetime(CreatedDate_s), ApprovalDate = todatetime(ApprovedDate_s), DeploymentDate = todatetime(DeployedDate_s), RolledBack = tobool(RolledBack_b)
+| extend LeadTime = datetime_diff('hour', ApprovalDate, RequestDate), DeploymentTime = datetime_diff('hour', DeploymentDate, ApprovalDate);
+ChangeRequests
+| summarize TotalChanges = count(), SuccessfulChanges = countif(RolledBack == false), RolledBackChanges = countif(RolledBack == true), AvgLeadTime = avg(LeadTime), AvgDeploymentTime = avg(DeploymentTime) by bin(RequestDate, 30d)
+| extend ChangeSuccessRate = round((todouble(SuccessfulChanges) / TotalChanges) * 100, 2)
+| project RequestDate, TotalChanges, ChangeSuccessRate, AvgLeadTime, AvgDeploymentTime, RolledBackChanges
+| order by RequestDate desc""",
+                "purpose": "Calculate change management KPIs including lead time, approval time, success rate, and rollback frequency"
+            }
+        ]
+
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        """
+        Get descriptions of evidence artifacts to collect.
+        
+        Returns:
+            List of artifact dictionaries
+        """
+        return [
+            {
+                "artifact_name": "Change Request Work Items with Approval History",
+                "artifact_type": "Azure DevOps Work Item Export",
+                "description": "Complete set of change requests with documented impact analysis, approval workflows, and deployment correlation",
+                "collection_method": "Azure DevOps REST API to export work items with full history including approvals and deployment results",
+                "storage_location": "Azure DevOps database with work item retention and monthly exports to Azure Storage Account"
+            },
+            {
+                "artifact_name": "Pipeline Deployment Approval Logs",
+                "artifact_type": "Azure Pipelines Logs",
+                "description": "Logs of all production deployments showing manual CAB approval gates and post-deployment validation sign-off",
+                "collection_method": "Azure Pipelines REST API to retrieve deployment runs with approval details (approver name, timestamp, comments)",
+                "storage_location": "Azure DevOps with 12-month retention and monthly exports for compliance auditing"
+            },
+            {
+                "artifact_name": "Activity Log Change Correlation Report",
+                "artifact_type": "Azure Monitor Report",
+                "description": "Infrastructure change audit trail correlated with approved change tickets showing compliance rate (target >= 95%)",
+                "collection_method": "Azure Monitor KQL query joining Activity Log events with DevOps change tickets via ChangeTicketID tag",
+                "storage_location": "Azure Log Analytics workspace with automated monthly reports highlighting unauthorized changes"
+            },
+            {
+                "artifact_name": "Change Management Tagging Policy Compliance Report",
+                "artifact_type": "Azure Policy Report",
+                "description": "Policy compliance status for change management tagging requirement (all resources must have ChangeTicketID tag)",
+                "collection_method": "Azure Policy Insights API to export compliance status for 'Require-ChangeTicketID-Tag' policy",
+                "storage_location": "Azure Storage Account with monthly compliance snapshots showing non-compliant resources"
+            },
+            {
+                "artifact_name": "Change Management KPI Dashboard",
+                "artifact_type": "Azure Monitor Workbook",
+                "description": "Comprehensive KPI dashboard showing change volume, lead time, approval time, success rate, and emergency change frequency",
+                "collection_method": "Azure Monitor workbook aggregating data from DevOps work items, pipelines, and Activity Log",
+                "storage_location": "Azure Monitor Workbooks with monthly PDF exports for CAB review and executive reporting"
+            }
+        ]

@@ -2,7 +2,7 @@
 
 import ast
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseKSIAnalyzer
 
@@ -414,6 +414,149 @@ class KSI_CMT_02_Analyzer(BaseKSIAnalyzer):
         
         return findings
     
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get recommendations for automating evidence collection for KSI-CMT-02.
+        
+        Returns:
+            Dict containing automation recommendations
+        """
+        return {
+            "ksi_id": self.ksi_id,
+            "ksi_name": "Redeployment / Immutable Infrastructure",
+            "evidence_type": "config-based",
+            "automation_feasibility": "high",
+            "azure_services": [
+                "Azure Container Registry",
+                "Azure Policy",
+                "Azure Resource Manager",
+                "Azure DevOps",
+                "Azure Monitor"
+            ],
+            "collection_methods": [
+                "Azure Container Registry (ACR) immutability enforcement - image tags cannot be overwritten, only new versions deployed",
+                "Azure Policy to audit VM images and require managed disks with immutability guarantees",
+                "Azure Resource Manager deployment history to track infrastructure changes via redeployment vs. in-place modification",
+                "Azure DevOps pipeline logs showing deployment patterns (destroy-then-create vs. update-in-place)",
+                "Azure Monitor configuration change tracking to detect runtime modifications outside deployment pipelines"
+            ],
+            "implementation_steps": [
+                "1. Configure Azure Container Registry with content trust and immutability: (a) Enable content trust for image signing, (b) Configure repository-scoped tokens for immutable image tags, (c) Set retention policies to prevent tag overwrites, (d) Enable vulnerability scanning on all images",
+                "2. Deploy Azure Policy initiative 'Immutable Infrastructure Controls': (a) Audit VMs not using managed disks, (b) Require VMs deployed from Azure Compute Gallery with versioned images, (c) Deny VM extensions applied outside IaC deployment, (d) Audit storage accounts without immutability policies",
+                "3. Configure Azure DevOps Deployment Frequency and Pattern Analysis: (a) Track deployment methods (create/destroy vs. update), (b) Monitor for manual changes via Azure Portal activity logs, (c) Alert on configuration drift detected by Policy Guest Configuration, (d) Export deployment history monthly",
+                "4. Enable Azure Automation Change Tracking and Inventory: (a) Track file changes on VMs and App Services, (b) Alert on changes outside deployment windows, (c) Correlate changes with DevOps deployment logs, (d) Generate weekly change reports",
+                "5. Build Azure Monitor workbook 'Infrastructure Immutability Dashboard': (a) Deployment frequency and methods (redeployment vs. update), (b) Policy compliance for managed disks and VM images, (c) Container image versioning and immutability status, (d) Configuration drift detection events, (e) Manual changes outside CI/CD pipeline",
+                "6. Generate monthly evidence package: (a) Export ACR image history with versioning, (b) Export Policy compliance for immutable infrastructure requirements, (c) Export DevOps deployment logs (create/destroy patterns), (d) Export Change Tracking alerts for runtime modifications"
+            ],
+            "evidence_artifacts": [
+                "Azure Container Registry Image History with versioning and immutability status showing no tag overwrites",
+                "Azure Policy Compliance Report for immutable infrastructure (managed disks, image gallery deployments, no manual VM extensions)",
+                "Azure DevOps Deployment Logs demonstrating create/destroy patterns instead of in-place updates",
+                "Azure Automation Change Tracking Report identifying runtime modifications outside deployment pipelines",
+                "Infrastructure Immutability Dashboard from Azure Monitor with monthly snapshots of compliance and deployment patterns"
+            ],
+            "update_frequency": "monthly",
+            "responsible_party": "Platform Engineering Team / Infrastructure Team"
+        }
+
+    def get_evidence_collection_queries(self) -> List[Dict[str, str]]:
+        """
+        Get specific queries for evidence collection automation.
+        
+        Returns:
+            List of query dictionaries
+        """
+        return [
+            {
+                "query_type": "Azure Container Registry REST API",
+                "query_name": "ACR image immutability audit",
+                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ContainerRegistry/registries/{registryName}/listUsages?api-version=2023-01-01-preview",
+                "purpose": "Retrieve ACR image history and immutability settings to verify images are versioned and not overwritten"
+            },
+            {
+                "query_type": "Azure Resource Graph KQL",
+                "query_name": "VMs using immutable managed disks vs. unmanaged disks",
+                "query": """Resources
+| where type == 'microsoft.compute/virtualmachines'
+| extend OSDiskType = properties.storageProfile.osDisk.managedDisk.id
+| extend DataDiskTypes = properties.storageProfile.dataDisks
+| extend IsManaged = isnotnull(OSDiskType)
+| project name, resourceGroup, IsManaged, OSDiskType, DataDiskTypes, location
+| summarize ManagedVMs = countif(IsManaged == true), UnmanagedVMs = countif(IsManaged == false) by resourceGroup
+| extend ComplianceRate = round((todouble(ManagedVMs) / (ManagedVMs + UnmanagedVMs)) * 100, 2)
+| order by ComplianceRate asc""",
+                "purpose": "Identify VMs not using managed disks (violates immutable infrastructure principle per NIST CM-2, CM-3)"
+            },
+            {
+                "query_type": "Azure DevOps REST API",
+                "query_name": "Deployment method analysis (redeployment vs. update)",
+                "query": "GET https://dev.azure.com/{organization}/{project}/_apis/build/builds?api-version=7.0&$top=100&statusFilter=completed&queryOrder=finishTimeDescending",
+                "purpose": "Analyze deployment pipeline logs to distinguish destroy/create (immutable) from update-in-place patterns"
+            },
+            {
+                "query_type": "Azure Monitor KQL",
+                "query_name": "Configuration drift and runtime modifications",
+                "query": """AzureDiagnostics
+| where ResourceType in ('VIRTUALMACHINES', 'WEBSITES', 'CONTAINERSERVICES')
+| where OperationName in ('Microsoft.Compute/virtualMachines/write', 'Microsoft.Web/sites/config/write', 'Microsoft.ContainerService/managedClusters/write')
+| extend Caller = tostring(parse_json(Caller_s))
+| where Caller !contains 'azure-pipelines' and Caller !contains 'github-actions'
+| summarize ModificationCount = count(), LastModification = max(TimeGenerated) by Resource, Caller, OperationName
+| order by ModificationCount desc""",
+                "purpose": "Detect runtime modifications to infrastructure outside CI/CD pipelines (indicates mutable infrastructure anti-pattern)"
+            },
+            {
+                "query_type": "Azure Policy REST API",
+                "query_name": "Immutable infrastructure policy compliance",
+                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.PolicyInsights/policyStates/latest/summarize?api-version=2019-10-01&$filter=policyDefinitionCategory eq 'Compute' and (policyDefinitionName contains 'ManagedDisk' or policyDefinitionName contains 'ImageGallery')",
+                "purpose": "Retrieve policy compliance for immutable infrastructure requirements (managed disks, VM images from gallery)"
+            }
+        ]
+
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        """
+        Get descriptions of evidence artifacts to collect.
+        
+        Returns:
+            List of artifact dictionaries
+        """
+        return [
+            {
+                "artifact_name": "Azure Container Registry Image Immutability Report",
+                "artifact_type": "ACR API Export",
+                "description": "Complete history of container images with versioning, immutability status, and verification that no tags were overwritten",
+                "collection_method": "Azure Container Registry REST API to export image manifest and immutability settings",
+                "storage_location": "Azure Storage Account with monthly snapshots showing ACR image versioning compliance"
+            },
+            {
+                "artifact_name": "Managed Disk Compliance Report",
+                "artifact_type": "Azure Resource Graph Report",
+                "description": "List of all VMs with managed disk status identifying any VMs using unmanaged disks (mutable infrastructure violation)",
+                "collection_method": "Azure Resource Graph KQL query aggregating VM disk types and compliance rates by resource group",
+                "storage_location": "Azure Storage Account with CSV exports showing managed disk adoption rates"
+            },
+            {
+                "artifact_name": "Deployment Pattern Analysis Report",
+                "artifact_type": "Azure DevOps Pipeline Logs",
+                "description": "Analysis of deployment methods distinguishing redeployment (destroy/create) from in-place updates",
+                "collection_method": "Azure DevOps REST API to retrieve pipeline logs and parse deployment operations",
+                "storage_location": "Azure DevOps with monthly reports showing percentage of redeployments vs. updates"
+            },
+            {
+                "artifact_name": "Configuration Drift Detection Log",
+                "artifact_type": "Azure Monitor Logs",
+                "description": "Audit trail of runtime modifications to infrastructure outside CI/CD pipelines indicating mutable infrastructure",
+                "collection_method": "Azure Monitor KQL query identifying write operations not initiated by CI/CD service principals",
+                "storage_location": "Azure Log Analytics workspace with alerting for drift events"
+            },
+            {
+                "artifact_name": "Infrastructure Immutability Dashboard",
+                "artifact_type": "Azure Monitor Workbook",
+                "description": "Comprehensive dashboard showing deployment patterns, policy compliance, ACR immutability, and drift detection",
+                "collection_method": "Azure Monitor workbook aggregating data from ACR, Resource Graph, Policy, and DevOps",
+                "storage_location": "Azure Monitor Workbooks with monthly PDF exports for compliance reporting"
+            }
+        ]
 
         """Get code snippet around line"""
         if not lines or line_num < 1:
