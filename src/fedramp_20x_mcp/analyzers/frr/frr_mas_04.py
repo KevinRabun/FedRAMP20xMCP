@@ -61,11 +61,12 @@ class FRR_MAS_04_Analyzer(BaseFRRAnalyzer):
         ("PM-5", "System Inventory"),
         ("CM-8", "System Component Inventory"),
         ("SA-4", "Acquisition Process"),
+        ("SC-28", "Protection of Information at Rest"),
     ]
     CODE_DETECTABLE = "No"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-CED-01",  # Data classification and handling
     ]
     
     def __init__(self):

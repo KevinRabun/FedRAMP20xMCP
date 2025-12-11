@@ -65,7 +65,7 @@ class FRR_MAS_01_Analyzer(BaseFRRAnalyzer):
     CODE_DETECTABLE = "No"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-CNA-04",  # Network inventory and architecture
     ]
     
     def __init__(self):
