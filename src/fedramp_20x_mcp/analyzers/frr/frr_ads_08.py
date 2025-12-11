@@ -58,15 +58,14 @@ class FRR_ADS_08_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("PM-9", "Risk Management Strategy"),
-        ("PL-2", "System Security Plan"),
-        ("SA-4", "Acquisition Process"),
         ("SA-9", "External System Services"),
+        ("SI-12", "Information Management and Retention"),
+        ("CP-2", "Contingency Plan"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-AFR-01",
     ]
     
     def __init__(self):
@@ -83,21 +82,41 @@ class FRR_ADS_08_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-ADS-08 compliance using AST.
+        Analyze Python code for FRR-ADS-08 compliance.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects trust center migration notification mechanisms:
+        - Migration notification systems
+        - Communication/announcement patterns
+        - Documentation update mechanisms
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
+        # Migration notification patterns
+        notification_patterns = [
+            r'migration.*notif',
+            r'notify.*migration',
+            r'trust.*center.*migration',
+            r'send.*notification',
+            r'announcement.*migration',
+            r'migration.*communication',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            for pattern in notification_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Migration notification mechanism detected",
+                        description=f"Found migration notification pattern: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Ensure notification sent to all necessary parties when migrating to trust center."
+                    ))
+                    break
+        
+        return findings
         # Example from FRR-VDR-08:
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)
