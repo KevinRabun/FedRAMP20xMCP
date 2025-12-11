@@ -58,15 +58,16 @@ class FRR_ADS_04_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("PM-9", "Risk Management Strategy"),
-        ("PL-2", "System Security Plan"),
-        ("SA-4", "Acquisition Process"),
-        ("SA-9", "External System Services"),
+        ("CP-2", "Contingency Plan"),
+        ("CP-6", "Alternate Storage Site"),
+        ("CP-9", "System Backup"),
+        ("SC-5", "Denial of Service Protection"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Yes"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-AFR-01",
+        "KSI-ICP-01",
     ]
     
     def __init__(self):
@@ -85,37 +86,85 @@ class FRR_ADS_04_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Python code for FRR-ADS-04 compliance using AST.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects uninterrupted sharing mechanisms:
+        - High availability configurations
+        - Redundancy/failover systems
+        - Health checks and monitoring
+        - Retry mechanisms
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
+        # Try AST-based analysis first
+        try:
+            parser = ASTParser(CodeLanguage.PYTHON)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                # Look for health check endpoints
+                function_defs = parser.find_nodes_by_type(tree.root_node, 'function_definition')
+                for func in function_defs:
+                    func_text = parser.get_node_text(func, code_bytes).lower()
+                    if any(pattern in func_text for pattern in ['health', 'liveness', 'readiness', 'heartbeat']):
+                        line_num = func.start_point[0] + 1
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Health check endpoint detected",
+                            description="Found health/liveness check for uninterrupted service",
+                            severity=Severity.INFO,
+                            line_number=line_num,
+                            code_snippet=lines[line_num-1] if line_num <= len(lines) else "",
+                            recommendation="Ensure health checks monitor authorization data sharing availability."
+                        ))
+                
+                # Look for retry/circuit breaker patterns
+                decorators = parser.find_nodes_by_type(tree.root_node, 'decorator')
+                for dec in decorators:
+                    dec_text = parser.get_node_text(dec, code_bytes).lower()
+                    if any(pattern in dec_text for pattern in ['retry', 'backoff', 'circuit_breaker', 'resilient']):
+                        line_num = dec.start_point[0] + 1
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Resilience pattern detected",
+                            description="Found retry/circuit breaker for uninterrupted sharing",
+                            severity=Severity.INFO,
+                            line_number=line_num,
+                            code_snippet=lines[line_num-1] if line_num <= len(lines) else "",
+                            recommendation="Ensure resilience patterns protect authorization data sharing."
+                        ))
+                
+                if findings:
+                    return findings
+        except Exception:
+            pass
         
-        # TODO: Implement regex fallback
+        # Regex fallback
+        ha_patterns = [
+            r'high.*availab',
+            r'failover',
+            r'redundan',
+            r'load.*balanc',
+            r'health.*check',
+            r'retry',
+            r'backoff',
+            r'circuit.*breaker',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            for pattern in ha_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Uninterrupted sharing mechanism detected",
+                        description=f"Found HA/resilience pattern: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Ensure authorization data sharing is uninterrupted."
+                    ))
+                    break
+        
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
