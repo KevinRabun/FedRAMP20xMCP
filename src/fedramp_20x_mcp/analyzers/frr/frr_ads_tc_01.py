@@ -58,15 +58,15 @@ class FRR_ADS_TC_01_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("PM-9", "Risk Management Strategy"),
-        ("PL-2", "System Security Plan"),
-        ("SA-4", "Acquisition Process"),
+        ("CA-2", "Security Assessments"),
+        ("CA-8", "Penetration Testing"),
         ("SA-9", "External System Services"),
+        ("SA-11", "Developer Testing and Evaluation"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-AFR-01",
     ]
     
     def __init__(self):
@@ -83,21 +83,40 @@ class FRR_ADS_TC_01_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-ADS-TC-01 compliance using AST.
+        Analyze Python code for FRR-ADS-TC-01 compliance.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects trust center assessment mechanisms:
+        - Trust center as information resource
+        - Assessment inclusion patterns
+        - Resource inventory mechanisms
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
+        # Trust center assessment patterns
+        assessment_patterns = [
+            r'trust.*center.*assessment',
+            r'trust.*center.*information.*resource',
+            r'assess.*trust.*center',
+            r'inventory.*trust.*center',
+            r'trust.*center.*scope',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            for pattern in assessment_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Trust center assessment mechanism detected",
+                        description=f"Found trust center assessment pattern: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Ensure trust center included as information resource in cloud service offering assessment."
+                    ))
+                    break
+        
+        return findings
         # Example from FRR-VDR-08:
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)
