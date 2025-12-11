@@ -58,14 +58,14 @@ class FRR_PVA_02_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("CA-2", "Control Assessments"),
+        ("RA-5", "Vulnerability Monitoring and Scanning"),
+        ("SI-2", "Flaw Remediation"),
         ("CA-7", "Continuous Monitoring"),
-        ("CA-8", "Penetration Testing"),
     ]
     CODE_DETECTABLE = "No"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-AFR-04",  # Vulnerability management
     ]
     
     def __init__(self):

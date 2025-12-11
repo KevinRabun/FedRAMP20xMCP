@@ -59,13 +59,11 @@ class FRR_PVA_09_Analyzer(BaseFRRAnalyzer):
     IMPACT_HIGH = True
     NIST_CONTROLS = [
         ("CA-2", "Control Assessments"),
-        ("CA-7", "Continuous Monitoring"),
-        ("CA-8", "Penetration Testing"),
     ]
     CODE_DETECTABLE = "No"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-AFR-01",  # Assessor guidance provision
     ]
     
     def __init__(self):
