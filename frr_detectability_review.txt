@@ -1,0 +1,1025 @@
+========================================================================================================================
+FRR CODE DETECTABILITY REASSESSMENT
+========================================================================================================================
+
+Found 196 FRR analyzers marked as CODE_DETECTABLE = "No"
+
+
+========================================================================================================================
+FAMILY: ADS (10 requirements)
+========================================================================================================================
+
+[NO] | FRR-ADS-01 | Public Information
+      File: frr_ads_01.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers MUST publicly share up-to-date information about the _cloud service offering_ in both human-readable and _machine-readable_ formats, includi...
+
+[YES] | FRR-ADS-02 | Consistency Between Formats
+      File: frr_ads_02.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - Code: Check access control implementation
+        - IaC: Verify RBAC/IAM policies
+      Statement: Providers MUST use automation to ensure information remains consistent between human-readable and _machine-readable_ formats when _authorization data_...
+
+[PARTIAL] | FRR-ADS-03 | Detailed Service List
+      File: frr_ads_03.py
+      Assessment: PARTIALLY_DETECTABLE
+      Reasoning: Mixed requirement: 1 technical aspects but 2 process aspects. Some code detection possible.
+      Detection Opportunities:
+        - Code: Check access control implementation
+        - IaC: Verify RBAC/IAM policies
+      Statement: Providers MUST share a detailed list of specific services and their impact levels that are included in the _cloud service offering_ using clear featur...
+
+[YES] | FRR-ADS-04 | Uninterrupted Sharing
+      File: frr_ads_04.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - Code: Check access control implementation
+        - IaC: Verify RBAC/IAM policies
+      Statement: Providers MUST share _authorization data_ with all necessary parties without interruption, including at least FedRAMP, CISA, and agency customers. ...
+
+[YES] | FRR-ADS-05 | Responsible Information Sharing
+      File: frr_ads_05.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - Code: Check access control implementation
+        - IaC: Verify RBAC/IAM policies
+      Statement: Providers MUST provide sufficient information in _authorization data_ to support authorization decisions but SHOULD NOT include sensitive information ...
+
+[PARTIAL] | FRR-ADS-06 | USDA Connect Community Portal
+      File: frr_ads_06.py
+      Assessment: PARTIALLY_DETECTABLE
+      Reasoning: Mixed requirement: 1 technical aspects but 2 process aspects. Some code detection possible.
+      Detection Opportunities:
+        - Code: Check access control implementation
+        - IaC: Verify RBAC/IAM policies
+      Statement: Providers of FedRAMP Rev5 Authorized _cloud service offerings_ MUST share _authorization data_ via the USDA Connect Community Portal UNLESS they use a...
+
+[YES] | FRR-ADS-07 | FedRAMP-Compatible Trust Centers
+      File: frr_ads_07.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - Code: Check access control implementation
+        - IaC: Verify RBAC/IAM policies
+      Statement: Providers of FedRAMP 20x Authorized _cloud service offerings_ MUST use a FedRAMP-compatible _trust center_ to store and share _authorization data_ wit...
+
+[PARTIAL] | FRR-ADS-08 | Trust Center Migration Notification
+      File: frr_ads_08.py
+      Assessment: PARTIALLY_DETECTABLE
+      Reasoning: Mixed requirement: 1 technical aspects but 2 process aspects. Some code detection possible.
+      Detection Opportunities:
+        - Code: Check access control implementation
+        - IaC: Verify RBAC/IAM policies
+      Statement: Providers MUST notify all necessary parties when migrating to a _trust center_ and MUST provide information in their existing USDA Connect Community P...
+
+[PARTIAL] | FRR-ADS-09 | Historical Authorization Data
+      File: frr_ads_09.py
+      Assessment: PARTIALLY_DETECTABLE
+      Reasoning: Mixed requirement: 1 technical aspects but 2 process aspects. Some code detection possible.
+      Detection Opportunities:
+        - Code: Check access control implementation
+        - IaC: Verify RBAC/IAM policies
+      Statement: Providers MUST make historical versions of _authorization data_ available for three years to all necessary parties UNLESS otherwise specified by appli...
+
+[YES] | FRR-ADS-10 | Best Practices and Technical Assistance
+      File: frr_ads_10.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - Code: Check access control implementation
+        - IaC: Verify RBAC/IAM policies
+      Statement: Providers SHOULD follow FedRAMP’s best practices and technical assistance for sharing _authorization data_ where applicable....
+
+
+========================================================================================================================
+FAMILY: CCM (7 requirements)
+========================================================================================================================
+
+[YES] | FRR-CCM-01 | Ongoing Authorization Reports
+      File: frr_ccm_01.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - Code: Check access control implementation
+        - IaC: Verify RBAC/IAM policies
+      Statement: Providers MUST make an _Ongoing Authorization Report_ available to _all necessary parties_ every 3 months, in a consistent format that is human readab...
+
+[YES] | FRR-CCM-02 | Avoiding Simultaneous Reports
+      File: frr_ccm_02.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - Code: Check access control implementation
+        - IaC: Verify RBAC/IAM policies
+      Statement: Providers SHOULD establish a regular 3 month cycle for _Ongoing Authorization Reports_ that is spread out from the beginning, middle, or end of each q...
+
+[YES] | FRR-CCM-03 | Public Next Report Date
+      File: frr_ccm_03.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - Code: Check access control implementation
+        - IaC: Verify RBAC/IAM policies
+      Statement: Providers MUST publicly include the target date for their next _Ongoing Authorization Report_ with the _authorization data_ required by FRR-ADS-01....
+
+[YES] | FRR-CCM-04 | Feedback Mechanism
+      File: frr_ccm_04.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - Code: Check access control implementation
+        - IaC: Verify RBAC/IAM policies
+      Statement: Providers MUST establish and share an asynchronous mechanism for _all necessary parties_ to provide feedback or ask questions about each _Ongoing Auth...
+
+[YES] | FRR-CCM-05 | Anonymized Feedback Summary
+      File: frr_ccm_05.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - Code: Check access control implementation
+        - IaC: Verify RBAC/IAM policies
+      Statement: Providers MUST maintain an anonymized and desensitized summary of the feedback, questions, and answers about each _Ongoing Authorization Report_ as an...
+
+[YES] | FRR-CCM-06 | Protect Sensitive Information
+      File: frr_ccm_06.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - Code: Check access control implementation
+        - IaC: Verify RBAC/IAM policies
+      Statement: Providers MUST NOT irresponsibly disclose sensitive information in an _Ongoing Authorization Report_ that would _likely_ have an adverse effect on the...
+
+[YES] | FRR-CCM-07 | Responsible Public Sharing
+      File: frr_ccm_07.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - Code: Check access control implementation
+        - IaC: Verify RBAC/IAM policies
+      Statement: Providers MAY responsibly share some or all of the information an _Ongoing Authorization Report_ publicly or with other parties if the provider determ...
+
+
+========================================================================================================================
+FAMILY: FSI (16 requirements)
+========================================================================================================================
+
+[PARTIAL] | FRR-FSI-01 | Verified Emails
+      File: frr_fsi_01.py
+      Assessment: PARTIALLY_DETECTABLE
+      Reasoning: Mixed requirement: 1 technical aspects but 2 process aspects. Some code detection possible.
+      Detection Opportunities:
+        - Code: Verify auth mechanisms
+        - IaC: Check identity provider config
+      Statement: FedRAMP MUST send messages to cloud service providers using an official @fedramp.gov or @gsa.gov email address with properly configured Sender Policy ...
+
+[NO] | FRR-FSI-02 | Criticality Designators
+      File: frr_fsi_02.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: FedRAMP MUST convey the criticality of the message in the subject line using one of the following designators if the message requires an elevated resp...
+
+[NO] | FRR-FSI-03 | Sender Addresses
+      File: frr_fsi_03.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: FedRAMP MUST send Emergency and Emergency Test designated messages from fedramp_security@gsa.gov OR fedramp_security@fedramp.gov....
+
+[NO] | FRR-FSI-04 | Public Notice of Emergency Tests
+      File: frr_fsi_04.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: Pure process/documentation requirement with no technical implementation aspects
+      Statement: FedRAMP MUST post a public notice at least 10 business days in advance of sending an Emergency Test message; such notices MUST include explanation of ...
+
+[NO] | FRR-FSI-05 | Required Actions
+      File: frr_fsi_05.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: FedRAMP MUST clearly specify the required actions in the body of messages that require an elevated response....
+
+[NO] | FRR-FSI-06 | Response Timeframes
+      File: frr_fsi_06.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: FedRAMP MUST clearly specify the expected timeframe for completing required actions in the body of messages that require an elevated response; timefra...
+
+[YES] | FRR-FSI-07 | Corrective Actions
+      File: frr_fsi_07.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - Code: Check access control implementation
+        - IaC: Verify RBAC/IAM policies
+      Statement: FedRAMP MUST clearly specify the corrective actions that will result from failure to complete the required actions in the body of messages that requir...
+
+[NO] | FRR-FSI-08 | Response Metrics
+      File: frr_fsi_08.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: FedRAMP MAY track and publicly share the time required by cloud service providers to take the actions specified in messages that require an elevated r...
+
+[NO] | FRR-FSI-09 | FedRAMP Security Inbox
+      File: frr_fsi_09.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers MUST establish and maintain an email address to receive messages from FedRAMP; this inbox is a _FedRAMP Security Inbox_ (FSI)....
+
+[NO] | FRR-FSI-10 | Receiving Messages
+      File: frr_fsi_10.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers MUST treat any email originating from an @fedramp.gov or @gsa.gov email address as if it was sent from FedRAMP by default; if such a message...
+
+[NO] | FRR-FSI-11 | Response
+      File: frr_fsi_11.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers MUST receive and respond to email messages from FedRAMP without disruption and without requiring additional actions from FedRAMP....
+
+[NO] | FRR-FSI-12 | Notification of Changes
+      File: frr_fsi_12.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers MUST immediately notify FedRAMP of any changes in addressing for their _FedRAMP Security Inbox_ by emailing info@fedramp.gov with the name a...
+
+[NO] | FRR-FSI-13 | Acknowledgment of Receipt
+      File: frr_fsi_13.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers SHOULD _promptly_ and automatically acknowledge the receipt of messages received from FedRAMP in their _FedRAMP Security Inbox_....
+
+[NO] | FRR-FSI-14 | Required Response for Emergency Messages
+      File: frr_fsi_14.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers MUST complete the required actions in Emergency or Emergency Test designated messages sent by FedRAMP within the timeframe included in the m...
+
+[NO] | FRR-FSI-15 | Routing
+      File: frr_fsi_15.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers MUST route Emergency designated messages sent by FedRAMP to a senior security official for their awareness....
+
+[NO] | FRR-FSI-16 | Recommended Response for Important Messages
+      File: frr_fsi_16.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers SHOULD complete the required actions in Important designated messages sent by FedRAMP within the timeframe specified in the message....
+
+
+========================================================================================================================
+FAMILY: ICP (9 requirements)
+========================================================================================================================
+
+[YES] | FRR-ICP-01 | Incident Reporting to FedRAMP
+      File: frr_icp_01.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - Code: Check incident logging
+        - IaC: Verify incident response resources
+      Statement: Providers MUST responsibly report _incidents_ to FedRAMP within 1 hour of identification by sending an email to fedramp_security@fedramp.gov or fedram...
+
+[YES] | FRR-ICP-02 | Incident Reporting to Agencies
+      File: frr_icp_02.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - Code: Check incident logging
+        - IaC: Verify incident response resources
+      Statement: Providers MUST responsibly report _incidents_ to all _agency_ customers within 1 hour of identification using the _incident_ communications points of ...
+
+[YES] | FRR-ICP-03 | Incident Reporting to CISA
+      File: frr_icp_03.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - Code: Check incident logging
+        - IaC: Verify incident response resources
+      Statement: Providers MUST responsibly report _incidents_ to CISA within 1 hour of identification if the incident is confirmed or suspected to be the result of an...
+
+[YES] | FRR-ICP-04 | Incident Updates
+      File: frr_icp_04.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - Code: Check incident logging
+        - IaC: Verify incident response resources
+      Statement: Providers MUST update _all necessary parties_, including at least FedRAMP, CISA (if applicable), and all _agency_ customers, at least once per calenda...
+
+[YES] | FRR-ICP-05 | Incident Report Availability
+      File: frr_icp_05.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - Code: Check incident logging
+        - IaC: Verify incident response resources
+      Statement: Providers MUST make _incident_ report information available in their secure FedRAMP repository (such as USDA Connect) or _trust center_....
+
+[YES] | FRR-ICP-06 | Responsible Disclosure
+      File: frr_icp_06.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - Code: Check incident logging
+        - IaC: Verify incident response resources
+      Statement: Providers MUST NOT irresponsibly disclose specific sensitive information about _incidents_ that would _likely_ increase the impact of the _incident_, ...
+
+[YES] | FRR-ICP-07 | Final Incident Report
+      File: frr_icp_07.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - Code: Check incident logging
+        - IaC: Verify incident response resources
+      Statement: Providers MUST provide a final report once the _incident_ is resolved and recovery is complete that describes at least:...
+
+[YES] | FRR-ICP-08 | Automated Reporting
+      File: frr_icp_08.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 2 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - CI/CD: Detect automation steps
+        - IaC: Check automated deployments
+        - Code: Check incident logging
+        - IaC: Verify incident response resources
+      Statement: Providers SHOULD use automated mechanisms for reporting incidents and providing updates to all necessary parties (including CISA)....
+
+[YES] | FRR-ICP-09 | Human-Readable and Machine-Readable Formats
+      File: frr_icp_09.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - Code: Check incident logging
+        - IaC: Verify incident response resources
+      Statement: Providers SHOULD make _incident_ report information available in consistent human-readable and _machine-readable_ formats....
+
+
+========================================================================================================================
+FAMILY: KSI (2 requirements)
+========================================================================================================================
+
+[NO] | FRR-KSI-01 | Application of Key Security Indicators
+      File: frr_ksi_01.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Cloud service providers SHOULD apply ALL Key Security Indicators to ALL aspects of their _cloud service offering_ that are within the FedRAMP Minimum ...
+
+[NO] | FRR-KSI-02 | Implementation Summaries
+      File: frr_ksi_02.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers MUST maintain simple high-level summaries of at least the following for each Key Security Indicator:...
+
+
+========================================================================================================================
+FAMILY: MAS (5 requirements)
+========================================================================================================================
+
+[YES] | FRR-MAS-01 | Cloud Service Offering Identification
+      File: frr_mas_01.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - Code: Check access control implementation
+        - IaC: Verify RBAC/IAM policies
+      Statement: Providers MUST identify a set of _information resources_ to assess for FedRAMP authorization that includes all _information resources_ that are _likel...
+
+[YES] | FRR-MAS-02 | Third-Party Information Resources
+      File: frr_mas_02.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - IaC: Check configuration management
+        - Code: Verify config security
+      Statement: Providers MUST include the configuration and usage of _third-party information resources_, ONLY IF _FRR-MAS-01_ APPLIES....
+
+[YES] | FRR-MAS-03 | Non-FedRAMP Authorized Third-Party Information Resources
+      File: frr_mas_03.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - IaC: Check configuration management
+        - Code: Verify config security
+      Statement: Providers MUST clearly identify and document the justification, mitigation measures, compensating controls, and potential impact to _federal customer ...
+
+[NO] | FRR-MAS-04 | Metadata Inclusion
+      File: frr_mas_04.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers MUST include metadata (including metadata about _federal customer data_), ONLY IF _FRR-MAS-01_ APPLIES....
+
+[NO] | FRR-MAS-05 | Information Flows and Impact Levels
+      File: frr_mas_05.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers MUST clearly identify, document, and explain information flows and impact levels for ALL _information resources_, ONLY IF _FRR-MAS-01_ APPLI...
+
+
+========================================================================================================================
+FAMILY: PVA (18 requirements)
+========================================================================================================================
+
+[YES] | FRR-PVA-01 | Persistent Validation
+      File: frr_pva_01.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - CI/CD: Verify vulnerability scanning in pipeline
+        - IaC: Check security scanning tools
+      Statement: Providers MUST _persistently_ perform validation of their Key Security Indicators following the processes and cycles documented for their _cloud servi...
+
+[PARTIAL] | FRR-PVA-02 | Failures As Vulnerabilities
+      File: frr_pva_02.py
+      Assessment: PARTIALLY_DETECTABLE
+      Reasoning: Mixed requirement: 1 technical aspects but 2 process aspects. Some code detection possible.
+      Detection Opportunities:
+        - CI/CD: Verify vulnerability scanning in pipeline
+        - IaC: Check security scanning tools
+      Statement: Providers MUST treat failures detected during _persistent validation_ and failures of the _persistent validation_ process as _vulnerabilities_, then f...
+
+[PARTIAL] | FRR-PVA-03 | Report Persistent Validation
+      File: frr_pva_03.py
+      Assessment: PARTIALLY_DETECTABLE
+      Reasoning: Mixed requirement: 1 technical aspects but 2 process aspects. Some code detection possible.
+      Detection Opportunities:
+        - CI/CD: Verify vulnerability scanning in pipeline
+        - IaC: Check security scanning tools
+      Statement: Providers MUST include _persistent validation_ activity in the reports on _vulnerability detection_ and _response_ activity required by the FedRAMP Vu...
+
+[NO] | FRR-PVA-04 | Track Significant Changes
+      File: frr_pva_04.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: Pure process/documentation requirement with no technical implementation aspects
+      Statement: Providers MUST track _significant changes_ that impact their Key Security Indicator goals and _validation_ processes while following the requirements ...
+
+[PARTIAL] | FRR-PVA-05 | Independent Assessment
+      File: frr_pva_05.py
+      Assessment: PARTIALLY_DETECTABLE
+      Reasoning: Mixed requirement: 1 technical aspects but 5 process aspects. Some code detection possible.
+      Detection Opportunities:
+        - Code: Check access control implementation
+        - IaC: Verify RBAC/IAM policies
+      Statement: Providers MUST have the implementation of their goals and validation processes assessed by a FedRAMP-recognized independent assessor OR by FedRAMP dir...
+
+[PARTIAL] | FRR-PVA-06 | Complete Validation Assessment
+      File: frr_pva_06.py
+      Assessment: PARTIALLY_DETECTABLE
+      Reasoning: Mixed requirement: 1 technical aspects but 3 process aspects. Some code detection possible.
+      Detection Opportunities:
+        - IaC: Check configuration management
+        - Code: Verify config security
+      Statement: Providers MUST ensure a complete assessment of _validation_ procedures (including underlying code, pipelines, configurations, automation tools, etc.) ...
+
+[NO] | FRR-PVA-07 | Provide Technical Evidence
+      File: frr_pva_07.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers SHOULD provide technical explanations, demonstrations, and other relevant supporting information to _all necessary assessors_ for the techni...
+
+[NO] | FRR-PVA-08 | Receiving Assessor Advice
+      File: frr_pva_08.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: Pure process/documentation requirement with no technical implementation aspects
+      Statement: Providers MAY ask for and accept advice from their assessor during assessment regarding techniques and procedures that will improve their security pos...
+
+[NO] | FRR-PVA-09 | Assessors May Advise
+      File: frr_pva_09.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: Pure process/documentation requirement with no technical implementation aspects
+      Statement: Assessors MAY share advice with providers they are assessing about techniques and procedures that will improve their security posture or the effective...
+
+[NO] | FRR-PVA-10 | Evaluate Validation Processes
+      File: frr_pva_10.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Assessors MUST evaluate the underlying processes (both _machine-based_ and non-_machine-based_) that providers use to _validate_ Key Security Indicato...
+
+[NO] | FRR-PVA-11 | Assess Process Implementation
+      File: frr_pva_11.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Assessors MUST evaluate the implementation of processes derived from Key Security Indicators to determine whether or not the provider has accurately d...
+
+[NO] | FRR-PVA-12 | Assess Outcome Consistency
+      File: frr_pva_12.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Assessors MUST evaluate whether or not the underlying processes are consistently creating the desired security outcome documented by the provider....
+
+[NO] | FRR-PVA-13 | Mixed Methods Evaluation
+      File: frr_pva_13.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Assessors MUST perform evaluation using a combination of quantitative and expert qualitative assessment as appropriate AND document which is applied t...
+
+[NO] | FRR-PVA-14 | Engage Provider Experts
+      File: frr_pva_14.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: Pure process/documentation requirement with no technical implementation aspects
+      Statement: Assessors SHOULD engage provider experts in discussion to understand the decisions made by the provider and inform expert qualitative assessment, and ...
+
+[PARTIAL] | FRR-PVA-15 | Avoid Static Evidence
+      File: frr_pva_15.py
+      Assessment: PARTIALLY_DETECTABLE
+      Reasoning: Mixed requirement: 1 technical aspects but 2 process aspects. Some code detection possible.
+      Detection Opportunities:
+        - IaC: Check configuration management
+        - Code: Verify config security
+      Statement: Assessors MUST NOT rely on screenshots, configuration dumps, or other static output as evidence EXCEPT when evaluating the accuracy and reliability of...
+
+[NO] | FRR-PVA-16 | Verify Procedure Adherence
+      File: frr_pva_16.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: Pure process/documentation requirement with no technical implementation aspects
+      Statement: Assessors MUST assess whether or not procedures are consistently followed, including the processes in place to ensure this occurs, without relying sol...
+
+[PARTIAL] | FRR-PVA-17 | Deliver Assessment Summary
+      File: frr_pva_17.py
+      Assessment: PARTIALLY_DETECTABLE
+      Reasoning: Mixed requirement: 1 technical aspects but 3 process aspects. Some code detection possible.
+      Detection Opportunities:
+        - Code: Check access control implementation
+        - IaC: Verify RBAC/IAM policies
+      Statement: Assessors MUST deliver a high-level summary of their assessment process and findings for each Key Security Indicator; this summary will be included in...
+
+[PARTIAL] | FRR-PVA-18 | No Overall Recommendation
+      File: frr_pva_18.py
+      Assessment: PARTIALLY_DETECTABLE
+      Reasoning: Mixed requirement: 1 technical aspects but 2 process aspects. Some code detection possible.
+      Detection Opportunities:
+        - Code: Check access control implementation
+        - IaC: Verify RBAC/IAM policies
+      Statement: Assessors MUST NOT deliver an overall recommendation on whether or not the _cloud service offering_ meets the requirements for FedRAMP authorization....
+
+
+========================================================================================================================
+FAMILY: RSC (10 requirements)
+========================================================================================================================
+
+[NO] | FRR-RSC-01 | Top-Level Administrative Accounts Guidance
+      File: frr_rsc_01.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers MUST create and maintain guidance that includes instructions on how to securely access, configure, operate, and decommission _top-level admi...
+
+[NO] | FRR-RSC-02 | Top-Level Administrative Accounts Security Settings Guidance
+      File: frr_rsc_02.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers MUST create and maintain guidance that explains security-related settings that can be operated only by _top-level administrative accounts_ a...
+
+[NO] | FRR-RSC-03 | Privileged Accounts Security Settings Guidance
+      File: frr_rsc_03.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers SHOULD create and maintain guidance that explains security-related settings that can be operated only by _privileged accounts_ and their sec...
+
+[NO] | FRR-RSC-04 | Secure Defaults on Provisioning
+      File: frr_rsc_04.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers SHOULD set all settings to their recommended secure defaults for _top-level administrative accounts_ and _privileged accounts_ when initiall...
+
+[NO] | FRR-RSC-05 | Comparison Capability
+      File: frr_rsc_05.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers SHOULD offer the capability to compare all current settings for _top-level administrative accounts_ and _privileged accounts_ to the recomme...
+
+[NO] | FRR-RSC-06 | Export Capability
+      File: frr_rsc_06.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers SHOULD offer the capability to export all security settings in a _machine-readable_ format....
+
+[YES] | FRR-RSC-07 | API Capability
+      File: frr_rsc_07.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - Code: Check API security implementations
+        - IaC: Verify API gateway config
+      Statement: Providers SHOULD offer the capability to view and adjust security settings via an API or similar capability....
+
+[YES] | FRR-RSC-08 | Machine-Readable Guidance
+      File: frr_rsc_08.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - IaC: Check configuration management
+        - Code: Verify config security
+      Statement: Providers SHOULD provide recommended secure configuration guidance in a _machine-readable_ format that can be used by customers or third-party tools t...
+
+[YES] | FRR-RSC-09 | Publish Guidance
+      File: frr_rsc_09.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - IaC: Check configuration management
+        - Code: Verify config security
+      Statement: Providers SHOULD make recommended secure configuration guidance available publicly....
+
+[NO] | FRR-RSC-10 | Versioning and Release History
+      File: frr_rsc_10.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers SHOULD provide versioning and a release history for recommended secure default settings for _top-level administrative accounts_ and _privile...
+
+
+========================================================================================================================
+FAMILY: SCN (10 requirements)
+========================================================================================================================
+
+[NO] | FRR-SCN-01 | Notifications
+      File: frr_scn_01.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: Pure process/documentation requirement with no technical implementation aspects
+      Statement: Providers MUST notify all necessary parties when Significant Change Notifications are required, including at least FedRAMP and all agency customers. P...
+
+[NO] | FRR-SCN-02 | Procedures and Documentation
+      File: frr_scn_02.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers MUST follow the procedures documented in their security plan to plan, evaluate, test, perform, assess, and document changes....
+
+[NO] | FRR-SCN-03 | Evaluate Changes
+      File: frr_scn_03.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers MUST evaluate and type label all _significant changes_, then follow FedRAMP requirements for the type....
+
+[YES] | FRR-SCN-04 | N/A
+      File: frr_scn_04.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - Code: Verify audit logging
+        - IaC: Check audit trail config
+      Statement: Providers MUST maintain auditable records of these activities and make them available to all necessary parties....
+
+[NO] | FRR-SCN-05 | N/A
+      File: frr_scn_05.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers MUST keep historical Significant Change Notifications available to all necessary parties at least until the service completes its next annua...
+
+[NO] | FRR-SCN-06 | N/A
+      File: frr_scn_06.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: All parties SHOULD follow FedRAMP's best practices and technical assistance on _significant change_ assessment and notification where applicable....
+
+[NO] | FRR-SCN-07 | N/A
+      File: frr_scn_07.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers MAY notify necessary parties in a variety of ways as long as the mechanism for notification is clearly documented and easily accessible....
+
+[YES] | FRR-SCN-08 | N/A
+      File: frr_scn_08.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - Code: Verify audit logging
+        - IaC: Check audit trail config
+      Statement: Providers MUST make ALL Significant Change Notifications and related audit records available in similar human-readable and compatible _machine-readabl...
+
+[NO] | FRR-SCN-09 | N/A
+      File: frr_scn_09.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers MUST include at least the following information in Significant Change Notifications:...
+
+[NO] | FRR-SCN-10 | N/A
+      File: frr_scn_10.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers MAY include additional relevant information in Significant Change Notifications....
+
+
+========================================================================================================================
+FAMILY: UCM (3 requirements)
+========================================================================================================================
+
+[NO] | FRR-UCM-01 | Cryptographic Module Documentation
+      File: frr_ucm_01.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers MUST document the cryptographic modules used in each service (or groups of services that use the same modules) where cryptographic services ...
+
+[NO] | FRR-UCM-03 | Update Streams (Moderate)
+      File: frr_ucm_03.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers SHOULD use cryptographic modules or update streams of cryptographic modules with active validations under the NIST Cryptographic Module Vali...
+
+[PARTIAL] | FRR-UCM-04 | Update Streams (High)
+      File: frr_ucm_04.py
+      Assessment: PARTIALLY_DETECTABLE
+      Reasoning: Implicit technical requirement - may be detectable through infrastructure or configuration analysis
+      Detection Opportunities:
+        - IaC: Analyze resource configurations
+        - Code: Check implementation patterns
+      Statement: Providers MUST use cryptographic modules or update streams of cryptographic modules with active validations under the NIST Cryptographic Module Valida...
+
+
+========================================================================================================================
+FAMILY: VDR (9 requirements)
+========================================================================================================================
+
+[YES] | FRR-VDR-02 | Vulnerability Response
+      File: frr_vdr_02.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - CI/CD: Verify vulnerability scanning in pipeline
+        - IaC: Check security scanning tools
+      Statement: Providers MUST systematically, _persistently_, and _promptly_ track, evaluate, monitor, _mitigate_, _remediate_, assess exploitation of, report, and o...
+
+[YES] | FRR-VDR-03 | Timeframe Requirements
+      File: frr_vdr_03.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - CI/CD: Verify vulnerability scanning in pipeline
+        - IaC: Check security scanning tools
+      Statement: Providers MUST follow the requirements and recommendations outlined in FRR-VDR-TF regarding timeframes for _vulnerability detection_ and _response_....
+
+[YES] | FRR-VDR-04 | Sampling Identical Resources
+      File: frr_vdr_04.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - CI/CD: Verify vulnerability scanning in pipeline
+        - IaC: Check security scanning tools
+      Statement: Providers MAY sample effectively identical _information resources_, especially _machine-based_ _information resources_, when performing _vulnerability...
+
+[YES] | FRR-VDR-05 | Grouping Vulnerabilities
+      File: frr_vdr_05.py
+      Assessment: CODE_DETECTABLE
+      Reasoning: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+      Detection Opportunities:
+        - CI/CD: Verify vulnerability scanning in pipeline
+        - IaC: Check security scanning tools
+      Statement: Providers SHOULD evaluate _detected vulnerabilities_, considering the context of the _cloud service offering_, to identify logical groupings of affect...
+
+[NO] | FRR-VDR-06 | Evaluate False Positives
+      File: frr_vdr_06.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers SHOULD evaluate _detected vulnerabilities_, considering the context of the _cloud service offering_, to determine if they are _false positiv...
+
+[NO] | FRR-VDR-07 | Evaluate Exploitability
+      File: frr_vdr_07.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers MUST evaluate _detected vulnerabilities_, considering the context of the _cloud service offering_, to determine if they are _likely exploita...
+
+[NO] | FRR-VDR-09 | Estimate Potential Adverse Impact
+      File: frr_vdr_09.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers MUST evaluate _detected vulnerabilities_, considering the context of the _cloud service offering_, to estimate the _potential adverse impact...
+
+[NO] | FRR-VDR-10 | Evaluation Factors
+      File: frr_vdr_10.py
+      Assessment: NOT_DETECTABLE
+      Reasoning: No clear technical implementation aspects detectable in code, IaC, or CI/CD
+      Statement: Providers SHOULD consider at least the following factors when considering the context of the _cloud service offering_ to evaluate _detected vulnerabil...
+
+[PARTIAL] | FRR-VDR-11 | Documenting Reasons
+      File: frr_vdr_11.py
+      Assessment: PARTIALLY_DETECTABLE
+      Reasoning: Mixed requirement: 1 technical aspects but 4 process aspects. Some code detection possible.
+      Detection Opportunities:
+        - Code: Check access control implementation
+        - IaC: Verify RBAC/IAM policies
+      Statement: Providers MUST document the reason and resulting implications for their customers when choosing not to meet FedRAMP recommendations in this process; t...
+
+
+========================================================================================================================
+SUMMARY
+========================================================================================================================
+
+Total Reviewed: 99
+Could Be Code-Detectable: 35 (35.4%)
+Partially Code-Detectable: 14 (14.1%)
+Truly Not Detectable: 50 (50.5%)
+
+
+========================================================================================================================
+RECOMMENDATIONS: CHANGE TO CODE_DETECTABLE = True
+========================================================================================================================
+
+The following 35 FRR analyzers SHOULD be changed to CODE_DETECTABLE = True:
+
+  FRR-ADS-02 (frr_ads_02.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: Code: Check access control implementation, IaC: Verify RBAC/IAM policies
+
+  FRR-ADS-04 (frr_ads_04.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: Code: Check access control implementation, IaC: Verify RBAC/IAM policies
+
+  FRR-ADS-05 (frr_ads_05.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: Code: Check access control implementation, IaC: Verify RBAC/IAM policies
+
+  FRR-ADS-07 (frr_ads_07.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: Code: Check access control implementation, IaC: Verify RBAC/IAM policies
+
+  FRR-ADS-10 (frr_ads_10.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: Code: Check access control implementation, IaC: Verify RBAC/IAM policies
+
+  FRR-CCM-01 (frr_ccm_01.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: Code: Check access control implementation, IaC: Verify RBAC/IAM policies
+
+  FRR-CCM-02 (frr_ccm_02.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: Code: Check access control implementation, IaC: Verify RBAC/IAM policies
+
+  FRR-CCM-03 (frr_ccm_03.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: Code: Check access control implementation, IaC: Verify RBAC/IAM policies
+
+  FRR-CCM-04 (frr_ccm_04.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: Code: Check access control implementation, IaC: Verify RBAC/IAM policies
+
+  FRR-CCM-05 (frr_ccm_05.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: Code: Check access control implementation, IaC: Verify RBAC/IAM policies
+
+  FRR-CCM-06 (frr_ccm_06.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: Code: Check access control implementation, IaC: Verify RBAC/IAM policies
+
+  FRR-CCM-07 (frr_ccm_07.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: Code: Check access control implementation, IaC: Verify RBAC/IAM policies
+
+  FRR-FSI-07 (frr_fsi_07.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: Code: Check access control implementation, IaC: Verify RBAC/IAM policies
+
+  FRR-ICP-01 (frr_icp_01.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: Code: Check incident logging, IaC: Verify incident response resources
+
+  FRR-ICP-02 (frr_icp_02.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: Code: Check incident logging, IaC: Verify incident response resources
+
+  FRR-ICP-03 (frr_icp_03.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: Code: Check incident logging, IaC: Verify incident response resources
+
+  FRR-ICP-04 (frr_icp_04.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: Code: Check incident logging, IaC: Verify incident response resources
+
+  FRR-ICP-05 (frr_icp_05.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: Code: Check incident logging, IaC: Verify incident response resources
+
+  FRR-ICP-06 (frr_icp_06.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: Code: Check incident logging, IaC: Verify incident response resources
+
+  FRR-ICP-07 (frr_icp_07.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: Code: Check incident logging, IaC: Verify incident response resources
+
+  FRR-ICP-08 (frr_icp_08.py)
+    Reason: Technical requirement with 2 detectable aspects in code, IaC, or CI/CD
+    Opportunities: CI/CD: Detect automation steps, IaC: Check automated deployments
+
+  FRR-ICP-09 (frr_icp_09.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: Code: Check incident logging, IaC: Verify incident response resources
+
+  FRR-MAS-01 (frr_mas_01.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: Code: Check access control implementation, IaC: Verify RBAC/IAM policies
+
+  FRR-MAS-02 (frr_mas_02.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: IaC: Check configuration management, Code: Verify config security
+
+  FRR-MAS-03 (frr_mas_03.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: IaC: Check configuration management, Code: Verify config security
+
+  FRR-PVA-01 (frr_pva_01.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: CI/CD: Verify vulnerability scanning in pipeline, IaC: Check security scanning tools
+
+  FRR-RSC-07 (frr_rsc_07.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: Code: Check API security implementations, IaC: Verify API gateway config
+
+  FRR-RSC-08 (frr_rsc_08.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: IaC: Check configuration management, Code: Verify config security
+
+  FRR-RSC-09 (frr_rsc_09.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: IaC: Check configuration management, Code: Verify config security
+
+  FRR-SCN-04 (frr_scn_04.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: Code: Verify audit logging, IaC: Check audit trail config
+
+  FRR-SCN-08 (frr_scn_08.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: Code: Verify audit logging, IaC: Check audit trail config
+
+  FRR-VDR-02 (frr_vdr_02.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: CI/CD: Verify vulnerability scanning in pipeline, IaC: Check security scanning tools
+
+  FRR-VDR-03 (frr_vdr_03.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: CI/CD: Verify vulnerability scanning in pipeline, IaC: Check security scanning tools
+
+  FRR-VDR-04 (frr_vdr_04.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: CI/CD: Verify vulnerability scanning in pipeline, IaC: Check security scanning tools
+
+  FRR-VDR-05 (frr_vdr_05.py)
+    Reason: Technical requirement with 1 detectable aspects in code, IaC, or CI/CD
+    Opportunities: CI/CD: Verify vulnerability scanning in pipeline, IaC: Check security scanning tools
+
+
+
+========================================================================================================================
+RECOMMENDATIONS: CONSIDER PARTIAL IMPLEMENTATION
+========================================================================================================================
+
+The following 14 FRR analyzers have PARTIAL code detectability:
+
+  FRR-ADS-03 (frr_ads_03.py)
+    Reason: Mixed requirement: 1 technical aspects but 2 process aspects. Some code detection possible.
+    Opportunities: Code: Check access control implementation, IaC: Verify RBAC/IAM policies
+
+  FRR-ADS-06 (frr_ads_06.py)
+    Reason: Mixed requirement: 1 technical aspects but 2 process aspects. Some code detection possible.
+    Opportunities: Code: Check access control implementation, IaC: Verify RBAC/IAM policies
+
+  FRR-ADS-08 (frr_ads_08.py)
+    Reason: Mixed requirement: 1 technical aspects but 2 process aspects. Some code detection possible.
+    Opportunities: Code: Check access control implementation, IaC: Verify RBAC/IAM policies
+
+  FRR-ADS-09 (frr_ads_09.py)
+    Reason: Mixed requirement: 1 technical aspects but 2 process aspects. Some code detection possible.
+    Opportunities: Code: Check access control implementation, IaC: Verify RBAC/IAM policies
+
+  FRR-FSI-01 (frr_fsi_01.py)
+    Reason: Mixed requirement: 1 technical aspects but 2 process aspects. Some code detection possible.
+    Opportunities: Code: Verify auth mechanisms, IaC: Check identity provider config
+
+  FRR-PVA-02 (frr_pva_02.py)
+    Reason: Mixed requirement: 1 technical aspects but 2 process aspects. Some code detection possible.
+    Opportunities: CI/CD: Verify vulnerability scanning in pipeline, IaC: Check security scanning tools
+
+  FRR-PVA-03 (frr_pva_03.py)
+    Reason: Mixed requirement: 1 technical aspects but 2 process aspects. Some code detection possible.
+    Opportunities: CI/CD: Verify vulnerability scanning in pipeline, IaC: Check security scanning tools
+
+  FRR-PVA-05 (frr_pva_05.py)
+    Reason: Mixed requirement: 1 technical aspects but 5 process aspects. Some code detection possible.
+    Opportunities: Code: Check access control implementation, IaC: Verify RBAC/IAM policies
+
+  FRR-PVA-06 (frr_pva_06.py)
+    Reason: Mixed requirement: 1 technical aspects but 3 process aspects. Some code detection possible.
+    Opportunities: IaC: Check configuration management, Code: Verify config security
+
+  FRR-PVA-15 (frr_pva_15.py)
+    Reason: Mixed requirement: 1 technical aspects but 2 process aspects. Some code detection possible.
+    Opportunities: IaC: Check configuration management, Code: Verify config security
+
+  FRR-PVA-17 (frr_pva_17.py)
+    Reason: Mixed requirement: 1 technical aspects but 3 process aspects. Some code detection possible.
+    Opportunities: Code: Check access control implementation, IaC: Verify RBAC/IAM policies
+
+  FRR-PVA-18 (frr_pva_18.py)
+    Reason: Mixed requirement: 1 technical aspects but 2 process aspects. Some code detection possible.
+    Opportunities: Code: Check access control implementation, IaC: Verify RBAC/IAM policies
+
+  FRR-UCM-04 (frr_ucm_04.py)
+    Reason: Implicit technical requirement - may be detectable through infrastructure or configuration analysis
+    Opportunities: IaC: Analyze resource configurations, Code: Check implementation patterns
+
+  FRR-VDR-11 (frr_vdr_11.py)
+    Reason: Mixed requirement: 1 technical aspects but 4 process aspects. Some code detection possible.
+    Opportunities: Code: Check access control implementation, IaC: Verify RBAC/IAM policies
+

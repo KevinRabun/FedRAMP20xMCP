@@ -24,7 +24,7 @@ async def test_cosmos_disable_local_auth_violation():
       name: 'cosmos-test'
       location: 'eastus'
       properties: {
-        disableLocalAuth: false  // ❌ VIOLATION - allows shared key auth
+        disableLocalAuth: false  // [FAIL] VIOLATION - allows shared key auth
         keyVaultKeyUri: 'https://kv-test.vault.azure.net/keys/cosmos-key/abc123'
       }
     }
@@ -47,7 +47,7 @@ async def test_cosmos_disable_local_auth_violation():
             violation_found = True
             assert 'disableLocalAuth: false' in violation['found']
             assert 'disableLocalAuth: true' in violation['expected']
-            print(f"✅ Detected: {violation['requirement']}")
+            print(f"[OK] Detected: {violation['requirement']}")
             print(f"   Expected: {violation['expected']}")
             print(f"   Found: {violation['found']}")
             print(f"   Fix: {violation['fix']}")
@@ -63,7 +63,7 @@ async def test_cosmos_disable_local_auth_compliant():
       name: 'cosmos-test'
       location: 'eastus'
       properties: {
-        disableLocalAuth: true  // ✅ COMPLIANT - enforces Azure AD
+        disableLocalAuth: true  // [OK] COMPLIANT - enforces Azure AD
         keyVaultKeyUri: 'https://kv-test.vault.azure.net/keys/cosmos-key/abc123'
       }
     }
@@ -88,7 +88,7 @@ async def test_cosmos_disable_local_auth_compliant():
     for compliant in result['compliant_values']:
         if 'Disable Local Auth' in compliant['requirement']:
             compliant_found = True
-            print(f"✅ Compliant: {compliant['requirement']}")
+            print(f"[OK] Compliant: {compliant['requirement']}")
             print(f"   Value: {compliant['value']}")
     
     assert compliant_found, "Should detect disableLocalAuth: true as compliant"
@@ -118,7 +118,7 @@ async def test_cosmos_disable_local_auth_missing():
     for warning in result['warnings']:
         if 'Disable Local Auth' in warning['requirement']:
             warning_found = True
-            print(f"⚠️  Warning: {warning['requirement']}")
+            print(f"[WARN]  Warning: {warning['requirement']}")
             print(f"   Expected: {warning['expected']}")
             print(f"   Found: {warning['found']}")
             print(f"   Note: {warning['note']}")
@@ -136,7 +136,7 @@ async def test_terraform_cosmos_local_auth_violation():
       resource_group_name = azurerm_resource_group.rg.name
       offer_type          = "Standard"
       
-      local_authentication_disabled = false  # ❌ VIOLATION
+      local_authentication_disabled = false  # [FAIL] VIOLATION
       
       consistency_policy {
         consistency_level = "Session"
@@ -155,7 +155,7 @@ async def test_terraform_cosmos_local_auth_violation():
         if 'Disable Local Auth' in violation['requirement']:
             violation_found = True
             assert 'local_authentication_disabled = false' in violation['found']
-            print(f"✅ Detected: {violation['requirement']}")
+            print(f"[OK] Detected: {violation['requirement']}")
             print(f"   Fix: {violation['fix']}")
     
     assert violation_found, "Should detect Terraform local_authentication_disabled = false"
@@ -171,7 +171,7 @@ async def test_terraform_cosmos_local_auth_compliant():
       resource_group_name = azurerm_resource_group.rg.name
       offer_type          = "Standard"
       
-      local_authentication_disabled = true  # ✅ COMPLIANT
+      local_authentication_disabled = true  # [OK] COMPLIANT
       
       consistency_policy {
         consistency_level = "Session"
@@ -189,7 +189,7 @@ async def test_terraform_cosmos_local_auth_compliant():
     for compliant in result['compliant_values']:
         if 'Disable Local Auth' in compliant['requirement']:
             compliant_found = True
-            print(f"✅ Compliant: {compliant['requirement']}")
+            print(f"[OK] Compliant: {compliant['requirement']}")
     
     assert compliant_found, "Should detect Terraform local_authentication_disabled = true as compliant"
     print("[PASS] Terraform local_authentication_disabled = true recognized\n")
@@ -205,7 +205,7 @@ async def test_storage_shared_key_compliant():
         name: 'Standard_ZRS'
       }
       properties: {
-        allowSharedKeyAccess: false  // ✅ COMPLIANT - disables shared key auth
+        allowSharedKeyAccess: false  // [OK] COMPLIANT - disables shared key auth
       }
     }
     """
@@ -220,7 +220,7 @@ async def test_storage_shared_key_compliant():
     for compliant in result['compliant_values']:
         if 'Storage Disable Shared Key' in compliant['requirement']:
             compliant_found = True
-            print(f"✅ Compliant: {compliant['requirement']}")
+            print(f"[OK] Compliant: {compliant['requirement']}")
     
     assert compliant_found, "Should detect Storage allowSharedKeyAccess: false as compliant"
     print("[PASS] Storage allowSharedKeyAccess: false recognized\n")
@@ -242,14 +242,14 @@ async def main():
         await test_storage_shared_key_compliant()
         
         print("="*70)
-        print("ALL TESTS PASSED ✓")
+        print("ALL TESTS PASSED [PASS]")
         print("="*70)
         
     except AssertionError as e:
-        print(f"\n❌ TEST FAILED: {e}")
+        print(f"\n[FAIL] TEST FAILED: {e}")
         sys.exit(1)
     except Exception as e:
-        print(f"\n❌ ERROR: {e}")
+        print(f"\n[FAIL] ERROR: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)

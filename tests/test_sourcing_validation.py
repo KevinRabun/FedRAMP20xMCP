@@ -219,7 +219,7 @@ async def test_implementation_examples_sourcing():
                 f"[FAIL] {req_id}: Missing requirement citation"
                 
         except Exception as e:
-            print(f"    ⚠ {req_id}: {str(e)}")
+            print(f"    [WARN] {req_id}: {str(e)}")
     
     print(f"\n  [PASS] Implementation examples properly sourced")
 
@@ -301,7 +301,7 @@ async def test_infrastructure_code_generation_sourcing():
             assert has_azure_resource, f"[FAIL] {iac_type}: Missing Azure resources"
             
         except Exception as e:
-            print(f"    ⚠ {iac_type}: {str(e)}")
+            print(f"    [WARN] {iac_type}: {str(e)}")
     
     print(f"\n  [PASS] Infrastructure code properly sourced")
 

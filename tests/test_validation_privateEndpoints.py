@@ -25,7 +25,7 @@ async def test_public_access_disabled_no_private_endpoints():
       location: 'eastus'
       sku: { name: 'Standard_GRS' }
       properties: {
-        publicNetworkAccess: 'Disabled'  // ❌ VIOLATION - no Private Endpoints!
+        publicNetworkAccess: 'Disabled'  // [FAIL] VIOLATION - no Private Endpoints!
         minimumTlsVersion: 'TLS1_2'
       }
     }
@@ -34,7 +34,7 @@ async def test_public_access_disabled_no_private_endpoints():
       name: 'cosmos-test'
       location: 'eastus'
       properties: {
-        publicNetworkAccess: 'Disabled'  // ❌ VIOLATION - no Private Endpoints!
+        publicNetworkAccess: 'Disabled'  // [FAIL] VIOLATION - no Private Endpoints!
         disableLocalAuth: true
         keyVaultKeyUri: 'https://kv-test.vault.azure.net/keys/cosmos-key/abc123'
       }
@@ -58,7 +58,7 @@ async def test_public_access_disabled_no_private_endpoints():
             violation_found = True
             assert 'NO Private Endpoints found' in violation['found']
             assert 'CRITICAL' == violation['severity']
-            print(f"✅ Detected: {violation['requirement']}")
+            print(f"[OK] Detected: {violation['requirement']}")
             print(f"   Severity: {violation['severity']}")
             print(f"   Found: {violation['found']}")
             print(f"   Fix: {violation['fix']}")
@@ -90,7 +90,7 @@ async def test_public_access_disabled_with_private_endpoints():
       location: 'eastus'
       sku: { name: 'Standard_GRS' }
       properties: {
-        publicNetworkAccess: 'Disabled'  // ✅ OK - Private Endpoints configured
+        publicNetworkAccess: 'Disabled'  // [OK] OK - Private Endpoints configured
         minimumTlsVersion: 'TLS1_2'
       }
     }
@@ -116,7 +116,7 @@ async def test_public_access_disabled_with_private_endpoints():
       name: 'cosmos-test'
       location: 'eastus'
       properties: {
-        publicNetworkAccess: 'Disabled'  // ✅ OK - Private Endpoints configured
+        publicNetworkAccess: 'Disabled'  // [OK] OK - Private Endpoints configured
         disableLocalAuth: true
         keyVaultKeyUri: 'https://kv-test.vault.azure.net/keys/cosmos-key/abc123'
       }
@@ -159,7 +159,7 @@ async def test_public_access_disabled_with_private_endpoints():
     for compliant in result['compliant_values']:
         if 'Private Endpoints' in compliant['requirement']:
             compliant_found = True
-            print(f"✅ Compliant: {compliant['requirement']}")
+            print(f"[OK] Compliant: {compliant['requirement']}")
             print(f"   Value: {compliant['value']}")
     
     assert compliant_found, "Should detect Private Endpoints as compliant"
@@ -176,7 +176,7 @@ async def test_terraform_no_private_endpoints():
       account_tier             = "Standard"
       account_replication_type = "GRS"
       
-      public_network_access_enabled = false  # ❌ VIOLATION - no Private Endpoints!
+      public_network_access_enabled = false  # [FAIL] VIOLATION - no Private Endpoints!
     }
     
     resource "azurerm_cosmosdb_account" "db" {
@@ -185,7 +185,7 @@ async def test_terraform_no_private_endpoints():
       resource_group_name = azurerm_resource_group.rg.name
       offer_type          = "Standard"
       
-      public_network_access_enabled = false  # ❌ VIOLATION - no Private Endpoints!
+      public_network_access_enabled = false  # [FAIL] VIOLATION - no Private Endpoints!
       local_authentication_disabled = true
     }
     """
@@ -201,7 +201,7 @@ async def test_terraform_no_private_endpoints():
         if 'Private Endpoints Required' in violation['requirement']:
             violation_found = True
             assert 'NO Private Endpoints found' in violation['found']
-            print(f"✅ Detected: {violation['requirement']}")
+            print(f"[OK] Detected: {violation['requirement']}")
             print(f"   Fix: {violation['fix']}")
     
     assert violation_found, "Should detect missing Terraform Private Endpoints"
@@ -234,7 +234,7 @@ async def test_terraform_with_private_endpoints():
       account_tier             = "Standard"
       account_replication_type = "GRS"
       
-      public_network_access_enabled = false  # ✅ OK - Private Endpoints configured
+      public_network_access_enabled = false  # [OK] OK - Private Endpoints configured
     }
     
     resource "azurerm_private_endpoint" "storage" {
@@ -262,7 +262,7 @@ async def test_terraform_with_private_endpoints():
     for compliant in result['compliant_values']:
         if 'Private Endpoints' in compliant['requirement']:
             compliant_found = True
-            print(f"✅ Compliant: {compliant['requirement']}")
+            print(f"[OK] Compliant: {compliant['requirement']}")
     
     assert compliant_found, "Should detect Terraform Private Endpoints as compliant"
     print("[PASS] Terraform Private Endpoints recognized as compliant\n")
@@ -276,7 +276,7 @@ async def test_public_access_enabled():
       location: 'eastus'
       sku: { name: 'Standard_GRS' }
       properties: {
-        publicNetworkAccess: 'Enabled'  // ❌ VIOLATION - public access enabled
+        publicNetworkAccess: 'Enabled'  // [FAIL] VIOLATION - public access enabled
         minimumTlsVersion: 'TLS1_2'
       }
     }
@@ -292,7 +292,7 @@ async def test_public_access_enabled():
     for violation in result['violations']:
         if 'Public Access Disabled' in violation['requirement']:
             violation_found = True
-            print(f"✅ Detected: {violation['requirement']}")
+            print(f"[OK] Detected: {violation['requirement']}")
     
     assert violation_found, "Should detect enabled public access as violation"
     print("[PASS] Enabled public access detected as violation\n")
@@ -313,14 +313,14 @@ async def main():
         await test_public_access_enabled()
         
         print("="*70)
-        print("ALL TESTS PASSED ✓")
+        print("ALL TESTS PASSED [PASS]")
         print("="*70)
         
     except AssertionError as e:
-        print(f"\n❌ TEST FAILED: {e}")
+        print(f"\n[FAIL] TEST FAILED: {e}")
         sys.exit(1)
     except Exception as e:
-        print(f"\n❌ ERROR: {e}")
+        print(f"\n[FAIL] ERROR: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)

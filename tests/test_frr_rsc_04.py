@@ -28,7 +28,7 @@ resource sqlServer 'Microsoft.Sql/servers@2021-11-01' = {
     # Check that we have a HIGH severity finding about insecure admin username
     high_findings = [f for f in findings if f.severity == Severity.HIGH and "default admin username" in f.title.lower()]
     assert len(high_findings) > 0, "Should have HIGH severity finding about default admin username"
-    print("✓ test_bicep_insecure_admin_username PASSED")
+    print("[PASS] test_bicep_insecure_admin_username PASSED")
 
 
 def test_bicep_missing_aad_auth():
@@ -47,7 +47,7 @@ resource sqlServer 'Microsoft.Sql/servers@2021-11-01' = {
     findings = analyzer.analyze_bicep(code, "main.bicep")
     assert len(findings) > 0, "Should detect missing Azure AD authentication"
     assert any("azure ad" in f.title.lower() for f in findings)
-    print("✓ test_bicep_missing_aad_auth PASSED")
+    print("[PASS] test_bicep_missing_aad_auth PASSED")
 
 
 def test_terraform_admin_without_mfa():
@@ -68,7 +68,7 @@ resource "aws_iam_user_policy_attachment" "admin_attach" {
     assert len(findings) > 0, "Should detect admin user without MFA"
     assert any("mfa" in f.title.lower() for f in findings)
     assert findings[0].severity == Severity.HIGH
-    print("✓ test_terraform_admin_without_mfa PASSED")
+    print("[PASS] test_terraform_admin_without_mfa PASSED")
 
 
 def test_terraform_weak_password_policy():
@@ -84,7 +84,7 @@ resource "aws_iam_account_password_policy" "strict" {
     findings = analyzer.analyze_terraform(code, "password_policy.tf")
     assert len(findings) > 0, "Should detect weak password length"
     assert any("password" in f.title.lower() for f in findings)
-    print("✓ test_terraform_weak_password_policy PASSED")
+    print("[PASS] test_terraform_weak_password_policy PASSED")
 
 
 def test_bicep_secure_config():
@@ -104,7 +104,7 @@ resource sqlServer 'Microsoft.Sql/servers@2021-11-01' = {
     findings = analyzer.analyze_bicep(code, "main.bicep")
     # Should not flag issues with secure config
     assert len([f for f in findings if f.severity == Severity.HIGH]) == 0, "Secure config should not have HIGH findings"
-    print("✓ test_bicep_secure_config PASSED")
+    print("[PASS] test_bicep_secure_config PASSED")
 
 
 def test_analyzer_metadata():
@@ -120,7 +120,7 @@ def test_analyzer_metadata():
     assert analyzer.IMPACT_HIGH == True, "Impact High should be True"
     assert analyzer.CODE_DETECTABLE == "Partial", "Code detectable should be Partial"
     
-    print("✓ test_analyzer_metadata PASSED")
+    print("[PASS] test_analyzer_metadata PASSED")
 
 
 def test_evidence_automation_recommendations():
@@ -133,7 +133,7 @@ def test_evidence_automation_recommendations():
     assert len(recommendations['evidence_artifacts']) > 0, "Should have evidence artifacts"
     assert len(recommendations['manual_validation_steps']) > 0, "Should have validation steps"
     
-    print("✓ test_evidence_automation_recommendations PASSED")
+    print("[PASS] test_evidence_automation_recommendations PASSED")
 
 
 def run_all_tests():
@@ -160,10 +160,10 @@ def run_all_tests():
             test_func()
             passed += 1
         except AssertionError as e:
-            print(f"✗ {test_name} FAILED: {e}")
+            print(f"[FAIL] {test_name} FAILED: {e}")
             failed += 1
         except Exception as e:
-            print(f"✗ {test_name} ERROR: {e}")
+            print(f"[FAIL] {test_name} ERROR: {e}")
             failed += 1
     
     print("\n" + "=" * 70)
@@ -171,9 +171,9 @@ def run_all_tests():
     print("=" * 70)
     
     if failed == 0:
-        print("\nALL TESTS PASSED ✓\n")
+        print("\nALL TESTS PASSED [PASS]\n")
     else:
-        print(f"\nSOME TESTS FAILED ✗\n")
+        print(f"\nSOME TESTS FAILED [FAIL]\n")
         print("TODO: Implement remaining tests to achieve 100% pass rate")
         exit(1)
 

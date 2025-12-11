@@ -31,7 +31,7 @@ For more information, see: https://csrc.nist.gov/projects/cryptographic-module-v
 """
     findings = analyzer.analyze_documentation(content, "SECURITY.md")
     assert len(findings) == 0, f"Complete documentation should have no findings, got {len(findings)}"
-    print("✓ test_complete_crypto_documentation PASSED")
+    print("[PASS] test_complete_crypto_documentation PASSED")
 
 
 def test_missing_cmvp_reference():
@@ -52,7 +52,7 @@ All cryptographic operations use industry-standard libraries.
     findings = analyzer.analyze_documentation(content, "README.md")
     assert len(findings) >= 1, "Should detect missing CMVP reference"
     assert any('CMVP' in f.title for f in findings), "Should flag missing CMVP reference"
-    print("✓ test_missing_cmvp_reference PASSED")
+    print("[PASS] test_missing_cmvp_reference PASSED")
 
 
 def test_missing_module_names():
@@ -69,7 +69,7 @@ CMVP validation certificates are maintained for all modules.
     findings = analyzer.analyze_documentation(content, "docs/crypto.md")
     assert len(findings) >= 1, "Should detect missing module names"
     assert any('module names' in f.title.lower() for f in findings), "Should flag missing module names"
-    print("✓ test_missing_module_names PASSED")
+    print("[PASS] test_missing_module_names PASSED")
 
 
 def test_missing_validation_status():
@@ -91,7 +91,7 @@ as required by CMVP guidelines.
     assert len(findings) >= 1, "Should detect missing validation status"
     assert any('validation status' in f.title.lower() for f in findings), "Should flag missing validation status"
     assert any(f.severity == Severity.HIGH for f in findings), "Should be HIGH severity"
-    print("✓ test_missing_validation_status PASSED")
+    print("[PASS] test_missing_validation_status PASSED")
 
 
 def test_no_crypto_documentation():
@@ -107,7 +107,7 @@ def test_no_crypto_documentation():
     assert len(findings) >= 1, "Should detect missing documentation"
     assert any('Missing' in f.title for f in findings), "Should flag missing documentation"
     assert any(f.severity == Severity.HIGH for f in findings), "Should be HIGH severity"
-    print("✓ test_no_crypto_documentation PASSED")
+    print("[PASS] test_no_crypto_documentation PASSED")
 
 
 def test_non_documentation_file_ignored():
@@ -121,7 +121,7 @@ def hash_data(data):
 """
     findings = analyzer.analyze_documentation(content, "src/crypto.py")
     assert len(findings) == 0, "Non-documentation files should be ignored"
-    print("✓ test_non_documentation_file_ignored PASSED")
+    print("[PASS] test_non_documentation_file_ignored PASSED")
 
 
 def test_partial_documentation():
@@ -139,7 +139,7 @@ We follow FIPS 140-2 guidelines and use validated modules where possible.
     findings = analyzer.analyze_documentation(content, "README.md")
     # Should have findings for missing module names, CMVP reference, and validation status
     assert len(findings) >= 2, f"Should detect multiple issues in partial documentation, got {len(findings)}"
-    print("✓ test_partial_documentation PASSED")
+    print("[PASS] test_partial_documentation PASSED")
 
 
 def test_analyzer_metadata():
@@ -158,7 +158,7 @@ def test_analyzer_metadata():
     evidence = analyzer.get_evidence_automation_recommendations()
     assert evidence['frr_id'] == "FRR-UCM-01", "Evidence FRR ID mismatch"
     
-    print("✓ test_analyzer_metadata PASSED")
+    print("[PASS] test_analyzer_metadata PASSED")
 
 
 def run_all_tests():
@@ -186,10 +186,10 @@ def run_all_tests():
             test_func()
             passed += 1
         except AssertionError as e:
-            print(f"✗ {test_name} FAILED: {e}")
+            print(f"[FAIL] {test_name} FAILED: {e}")
             failed += 1
         except Exception as e:
-            print(f"✗ {test_name} ERROR: {e}")
+            print(f"[FAIL] {test_name} ERROR: {e}")
             failed += 1
     
     print("\n" + "=" * 70)
@@ -197,9 +197,9 @@ def run_all_tests():
     print("=" * 70)
     
     if failed == 0:
-        print("\nALL TESTS PASSED ✓\n")
+        print("\nALL TESTS PASSED [PASS]\n")
     else:
-        print(f"\nSOME TESTS FAILED ✗\n")
+        print(f"\nSOME TESTS FAILED [FAIL]\n")
         exit(1)
 
 

@@ -104,22 +104,27 @@ class FRR_SCN_02_Analyzer(BaseFRRAnalyzer):
                         ksi_id=self.FRR_ID,
                         requirement_id=self.FRR_ID,
                         title="Change management procedure detected",
-                        description=f\"Line {i} implements change management. FRR-SCN-02 requires following documented procedures to plan, evaluate, test, perform, assess, and document changes.\",
+                        description=f"Line {i} implements change management. FRR-SCN-02 requires following documented procedures to plan, evaluate, test, perform, assess, and document changes.",
                         severity=Severity.LOW,
                         file_path=file_path,
                         line_number=i,
                         code_snippet=self._get_snippet(lines, i, 3),
-                        recommendation=\"Ensure procedures cover: (1) Change planning, (2) Evaluation/testing, (3) Performance/deployment, (4) Assessment, (5) Documentation\"\n                    ))
+                        recommendation="Ensure procedures cover: (1) Change planning, (2) Evaluation/testing, (3) Performance/deployment, (4) Assessment, (5) Documentation"
+                    ))
                     return findings
         
         return findings
     
-    def analyze_csharp(self, code: str, file_path: str = \"\") -> List[Finding]:
-        \"\"\"Check C# for change management (testing frameworks).\"\"\"
-        return []\n    \n    def analyze_java(self, code: str, file_path: str = \"\") -> List[Finding]:
-        \"\"\"Check Java for change management.\"\"\"
-        return []\n    \n    def analyze_typescript(self, code: str, file_path: str = \"\") -> List[Finding]:
-        \"\"\"Check TypeScript for change management.\"\"\"
+    def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
+        """Check C# for change management (testing frameworks)."""
+        return []
+    
+    def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
+        """Check Java for change management."""
+        return []
+    
+    def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
+        """Check TypeScript for change management."""
         return []
     
     # Note: SCN-02 is primarily process/documentation, limited code detection

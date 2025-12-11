@@ -57,7 +57,7 @@ jobs:
     assert "FRR-VDR-01" in result
     assert "Vulnerability Detection" in result
     assert "VDR" in result
-    print("✓ FRR-VDR-01 GitHub Actions analysis successful")
+    print("[PASS] FRR-VDR-01 GitHub Actions analysis successful")
     print(f"Result length: {len(result)} characters")
 
 
@@ -93,7 +93,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {
     
     assert "FRR-VDR-01" in result
     assert "findings" in result.lower() or "issue" in result.lower()
-    print("✓ FRR-VDR-01 Bicep analysis successful")
+    print("[PASS] FRR-VDR-01 Bicep analysis successful")
     print(f"Result length: {len(result)} characters")
 
 
@@ -111,7 +111,7 @@ async def test_list_frrs_by_family_vdr():
     assert "VDR" in result
     assert "FRR-VDR-01" in result
     assert "Vulnerability Detection" in result
-    print("✓ List VDR FRRs successful")
+    print("[PASS] List VDR FRRs successful")
     print(f"Result length: {len(result)} characters")
 
 
@@ -128,7 +128,7 @@ async def test_list_frrs_by_family_rsc():
     
     assert "RSC" in result
     # RSC analyzers not yet implemented, so we expect "not yet implemented" or similar
-    print("✓ List RSC FRRs successful")
+    print("[PASS] List RSC FRRs successful")
     print(f"Result length: {len(result)} characters")
 
 
@@ -147,7 +147,7 @@ async def test_get_frr_metadata():
     assert "Vulnerability Detection" in result
     assert "VDR" in result
     assert "NIST" in result or "nist" in result.lower()
-    print("✓ Get FRR metadata successful")
+    print("[PASS] Get FRR metadata successful")
     print(f"Result length: {len(result)} characters")
 
 
@@ -165,7 +165,7 @@ async def test_get_frr_evidence_automation():
     assert "FRR-VDR-01" in result
     assert "Evidence" in result or "evidence" in result.lower()
     assert "Azure" in result or "azure" in result.lower()
-    print("✓ Get FRR evidence automation successful")
+    print("[PASS] Get FRR evidence automation successful")
     print(f"Result length: {len(result)} characters")
 
 
@@ -199,7 +199,7 @@ jobs:
     
     assert "VDR" in result
     assert "Family" in result
-    print("✓ Analyze VDR family successful")
+    print("[PASS] Analyze VDR family successful")
     print(f"Result length: {len(result)} characters")
 
 
@@ -216,7 +216,7 @@ async def test_get_frr_implementation_status():
     
     assert "FRR" in result or "Implementation" in result
     assert "Status" in result or "status" in result
-    print("✓ Get FRR implementation status successful")
+    print("[PASS] Get FRR implementation status successful")
     print(f"Result length: {len(result)} characters")
 
 

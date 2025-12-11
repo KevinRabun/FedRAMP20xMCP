@@ -29,7 +29,7 @@ def hash_password(password):
     assert len(findings) >= 1, "Should detect MD5 usage"
     assert any('MD5' in f.title for f in findings), "Should flag MD5"
     assert any(f.severity == Severity.HIGH for f in findings), "Should be HIGH severity"
-    print("✓ test_python_md5_detected PASSED")
+    print("[PASS] test_python_md5_detected PASSED")
 
 
 def test_python_sha1_detected():
@@ -46,7 +46,7 @@ def create_signature(data):
     assert len(findings) >= 1, "Should detect SHA1 usage"
     assert any('SHA1' in f.title for f in findings), "Should flag SHA1"
     assert any(f.severity == Severity.HIGH for f in findings), "Should be HIGH severity"
-    print("✓ test_python_sha1_detected PASSED")
+    print("[PASS] test_python_sha1_detected PASSED")
 
 
 def test_python_des_cipher_detected():
@@ -65,7 +65,7 @@ def encrypt_data(data, key):
     assert len(findings) >= 1, "Should detect DES cipher"
     assert any('DES' in f.title for f in findings), "Should flag DES"
     assert any(f.severity == Severity.HIGH for f in findings), "Should be HIGH severity"
-    print("✓ test_python_des_cipher_detected PASSED")
+    print("[PASS] test_python_des_cipher_detected PASSED")
 
 
 def test_python_fips_compliant_passes():
@@ -88,7 +88,7 @@ def secure_encrypt(data, key, iv):
 """
     findings = analyzer.analyze_python(code)
     assert len(findings) == 0, f"FIPS-compliant code should pass, but got {len(findings)} findings"
-    print("✓ test_python_fips_compliant_passes PASSED")
+    print("[PASS] test_python_fips_compliant_passes PASSED")
 
 
 def test_python_custom_crypto_detected():
@@ -110,7 +110,7 @@ class CustomCryptoEngine:
     assert len(findings) >= 1, "Should detect custom crypto implementation"
     assert any('custom' in f.title.lower() for f in findings), "Should flag custom crypto"
     assert any(f.severity == Severity.CRITICAL for f in findings), "Should be CRITICAL severity"
-    print("✓ test_python_custom_crypto_detected PASSED")
+    print("[PASS] test_python_custom_crypto_detected PASSED")
 
 
 def test_csharp_md5_provider_detected():
@@ -135,7 +135,7 @@ public class HashUtil
     assert len(findings) >= 1, "Should detect MD5 usage"
     assert any('MD5' in f.title for f in findings), "Should flag MD5"
     assert any(f.severity == Severity.HIGH for f in findings), "Should be HIGH severity"
-    print("✓ test_csharp_md5_provider_detected PASSED")
+    print("[PASS] test_csharp_md5_provider_detected PASSED")
 
 
 def test_csharp_des_provider_detected():
@@ -161,7 +161,7 @@ public class EncryptionUtil
     assert len(findings) >= 1, "Should detect DES usage"
     assert any('DES' in f.title for f in findings), "Should flag DES"
     assert any(f.severity == Severity.HIGH for f in findings), "Should be HIGH severity"
-    print("✓ test_csharp_des_provider_detected PASSED")
+    print("[PASS] test_csharp_des_provider_detected PASSED")
 
 
 def test_csharp_fips_policy_disabled():
@@ -180,7 +180,7 @@ def test_csharp_fips_policy_disabled():
     assert len(findings) >= 1, "Should detect FIPS policy disabled"
     assert any('FIPS policy' in f.title for f in findings), "Should flag FIPS policy"
     assert any(f.severity == Severity.CRITICAL for f in findings), "Should be CRITICAL severity"
-    print("✓ test_csharp_fips_policy_disabled PASSED")
+    print("[PASS] test_csharp_fips_policy_disabled PASSED")
 
 
 def test_java_md5_digest_detected():
@@ -201,7 +201,7 @@ public class HashUtil {
     assert len(findings) >= 1, "Should detect MD5 MessageDigest"
     assert any('MD5' in f.title for f in findings), "Should flag MD5"
     assert any(f.severity == Severity.HIGH for f in findings), "Should be HIGH severity"
-    print("✓ test_java_md5_digest_detected PASSED")
+    print("[PASS] test_java_md5_digest_detected PASSED")
 
 
 def test_java_des_cipher_detected():
@@ -224,7 +224,7 @@ public class CryptoUtil {
     assert len(findings) >= 1, "Should detect DES cipher"
     assert any('DES' in f.title for f in findings), "Should flag DES"
     assert any(f.severity == Severity.HIGH for f in findings), "Should be HIGH severity"
-    print("✓ test_java_des_cipher_detected PASSED")
+    print("[PASS] test_java_des_cipher_detected PASSED")
 
 
 def test_typescript_md5_hash_detected():
@@ -242,7 +242,7 @@ export function hashPassword(password: string): string {
     assert len(findings) >= 1, "Should detect MD5 usage"
     assert any('MD5' in f.title for f in findings), "Should flag MD5"
     assert any(f.severity == Severity.HIGH for f in findings), "Should be HIGH severity"
-    print("✓ test_typescript_md5_hash_detected PASSED")
+    print("[PASS] test_typescript_md5_hash_detected PASSED")
 
 
 def test_typescript_des_cipher_detected():
@@ -261,7 +261,7 @@ export function encryptData(data: string, key: Buffer): Buffer {
     assert len(findings) >= 1, "Should detect DES cipher"
     assert any('DES' in f.title for f in findings), "Should flag DES"
     assert any(f.severity == Severity.HIGH for f in findings), "Should be HIGH severity"
-    print("✓ test_typescript_des_cipher_detected PASSED")
+    print("[PASS] test_typescript_des_cipher_detected PASSED")
 
 
 def test_typescript_non_fips_library():
@@ -279,7 +279,7 @@ export function hashData(data: string): string {
     assert len(findings) >= 1, "Should detect non-FIPS library"
     assert any('crypto-js' in f.title for f in findings), "Should flag crypto-js"
     assert any(f.severity == Severity.MEDIUM for f in findings), "Should be MEDIUM severity"
-    print("✓ test_typescript_non_fips_library PASSED")
+    print("[PASS] test_typescript_non_fips_library PASSED")
 
 
 def test_bicep_storage_no_infra_encryption():
@@ -310,7 +310,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' = {
     assert len(findings) >= 1, "Should detect missing infrastructure encryption"
     assert any('infrastructure encryption' in f.title.lower() for f in findings), "Should flag infrastructure encryption"
     assert any(f.severity == Severity.HIGH for f in findings), "Should be HIGH severity"
-    print("✓ test_bicep_storage_no_infra_encryption PASSED")
+    print("[PASS] test_bicep_storage_no_infra_encryption PASSED")
 
 
 def test_bicep_keyvault_standard_sku():
@@ -335,7 +335,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
     assert len(findings) >= 1, "Should detect Standard SKU"
     assert any('standard' in f.title.lower() or 'sku' in f.title.lower() for f in findings), "Should flag Standard SKU"
     assert any(f.severity == Severity.MEDIUM for f in findings), "Should be MEDIUM severity"
-    print("✓ test_bicep_keyvault_standard_sku PASSED")
+    print("[PASS] test_bicep_keyvault_standard_sku PASSED")
 
 
 def test_terraform_storage_no_infra_encryption():
@@ -356,7 +356,7 @@ resource "azurerm_storage_account" "example" {
     assert len(findings) >= 1, "Should detect missing infrastructure encryption"
     assert any('infrastructure encryption' in f.title.lower() for f in findings), "Should flag infrastructure encryption"
     assert any(f.severity == Severity.HIGH for f in findings), "Should be HIGH severity"
-    print("✓ test_terraform_storage_no_infra_encryption PASSED")
+    print("[PASS] test_terraform_storage_no_infra_encryption PASSED")
 
 
 def test_terraform_keyvault_standard_sku():
@@ -376,7 +376,7 @@ resource "azurerm_key_vault" "example" {
     assert len(findings) >= 1, "Should detect Standard SKU"
     assert any('standard' in f.title.lower() or 'sku' in f.title.lower() for f in findings), "Should flag Standard SKU"
     assert any(f.severity == Severity.MEDIUM for f in findings), "Should be MEDIUM severity"
-    print("✓ test_terraform_keyvault_standard_sku PASSED")
+    print("[PASS] test_terraform_keyvault_standard_sku PASSED")
 
 
 def test_no_findings_for_fips_compliant_code():
@@ -467,7 +467,7 @@ resource "azurerm_key_vault" "secure" {
                      len(typescript_findings) + len(bicep_findings) + len(terraform_findings)
     
     assert total_findings == 0, f"FIPS-compliant code should have 0 findings, got {total_findings}"
-    print("✓ test_no_findings_for_fips_compliant_code PASSED")
+    print("[PASS] test_no_findings_for_fips_compliant_code PASSED")
 
 
 def test_analyzer_metadata():
@@ -490,7 +490,7 @@ def test_analyzer_metadata():
     assert "SC-13" in control_ids, "Should include SC-13 (Cryptographic Protection)"
     assert "SC-12" in control_ids, "Should include SC-12 (Key Management)"
     
-    print("✓ test_analyzer_metadata PASSED")
+    print("[PASS] test_analyzer_metadata PASSED")
 
 
 def test_evidence_automation_recommendations():
@@ -507,7 +507,7 @@ def test_evidence_automation_recommendations():
     assert 'collection_methods' in recommendations, "Should include collection methods"
     assert len(recommendations['collection_methods']) >= 4, "Should have at least 4 collection methods"
     
-    print("✓ test_evidence_automation_recommendations PASSED")
+    print("[PASS] test_evidence_automation_recommendations PASSED")
 
 
 def test_evidence_collection_queries():
@@ -529,7 +529,7 @@ def test_evidence_collection_queries():
     query_types = [q['query_type'] for q in queries]
     assert any('KQL' in qt or 'Kusto' in qt or 'Resource Graph' in qt for qt in query_types), "Should include Azure Resource Graph KQL queries"
     
-    print("✓ test_evidence_collection_queries PASSED")
+    print("[PASS] test_evidence_collection_queries PASSED")
 
 
 def test_evidence_artifacts():
@@ -554,7 +554,7 @@ def test_evidence_artifacts():
     assert any('FIPS' in name or 'Certificate' in name for name in artifact_names), "Should include FIPS validation certificates"
     assert any('Key Vault' in name for name in artifact_names), "Should include Key Vault configuration"
     
-    print("✓ test_evidence_artifacts PASSED")
+    print("[PASS] test_evidence_artifacts PASSED")
 
 
 def run_all_tests():
@@ -596,10 +596,10 @@ def run_all_tests():
             test_func()
             passed += 1
         except AssertionError as e:
-            print(f"✗ {test_func.__name__} FAILED: {e}")
+            print(f"[FAIL] {test_func.__name__} FAILED: {e}")
             failed += 1
         except Exception as e:
-            print(f"✗ {test_func.__name__} ERROR: {e}")
+            print(f"[FAIL] {test_func.__name__} ERROR: {e}")
             failed += 1
     
     print(f"\n{'='*70}")
@@ -607,10 +607,10 @@ def run_all_tests():
     print(f"{'='*70}\n")
     
     if failed == 0:
-        print("ALL TESTS PASSED ✓\n")
+        print("ALL TESTS PASSED [PASS]\n")
         return 0
     else:
-        print(f"SOME TESTS FAILED ✗\n")
+        print(f"SOME TESTS FAILED [FAIL]\n")
         return 1
 
 

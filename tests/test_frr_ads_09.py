@@ -26,7 +26,7 @@ def test_analyzer_metadata():
     assert analyzer.IMPACT_MODERATE == True, "Impact Moderate mismatch"
     assert analyzer.IMPACT_HIGH == True, "Impact High mismatch"
     
-    print("✓ test_analyzer_metadata PASSED")
+    print("[PASS] test_analyzer_metadata PASSED")
 
 
 def test_evidence_automation_recommendations():
@@ -37,7 +37,7 @@ def test_evidence_automation_recommendations():
     assert recommendations['frr_id'] == "FRR-ADS-09", "FRR_ID mismatch"
     # TODO: Add more assertions for evidence recommendations
     
-    print("✓ test_evidence_automation_recommendations PASSED")
+    print("[PASS] test_evidence_automation_recommendations PASSED")
 
 
 # TODO: Add language-specific tests
@@ -73,10 +73,10 @@ def run_all_tests():
             test_func()
             passed += 1
         except AssertionError as e:
-            print(f"✗ {test_name} FAILED: {e}")
+            print(f"[FAIL] {test_name} FAILED: {e}")
             failed += 1
         except Exception as e:
-            print(f"✗ {test_name} ERROR: {e}")
+            print(f"[FAIL] {test_name} ERROR: {e}")
             failed += 1
     
     print("\n" + "=" * 70)
@@ -84,9 +84,9 @@ def run_all_tests():
     print("=" * 70)
     
     if failed == 0:
-        print("\nALL TESTS PASSED ✓\n")
+        print("\nALL TESTS PASSED [PASS]\n")
     else:
-        print(f"\nSOME TESTS FAILED ✗\n")
+        print(f"\nSOME TESTS FAILED [FAIL]\n")
         print("TODO: Implement remaining tests to achieve 100% pass rate")
         exit(1)
 

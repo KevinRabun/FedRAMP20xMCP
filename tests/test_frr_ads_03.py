@@ -44,7 +44,7 @@ def test_complete_service_list():
 """
     findings = analyzer.analyze_documentation(content, "README.md")
     assert len(findings) == 0, f"Complete service list should have no findings, got {len(findings)}"
-    print("✓ test_complete_service_list PASSED")
+    print("[PASS] test_complete_service_list PASSED")
 
 
 def test_missing_service_list():
@@ -64,7 +64,7 @@ Welcome to our cloud service platform. We provide enterprise-grade solutions.
     assert len(findings) > 0, "Should detect missing service list"
     assert any("Missing service list" in f.title for f in findings), "Should flag missing service list"
     assert findings[0].severity == Severity.HIGH, "Missing service list should be HIGH severity"
-    print("✓ test_missing_service_list PASSED")
+    print("[PASS] test_missing_service_list PASSED")
 
 
 def test_service_list_without_impact_levels():
@@ -85,7 +85,7 @@ All services are fully managed and highly available.
     findings = analyzer.analyze_documentation(content, "SERVICES.md")
     assert len(findings) > 0, "Should detect missing impact levels"
     assert any("impact level" in f.title.lower() for f in findings), "Should flag missing impact levels"
-    print("✓ test_service_list_without_impact_levels PASSED")
+    print("[PASS] test_service_list_without_impact_levels PASSED")
 
 
 def test_vague_service_names():
@@ -103,7 +103,7 @@ Our authorized services include:
     findings = analyzer.analyze_documentation(content, "README.md")
     assert len(findings) > 0, "Should detect vague service names"
     assert any("specific service names" in f.title.lower() for f in findings), "Should flag vague names"
-    print("✓ test_vague_service_names PASSED")
+    print("[PASS] test_vague_service_names PASSED")
 
 
 def test_non_documentation_file_ignored():
@@ -119,7 +119,7 @@ def deploy_resources():
 """
     findings = analyzer.analyze_documentation(code, "deploy.py")
     assert len(findings) == 0, "Non-documentation files should be ignored"
-    print("✓ test_non_documentation_file_ignored PASSED")
+    print("[PASS] test_non_documentation_file_ignored PASSED")
 
 
 def test_analyzer_metadata():
@@ -135,7 +135,7 @@ def test_analyzer_metadata():
     assert analyzer.IMPACT_HIGH == True, "Impact High should be True"
     assert analyzer.CODE_DETECTABLE == "Partial", "Code detectable should be Partial"
     
-    print("✓ test_analyzer_metadata PASSED")
+    print("[PASS] test_analyzer_metadata PASSED")
 
 
 def test_evidence_automation_recommendations():
@@ -148,7 +148,7 @@ def test_evidence_automation_recommendations():
     assert len(recommendations['evidence_artifacts']) > 0, "Should have evidence artifacts"
     assert len(recommendations['manual_validation_steps']) > 0, "Should have validation steps"
     
-    print("✓ test_evidence_automation_recommendations PASSED")
+    print("[PASS] test_evidence_automation_recommendations PASSED")
 
 
 def run_all_tests():
@@ -175,10 +175,10 @@ def run_all_tests():
             test_func()
             passed += 1
         except AssertionError as e:
-            print(f"✗ {test_name} FAILED: {e}")
+            print(f"[FAIL] {test_name} FAILED: {e}")
             failed += 1
         except Exception as e:
-            print(f"✗ {test_name} ERROR: {e}")
+            print(f"[FAIL] {test_name} ERROR: {e}")
             failed += 1
     
     print("\n" + "=" * 70)
@@ -186,9 +186,9 @@ def run_all_tests():
     print("=" * 70)
     
     if failed == 0:
-        print("\nALL TESTS PASSED ✓\n")
+        print("\nALL TESTS PASSED [PASS]\n")
     else:
-        print(f"\nSOME TESTS FAILED ✗\n")
+        print(f"\nSOME TESTS FAILED [FAIL]\n")
         print("TODO: Implement remaining tests to achieve 100% pass rate")
         exit(1)
 
