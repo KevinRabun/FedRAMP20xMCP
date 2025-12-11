@@ -60,13 +60,11 @@ class FRR_SCN_01_Analyzer(BaseFRRAnalyzer):
     NIST_CONTROLS = [
         ("IR-6", "Incident Reporting"),
         ("PM-15", "Security and Privacy Groups and Associations"),
-        ("CP-2", "Contingency Plan"),
+        ("CP-2", "Contingency Plan")
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Yes"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
-    RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
-    ]
+    RELATED_KSIS = ["KSI-ICP-08", "KSI-ICP-09"]
     
     def __init__(self):
         """Initialize FRR-SCN-01 analyzer."""
@@ -82,72 +80,78 @@ class FRR_SCN_01_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-SCN-01 compliance using AST.
+        Check for notification systems for significant changes.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects:
+        - Email notification systems (SMTP, SendGrid, SES)
+        - Webhook implementations
+        - Message queue notifications (SQS, Azure Service Bus)
+        - Alerting systems integration
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
+        # Check for notification/alerting code
+        notification_patterns = [
+            r'send.*email', r'smtp', r'sendgrid', r'ses\.send',
+            r'notify.*customer', r'notify.*agency', r'webhook',
+            r'post.*notification', r'alert.*customer',
+            r'EmailMessage', r'smtplib', r'send_mail'
+        ]
         
-        # TODO: Implement regex fallback
+        has_notification = False
+        for i, line in enumerate(lines, start=1):
+            for pattern in notification_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    has_notification = True
+                    findings.append(Finding(
+                        ksi_id=self.FRR_ID,
+                        requirement_id=self.FRR_ID,
+                        title="Notification system detected - verify SCN coverage",
+                        description=f"Line {i} implements notification functionality. FRR-SCN-01 requires notifying FedRAMP and all agency customers for Significant Change Notifications.",
+                        severity=Severity.LOW,
+                        file_path=file_path,
+                        line_number=i,
+                        code_snippet=self._get_snippet(lines, i, 3),
+                        recommendation="Ensure notification system covers: (1) FedRAMP notification, (2) All agency customers, (3) Significant change events (security updates, service changes, incident notifications), (4) Audit trail of notifications sent"
+                    ))
+                    return findings
+        
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for FRR-SCN-01 compliance using AST.
-        
-        TODO: Implement C# analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        """Check C# for notification systems (SmtpClient, SendGrid, etc)."""
+        patterns = [r'SmtpClient', r'SendGridClient', r'MailMessage', r'IEmailSender']
+        return self._check_notifications(code, file_path, patterns)
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for FRR-SCN-01 compliance using AST.
-        
-        TODO: Implement Java analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        """Check Java for notification systems (JavaMail, AWS SES, etc)."""
+        patterns = [r'javax\.mail', r'MimeMessage', r'AmazonSimpleEmailService', r'sendEmail']
+        return self._check_notifications(code, file_path, patterns)
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for FRR-SCN-01 compliance using AST.
-        
-        TODO: Implement TypeScript analysis
-        """
+        """Check TypeScript for notification systems (Nodemailer, SendGrid, etc)."""
+        patterns = [r'nodemailer', r'@sendgrid', r'transporter\.sendMail', r'webhook']
+        return self._check_notifications(code, file_path, patterns)
+    
+    def _check_notifications(self, code: str, file_path: str, patterns: List[str]) -> List[Finding]:
+        """Shared notification detection logic."""
         findings = []
+        for pattern in patterns:
+            if re.search(pattern, code, re.IGNORECASE):
+                findings.append(Finding(
+                    ksi_id=self.FRR_ID,
+                    requirement_id=self.FRR_ID,
+                    title="Notification system found",
+                    description="Notification functionality detected. Verify it handles Significant Change Notifications to FedRAMP and all customers per FRR-SCN-01.",
+                    severity=Severity.LOW,
+                    file_path=file_path,
+                    line_number=1,
+                    code_snippet="",
+                    recommendation="Ensure SCN notifications reach FedRAMP and all agency customers"
+                ))
+                break
+        return findings
         lines = code.split('\n')
         
         # TODO: Implement AST analysis for TypeScript

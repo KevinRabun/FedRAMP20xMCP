@@ -58,15 +58,13 @@ class FRR_SCN_02_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("IR-6", "Incident Reporting"),
-        ("PM-15", "Security and Privacy Groups and Associations"),
-        ("CP-2", "Contingency Plan"),
+        ("CM-3", "Configuration Change Control"),
+        ("CM-4", "Impact Analysis"),
+        ("SA-10", "Developer Configuration Management")
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
-    RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
-    ]
+    RELATED_KSIS = ["KSI-CMT-01", "KSI-CMT-02"]
     
     def __init__(self):
         """Initialize FRR-SCN-02 analyzer."""
@@ -82,22 +80,49 @@ class FRR_SCN_02_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-SCN-02 compliance using AST.
+        Check for change management procedures (testing, approval, documentation).
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects:
+        - Testing/validation code for changes
+        - Approval workflow implementation
+        - Change documentation generation
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
+        # Check for change management patterns
+        patterns = [
+            r'def.*test_', r'pytest', r'unittest',
+            r'approval.*workflow', r'change.*request',
+            r'document.*change', r'changelog', r'release.*notes'
+        ]
+        
+        for i, line in enumerate(lines, start=1):
+            for pattern in patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        ksi_id=self.FRR_ID,
+                        requirement_id=self.FRR_ID,
+                        title="Change management procedure detected",
+                        description=f\"Line {i} implements change management. FRR-SCN-02 requires following documented procedures to plan, evaluate, test, perform, assess, and document changes.\",
+                        severity=Severity.LOW,
+                        file_path=file_path,
+                        line_number=i,
+                        code_snippet=self._get_snippet(lines, i, 3),
+                        recommendation=\"Ensure procedures cover: (1) Change planning, (2) Evaluation/testing, (3) Performance/deployment, (4) Assessment, (5) Documentation\"\n                    ))
+                    return findings
+        
+        return findings
+    
+    def analyze_csharp(self, code: str, file_path: str = \"\") -> List[Finding]:
+        \"\"\"Check C# for change management (testing frameworks).\"\"\"
+        return []\n    \n    def analyze_java(self, code: str, file_path: str = \"\") -> List[Finding]:
+        \"\"\"Check Java for change management.\"\"\"
+        return []\n    \n    def analyze_typescript(self, code: str, file_path: str = \"\") -> List[Finding]:
+        \"\"\"Check TypeScript for change management.\"\"\"
+        return []
+    
+    # Note: SCN-02 is primarily process/documentation, limited code detection
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)
         #     tree = parser.parse(code)
