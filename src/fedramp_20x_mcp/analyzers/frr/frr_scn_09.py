@@ -60,12 +60,13 @@ class FRR_SCN_09_Analyzer(BaseFRRAnalyzer):
     NIST_CONTROLS = [
         ("IR-6", "Incident Reporting"),
         ("PM-15", "Security and Privacy Groups and Associations"),
-        ("CP-2", "Contingency Plan"),
+        ("CM-3", "Configuration Change Control"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-ICP-08",
+        "KSI-CMT-01",
     ]
     
     def __init__(self):
@@ -82,22 +83,40 @@ class FRR_SCN_09_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-SCN-09 compliance using AST.
+        Analyze Python code for FRR-SCN-09 compliance.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects notification content validation:
+        - Notification templates
+        - Required field validation
+        - Content structure
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
+        # Detect notification content patterns
+        content_patterns = [
+            r'notification.*template',
+            r'notification.*content',
+            r'required.*field',
+            r'validate.*notification',
+            r'notification.*schema',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            for pattern in content_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Notification content validation detected",
+                        description=f"Found content pattern: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Ensure notifications include all required information per FedRAMP requirements."
+                    ))
+                    break
+        
+        return findings
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)
         #     tree = parser.parse(code)

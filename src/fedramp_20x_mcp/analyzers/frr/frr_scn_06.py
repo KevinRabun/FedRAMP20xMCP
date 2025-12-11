@@ -58,14 +58,15 @@ class FRR_SCN_06_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("IR-6", "Incident Reporting"),
         ("PM-15", "Security and Privacy Groups and Associations"),
-        ("CP-2", "Contingency Plan"),
+        ("CM-3", "Configuration Change Control"),
+        ("SA-5", "System Documentation"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-CMT-01",
+        "KSI-ICP-08",
     ]
     
     def __init__(self):
@@ -82,22 +83,39 @@ class FRR_SCN_06_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-SCN-06 compliance using AST.
+        Analyze Python code for FRR-SCN-06 compliance.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects references to FedRAMP best practices:
+        - Documentation references
+        - Best practice comments
+        - Compliance guidance
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
+        # Detect best practice patterns
+        best_practice_patterns = [
+            r'fedramp.*best.*practice',
+            r'fedramp.*guidance',
+            r'significant.*change.*best',
+            r'follow.*fedramp',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            for pattern in best_practice_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="FedRAMP best practice reference detected",
+                        description=f"Found best practice pattern: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Ensure FedRAMP best practices and technical assistance are followed for significant change assessment."
+                    ))
+                    break
+        
+        return findings
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)
         #     tree = parser.parse(code)

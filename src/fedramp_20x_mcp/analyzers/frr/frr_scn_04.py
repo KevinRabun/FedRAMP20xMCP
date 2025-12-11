@@ -58,14 +58,16 @@ class FRR_SCN_04_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("IR-6", "Incident Reporting"),
-        ("PM-15", "Security and Privacy Groups and Associations"),
-        ("CP-2", "Contingency Plan"),
+        ("AU-2", "Event Logging"),
+        ("AU-3", "Content of Audit Records"),
+        ("AU-6", "Audit Record Review, Analysis, and Reporting"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Yes"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-MLA-01",
+        "KSI-MLA-02",
+        "KSI-AFR-04",
     ]
     
     def __init__(self):
@@ -82,22 +84,41 @@ class FRR_SCN_04_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-SCN-04 compliance using AST.
+        Analyze Python code for FRR-SCN-04 compliance.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects auditable records and logging:
+        - Audit logging systems
+        - Record retention
+        - Log availability mechanisms
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
+        # Detect audit logging patterns
+        audit_patterns = [
+            r'audit.*log',
+            r'logger\.\w+',
+            r'logging\.\w+',
+            r'record.*activity',
+            r'maintain.*record',
+            r'audit.*trail',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            for pattern in audit_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Audit logging detected",
+                        description=f"Found audit/logging pattern: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Ensure auditable records are maintained and available to all necessary parties."
+                    ))
+                    break
+        
+        return findings
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)
         #     tree = parser.parse(code)
