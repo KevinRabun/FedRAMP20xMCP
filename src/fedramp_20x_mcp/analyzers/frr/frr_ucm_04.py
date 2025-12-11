@@ -38,13 +38,13 @@ class FRR_UCM_04_Analyzer(BaseFRRAnalyzer):
     **Related KSIs:**
     - TODO: Add related KSI IDs
     
-    **Detectability:** Unknown
+    **Detectability:** Yes (Code, IaC)
     
     **Detection Strategy:**
-    TODO: Describe what this analyzer detects and how:
-        1. Application code patterns (Python, C#, Java, TypeScript) - Use AST
-        2. Infrastructure patterns (Bicep, Terraform) - Use regex
-        3. CI/CD patterns (GitHub Actions, Azure Pipelines, GitLab CI) - Use regex
+    Same as FRR-UCM-02 but specific to High impact systems:
+        1. Application code: Non-FIPS crypto modules, weak algorithms (MD5, SHA1, DES, RC4)
+        2. Infrastructure: Azure services without FIPS compliance
+        3. Custom crypto implementations instead of validated modules
     
     """
     
@@ -62,7 +62,7 @@ class FRR_UCM_04_Analyzer(BaseFRRAnalyzer):
         ("SC-12", "Cryptographic Key Establishment and Management"),
         ("IA-7", "Cryptographic Module Authentication"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = True  # Detects non-FIPS cryptographic modules
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
         # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
@@ -84,69 +84,87 @@ class FRR_UCM_04_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Python code for FRR-UCM-04 compliance using AST.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Delegates to FRR-UCM-02 analyzer (identical logic, High impact only).
+        Detects weak crypto: MD5, SHA1, DES, RC4, custom implementations.
         """
-        findings = []
-        lines = code.split('\n')
+        from .frr_ucm_02 import FRR_UCM_02_Analyzer
         
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
+        # Delegate to UCM-02 analyzer (same detection logic)
+        ucm_02 = FRR_UCM_02_Analyzer()
+        findings = ucm_02.analyze_python(code, file_path)
         
-        # TODO: Implement regex fallback
+        # Update FRR ID to UCM-04
+        for finding in findings:
+            finding.frr_id = self.FRR_ID
+        
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze C# code for FRR-UCM-04 compliance using AST.
         
-        TODO: Implement C# analysis
+        Delegates to FRR-UCM-02 analyzer (identical logic, High impact only).
         """
-        findings = []
-        lines = code.split('\n')
+        from .frr_ucm_02 import FRR_UCM_02_Analyzer
         
-        # TODO: Implement AST analysis for C#
+        ucm_02 = FRR_UCM_02_Analyzer()
+        findings = ucm_02.analyze_csharp(code, file_path)
+        
+        for finding in findings:
+            finding.frr_id = self.FRR_ID
+        
         return findings
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Java code for FRR-UCM-04 compliance using AST.
         
-        TODO: Implement Java analysis
+        Delegates to FRR-UCM-02 analyzer (identical logic, High impact only).
         """
-        findings = []
-        lines = code.split('\n')
+        from .frr_ucm_02 import FRR_UCM_02_Analyzer
         
-        # TODO: Implement AST analysis for Java
+        ucm_02 = FRR_UCM_02_Analyzer()
+        findings = ucm_02.analyze_java(code, file_path)
+        
+        for finding in findings:
+            finding.frr_id = self.FRR_ID
+        
         return findings
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze TypeScript/JavaScript code for FRR-UCM-04 compliance using AST.
         
-        TODO: Implement TypeScript analysis
+        Delegates to FRR-UCM-02 analyzer (identical logic, High impact only).
         """
+        from .frr_ucm_02 import FRR_UCM_02_Analyzer
+        
+        ucm_02 = FRR_UCM_02_Analyzer()
+        findings = ucm_02.analyze_typescript(code, file_path)
+        
+        for finding in findings:
+            finding.frr_id = self.FRR_ID
+        
+        return findings
+    
+    def analyze_bicep(self, code: str, file_path: str = "") -> List[Finding]:
+        """
+        Analyze Bicep IaC for FRR-UCM-04 compliance.
+        
+        Delegates to FRR-UCM-02 analyzer (identical logic, High impact only).
+        """
+        from .frr_ucm_02 import FRR_UCM_02_Analyzer
+        
+        ucm_02 = FRR_UCM_02_Analyzer()
+        findings = ucm_02.analyze_bicep(code, file_path)
+        
+        for finding in findings:
+            finding.frr_id = self.FRR_ID
+        
+        return findings
+    
+    def analyze_github_actions(self, code: str, file_path: str = "") -> List[Finding]:
+        """GitHub Actions not applicable for cryptographic module validation."""
         findings = []
         lines = code.split('\n')
         
