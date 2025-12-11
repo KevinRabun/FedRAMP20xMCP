@@ -58,16 +58,12 @@ class FRR_CCM_AG_07_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("CA-7", "Continuous Monitoring"),
-        ("CA-2", "Control Assessments"),
-        ("SI-4", "System Monitoring"),
-        ("PM-31", "Continuous Monitoring Strategy"),
+        ("SA-9", "External System Services"),
+        ("PM-15", "Contacts with Security Groups and Associations"),
     ]
     CODE_DETECTABLE = "No"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
-    RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
-    ]
+    RELATED_KSIS = []
     
     def __init__(self):
         """Initialize FRR-CCM-AG-07 analyzer."""
