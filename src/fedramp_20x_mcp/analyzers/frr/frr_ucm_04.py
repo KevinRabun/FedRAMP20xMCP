@@ -65,7 +65,9 @@ class FRR_UCM_04_Analyzer(BaseFRRAnalyzer):
     CODE_DETECTABLE = True  # Detects non-FIPS cryptographic modules
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-CNA-05",  # Encryption in transit
+        "KSI-IAM-03",  # Multi-factor authentication
+        "KSI-CED-03",  # Encryption at rest
     ]
     
     def __init__(self):

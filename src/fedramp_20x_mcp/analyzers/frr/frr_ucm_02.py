@@ -69,11 +69,15 @@ class FRR_UCM_02_Analyzer(BaseFRRAnalyzer):
     NIST_CONTROLS = [
         ("SC-13", "Cryptographic Protection"),
         ("SC-12", "Cryptographic Key Establishment and Management"),
-        ("IA-7", "Cryptographic Module Authentication")
+        ("IA-7", "Cryptographic Module Authentication"),
     ]
-    CODE_DETECTABLE = "Yes"
+    CODE_DETECTABLE = True  # Extensive crypto analysis implemented
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
-    RELATED_KSIS = ["KSI-CNA-05", "KSI-IAM-03"]
+    RELATED_KSIS = [
+        "KSI-CNA-05",  # Encryption in transit
+        "KSI-IAM-03",  # Multi-factor authentication
+        "KSI-CED-03",  # Encryption at rest
+    ]
     
     # Weak/deprecated algorithms that should not be used
     WEAK_ALGORITHMS = {

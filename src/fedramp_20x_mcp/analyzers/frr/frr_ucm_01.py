@@ -65,9 +65,14 @@ class FRR_UCM_01_Analyzer(BaseFRRAnalyzer):
     IMPACT_HIGH = True
     NIST_CONTROLS = [
         ("SC-13", "Cryptographic Protection"),
-        ("SA-4(9)", "Functions, Ports, Protocols, and Services in Use")
+        ("SA-4", "Acquisition Process"),
     ]
     CODE_DETECTABLE = "No"
+    IMPLEMENTATION_STATUS = "IMPLEMENTED"
+    RELATED_KSIS = [
+        "KSI-CNA-05",  # Encryption in transit
+        "KSI-CED-03",  # Encryption at rest
+    ]
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = ["KSI-AFR-01"]
     
