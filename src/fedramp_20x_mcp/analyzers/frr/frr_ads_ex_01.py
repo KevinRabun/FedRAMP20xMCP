@@ -58,15 +58,14 @@ class FRR_ADS_EX_01_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("PM-9", "Risk Management Strategy"),
-        ("PL-2", "System Security Plan"),
-        ("SA-4", "Acquisition Process"),
         ("SA-9", "External System Services"),
+        ("SI-12", "Information Management and Retention"),
+        ("PL-2", "System Security Plan"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-AFR-01",
     ]
     
     def __init__(self):
@@ -83,21 +82,40 @@ class FRR_ADS_EX_01_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-ADS-EX-01 compliance using AST.
+        Analyze Python code for FRR-ADS-EX-01 compliance.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects legacy self-managed repository usage:
+        - Legacy repository references
+        - Rev5 authorization indicators
+        - Self-managed storage systems
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
+        # Legacy repository patterns
+        legacy_patterns = [
+            r'legacy.*repository',
+            r'self.*managed.*repository',
+            r'rev5.*authorized',
+            r'fedramp.*high.*legacy',
+            r'legacy.*authorization.*data',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            for pattern in legacy_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Legacy repository reference detected",
+                        description=f"Found legacy repository pattern: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="FedRAMP Rev5 High providers with legacy self-managed repository may be exempt from ADS requirements until further notice."
+                    ))
+                    break
+        
+        return findings
         # Example from FRR-VDR-08:
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)
