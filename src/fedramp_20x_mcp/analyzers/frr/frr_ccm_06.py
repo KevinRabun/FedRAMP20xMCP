@@ -58,15 +58,15 @@ class FRR_CCM_06_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("CA-7", "Continuous Monitoring"),
-        ("CA-2", "Control Assessments"),
-        ("SI-4", "System Monitoring"),
-        ("PM-31", "Continuous Monitoring Strategy"),
+        ("AC-4", "Information Flow Enforcement"),
+        ("SC-4", "Information in Shared System Resources"),
+        ("SI-12", "Information Management and Retention"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Yes"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-AFR-01",
+        "KSI-MLA-01",
     ]
     
     def __init__(self):
@@ -85,19 +85,62 @@ class FRR_CCM_06_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Python code for FRR-CCM-06 compliance using AST.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects sensitive information protection:
+        - Sanitization functions
+        - Information leakage detection (similar to ADS-05)
         """
         findings = []
-        lines = code.split('\n')
+        lines = code.split('\\n')
         
-        # TODO: Implement AST-based analysis
+        # Try AST analysis first
+        try:
+            parser = ASTParser(CodeLanguage.PYTHON)
+            tree = parser.parse(code)
+            if tree and tree.root_node:
+                code_bytes = code.encode('utf-8')
+                
+                # Check for sanitization functions
+                sanitize_functions = ['sanitize', 'redact', 'mask', 'scrub', 'filter_sensitive']
+                for func_name in sanitize_functions:
+                    func_nodes = parser.find_nodes_by_type(tree.root_node, 'function_definition')
+                    for node in func_nodes:
+                        node_text = parser.get_node_text(node, code_bytes)
+                        if func_name in node_text.lower():
+                            line_num = node.start_point[0] + 1
+                            findings.append(Finding(
+                                frr_id=self.FRR_ID,
+                                title="Information protection mechanism detected",
+                                description=f"Found sanitization function: {func_name}",
+                                severity=Severity.INFO,
+                                line_number=line_num,
+                                code_snippet=lines[line_num-1].strip() if line_num <= len(lines) else "",
+                                recommendation="Ensure sensitive information protected in Ongoing Authorization Reports."
+                            ))
+        except Exception:
+            pass
+        
+        # Regex fallback
+        protection_patterns = [
+            r'sanitize',
+            r'redact.*sensitive',
+            r'protect.*information',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            for pattern in protection_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Information protection pattern detected",
+                        description=f"Found protection pattern: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Verify no irresponsible disclosure of sensitive information."
+                    ))
+                    break
+        
+        return findings
         # Example from FRR-VDR-08:
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)

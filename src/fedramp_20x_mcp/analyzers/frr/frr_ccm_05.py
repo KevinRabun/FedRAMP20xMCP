@@ -59,14 +59,14 @@ class FRR_CCM_05_Analyzer(BaseFRRAnalyzer):
     IMPACT_HIGH = True
     NIST_CONTROLS = [
         ("CA-7", "Continuous Monitoring"),
-        ("CA-2", "Control Assessments"),
-        ("SI-4", "System Monitoring"),
-        ("PM-31", "Continuous Monitoring Strategy"),
+        ("AC-4", "Information Flow Enforcement"),
+        ("SI-12", "Information Management and Retention"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-AFR-01",
+        "KSI-MLA-01",
     ]
     
     def __init__(self):
@@ -83,21 +83,37 @@ class FRR_CCM_05_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-CCM-05 compliance using AST.
+        Analyze Python code for FRR-CCM-05 compliance.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects anonymization mechanisms:
+        - Anonymize/desensitize functions
+        - Feedback summary generation
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
+        anonymization_patterns = [
+            r'anonymi[sz]e',
+            r'desensiti[sz]e',
+            r'feedback.*summary',
+            r'redact.*feedback',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            for pattern in anonymization_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Anonymization mechanism detected",
+                        description=f"Found anonymization pattern: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Ensure feedback anonymized and desensitized in report addendum."
+                    ))
+                    break
+        
+        return findings
         # Example from FRR-VDR-08:
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)
