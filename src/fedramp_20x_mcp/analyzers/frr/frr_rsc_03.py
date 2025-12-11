@@ -53,20 +53,18 @@ class FRR_RSC_03_Analyzer(BaseFRRAnalyzer):
     FRR_STATEMENT = """Providers SHOULD create and maintain guidance that explains security-related settings that can be operated only by _privileged accounts_ and their security implications."""
     FAMILY = "RSC"
     FAMILY_NAME = "Resource Categorization"
-    PRIMARY_KEYWORD = "MUST"
+    PRIMARY_KEYWORD = "SHOULD"
     IMPACT_LOW = True
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("CM-7", "Least Functionality"),
-        ("CM-6", "Configuration Settings"),
-        ("SC-7", "Boundary Protection"),
+        ("AC-2", "Account Management"),
+        ("AC-6", "Least Privilege"),
+        ("CM-6", "Configuration Settings")
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
-    RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
-    ]
+    RELATED_KSIS = ["KSI-IAM-01"]
     
     def __init__(self):
         """Initialize FRR-RSC-03 analyzer."""
@@ -81,73 +79,36 @@ class FRR_RSC_03_Analyzer(BaseFRRAnalyzer):
     # ============================================================================
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Python code for FRR-RSC-03 compliance using AST.
+        """Delegate to RSC-01 with privileged account focus (SHOULD = lower severity)."""
+        from .frr_rsc_01 import FRR_RSC_01_Analyzer
+        base_analyzer = FRR_RSC_01_Analyzer()
+        findings = base_analyzer.analyze_python(code, file_path)
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
+        # Update for RSC-03 (SHOULD requirement, privileged vs top-level admin)
+        for finding in findings:
+            finding.ksi_id = self.FRR_ID
+            finding.requirement_id = self.FRR_ID
+            # Reduce severity for SHOULD
+            if finding.severity == Severity.CRITICAL:
+                finding.severity = Severity.HIGH
+            elif finding.severity == Severity.HIGH:
+                finding.severity = Severity.MEDIUM
+            finding.title = finding.title.replace("admin", "privileged")
+            finding.description = finding.description.replace("FRR-RSC-01", "FRR-RSC-03 (SHOULD)").replace("top-level administrative", "privileged")
         
-        Detection targets:
-        - TODO: List what patterns to detect
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for FRR-RSC-03 compliance using AST.
-        
-        TODO: Implement C# analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        """Delegate to Python implementation."""
+        return self.analyze_python(code, file_path)
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for FRR-RSC-03 compliance using AST.
-        
-        TODO: Implement Java analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        """Delegate to Python implementation."""
+        return self.analyze_python(code, file_path)
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for FRR-RSC-03 compliance using AST.
-        
-        TODO: Implement TypeScript analysis
-        """
-        findings = []
+        """Delegate to Python implementation."""
+        return self.analyze_python(code, file_path)
         lines = code.split('\n')
         
         # TODO: Implement AST analysis for TypeScript

@@ -58,15 +58,12 @@ class FRR_RSC_05_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("CM-7", "Least Functionality"),
         ("CM-6", "Configuration Settings"),
-        ("SC-7", "Boundary Protection"),
+        ("CM-7", "Least Functionality")
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Yes"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
-    RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
-    ]
+    RELATED_KSIS = []
     
     def __init__(self):
         """Initialize FRR-RSC-05 analyzer."""
@@ -82,72 +79,73 @@ class FRR_RSC_05_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-RSC-05 compliance using AST.
+        Check for comparison/validation APIs for security settings.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Looks for:
+        - API endpoints for comparing settings
+        - Functions that validate against secure defaults
+        - Configuration comparison logic
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
+        # Check for comparison functions
+        comparison_patterns = [
+            r'def.*compare.*settings', r'def.*validate.*config',
+            r'def.*check.*defaults', r'compare.*security',
+            r'@app\.route.*\/compare', r'@api\.route.*\/validate'
+        ]
         
-        # TODO: Implement regex fallback
+        for i, line in enumerate(lines, start=1):
+            for pattern in comparison_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        ksi_id=self.FRR_ID,
+                        requirement_id=self.FRR_ID,
+                        title="Comparison capability detected - ensure completeness",
+                        description=f"Line {i} implements settings comparison. FRR-RSC-05 requires ability to compare ALL current settings for admin/privileged accounts to recommended defaults.",
+                        severity=Severity.LOW,
+                        file_path=file_path,
+                        line_number=i,
+                        code_snippet=self._get_snippet(lines, i, 3),
+                        recommendation="Verify comparison covers: (1) All admin/privileged accounts, (2) All security settings, (3) Current vs recommended defaults, (4) Deviation reporting"
+                    ))
+                    return findings  # Only report once per file
+        
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for FRR-RSC-05 compliance using AST.
-        
-        TODO: Implement C# analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        """Check C# for comparison APIs (similar patterns).""" 
+        return self._check_comparison_api(code, file_path)
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for FRR-RSC-05 compliance using AST.
-        
-        TODO: Implement Java analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        """Check Java for comparison APIs (similar patterns)."""
+        return self._check_comparison_api(code, file_path)
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for FRR-RSC-05 compliance using AST.
-        
-        TODO: Implement TypeScript analysis
-        """
+        """Check TypeScript for comparison APIs (similar patterns)."""
+        return self._check_comparison_api(code, file_path)
+    
+    def _check_comparison_api(self, code: str, file_path: str) -> List[Finding]:
+        """Shared logic for detecting comparison APIs."""
         findings = []
+        patterns = [r'compare.*settings', r'validate.*config', r'/api/compare', r'/api/validate']
+        
+        for pattern in patterns:
+            if re.search(pattern, code, re.IGNORECASE):
+                findings.append(Finding(
+                    ksi_id=self.FRR_ID,
+                    requirement_id=self.FRR_ID,
+                    title="Comparison API detected",
+                    description="Code implements comparison capability. Ensure it covers all admin/privileged account settings per FRR-RSC-05.",
+                    severity=Severity.LOW,
+                    file_path=file_path,
+                    line_number=1,
+                    code_snippet="",
+                    recommendation="Verify comprehensive coverage of all security settings"
+                ))
+                break
+        return findings
         lines = code.split('\n')
         
         # TODO: Implement AST analysis for TypeScript

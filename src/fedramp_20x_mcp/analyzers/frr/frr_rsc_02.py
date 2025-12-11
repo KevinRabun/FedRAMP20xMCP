@@ -58,15 +58,13 @@ class FRR_RSC_02_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("CM-7", "Least Functionality"),
+        ("AC-2", "Account Management"),
         ("CM-6", "Configuration Settings"),
-        ("SC-7", "Boundary Protection"),
+        ("AC-6", "Least Privilege")
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
-    RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
-    ]
+    RELATED_KSIS = ["KSI-IAM-01", "KSI-IAM-02"]
     
     def __init__(self):
         """Initialize FRR-RSC-02 analyzer."""
@@ -81,73 +79,31 @@ class FRR_RSC_02_Analyzer(BaseFRRAnalyzer):
     # ============================================================================
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Python code for FRR-RSC-02 compliance using AST.
+        """Delegate to RSC-01 analyzer with RSC-02 context."""
+        from .frr_rsc_01 import FRR_RSC_01_Analyzer
+        base_analyzer = FRR_RSC_01_Analyzer()
+        findings = base_analyzer.analyze_python(code, file_path)
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
+        # Update findings with RSC-02 context
+        for finding in findings:
+            finding.ksi_id = self.FRR_ID
+            finding.requirement_id = self.FRR_ID
+            finding.title = finding.title.replace("RSC-01", "RSC-02")
+            finding.description += " FRR-RSC-02 specifically requires documentation explaining security settings operated by admin accounts and their implications."
         
-        Detection targets:
-        - TODO: List what patterns to detect
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for FRR-RSC-02 compliance using AST.
-        
-        TODO: Implement C# analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        """Delegate to base implementation."""
+        return self.analyze_python(code, file_path)
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for FRR-RSC-02 compliance using AST.
-        
-        TODO: Implement Java analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        """Delegate to base implementation."""
+        return self.analyze_python(code, file_path)
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for FRR-RSC-02 compliance using AST.
-        
-        TODO: Implement TypeScript analysis
-        """
-        findings = []
+        """Delegate to base implementation."""
+        return self.analyze_python(code, file_path)
         lines = code.split('\n')
         
         # TODO: Implement AST analysis for TypeScript

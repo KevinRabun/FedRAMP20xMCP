@@ -57,15 +57,13 @@ class FRR_RSC_04_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("CM-7", "Least Functionality"),
-        ("CM-6", "Configuration Settings"),
-        ("SC-7", "Boundary Protection"),
+        ("AC-2", "Account Management"),
+        ("IA-5", "Authenticator Management"),
+        ("CM-6", "Configuration Settings")
     ]
-    CODE_DETECTABLE = "No"
-    IMPLEMENTATION_STATUS = "PARTIAL"
-    RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
-    ]
+    CODE_DETECTABLE = "Yes"
+    IMPLEMENTATION_STATUS = "IMPLEMENTED"
+    RELATED_KSIS = ["KSI-IAM-01", "KSI-IAM-05"]
     
     def __init__(self):
         """Initialize FRR-RSC-04 analyzer."""

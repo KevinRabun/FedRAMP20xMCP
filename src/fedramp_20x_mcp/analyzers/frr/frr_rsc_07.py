@@ -58,15 +58,12 @@ class FRR_RSC_07_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("CM-7", "Least Functionality"),
         ("CM-6", "Configuration Settings"),
-        ("SC-7", "Boundary Protection"),
+        ("AC-3", "Access Enforcement")
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Yes"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
-    RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
-    ]
+    RELATED_KSIS = []
     
     def __init__(self):
         """Initialize FRR-RSC-07 analyzer."""
@@ -82,22 +79,40 @@ class FRR_RSC_07_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-RSC-07 compliance using AST.
+        Check for API endpoints that allow viewing/adjusting security settings.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Looks for:
+        - Flask/FastAPI routes for security configuration
+        - API decorators with security endpoints
+        - Functions that modify security settings via API
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
+        api_patterns = [
+            r'@app\.route.*\/security', r'@api\.route.*\/settings',
+            r'@app\.route.*\/config', r'@app\.put.*\/security',
+            r'@app\.patch.*\/settings', r'FastAPI.*security',
+            r'def.*update.*security.*settings', r'def.*configure.*security'
+        ]
+        
+        for i, line in enumerate(lines, start=1):
+            for pattern in api_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        ksi_id=self.FRR_ID,
+                        requirement_id=self.FRR_ID,
+                        title="Security settings API detected - verify capabilities",
+                        description=f"Line {i} implements API for security settings. FRR-RSC-07 requires ability to VIEW and ADJUST security settings via API.",
+                        severity=Severity.LOW,
+                        file_path=file_path,
+                        line_number=i,
+                        code_snippet=self._get_snippet(lines, i, 3),
+                        recommendation="Ensure API supports: (1) Viewing current settings (GET), (2) Adjusting settings (PUT/PATCH), (3) Authentication/authorization, (4) Audit logging"
+                    ))
+                    return findings
+        
+        return findings
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)
         #     tree = parser.parse(code)
@@ -118,16 +133,9 @@ class FRR_RSC_07_Analyzer(BaseFRRAnalyzer):
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for FRR-RSC-07 compliance using AST.
-        
-        TODO: Implement C# analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        """Check C# for security settings APIs (Web API, ASP.NET Core)."""
+        patterns = [r'\[Route.*security', r'\[HttpGet.*settings', r'\[ApiController.*Security']
+        return self._check_api(code, file_path, patterns)
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
@@ -142,15 +150,27 @@ class FRR_RSC_07_Analyzer(BaseFRRAnalyzer):
         return findings
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for FRR-RSC-07 compliance using AST.
-        
-        TODO: Implement TypeScript analysis
-        """
+        """Check TypeScript for security settings APIs (Express, NestJS)."""
+        patterns = [r'router\.get.*\/security', r'router\.put.*\/settings', r'@Controller.*security']
+        return self._check_api(code, file_path, patterns)
+    
+    def _check_api(self, code: str, file_path: str, patterns: List[str]) -> List[Finding]:
+        """Shared API detection logic."""
         findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
+        for pattern in patterns:
+            if re.search(pattern, code, re.IGNORECASE):
+                findings.append(Finding(
+                    ksi_id=self.FRR_ID,
+                    requirement_id=self.FRR_ID,
+                    title="Security settings API found",
+                    description="API for security settings detected. Verify view/adjust capabilities per FRR-RSC-07.",
+                    severity=Severity.LOW,
+                    file_path=file_path,
+                    line_number=1,
+                    code_snippet="",
+                    recommendation="Ensure API supports viewing AND adjusting security settings"
+                ))
+                break
         return findings
     
     # ============================================================================
@@ -158,34 +178,41 @@ class FRR_RSC_07_Analyzer(BaseFRRAnalyzer):
     # ============================================================================
     
     def analyze_bicep(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Bicep infrastructure code for FRR-RSC-07 compliance.
-        
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
-        """
+        """Check for API Management resources (Azure API for settings)."""
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
+        if re.search(r'Microsoft\.ApiManagement/service', code):
+            findings.append(Finding(
+                ksi_id=self.FRR_ID,
+                requirement_id=self.FRR_ID,
+                title="API Management resource detected",
+                description="API Management service found. Verify it provides security settings API per FRR-RSC-07.",
+                severity=Severity.LOW,
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Ensure API endpoints for viewing/adjusting security settings are configured"
+            ))
         
         return findings
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Terraform infrastructure code for FRR-RSC-07 compliance.
-        
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
-        """
+        """Check for API Gateway resources (AWS API for settings)."""
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement Terraform regex patterns
+        if 'aws_api_gateway' in code or 'azurerm_api_management' in code:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID,
+                requirement_id=self.FRR_ID,
+                title="API Gateway resource detected",
+                description="API Gateway found. Verify it provides security settings API per FRR-RSC-07.",
+                severity=Severity.LOW,
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Configure endpoints for viewing/adjusting security settings"
+            ))
+        
         return findings
     
     # ============================================================================

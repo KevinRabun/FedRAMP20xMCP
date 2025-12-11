@@ -58,15 +58,12 @@ class FRR_RSC_06_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("CM-7", "Least Functionality"),
         ("CM-6", "Configuration Settings"),
-        ("SC-7", "Boundary Protection"),
+        ("CM-2", "Baseline Configuration")
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Yes"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
-    RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
-    ]
+    RELATED_KSIS = []
     
     def __init__(self):
         """Initialize FRR-RSC-06 analyzer."""
@@ -82,72 +79,73 @@ class FRR_RSC_06_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-RSC-06 compliance using AST.
+        Check for export/serialization capabilities for security settings.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Looks for:
+        - JSON/YAML/XML export functions
+        - API endpoints for exporting settings
+        - Serialization of security configurations
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
+        export_patterns = [
+            r'def.*export.*settings', r'def.*export.*config',
+            r'json\.dump', r'yaml\.dump', r'to_json', r'to_yaml',
+            r'@app\.route.*\/export', r'serialize.*config'
+        ]
         
-        # TODO: Implement regex fallback
+        for i, line in enumerate(lines, start=1):
+            for pattern in export_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        ksi_id=self.FRR_ID,
+                        requirement_id=self.FRR_ID,
+                        title="Export capability detected - verify machine-readable format",
+                        description=f"Line {i} implements settings export. FRR-RSC-06 requires exporting ALL security settings in machine-readable format (JSON, YAML, XML).",
+                        severity=Severity.LOW,
+                        file_path=file_path,
+                        line_number=i,
+                        code_snippet=self._get_snippet(lines, i, 3),
+                        recommendation="Ensure export includes: (1) All security settings, (2) Machine-readable format, (3) Schema documentation, (4) Version information"
+                    ))
+                    return findings
+        
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for FRR-RSC-06 compliance using AST.
-        
-        TODO: Implement C# analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        """Check C# for export APIs."""
+        patterns = [r'Export.*Settings', r'JsonSerializer\.Serialize', r'\/api\/export']
+        return self._check_export(code, file_path, patterns)
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for FRR-RSC-06 compliance using AST.
-        
-        TODO: Implement Java analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        """Check Java for export APIs."""
+        patterns = [r'export.*Config', r'ObjectMapper.*writeValue', r'toJson']
+        return self._check_export(code, file_path, patterns)
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for FRR-RSC-06 compliance using AST.
-        
-        TODO: Implement TypeScript analysis
-        """
+        """Check TypeScript for export APIs."""
+        patterns = [r'export.*settings', r'JSON\.stringify', r'\/api\/export']
+        return self._check_export(code, file_path, patterns)
+    
+    def _check_export(self, code: str, file_path: str, patterns: List[str]) -> List[Finding]:
+        """Shared export detection logic."""
         findings = []
+        for pattern in patterns:
+            if re.search(pattern, code, re.IGNORECASE):
+                findings.append(Finding(
+                    ksi_id=self.FRR_ID,
+                    requirement_id=self.FRR_ID,
+                    title="Export capability found",
+                    description="Export functionality detected. Verify machine-readable format per FRR-RSC-06.",
+                    severity=Severity.LOW,
+                    file_path=file_path,
+                    line_number=1,
+                    code_snippet="",
+                    recommendation="Ensure comprehensive export of all security settings"
+                ))
+                break
+        return findings
         lines = code.split('\n')
         
         # TODO: Implement AST analysis for TypeScript

@@ -58,15 +58,12 @@ class FRR_RSC_09_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("CM-7", "Least Functionality"),
         ("CM-6", "Configuration Settings"),
-        ("SC-7", "Boundary Protection"),
+        ("SA-5", "Information System Documentation")
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
-    RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
-    ]
+    RELATED_KSIS = []
     
     def __init__(self):
         """Initialize FRR-RSC-09 analyzer."""
@@ -82,22 +79,39 @@ class FRR_RSC_09_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-RSC-09 compliance using AST.
+        Check for public documentation hosting/publishing code.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Looks for:
+        - Static site generation for docs
+        - Documentation publishing scripts
+        - Public endpoint configuration
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
+        patterns = [
+            r'mkdocs', r'sphinx', r'jekyll', r'docusaurus',
+            r'publish.*docs', r'deploy.*documentation',
+            r'static.*site.*generator', r'@app\.route.*\/docs'
+        ]
+        
+        for i, line in enumerate(lines, start=1):
+            for pattern in patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        ksi_id=self.FRR_ID,
+                        requirement_id=self.FRR_ID,
+                        title="Documentation publishing detected",
+                        description=f"Line {i} publishes documentation. FRR-RSC-09 requires making secure configuration guidance publicly available.",
+                        severity=Severity.LOW,
+                        file_path=file_path,
+                        line_number=i,
+                        code_snippet=self._get_snippet(lines, i, 3),
+                        recommendation="Ensure published docs include: (1) Secure configuration guidance, (2) Admin account procedures, (3) Security settings explanations, (4) Public accessibility"
+                    ))
+                    return findings
+        
+        return findings
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)
         #     tree = parser.parse(code)

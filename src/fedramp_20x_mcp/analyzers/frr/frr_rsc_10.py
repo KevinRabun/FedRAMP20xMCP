@@ -58,15 +58,13 @@ class FRR_RSC_10_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("CM-7", "Least Functionality"),
+        ("CM-3", "Configuration Change Control"),
         ("CM-6", "Configuration Settings"),
-        ("SC-7", "Boundary Protection"),
+        ("SA-5", "Information System Documentation")
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
-    RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
-    ]
+    RELATED_KSIS = []
     
     def __init__(self):
         """Initialize FRR-RSC-10 analyzer."""
@@ -82,72 +80,85 @@ class FRR_RSC_10_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-RSC-10 compliance using AST.
+        Check for version management of security configuration.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Looks for:
+        - Version attributes/constants
+        - Changelog/release notes generation
+        - Semantic versioning usage
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
+        # Check for version tracking
+        version_patterns = [
+            r'__version__\s*=', r'VERSION\s*=', r'CONFIG_VERSION',
+            r'generate.*changelog', r'release.*notes',
+            r'semver', r'version.*history'
+        ]
         
-        # TODO: Implement regex fallback
+        for i, line in enumerate(lines, start=1):
+            for pattern in version_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        ksi_id=self.FRR_ID,
+                        requirement_id=self.FRR_ID,
+                        title="Version tracking detected",
+                        description=f"Line {i} tracks version information. FRR-RSC-10 requires versioning and release history for secure default settings as they change over time.",
+                        severity=Severity.LOW,
+                        file_path=file_path,
+                        line_number=i,
+                        code_snippet=self._get_snippet(lines, i, 3),
+                        recommendation="Ensure versioning includes: (1) Semantic versioning, (2) Release history/changelog, (3) Security setting changes documented, (4) Rationale for changes"
+                    ))
+                    return findings
+        
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for FRR-RSC-10 compliance using AST.
-        
-        TODO: Implement C# analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        """Check C# for version tracking."""
+        patterns = [r'\[assembly:\s*AssemblyVersion', r'Version\s*=', r'ChangeLog']
+        return self._check_versioning(code, file_path, patterns)
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for FRR-RSC-10 compliance using AST.
-        
-        TODO: Implement Java analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        """Check Java for version tracking."""
+        patterns = [r'<version>', r'VERSION\s*=', r'pom\.xml']
+        return self._check_versioning(code, file_path, patterns)
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for FRR-RSC-10 compliance using AST.
-        
-        TODO: Implement TypeScript analysis
-        """
+        """Check TypeScript for version tracking (package.json)."""
+        if 'package.json' in file_path.lower() and '"version"' in code:
+            return [Finding(
+                ksi_id=self.FRR_ID,
+                requirement_id=self.FRR_ID,
+                title="Version tracking in package.json",
+                description="Version found in package.json. Ensure CHANGELOG.md documents security setting changes per FRR-RSC-10.",
+                severity=Severity.LOW,
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Maintain CHANGELOG.md with security configuration version history"
+            )]
+        return []
+    
+    def _check_versioning(self, code: str, file_path: str, patterns: List[str]) -> List[Finding]:
+        """Shared versioning detection."""
         findings = []
+        for pattern in patterns:
+            if re.search(pattern, code, re.IGNORECASE):
+                findings.append(Finding(
+                    ksi_id=self.FRR_ID,
+                    requirement_id=self.FRR_ID,
+                    title="Version tracking found",
+                    description="Versioning detected. Verify release history for secure default settings per FRR-RSC-10.",
+                    severity=Severity.LOW,
+                    file_path=file_path,
+                    line_number=1,
+                    code_snippet="",
+                    recommendation="Document security setting changes in release notes"
+                ))
+                break
+        return findings
         lines = code.split('\n')
         
         # TODO: Implement AST analysis for TypeScript

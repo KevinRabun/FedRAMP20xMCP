@@ -58,15 +58,13 @@ class FRR_RSC_01_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("CM-7", "Least Functionality"),
-        ("CM-6", "Configuration Settings"),
-        ("SC-7", "Boundary Protection"),
+        ("AC-2", "Account Management"),
+        ("IA-2", "Identification and Authentication"),
+        ("IA-4", "Identifier Management")
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
-    RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
-    ]
+    RELATED_KSIS = ["KSI-IAM-01", "KSI-IAM-02"]
     
     def __init__(self):
         """Initialize FRR-RSC-01 analyzer."""
@@ -82,72 +80,101 @@ class FRR_RSC_01_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-RSC-01 compliance using AST.
+        Analyze Python code for admin account management patterns.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Checks for:
+        - Admin user creation/provisioning code
+        - Missing documentation references
+        - Hardcoded admin credentials
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
+        # Check for admin account creation without documented procedures
+        admin_patterns = [
+            r'create.*admin', r'provision.*admin', r'setup.*admin',
+            r'admin.*user', r'root.*account', r'superuser'
+        ]
         
-        # TODO: Implement regex fallback
+        for i, line in enumerate(lines, start=1):
+            for pattern in admin_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        ksi_id=self.FRR_ID,
+                        requirement_id=self.FRR_ID,
+                        title="Admin account management requires documented procedures",
+                        description=f"Line {i} contains admin account creation code. FRR-RSC-01 requires documented guidance for securely accessing, configuring, operating, and decommissioning top-level administrative accounts.",
+                        severity=Severity.MEDIUM,
+                        file_path=file_path,
+                        line_number=i,
+                        code_snippet=self._get_snippet(lines, i, 3),
+                        recommendation="Create documentation (e.g., ADMIN-ACCOUNTS.md) covering: (1) How to securely create admin accounts, (2) Required security settings, (3) MFA requirements, (4) Audit logging, (5) Decommissioning procedures"
+                    ))
+                    break
+        
+        # Check for hardcoded admin credentials (security issue)
+        credential_patterns = [
+            r'admin.*password', r'root.*password', r'admin.*token',
+            r'password.*=.*[\'"]admin', r'username.*=.*[\'"]admin'
+        ]
+        
+        for i, line in enumerate(lines, start=1):
+            for pattern in credential_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        ksi_id=self.FRR_ID,
+                        requirement_id=self.FRR_ID,
+                        title="Hardcoded admin credentials detected",
+                        description=f"Line {i} contains hardcoded admin credentials. This violates secure admin account practices required by FRR-RSC-01.",
+                        severity=Severity.CRITICAL,
+                        file_path=file_path,
+                        line_number=i,
+                        code_snippet=self._get_snippet(lines, i, 2),
+                        recommendation="Remove hardcoded credentials. Use environment variables, Azure Key Vault, or managed identities. Document proper credential management in admin account guidance."
+                    ))
+                    break
+        
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for FRR-RSC-01 compliance using AST.
-        
-        TODO: Implement C# analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        """C# admin account analysis (similar patterns to Python)."""
+        return self._analyze_admin_patterns(code, file_path)
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for FRR-RSC-01 compliance using AST.
-        
-        TODO: Implement Java analysis
-        """
+        """Java admin account analysis (similar patterns to Python)."""
+        return self._analyze_admin_patterns(code, file_path)
+    
+    def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
+        """TypeScript/JavaScript admin account analysis (similar patterns to Python)."""
+        return self._analyze_admin_patterns(code, file_path)
+    
+    def _analyze_admin_patterns(self, code: str, file_path: str) -> List[Finding]:
+        """Shared logic for admin account detection across languages."""
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST analysis for Java
-        return findings
-    
-    def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for FRR-RSC-01 compliance using AST.
+        admin_patterns = [
+            r'create.*admin', r'provision.*admin', r'Admin.*User',
+            r'root.*account', r'superuser', r'Administrator'
+        ]
         
-        TODO: Implement TypeScript analysis
-        """
-        findings = []
+        for i, line in enumerate(lines, start=1):
+            for pattern in admin_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        ksi_id=self.FRR_ID,
+                        requirement_id=self.FRR_ID,
+                        title="Admin account management requires documented procedures",
+                        description=f"Admin account code detected. FRR-RSC-01 requires documentation for secure access, configuration, operation, and decommissioning.",
+                        severity=Severity.MEDIUM,
+                        file_path=file_path,
+                        line_number=i,
+                        code_snippet=self._get_snippet(lines, i, 3),
+                        recommendation="Document admin account lifecycle in ADMIN-ACCOUNTS.md or SECURITY.md"
+                    ))
+                    return findings  # Only report once per file
+        
+        return findings
         lines = code.split('\n')
         
         # TODO: Implement AST analysis for TypeScript
@@ -159,33 +186,61 @@ class FRR_RSC_01_Analyzer(BaseFRRAnalyzer):
     
     def analyze_bicep(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Bicep infrastructure code for FRR-RSC-01 compliance.
+        Analyze Bicep for admin account provisioning.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        Checks for SQL admins, Key Vault admins, etc. requiring documented procedures.
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
+        # Check for SQL admin configuration
+        if re.search(r'Microsoft\.Sql/servers.*administratorLogin', code, re.DOTALL):
+            findings.append(Finding(
+                ksi_id=self.FRR_ID,
+                requirement_id=self.FRR_ID,
+                title="SQL Server admin accounts require documented guidance",
+                description="Bicep configures SQL Server administrative accounts. FRR-RSC-01 requires documentation for accessing, configuring, operating, and decommissioning top-level admin accounts.",
+                severity=Severity.MEDIUM,
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Create ADMIN-ACCOUNTS.md documenting: (1) How to create/configure SQL admins, (2) MFA requirements, (3) Privilege levels, (4) Decommissioning steps"
+            ))
+        
+        # Check for Key Vault access policies (admin-level access)
+        if re.search(r'accessPolicies.*permissions.*\[(.*all.*|.*\*.*)\]', code, re.IGNORECASE | re.DOTALL):
+            findings.append(Finding(
+                ksi_id=self.FRR_ID,
+                requirement_id=self.FRR_ID,
+                title="Key Vault admin access requires documented procedures",
+                description="Bicep grants administrative Key Vault permissions. FRR-RSC-01 requires documented guidance for admin account lifecycle.",
+                severity=Severity.MEDIUM,
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Document Key Vault admin access procedures including role requirements and audit logging"
+            ))
         
         return findings
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Terraform infrastructure code for FRR-RSC-01 compliance.
-        
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
-        """
+        """Analyze Terraform for admin account provisioning."""
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement Terraform regex patterns
+        # Check for azurerm_sql_server admin
+        if 'azurerm_sql_server' in code and 'administrator_login' in code:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID,
+                requirement_id=self.FRR_ID,
+                title="SQL admin accounts require documented guidance (Terraform)",
+                description="Terraform configures SQL admin accounts. FRR-RSC-01 requires documentation.",
+                severity=Severity.MEDIUM,
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Document SQL admin lifecycle in ADMIN-ACCOUNTS.md"
+            ))
+        
         return findings
     
     # ============================================================================
@@ -193,41 +248,86 @@ class FRR_RSC_01_Analyzer(BaseFRRAnalyzer):
     # ============================================================================
     
     def analyze_github_actions(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitHub Actions workflow for FRR-RSC-01 compliance.
-        
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
-        """
+        """Check GitHub Actions for admin account operations."""
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement GitHub Actions analysis
+        # Look for admin provisioning steps
+        if re.search(r'(azure/login|az\s+ad|create.*admin|provision.*admin)', code, re.IGNORECASE):
+            findings.append(Finding(
+                ksi_id=self.FRR_ID,
+                requirement_id=self.FRR_ID,
+                title="Admin provisioning in CI/CD requires documented procedures",
+                description="GitHub Actions performs admin account operations. FRR-RSC-01 requires documented guidance.",
+                severity=Severity.MEDIUM,
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Document CI/CD admin provisioning procedures including approval workflow and audit logging"
+            ))
+        
         return findings
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Azure Pipelines YAML for FRR-RSC-01 compliance.
-        
-        TODO: Implement Azure Pipelines analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        """Check Azure Pipelines for admin operations."""
+        return self.analyze_github_actions(code, file_path)  # Similar logic
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
+        """Check GitLab CI for admin operations."""
+        return self.analyze_github_actions(code, file_path)  # Similar logic
+    
+    # ============================================================================
+    # DOCUMENTATION ANALYSIS
+    # ============================================================================
+    
+    def analyze_documentation(self, file_content: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze GitLab CI YAML for FRR-RSC-01 compliance.
+        Check if documentation exists for admin account procedures.
         
-        TODO: Implement GitLab CI analysis
+        Looks for:
+        - Admin account guidance
+        - Secure access procedures
+        - Configuration instructions
+        - Decommissioning steps
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement GitLab CI analysis
+        # Check if this is a relevant documentation file
+        doc_files = ['readme', 'admin', 'security', 'ops', 'runbook']
+        if not any(keyword in file_path.lower() for keyword in doc_files):
+            return findings
+        
+        # Check for admin account documentation
+        has_admin_guidance = re.search(r'(admin.*account|administrative.*account|root.*account|top.*level.*admin)', file_content, re.IGNORECASE)
+        has_access_procedures = re.search(r'(access|login|authentication).*admin', file_content, re.IGNORECASE)
+        has_decommission = re.search(r'(decommission|delete|remove|offboard).*admin', file_content, re.IGNORECASE)
+        
+        if has_admin_guidance:
+            if not has_access_procedures:
+                findings.append(Finding(
+                    ksi_id=self.FRR_ID,
+                    requirement_id=self.FRR_ID,
+                    title="Incomplete admin documentation: Missing access procedures",
+                    description="Documentation mentions admin accounts but lacks secure access procedures required by FRR-RSC-01.",
+                    severity=Severity.MEDIUM,
+                    file_path=file_path,
+                    line_number=1,
+                    code_snippet="",
+                    recommendation="Add section documenting: (1) MFA requirements, (2) Access approval process, (3) Session timeouts, (4) Login monitoring"
+                ))
+            
+            if not has_decommission:
+                findings.append(Finding(
+                    ksi_id=self.FRR_ID,
+                    requirement_id=self.FRR_ID,
+                    title="Incomplete admin documentation: Missing decommissioning procedures",
+                    description="Documentation lacks admin account decommissioning procedures required by FRR-RSC-01.",
+                    severity=Severity.MEDIUM,
+                    file_path=file_path,
+                    line_number=1,
+                    code_snippet="",
+                    recommendation="Document: (1) When to decommission, (2) Access revocation steps, (3) Audit log preservation, (4) Knowledge transfer"
+                ))
+        
         return findings
     
     # ============================================================================
@@ -238,18 +338,19 @@ class FRR_RSC_01_Analyzer(BaseFRRAnalyzer):
         """
         Get recommendations for automating evidence collection for FRR-RSC-01.
         
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        This requirement is primarily documentation-focused.
         """
         return {
             'frr_id': self.FRR_ID,
             'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
+            'code_detectable': 'Partial',
+            'automation_approach': 'Documentation review + code analysis for admin provisioning',
             'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
+                "ADMIN-ACCOUNTS.md or equivalent documentation",
+                "Procedures for secure admin access",
+                "Configuration instructions",
+                "Decommissioning procedures",
+                "Code analysis showing admin account creation points"
                 # - "Documentation showing policy Z"
             ],
             'collection_queries': [

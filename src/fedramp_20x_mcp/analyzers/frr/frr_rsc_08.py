@@ -58,15 +58,12 @@ class FRR_RSC_08_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("CM-7", "Least Functionality"),
         ("CM-6", "Configuration Settings"),
-        ("SC-7", "Boundary Protection"),
+        ("CM-2", "Baseline Configuration")
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Yes"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
-    RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
-    ]
+    RELATED_KSIS = []
     
     def __init__(self):
         """Initialize FRR-RSC-08 analyzer."""
@@ -82,22 +79,40 @@ class FRR_RSC_08_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-RSC-08 compliance using AST.
+        Check for machine-readable configuration guidance generation.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Looks for:
+        - JSON/YAML/XML schema generation
+        - Configuration export to structured formats
+        - Documentation generation with machine-readable output
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
+        patterns = [
+            r'json\.dump.*config', r'yaml\.dump.*guidance',
+            r'generate.*schema', r'export.*json.*settings',
+            r'create.*machine.*readable', r'jsonschema',
+            r'xml\.etree.*config'
+        ]
+        
+        for i, line in enumerate(lines, start=1):
+            for pattern in patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        ksi_id=self.FRR_ID,
+                        requirement_id=self.FRR_ID,
+                        title="Machine-readable config guidance detected",
+                        description=f"Line {i} exports configuration in machine-readable format. FRR-RSC-08 requires secure configuration guidance in machine-readable format.",
+                        severity=Severity.LOW,
+                        file_path=file_path,
+                        line_number=i,
+                        code_snippet=self._get_snippet(lines, i, 3),
+                        recommendation="Ensure output includes: (1) Secure default recommendations, (2) Security setting descriptions, (3) Schema/validation rules, (4) Version information"
+                    ))
+                    return findings
+        
+        return findings
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)
         #     tree = parser.parse(code)
