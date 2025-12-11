@@ -38,14 +38,14 @@ class FRR_VDR_02_Analyzer(BaseFRRAnalyzer):
     **Related KSIs:**
     - TODO: Add related KSI IDs
     
-    **Detectability:** No
+    **Detectability:** Yes (Code, IaC, CI/CD)
     
     **Detection Strategy:**
-    TODO: This requirement is not directly code-detectable. This analyzer provides:
-        1. Evidence collection guidance and automation recommendations
-        2. Manual validation procedures and checklists
-        3. Related documentation and artifact requirements
-        4. Integration points with other compliance tools
+    This requirement is code-detectable by checking for:
+        1. Application code: Vulnerability tracking systems, remediation workflows, CVE management
+        2. Infrastructure: Microsoft Defender for Cloud, vulnerability scanning services
+        3. CI/CD: Security scanning tools (Trivy, Snyk, CodeQL), vulnerability reporting
+        4. Configuration: Automated remediation, patch management
     """
     
     FRR_ID = "FRR-VDR-02"
@@ -64,7 +64,7 @@ class FRR_VDR_02_Analyzer(BaseFRRAnalyzer):
         ("SI-2(1)", "Central Management"),
         ("SI-2(2)", "Automated Flaw Remediation Status"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = True  # Detects vulnerability tracking and remediation mechanisms
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
         # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
@@ -86,19 +86,60 @@ class FRR_VDR_02_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Python code for FRR-VDR-02 compliance using AST.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects:
+        - Vulnerability tracking and management systems
+        - CVE/vulnerability databases
+        - Remediation workflow automation
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
+        from ..detection_patterns import detect_python_vulnerability_tracking, create_missing_vulnerability_tracking_finding
+        
+        # Check for vulnerability tracking
+        has_vuln_tracking, detected_tools = detect_python_vulnerability_tracking(code)
+        
+        # Check for remediation workflows
+        has_remediation = bool(re.search(
+            r'remediate|remediation|patch|fix.*vulnerability|mitigate',
+            code, re.IGNORECASE
+        ))
+        
+        # Check for status tracking
+        has_status_tracking = bool(re.search(
+            r'vulnerability.*status|remediation.*status|tracking.*state|workflow',
+            code, re.IGNORECASE
+        ))
+        
+        if not has_vuln_tracking:
+            findings.append(create_missing_vulnerability_tracking_finding(self.FRR_ID, file_path))
+        
+        if not has_remediation:
+            findings.append(Finding(
+                frr_id=self.FRR_ID,
+                severity=Severity.HIGH,
+                message="No vulnerability remediation mechanism detected",
+                details=(
+                    "FRR-VDR-02 requires systematic vulnerability remediation. "
+                    "Implement remediation workflows and tracking."
+                ),
+                file_path=file_path,
+                line_number=1,
+                remediation="Implement vulnerability remediation workflow."
+            ))
+        
+        if has_vuln_tracking and not has_status_tracking:
+            findings.append(Finding(
+                frr_id=self.FRR_ID,
+                severity=Severity.MEDIUM,
+                message="Vulnerability tracking without status management",
+                details=(
+                    "FRR-VDR-02 requires persistent tracking. "
+                    "Implement status tracking for vulnerabilities through remediation."
+                ),
+                file_path=file_path,
+                line_number=1,
+                remediation="Add vulnerability status tracking (open, in-progress, remediated)."
+            ))
         # Example from FRR-VDR-08:
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)
@@ -198,14 +239,42 @@ class FRR_VDR_02_Analyzer(BaseFRRAnalyzer):
         """
         Analyze GitHub Actions workflow for FRR-VDR-02 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        Detects:
+        - Vulnerability scanning tools (Trivy, Snyk, CodeQL)
+        - Dependency scanning (Dependabot)
+        - Remediation automation
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement GitHub Actions analysis
+        from ..detection_patterns import detect_github_actions_security_scanning, create_missing_security_scanning_finding
+        
+        # Check for security scanning
+        scanning = detect_github_actions_security_scanning(code)
+        has_any_scanning = any(scanning.values())
+        
+        # Check for automated remediation
+        has_auto_remediation = bool(re.search(
+            r'auto.*fix|auto.*remediate|dependabot.*auto.*merge',
+            code, re.IGNORECASE
+        ))
+        
+        if not has_any_scanning:
+            findings.append(create_missing_security_scanning_finding(self.FRR_ID, file_path))
+        
+        if has_any_scanning and not has_auto_remediation:
+            findings.append(Finding(
+                frr_id=self.FRR_ID,
+                severity=Severity.LOW,
+                message="Scanning detected but no automated remediation",
+                details=(
+                    "FRR-VDR-02 encourages prompt remediation. "
+                    "Consider enabling automated fixes where appropriate."
+                ),
+                file_path=file_path,
+                line_number=1,
+                remediation="Consider enabling automated dependency updates and fixes."
+            ))
+        
         return findings
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
