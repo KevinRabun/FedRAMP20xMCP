@@ -58,12 +58,14 @@ class FRR_KSI_01_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = False  # Not applicable for this requirement
     NIST_CONTROLS = [
-        # TODO: Add NIST controls (e.g., ("RA-5", "Vulnerability Monitoring and Scanning"))
+        ("CA-2", "Control Assessments"),
+        ("CA-7", "Continuous Monitoring"),
+        ("SI-4", "System Monitoring"),
     ]
     CODE_DETECTABLE = "No"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-AFR-01",
     ]
     
     def __init__(self):
