@@ -60,12 +60,13 @@ class FRR_SCN_TR_02_Analyzer(BaseFRRAnalyzer):
     NIST_CONTROLS = [
         ("IR-6", "Incident Reporting"),
         ("PM-15", "Security and Privacy Groups and Associations"),
-        ("CP-2", "Contingency Plan"),
+        ("CM-3", "Configuration Change Control"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-ICP-08",
+        "KSI-CMT-01",
     ]
     
     def __init__(self):
@@ -82,22 +83,40 @@ class FRR_SCN_TR_02_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-SCN-TR-02 compliance using AST.
+        Analyze Python code for FRR-SCN-TR-02 compliance.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects initial notification timing:
+        - 30-day advance notifications
+        - Initial plan notifications
+        - Scheduling mechanisms
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
+        # Detect initial notification patterns
+        initial_patterns = [
+            r'initial.*plan',
+            r'30.*day',
+            r'thirty.*day',
+            r'advance.*notif',
+            r'transformative.*plan',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            for pattern in initial_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Initial transformative change notification detected",
+                        description=f"Found initial notification pattern: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Ensure initial plans for transformative changes are notified 30 business days in advance."
+                    ))
+                    break
+        
+        return findings
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)
         #     tree = parser.parse(code)

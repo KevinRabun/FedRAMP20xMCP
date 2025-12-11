@@ -58,14 +58,15 @@ class FRR_SCN_EX_01_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("IR-6", "Incident Reporting"),
+        ("CM-3", "Configuration Change Control"),
+        ("CM-4", "Impact Analysis"),
         ("PM-15", "Security and Privacy Groups and Associations"),
-        ("CP-2", "Contingency Plan"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-CMT-01",
+        "KSI-CMT-02",
     ]
     
     def __init__(self):
@@ -82,22 +83,40 @@ class FRR_SCN_EX_01_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-SCN-EX-01 compliance using AST.
+        Analyze Python code for FRR-SCN-EX-01 compliance.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects approval delays and CAP requirements:
+        - Approval workflow gates
+        - Change delay mechanisms
+        - CAP-related approvals
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
+        # Detect approval/delay patterns
+        approval_patterns = [
+            r'require.*approval',
+            r'delay.*change',
+            r'corrective.*action.*plan',
+            r'cap',
+            r'approval.*advance',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            for pattern in approval_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Approval/delay mechanism detected",
+                        description=f"Found approval pattern: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Ensure changes can be delayed or require approval per CAP or other agreements."
+                    ))
+                    break
+        
+        return findings
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)
         #     tree = parser.parse(code)

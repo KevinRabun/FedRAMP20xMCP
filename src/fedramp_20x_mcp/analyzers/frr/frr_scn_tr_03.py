@@ -60,12 +60,13 @@ class FRR_SCN_TR_03_Analyzer(BaseFRRAnalyzer):
     NIST_CONTROLS = [
         ("IR-6", "Incident Reporting"),
         ("PM-15", "Security and Privacy Groups and Associations"),
-        ("CP-2", "Contingency Plan"),
+        ("CM-3", "Configuration Change Control"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-ICP-08",
+        "KSI-CMT-01",
     ]
     
     def __init__(self):
@@ -82,22 +83,40 @@ class FRR_SCN_TR_03_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-SCN-TR-03 compliance using AST.
+        Analyze Python code for FRR-SCN-TR-03 compliance.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects final notification timing:
+        - 10-day advance notifications
+        - Final plan notifications
+        - Pre-implementation alerts
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
+        # Detect final notification patterns
+        final_patterns = [
+            r'final.*plan',
+            r'10.*day',
+            r'ten.*day',
+            r'pre.*implementation',
+            r'before.*start',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            for pattern in final_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Final transformative change notification detected",
+                        description=f"Found final notification pattern: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Ensure final plans for transformative changes are notified 10 business days in advance."
+                    ))
+                    break
+        
+        return findings
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)
         #     tree = parser.parse(code)

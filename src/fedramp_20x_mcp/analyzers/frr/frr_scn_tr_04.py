@@ -60,12 +60,13 @@ class FRR_SCN_TR_04_Analyzer(BaseFRRAnalyzer):
     NIST_CONTROLS = [
         ("IR-6", "Incident Reporting"),
         ("PM-15", "Security and Privacy Groups and Associations"),
-        ("CP-2", "Contingency Plan"),
+        ("CM-3", "Configuration Change Control"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-ICP-08",
+        "KSI-CMT-01",
     ]
     
     def __init__(self):
@@ -82,22 +83,40 @@ class FRR_SCN_TR_04_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-SCN-TR-04 compliance using AST.
+        Analyze Python code for FRR-SCN-TR-04 compliance.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects post-completion notification:
+        - 5-day post-completion alerts
+        - Completion notifications
+        - Post-deployment notifications
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
+        # Detect post-completion patterns
+        completion_patterns = [
+            r'after.*finish',
+            r'after.*complet',
+            r'5.*day.*after',
+            r'five.*day.*after',
+            r'post.*complet',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            for pattern in completion_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Post-completion notification detected",
+                        description=f"Found completion notification pattern: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Ensure notifications are sent within 5 business days after finishing transformative changes."
+                    ))
+                    break
+        
+        return findings
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)
         #     tree = parser.parse(code)

@@ -60,12 +60,14 @@ class FRR_SCN_AD_01_Analyzer(BaseFRRAnalyzer):
     NIST_CONTROLS = [
         ("IR-6", "Incident Reporting"),
         ("PM-15", "Security and Privacy Groups and Associations"),
-        ("CP-2", "Contingency Plan"),
+        ("CM-3", "Configuration Change Control"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-ICP-08",
+        "KSI-ICP-09",
+        "KSI-CMT-01",
     ]
     
     def __init__(self):
@@ -82,22 +84,40 @@ class FRR_SCN_AD_01_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-SCN-AD-01 compliance using AST.
+        Analyze Python code for FRR-SCN-AD-01 compliance.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects adaptive change notification with timing:
+        - Scheduled notifications
+        - Time-based triggers
+        - Adaptive change tracking
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
+        # Detect adaptive change notification patterns
+        adaptive_patterns = [
+            r'adaptive.*change',
+            r'notify.*after.*change',
+            r'schedule.*notification',
+            r'delay.*notification',
+            r'ten.*business.*day',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            for pattern in adaptive_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Adaptive change notification detected",
+                        description=f"Found adaptive change pattern: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Ensure notifications for adaptive changes are sent within 10 business days after completion."
+                    ))
+                    break
+        
+        return findings
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)
         #     tree = parser.parse(code)
