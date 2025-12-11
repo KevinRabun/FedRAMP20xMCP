@@ -63,7 +63,7 @@ class FRR_ICP_07_Analyzer(BaseFRRAnalyzer):
         ("IR-5", "Incident Monitoring"),
         ("IR-8", "Incident Response Plan"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = True  # Detects final report generation and post-incident documentation
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
         # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
@@ -85,19 +85,58 @@ class FRR_ICP_07_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Python code for FRR-ICP-07 compliance using AST.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects:
+        - Final report generation
+        - Incident summary creation
+        - Root cause analysis documentation
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
+        # Check for report generation
+        has_report_gen = bool(re.search(
+            r'generate.*report|create.*report|final.*report|incident.*summary',
+            code, re.IGNORECASE
+        ))
+        
+        # Check for root cause analysis
+        has_rca = bool(re.search(
+            r'root.*cause|rca|post.*mortem|incident.*analysis|lessons.*learned',
+            code, re.IGNORECASE
+        ))
+        
+        # Check for comprehensive data collection
+        has_data_collection = bool(re.search(
+            r'timeline|impact.*assessment|remediation.*steps|recovery.*actions',
+            code, re.IGNORECASE
+        ))
+        
+        if not has_report_gen:
+            findings.append(Finding(
+                frr_id=self.FRR_ID,
+                severity=Severity.HIGH,
+                message="No final report generation detected",
+                details=(
+                    "FRR-ICP-07 requires comprehensive final reports after incident resolution. "
+                    "Implement automated report generation."
+                ),
+                file_path=file_path,
+                line_number=1,
+                remediation="Implement final incident report generation."
+            ))
+        
+        if not has_rca:
+            findings.append(Finding(
+                frr_id=self.FRR_ID,
+                severity=Severity.MEDIUM,
+                message="No root cause analysis detected",
+                details=(
+                    "FRR-ICP-07 requires root cause analysis in final reports. "
+                    "Implement RCA documentation."
+                ),
+                file_path=file_path,
+                line_number=1,
+                remediation="Implement root cause analysis documentation."
+            ))
         # Example from FRR-VDR-08:
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)

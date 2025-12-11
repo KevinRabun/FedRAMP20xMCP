@@ -63,7 +63,7 @@ class FRR_ICP_03_Analyzer(BaseFRRAnalyzer):
         ("IR-5", "Incident Monitoring"),
         ("IR-8", "Incident Response Plan"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = True  # Detects CISA reporting mechanisms and government cloud integrations
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
         # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
@@ -85,19 +85,59 @@ class FRR_ICP_03_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Python code for FRR-ICP-03 compliance using AST.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects:
+        - CISA-specific reporting mechanisms
+        - Government cloud integrations
+        - Attack vector detection and classification
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
+        from ..detection_patterns import detect_python_alerting, detect_python_logging
+        from ..detection_patterns import create_missing_alerting_finding, create_missing_logging_finding
+        
+        # Check for logging mechanisms
+        has_logging, _ = detect_python_logging(code)
+        
+        # Check for alerting mechanisms
+        has_alerting, _ = detect_python_alerting(code)
+        
+        # Check for CISA-specific patterns
+        has_cisa = bool(re.search(r'cisa|government.*reporting|federal.*reporting', code, re.IGNORECASE))
+        has_attack_vector = bool(re.search(r'attack.*vector|threat.*classification|incident.*type', code, re.IGNORECASE))
+        
+        if not has_logging:
+            findings.append(create_missing_logging_finding(self.FRR_ID, file_path))
+        
+        if not has_alerting:
+            findings.append(create_missing_alerting_finding(self.FRR_ID, file_path))
+        
+        if not has_cisa:
+            findings.append(Finding(
+                frr_id=self.FRR_ID,
+                severity=Severity.HIGH,
+                message="No CISA-specific reporting mechanism detected",
+                details=(
+                    "FRR-ICP-03 requires reporting specific incidents to CISA. "
+                    "The code should implement CISA reporting integration."
+                ),
+                file_path=file_path,
+                line_number=1,
+                remediation="Implement CISA reporting mechanism for applicable incidents."
+            ))
+        
+        if not has_attack_vector:
+            findings.append(Finding(
+                frr_id=self.FRR_ID,
+                severity=Severity.MEDIUM,
+                message="No attack vector classification detected",
+                details=(
+                    "FRR-ICP-03 requires determining if incidents match CISA attack vectors. "
+                    "The code should classify incidents by attack vector type."
+                ),
+                file_path=file_path,
+                line_number=1,
+                remediation="Implement attack vector detection and classification logic."
+            ))
         # Example from FRR-VDR-08:
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)

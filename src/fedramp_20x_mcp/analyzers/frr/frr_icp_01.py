@@ -38,14 +38,16 @@ class FRR_ICP_01_Analyzer(BaseFRRAnalyzer):
     **Related KSIs:**
     - TODO: Add related KSI IDs
     
-    **Detectability:** No
+    **Detectability:** Yes (Code, IaC, CI/CD)
     
     **Detection Strategy:**
-    TODO: This requirement is not directly code-detectable. This analyzer provides:
-        1. Evidence collection guidance and automation recommendations
-        2. Manual validation procedures and checklists
-        3. Related documentation and artifact requirements
-        4. Integration points with other compliance tools
+    This analyzer detects incident reporting mechanisms through:
+        1. Application code: Incident detection, logging, and alert/notification integrations
+        2. Infrastructure: Azure Monitor alerts, Log Analytics, incident response automation resources
+        3. CI/CD: Incident response workflow integrations, alerting configurations
+    
+    Detection focuses on identifying whether incident detection and reporting infrastructure is configured,
+    not whether specific incidents are reported (which is a runtime/operational concern).
     """
     
     FRR_ID = "FRR-ICP-01"
@@ -63,7 +65,7 @@ class FRR_ICP_01_Analyzer(BaseFRRAnalyzer):
         ("IR-5", "Incident Monitoring"),
         ("IR-8", "Incident Response Plan"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = True  # Detects incident response infrastructure and alerting configurations
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
         # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
@@ -83,39 +85,82 @@ class FRR_ICP_01_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-ICP-01 compliance using AST.
+        Analyze Python code for FRR-ICP-01 incident reporting mechanisms.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects:
+        - Incident detection/logging frameworks (logging, structlog, etc.)
+        - Alert/notification integrations (email, webhook, Azure Monitor)
+        - Incident response automation hooks
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
+        has_incident_logging = False
+        has_alert_mechanism = False
         
-        # TODO: Implement regex fallback
+        # Use AST to detect logging and alerting
+        try:
+            parser = ASTParser(CodeLanguage.PYTHON)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                # Check for logging imports
+                import_nodes = parser.find_nodes_by_type(tree.root_node, 'import_statement') + \
+                              parser.find_nodes_by_type(tree.root_node, 'import_from_statement')
+                
+                for node in import_nodes:
+                    import_text = parser.get_node_text(node, code_bytes).decode('utf8').lower()
+                    if any(lib in import_text for lib in ['logging', 'structlog', 'loguru', 'azure.monitor']):
+                        has_incident_logging = True
+                    if any(lib in import_text for lib in ['smtplib', 'sendgrid', 'azure.communication', 'requests', 'httpx']):
+                        has_alert_mechanism = True
+                
+                # Check for incident-related function calls
+                call_nodes = parser.find_nodes_by_type(tree.root_node, 'call')
+                for node in call_nodes:
+                    call_text = parser.get_node_text(node, code_bytes).decode('utf8').lower()
+                    if any(term in call_text for term in ['log.critical', 'log.error', 'logger.critical', 'incident', 'alert', 'notify']):
+                        has_incident_logging = True
+                
+        except Exception:
+            # Fallback to regex
+            pass
+        
+        # Regex fallback for logging/alerting
+        if not has_incident_logging:
+            has_incident_logging = bool(re.search(r'(import\s+logging|from\s+\w+\s+import\s+\w*log)', code, re.IGNORECASE))
+        
+        if not has_alert_mechanism:
+            has_alert_mechanism = bool(re.search(r'(send_?mail|send_?email|requests\.post|webhook|notify|alert)', code, re.IGNORECASE))
+        
+        # Report findings
+        if not has_incident_logging:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID,
+                requirement_id=self.FRR_ID,
+                title="No incident logging framework detected",
+                description=f"Python code in '{file_path}' lacks incident logging framework. FRR-ICP-01 requires incident detection and reporting infrastructure. Implement logging for critical/security events.",
+                severity=Severity.MEDIUM,
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Add incident logging: 1) Import logging framework (logging, structlog), 2) Log critical/security events, 3) Configure log aggregation (Azure Monitor, CloudWatch)"
+            ))
+        
+        if not has_alert_mechanism and 'incident' in code.lower():
+            findings.append(Finding(
+                ksi_id=self.FRR_ID,
+                requirement_id=self.FRR_ID,
+                title="Incident detection without alerting mechanism",
+                description=f"Code in '{file_path}' handles incidents but lacks alerting/notification mechanism. FRR-ICP-01 requires incident reporting to FedRAMP within 1 hour.",
+                severity=Severity.HIGH,
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Implement alerting: 1) Add email notification (smtplib, SendGrid), 2) Integrate with Azure Monitor alerts, 3) Configure webhook to incident management system"
+            ))
+        
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
@@ -160,18 +205,48 @@ class FRR_ICP_01_Analyzer(BaseFRRAnalyzer):
     
     def analyze_bicep(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Bicep infrastructure code for FRR-ICP-01 compliance.
+        Analyze Bicep infrastructure for incident response resources.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        Checks for:
+        - Azure Monitor alert rules
+        - Log Analytics workspaces
+        - Action groups for incident notification
+        - Logic Apps/Functions for incident response automation
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
+        has_alert_rules = bool(re.search(r"resource\s+\w+\s+'Microsoft\.Insights/(metricalerts|scheduledQueryRules)", code, re.IGNORECASE))
+        has_log_analytics = bool(re.search(r"resource\s+\w+\s+'Microsoft\.OperationalInsights/workspaces", code, re.IGNORECASE))
+        has_action_group = bool(re.search(r"resource\s+\w+\s+'Microsoft\.Insights/actionGroups", code, re.IGNORECASE))
+        has_automation = bool(re.search(r"resource\s+\w+\s+'Microsoft\.(Logic/workflows|Web/sites).*kind:\s*'functionapp'", code, re.IGNORECASE | re.DOTALL))
+        
+        # Check for monitoring/alerting infrastructure
+        if not has_log_analytics and not has_alert_rules:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID,
+                requirement_id=self.FRR_ID,
+                title="No incident monitoring infrastructure detected",
+                description=f"Bicep template '{file_path}' lacks Azure Monitor or Log Analytics resources. FRR-ICP-01 requires incident detection and reporting capabilities.",
+                severity=Severity.HIGH,
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Deploy monitoring: 1) Add Log Analytics workspace, 2) Configure Azure Monitor alert rules, 3) Set up diagnostic settings for resource logging"
+            ))
+        
+        if has_alert_rules and not has_action_group:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID,
+                requirement_id=self.FRR_ID,
+                title="Alert rules without notification action groups",
+                description=f"Bicep template '{file_path}' defines alert rules but no action groups for notifications. FRR-ICP-01 requires incident reporting within 1 hour.",
+                severity=Severity.HIGH,
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Add action groups: 1) Create Microsoft.Insights/actionGroups resource, 2) Configure email/webhook notifications, 3) Link to alert rules via 'actions' property"
+            ))
         
         return findings
     
@@ -195,16 +270,47 @@ class FRR_ICP_01_Analyzer(BaseFRRAnalyzer):
     
     def analyze_github_actions(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze GitHub Actions workflow for FRR-ICP-01 compliance.
+        Analyze GitHub Actions for incident response workflow integrations.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        Checks for:
+        - Security scanning that triggers on incidents
+        - Notification steps for security events
+        - Integration with incident management systems
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement GitHub Actions analysis
+        has_security_scanning = bool(re.search(r'uses:.*?(security|trivy|snyk|dependabot|codeql)', code, re.IGNORECASE))
+        has_notification = bool(re.search(r'(slack/action|email|webhook|notify|alert)', code, re.IGNORECASE))
+        has_on_security_trigger = bool(re.search(r'on:\s*\n?\s*(security_and_analysis|schedule)', code, re.IGNORECASE))
+        
+        # Check for incident response integration
+        if has_security_scanning and not has_notification:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID,
+                requirement_id=self.FRR_ID,
+                title="Security scanning without incident notifications",
+                description=f"GitHub Actions workflow '{file_path}' includes security scanning but lacks notification steps. FRR-ICP-01 requires incident reporting within 1 hour.",
+                severity=Severity.MEDIUM,
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Add notifications: 1) Use slack/send-action for Slack alerts, 2) Add email notification step, 3) Integrate with PagerDuty/ServiceNow for incident management"
+            ))
+        
+        if not has_security_scanning and 'deploy' in code.lower():
+            findings.append(Finding(
+                ksi_id=self.FRR_ID,
+                requirement_id=self.FRR_ID,
+                title="Deployment without security incident detection",
+                description=f"Workflow '{file_path}' deploys code but lacks security scanning for incident detection. FRR-ICP-01 requires systematic incident identification.",
+                severity=Severity.MEDIUM,
+                file_path=file_path,
+                line_number=1,
+                code_snippet="",
+                recommendation="Add security scanning: 1) Integrate Trivy/Snyk for vulnerability scanning, 2) Add CodeQL for code analysis, 3) Configure Dependabot for dependency alerts"
+            ))
+        
         return findings
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:

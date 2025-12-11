@@ -63,7 +63,7 @@ class FRR_ICP_04_Analyzer(BaseFRRAnalyzer):
         ("IR-5", "Incident Monitoring"),
         ("IR-8", "Incident Response Plan"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = True  # Detects scheduled update mechanisms and daily notification logic
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
         # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
@@ -85,19 +85,61 @@ class FRR_ICP_04_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Python code for FRR-ICP-04 compliance using AST.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects:
+        - Scheduled update mechanisms (cron, APScheduler, celery beat)
+        - Daily notification logic
+        - Status tracking for ongoing incidents
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
+        from ..detection_patterns import detect_python_alerting
+        
+        # Check for alerting mechanisms
+        has_alerting, _ = detect_python_alerting(code)
+        
+        # Check for scheduling mechanisms
+        has_scheduler = bool(re.search(
+            r'apscheduler|schedule|celery.*beat|cron|recurring|daily|periodic',
+            code, re.IGNORECASE
+        ))
+        
+        # Check for status tracking
+        has_status_tracking = bool(re.search(
+            r'status|state|incident.*tracking|update.*history|resolution.*status',
+            code, re.IGNORECASE
+        ))
+        
+        if not has_alerting:
+            from ..detection_patterns import create_missing_alerting_finding
+            findings.append(create_missing_alerting_finding(self.FRR_ID, file_path))
+        
+        if not has_scheduler:
+            findings.append(Finding(
+                frr_id=self.FRR_ID,
+                severity=Severity.HIGH,
+                message="No scheduled update mechanism detected",
+                details=(
+                    "FRR-ICP-04 requires daily updates to all parties until incident resolution. "
+                    "Implement scheduled notification using APScheduler, Celery Beat, or similar."
+                ),
+                file_path=file_path,
+                line_number=1,
+                remediation="Implement scheduled daily update mechanism (APScheduler, Celery Beat)."
+            ))
+        
+        if not has_status_tracking:
+            findings.append(Finding(
+                frr_id=self.FRR_ID,
+                severity=Severity.MEDIUM,
+                message="No incident status tracking detected",
+                details=(
+                    "FRR-ICP-04 requires updates until resolution. "
+                    "Implement status tracking to determine when updates are no longer needed."
+                ),
+                file_path=file_path,
+                line_number=1,
+                remediation="Implement incident status tracking system."
+            ))
         # Example from FRR-VDR-08:
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)

@@ -63,7 +63,7 @@ class FRR_ICP_09_Analyzer(BaseFRRAnalyzer):
         ("IR-5", "Incident Monitoring"),
         ("IR-8", "Incident Response Plan"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = True  # Detects machine-readable format generation and API endpoints
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
         # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
@@ -85,19 +85,70 @@ class FRR_ICP_09_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Python code for FRR-ICP-09 compliance using AST.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects:
+        - JSON/XML export functionality
+        - Structured data APIs
+        - Machine-readable format generation
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
+        # Check for JSON/XML generation
+        has_json = bool(re.search(r'json\.dumps|jsonify|to_json|JSONEncoder', code))
+        has_xml = bool(re.search(r'xml|ElementTree|lxml|tostring', code, re.IGNORECASE))
+        
+        # Check for API endpoints
+        has_api = bool(re.search(
+            r'@app\.route|@api\.|FastAPI|Flask|endpoint|api.*handler',
+            code
+        ))
+        
+        # Check for structured schemas
+        has_schema = bool(re.search(
+            r'pydantic|marshmallow|schema|dataclass|TypedDict',
+            code, re.IGNORECASE
+        ))
+        
+        if not (has_json or has_xml):
+            findings.append(Finding(
+                frr_id=self.FRR_ID,
+                severity=Severity.LOW,  # SHOULD requirement
+                message="No machine-readable format generation detected",
+                details=(
+                    "FRR-ICP-09 recommends machine-readable incident reports. "
+                    "Consider implementing JSON or XML export."
+                ),
+                file_path=file_path,
+                line_number=1,
+                remediation="Consider implementing JSON/XML export for incident reports."
+            ))
+        
+        if not has_api:
+            findings.append(Finding(
+                frr_id=self.FRR_ID,
+                severity=Severity.LOW,  # SHOULD requirement
+                message="No API endpoints detected",
+                details=(
+                    "FRR-ICP-09 recommends machine-readable access. "
+                    "Consider implementing API endpoints for incident data."
+                ),
+                file_path=file_path,
+                line_number=1,
+                remediation="Consider implementing API endpoints for incident data access."
+            ))
+        
+        if (has_json or has_api) and not has_schema:
+            findings.append(Finding(
+                frr_id=self.FRR_ID,
+                severity=Severity.LOW,  # SHOULD requirement
+                message="Structured data without schema validation",
+                details=(
+                    "FRR-ICP-09 recommends consistent formats. "
+                    "Consider using Pydantic or Marshmallow for schema validation."
+                ),
+                file_path=file_path,
+                line_number=1,
+                remediation="Consider implementing schema validation (Pydantic, Marshmallow)."
+            ))
         # Example from FRR-VDR-08:
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)

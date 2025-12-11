@@ -63,7 +63,7 @@ class FRR_ICP_05_Analyzer(BaseFRRAnalyzer):
         ("IR-5", "Incident Monitoring"),
         ("IR-8", "Incident Response Plan"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = True  # Detects repository integrations and secure storage mechanisms
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
         # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
@@ -85,19 +85,71 @@ class FRR_ICP_05_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Python code for FRR-ICP-05 compliance using AST.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects:
+        - File upload mechanisms
+        - Repository integrations (USDA Connect, trust center)
+        - Document generation for incident reports
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
+        # Check for file upload/storage mechanisms
+        has_file_upload = bool(re.search(
+            r'upload|blob.*client|storage.*account|file.*share|azure\.storage',
+            code, re.IGNORECASE
+        ))
+        
+        # Check for repository integrations
+        has_repository = bool(re.search(
+            r'repository|trust.*center|usda.*connect|secure.*storage|artifact.*upload',
+            code, re.IGNORECASE
+        ))
+        
+        # Check for document generation
+        has_doc_generation = bool(re.search(
+            r'generate.*report|create.*document|pdf|markdown.*report|incident.*report',
+            code, re.IGNORECASE
+        ))
+        
+        if not has_file_upload:
+            findings.append(Finding(
+                frr_id=self.FRR_ID,
+                severity=Severity.HIGH,
+                message="No file upload mechanism detected",
+                details=(
+                    "FRR-ICP-05 requires making incident reports available in a secure repository. "
+                    "Implement file upload to Azure Blob Storage or equivalent."
+                ),
+                file_path=file_path,
+                line_number=1,
+                remediation="Implement file upload mechanism (Azure Blob Storage, SharePoint)."
+            ))
+        
+        if not has_repository:
+            findings.append(Finding(
+                frr_id=self.FRR_ID,
+                severity=Severity.MEDIUM,
+                message="No repository integration detected",
+                details=(
+                    "FRR-ICP-05 requires integration with secure FedRAMP repository or trust center. "
+                    "Consider integrating with USDA Connect or similar."
+                ),
+                file_path=file_path,
+                line_number=1,
+                remediation="Implement repository integration (USDA Connect, trust center)."
+            ))
+        
+        if not has_doc_generation:
+            findings.append(Finding(
+                frr_id=self.FRR_ID,
+                severity=Severity.LOW,
+                message="No document generation detected",
+                details=(
+                    "Consider implementing automated incident report generation."
+                ),
+                file_path=file_path,
+                line_number=1,
+                remediation="Implement automated incident report generation."
+            ))
         # Example from FRR-VDR-08:
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)

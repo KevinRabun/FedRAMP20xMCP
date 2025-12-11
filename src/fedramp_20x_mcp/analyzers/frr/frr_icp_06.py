@@ -63,7 +63,7 @@ class FRR_ICP_06_Analyzer(BaseFRRAnalyzer):
         ("IR-5", "Incident Monitoring"),
         ("IR-8", "Incident Response Plan"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = True  # Detects data redaction and sensitive info handling mechanisms
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
         # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
@@ -85,19 +85,58 @@ class FRR_ICP_06_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Python code for FRR-ICP-06 compliance using AST.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects:
+        - Data redaction mechanisms
+        - PII filtering
+        - Sensitive information handling
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
+        # Check for redaction/sanitization
+        has_redaction = bool(re.search(
+            r'redact|sanitize|mask|scrub|filter.*sensitive|remove.*pii',
+            code, re.IGNORECASE
+        ))
+        
+        # Check for PII handling
+        has_pii_handling = bool(re.search(
+            r'pii|personal.*identifiable|sensitive.*data|confidential',
+            code, re.IGNORECASE
+        ))
+        
+        # Check for classification
+        has_classification = bool(re.search(
+            r'classify|classification|sensitivity.*level|data.*category',
+            code, re.IGNORECASE
+        ))
+        
+        if not has_redaction:
+            findings.append(Finding(
+                frr_id=self.FRR_ID,
+                severity=Severity.HIGH,
+                message="No data redaction mechanism detected",
+                details=(
+                    "FRR-ICP-06 requires responsible disclosure with sensitive info removed. "
+                    "Implement data redaction before sharing incident information."
+                ),
+                file_path=file_path,
+                line_number=1,
+                remediation="Implement data redaction for incident reports."
+            ))
+        
+        if not has_pii_handling:
+            findings.append(Finding(
+                frr_id=self.FRR_ID,
+                severity=Severity.MEDIUM,
+                message="No PII handling detected",
+                details=(
+                    "FRR-ICP-06 requires protecting sensitive information. "
+                    "Implement PII detection and filtering."
+                ),
+                file_path=file_path,
+                line_number=1,
+                remediation="Implement PII detection and filtering mechanisms."
+            ))
         # Example from FRR-VDR-08:
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)

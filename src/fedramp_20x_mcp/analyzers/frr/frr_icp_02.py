@@ -38,14 +38,14 @@ class FRR_ICP_02_Analyzer(BaseFRRAnalyzer):
     **Related KSIs:**
     - TODO: Add related KSI IDs
     
-    **Detectability:** No
+    **Detectability:** Yes (Code, IaC, CI/CD)
     
     **Detection Strategy:**
-    TODO: This requirement is not directly code-detectable. This analyzer provides:
-        1. Evidence collection guidance and automation recommendations
-        2. Manual validation procedures and checklists
-        3. Related documentation and artifact requirements
-        4. Integration points with other compliance tools
+    This requirement is code-detectable by checking for:
+        1. Application code: Incident notification mechanisms, contact management systems, alert functions
+        2. Infrastructure: Alerting infrastructure (Action Groups, notification services), automation workflows
+        3. CI/CD: Notification steps, incident communication pipelines
+        4. Configuration: Agency contact management, notification routing
     """
     
     FRR_ID = "FRR-ICP-02"
@@ -63,7 +63,7 @@ class FRR_ICP_02_Analyzer(BaseFRRAnalyzer):
         ("IR-5", "Incident Monitoring"),
         ("IR-8", "Incident Response Plan"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = True  # Detects agency notification mechanisms and contact management
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
         # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
@@ -85,19 +85,67 @@ class FRR_ICP_02_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Python code for FRR-ICP-02 compliance using AST.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects:
+        - Notification mechanisms for agency communication
+        - Contact management systems
+        - Alert/notification functions with agency/customer routing
+        - Multi-recipient notification logic
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
+        from ..detection_patterns import detect_python_alerting, create_missing_alerting_finding
+        
+        # Check for alerting/notification mechanisms
+        has_alerting, detected_mechanisms = detect_python_alerting(code)
+        
+        # Check for agency/customer contact management
+        has_contact_mgmt = bool(re.search(
+            r'(agency|customer|client).*contact|contact.*(agency|customer|client)|'
+            r'def\s+\w*notify.*agency|def\s+\w*alert.*customer|'
+            r'notification.*routing|contact.*management',
+            code, re.IGNORECASE
+        ))
+        
+        # Check for multi-recipient notification
+        has_multi_recipient = bool(re.search(
+            r'for\s+\w+\s+in\s+(agencies|customers|clients|contacts)|'
+            r'recipients|to_addresses|notification_list',
+            code, re.IGNORECASE
+        ))
+        
+        if not has_alerting:
+            findings.append(create_missing_alerting_finding(self.FRR_ID, file_path))
+        
+        if not has_contact_mgmt:
+            findings.append(Finding(
+                frr_id=self.FRR_ID,
+                severity=Severity.HIGH,
+                message="No agency contact management detected",
+                details=(
+                    "FRR-ICP-02 requires incident reporting to ALL agency customers. "
+                    "The code should include agency contact management with:"
+                    "\n- Contact information storage (database, config)"
+                    "\n- Agency/customer identification"
+                    "\n- Contact point routing logic"
+                ),
+                file_path=file_path,
+                line_number=1,
+                remediation="Implement agency contact management system for incident notifications."
+            ))
+        
+        if has_alerting and not has_multi_recipient:
+            findings.append(Finding(
+                frr_id=self.FRR_ID,
+                severity=Severity.MEDIUM,
+                message="Alerting detected but no multi-recipient notification logic found",
+                details=(
+                    "FRR-ICP-02 requires notifying ALL agency customers. "
+                    "Ensure notification logic handles multiple recipients."
+                ),
+                file_path=file_path,
+                line_number=1,
+                remediation="Add multi-recipient notification logic to alert all agency customers."
+            ))
         # Example from FRR-VDR-08:
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)
