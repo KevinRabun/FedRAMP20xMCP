@@ -59,14 +59,12 @@ class FRR_CCM_03_Analyzer(BaseFRRAnalyzer):
     IMPACT_HIGH = True
     NIST_CONTROLS = [
         ("CA-7", "Continuous Monitoring"),
-        ("CA-2", "Control Assessments"),
-        ("SI-4", "System Monitoring"),
-        ("PM-31", "Continuous Monitoring Strategy"),
+        ("SI-12", "Information Management and Retention"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-AFR-01",
     ]
     
     def __init__(self):
@@ -83,21 +81,37 @@ class FRR_CCM_03_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-CCM-03 compliance using AST.
+        Analyze Python code for FRR-CCM-03 compliance.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects next report date publication:
+        - Report date fields
+        - Target date publication
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
+        date_patterns = [
+            r'next.*report.*date',
+            r'target.*date',
+            r'report.*schedule.*date',
+            r'upcoming.*report',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            for pattern in date_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Report date publication detected",
+                        description=f"Found date pattern: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Ensure next report date publicly included with authorization data."
+                    ))
+                    break
+        
+        return findings
         # Example from FRR-VDR-08:
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)

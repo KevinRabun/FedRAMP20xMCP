@@ -59,14 +59,12 @@ class FRR_CCM_04_Analyzer(BaseFRRAnalyzer):
     IMPACT_HIGH = True
     NIST_CONTROLS = [
         ("CA-7", "Continuous Monitoring"),
-        ("CA-2", "Control Assessments"),
-        ("SI-4", "System Monitoring"),
-        ("PM-31", "Continuous Monitoring Strategy"),
+        ("SI-12", "Information Management and Retention"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-AFR-01",
     ]
     
     def __init__(self):
@@ -83,21 +81,38 @@ class FRR_CCM_04_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-CCM-04 compliance using AST.
+        Analyze Python code for FRR-CCM-04 compliance.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects feedback mechanisms:
+        - Asynchronous feedback systems
+        - Question submission mechanisms
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
+        feedback_patterns = [
+            r'feedback.*mechanism',
+            r'async.*feedback',
+            r'submit.*question',
+            r'feedback.*form',
+            r'report.*feedback',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            for pattern in feedback_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Feedback mechanism detected",
+                        description=f"Found feedback pattern: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Ensure asynchronous feedback mechanism available for Ongoing Authorization Reports."
+                    ))
+                    break
+        
+        return findings
         # Example from FRR-VDR-08:
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)

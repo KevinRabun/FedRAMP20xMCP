@@ -59,14 +59,11 @@ class FRR_CCM_02_Analyzer(BaseFRRAnalyzer):
     IMPACT_HIGH = True
     NIST_CONTROLS = [
         ("CA-7", "Continuous Monitoring"),
-        ("CA-2", "Control Assessments"),
-        ("SI-4", "System Monitoring"),
-        ("PM-31", "Continuous Monitoring Strategy"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-AFR-01",
     ]
     
     def __init__(self):
@@ -83,21 +80,37 @@ class FRR_CCM_02_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-CCM-02 compliance using AST.
+        Analyze Python code for FRR-CCM-02 compliance.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects report scheduling mechanisms:
+        - Quarterly report cycles
+        - Report scheduling patterns
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
+        schedule_patterns = [
+            r'report.*schedule',
+            r'quarterly.*cycle',
+            r'3.*month.*cycle',
+            r'report.*timing',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            for pattern in schedule_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Report scheduling detected",
+                        description=f"Found scheduling pattern: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Establish regular 3-month cycle spread throughout quarter."
+                    ))
+                    break
+        
+        return findings
         # Example from FRR-VDR-08:
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)
