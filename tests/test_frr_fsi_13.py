@@ -21,7 +21,7 @@ def test_analyzer_metadata():
     assert analyzer.FRR_ID == "FRR-FSI-13", "FRR_ID should be FRR-FSI-13"
     assert analyzer.FAMILY == "FSI", "Family should be FSI"
     assert analyzer.FRR_NAME == "Acknowledgment of Receipt", "Title mismatch"
-    assert analyzer.PRIMARY_KEYWORD == "MUST", "Keyword mismatch"
+    assert analyzer.PRIMARY_KEYWORD == "SHOULD", "Keyword mismatch"
     assert analyzer.IMPACT_LOW == True, "Impact Low mismatch"
     assert analyzer.IMPACT_MODERATE == True, "Impact Moderate mismatch"
     assert analyzer.IMPACT_HIGH == True, "Impact High mismatch"

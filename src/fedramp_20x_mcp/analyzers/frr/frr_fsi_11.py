@@ -58,15 +58,12 @@ class FRR_FSI_11_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("SA-9", "External System Services"),
-        ("CA-3", "Information Exchange"),
-        ("SC-7", "Boundary Protection"),
+        ("IR-4", "Incident Handling"),
+        ("IR-7", "Incident Response Assistance"),
     ]
     CODE_DETECTABLE = "No"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
-    RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
-    ]
+    RELATED_KSIS = []
     
     def __init__(self):
         """Initialize FRR-FSI-11 analyzer."""

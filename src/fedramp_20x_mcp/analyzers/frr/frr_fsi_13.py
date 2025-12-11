@@ -5,7 +5,7 @@ Providers SHOULD _promptly_ and automatically acknowledge the receipt of message
 
 Official FedRAMP 20x Requirement
 Source: FRR-FSI (FedRAMP Security Incident) family
-Primary Keyword: MUST
+Primary Keyword: SHOULD
 Impact Levels: Low, Moderate, High
 """
 
@@ -53,20 +53,17 @@ class FRR_FSI_13_Analyzer(BaseFRRAnalyzer):
     FRR_STATEMENT = """Providers SHOULD _promptly_ and automatically acknowledge the receipt of messages received from FedRAMP in their _FedRAMP Security Inbox_."""
     FAMILY = "FSI"
     FAMILY_NAME = "FedRAMP Security Incident"
-    PRIMARY_KEYWORD = "MUST"
+    PRIMARY_KEYWORD = "SHOULD"
     IMPACT_LOW = True
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("SA-9", "External System Services"),
-        ("CA-3", "Information Exchange"),
-        ("SC-7", "Boundary Protection"),
+        ("IR-4", "Incident Handling"),
+        ("IR-7", "Incident Response Assistance"),
     ]
     CODE_DETECTABLE = "No"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
-    RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
-    ]
+    RELATED_KSIS = []
     
     def __init__(self):
         """Initialize FRR-FSI-13 analyzer."""
