@@ -58,18 +58,16 @@ class FRR_ADS_05_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("PM-9", "Risk Management Strategy"),
-        ("PL-2", "System Security Plan"),
-        ("SA-4", "Acquisition Process"),
-        ("SA-9", "External System Services"),
-        ("AC-2", "Account Management"),
-        ("AC-3", "Access Enforcement"),
-        ("AU-2", "Event Logging"),
+        ("AC-4", "Information Flow Enforcement"),
+        ("SC-4", "Information in Shared System Resources"),
+        ("SI-12", "Information Management and Retention"),
+        ("AU-9", "Protection of Audit Information"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Yes"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-AFR-01",
+        "KSI-MLA-01",
     ]
     
     def __init__(self):
@@ -88,37 +86,85 @@ class FRR_ADS_05_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Python code for FRR-ADS-05 compliance using AST.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects responsible information sharing:
+        - Data sanitization/redaction
+        - Masking sensitive fields
+        - Filtering/scrubbing functions
+        - Preventing information leakage
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
+        # Try AST-based analysis first
+        try:
+            parser = ASTParser(CodeLanguage.PYTHON)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                # Look for sanitization/redaction functions
+                function_defs = parser.find_nodes_by_type(tree.root_node, 'function_definition')
+                for func in function_defs:
+                    func_text = parser.get_node_text(func, code_bytes).lower()
+                    if any(pattern in func_text for pattern in ['sanitize', 'redact', 'mask', 'scrub', 'filter_sensitive']):
+                        line_num = func.start_point[0] + 1
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Data sanitization detected",
+                            description="Found data sanitization/redaction function",
+                            severity=Severity.INFO,
+                            line_number=line_num,
+                            code_snippet=lines[line_num-1] if line_num <= len(lines) else "",
+                            recommendation="Ensure sensitive information is properly sanitized before sharing authorization data."
+                        ))
+                
+                # Look for potential information leakage
+                calls = parser.find_nodes_by_type(tree.root_node, 'call')
+                for call in calls:
+                    call_text = parser.get_node_text(call, code_bytes).lower()
+                    # Check for risky operations that might expose sensitive data
+                    if any(pattern in call_text for pattern in ['print(password', 'print(secret', 'print(key', 'log(password', 'log(secret']):
+                        line_num = call.start_point[0] + 1
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Potential sensitive information leakage",
+                            description="Found logging/printing of sensitive data",
+                            severity=Severity.HIGH,
+                            line_number=line_num,
+                            code_snippet=lines[line_num-1] if line_num <= len(lines) else "",
+                            recommendation="Do not expose passwords, secrets, or keys in logs or output."
+                        ))
+                
+                if findings:
+                    return findings
+        except Exception:
+            pass
         
-        # TODO: Implement regex fallback
+        # Regex fallback
+        sanitization_patterns = [
+            r'def.*sanitize',
+            r'def.*redact',
+            r'def.*mask',
+            r'def.*scrub',
+            r'filter.*sensitive',
+            r'\.mask\(',
+            r'\.redact\(',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            for pattern in sanitization_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Data sanitization detected",
+                        description=f"Found sanitization pattern: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Ensure authorization data includes sufficient info without sensitive details."
+                    ))
+                    break
+        
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
