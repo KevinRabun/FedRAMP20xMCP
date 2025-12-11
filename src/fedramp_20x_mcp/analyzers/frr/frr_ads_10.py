@@ -58,15 +58,14 @@ class FRR_ADS_10_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("PM-9", "Risk Management Strategy"),
         ("PL-2", "System Security Plan"),
-        ("SA-4", "Acquisition Process"),
         ("SA-9", "External System Services"),
+        ("SI-12", "Information Management and Retention"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-AFR-01",
     ]
     
     def __init__(self):
@@ -83,21 +82,40 @@ class FRR_ADS_10_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-ADS-10 compliance using AST.
+        Analyze Python code for FRR-ADS-10 compliance.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects references to FedRAMP best practices:
+        - Best practice documentation references
+        - Technical assistance patterns
+        - Compliance guidance implementations
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
+        # Best practices patterns
+        best_practice_patterns = [
+            r'fedramp.*best.*practice',
+            r'best.*practice.*authorization',
+            r'technical.*assistance.*fedramp',
+            r'fedramp.*guidance',
+            r'compliance.*best.*practice',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            for pattern in best_practice_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Best practices reference detected",
+                        description=f"Found FedRAMP best practices pattern: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Ensure following FedRAMP best practices for authorization data sharing."
+                    ))
+                    break
+        
+        return findings
         # Example from FRR-VDR-08:
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)
