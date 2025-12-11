@@ -58,16 +58,17 @@ class FRR_ADS_TC_05_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("PM-9", "Risk Management Strategy"),
-        ("PL-2", "System Security Plan"),
-        ("SA-4", "Acquisition Process"),
-        ("SA-9", "External System Services"),
         ("AC-2", "Account Management"),
-        ("AC-3", "Access Enforcement"),
         ("AU-2", "Event Logging"),
+        ("AU-11", "Audit Record Retention"),
+        ("SI-4", "System Monitoring"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Yes"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
+    RELATED_KSIS = [
+        "KSI-AFR-01",
+        "KSI-MLA-01",
+    ]
     RELATED_KSIS = [
         # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
     ]
@@ -88,19 +89,64 @@ class FRR_ADS_TC_05_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Python code for FRR-ADS-TC-05 compliance using AST.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects access inventory mechanisms:
+        - User/system inventory tracking
+        - Access history logging
+        - Inventory reporting functions
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
+        # Try AST analysis first
+        try:
+            parser = ASTParser(CodeLanguage.PYTHON)
+            tree = parser.parse(code)
+            if tree and tree.root_node:
+                code_bytes = code.encode('utf-8')
+                
+                # Check for inventory functions
+                inventory_functions = ['inventory', 'track_access', 'log_access', 'access_history', 'user_inventory']
+                for func_name in inventory_functions:
+                    func_nodes = parser.find_nodes_by_type(tree.root_node, 'function_definition')
+                    for node in func_nodes:
+                        node_text = parser.get_node_text(node, code_bytes)
+                        if func_name in node_text.lower():
+                            line_num = node.start_point[0] + 1
+                            findings.append(Finding(
+                                frr_id=self.FRR_ID,
+                                title="Access inventory mechanism detected",
+                                description=f"Found inventory function: {func_name}",
+                                severity=Severity.INFO,
+                                line_number=line_num,
+                                code_snippet=lines[line_num-1].strip() if line_num <= len(lines) else "",
+                                recommendation="Ensure inventory and history of federal agency access maintained and available to FedRAMP."
+                            ))
+        except Exception:
+            pass
+        
+        # Regex fallback
+        inventory_patterns = [
+            r'access.*inventory',
+            r'user.*history',
+            r'track.*access',
+            r'inventory.*users',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            for pattern in inventory_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Access inventory pattern detected",
+                        description=f"Found inventory pattern: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Ensure inventory and history maintained without interruption."
+                    ))
+                    break
+        
+        return findings
         # Example from FRR-VDR-08:
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)
