@@ -43,7 +43,7 @@ jobs:
     assert any(f.severity == Severity.HIGH for f in result.findings), \
         "Container without scan should be HIGH severity"
     
-    print("✓ GitHub Actions missing container scan detected")
+    print("[PASS] GitHub Actions missing container scan detected")
 
 
 def test_github_actions_missing_sast():
@@ -69,7 +69,7 @@ jobs:
                for f in result.findings), \
         "Should have finding about missing SAST"
     
-    print("✓ GitHub Actions missing SAST detected")
+    print("[PASS] GitHub Actions missing SAST detected")
 
 
 def test_github_actions_missing_dependency_scan():
@@ -94,7 +94,7 @@ jobs:
     assert any("dependency" in f.title.lower() for f in result.findings), \
         "Should have finding about missing dependency scanning"
     
-    print("✓ GitHub Actions missing dependency scan detected")
+    print("[PASS] GitHub Actions missing dependency scan detected")
 
 
 def test_github_actions_with_all_scanners():
@@ -134,7 +134,7 @@ jobs:
     
     assert result.total_issues == 0, f"Complete workflow should have no findings, but found {result.total_issues}: {[f.title for f in result.findings]}"
     
-    print("✓ GitHub Actions with all scanners: no findings")
+    print("[PASS] GitHub Actions with all scanners: no findings")
 
 
 def test_azure_pipelines_missing_security_devops():
@@ -162,7 +162,7 @@ steps:
     assert any("microsoft security devops" in f.title.lower() for f in result.findings), \
         "Should have finding about missing MicrosoftSecurityDevOps task"
     
-    print("✓ Azure Pipelines missing security task detected")
+    print("[PASS] Azure Pipelines missing security task detected")
 
 
 def test_gitlab_ci_missing_scanning_templates():
@@ -186,7 +186,7 @@ build-job:
                for f in result.findings), \
         "Should have findings about missing security templates"
     
-    print("✓ GitLab CI missing security templates detected")
+    print("[PASS] GitLab CI missing security templates detected")
 
 
 def test_bicep_missing_defender():
@@ -211,7 +211,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {
     assert any("defender" in f.title.lower() for f in result.findings), \
         "Should have finding about missing Defender configuration"
     
-    print("✓ Bicep missing Defender for Cloud detected")
+    print("[PASS] Bicep missing Defender for Cloud detected")
 
 
 def test_terraform_missing_defender():
@@ -235,7 +235,7 @@ resource "azurerm_linux_virtual_machine" "main" {
     assert any("defender" in f.title.lower() for f in result.findings), \
         "Should have finding about missing Defender configuration"
     
-    print("✓ Terraform missing Defender for Cloud detected")
+    print("[PASS] Terraform missing Defender for Cloud detected")
 
 
 def test_frr_vdr_01_metadata():
@@ -249,7 +249,7 @@ def test_frr_vdr_01_metadata():
     assert "KSI-AFR-04" in analyzer.RELATED_KSIS
     assert len(analyzer.NIST_CONTROLS) >= 5
     
-    print("✓ FRR-VDR-01 metadata validated")
+    print("[PASS] FRR-VDR-01 metadata validated")
 
 
 def test_evidence_automation():
@@ -270,7 +270,7 @@ def test_evidence_automation():
     artifacts = analyzer.get_evidence_artifacts()
     assert len(artifacts) >= 4
     
-    print("✓ Evidence automation validated")
+    print("[PASS] Evidence automation validated")
 
 
 def run_all_tests():
@@ -300,10 +300,10 @@ def run_all_tests():
             test()
             passed += 1
         except AssertionError as e:
-            print(f"✗ {test.__name__}: {e}")
+            print(f"[FAIL] {test.__name__}: {e}")
             failed += 1
         except Exception as e:
-            print(f"✗ {test.__name__}: Unexpected error: {e}")
+            print(f"[FAIL] {test.__name__}: Unexpected error: {e}")
             failed += 1
     
     print("\n" + "="*70)

@@ -65,7 +65,7 @@ class FRR_VDR_RP_04_Analyzer(BaseFRRAnalyzer):
     CODE_DETECTABLE = "No"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-AFR-04"  # Vulnerability Detection and Response
     ]
     
     def __init__(self):

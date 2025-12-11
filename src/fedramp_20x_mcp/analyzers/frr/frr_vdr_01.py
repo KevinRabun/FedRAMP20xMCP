@@ -77,9 +77,14 @@ class FRR_VDR_01_Analyzer(BaseFRRAnalyzer):
         ("SI-2", "Flaw Remediation"),
         ("CA-7", "Continuous Monitoring")
     ]
-    CODE_DETECTABLE = "Yes"
+    CODE_DETECTABLE = True  # Detects missing vulnerability scanning tools in CI/CD and IaC
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
-    RELATED_KSIS = ["KSI-AFR-04", "KSI-PIY-06", "KSI-SVC-08", "KSI-TPR-04"]
+    RELATED_KSIS = [
+        "KSI-AFR-04",  # Vulnerability Detection and Response
+        "KSI-PIY-06",  # Vulnerability Disclosure Program
+        "KSI-SVC-08",  # Secure Dependencies
+        "KSI-TPR-04"   # Software Bill of Materials
+    ]
     
     # Known vulnerability scanning tools by category
     VULN_SCANNERS = {

@@ -33,7 +33,7 @@ def test_bicep_public_ip_detected():
     assert findings[0].requirement_id == "FRR-VDR-08" or findings[0].ksi_id == "FRR-VDR-08"
     assert findings[0].severity == Severity.HIGH
     assert "Public IP address" in findings[0].title
-    print("✓ test_bicep_public_ip_detected passed")
+    print("[PASS] test_bicep_public_ip_detected passed")
 
 
 def test_bicep_load_balancer_internet_facing():
@@ -63,7 +63,7 @@ def test_bicep_load_balancer_internet_facing():
     assert len(findings) == 1, f"Expected 1 finding, got {len(findings)}"
     assert findings[0].severity == Severity.HIGH
     assert "Load Balancer" in findings[0].title
-    print("✓ test_bicep_load_balancer_internet_facing passed")
+    print("[PASS] test_bicep_load_balancer_internet_facing passed")
 
 
 def test_bicep_nsg_allows_all_internet():
@@ -98,7 +98,7 @@ def test_bicep_nsg_allows_all_internet():
     assert len(findings) == 1, f"Expected 1 finding, got {len(findings)}"
     assert findings[0].severity == Severity.HIGH
     assert "NSG rule" in findings[0].title or "permissive" in findings[0].title.lower()
-    print("✓ test_bicep_nsg_allows_all_internet passed")
+    print("[PASS] test_bicep_nsg_allows_all_internet passed")
 
 
 def test_bicep_vm_without_nsg():
@@ -141,7 +141,7 @@ def test_bicep_vm_without_nsg():
     assert len(findings) == 1, f"Expected 1 finding, got {len(findings)}: {[f.title for f in findings]}"
     assert findings[0].severity == Severity.HIGH
     assert "VM" in findings[0].title and ("NSG" in findings[0].title or "Network Security Group" in findings[0].title)
-    print("✓ test_bicep_vm_without_nsg passed")
+    print("[PASS] test_bicep_vm_without_nsg passed")
 
 
 def test_bicep_application_gateway():
@@ -165,7 +165,7 @@ def test_bicep_application_gateway():
     assert len(findings) == 1, f"Expected 1 finding, got {len(findings)}"
     assert findings[0].severity == Severity.MEDIUM
     assert "Application Gateway" in findings[0].title
-    print("✓ test_bicep_application_gateway passed")
+    print("[PASS] test_bicep_application_gateway passed")
 
 
 def test_terraform_azure_public_ip():
@@ -185,7 +185,7 @@ def test_terraform_azure_public_ip():
     assert len(findings) == 1, f"Expected 1 finding, got {len(findings)}"
     assert findings[0].severity == Severity.HIGH
     assert "Azure Public IP" in findings[0].title or "Public IP" in findings[0].title
-    print("✓ test_terraform_azure_public_ip passed")
+    print("[PASS] test_terraform_azure_public_ip passed")
 
 
 def test_terraform_azure_nsg_wildcard():
@@ -216,7 +216,7 @@ def test_terraform_azure_nsg_wildcard():
     assert len(findings) == 1, f"Expected 1 finding, got {len(findings)}"
     assert findings[0].severity == Severity.HIGH
     assert "NSG" in findings[0].title
-    print("✓ test_terraform_azure_nsg_wildcard passed")
+    print("[PASS] test_terraform_azure_nsg_wildcard passed")
 
 
 def test_no_findings_for_private_config():
@@ -244,7 +244,7 @@ def test_no_findings_for_private_config():
     findings = analyzer.analyze_bicep(code, "private.bicep")
     
     assert len(findings) == 0, f"Expected 0 findings for private config, got {len(findings)}"
-    print("✓ test_no_findings_for_private_config passed")
+    print("[PASS] test_no_findings_for_private_config passed")
 
 
 def test_analyzer_metadata():
@@ -263,7 +263,7 @@ def test_analyzer_metadata():
     assert len(analyzer.NIST_CONTROLS) >= 3
     assert len(analyzer.RELATED_KSIS) >= 2
     
-    print("✓ test_analyzer_metadata passed")
+    print("[PASS] test_analyzer_metadata passed")
 
 
 def test_evidence_automation_recommendations():
@@ -278,7 +278,7 @@ def test_evidence_automation_recommendations():
     assert len(recommendations["collection_methods"]) >= 3
     assert len(recommendations["evidence_artifacts"]) >= 3
     
-    print("✓ test_evidence_automation_recommendations passed")
+    print("[PASS] test_evidence_automation_recommendations passed")
 
 
 def test_evidence_collection_queries():
@@ -299,7 +299,7 @@ def test_evidence_collection_queries():
         assert "query" in query
         assert "purpose" in query
     
-    print("✓ test_evidence_collection_queries passed")
+    print("[PASS] test_evidence_collection_queries passed")
 
 
 def test_evidence_artifacts():
@@ -317,7 +317,7 @@ def test_evidence_artifacts():
         assert "collection_method" in artifact
         assert "storage_location" in artifact
     
-    print("✓ test_evidence_artifacts passed")
+    print("[PASS] test_evidence_artifacts passed")
 
 
 def run_all_tests():
@@ -349,12 +349,12 @@ def run_all_tests():
             passed += 1
         except AssertionError as e:
             failed += 1
-            print(f"✗ {test.__name__} failed: {e}")
+            print(f"[FAIL] {test.__name__} failed: {e}")
             import traceback
             traceback.print_exc()
         except Exception as e:
             failed += 1
-            print(f"✗ {test.__name__} error: {e}")
+            print(f"[FAIL] {test.__name__} error: {e}")
             import traceback
             traceback.print_exc()
     
@@ -362,7 +362,7 @@ def run_all_tests():
     print(f"Results: {passed} passed, {failed} failed")
     
     if failed == 0:
-        print("ALL TESTS PASSED ✓")
+        print("ALL TESTS PASSED [PASS]")
         return 0
     else:
         print(f"FAILURES DETECTED ({failed} tests failed)")
