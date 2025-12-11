@@ -58,15 +58,13 @@ class FRR_ADS_TC_02_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("PM-9", "Risk Management Strategy"),
-        ("PL-2", "System Security Plan"),
-        ("SA-4", "Acquisition Process"),
         ("SA-9", "External System Services"),
+        ("SI-12", "Information Management and Retention"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-AFR-01",
     ]
     
     def __init__(self):
@@ -83,21 +81,39 @@ class FRR_ADS_TC_02_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-ADS-TC-02 compliance using AST.
+        Analyze Python code for FRR-ADS-TC-02 compliance.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects human and machine-readable format support:
+        - Format conversion mechanisms (PDF, HTML, JSON, XML)
+        - Download endpoints for different formats
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
+        # Human and machine-readable format patterns
+        format_patterns = [
+            r'(pdf|html|json|xml|csv).*format',
+            r'human.*readable',
+            r'machine.*readable',
+            r'export.*format',
+            r'download.*\.(pdf|html|json|xml)',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            for pattern in format_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Format conversion mechanism detected",
+                        description=f"Found format support pattern: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Ensure trust center provides authorization data in both human-readable and machine-readable formats."
+                    ))
+                    break
+        
+        return findings
         # Example from FRR-VDR-08:
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)

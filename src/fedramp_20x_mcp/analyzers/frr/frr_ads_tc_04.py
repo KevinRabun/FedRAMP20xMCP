@@ -58,16 +58,15 @@ class FRR_ADS_TC_04_Analyzer(BaseFRRAnalyzer):
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
     NIST_CONTROLS = [
-        ("PM-9", "Risk Management Strategy"),
-        ("PL-2", "System Security Plan"),
-        ("SA-4", "Acquisition Process"),
-        ("SA-9", "External System Services"),
         ("AC-2", "Account Management"),
         ("AC-3", "Access Enforcement"),
-        ("AU-2", "Event Logging"),
+        ("SA-9", "External System Services"),
     ]
-    CODE_DETECTABLE = "No"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
+    RELATED_KSIS = [
+        "KSI-AFR-01",
+    ]
     RELATED_KSIS = [
         # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
     ]
@@ -86,21 +85,40 @@ class FRR_ADS_TC_04_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-ADS-TC-04 compliance using AST.
+        Analyze Python code for FRR-ADS-TC-04 compliance.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        Detects self-service access management:
+        - Self-service portals
+        - Access provisioning mechanisms
+        - User/service management features
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement AST-based analysis
+        # Self-service access patterns
+        self_service_patterns = [
+            r'self.*service',
+            r'provision.*access',
+            r'manage.*access.*self',
+            r'user.*portal',
+            r'self.*provision',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            for pattern in self_service_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Self-service access mechanism detected",
+                        description=f"Found self-service pattern: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Ensure trust center includes self-service features for access management."
+                    ))
+                    break
+        
+        return findings
         # Example from FRR-VDR-08:
         # try:
         #     parser = ASTParser(CodeLanguage.PYTHON)
