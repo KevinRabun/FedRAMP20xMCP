@@ -65,10 +65,10 @@ class FRR_ADS_03_Analyzer(BaseFRRAnalyzer):
         ("AC-3", "Access Enforcement"),
         ("AU-2", "Event Logging"),
     ]
-    CODE_DETECTABLE = "No"
-    IMPLEMENTATION_STATUS = "PARTIAL"
+    CODE_DETECTABLE = "Partial"
+    IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
+        "KSI-AFR-01",  # Automated FedRAMP Data Publication
     ]
     
     def __init__(self):
