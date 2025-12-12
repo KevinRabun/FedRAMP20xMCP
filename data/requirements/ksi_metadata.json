@@ -1,0 +1,3286 @@
+{
+  "KSI-AFR-01": {
+    "id": "KSI-AFR-01",
+    "name": "Minimum Assessment Scope",
+    "statement": "Apply the FedRAMP Minimum Assessment Scope (MAS) to identify and document the scope of the cloud service offering to be assessed for FedRAMP authorization and persistently address all related requirements and recommendations.",
+    "family": "AFR",
+    "family_name": "Authorization by FedRAMP",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_01.py",
+    "class_name": "KSI_AFR_01_Analyzer"
+  },
+  "KSI-AFR-02": {
+    "id": "KSI-AFR-02",
+    "name": "Key Security Indicators",
+    "statement": "Set security goals for the cloud service offering based on FedRAMP 20x Phase Two Key Security Indicators (KSIs - you are here), develop automated validation of status and progress to the greatest extent possible, and persistently address all related requirements and recommendations.",
+    "family": "AFR",
+    "family_name": "Authorization by FedRAMP",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_02.py",
+    "class_name": "KSI_AFR_02_Analyzer"
+  },
+  "KSI-AFR-03": {
+    "id": "KSI-AFR-03",
+    "name": "Authorization Data Sharing",
+    "statement": "Determine how authorization data will be shared with all necessary parties in alignment with the FedRAMP Authorization Data Sharing (ADS) process and persistently address all related requirements and recommendations.",
+    "family": "AFR",
+    "family_name": "Authorization by FedRAMP",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ac-3",
+        "name": "Access Enforcement"
+      },
+      {
+        "id": "ac-4",
+        "name": "Information Flow Enforcement"
+      },
+      {
+        "id": "au-2",
+        "name": "Event Logging"
+      },
+      {
+        "id": "au-3",
+        "name": "Content of Audit Records"
+      },
+      {
+        "id": "au-6",
+        "name": "Audit Record Review, Analysis, and Reporting"
+      },
+      {
+        "id": "ca-2",
+        "name": "Control Assessments"
+      },
+      {
+        "id": "ir-4",
+        "name": "Incident Handling"
+      },
+      {
+        "id": "ra-5",
+        "name": "Vulnerability Monitoring and Scanning"
+      },
+      {
+        "id": "sc-8",
+        "name": "Transmission Confidentiality and Integrity"
+      }
+    ],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_03.py",
+    "class_name": "KSI_AFR_03_Analyzer"
+  },
+  "KSI-AFR-04": {
+    "id": "KSI-AFR-04",
+    "name": "Vulnerability Detection and Response",
+    "statement": "Document the vulnerability detection and vulnerability response methodology used within the cloud service offering in alignment with the FedRAMP Vulnerability Detection and Response (VDR) process and persistently address all related requirements and recommendations.",
+    "family": "AFR",
+    "family_name": "Authorization by FedRAMP",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ca-2",
+        "name": "Control Assessments"
+      },
+      {
+        "id": "ca-7",
+        "name": "Continuous Monitoring"
+      },
+      {
+        "id": "ca-7.6",
+        "name": "Automation Support for Monitoring"
+      },
+      {
+        "id": "ir-1",
+        "name": "Policy and Procedures"
+      },
+      {
+        "id": "ir-4",
+        "name": "Incident Handling"
+      },
+      {
+        "id": "ir-4.1",
+        "name": "Automated Incident Handling Processes"
+      },
+      {
+        "id": "ir-5",
+        "name": "Incident Monitoring"
+      },
+      {
+        "id": "ir-5.1",
+        "name": "Automated Tracking, Data Collection, and Analysis"
+      },
+      {
+        "id": "ir-6",
+        "name": "Incident Reporting"
+      },
+      {
+        "id": "ir-6.1",
+        "name": "Automated Reporting"
+      },
+      {
+        "id": "ir-6.2",
+        "name": "Vulnerabilities Related to Incidents"
+      },
+      {
+        "id": "pm-3",
+        "name": "Information Security and Privacy Resources"
+      },
+      {
+        "id": "pm-5",
+        "name": "System Inventory"
+      },
+      {
+        "id": "pm-31",
+        "name": "Continuous Monitoring Strategy"
+      },
+      {
+        "id": "ra-2",
+        "name": "Security Categorization"
+      },
+      {
+        "id": "ra-2.1",
+        "name": "Impact-level Prioritization"
+      },
+      {
+        "id": "ra-3",
+        "name": "Risk Assessment"
+      },
+      {
+        "id": "ra-3.3",
+        "name": "Dynamic Threat Awareness"
+      },
+      {
+        "id": "ra-5",
+        "name": "Vulnerability Monitoring and Scanning"
+      },
+      {
+        "id": "ra-5.2",
+        "name": "Update Vulnerabilities to Be Scanned"
+      },
+      {
+        "id": "ra-5.3",
+        "name": "Breadth and Depth of Coverage"
+      },
+      {
+        "id": "ra-5.4",
+        "name": "Discoverable Information"
+      },
+      {
+        "id": "ra-5.5",
+        "name": "Privileged Access"
+      },
+      {
+        "id": "ra-5.6",
+        "name": "Automated Trend Analyses"
+      },
+      {
+        "id": "ra-5.7",
+        "name": "Automated Detection and Notification of Unauthorized Components"
+      },
+      {
+        "id": "ra-5.11",
+        "name": "Public Disclosure Program"
+      },
+      {
+        "id": "ra-9",
+        "name": "Criticality Analysis"
+      },
+      {
+        "id": "ra-10",
+        "name": "Threat Hunting"
+      },
+      {
+        "id": "si-2",
+        "name": "Flaw Remediation"
+      },
+      {
+        "id": "si-2.1",
+        "name": "Central Management"
+      },
+      {
+        "id": "si-2.2",
+        "name": "Automated Flaw Remediation Status"
+      },
+      {
+        "id": "si-2.4",
+        "name": "Automated Patch Management Tools"
+      },
+      {
+        "id": "si-2.5",
+        "name": "Automatic Software and Firmware Updates"
+      },
+      {
+        "id": "si-3",
+        "name": "Malicious Code Protection"
+      },
+      {
+        "id": "si-3.1",
+        "name": "Central Management"
+      },
+      {
+        "id": "si-3.2",
+        "name": "Automatic Updates"
+      },
+      {
+        "id": "si-4",
+        "name": "System Monitoring"
+      },
+      {
+        "id": "si-4.2",
+        "name": "Automated Tools and Mechanisms for Real-time Analysis"
+      },
+      {
+        "id": "si-4.3",
+        "name": "Automated Tool and Mechanism Integration"
+      },
+      {
+        "id": "si-4.7",
+        "name": "Automated Response to Suspicious Events"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_04.py",
+    "class_name": "KSI_AFR_04_Analyzer"
+  },
+  "KSI-AFR-05": {
+    "id": "KSI-AFR-05",
+    "name": "Significant Change Notifications",
+    "statement": "Determine how significant changes will be tracked and how all necessary parties will be notified in alignment with the FedRAMP Significant Change Notifications (SCN) process and persistently address all related requirements and recommendations.",
+    "family": "AFR",
+    "family_name": "Authorization by FedRAMP",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ca-7.4",
+        "name": "Risk Monitoring"
+      },
+      {
+        "id": "cm-3.4",
+        "name": "Security and Privacy Representatives"
+      },
+      {
+        "id": "cm-4",
+        "name": "Impact Analyses"
+      },
+      {
+        "id": "cm-7.1",
+        "name": "Periodic Review"
+      },
+      {
+        "id": "au-5",
+        "name": "Response to Audit Logging Process Failures"
+      },
+      {
+        "id": "ca-5",
+        "name": "Plan of Action and Milestones"
+      },
+      {
+        "id": "ca-7",
+        "name": "Continuous Monitoring"
+      },
+      {
+        "id": "ra-5",
+        "name": "Vulnerability Monitoring and Scanning"
+      },
+      {
+        "id": "ra-5.2",
+        "name": "Update Vulnerabilities to Be Scanned"
+      },
+      {
+        "id": "sa-22",
+        "name": "Unsupported System Components"
+      },
+      {
+        "id": "si-2",
+        "name": "Flaw Remediation"
+      },
+      {
+        "id": "si-2.2",
+        "name": "Automated Flaw Remediation Status"
+      },
+      {
+        "id": "si-3",
+        "name": "Malicious Code Protection"
+      },
+      {
+        "id": "si-5",
+        "name": "Security Alerts, Advisories, and Directives"
+      },
+      {
+        "id": "si-7.7",
+        "name": "Integration of Detection and Response"
+      },
+      {
+        "id": "si-10",
+        "name": "Information Input Validation"
+      },
+      {
+        "id": "si-11",
+        "name": "Error Handling"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_05.py",
+    "class_name": "KSI_AFR_05_Analyzer"
+  },
+  "KSI-AFR-06": {
+    "id": "KSI-AFR-06",
+    "name": "Collaborative Continuous Monitoring",
+    "statement": "Maintain a plan and process for providing Ongoing Authorization Reports and Quarterly Reviews for all necessary parties in alignment with the FedRAMP Collaborative Continuous Monitoring (CCM) process and persistently address all related requirements and recommendations.",
+    "family": "AFR",
+    "family_name": "Authorization by FedRAMP",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_06.py",
+    "class_name": "KSI_AFR_06_Analyzer"
+  },
+  "KSI-AFR-07": {
+    "id": "KSI-AFR-07",
+    "name": "Recommended Secure Configuration",
+    "statement": "Develop secure by default configurations and provide guidance for secure configuration of the cloud service offering to customers in alignment with the FedRAMP Recommended Secure Configuration (RSC) guidance process and persistently address all related requirements and recommendations.",
+    "family": "AFR",
+    "family_name": "Authorization by FedRAMP",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_07.py",
+    "class_name": "KSI_AFR_07_Analyzer"
+  },
+  "KSI-AFR-08": {
+    "id": "KSI-AFR-08",
+    "name": "FedRAMP Security Inbox",
+    "statement": "Operate a secure inbox to receive critical communication from FedRAMP and other government entities in alignment with FedRAMP Security Inbox (FSI) requirements and persistently address all related requirements and recommendations.",
+    "family": "AFR",
+    "family_name": "Authorization by FedRAMP",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_08.py",
+    "class_name": "KSI_AFR_08_Analyzer"
+  },
+  "KSI-AFR-09": {
+    "id": "KSI-AFR-09",
+    "name": "Persistent Validation and Assessment",
+    "statement": "Persistently validate, assess, and report on the effectiveness and status of security decisions and policies that are implemented within the cloud service offering in alignment with the FedRAMP 20x Persistent Validation and Assessment (PVA) process, and persistently address all related requirements and recommendations.",
+    "family": "AFR",
+    "family_name": "Authorization by FedRAMP",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_09.py",
+    "class_name": "KSI_AFR_09_Analyzer"
+  },
+  "KSI-AFR-10": {
+    "id": "KSI-AFR-10",
+    "name": "Incident Communications Procedures",
+    "statement": "Integrate FedRAMP's Incident Communications Procedures (ICP) into incident response procedures and persistently address all related requirements and recommendations.",
+    "family": "AFR",
+    "family_name": "Authorization by FedRAMP",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_10.py",
+    "class_name": "KSI_AFR_10_Analyzer"
+  },
+  "KSI-AFR-11": {
+    "id": "KSI-AFR-11",
+    "name": "Using Cryptographic Modules",
+    "statement": "Ensure that cryptographic modules used to protect potentially sensitive federal customer data are selected and used in alignment with the FedRAMP 20x Using Cryptographic Modules (UCM) guidance and persistently address all related requirements and recommendations.",
+    "family": "AFR",
+    "family_name": "",
+    "impact_levels": [],
+    "nist_controls": [],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_11.py",
+    "class_name": "KSI_AFR_11_Analyzer"
+  },
+  "KSI-CED-01": {
+    "id": "KSI-CED-01",
+    "name": "General Education",
+    "statement": "Require and monitor the effectiveness of training given to all employees on policies, procedures, and security-related topics.",
+    "family": "CED",
+    "family_name": "Cybersecurity Education",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "at-2",
+        "name": "Literacy Training and Awareness"
+      },
+      {
+        "id": "at-2.2",
+        "name": "Insider Threat"
+      },
+      {
+        "id": "at-2.3",
+        "name": "Social Engineering and Mining"
+      },
+      {
+        "id": "at-3.5",
+        "name": "Processing Personally Identifiable Information"
+      },
+      {
+        "id": "at-4",
+        "name": "Training Records"
+      },
+      {
+        "id": "ir-2.3",
+        "name": "Breach"
+      }
+    ],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_ced_01.py",
+    "class_name": "KSI_CED_01_Analyzer"
+  },
+  "KSI-CED-02": {
+    "id": "KSI-CED-02",
+    "name": "Role-Specific Education",
+    "statement": "Require and monitor the effectiveness of role-specific training for high risk roles, including at least roles with privileged access.",
+    "family": "CED",
+    "family_name": "Cybersecurity Education",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "at-2",
+        "name": "Literacy Training and Awareness"
+      },
+      {
+        "id": "at-2.3",
+        "name": "Social Engineering and Mining"
+      },
+      {
+        "id": "at-3",
+        "name": "Role-based Training"
+      },
+      {
+        "id": "sr-11.1",
+        "name": "Anti-counterfeit Training"
+      }
+    ],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_ced_02.py",
+    "class_name": "KSI_CED_02_Analyzer"
+  },
+  "KSI-CED-03": {
+    "id": "KSI-CED-03",
+    "name": "Development and Engineering Education",
+    "statement": "Require and monitor the effectiveness of role-specific training provided to development and engineering staff that covers best practices for delivering secure software.",
+    "family": "CED",
+    "family_name": "Cybersecurity Education",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "cp-3",
+        "name": "Contingency Training"
+      },
+      {
+        "id": "ir-2",
+        "name": "Incident Response Training"
+      },
+      {
+        "id": "ps-6",
+        "name": "Access Agreements"
+      }
+    ],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_ced_03.py",
+    "class_name": "KSI_CED_03_Analyzer"
+  },
+  "KSI-CED-04": {
+    "id": "KSI-CED-04",
+    "name": "Incident Response and Disaster Recovery Education",
+    "statement": "Require and monitor the effectiveness of role-specific training to staff involved with incident response or disaster recovery.",
+    "family": "CED",
+    "family_name": "Cybersecurity Education",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_ced_04.py",
+    "class_name": "KSI_CED_04_Analyzer"
+  },
+  "KSI-CMT-01": {
+    "id": "KSI-CMT-01",
+    "name": "Version Control and Change Logging",
+    "statement": "Log and monitor modifications to the cloud service offering.",
+    "family": "CMT",
+    "family_name": "Change Management",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "au-2",
+        "name": "Event Logging"
+      },
+      {
+        "id": "cm-3",
+        "name": "Configuration Change Control"
+      },
+      {
+        "id": "cm-3.2",
+        "name": "Testing, Validation, and Documentation of Changes"
+      },
+      {
+        "id": "cm-4.2",
+        "name": "Verification of Controls"
+      },
+      {
+        "id": "cm-6",
+        "name": "Configuration Settings"
+      },
+      {
+        "id": "cm-8.3",
+        "name": "Automated Unauthorized Component Detection"
+      },
+      {
+        "id": "ma-2",
+        "name": "Controlled Maintenance"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cmt_01.py",
+    "class_name": "KSI_CMT_01_Analyzer"
+  },
+  "KSI-CMT-02": {
+    "id": "KSI-CMT-02",
+    "name": "Immutable Infrastructure",
+    "statement": "Execute changes through redeployment of version controlled immutable resources rather than direct modification wherever possible.",
+    "family": "CMT",
+    "family_name": "Change Management",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "cm-2",
+        "name": "Baseline Configuration"
+      },
+      {
+        "id": "cm-3",
+        "name": "Configuration Change Control"
+      },
+      {
+        "id": "cm-5",
+        "name": "Access Restrictions for Change"
+      },
+      {
+        "id": "cm-6",
+        "name": "Configuration Settings"
+      },
+      {
+        "id": "cm-7",
+        "name": "Least Functionality"
+      },
+      {
+        "id": "cm-8.1",
+        "name": "Updates During Installation and Removal"
+      },
+      {
+        "id": "si-3",
+        "name": "Malicious Code Protection"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cmt_02.py",
+    "class_name": "KSI_CMT_02_Analyzer"
+  },
+  "KSI-CMT-03": {
+    "id": "KSI-CMT-03",
+    "name": "Automated Testing and Validation",
+    "statement": "Automate persistent testing and validation of changes throughout deployment.",
+    "family": "CMT",
+    "family_name": "Change Management",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "cm-3",
+        "name": "Configuration Change Control"
+      },
+      {
+        "id": "cm-3.2",
+        "name": "Testing, Validation, and Documentation of Changes"
+      },
+      {
+        "id": "cm-4.2",
+        "name": "Verification of Controls"
+      },
+      {
+        "id": "si-2",
+        "name": "Flaw Remediation"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cmt_03.py",
+    "class_name": "KSI_CMT_03_Analyzer"
+  },
+  "KSI-CMT-04": {
+    "id": "KSI-CMT-04",
+    "name": "Change Management Procedure",
+    "statement": "Always follow a documented change management procedure.",
+    "family": "CMT",
+    "family_name": "Change Management",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "cm-3",
+        "name": "Configuration Change Control"
+      },
+      {
+        "id": "cm-3.2",
+        "name": "Testing, Validation, and Documentation of Changes"
+      },
+      {
+        "id": "cm-3.4",
+        "name": "Security and Privacy Representatives"
+      },
+      {
+        "id": "cm-5",
+        "name": "Access Restrictions for Change"
+      },
+      {
+        "id": "cm-7.1",
+        "name": "Periodic Review"
+      },
+      {
+        "id": "cm-9",
+        "name": "Configuration Management Plan"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cmt_04.py",
+    "class_name": "KSI_CMT_04_Analyzer"
+  },
+  "KSI-CMT-05": {
+    "id": "KSI-CMT-05",
+    "name": "RETIRED",
+    "statement": "",
+    "family": "CMT",
+    "family_name": "Change Management",
+    "impact_levels": [],
+    "nist_controls": [],
+    "code_detectable": false,
+    "implementation_status": "RETIRED",
+    "retired": true,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cmt_05.py",
+    "class_name": "KSI_CMT_05_Analyzer"
+  },
+  "KSI-CNA-01": {
+    "id": "KSI-CNA-01",
+    "name": "Restrict Network Traffic",
+    "statement": "Configure all machine-based information resources to limit inbound and outbound network traffic.",
+    "family": "CNA",
+    "family_name": "Cloud Native Architecture",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ac-17.3",
+        "name": "Managed Access Control Points"
+      },
+      {
+        "id": "ca-9",
+        "name": "Internal System Connections"
+      },
+      {
+        "id": "cm-7.1",
+        "name": "Periodic Review"
+      },
+      {
+        "id": "sc-7.5",
+        "name": "Deny by Default — Allow by Exception"
+      },
+      {
+        "id": "si-8",
+        "name": "Spam Protection"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cna_01.py",
+    "class_name": "KSI_CNA_01_Analyzer"
+  },
+  "KSI-CNA-02": {
+    "id": "KSI-CNA-02",
+    "name": "Minimize the Attack Surface",
+    "statement": "Design systems to minimize the attack surface and minimize lateral movement if compromised.",
+    "family": "CNA",
+    "family_name": "Cloud Native Architecture",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ac-17.3",
+        "name": "Managed Access Control Points"
+      },
+      {
+        "id": "ac-18.1",
+        "name": "Authentication and Encryption"
+      },
+      {
+        "id": "ac-18.3",
+        "name": "Disable Wireless Networking"
+      },
+      {
+        "id": "ac-20.1",
+        "name": "Limits on Authorized Use"
+      },
+      {
+        "id": "ca-9",
+        "name": "Internal System Connections"
+      },
+      {
+        "id": "sc-7.3",
+        "name": "Access Points"
+      },
+      {
+        "id": "sc-7.4",
+        "name": "External Telecommunications Services"
+      },
+      {
+        "id": "sc-7.5",
+        "name": "Deny by Default — Allow by Exception"
+      },
+      {
+        "id": "sc-7.8",
+        "name": "Route Traffic to Authenticated Proxy Servers"
+      },
+      {
+        "id": "sc-8",
+        "name": "Transmission Confidentiality and Integrity"
+      },
+      {
+        "id": "sc-10",
+        "name": "Network Disconnect"
+      },
+      {
+        "id": "si-10",
+        "name": "Information Input Validation"
+      },
+      {
+        "id": "si-11",
+        "name": "Error Handling"
+      },
+      {
+        "id": "si-16",
+        "name": "Memory Protection"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cna_02.py",
+    "class_name": "KSI_CNA_02_Analyzer"
+  },
+  "KSI-CNA-03": {
+    "id": "KSI-CNA-03",
+    "name": "Enforce Traffic Flow",
+    "statement": "Use logical networking and related capabilities to enforce traffic flow controls.",
+    "family": "CNA",
+    "family_name": "Cloud Native Architecture",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ac-12",
+        "name": "Session Termination"
+      },
+      {
+        "id": "ac-17.3",
+        "name": "Managed Access Control Points"
+      },
+      {
+        "id": "ca-9",
+        "name": "Internal System Connections"
+      },
+      {
+        "id": "sc-4",
+        "name": "Information in Shared System Resources"
+      },
+      {
+        "id": "sc-7",
+        "name": "Boundary Protection"
+      },
+      {
+        "id": "sc-7.7",
+        "name": "Split Tunneling for Remote Devices"
+      },
+      {
+        "id": "sc-8",
+        "name": "Transmission Confidentiality and Integrity"
+      },
+      {
+        "id": "sc-10",
+        "name": "Network Disconnect"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cna_03.py",
+    "class_name": "KSI_CNA_03_Analyzer"
+  },
+  "KSI-CNA-04": {
+    "id": "KSI-CNA-04",
+    "name": "Immutable Infrastructure",
+    "statement": "Use immutable infrastructure with strictly defined functionality and privileges by default.",
+    "family": "CNA",
+    "family_name": "Cloud Native Architecture",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "cm-2",
+        "name": "Baseline Configuration"
+      },
+      {
+        "id": "si-3",
+        "name": "Malicious Code Protection"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cna_04.py",
+    "class_name": "KSI_CNA_04_Analyzer"
+  },
+  "KSI-CNA-05": {
+    "id": "KSI-CNA-05",
+    "name": "Unwanted Activity",
+    "statement": "Protect against denial of service attacks and other unwanted activity.",
+    "family": "CNA",
+    "family_name": "Cloud Native Architecture",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "sc-5",
+        "name": "Denial-of-service Protection"
+      },
+      {
+        "id": "si-8",
+        "name": "Spam Protection"
+      },
+      {
+        "id": "si-8.2",
+        "name": "Automatic Updates"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cna_05.py",
+    "class_name": "KSI_CNA_05_Analyzer"
+  },
+  "KSI-CNA-06": {
+    "id": "KSI-CNA-06",
+    "name": "High Availability",
+    "statement": "Design systems for high availability and rapid recovery.",
+    "family": "CNA",
+    "family_name": "Cloud Native Architecture",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cna_06.py",
+    "class_name": "KSI_CNA_06_Analyzer"
+  },
+  "KSI-CNA-07": {
+    "id": "KSI-CNA-07",
+    "name": "Best Practices",
+    "statement": "Ensure cloud-native information resources are implemented based on host provider's best practices and documented guidance.",
+    "family": "CNA",
+    "family_name": "Cloud Native Architecture",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ac-17.3",
+        "name": "Managed Access Control Points"
+      },
+      {
+        "id": "cm-2",
+        "name": "Baseline Configuration"
+      },
+      {
+        "id": "pl-10",
+        "name": "Baseline Selection"
+      }
+    ],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cna_07.py",
+    "class_name": "KSI_CNA_07_Analyzer"
+  },
+  "KSI-CNA-08": {
+    "id": "KSI-CNA-08",
+    "name": "Persistent Assessment and Automated Enforcement",
+    "statement": "Use automated services to persistently assess the security posture of all machine-based information resources and automatically enforce their intended operational state.",
+    "family": "CNA",
+    "family_name": "Cloud Native Architecture",
+    "impact_levels": [
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ca-2.1",
+        "name": "Independent Assessors"
+      },
+      {
+        "id": "ca-7.1",
+        "name": "Independent Assessment"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cna_08.py",
+    "class_name": "KSI_CNA_08_Analyzer"
+  },
+  "KSI-IAM-01": {
+    "id": "KSI-IAM-01",
+    "name": "Phishing-Resistant MFA",
+    "statement": "Enforce multi-factor authentication (MFA) using methods that are difficult to intercept or impersonate (phishing-resistant MFA) for all user authentication.",
+    "family": "IAM",
+    "family_name": "Identity and Access Management",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ac-2",
+        "name": "Account Management"
+      },
+      {
+        "id": "ia-2",
+        "name": "Identification and Authentication (Organizational Users)"
+      },
+      {
+        "id": "ia-2.1",
+        "name": "Multi-factor Authentication to Privileged Accounts"
+      },
+      {
+        "id": "ia-2.2",
+        "name": "Multi-factor Authentication to Non-privileged Accounts"
+      },
+      {
+        "id": "ia-2.8",
+        "name": "Access to Accounts — Replay Resistant"
+      },
+      {
+        "id": "ia-5",
+        "name": "Authenticator Management"
+      },
+      {
+        "id": "ia-8",
+        "name": "Identification and Authentication (Non-organizational Users)"
+      },
+      {
+        "id": "sc-23",
+        "name": "Session Authenticity"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_iam_01.py",
+    "class_name": "KSI_IAM_01_Analyzer"
+  },
+  "KSI-IAM-02": {
+    "id": "KSI-IAM-02",
+    "name": "Passwordless Authentication",
+    "statement": "Use secure passwordless methods for user authentication and authorization when feasible, otherwise enforce strong passwords with MFA.",
+    "family": "IAM",
+    "family_name": "",
+    "impact_levels": [],
+    "nist_controls": [
+      {
+        "id": "ac-2",
+        "name": "Account Management"
+      },
+      {
+        "id": "ac-3",
+        "name": "Access Enforcement"
+      },
+      {
+        "id": "ia-2.1",
+        "name": "Multi-factor Authentication to Privileged Accounts"
+      },
+      {
+        "id": "ia-2.2",
+        "name": "Multi-factor Authentication to Non-privileged Accounts"
+      },
+      {
+        "id": "ia-2.8",
+        "name": "Access to Accounts — Replay Resistant"
+      },
+      {
+        "id": "ia-5.1",
+        "name": "Password-based Authentication"
+      },
+      {
+        "id": "ia-5.2",
+        "name": "Public Key-based Authentication"
+      },
+      {
+        "id": "ia-5.6",
+        "name": "Protection of Authenticators"
+      },
+      {
+        "id": "ia-6",
+        "name": "Authentication Feedback"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_iam_02.py",
+    "class_name": "KSI_IAM_02_Analyzer"
+  },
+  "KSI-IAM-03": {
+    "id": "KSI-IAM-03",
+    "name": "Non-User Accounts",
+    "statement": "Enforce appropriately secure authentication methods for non-user accounts and services.",
+    "family": "IAM",
+    "family_name": "Identity and Access Management",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ac-2",
+        "name": "Account Management"
+      },
+      {
+        "id": "ac-2.2",
+        "name": "Automated Temporary and Emergency Account Management"
+      },
+      {
+        "id": "ac-4",
+        "name": "Information Flow Enforcement"
+      },
+      {
+        "id": "ac-6.5",
+        "name": "Privileged Accounts"
+      },
+      {
+        "id": "ia-3",
+        "name": "Device Identification and Authentication"
+      },
+      {
+        "id": "ia-5.2",
+        "name": "Public Key-based Authentication"
+      },
+      {
+        "id": "ra-5.5",
+        "name": "Privileged Access"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_iam_03.py",
+    "class_name": "KSI_IAM_03_Analyzer"
+  },
+  "KSI-IAM-04": {
+    "id": "KSI-IAM-04",
+    "name": "Just-in-Time Authorization",
+    "statement": "Use a least-privileged, role and attribute-based, and just-in-time security authorization model for all user and non-user accounts and services.",
+    "family": "IAM",
+    "family_name": "Identity and Access Management",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ac-2",
+        "name": "Account Management"
+      },
+      {
+        "id": "ac-2.1",
+        "name": "Automated System Account Management"
+      },
+      {
+        "id": "ac-2.2",
+        "name": "Automated Temporary and Emergency Account Management"
+      },
+      {
+        "id": "ac-2.3",
+        "name": "Disable Accounts"
+      },
+      {
+        "id": "ac-2.4",
+        "name": "Automated Audit Actions"
+      },
+      {
+        "id": "ac-2.6",
+        "name": "Dynamic Privilege Management"
+      },
+      {
+        "id": "ac-3",
+        "name": "Access Enforcement"
+      },
+      {
+        "id": "ac-4",
+        "name": "Information Flow Enforcement"
+      },
+      {
+        "id": "ac-5",
+        "name": "Separation of Duties"
+      },
+      {
+        "id": "ac-6",
+        "name": "Least Privilege"
+      },
+      {
+        "id": "ac-6.1",
+        "name": "Authorize Access to Security Functions"
+      },
+      {
+        "id": "ac-6.2",
+        "name": "Non-privileged Access for Nonsecurity Functions"
+      },
+      {
+        "id": "ac-6.5",
+        "name": "Privileged Accounts"
+      },
+      {
+        "id": "ac-6.7",
+        "name": "Review of User Privileges"
+      },
+      {
+        "id": "ac-6.9",
+        "name": "Log Use of Privileged Functions"
+      },
+      {
+        "id": "ac-6.10",
+        "name": "Prohibit Non-privileged Users from Executing Privileged Functions"
+      },
+      {
+        "id": "ac-7",
+        "name": "Unsuccessful Logon Attempts"
+      },
+      {
+        "id": "ac-20.1",
+        "name": "Limits on Authorized Use"
+      },
+      {
+        "id": "ac-17",
+        "name": "Remote Access"
+      },
+      {
+        "id": "au-9.4",
+        "name": "Access by Subset of Privileged Users"
+      },
+      {
+        "id": "cm-5",
+        "name": "Access Restrictions for Change"
+      },
+      {
+        "id": "cm-7",
+        "name": "Least Functionality"
+      },
+      {
+        "id": "cm-7.2",
+        "name": "Prevent Program Execution"
+      },
+      {
+        "id": "cm-7.5",
+        "name": "Authorized Software — Allow-by-exception"
+      },
+      {
+        "id": "cm-9",
+        "name": "Configuration Management Plan"
+      },
+      {
+        "id": "ia-4",
+        "name": "Identifier Management"
+      },
+      {
+        "id": "ia-4.4",
+        "name": "Identify User Status"
+      },
+      {
+        "id": "ia-7",
+        "name": "Cryptographic Module Authentication"
+      },
+      {
+        "id": "ps-2",
+        "name": "Position Risk Designation"
+      },
+      {
+        "id": "ps-3",
+        "name": "Personnel Screening"
+      },
+      {
+        "id": "ps-4",
+        "name": "Personnel Termination"
+      },
+      {
+        "id": "ps-5",
+        "name": "Personnel Transfer"
+      },
+      {
+        "id": "ps-6",
+        "name": "Access Agreements"
+      },
+      {
+        "id": "ps-9",
+        "name": "Position Descriptions"
+      },
+      {
+        "id": "ra-5.5",
+        "name": "Privileged Access"
+      },
+      {
+        "id": "sc-2",
+        "name": "Separation of System and User Functionality"
+      },
+      {
+        "id": "sc-23",
+        "name": "Session Authenticity"
+      },
+      {
+        "id": "sc-39",
+        "name": "Process Isolation"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_iam_04.py",
+    "class_name": "KSI_IAM_04_Analyzer"
+  },
+  "KSI-IAM-05": {
+    "id": "KSI-IAM-05",
+    "name": "Least Privilege",
+    "statement": "Configure identity and access management with measures that always verify each user or device can only access the resources they need.",
+    "family": "IAM",
+    "family_name": "Identity and Access Management",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ac-2.5",
+        "name": "Inactivity Logout"
+      },
+      {
+        "id": "ac-2.6",
+        "name": "Dynamic Privilege Management"
+      },
+      {
+        "id": "ac-3",
+        "name": "Access Enforcement"
+      },
+      {
+        "id": "ac-4",
+        "name": "Information Flow Enforcement"
+      },
+      {
+        "id": "ac-6",
+        "name": "Least Privilege"
+      },
+      {
+        "id": "ac-12",
+        "name": "Session Termination"
+      },
+      {
+        "id": "ac-14",
+        "name": "Permitted Actions Without Identification or Authentication"
+      },
+      {
+        "id": "ac-17",
+        "name": "Remote Access"
+      },
+      {
+        "id": "ac-17.1",
+        "name": "Monitoring and Control"
+      },
+      {
+        "id": "ac-17.2",
+        "name": "Protection of Confidentiality and Integrity Using Encryption"
+      },
+      {
+        "id": "ac-17.3",
+        "name": "Managed Access Control Points"
+      },
+      {
+        "id": "ac-20",
+        "name": "Use of External Systems"
+      },
+      {
+        "id": "ac-20.1",
+        "name": "Limits on Authorized Use"
+      },
+      {
+        "id": "cm-2.7",
+        "name": "Configure Systems and Components for High-risk Areas"
+      },
+      {
+        "id": "cm-9",
+        "name": "Configuration Management Plan"
+      },
+      {
+        "id": "ia-2",
+        "name": "Identification and Authentication (Organizational Users)"
+      },
+      {
+        "id": "ia-3",
+        "name": "Device Identification and Authentication"
+      },
+      {
+        "id": "ia-4",
+        "name": "Identifier Management"
+      },
+      {
+        "id": "ia-4.4",
+        "name": "Identify User Status"
+      },
+      {
+        "id": "ia-5.2",
+        "name": "Public Key-based Authentication"
+      },
+      {
+        "id": "ia-5.6",
+        "name": "Protection of Authenticators"
+      },
+      {
+        "id": "ia-11",
+        "name": "Re-authentication"
+      },
+      {
+        "id": "ps-2",
+        "name": "Position Risk Designation"
+      },
+      {
+        "id": "ps-3",
+        "name": "Personnel Screening"
+      },
+      {
+        "id": "ps-4",
+        "name": "Personnel Termination"
+      },
+      {
+        "id": "ps-5",
+        "name": "Personnel Transfer"
+      },
+      {
+        "id": "ps-6",
+        "name": "Access Agreements"
+      },
+      {
+        "id": "sc-4",
+        "name": "Information in Shared System Resources"
+      },
+      {
+        "id": "sc-20",
+        "name": "Secure Name/Address Resolution Service (Authoritative Source)"
+      },
+      {
+        "id": "sc-21",
+        "name": "Secure Name/Address Resolution Service (Recursive or Caching Resolver)"
+      },
+      {
+        "id": "sc-22",
+        "name": "Architecture and Provisioning for Name/Address Resolution Service"
+      },
+      {
+        "id": "sc-23",
+        "name": "Session Authenticity"
+      },
+      {
+        "id": "sc-39",
+        "name": "Process Isolation"
+      },
+      {
+        "id": "si-3",
+        "name": "Malicious Code Protection"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_iam_05.py",
+    "class_name": "KSI_IAM_05_Analyzer"
+  },
+  "KSI-IAM-06": {
+    "id": "KSI-IAM-06",
+    "name": "Suspicious Activity",
+    "statement": "Automatically disable or otherwise secure accounts with privileged access in response to suspicious activity",
+    "family": "IAM",
+    "family_name": "Identity and Access Management",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ac-2",
+        "name": "Account Management"
+      },
+      {
+        "id": "ac-2.1",
+        "name": "Automated System Account Management"
+      },
+      {
+        "id": "ac-2.3",
+        "name": "Disable Accounts"
+      },
+      {
+        "id": "ac-2.13",
+        "name": "Disable Accounts for High-risk Individuals"
+      },
+      {
+        "id": "ac-7",
+        "name": "Unsuccessful Logon Attempts"
+      },
+      {
+        "id": "ps-4",
+        "name": "Personnel Termination"
+      },
+      {
+        "id": "ps-8",
+        "name": "Personnel Sanctions"
+      }
+    ],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_iam_06.py",
+    "class_name": "KSI_IAM_06_Analyzer"
+  },
+  "KSI-IAM-07": {
+    "id": "KSI-IAM-07",
+    "name": "Automated Account Management",
+    "statement": "Securely manage the lifecycle and privileges of all accounts, roles, and groups, using automation.",
+    "family": "IAM",
+    "family_name": "Identity and Access Management",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ac-2.2",
+        "name": "Automated Temporary and Emergency Account Management"
+      },
+      {
+        "id": "ac-2.3",
+        "name": "Disable Accounts"
+      },
+      {
+        "id": "ac-2.13",
+        "name": "Disable Accounts for High-risk Individuals"
+      },
+      {
+        "id": "ac-6.7",
+        "name": "Review of User Privileges"
+      },
+      {
+        "id": "ia-4.4",
+        "name": "Identify User Status"
+      },
+      {
+        "id": "ia-12",
+        "name": "Identity Proofing"
+      },
+      {
+        "id": "ia-12.2",
+        "name": "Identity Evidence"
+      },
+      {
+        "id": "ia-12.3",
+        "name": "Identity Evidence Validation and Verification"
+      },
+      {
+        "id": "ia-12.5",
+        "name": "Address Confirmation"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_iam_07.py",
+    "class_name": "KSI_IAM_07_Analyzer"
+  },
+  "KSI-INR-01": {
+    "id": "KSI-INR-01",
+    "name": "Incident Response Procedure",
+    "statement": "Always follow a documented incident response procedure.",
+    "family": "INR",
+    "family_name": "Incident Response",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ir-4",
+        "name": "Incident Handling"
+      },
+      {
+        "id": "ir-4.1",
+        "name": "Automated Incident Handling Processes"
+      },
+      {
+        "id": "ir-6",
+        "name": "Incident Reporting"
+      },
+      {
+        "id": "ir-6.1",
+        "name": "Automated Reporting"
+      },
+      {
+        "id": "ir-6.3",
+        "name": "Supply Chain Coordination"
+      },
+      {
+        "id": "ir-7",
+        "name": "Incident Response Assistance"
+      },
+      {
+        "id": "ir-7.1",
+        "name": "Automation Support for Availability of Information and Support"
+      },
+      {
+        "id": "ir-8",
+        "name": "Incident Response Plan"
+      },
+      {
+        "id": "ir-8.1",
+        "name": "Breaches"
+      },
+      {
+        "id": "si-4.5",
+        "name": "System-generated Alerts"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_inr_01.py",
+    "class_name": "KSI_INR_01_Analyzer"
+  },
+  "KSI-INR-02": {
+    "id": "KSI-INR-02",
+    "name": "Incident Logging",
+    "statement": "Maintain a log of incidents and periodically review past incidents for patterns or vulnerabilities.",
+    "family": "INR",
+    "family_name": "Incident Response",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ir-3",
+        "name": "Incident Response Testing"
+      },
+      {
+        "id": "ir-4",
+        "name": "Incident Handling"
+      },
+      {
+        "id": "ir-4.1",
+        "name": "Automated Incident Handling Processes"
+      },
+      {
+        "id": "ir-5",
+        "name": "Incident Monitoring"
+      },
+      {
+        "id": "ir-8",
+        "name": "Incident Response Plan"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_inr_02.py",
+    "class_name": "KSI_INR_02_Analyzer"
+  },
+  "KSI-INR-03": {
+    "id": "KSI-INR-03",
+    "name": "Incident After Action Reports",
+    "statement": "Generate after action reports and regularly incorporate lessons learned into operations.",
+    "family": "INR",
+    "family_name": "Incident Response",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ir-3",
+        "name": "Incident Response Testing"
+      },
+      {
+        "id": "ir-4",
+        "name": "Incident Handling"
+      },
+      {
+        "id": "ir-4.1",
+        "name": "Automated Incident Handling Processes"
+      },
+      {
+        "id": "ir-8",
+        "name": "Incident Response Plan"
+      }
+    ],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_inr_03.py",
+    "class_name": "KSI_INR_03_Analyzer"
+  },
+  "KSI-MLA-01": {
+    "id": "KSI-MLA-01",
+    "name": "Security Information and Event Management (SIEM)",
+    "statement": "Operate a Security Information and Event Management (SIEM) or similar system(s) for centralized, tamper-resistant logging of events, activities, and changes.",
+    "family": "MLA",
+    "family_name": "Monitoring, Logging, and Auditing",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ac-17.1",
+        "name": "Monitoring and Control"
+      },
+      {
+        "id": "ac-20.1",
+        "name": "Limits on Authorized Use"
+      },
+      {
+        "id": "au-2",
+        "name": "Event Logging"
+      },
+      {
+        "id": "au-3",
+        "name": "Content of Audit Records"
+      },
+      {
+        "id": "au-3.1",
+        "name": "Additional Audit Information"
+      },
+      {
+        "id": "au-4",
+        "name": "Audit Log Storage Capacity"
+      },
+      {
+        "id": "au-5",
+        "name": "Response to Audit Logging Process Failures"
+      },
+      {
+        "id": "au-6.1",
+        "name": "Automated Process Integration"
+      },
+      {
+        "id": "au-6.3",
+        "name": "Correlate Audit Record Repositories"
+      },
+      {
+        "id": "au-7",
+        "name": "Audit Record Reduction and Report Generation"
+      },
+      {
+        "id": "au-7.1",
+        "name": "Automatic Processing"
+      },
+      {
+        "id": "au-8",
+        "name": "Time Stamps"
+      },
+      {
+        "id": "au-9",
+        "name": "Protection of Audit Information"
+      },
+      {
+        "id": "au-11",
+        "name": "Audit Record Retention"
+      },
+      {
+        "id": "ir-4.1",
+        "name": "Automated Incident Handling Processes"
+      },
+      {
+        "id": "si-4.2",
+        "name": "Automated Tools and Mechanisms for Real-time Analysis"
+      },
+      {
+        "id": "si-4.4",
+        "name": "Inbound and Outbound Communications Traffic"
+      },
+      {
+        "id": "si-7.7",
+        "name": "Integration of Detection and Response"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_mla_01.py",
+    "class_name": "KSI_MLA_01_Analyzer"
+  },
+  "KSI-MLA-02": {
+    "id": "KSI-MLA-02",
+    "name": "Audit Logging",
+    "statement": "Regularly review and audit logs.",
+    "family": "MLA",
+    "family_name": "",
+    "impact_levels": [],
+    "nist_controls": [
+      {
+        "id": "ac-2.4",
+        "name": ""
+      },
+      {
+        "id": "ac-6.9",
+        "name": ""
+      },
+      {
+        "id": "au-2",
+        "name": ""
+      },
+      {
+        "id": "au-6",
+        "name": ""
+      },
+      {
+        "id": "au-6.1",
+        "name": ""
+      },
+      {
+        "id": "si-4",
+        "name": ""
+      },
+      {
+        "id": "si-4.4",
+        "name": ""
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_mla_02.py",
+    "class_name": "KSI_MLA_02_Analyzer"
+  },
+  "KSI-MLA-03": {
+    "id": "KSI-MLA-03",
+    "name": "RETIRED",
+    "statement": "",
+    "family": "MLA",
+    "family_name": "Monitoring, Logging, and Auditing",
+    "impact_levels": [],
+    "nist_controls": [],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": true,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_mla_03.py",
+    "class_name": "KSI_MLA_03_Analyzer"
+  },
+  "KSI-MLA-04": {
+    "id": "KSI-MLA-04",
+    "name": "RETIRED",
+    "statement": "",
+    "family": "MLA",
+    "family_name": "Monitoring, Logging, and Auditing",
+    "impact_levels": [],
+    "nist_controls": [],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": true,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_mla_04.py",
+    "class_name": "KSI_MLA_04_Analyzer"
+  },
+  "KSI-MLA-05": {
+    "id": "KSI-MLA-05",
+    "name": "Infrastructure as Code",
+    "statement": "Perform Infrastructure as Code and configuration evaluation and testing",
+    "family": "MLA",
+    "family_name": "Monitoring, Logging, and Auditing",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ca-7",
+        "name": "Continuous Monitoring"
+      },
+      {
+        "id": "cm-2",
+        "name": "Baseline Configuration"
+      },
+      {
+        "id": "cm-6",
+        "name": "Configuration Settings"
+      },
+      {
+        "id": "si-7.7",
+        "name": "Integration of Detection and Response"
+      }
+    ],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_mla_05.py",
+    "class_name": "KSI_MLA_05_Analyzer"
+  },
+  "KSI-MLA-06": {
+    "id": "KSI-MLA-06",
+    "name": "RETIRED",
+    "statement": "",
+    "family": "MLA",
+    "family_name": "Monitoring, Logging, and Auditing",
+    "impact_levels": [],
+    "nist_controls": [],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": true,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_mla_06.py",
+    "class_name": "KSI_MLA_06_Analyzer"
+  },
+  "KSI-MLA-07": {
+    "id": "KSI-MLA-07",
+    "name": "Event Types",
+    "statement": "Maintain a list of information resources and event types that will be monitored, logged, and audited, then do so.",
+    "family": "MLA",
+    "family_name": "Monitoring, Logging & Analysis",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ac-2.4",
+        "name": "Automated Audit Actions"
+      },
+      {
+        "id": "ac-6.9",
+        "name": "Log Use of Privileged Functions"
+      },
+      {
+        "id": "ac-17.1",
+        "name": "Monitoring and Control"
+      },
+      {
+        "id": "ac-20.1",
+        "name": "Limits on Authorized Use"
+      },
+      {
+        "id": "au-2",
+        "name": "Event Logging"
+      },
+      {
+        "id": "au-7.1",
+        "name": "Automatic Processing"
+      },
+      {
+        "id": "au-12",
+        "name": "Audit Record Generation"
+      },
+      {
+        "id": "si-4.4",
+        "name": "Inbound and Outbound Communications Traffic"
+      },
+      {
+        "id": "si-4.5",
+        "name": "System-generated Alerts"
+      },
+      {
+        "id": "si-7.7",
+        "name": "Integration of Detection and Response"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_mla_07.py",
+    "class_name": "KSI_MLA_07_Analyzer"
+  },
+  "KSI-MLA-08": {
+    "id": "KSI-MLA-08",
+    "name": "Log Data Access",
+    "statement": "Use a least-privileged, role and attribute-based, and just-in-time access authorization model for access to log data based on organizationally defined data sensitivity.",
+    "family": "MLA",
+    "family_name": "Monitoring, Logging & Analysis",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "si-11",
+        "name": "Error Handling"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_mla_08.py",
+    "class_name": "KSI_MLA_08_Analyzer"
+  },
+  "KSI-PIY-01": {
+    "id": "KSI-PIY-01",
+    "name": "Automated Inventory",
+    "statement": "Use authoritative sources to automatically maintain real-time inventories of all information resources.",
+    "family": "PIY",
+    "family_name": "Policy and Inventory",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "cm-2.2",
+        "name": "Automation Support for Accuracy and Currency"
+      },
+      {
+        "id": "cm-7.5",
+        "name": "Authorized Software — Allow-by-exception"
+      },
+      {
+        "id": "cm-8",
+        "name": "System Component Inventory"
+      },
+      {
+        "id": "cm-8.1",
+        "name": "Updates During Installation and Removal"
+      },
+      {
+        "id": "cm-12",
+        "name": "Information Location"
+      },
+      {
+        "id": "cm-12.1",
+        "name": "Automated Tools to Support Information Location"
+      },
+      {
+        "id": "cp-2.8",
+        "name": "Identify Critical Assets"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_piy_01.py",
+    "class_name": "KSI_PIY_01_Analyzer"
+  },
+  "KSI-PIY-02": {
+    "id": "KSI-PIY-02",
+    "name": "Data Minimization",
+    "statement": "Minimize data collection to necessary fields only.",
+    "family": "PIY",
+    "family_name": "Privacy",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ac-1",
+        "name": "Policy and Procedures"
+      },
+      {
+        "id": "ac-21",
+        "name": "Information Sharing"
+      },
+      {
+        "id": "at-1",
+        "name": "Policy and Procedures"
+      },
+      {
+        "id": "au-1",
+        "name": "Policy and Procedures"
+      },
+      {
+        "id": "ca-1",
+        "name": "Policy and Procedures"
+      },
+      {
+        "id": "cm-1",
+        "name": "Policy and Procedures"
+      },
+      {
+        "id": "cp-1",
+        "name": "Policy and Procedures"
+      },
+      {
+        "id": "cp-2.1",
+        "name": "Coordinate with Related Plans"
+      },
+      {
+        "id": "cp-2.8",
+        "name": "Identify Critical Assets"
+      },
+      {
+        "id": "cp-4.1",
+        "name": "Coordinate with Related Plans"
+      },
+      {
+        "id": "ia-1",
+        "name": "Policy and Procedures"
+      },
+      {
+        "id": "ir-1",
+        "name": "Policy and Procedures"
+      },
+      {
+        "id": "ma-1",
+        "name": "Policy and Procedures"
+      },
+      {
+        "id": "mp-1",
+        "name": "Policy and Procedures"
+      },
+      {
+        "id": "pe-1",
+        "name": "Policy and Procedures"
+      },
+      {
+        "id": "pl-1",
+        "name": "Policy and Procedures"
+      },
+      {
+        "id": "pl-2",
+        "name": "System Security and Privacy Plans"
+      },
+      {
+        "id": "pl-4",
+        "name": "Rules of Behavior"
+      },
+      {
+        "id": "pl-4.1",
+        "name": "Social Media and External Site/Application Usage Restrictions"
+      },
+      {
+        "id": "ps-1",
+        "name": "Policy and Procedures"
+      },
+      {
+        "id": "ra-1",
+        "name": "Policy and Procedures"
+      },
+      {
+        "id": "ra-9",
+        "name": "Criticality Analysis"
+      },
+      {
+        "id": "sa-1",
+        "name": "Policy and Procedures"
+      },
+      {
+        "id": "sc-1",
+        "name": "Policy and Procedures"
+      },
+      {
+        "id": "si-1",
+        "name": "Policy and Procedures"
+      },
+      {
+        "id": "sr-1",
+        "name": "Policy and Procedures"
+      },
+      {
+        "id": "sr-2",
+        "name": "Supply Chain Risk Management Plan"
+      },
+      {
+        "id": "sr-3",
+        "name": "Supply Chain Controls and Processes"
+      },
+      {
+        "id": "sr-11",
+        "name": "Component Authenticity"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_piy_02.py",
+    "class_name": "KSI_PIY_02_Analyzer"
+  },
+  "KSI-PIY-03": {
+    "id": "KSI-PIY-03",
+    "name": "Vulnerability Disclosure Program",
+    "statement": "Maintain a vulnerability disclosure program.",
+    "family": "PIY",
+    "family_name": "Policy and Inventory",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ra-5.11",
+        "name": "Public Disclosure Program"
+      }
+    ],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_piy_03.py",
+    "class_name": "KSI_PIY_03_Analyzer"
+  },
+  "KSI-PIY-04": {
+    "id": "KSI-PIY-04",
+    "name": "CISA Secure By Design",
+    "statement": "Monitor the effectiveness of building security and privacy considerations into the Software Development Lifecycle and aligning with CISA Secure By Design principles.",
+    "family": "PIY",
+    "family_name": "Policy and Inventory",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ac-5",
+        "name": "Separation of Duties"
+      },
+      {
+        "id": "au-3.3",
+        "name": "Limit Personally Identifiable Information Elements"
+      },
+      {
+        "id": "cm-3.4",
+        "name": "Security and Privacy Representatives"
+      },
+      {
+        "id": "pl-8",
+        "name": "Security and Privacy Architectures"
+      },
+      {
+        "id": "pm-7",
+        "name": "Enterprise Architecture"
+      },
+      {
+        "id": "sa-3",
+        "name": "System Development Life Cycle"
+      },
+      {
+        "id": "sa-8",
+        "name": "Security and Privacy Engineering Principles"
+      },
+      {
+        "id": "sc-4",
+        "name": "Information in Shared System Resources"
+      },
+      {
+        "id": "sc-18",
+        "name": "Mobile Code"
+      },
+      {
+        "id": "si-10",
+        "name": "Information Input Validation"
+      },
+      {
+        "id": "si-11",
+        "name": "Error Handling"
+      },
+      {
+        "id": "si-16",
+        "name": "Memory Protection"
+      }
+    ],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_piy_04.py",
+    "class_name": "KSI_PIY_04_Analyzer"
+  },
+  "KSI-PIY-05": {
+    "id": "KSI-PIY-05",
+    "name": "Evaluate Implementations",
+    "statement": "Document methods used to evaluate information resource implementations.",
+    "family": "PIY",
+    "family_name": "Policy and Inventory",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_piy_05.py",
+    "class_name": "KSI_PIY_05_Analyzer"
+  },
+  "KSI-PIY-06": {
+    "id": "KSI-PIY-06",
+    "name": "Security Investment Effectiveness",
+    "statement": "Monitor the effectiveness of the organization's investments in achieving security objectives.",
+    "family": "PIY",
+    "family_name": "Policy and Inventory",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ac-5",
+        "name": "Separation of Duties"
+      },
+      {
+        "id": "ca-2",
+        "name": "Control Assessments"
+      },
+      {
+        "id": "cp-2.1",
+        "name": "Coordinate with Related Plans"
+      },
+      {
+        "id": "cp-4.1",
+        "name": "Coordinate with Related Plans"
+      },
+      {
+        "id": "ir-3.2",
+        "name": "Coordination with Related Plans"
+      },
+      {
+        "id": "pm-3",
+        "name": "Information Security and Privacy Resources"
+      },
+      {
+        "id": "sa-2",
+        "name": "Allocation of Resources"
+      },
+      {
+        "id": "sa-3",
+        "name": "System Development Life Cycle"
+      },
+      {
+        "id": "sr-2.1",
+        "name": "Establish SCRM Team"
+      }
+    ],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_piy_06.py",
+    "class_name": "KSI_PIY_06_Analyzer"
+  },
+  "KSI-PIY-07": {
+    "id": "KSI-PIY-07",
+    "name": "Supply Chain Risk Management",
+    "statement": "Document risk management decisions for software supply chain security.",
+    "family": "PIY",
+    "family_name": "Policy and Inventory",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ca-7.4",
+        "name": "Risk Monitoring"
+      },
+      {
+        "id": "sc-18",
+        "name": "Mobile Code"
+      }
+    ],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_piy_07.py",
+    "class_name": "KSI_PIY_07_Analyzer"
+  },
+  "KSI-PIY-08": {
+    "id": "KSI-PIY-08",
+    "name": "Executive Support",
+    "statement": "Regularly measure executive support for achieving the organization's security objectives.",
+    "family": "PIY",
+    "family_name": "Policy and Inventory",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_piy_08.py",
+    "class_name": "KSI_PIY_08_Analyzer"
+  },
+  "KSI-RPL-01": {
+    "id": "KSI-RPL-01",
+    "name": "Recovery Objectives",
+    "statement": "Define Recovery Time Objectives (RTO) and Recovery Point Objectives (RPO).",
+    "family": "RPL",
+    "family_name": "Recovery Planning",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "cp-2.3",
+        "name": "Resume Mission and Business Functions"
+      },
+      {
+        "id": "cp-10",
+        "name": "System Recovery and Reconstitution"
+      }
+    ],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_rpl_01.py",
+    "class_name": "KSI_RPL_01_Analyzer"
+  },
+  "KSI-RPL-02": {
+    "id": "KSI-RPL-02",
+    "name": "Recovery Plan",
+    "statement": "Develop and maintain a recovery plan that aligns with the defined recovery objectives.",
+    "family": "RPL",
+    "family_name": "Recovery Planning",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "cp-2",
+        "name": "Contingency Plan"
+      },
+      {
+        "id": "cp-2.1",
+        "name": "Coordinate with Related Plans"
+      },
+      {
+        "id": "cp-2.3",
+        "name": "Resume Mission and Business Functions"
+      },
+      {
+        "id": "cp-4.1",
+        "name": "Coordinate with Related Plans"
+      },
+      {
+        "id": "cp-6",
+        "name": "Alternate Storage Site"
+      },
+      {
+        "id": "cp-6.1",
+        "name": "Separation from Primary Site"
+      },
+      {
+        "id": "cp-6.3",
+        "name": "Accessibility"
+      },
+      {
+        "id": "cp-7",
+        "name": "Alternate Processing Site"
+      },
+      {
+        "id": "cp-7.1",
+        "name": "Separation from Primary Site"
+      },
+      {
+        "id": "cp-7.2",
+        "name": "Accessibility"
+      },
+      {
+        "id": "cp-7.3",
+        "name": "Priority of Service"
+      },
+      {
+        "id": "cp-8",
+        "name": "Telecommunications Services"
+      },
+      {
+        "id": "cp-8.1",
+        "name": "Priority of Service Provisions"
+      },
+      {
+        "id": "cp-8.2",
+        "name": "Single Points of Failure"
+      },
+      {
+        "id": "cp-10",
+        "name": "System Recovery and Reconstitution"
+      },
+      {
+        "id": "cp-10.2",
+        "name": "Transaction Recovery"
+      }
+    ],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_rpl_02.py",
+    "class_name": "KSI_RPL_02_Analyzer"
+  },
+  "KSI-RPL-03": {
+    "id": "KSI-RPL-03",
+    "name": "System Backups",
+    "statement": "Perform system backups aligned with recovery objectives",
+    "family": "RPL",
+    "family_name": "Recovery Planning",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "cm-2.3",
+        "name": "Retention of Previous Configurations"
+      },
+      {
+        "id": "cp-6",
+        "name": "Alternate Storage Site"
+      },
+      {
+        "id": "cp-9",
+        "name": "System Backup"
+      },
+      {
+        "id": "cp-10",
+        "name": "System Recovery and Reconstitution"
+      },
+      {
+        "id": "cp-10.2",
+        "name": "Transaction Recovery"
+      },
+      {
+        "id": "si-12",
+        "name": "Information Management and Retention"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_rpl_03.py",
+    "class_name": "KSI_RPL_03_Analyzer"
+  },
+  "KSI-RPL-04": {
+    "id": "KSI-RPL-04",
+    "name": "Recovery Testing",
+    "statement": "Regularly test the capability to recover from incidents and contingencies.",
+    "family": "RPL",
+    "family_name": "Recovery Planning",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "cp-2.1",
+        "name": "Coordinate with Related Plans"
+      },
+      {
+        "id": "cp-2.3",
+        "name": "Resume Mission and Business Functions"
+      },
+      {
+        "id": "cp-4",
+        "name": "Contingency Plan Testing"
+      },
+      {
+        "id": "cp-4.1",
+        "name": "Coordinate with Related Plans"
+      },
+      {
+        "id": "cp-6",
+        "name": "Alternate Storage Site"
+      },
+      {
+        "id": "cp-6.1",
+        "name": "Separation from Primary Site"
+      },
+      {
+        "id": "cp-9.1",
+        "name": "Testing for Reliability and Integrity"
+      },
+      {
+        "id": "cp-10",
+        "name": "System Recovery and Reconstitution"
+      },
+      {
+        "id": "ir-3",
+        "name": "Incident Response Testing"
+      },
+      {
+        "id": "ir-3.2",
+        "name": "Coordination with Related Plans"
+      }
+    ],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_rpl_04.py",
+    "class_name": "KSI_RPL_04_Analyzer"
+  },
+  "KSI-SVC-01": {
+    "id": "KSI-SVC-01",
+    "name": "Continuous Improvement",
+    "statement": "Implement improvements based on persistent evaluation of information resources for opportunities to improve security.",
+    "family": "SVC",
+    "family_name": "Service Configuration",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "cm-7.1",
+        "name": "Periodic Review"
+      },
+      {
+        "id": "cm-12.1",
+        "name": "Automated Tools to Support Information Location"
+      },
+      {
+        "id": "ma-2",
+        "name": "Controlled Maintenance"
+      },
+      {
+        "id": "pl-8",
+        "name": "Security and Privacy Architectures"
+      },
+      {
+        "id": "sc-7",
+        "name": "Boundary Protection"
+      },
+      {
+        "id": "sc-39",
+        "name": "Process Isolation"
+      },
+      {
+        "id": "si-2.2",
+        "name": "Automated Flaw Remediation Status"
+      },
+      {
+        "id": "si-4",
+        "name": "System Monitoring"
+      },
+      {
+        "id": "sr-10",
+        "name": "Inspection of Systems or Components"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_01.py",
+    "class_name": "KSI_SVC_01_Analyzer"
+  },
+  "KSI-SVC-02": {
+    "id": "KSI-SVC-02",
+    "name": "Network Encryption",
+    "statement": "Encrypt or otherwise secure network traffic.",
+    "family": "SVC",
+    "family_name": "Service Configuration",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ac-1",
+        "name": "Policy and Procedures"
+      },
+      {
+        "id": "ac-17.2",
+        "name": "Protection of Confidentiality and Integrity Using Encryption"
+      },
+      {
+        "id": "cp-9.8",
+        "name": "Cryptographic Protection"
+      },
+      {
+        "id": "sc-8",
+        "name": "Transmission Confidentiality and Integrity"
+      },
+      {
+        "id": "sc-8.1",
+        "name": "Cryptographic Protection"
+      },
+      {
+        "id": "sc-13",
+        "name": "Cryptographic Protection"
+      },
+      {
+        "id": "sc-20",
+        "name": "Secure Name/Address Resolution Service (Authoritative Source)"
+      },
+      {
+        "id": "sc-21",
+        "name": "Secure Name/Address Resolution Service (Recursive or Caching Resolver)"
+      },
+      {
+        "id": "sc-22",
+        "name": "Architecture and Provisioning for Name/Address Resolution Service"
+      },
+      {
+        "id": "sc-23",
+        "name": "Session Authenticity"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_02.py",
+    "class_name": "KSI_SVC_02_Analyzer"
+  },
+  "KSI-SVC-03": {
+    "id": "KSI-SVC-03",
+    "name": "RETIRED",
+    "statement": "",
+    "family": "SVC",
+    "family_name": "Service Configuration",
+    "impact_levels": [],
+    "nist_controls": [],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": true,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_03.py",
+    "class_name": "KSI_SVC_03_Analyzer"
+  },
+  "KSI-SVC-04": {
+    "id": "KSI-SVC-04",
+    "name": "Configuration Automation",
+    "statement": "Manage configuration of machine-based information resources using automation.",
+    "family": "SVC",
+    "family_name": "Service Configuration",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ac-2.4",
+        "name": "Automated Audit Actions"
+      },
+      {
+        "id": "cm-2",
+        "name": "Baseline Configuration"
+      },
+      {
+        "id": "cm-2.2",
+        "name": "Automation Support for Accuracy and Currency"
+      },
+      {
+        "id": "cm-2.3",
+        "name": "Retention of Previous Configurations"
+      },
+      {
+        "id": "cm-6",
+        "name": "Configuration Settings"
+      },
+      {
+        "id": "cm-7.1",
+        "name": "Periodic Review"
+      },
+      {
+        "id": "pl-9",
+        "name": "Central Management"
+      },
+      {
+        "id": "pl-10",
+        "name": "Baseline Selection"
+      },
+      {
+        "id": "sa-5",
+        "name": "System Documentation"
+      },
+      {
+        "id": "si-5",
+        "name": "Security Alerts, Advisories, and Directives"
+      },
+      {
+        "id": "sr-10",
+        "name": "Inspection of Systems or Components"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_04.py",
+    "class_name": "KSI_SVC_04_Analyzer"
+  },
+  "KSI-SVC-05": {
+    "id": "KSI-SVC-05",
+    "name": "Resource Integrity",
+    "statement": "Use cryptographic methods to validate the integrity of machine-based information resources.",
+    "family": "SVC",
+    "family_name": "Service Configuration",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "cm-2.2",
+        "name": "Automation Support for Accuracy and Currency"
+      },
+      {
+        "id": "cm-8.3",
+        "name": "Automated Unauthorized Component Detection"
+      },
+      {
+        "id": "sc-13",
+        "name": "Cryptographic Protection"
+      },
+      {
+        "id": "sc-23",
+        "name": "Session Authenticity"
+      },
+      {
+        "id": "si-7",
+        "name": "Software, Firmware, and Information Integrity"
+      },
+      {
+        "id": "si-7.1",
+        "name": "Integrity Checks"
+      },
+      {
+        "id": "sr-10",
+        "name": "Inspection of Systems or Components"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_05.py",
+    "class_name": "KSI_SVC_05_Analyzer"
+  },
+  "KSI-SVC-06": {
+    "id": "KSI-SVC-06",
+    "name": "Secret Management",
+    "statement": "Implement secure secret management using Azure Key Vault or equivalent",
+    "family": "SVC",
+    "family_name": "Service Protection",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ac-17.2",
+        "name": "Protection of Confidentiality and Integrity Using Encryption"
+      },
+      {
+        "id": "ia-5.2",
+        "name": "Public Key-based Authentication"
+      },
+      {
+        "id": "ia-5.6",
+        "name": "Protection of Authenticators"
+      },
+      {
+        "id": "sc-12",
+        "name": "Cryptographic Key Establishment and Management"
+      },
+      {
+        "id": "sc-17",
+        "name": "Public Key Infrastructure Certificates"
+      }
+    ],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_06.py",
+    "class_name": "KSI_SVC_06_Analyzer"
+  },
+  "KSI-SVC-07": {
+    "id": "KSI-SVC-07",
+    "name": "Patching",
+    "statement": "Use a consistent, risk-informed approach for applying security patches.",
+    "family": "SVC",
+    "family_name": "Service Configuration",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ca-7.4",
+        "name": "Risk Monitoring"
+      },
+      {
+        "id": "ra-5",
+        "name": "Vulnerability Monitoring and Scanning"
+      },
+      {
+        "id": "ra-7",
+        "name": "Risk Response"
+      }
+    ],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_07.py",
+    "class_name": "KSI_SVC_07_Analyzer"
+  },
+  "KSI-SVC-08": {
+    "id": "KSI-SVC-08",
+    "name": "Shared Resources",
+    "statement": "Do not introduce or leave behind residual elements that could negatively affect confidentiality, integrity, or availability of federal customer data during operations.",
+    "family": "SVC",
+    "family_name": "Service Configuration",
+    "impact_levels": [
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "sc-4",
+        "name": "Information in Shared System Resources"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_08.py",
+    "class_name": "KSI_SVC_08_Analyzer"
+  },
+  "KSI-SVC-09": {
+    "id": "KSI-SVC-09",
+    "name": "Communication Integrity",
+    "statement": "Persistently validate the authenticity and integrity of communications between machine-based information resources using automation.",
+    "family": "SVC",
+    "family_name": "Service Configuration",
+    "impact_levels": [
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "sc-23",
+        "name": "Session Authenticity"
+      },
+      {
+        "id": "si-7.1",
+        "name": "Integrity Checks"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_09.py",
+    "class_name": "KSI_SVC_09_Analyzer"
+  },
+  "KSI-SVC-10": {
+    "id": "KSI-SVC-10",
+    "name": "Data Destruction",
+    "statement": "Remove unwanted federal customer data promptly when requested by an agency in alignment with customer agreements, including from backups if appropriate; this typically applies when a customer spills information or when a customer seeks to remove information from a service due to a change in usage.",
+    "family": "SVC",
+    "family_name": "Service Configuration",
+    "impact_levels": [
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "si-12.3",
+        "name": "Information Disposal"
+      },
+      {
+        "id": "si-18.4",
+        "name": "Individual Requests"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_10.py",
+    "class_name": "KSI_SVC_10_Analyzer"
+  },
+  "KSI-TPR-01": {
+    "id": "KSI-TPR-01",
+    "name": "RETIRED",
+    "statement": "",
+    "family": "TPR",
+    "family_name": "Third-Party Information Resources",
+    "impact_levels": [],
+    "nist_controls": [],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": true,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_tpr_01.py",
+    "class_name": "KSI_TPR_01_Analyzer"
+  },
+  "KSI-TPR-02": {
+    "id": "KSI-TPR-02",
+    "name": "RETIRED",
+    "statement": "",
+    "family": "TPR",
+    "family_name": "Third-Party Information Resources",
+    "impact_levels": [],
+    "nist_controls": [],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": true,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_tpr_02.py",
+    "class_name": "KSI_TPR_02_Analyzer"
+  },
+  "KSI-TPR-03": {
+    "id": "KSI-TPR-03",
+    "name": "Supply Chain Risk Management",
+    "statement": "Identify and prioritize mitigation of potential supply chain risks.",
+    "family": "TPR",
+    "family_name": "Third-Party Information Resources",
+    "impact_levels": [
+      "Low",
+      "Moderate"
+    ],
+    "nist_controls": [
+      {
+        "id": "ac-20",
+        "name": "Use of External Systems"
+      },
+      {
+        "id": "ra-3.1",
+        "name": "Supply Chain Risk Assessment"
+      },
+      {
+        "id": "sa-9",
+        "name": "External System Services"
+      },
+      {
+        "id": "sa-10",
+        "name": "Developer Configuration Management"
+      },
+      {
+        "id": "sa-11",
+        "name": "Developer Testing and Evaluation"
+      },
+      {
+        "id": "sa-15.3",
+        "name": "Criticality Analysis"
+      },
+      {
+        "id": "sa-22",
+        "name": "Unsupported System Components"
+      },
+      {
+        "id": "si-7.1",
+        "name": "Integrity Checks"
+      },
+      {
+        "id": "sr-5",
+        "name": "Acquisition Strategies, Tools, and Methods"
+      },
+      {
+        "id": "sr-6",
+        "name": "Supplier Assessments and Reviews"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_tpr_03.py",
+    "class_name": "KSI_TPR_03_Analyzer"
+  },
+  "KSI-TPR-04": {
+    "id": "KSI-TPR-04",
+    "name": "Supply Chain Risk Monitoring",
+    "statement": "Automatically monitor third party software information resources for upstream vulnerabilities using mechanisms that may include contractual notification requirements or active monitoring services.",
+    "family": "TPR",
+    "family_name": "",
+    "impact_levels": [],
+    "nist_controls": [
+      {
+        "id": "ac-20",
+        "name": "Use of External Systems"
+      },
+      {
+        "id": "ca-3",
+        "name": "Information Exchange"
+      },
+      {
+        "id": "ir-6.3",
+        "name": "Supply Chain Coordination"
+      },
+      {
+        "id": "ps-7",
+        "name": "External Personnel Security"
+      },
+      {
+        "id": "ra-5",
+        "name": "Vulnerability Monitoring and Scanning"
+      },
+      {
+        "id": "sa-9",
+        "name": "External System Services"
+      },
+      {
+        "id": "si-5",
+        "name": "Security Alerts, Advisories, and Directives"
+      },
+      {
+        "id": "sr-5",
+        "name": "Acquisition Strategies, Tools, and Methods"
+      },
+      {
+        "id": "sr-6",
+        "name": "Supplier Assessments and Reviews"
+      },
+      {
+        "id": "sr-8",
+        "name": "Notification Agreements"
+      }
+    ],
+    "code_detectable": true,
+    "implementation_status": "IMPLEMENTED",
+    "retired": false,
+    "related_ksis": [],
+    "related_frrs": [],
+    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_tpr_04.py",
+    "class_name": "KSI_TPR_04_Analyzer"
+  }
+}
