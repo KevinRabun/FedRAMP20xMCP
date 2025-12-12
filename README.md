@@ -210,9 +210,10 @@ For CI/CD integration, multi-server setup with Azure and GitHub, or detailed tro
 
 ## Available Tools
 
-The server provides **38 tools** organized into the following categories:
+The server provides **45 tools** organized into the following categories:
 
 **Core Tools (11):** Query requirements, definitions, KSIs, and KSI evidence automation
+**FRR Analysis Tools (7):** Analyze code against FedRAMP Requirements (FRR) with comprehensive compliance checking across all 199 requirements
 **Documentation Tools (3):** Search and retrieve FedRAMP documentation
 **Enhancement Tools (7):** Implementation examples, dependencies, effort estimation, architecture validation
 **Export Tools (3):** Excel/CSV export and KSI specification generation
@@ -330,6 +331,285 @@ Get specifications for evidence artifacts to collect for a specific KSI.
 - **Storage Recommendations**: Azure Blob Storage with encryption, access logging, immutability policies
 
 **Example:** `get_ksi_evidence_artifacts("KSI-IAM-01")` returns sign-in logs (CSV, daily, 90 days), Conditional Access policy exports (JSON, weekly, 1 year), MFA method registration reports (XLSX, monthly, 3 years), authentication dashboard screenshots (PNG, quarterly, 1 year), and MFA compliance matrices (PDF, monthly, 7 years).
+
+### analyze_frr_code
+Analyze code against a specific FedRAMP Requirement (FRR) for compliance issues.
+
+**Parameters:**
+- `frr_id` (string): FRR identifier (e.g., "FRR-VDR-01", "FRR-RSC-01", "FRR-ADS-01")
+- `code` (string): Code to analyze
+- `language` (string): Language/platform - `"python"`, `"csharp"`, `"java"`, `"typescript"`, `"bicep"`, `"terraform"`, `"github-actions"`, `"azure-pipelines"`, `"gitlab-ci"`
+- `file_path` (string, optional): File path for context
+
+**Returns:** Analysis results with findings, severity levels, and remediation recommendations
+
+**Supported FRR Families:**
+- **VDR** - Vulnerability Detection and Response (59 requirements): Vulnerability scanning, patch management, remediation timeframes, deviation tracking, KEV vulnerability handling
+- **RSC** - Recommended Secure Configuration (10 requirements): Security baselines, configuration management, hardening standards
+- **UCM** - Using Cryptographic Modules (4 requirements): FIPS 140-3 compliance, key management, encryption standards
+- **SCN** - Significant Change Notifications (26 requirements): Change management, notification procedures, impact assessment
+- **ADS** - Authorization Data Sharing (22 requirements): Machine-readable evidence APIs, data formats, authentication
+- **CCM** - Collaborative Continuous Monitoring (25 requirements): Monitoring procedures, quarterly reviews, assessment coordination
+- **MAS** - Minimum Assessment Scope (12 requirements): Authorization boundaries, system inventory, assessment requirements
+- **ICP** - Incident Communications Procedures (9 requirements): Incident notification, communication protocols, escalation procedures
+- **FSI** - FedRAMP Security Inbox (16 requirements): Security inbox management, vulnerability disclosure, response procedures
+- **PVA** - Persistent Validation and Assessment (22 requirements): Continuous validation, assessment procedures, testing requirements
+
+**What It Checks:**
+Analyzes code for FRR-specific compliance issues using AST-powered semantic analysis:
+- **Application Code**: Security controls, API implementations, cryptographic usage, logging, error handling
+- **Infrastructure as Code**: Resource configurations, security settings, compliance controls, network policies
+- **CI/CD Pipelines**: Security gates, testing requirements, deployment procedures, evidence collection
+
+**Example Usage:**
+```python
+# Check Python code for FRR-VDR-01 compliance (vulnerability scanning)
+result = analyze_frr_code(
+    frr_id="FRR-VDR-01",
+    code="""import subprocess
+    subprocess.run(['trivy', 'image', 'myapp:latest'])
+    """,
+    language="python"
+)
+# ✅ Detects Trivy vulnerability scanning implementation
+
+# Check Bicep for FRR-ADS-01 compliance (machine-readable evidence)
+result = analyze_frr_code(
+    frr_id="FRR-ADS-01",
+    code="""resource apiManagement 'Microsoft.ApiManagement/service@2023-05-01-preview' = {
+      name: 'evidence-api'
+      properties: {
+        publisherEmail: 'admin@contoso.com'
+        publisherName: 'Contoso'
+      }
+    }""",
+    language="bicep"
+)
+# ✅ Validates API Management for authorization data sharing
+```
+
+### analyze_all_frrs
+Analyze code against all 199 FedRAMP requirements for comprehensive compliance checking.
+
+**Parameters:**
+- `code` (string): Code to analyze
+- `language` (string): Language/platform (python, csharp, java, typescript, bicep, terraform, github-actions, azure-pipelines, gitlab-ci)
+- `file_path` (string, optional): File path for context
+
+**Returns:** Complete analysis results grouped by FRR family with summary statistics
+
+**Use Cases:**
+- **Pre-deployment validation**: Check all code before production deployment
+- **Comprehensive audits**: Full compliance scan for certification preparation
+- **Security reviews**: Identify all FedRAMP compliance gaps
+- **CI/CD integration**: Automated compliance checking in pipelines
+
+**Output Structure:**
+- Findings organized by family (VDR, RSC, UCM, SCN, ADS, CCM, etc.)
+- Summary statistics: total findings, critical/high/medium/low counts
+- Compliant requirements listed
+- Actionable remediation guidance
+
+**Example Usage:**
+```python
+# Comprehensive FRR analysis of Bicep infrastructure code
+result = analyze_all_frrs(
+    code=bicep_template,
+    language="bicep",
+    file_path="main.bicep"
+)
+# Returns findings across all 10 FRR families
+```
+
+**Performance:** Analyzes all 199 FRRs in 2-5 seconds using parallel processing and AST caching.
+
+### analyze_frr_family
+Analyze code against all requirements in a specific FRR family.
+
+**Parameters:**
+- `family` (string): Family code - `"VDR"`, `"RSC"`, `"UCM"`, `"SCN"`, `"ADS"`, `"CCM"`, `"MAS"`, `"ICP"`, `"FSI"`, `"PVA"`
+- `code` (string): Code to analyze
+- `language` (string): Language/platform
+- `file_path` (string, optional): File path for context
+
+**Returns:** Analysis results for all requirements in the specified family
+
+**Common Use Cases:**
+
+**VDR Family (59 requirements):**
+```python
+# Check CI/CD pipeline for vulnerability management compliance
+result = analyze_frr_family(
+    family="VDR",
+    code=github_actions_yaml,
+    language="github-actions"
+)
+# Checks: Vulnerability scanning, patch procedures, remediation timeframes,
+# deviation management, KEV tracking, monthly reporting
+```
+
+**ADS Family (22 requirements):**
+```python
+# Validate authorization data sharing API implementation
+result = analyze_frr_family(
+    family="ADS",
+    code=python_api_code,
+    language="python"
+)
+# Checks: Machine-readable formats, API authentication, data accuracy,
+# real-time updates, audit logging, access controls
+```
+
+**RSC Family (10 requirements):**
+```python
+# Check infrastructure for secure configuration compliance
+result = analyze_frr_family(
+    family="RSC",
+    code=terraform_code,
+    language="terraform"
+)
+# Checks: Security baselines, configuration standards, hardening,
+# drift detection, compliance validation
+```
+
+### list_frrs_by_family
+List all FRR requirements in a specific family with implementation status.
+
+**Parameters:**
+- `family` (string): Family code (VDR, RSC, UCM, SCN, ADS, CCM, MAS, ICP, FSI, PVA)
+
+**Returns:** List of all FRRs in the family with:
+- FRR ID and name
+- Implementation status (Implemented/Not Implemented)
+- Code detectability (Code-Detectable/Process-Based)
+- NIST 800-53 control mappings
+- Impact levels (Low/Moderate/High)
+
+**Example Usage:**
+```python
+# List all vulnerability detection requirements
+result = list_frrs_by_family("VDR")
+# Returns 59 VDR requirements with status indicators
+
+# List all authorization data sharing requirements
+result = list_frrs_by_family("ADS")
+# Returns 22 ADS requirements
+```
+
+**Use Cases:**
+- Discover available FRR requirements in a family
+- Check implementation coverage
+- Plan FRR implementation priorities
+- Understand code vs. process requirements
+
+### get_frr_metadata
+Get detailed metadata for a specific FRR including NIST controls, related KSIs, and detection strategy.
+
+**Parameters:**
+- `frr_id` (string): FRR identifier (e.g., "FRR-VDR-01")
+
+**Returns:** Comprehensive FRR metadata including:
+- **FRR Details**: ID, name, family, requirement statement
+- **NIST 800-53 Controls**: Related security controls with full titles
+- **Related KSIs**: Key Security Indicators that align with this FRR
+- **Impact Levels**: Applicable authorization levels (Low/Moderate/High)
+- **Detection Strategy**: How the requirement can be validated (code analysis, configuration checks, process review)
+- **Implementation Guidance**: Azure-specific recommendations and best practices
+
+**Example Usage:**
+```python
+# Get metadata for FRR-VDR-01 (vulnerability scanning)
+result = get_frr_metadata("FRR-VDR-01")
+# Returns: NIST controls (RA-5, SI-2), related KSIs (KSI-AFR-04),
+# detection strategy (CI/CD pipeline analysis, tool configuration checks)
+
+# Get metadata for FRR-ADS-01 (machine-readable evidence)
+result = get_frr_metadata("FRR-ADS-01")
+# Returns: NIST controls (CA-2, CA-5, CA-7), related KSIs (KSI-CED-01),
+# detection strategy (API endpoint analysis, data format validation)
+```
+
+**Use Cases:**
+- Understand FRR requirements before implementation
+- Map FRRs to NIST controls for compliance documentation
+- Identify related KSIs for integrated compliance approach
+- Get Azure-specific implementation guidance
+
+### get_frr_evidence_automation
+Get evidence automation recommendations for a specific FRR.
+
+**Parameters:**
+- `frr_id` (string): FRR identifier (e.g., "FRR-VDR-01", "FRR-ADS-01")
+
+**Returns:** Comprehensive evidence automation guidance including:
+- **Evidence Type**: Configuration-based, log-based, or API-based evidence
+- **Automation Feasibility**: High/Medium/Low automation potential
+- **Azure Services**: 3-5 recommended services for evidence collection
+- **Collection Methods**: Automated approaches (Azure Monitor, Resource Graph, Policy, APIs)
+- **Storage Requirements**: Retention policies, encryption, access controls
+- **Evidence Artifacts**: Specific files/reports to collect
+- **Implementation Steps**: Step-by-step automation setup
+- **Code Examples**: Infrastructure templates and scripts
+- **Update Frequency**: Daily/weekly/monthly/quarterly collection schedules
+- **Responsible Party**: Team ownership (Security, DevOps, Compliance)
+
+**Example Usage:**
+```python
+# Get evidence automation for FRR-VDR-01 (vulnerability scanning)
+result = get_frr_evidence_automation("FRR-VDR-01")
+# Returns: Azure Defender for Cloud configuration, KQL queries for
+# vulnerability data, scan result export automation, compliance dashboards
+
+# Get evidence automation for FRR-ADS-01 (data sharing API)
+result = get_frr_evidence_automation("FRR-ADS-01")
+# Returns: API Management setup, authentication configuration,
+# audit logging, API call metrics, response format validation
+```
+
+**Supported FRR Families:**
+- **VDR**: Vulnerability scan results, patch status, remediation tracking, deviation approvals
+- **ADS**: API call logs, data format compliance, authentication records, access audits
+- **CCM**: Monitoring metrics, quarterly review artifacts, assessment coordination logs
+- **RSC**: Configuration baselines, drift detection reports, compliance scan results
+- **All others**: Family-specific evidence recommendations
+
+### get_frr_implementation_status
+Get implementation status summary across all FRR analyzers.
+
+**Parameters:** None
+
+**Returns:** Implementation status summary including:
+- **Total FRRs**: 199 requirements across 10 families
+- **Implementation by Family**: VDR (59), RSC (10), UCM (4), SCN (26), ADS (22), CCM (25), MAS (12), ICP (9), FSI (16), PVA (22)
+- **Status Breakdown**: Implemented vs. Not Implemented counts
+- **Code-Detectable**: Requirements that can be validated through code analysis
+- **Process-Based**: Requirements requiring manual review or documentation
+- **Coverage Statistics**: Implementation completion percentage by family
+
+**Example Usage:**
+```python
+# Get overall FRR implementation status
+result = get_frr_implementation_status()
+# Returns: Family-by-family breakdown with implementation rates
+```
+
+**Use Cases:**
+- Track FRR analyzer development progress
+- Identify gaps in FRR coverage
+- Plan FRR implementation priorities
+- Report on compliance automation capabilities
+
+**Output Example:**
+```
+FRR Implementation Status:
+- VDR Family: 59/59 implemented (100%)
+- RSC Family: 10/10 implemented (100%)
+- ADS Family: 22/22 implemented (100%)
+- Total: 199/199 implemented (100%)
+
+Code-Detectable: 145 FRRs (73%)
+Process-Based: 54 FRRs (27%)
+```
 
 ### compare_with_rev4
 Compare FedRAMP 20x with Rev 4/Rev 5 requirements for specific areas.
