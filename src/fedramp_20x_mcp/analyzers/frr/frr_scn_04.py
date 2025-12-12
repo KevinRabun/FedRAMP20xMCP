@@ -62,7 +62,7 @@ class FRR_SCN_04_Analyzer(BaseFRRAnalyzer):
         ("AU-3", "Content of Audit Records"),
         ("AU-6", "Audit Record Review, Analysis, and Reporting"),
     ]
-    CODE_DETECTABLE = "Yes"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
         "KSI-MLA-01",
@@ -255,47 +255,85 @@ class FRR_SCN_04_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> dict:
         """
-        Get recommendations for automating evidence collection for FRR-SCN-04.
-        
-        TODO: Add evidence collection guidance
+        Get automated queries for collecting evidence of auditable change records.
         """
         return {
             'frr_id': self.FRR_ID,
             'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            'azure_resource_graph': [
+                "// Find Log Analytics workspaces with audit logs",
+                "Resources | where type =~ 'microsoft.operationalinsights/workspaces' | project name, properties.retentionInDays",
+                "// Find Storage accounts with audit log retention",
+                "Resources | where type =~ 'microsoft.storage/storageaccounts' | where properties.logging.read == true | project name, properties.logging"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            'azure_monitor_kql': [
+                "// Audit records for change activities",
+                "AuditLogs | where OperationName contains 'Change' | project TimeGenerated, Identity, OperationName, TargetResources, Result",
+                "// Deployment audit trail",
+                "AzureActivity | where CategoryValue == 'Administrative' | where OperationNameValue contains 'deployment' | project TimeGenerated, Caller, OperationNameValue, ResourceGroup, ActivityStatusValue"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
+            'azure_cli': [
+                "az monitor log-analytics workspace show --workspace-name <workspace> --resource-group <rg>",
+                "az monitor diagnostic-settings list --resource <resource-id>",
+                "az storage logging show --account-name <storage-account>"
+            ]
+        }
+
+    def get_evidence_artifacts(self) -> dict:
+        """
+        Get evidence artifacts demonstrating auditable records of change activities.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
+            'code_locations': [
+                'Audit logging configuration (logging/audit-config.json)',
+                'Change activity logging code (src/logging/change-logger.ts)',
+                'Audit log retention policies (infrastructure/logging.bicep)',
+                'Log access control configuration (rbac/log-access.yml)'
+            ],
+            'documentation': [
+                'Audit logging policy and procedures',
+                'Change activity record retention schedule',
+                'Audit log access control matrix',
+                'Sample audit log entries for change activities',
+                'Audit log review and reporting procedures'
+            ],
+            'configuration_samples': [
+                'Log Analytics workspace with 90+ day retention',
+                'Diagnostic settings for change activity logging',
+                'RBAC assignments for audit log access',
+                'Automated audit log export to secure storage'
+            ]
+        }
+
+    def get_evidence_automation_recommendations(self) -> dict:
+        """
+        Get recommendations for automating evidence collection for auditable records.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
+            'code_detectable': 'Partial',
+            'implementation_notes': [
+                'Logging frameworks provide automated audit trail of change activities',
+                'Diagnostic settings ensure change activities are logged to centralized systems',
+                'RBAC controls access to audit logs for necessary parties',
+                'Log retention policies ensure audit records are maintained per requirements',
+                'Azure Monitor and Log Analytics provide queryable audit records'
             ],
             'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
+                'Azure Monitor - Centralized logging and audit trail',
+                'Log Analytics - Long-term audit log retention and querying',
+                'Azure Storage - Immutable audit log archival',
+                'Azure RBAC - Control access to audit logs for authorized parties'
             ],
             'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                'Azure Monitor diagnostic settings for change activity logging',
+                'Log Analytics workspaces for audit record aggregation',
+                'Storage accounts for long-term audit log archival',
+                'SIEM systems for audit log analysis and alerting'
             ]
         }

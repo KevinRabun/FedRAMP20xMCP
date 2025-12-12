@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import Dict, List, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -231,47 +231,155 @@ class FRR_FSI_15_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
         """
-        Get recommendations for automating evidence collection for FRR-FSI-15.
+        Get Azure Resource Graph and other queries for evidence collection.
         
-        TODO: Add evidence collection guidance
+        Returns a dict with 'automated_queries' key containing query notes.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            'automated_queries': [
+                "FRR-FSI-15 is an operational requirement for CSPs to MUST route Emergency "
+                "designated messages sent by FedRAMP to a senior security official for their "
+                "awareness. Evidence cannot be collected through automated queries of Azure "
+                "resources or code repositories. Evidence should consist of email routing "
+                "configuration and records of senior leadership notification."
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get list of evidence artifacts to collect for FRR-FSI-15 compliance.
+        
+        Returns a dict with 'evidence_artifacts' key containing artifact list.
+        """
+        return {
+            'evidence_artifacts': [
+                "1. Emergency Routing Policy: Documented policy or procedures requiring that "
+                "Emergency designated messages from FedRAMP be routed to a senior security "
+                "official (e.g., CISO, Chief Security Officer, VP of Security) for their awareness, "
+                "including definition of 'senior security official' and routing procedures.",
+                
+                "2. Email Routing Configuration: Email system configuration showing automatic "
+                "routing rules that forward or CC Emergency designated messages to the senior "
+                "security official, including rule conditions (e.g., subject contains '[EMERGENCY]', "
+                "from FedRAMP domain, received in FSI inbox).",
+                
+                "3. Senior Security Official Designation: Documentation identifying the current "
+                "senior security official for the organization (name, title, contact information), "
+                "demonstrating appropriate seniority and security authority for emergency awareness.",
+                
+                "4. Historical Routing Records: Email logs or records demonstrating that past "
+                "Emergency messages from FedRAMP were routed to the senior security official, "
+                "including message subject/date, routing timestamp, and confirmation of delivery "
+                "to senior leader's mailbox.",
+                
+                "5. Routing Rule Testing: Test results demonstrating that emergency routing rules "
+                "function correctly, including test messages sent with emergency designation and "
+                "verification that they were delivered to the senior security official.",
+                
+                "6. Notification Acknowledgment: Records of senior security official acknowledging "
+                "receipt and awareness of Emergency messages (optional but demonstrates effective "
+                "routing), such as read receipts, reply acknowledgments, or follow-up actions taken.",
+                
+                "7. Backup Routing Configuration: Evidence of backup routing procedures if the "
+                "primary senior security official is unavailable (e.g., vacation, out of office), "
+                "ensuring Emergency messages still reach senior leadership for awareness.",
+                
+                "8. Routing Rule Maintenance: Records of regular review and testing of emergency "
+                "routing rules, including updates when senior security official changes or email "
+                "addresses change, ensuring continuous compliance with routing requirement."
+            ]
+        }
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get recommendations for automating evidence collection.
+        
+        Returns a dict with 'implementation_notes' key containing guidance.
+        """
+        return {
+            'implementation_notes': (
+                "FRR-FSI-15 requires CSPs to MUST route Emergency designated messages sent by FedRAMP "
+                "to a senior security official for their awareness. This ensures senior leadership "
+                "visibility into critical FedRAMP communications and enables appropriate organizational "
+                "response. This is an email routing and escalation requirement that cannot be detected "
+                "through code analysis, IaC templates, or CI/CD pipelines.\n\n"
+                
+                "COMPLIANCE APPROACH:\n"
+                "1. Senior Security Official Designation: Identify the senior security official who "
+                "should receive Emergency messages:\n"
+                "   - Typical roles: CISO (Chief Information Security Officer), Chief Security Officer, "
+                "     VP of Security, Director of Security\n"
+                "   - Requirements: Sufficient seniority and authority to oversee organizational response "
+                "     to FedRAMP emergencies\n"
+                "   - Documentation: Formally designate individual with name, title, contact information\n"
+                "   - Succession: Define backup senior official for coverage during absences\n\n"
+                
+                "2. Automatic Routing Configuration: Configure email system to automatically route "
+                "Emergency messages to senior official:\n"
+                "   - Email rules: Create rules in Exchange/Outlook, Gmail, or email gateway\n"
+                "   - Trigger conditions: Subject contains '[EMERGENCY]', from FedRAMP/GSA domains, "
+                "     received in FSI inbox\n"
+                "   - Routing action: Forward or CC to senior security official's email address\n"
+                "   - Preservation: Ensure original message remains in FSI inbox for operational response\n"
+                "   - Reliability: Configure rules to trigger reliably without manual intervention\n\n"
+                
+                "3. Routing Methods: Several approaches to ensure senior official awareness:\n"
+                "   Option A: Automatic forwarding - Emergency messages automatically forwarded to "
+                "   senior official\n"
+                "   Option B: CC/BCC - Senior official automatically CC'd or BCC'd on Emergency messages\n"
+                "   Option C: Separate copy - Duplicate Emergency message sent to senior official's inbox\n"
+                "   Option D: Digest/alert - Automated alert sent to senior official with message summary\n"
+                "   Recommendation: Automatic forwarding or CC for immediate awareness\n\n"
+                
+                "4. Routing Verification: Verify that emergency routing functions correctly:\n"
+                "   - Initial testing: Send test Emergency message and verify delivery to senior official\n"
+                "   - Regular testing: Monthly or quarterly tests of emergency routing rules\n"
+                "   - Logging: Maintain logs of messages routed to senior official\n"
+                "   - Monitoring: Alert if routing rule becomes disabled or fails\n"
+                "   - Updates: Update routing rules when senior official changes or email address changes\n\n"
+                
+                "5. Senior Official Engagement: Ensure senior official understands their role:\n"
+                "   - Training: Brief senior official on FedRAMP Emergency message routing requirement\n"
+                "   - Expectations: Clarify that their role is awareness, not necessarily direct action\n"
+                "     (operational response handled by incident response team per FRR-FSI-14)\n"
+                "   - Escalation: Define when/how senior official should escalate or take direct action\n"
+                "   - Communication: Establish protocol for senior official to communicate with FedRAMP "
+                "     if needed\n\n"
+                
+                "EVIDENCE COLLECTION:\n"
+                "Evidence for FRR-FSI-15 consists of email routing configuration and operational records, "
+                "not code or infrastructure configurations. Key evidence includes:\n"
+                "- Emergency routing policy requiring senior official awareness\n"
+                "- Email system routing configuration (rules, forwarding, CC)\n"
+                "- Senior security official designation (name, title, contact info)\n"
+                "- Historical records showing emergency messages routed to senior leader\n"
+                "- Routing rule testing results demonstrating functionality\n"
+                "- Acknowledgment records from senior official (if available)\n"
+                "- Backup routing configuration for senior official absences\n"
+                "- Routing rule maintenance and update records\n\n"
+                
+                "AWARENESS vs. ACTION:\n"
+                "FRR-FSI-15 requires routing for 'awareness', not necessarily for action:\n"
+                "- Operational response: Handled by incident response team (per FRR-FSI-14)\n"
+                "- Senior awareness: Ensures leadership visibility into critical FedRAMP communications\n"
+                "- Decision authority: Senior official can provide guidance, resources, or escalation as needed\n"
+                "- Not blocking: Senior official awareness should not delay operational response\n"
+                "Senior official receives messages for situational awareness and to enable leadership "
+                "oversight and support of organizational response.\n\n"
+                
+                "RELATIONSHIP TO OTHER REQUIREMENTS:\n"
+                "FRR-FSI-15 complements FRR-FSI-14 emergency response requirement:\n"
+                "- FRR-FSI-14: Requires CSP to complete emergency actions within specified timeframes\n"
+                "- FRR-FSI-15: Requires senior security official awareness of emergency messages\n"
+                "- Parallel processes: Operational team responds (FSI-14) while senior leader is informed (FSI-15)\n"
+                "- Leadership support: Senior official can provide resources, authority, or escalation to "
+                "  support operational response\n\n"
+                
+                "NOT APPLICABLE: This requirement cannot be validated through automated code analysis, "
+                "IaC scanning, or CI/CD pipeline checks. Compliance is demonstrated through email routing "
+                "configuration, senior official designation, and records of leadership notification, not "
+                "code artifacts."
+            )
         }

@@ -334,48 +334,41 @@ class FRR_RSC_01_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
-        """
-        Get recommendations for automating evidence collection for FRR-RSC-01.
-        
-        This requirement is primarily documentation-focused.
-        """
+    def get_evidence_collection_queries(self) -> dict:
+        """KQL queries for top-level admin account documentation evidence."""
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Partial',
-            'automation_approach': 'Documentation review + code analysis for admin provisioning',
+            'automated_queries': [
+                "// Query 1: Admin account provisioning activity\nAzureActivity\n| where TimeGenerated > ago(90d)\n| where OperationNameValue contains 'Microsoft.Authorization/roleAssignments' or OperationNameValue contains 'admin'\n| where ActivityStatusValue == 'Success'\n| project TimeGenerated, Caller, ResourceId, OperationNameValue, Properties\n| order by TimeGenerated desc",
+                "// Query 2: Resources tagged with admin-account-documented metadata\nResources\n| where tags['admin-account-documented'] == 'true'\n| project resourceId, name, type, tags, location",
+                "// Query 3: Admin role assignments (Owner, User Access Administrator)\nAuthorizationManagementResources\n| where type == 'microsoft.authorization/roleassignments'\n| where properties.roleDefinitionId contains 'Owner' or properties.roleDefinitionId contains 'UserAccessAdministrator'\n| project id, properties"
+            ]
+        }
+
+    def get_evidence_artifacts(self) -> dict:
+        """Documentation artifacts for top-level admin account guidance."""
+        return {
             'evidence_artifacts': [
-                "ADMIN-ACCOUNTS.md or equivalent documentation",
-                "Procedures for secure admin access",
-                "Configuration instructions",
-                "Decommissioning procedures",
-                "Code analysis showing admin account creation points"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                "ADMIN-ACCOUNTS.md or equivalent documentation file",
+                "Procedures for secure admin access (including MFA requirements)",
+                "Admin account configuration instructions",
+                "Admin account decommissioning procedures",
+                "Code analysis results showing admin account creation points",
+                "Admin role assignment audit logs",
+                "Admin account lifecycle management procedures",
+                "Security baseline for admin accounts"
+            ]
+        }
+
+    def get_evidence_automation_recommendations(self) -> dict:
+        """Implementation recommendations for top-level admin account guidance."""
+        return {
+            'implementation_notes': [
+                "Create ADMIN-ACCOUNTS.md documenting admin account lifecycle",
+                "Include secure access procedures (MFA, privileged access workstations)",
+                "Document configuration requirements (audit logging, session timeouts)",
+                "Define decommissioning procedures (revoke access, archive artifacts)",
+                "Tag resources with admin-account-documented metadata",
+                "Review code for admin provisioning patterns (use this analyzer)",
+                "Maintain audit logs of admin role assignments (90-day retention minimum)"
             ]
         }

@@ -114,7 +114,7 @@ def test_analyzer_metadata():
     assert analyzer.FRR_ID == "FRR-RSC-04", "FRR_ID should be FRR-RSC-04"
     assert analyzer.FAMILY == "RSC", "Family should be RSC"
     assert analyzer.FRR_NAME == "Secure Defaults on Provisioning", "Name mismatch"
-    assert analyzer.PRIMARY_KEYWORD == "MUST", "Keyword should be MUST"
+    assert analyzer.PRIMARY_KEYWORD == "SHOULD", "Keyword should be SHOULD"
     assert analyzer.IMPACT_LOW == True, "Impact Low should be True"
     assert analyzer.IMPACT_MODERATE == True, "Impact Moderate should be True"
     assert analyzer.IMPACT_HIGH == True, "Impact High should be True"
@@ -127,11 +127,15 @@ def test_evidence_automation_recommendations():
     """Test evidence automation recommendations."""
     analyzer = FRR_RSC_04_Analyzer()
     
+    # Test 3 separate evidence methods
+    queries = analyzer.get_evidence_collection_queries()
+    artifacts = analyzer.get_evidence_artifacts()
     recommendations = analyzer.get_evidence_automation_recommendations()
-    assert recommendations['frr_id'] == "FRR-RSC-04", "FRR_ID mismatch"
-    assert recommendations['code_detectable'] == "Partial", "Should be Partial"
-    assert len(recommendations['evidence_artifacts']) > 0, "Should have evidence artifacts"
-    assert len(recommendations['manual_validation_steps']) > 0, "Should have validation steps"
+    
+    # Verify structure
+    assert 'automated_queries' in queries
+    assert 'evidence_artifacts' in artifacts
+    assert 'implementation_notes' in recommendations
     
     print("[PASS] test_evidence_automation_recommendations PASSED")
 

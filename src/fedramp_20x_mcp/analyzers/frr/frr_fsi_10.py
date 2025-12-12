@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import Dict, List, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -79,75 +79,78 @@ class FRR_FSI_10_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-FSI-10 compliance using AST.
+        Analyze Python code for FRR-FSI-10 compliance.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
+        This analyzer is NOT APPLICABLE because FRR-FSI-10 requires CSPs to treat
+        emails from @fedramp.gov or @gsa.gov domains as FedRAMP messages by default.
+        This is an operational email handling policy requirement that cannot be
+        detected in application code.
         
-        Detection targets:
-        - TODO: List what patterns to detect
+        Args:
+            code: Python source code to analyze
+            file_path: Optional path to the file being analyzed
+            
+        Returns:
+            Empty list (operational requirement, not code-detectable)
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
+        # NOT APPLICABLE: Operational email handling policy requirement
+        return []
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze C# code for FRR-FSI-10 compliance using AST.
+        Analyze C# code for FRR-FSI-10 compliance.
         
-        TODO: Implement C# analysis
+        This analyzer is NOT APPLICABLE because FRR-FSI-10 requires CSPs to treat
+        emails from @fedramp.gov or @gsa.gov domains as FedRAMP messages by default.
+        This is an operational email handling policy requirement that cannot be
+        detected in application code.
+        
+        Args:
+            code: C# source code to analyze
+            file_path: Optional path to the file being analyzed
+            
+        Returns:
+            Empty list (operational requirement, not code-detectable)
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        # NOT APPLICABLE: Operational email handling policy requirement
+        return []
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Java code for FRR-FSI-10 compliance using AST.
+        Analyze Java code for FRR-FSI-10 compliance.
         
-        TODO: Implement Java analysis
+        This analyzer is NOT APPLICABLE because FRR-FSI-10 requires CSPs to treat
+        emails from @fedramp.gov or @gsa.gov domains as FedRAMP messages by default.
+        This is an operational email handling policy requirement that cannot be
+        detected in application code.
+        
+        Args:
+            code: Java source code to analyze
+            file_path: Optional path to the file being analyzed
+            
+        Returns:
+            Empty list (operational requirement, not code-detectable)
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        # NOT APPLICABLE: Operational email handling policy requirement
+        return []
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze TypeScript/JavaScript code for FRR-FSI-10 compliance using AST.
+        Analyze TypeScript/JavaScript code for FRR-FSI-10 compliance.
         
-        TODO: Implement TypeScript analysis
+        This analyzer is NOT APPLICABLE because FRR-FSI-10 requires CSPs to treat
+        emails from @fedramp.gov or @gsa.gov domains as FedRAMP messages by default.
+        This is an operational email handling policy requirement that cannot be
+        detected in application code.
+        
+        Args:
+            code: TypeScript/JavaScript source code to analyze
+            file_path: Optional path to the file being analyzed
+            
+        Returns:
+            Empty list (operational requirement, not code-detectable)
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
+        # NOT APPLICABLE: Operational email handling policy requirement
         return findings
     
     # ============================================================================
@@ -156,34 +159,41 @@ class FRR_FSI_10_Analyzer(BaseFRRAnalyzer):
     
     def analyze_bicep(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Bicep infrastructure code for FRR-FSI-10 compliance.
+        Analyze Bicep IaC for FRR-FSI-10 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        This analyzer is NOT APPLICABLE because FRR-FSI-10 requires CSPs to treat
+        emails from @fedramp.gov or @gsa.gov domains as FedRAMP messages by default.
+        This is an operational email handling policy requirement that cannot be
+        detected in infrastructure-as-code templates.
+        
+        Args:
+            code: Bicep IaC code to analyze
+            file_path: Optional path to the file being analyzed
+            
+        Returns:
+            Empty list (operational requirement, not IaC-detectable)
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        # NOT APPLICABLE: Operational email handling policy requirement
+        return []
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Terraform infrastructure code for FRR-FSI-10 compliance.
+        Analyze Terraform IaC for FRR-FSI-10 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        This analyzer is NOT APPLICABLE because FRR-FSI-10 requires CSPs to treat
+        emails from @fedramp.gov or @gsa.gov domains as FedRAMP messages by default.
+        This is an operational email handling policy requirement that cannot be
+        detected in infrastructure-as-code templates.
+        
+        Args:
+            code: Terraform IaC code to analyze
+            file_path: Optional path to the file being analyzed
+            
+        Returns:
+            Empty list (operational requirement, not IaC-detectable)
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        # NOT APPLICABLE: Operational email handling policy requirement
+        return []
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
@@ -193,85 +203,183 @@ class FRR_FSI_10_Analyzer(BaseFRRAnalyzer):
         """
         Analyze GitHub Actions workflow for FRR-FSI-10 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
-        """
-        findings = []
-        lines = code.split('\n')
+        This analyzer is NOT APPLICABLE because FRR-FSI-10 requires CSPs to treat
+        emails from @fedramp.gov or @gsa.gov domains as FedRAMP messages by default.
+        This is an operational email handling policy requirement that cannot be
+        detected in CI/CD pipelines.
         
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        Args:
+            code: GitHub Actions YAML workflow
+            file_path: Optional path to the file being analyzed
+            
+        Returns:
+            Empty list (operational requirement, not CI/CD-detectable)
+        """
+        # NOT APPLICABLE: Operational email handling policy requirement
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Azure Pipelines YAML for FRR-FSI-10 compliance.
         
-        TODO: Implement Azure Pipelines analysis
-        """
-        findings = []
-        lines = code.split('\n')
+        This analyzer is NOT APPLICABLE because FRR-FSI-10 requires CSPs to treat
+        emails from @fedramp.gov or @gsa.gov domains as FedRAMP messages by default.
+        This is an operational email handling policy requirement that cannot be
+        detected in CI/CD pipelines.
         
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        Args:
+            code: Azure Pipelines YAML
+            file_path: Optional path to the file being analyzed
+            
+        Returns:
+            Empty list (operational requirement, not CI/CD-detectable)
+        """
+        # NOT APPLICABLE: Operational email handling policy requirement
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze GitLab CI YAML for FRR-FSI-10 compliance.
+        Analyze GitLab CI configuration for FRR-FSI-10 compliance.
         
-        TODO: Implement GitLab CI analysis
+        This analyzer is NOT APPLICABLE because FRR-FSI-10 requires CSPs to treat
+        emails from @fedramp.gov or @gsa.gov domains as FedRAMP messages by default.
+        This is an operational email handling policy requirement that cannot be
+        detected in CI/CD pipelines.
+        
+        Args:
+            code: GitLab CI YAML configuration
+            file_path: Optional path to the file being analyzed
+            
+        Returns:
+            Empty list (operational requirement, not CI/CD-detectable)
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        # NOT APPLICABLE: Operational email handling policy requirement
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
         """
-        Get recommendations for automating evidence collection for FRR-FSI-10.
+        Get Azure Resource Graph and other queries for evidence collection.
         
-        TODO: Add evidence collection guidance
+        Returns a dict with 'automated_queries' key containing query notes.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            'automated_queries': [
+                "FRR-FSI-10 is an operational requirement for CSPs to treat emails from "
+                "@fedramp.gov or @gsa.gov domains as FedRAMP messages by default. Evidence "
+                "cannot be collected through automated queries of Azure resources or code "
+                "repositories. Evidence should consist of CSP's email handling policies and "
+                "procedures for processing FedRAMP messages."
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get list of evidence artifacts to collect for FRR-FSI-10 compliance.
+        
+        Returns a dict with 'evidence_artifacts' key containing artifact list.
+        """
+        return {
+            'evidence_artifacts': [
+                "1. Email Handling Policy: Documented policy specifying that emails from "
+                "@fedramp.gov and @gsa.gov domains must be treated as FedRAMP messages by default, "
+                "including verification procedures and escalation paths.",
+                
+                "2. Domain Whitelist Configuration: Records of email filtering/security "
+                "configurations that whitelist @fedramp.gov and @gsa.gov domains, ensuring these "
+                "messages are not blocked by spam filters or security controls.",
+                
+                "3. Message Verification Procedures: Documented procedures for verifying the "
+                "authenticity of emails claiming to be from FedRAMP, including SPF/DKIM/DMARC "
+                "checks and escalation to FedRAMP for suspicious messages.",
+                
+                "4. Staff Training Records: Evidence that personnel monitoring the FedRAMP Security "
+                "Inbox (FSI) have been trained on FRR-FSI-10 requirements, including how to handle "
+                "emails from FedRAMP domains and verification procedures.",
+                
+                "5. Incident Response Procedures: Documented procedures for handling suspected "
+                "phishing or spoofing attempts from @fedramp.gov/@gsa.gov domains, including "
+                "notification to FedRAMP and internal security teams.",
+                
+                "6. Historical Message Records: Sample records of emails received from @fedramp.gov "
+                "and @gsa.gov domains, demonstrating proper handling and response per FRR-FSI-06 "
+                "timeframes and FRR-FSI-05 action requirements.",
+                
+                "7. Email Authentication Configuration: SPF, DKIM, and DMARC records for the "
+                "CSP's email domain, plus verification procedures for authenticating inbound "
+                "messages from FedRAMP domains.",
+                
+                "8. Exception Handling Documentation: Procedures for handling cases where an "
+                "email from @fedramp.gov/@gsa.gov is confirmed to originate from someone other "
+                "than FedRAMP, including how FSI requirements no longer apply in such cases."
+            ]
+        }
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get recommendations for automating evidence collection.
+        
+        Returns a dict with 'implementation_notes' key containing guidance.
+        """
+        return {
+            'implementation_notes': (
+                "FRR-FSI-10 requires CSPs to treat any email originating from @fedramp.gov or "
+                "@gsa.gov domains as FedRAMP messages by default. If a message is confirmed to "
+                "originate from someone other than FedRAMP, FSI requirements no longer apply. "
+                "This is an operational email handling policy requirement that cannot be detected "
+                "through code analysis, IaC templates, or CI/CD pipelines.\n\n"
+                
+                "COMPLIANCE APPROACH:\n"
+                "1. Email Handling Policy: Establish clear policy that emails from @fedramp.gov "
+                "and @gsa.gov domains are treated as official FedRAMP communications by default, "
+                "requiring appropriate handling per FRR-FSI-01 through FRR-FSI-09.\n\n"
+                
+                "2. Domain Whitelisting: Configure email security systems (spam filters, "
+                "anti-phishing tools) to whitelist @fedramp.gov and @gsa.gov domains, ensuring "
+                "FedRAMP messages are not blocked or quarantined.\n\n"
+                
+                "3. Email Authentication: Implement SPF, DKIM, and DMARC verification for inbound "
+                "emails from FedRAMP domains to detect potential spoofing or phishing attempts. "
+                "Establish procedures for escalating suspicious messages to FedRAMP for verification.\n\n"
+                
+                "4. Staff Training: Train personnel monitoring the FedRAMP Security Inbox (FSI) on "
+                "FRR-FSI-10 requirements, including how to recognize legitimate FedRAMP messages, "
+                "verify message authenticity, and escalate suspicious communications.\n\n"
+                
+                "5. Verification Procedures: Document procedures for verifying the authenticity of "
+                "emails claiming to be from FedRAMP, including:\n"
+                "   - SPF/DKIM/DMARC header analysis\n"
+                "   - Contact verification through official FedRAMP channels\n"
+                "   - Escalation to FedRAMP security team for suspicious messages\n"
+                "   - Documentation of verification outcomes\n\n"
+                
+                "6. Exception Handling: Establish procedures for cases where an email from "
+                "@fedramp.gov/@gsa.gov is confirmed to originate from someone other than FedRAMP "
+                "(e.g., account compromise, spoofing). Document how FSI requirements no longer "
+                "apply in such cases and how to respond appropriately.\n\n"
+                
+                "EVIDENCE COLLECTION:\n"
+                "Evidence for FRR-FSI-10 consists of operational policies and procedures, not code "
+                "or infrastructure configurations. Key evidence includes:\n"
+                "- Email handling policy specifying treatment of FedRAMP domain emails\n"
+                "- Domain whitelist configurations in email security systems\n"
+                "- Message verification procedures (SPF/DKIM/DMARC)\n"
+                "- Staff training records on FRR-FSI-10 requirements\n"
+                "- Incident response procedures for suspected phishing/spoofing\n"
+                "- Historical records of FedRAMP messages and responses\n"
+                "- Exception handling documentation\n\n"
+                
+                "SECURITY CONSIDERATIONS:\n"
+                "While CSPs must treat @fedramp.gov/@gsa.gov emails as FedRAMP messages by default, "
+                "they should also implement robust email authentication to detect potential account "
+                "compromise or spoofing. Balance trust in FedRAMP domains with appropriate verification "
+                "mechanisms to protect against sophisticated attacks.\n\n"
+                
+                "NOT APPLICABLE: This requirement cannot be validated through automated code analysis, "
+                "IaC scanning, or CI/CD pipeline checks. Compliance is demonstrated through operational "
+                "policies, email security configurations, and staff training, not code artifacts."
+            )
         }

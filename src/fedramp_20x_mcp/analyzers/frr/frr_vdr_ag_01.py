@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,53 @@ class FRR_VDR_AG_01_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-AG-01.
+        Provides queries for collecting evidence of FRR-VDR-AG-01 compliance.
         
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        Note: This is an agency requirement (not provider). Queries support agency validation.
+        
+        Returns:
+            Dict containing query strings for various platforms
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "azure_monitor_kql": [
+                "SecurityRecommendation | summarize ReviewCount = count() by TimeGenerated, Reviewer = tostring(properties.reviewer) | where TimeGenerated > ago(30d)",
+                "AuditLogs | where OperationName contains 'vulnerability report' | project TimeGenerated, Initiator = identity, Result = result"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "azure_cli": [
+                "az activity-log list --query \"[?contains(operationName.value, 'SecurityAssessment')].{Time:eventTimestamp, User:caller}\" --start-time $(date -u -d '30 days ago' '+%Y-%m-%dT%H:%M:%SZ')"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Lists artifacts to collect as evidence of FRR-VDR-AG-01 compliance.
+        
+        Note: This is an agency requirement - artifacts demonstrate agency review activity.
+        
+        Returns:
+            List of artifact descriptions
+        """
+        return [
+            "Vulnerability report review schedule documentation",
+            "Logs showing agency personnel accessing vulnerability reports",
+            "Machine-readable vulnerability data exports (JSON/XML) from provider",
+            "Automated processing tool configurations and scripts",
+            "Review completion records with timestamps and reviewer identities"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Provides recommendations for automating evidence collection for FRR-VDR-AG-01.
+        
+        Note: This is an agency requirement - recommendations support agency compliance.
+        
+        Returns:
+            Dict mapping automation areas to implementation guidance
+        """
+        return {
+            "report_ingestion": "Automate ingestion of machine-readable vulnerability reports from provider APIs",
+            "review_tracking": "Implement tracking system (e.g., Azure DevOps, ServiceNow) to log review activities",
+            "evidence_collection": "Generate monthly audit reports showing review frequency and completeness"
         }

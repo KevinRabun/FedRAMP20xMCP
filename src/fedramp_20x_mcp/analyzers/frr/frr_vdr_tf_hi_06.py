@@ -10,7 +10,7 @@ Impact Levels: High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,50 @@ class FRR_VDR_TF_HI_06_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-TF-HI-06.
+        Get queries for collecting evidence of treating N4/N5 vulnerabilities as incidents (High impact).
         
-        TODO: Add evidence collection guidance
+        Returns queries to verify internet-reachable exploitable N4/N5 vulnerabilities are treated as security incidents.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "N4/N5 vulnerability incident creation": [
+                "SecurityIncidents | where TimeGenerated > ago(90d) | where IncidentType == 'Vulnerability' | where properties.ImpactLevel in ('N4', 'N5') | where properties.InternetReachable == true | where properties.Exploitable == true | project TimeGenerated, IncidentId, VulnerabilityId, ImpactLevel, Status",
+                "VulnerabilityManagement | where ImpactRating in ('N4', 'N5') | where InternetFacing == true | where ExploitabilityScore >= 0.8 | extend IncidentCreated = isnotnull(IncidentId) | summarize TotalN4N5=count(), IncidentsCreated=countif(IncidentCreated) by bin(DetectionDate, 7d)"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "Internet-reachable vulnerability detection": [
+                "NetworkTopology | where ExternallyAccessible == true | join kind=inner (VulnerabilityScans | where ImpactLevel in ('N4', 'N5')) on ResourceId | project ResourceId, VulnerabilityId, ImpactLevel, PublicIP, ExploitAvailable",
+                "DefenderVulnerabilityAssessments | where TimeGenerated > ago(30d) | where Severity in ('Critical', 'High') | where properties.InternetExposure == true | extend ImpactLevel=iff(Severity=='Critical', 'N5', 'N4') | project VulnerabilityId, ResourceId, ImpactLevel, ExploitKnown"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "Incident status through partial mitigation to N3": [
+                "SecurityIncidents | where IncidentType == 'Vulnerability' | where properties.InitialImpact in ('N4', 'N5') | extend DaysOpen=datetime_diff('day', now(), TimeGenerated) | extend ClosedAtN3=iff(properties.MitigatedImpact <= 'N3' and Status == 'Closed', true, false) | summarize IncidentsOpen=countif(Status=='Active'), IncidentsMitigated=countif(ClosedAtN3) by bin(TimeGenerated, 7d)",
+                "VulnerabilityRemediation | where InitialImpact in ('N4', 'N5') | where RemediationType == 'Partial Mitigation' | extend MitigatedToN3=iff(CurrentImpact <= 'N3', true, false) | project VulnerabilityId, InitialImpact, CurrentImpact, MitigatedToN3, RemediationDate"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for treating N4/N5 vulnerabilities as incidents.
+        """
+        return [
+            "Security incident records for N4/N5 vulnerabilities (internet-reachable, exploitable)",
+            "Internet-facing asset inventory with vulnerability mappings (public IPs, external access)",
+            "Exploitability assessments for N4/N5 vulnerabilities (exploit availability, likelihood)",
+            "Incident response procedures for N4/N5 vulnerabilities (escalation, containment)",
+            "Partial mitigation tracking (status until reduced to N3 or below)",
+            "Automated incident creation workflows for qualifying vulnerabilities",
+            "N4/N5 impact level classifications per FRR-VDR-09 (potential adverse impact)",
+            "Incident closure records showing mitigation to N3 or below"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Get recommendations for automating evidence collection.
+        """
+        return {
+            "Automated incident creation": "Automatically create security incidents when internet-reachable exploitable vulnerabilities with N4/N5 impact are detected (Azure Sentinel automation rules, Logic Apps)",
+            "Internet exposure detection": "Identify internet-facing resources with vulnerabilities using network topology and vulnerability scan correlation (Azure Network Watcher, Defender for Cloud)",
+            "Exploitability assessment": "Automatically assess exploitability using threat intelligence and exploit databases (Microsoft Threat Intelligence, CISA KEV catalog)",
+            "Incident tracking until N3 mitigation": "Track incident status until partial mitigation reduces impact to N3 or below (Azure Sentinel incident management, custom fields)",
+            "N4/N5 impact classification": "Automate impact level classification per FRR-VDR-09 potential adverse impact ratings (custom logic based on asset criticality, data sensitivity)"
         }

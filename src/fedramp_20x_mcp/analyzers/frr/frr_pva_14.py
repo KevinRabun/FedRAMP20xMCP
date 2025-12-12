@@ -82,77 +82,32 @@ class FRR_PVA_14_Analyzer(BaseFRRAnalyzer):
     # ============================================================================
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
+        """Analyze Python code for FRR-PVA-14 compliance.
+        
+        PVA-14 NOT code-detectable: Assessor engagement of provider experts and independent research is operational.
         """
-        Analyze Python code for FRR-PVA-14 compliance using AST.
-        
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
+        return []
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for FRR-PVA-14 compliance using AST.
+        """Analyze C# code for FRR-PVA-14 compliance.
         
-        TODO: Implement C# analysis
+        PVA-14 NOT code-detectable: Assessor engagement of provider experts and independent research is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        return []
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for FRR-PVA-14 compliance using AST.
+        """Analyze Java code for FRR-PVA-14 compliance.
         
-        TODO: Implement Java analysis
+        PVA-14 NOT code-detectable: Assessor engagement of provider experts and independent research is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        return []
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for FRR-PVA-14 compliance using AST.
+        """Analyze TypeScript/JavaScript code for FRR-PVA-14 compliance.
         
-        TODO: Implement TypeScript analysis
+        PVA-14 NOT code-detectable: Assessor engagement of provider experts and independent research is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
-        return findings
+        return []
     
     # ============================================================================
     # INFRASTRUCTURE AS CODE ANALYZERS (Regex-based)
@@ -176,106 +131,103 @@ class FRR_PVA_14_Analyzer(BaseFRRAnalyzer):
         return findings
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Terraform infrastructure code for FRR-PVA-14 compliance.
+        """Analyze Terraform infrastructure code for FRR-PVA-14 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        Assessor engagement of provider experts and independent research is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        return []
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
     # ============================================================================
     
     def analyze_github_actions(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitHub Actions workflow for FRR-PVA-14 compliance.
+        """Analyze GitHub Actions workflow for FRR-PVA-14 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        Assessor engagement of provider experts and independent research is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Azure Pipelines YAML for FRR-PVA-14 compliance.
+        """Analyze Azure Pipelines YAML for FRR-PVA-14 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        Assessor engagement of provider experts and independent research is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitLab CI YAML for FRR-PVA-14 compliance.
+        """Analyze GitLab CI YAML for FRR-PVA-14 compliance.
         
-        TODO: Implement GitLab CI analysis
+        Assessor engagement of provider experts and independent research is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    # ============================================================================
+    # EVIDENCE COLLECTION METHODS
+    # ============================================================================
+    
+    def get_evidence_collection_queries(self) -> dict:
         """
-        Get recommendations for automating evidence collection for FRR-PVA-14.
+        Get KQL queries for collecting evidence of assessor provider engagement and independent research.
         
-        TODO: Add evidence collection guidance
+        Returns queries to detect assessor engagement activities.
         """
         return {
             'frr_id': self.FRR_ID,
             'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
+            'automated_queries': [
+                # Resources with assessor-engagement tags
+                "Resources | where tags contains 'assessor-engagement' | project name, type, tags, location",
+                
+                # Assessment activities involving provider experts
+                "AzureActivity | where OperationNameValue contains 'Assessment' and Properties contains 'provider-expert' | project TimeGenerated, Caller, OperationNameValue, Properties",
+                
+                # Resources with expert-discussion and independent-research metadata
+                "Resources | where tags contains 'expert-discussion' or tags contains 'independent-research' | project name, type, tags['expert-discussion'], tags['independent-research']"
+            ]
+        }
+    
+    def get_evidence_artifacts(self) -> dict:
+        """
+        Get list of evidence artifacts for demonstrating assessor provider engagement.
+        
+        Returns documentation and records demonstrating engagement and research.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
             'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                "Provider expert engagement documentation (schedules, attendees, topics discussed)",
+                "Expert interview records and decision rationale documentation",
+                "Independent research documentation and findings",
+                "Qualitative assessment reports incorporating expert input",
+                "Verification and validation records from independent research",
+                "Provider decision documentation and justifications",
+                "Expert engagement procedures and guidelines",
+                "Research methodology and validation approach documentation"
+            ]
+        }
+    
+    def get_evidence_automation_recommendations(self) -> dict:
+        """
+        Get recommendations for implementing assessor provider engagement and research.
+        
+        Returns implementation notes for engagement procedures and research validation.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
+            'implementation_notes': [
+                "Define assessor procedures for engaging provider experts in discussions",
+                "Tag Azure resources with 'assessor-engagement', 'expert-discussion', and 'independent-research' metadata",
+                "Document provider decision rationale and expert input during assessments",
+                "Track assessor engagement activities including interviews and discussions",
+                "Maintain independent research documentation and validation records",
+                "Provide assessors with access to provider experts and decision documentation",
+                "Review assessor engagement procedures and research validation quarterly"
             ]
         }

@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -64,7 +64,7 @@ class FRR_VDR_02_Analyzer(BaseFRRAnalyzer):
         ("SI-2(1)", "Central Management"),
         ("SI-2(2)", "Automated Flaw Remediation Status"),
     ]
-    CODE_DETECTABLE = True  # Detects vulnerability tracking and remediation mechanisms
+    CODE_DETECTABLE = "Partial"  # Detects vulnerability tracking and remediation mechanisms
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
         "KSI-AFR-04"  # Vulnerability Detection and Response
@@ -305,47 +305,48 @@ class FRR_VDR_02_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-02.
+        Provides queries for collecting evidence of FRR-VDR-02 compliance.
         
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        Returns:
+            Dict containing query strings for various platforms
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "azure_monitor_kql": [
+                "SecurityRecommendation | where TimeGenerated > ago(30d) | where RecommendationState == 'Completed' | summarize RemediatedCount = count() by bin(TimeGenerated, 1d)",
+                "AzureDiagnostics | where Category == 'VulnerabilityManagement' | project TimeGenerated, VulnerabilityId, Status"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "azure_cli": [
+                "az security assessment list --query '[?status.code==\"Completed\"]'",
+                "az monitor activity-log list --query '[?category==\"ServiceHealth\"]'"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Lists artifacts to collect as evidence of FRR-VDR-02 compliance.
+        
+        Returns:
+            List of artifact descriptions
+        """
+        return [
+            "Vulnerability tracking system records (Jira, Azure DevOps) showing remediation workflows",
+            "Remediation trend reports showing time-to-fix metrics by severity",
+            "Security incident reports documenting vulnerability exploitation assessments",
+            "Monthly vulnerability management reports showing tracking and resolution",
+            "Change management records linking vulnerability fixes to deployments"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Provides recommendations for automating evidence collection for FRR-VDR-02.
+        
+        Returns:
+            Dict mapping automation areas to implementation guidance
+        """
+        return {
+            "tracking_integration": "Integrate Defender for Cloud with Azure DevOps/Jira for automated vulnerability ticket creation",
+            "remediation_monitoring": "Configure Azure Monitor alerts for vulnerability remediation SLA breaches",
+            "evidence_collection": "Automate monthly export of remediation metrics from tracking system to Azure Storage"
         }

@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,47 @@ class FRR_VDR_04_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-04.
+        Provides queries for collecting evidence of FRR-VDR-04 compliance.
         
-        TODO: Add evidence collection guidance
+        Returns:
+            Dict containing query strings for various platforms
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "azure_resource_graph": [
+                "Resources | where type =~ 'microsoft.compute/virtualmachines' | extend vmImage = properties.storageProfile.imageReference | summarize count() by tostring(vmImage)",
+                "Resources | where type contains 'microsoft.compute' | summarize ResourceGroups = make_set(resourceGroup) by type"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "azure_cli": [
+                "az vm list --query '[].{Name:name, Image:storageProfile.imageReference.offer, RG:resourceGroup}' -o table"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Lists artifacts to collect as evidence of FRR-VDR-04 compliance.
+        
+        Returns:
+            List of artifact descriptions
+        """
+        return [
+            "Sampling methodology documentation for identical resources",
+            "Resource inventory showing groupings of identical machine-based resources",
+            "Vulnerability scanning configuration showing sampling approach",
+            "Analysis demonstrating sampling does not decrease detection efficiency",
+            "Exception documentation for resources excluded from sampling"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Provides recommendations for automating evidence collection for FRR-VDR-04.
+        
+        Returns:
+            Dict mapping automation areas to implementation guidance
+        """
+        return {
+            "resource_grouping": "Use Azure Resource Graph to identify and group identical resources by configuration",
+            "sampling_strategy": "Document sampling methodology in Azure DevOps or GitHub for auditability",
+            "evidence_collection": "Automate inventory exports showing resource similarity analysis"
         }

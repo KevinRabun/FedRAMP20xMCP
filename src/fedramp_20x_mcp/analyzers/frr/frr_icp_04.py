@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import Dict, List, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -161,39 +161,42 @@ class FRR_ICP_04_Analyzer(BaseFRRAnalyzer):
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for FRR-ICP-04 compliance using AST.
-        
-        TODO: Implement C# analysis
-        """
+        """Analyze C# for scheduled incident updates."""
         findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
+        has_scheduler = bool(re.search(r'(Quartz|Hangfire|Timer|Schedule)', code))
+        if not has_scheduler:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID, requirement_id=self.FRR_ID,
+                title="No scheduled update mechanism", description=f"FRR-ICP-04 requires daily updates until resolution.",
+                severity=Severity.HIGH, file_path=file_path, line_number=1, code_snippet="",
+                recommendation="Implement scheduled updates: Hangfire, Quartz, or System.Threading.Timer"
+            ))
         return findings
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for FRR-ICP-04 compliance using AST.
-        
-        TODO: Implement Java analysis
-        """
+        """Analyze Java for scheduled incident updates."""
         findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
+        has_scheduler = bool(re.search(r'(Quartz|ScheduledExecutorService|Timer|@Scheduled)', code))
+        if not has_scheduler:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID, requirement_id=self.FRR_ID,
+                title="No scheduled update mechanism", description=f"FRR-ICP-04 requires daily updates until resolution.",
+                severity=Severity.HIGH, file_path=file_path, line_number=1, code_snippet="",
+                recommendation="Implement scheduled updates: Quartz, ScheduledExecutorService, or @Scheduled annotation"
+            ))
         return findings
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for FRR-ICP-04 compliance using AST.
-        
-        TODO: Implement TypeScript analysis
-        """
+        """Analyze TypeScript for scheduled incident updates."""
         findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
+        has_scheduler = bool(re.search(r'(node-cron|node-schedule|setInterval|cron)', code, re.IGNORECASE))
+        if not has_scheduler:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID, requirement_id=self.FRR_ID,
+                title="No scheduled update mechanism", description=f"FRR-ICP-04 requires daily updates until resolution.",
+                severity=Severity.HIGH, file_path=file_path, line_number=1, code_snippet="",
+                recommendation="Implement scheduled updates: node-cron, node-schedule, or setInterval"
+            ))
         return findings
     
     # ============================================================================
@@ -201,34 +204,30 @@ class FRR_ICP_04_Analyzer(BaseFRRAnalyzer):
     # ============================================================================
     
     def analyze_bicep(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Bicep infrastructure code for FRR-ICP-04 compliance.
-        
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
-        """
+        """Analyze Bicep for scheduled update automation."""
         findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
+        has_scheduler = bool(re.search(r"resource\s+\w+\s+'Microsoft\.Logic/workflows", code))
+        has_function = bool(re.search(r"resource\s+\w+\s+'Microsoft\.Web/sites.*kind:\s*'functionapp'", code, re.DOTALL))
+        if not (has_scheduler or has_function):
+            findings.append(Finding(
+                ksi_id=self.FRR_ID, requirement_id=self.FRR_ID,
+                title="No scheduled update automation", description=f"FRR-ICP-04 requires daily updates.",
+                severity=Severity.MEDIUM, file_path=file_path, line_number=1, code_snippet="",
+                recommendation="Deploy scheduling: Logic Apps with recurrence trigger or Function Apps with timer trigger"
+            ))
         return findings
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Terraform infrastructure code for FRR-ICP-04 compliance.
-        
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
-        """
+        """Analyze Terraform for scheduled update automation."""
         findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
+        has_scheduler = bool(re.search(r'resource\s+"(azurerm_logic_app_workflow|azurerm_function_app|aws_lambda_function)"', code))
+        if not has_scheduler:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID, requirement_id=self.FRR_ID,
+                title="No scheduled update automation", description=f"FRR-ICP-04 requires daily updates.",
+                severity=Severity.MEDIUM, file_path=file_path, line_number=1, code_snippet="",
+                recommendation="Deploy scheduling: azurerm_logic_app_workflow, azurerm_function_app, or aws_lambda_function"
+            ))
         return findings
     
     # ============================================================================
@@ -236,88 +235,56 @@ class FRR_ICP_04_Analyzer(BaseFRRAnalyzer):
     # ============================================================================
     
     def analyze_github_actions(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitHub Actions workflow for FRR-ICP-04 compliance.
-        
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        """Analyze GitHub Actions for scheduled workflows."""
+        return []  # Daily updates are runtime operational, not CI/CD
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Azure Pipelines YAML for FRR-ICP-04 compliance.
-        
-        TODO: Implement Azure Pipelines analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        """Analyze Azure Pipelines for scheduled tasks."""
+        return []  # Daily updates are runtime operational
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitLab CI YAML for FRR-ICP-04 compliance.
-        
-        TODO: Implement GitLab CI analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        """Analyze GitLab CI for scheduled jobs."""
+        return []  # Daily updates are runtime operational
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
-        """
-        Get recommendations for automating evidence collection for FRR-ICP-04.
-        
-        TODO: Add evidence collection guidance
-        """
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """Get automated queries for FRR-ICP-04 evidence (daily incident updates)."""
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
+            'automated_queries': [
+                "AzureActivity | where ResourceProviderValue == 'Microsoft.Logic' and OperationNameValue contains 'workflows' | summarize by ResourceId, Properties",
+                "AzureActivity | where ResourceProviderValue == 'Microsoft.Automation' and OperationNameValue contains 'schedules' | summarize by ResourceId, Properties",
+                "Resources | where type == 'microsoft.logic/workflows' | extend recurrence = properties.definition.triggers | project name, resourceGroup, recurrence"
+            ]
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """Get evidence artifacts for FRR-ICP-04 (daily incident updates)."""
+        return {
             'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                "Daily incident update procedures (section of IRP)",
+                "Scheduling configuration exports (Logic Apps, Automation accounts, cron jobs)",
+                "Status tracking system configuration",
+                "Historical incident update records showing daily frequency",
+                "Update automation infrastructure documentation",
+                "Incident update templates for all parties (FedRAMP, CISA, agencies)",
+                "Recipient management exports (FedRAMP, CISA, agency contacts)",
+                "Update delivery testing evidence"
+            ]
+        }
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """Get automation recommendations for FRR-ICP-04 (daily incident updates)."""
+        return {
+            'implementation_notes': [
+                "Configure daily update scheduling (Azure Logic Apps with recurrence, Azure Automation, or equivalent)",
+                "Implement status tracking system for incident lifecycle",
+                "Automate recipient management (FedRAMP, CISA if applicable, all agency customers)",
+                "Configure update templates for consistent communication",
+                "Test daily update delivery to all parties",
+                "Monitor update frequency compliance (at least once per calendar day)",
+                "Continue updates until incident resolved and recovery complete"
             ]
         }

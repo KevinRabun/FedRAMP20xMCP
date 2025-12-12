@@ -474,129 +474,51 @@ Reference: FRR-VDR-01, KSI-AFR-04, NIST CA-7"""
     # EVIDENCE AUTOMATION METHODS
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-01.
+        Provides queries for collecting evidence of FRR-VDR-01 compliance.
         
         Returns:
-            Dictionary with automation recommendations
+            Dict containing query strings for various platforms
         """
         return {
-            "frr_id": self.FRR_ID,
-            "frr_name": "Vulnerability Detection",
-            "evidence_type": "log-based",
-            "automation_feasibility": "high",
-            "azure_services": [
-                "Microsoft Defender for Cloud",
-                "Azure Monitor",
-                "Azure DevOps / GitHub Advanced Security",
-                "Azure Log Analytics"
+            "azure_monitor_kql": [
+                "SecurityRecommendation | where TimeGenerated > ago(30d) | summarize TotalVulns = count(), HighSeverity = countif(RecommendationSeverity == 'High') by bin(TimeGenerated, 1d)",
+                "securityresources | where type == 'microsoft.security/pricings' | extend tier = properties.pricingTier | where tier == 'Standard' | project subscriptionId, name"
             ],
-            "collection_methods": [
-                "Export Defender for Cloud vulnerability assessments via REST API",
-                "Query security recommendations from Log Analytics workspace",
-                "Collect CI/CD scan results from pipeline artifacts",
-                "Track scanning frequency via Azure Monitor metrics"
-            ],
-            "implementation_steps": [
-                "1. Enable Microsoft Defender for Cloud for all resource types",
-                "2. Configure Log Analytics workspace for Defender data collection",
-                "3. Create Azure Monitor workbook for vulnerability dashboard",
-                "4. Set up Azure Automation runbook to export scan results monthly",
-                "5. Store vulnerability scan reports in Azure Storage with 12-month retention",
-                "6. Configure alerts for Critical/High vulnerabilities"
-            ],
-            "evidence_artifacts": [
-                "Monthly vulnerability scan reports from Defender for Cloud",
-                "CI/CD pipeline scan results (Trivy, Snyk, CodeQL artifacts)",
-                "Vulnerability trend charts showing detection and remediation rates",
-                "Configuration proof showing scanning enabled for all resources",
-                "Scan frequency logs from Azure Monitor"
-            ],
-            "update_frequency": "monthly",
-            "responsible_party": "Cloud Security Team"
+            "azure_cli": [
+                "az security pricing list --query '[].{Name:name, Tier:pricingTier}'",
+                "az security assessment list --query '[].{Name:displayName, Status:status.code, Severity:metadata.severity}'"
+            ]
         }
     
-    def get_evidence_collection_queries(self) -> List[Dict[str, str]]:
+    def get_evidence_artifacts(self) -> List[str]:
         """
-        Get specific queries for evidence collection automation.
+        Lists artifacts to collect as evidence of FRR-VDR-01 compliance.
         
         Returns:
-            List of query dictionaries
+            List of artifact descriptions
         """
         return [
-            {
-                "query_type": "Azure Monitor KQL",
-                "query_name": "Defender for Cloud vulnerability inventory",
-                "query": """SecurityRecommendation
-| where TimeGenerated > ago(30d)
-| where RecommendationSeverity in ('High', 'Medium', 'Low')
-| summarize 
-    TotalVulnerabilities = count(),
-    HighSeverity = countif(RecommendationSeverity == 'High'),
-    MediumSeverity = countif(RecommendationSeverity == 'Medium'),
-    LowSeverity = countif(RecommendationSeverity == 'Low'),
-    OpenVulns = countif(RecommendationState != 'Completed'),
-    RemediatedVulns = countif(RecommendationState == 'Completed')
-| project TotalVulnerabilities, HighSeverity, MediumSeverity, LowSeverity, OpenVulns, RemediatedVulns""",
-                "purpose": "Monthly vulnerability inventory for FRR-VDR-01 evidence"
-            },
-            {
-                "query_type": "Azure Resource Graph KQL",
-                "query_name": "Defender for Cloud enablement status",
-                "query": """securityresources
-| where type == "microsoft.security/pricings"
-| extend tier = properties.pricingTier
-| summarize DefenderPlans = make_set(name) by subscriptionId, tier
-| where tier == "Standard"
-| project subscriptionId, EnabledDefenderPlans = DefenderPlans""",
-                "purpose": "Verify continuous scanning capability is enabled per FRR-VDR-01"
-            },
-            {
-                "query_type": "Azure DevOps REST API",
-                "query_name": "CI/CD vulnerability scan results",
-                "query": "GET https://dev.azure.com/{organization}/{project}/_apis/build/builds/{buildId}/artifacts?api-version=7.0",
-                "purpose": "Collect scan artifacts (Trivy, Snyk reports) from pipelines for audit trail"
-            }
+            "Monthly vulnerability scan reports from Microsoft Defender for Cloud",
+            "CI/CD pipeline scan results (Trivy, Snyk, CodeQL artifacts)",
+            "Vulnerability trend dashboard showing detection and remediation rates",
+            "Defender for Cloud configuration showing scanning enabled for all resources",
+            "Scan frequency logs demonstrating persistent monitoring"
         ]
     
-    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
         """
-        Get descriptions of evidence artifacts to collect.
+        Provides recommendations for automating evidence collection for FRR-VDR-01.
         
         Returns:
-            List of artifact dictionaries
+            Dict mapping automation areas to implementation guidance
         """
-        return [
-            {
-                "artifact_name": "Monthly Vulnerability Scan Report",
-                "artifact_type": "PDF Report",
-                "description": "Comprehensive report from Microsoft Defender for Cloud showing all vulnerabilities detected, remediation status, and trends",
-                "collection_method": "Azure Automation runbook exporting Defender data to PDF via Power BI",
-                "storage_location": "Azure Storage Account (immutable blob) with 12-month retention"
-            },
-            {
-                "artifact_name": "CI/CD Scan Artifacts",
-                "artifact_type": "SARIF Files",
-                "description": "Trivy, Snyk, and CodeQL scan results from every pipeline run showing container, code, and dependency vulnerabilities",
-                "collection_method": "Azure DevOps artifact collection or GitHub Advanced Security API",
-                "storage_location": "Azure DevOps artifacts or GitHub repository with 6-month retention"
-            },
-            {
-                "artifact_name": "Vulnerability Trend Dashboard",
-                "artifact_type": "Azure Monitor Workbook",
-                "description": "Interactive dashboard showing vulnerability counts by severity, remediation velocity, and scan coverage metrics",
-                "collection_method": "Azure Monitor workbook querying Log Analytics SecurityRecommendation table",
-                "storage_location": "Azure Monitor Workbooks shared with compliance team"
-            },
-            {
-                "artifact_name": "Scanning Configuration Proof",
-                "artifact_type": "JSON Export",
-                "description": "Terraform/Bicep configuration showing Defender for Cloud enabled for all resource types and CI/CD scan steps configured",
-                "collection_method": "Git repository export of IaC files and .github/workflows or azure-pipelines.yml",
-                "storage_location": "Version control repository with tags for quarterly reviews"
-            }
-        ]
+        return {
+            "defender_enablement": "Enable Defender for Cloud for all resource types with automated assessment",
+            "cicd_integration": "Integrate vulnerability scanning (Trivy, Snyk, CodeQL) in all CI/CD pipelines",
+            "evidence_collection": "Automate monthly export of vulnerability reports to Azure Storage with 12-month retention"
+        }
     
     # ============================================================================
     # APPLICATION CODE ANALYZERS (Not primary focus for FRR-VDR-01)

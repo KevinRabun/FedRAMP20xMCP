@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import Dict, List, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -81,74 +81,51 @@ class FRR_FSI_07_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Python code for FRR-FSI-07 compliance using AST.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST clearly specify corrective actions for failure to complete required actions.
+        This is a FedRAMP message composition requirement, not a CSP code requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze C# code for FRR-FSI-07 compliance using AST.
         
-        TODO: Implement C# analysis
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST clearly specify corrective actions for failure to complete required actions.
+        This is a FedRAMP message composition requirement, not a CSP code requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Java code for FRR-FSI-07 compliance using AST.
         
-        TODO: Implement Java analysis
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST clearly specify corrective actions for failure to complete required actions.
+        This is a FedRAMP message composition requirement, not a CSP code requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze TypeScript/JavaScript code for FRR-FSI-07 compliance using AST.
         
-        TODO: Implement TypeScript analysis
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST clearly specify corrective actions for failure to complete required actions.
+        This is a FedRAMP message composition requirement, not a CSP code requirement.
         """
-        findings = []
-        lines = code.split('\n')
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
+    
+    def analyze_javascript(self, code: str, file_path: str = "") -> List[Finding]:
+        """
+        Analyze JavaScript code for FRR-FSI-07 compliance using AST.
         
-        # TODO: Implement AST analysis for TypeScript
-        return findings
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST clearly specify corrective actions for failure to complete required actions.
+        This is a FedRAMP message composition requirement, not a CSP code requirement.
+        """
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     # ============================================================================
     # INFRASTRUCTURE AS CODE ANALYZERS (Regex-based)
@@ -158,32 +135,21 @@ class FRR_FSI_07_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Bicep infrastructure code for FRR-FSI-07 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST clearly specify corrective actions for failure to complete required actions.
+        This is a FedRAMP message composition requirement, not a CSP infrastructure requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Terraform infrastructure code for FRR-FSI-07 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST clearly specify corrective actions for failure to complete required actions.
+        This is a FedRAMP message composition requirement, not a CSP infrastructure requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
@@ -193,85 +159,199 @@ class FRR_FSI_07_Analyzer(BaseFRRAnalyzer):
         """
         Analyze GitHub Actions workflow for FRR-FSI-07 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST clearly specify corrective actions for failure to complete required actions.
+        This is a FedRAMP message composition requirement, not a CSP CI/CD requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Azure Pipelines YAML for FRR-FSI-07 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST clearly specify corrective actions for failure to complete required actions.
+        This is a FedRAMP message composition requirement, not a CSP CI/CD requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze GitLab CI YAML for FRR-FSI-07 compliance.
         
-        TODO: Implement GitLab CI analysis
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST clearly specify corrective actions for failure to complete required actions.
+        This is a FedRAMP message composition requirement, not a CSP CI/CD requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     # ============================================================================
-    # EVIDENCE COLLECTION SUPPORT
+    # EVIDENCE COLLECTION METHODS
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
         """
-        Get recommendations for automating evidence collection for FRR-FSI-07.
+        Return automated evidence collection queries for FRR-FSI-07.
         
-        TODO: Add evidence collection guidance
+        Returns:
+            Dict containing automated query specifications.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "automated_queries": [
+                "Note: FRR-FSI-07 is a FedRAMP-side requirement. CSPs verify FedRAMP "
+                "messages clearly specify corrective actions for non-compliance"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        """
+        Return list of evidence artifacts needed for FRR-FSI-07 compliance.
+        
+        Returns:
+            List of evidence artifact specifications.
+        """
+        return [
+            {
+                "artifact_id": "FSI-07-01",
+                "name": "Sample Messages with Corrective Actions",
+                "description": "Sample FedRAMP messages showing clear specification of corrective actions for non-compliance",
+                "collection_method": "Email Archive - Export messages with corrective action statements"
+            },
+            {
+                "artifact_id": "FSI-07-02",
+                "name": "Corrective Action Policy",
+                "description": "FedRAMP policy documenting range of corrective actions (marketplace rating to authorization suspension)",
+                "collection_method": "Document Review - FedRAMP corrective action policy and procedures"
+            },
+            {
+                "artifact_id": "FSI-07-03",
+                "name": "Severity-Action Mapping",
+                "description": "Documentation showing how corrective actions vary by event severity",
+                "collection_method": "Document Review - Corrective action matrix based on severity levels"
+            },
+            {
+                "artifact_id": "FSI-07-04",
+                "name": "CSP Response to Warnings",
+                "description": "CSP responses and remediation actions after receiving corrective action warnings",
+                "collection_method": "Document Review - Response emails and remediation documentation"
+            },
+            {
+                "artifact_id": "FSI-07-05",
+                "name": "Historical Corrective Actions",
+                "description": "Records of actual corrective actions taken by FedRAMP for non-compliance",
+                "collection_method": "Document Review - Corrective action history and outcomes"
+            },
+            {
+                "artifact_id": "FSI-07-06",
+                "name": "Marketplace Rating History",
+                "description": "History of marketplace ratings showing impact of corrective actions",
+                "collection_method": "Log Query - FedRAMP Marketplace rating changes over time"
+            },
+            {
+                "artifact_id": "FSI-07-07",
+                "name": "Authorization Status Changes",
+                "description": "Records of authorization suspensions or revocations due to non-compliance",
+                "collection_method": "Document Review - Authorization status change notifications"
+            },
+            {
+                "artifact_id": "FSI-07-08",
+                "name": "Appeal and Remediation Processes",
+                "description": "Documentation of CSP appeals or remediation plans following corrective actions",
+                "collection_method": "Document Review - Appeal submissions and remediation plans"
+            }
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Return recommendations for automating evidence collection for FRR-FSI-07.
+        
+        Returns:
+            Dict containing automation recommendations and implementation notes.
+        """
+        return {
+            "implementation_notes": (
+                "FRR-FSI-07 is a FedRAMP-side requirement: FedRAMP MUST clearly specify "
+                "corrective actions that will result from failure to complete required actions. "
+                "This is NOT a CSP implementation requirement.\n\n"
+                
+                "CSP ROLE:\n"
+                "- Read and understand corrective action warnings in FedRAMP messages\n"
+                "- Take immediate action to avoid corrective measures\n"
+                "- Document remediation efforts to demonstrate compliance\n"
+                "- Appeal corrective actions if warranted with justification\n\n"
+                
+                "CORRECTIVE ACTION SPECIFICATION (FedRAMP responsibility):\n"
+                "- Clear: Specific consequences stated explicitly\n"
+                "- Proportional: Actions matched to severity of non-compliance\n"
+                "- Escalating: Progressive enforcement from warnings to suspension\n"
+                "- Reversible: Path to remediation and restoration\n\n"
+                
+                "CORRECTIVE ACTION TYPES (severity-based):\n"
+                "- Minor Non-Compliance: Written warning, increased monitoring\n"
+                "- Moderate Non-Compliance: Negative marketplace rating, enhanced oversight\n"
+                "- Serious Non-Compliance: Authorization suspension, mandatory remediation\n"
+                "- Critical Non-Compliance: Authorization revocation, marketplace removal\n\n"
+                
+                "MESSAGE CONTENT (what CSPs should expect):\n"
+                "- Current Issue: What non-compliance was detected\n"
+                "- Required Action: What CSP must do to resolve\n"
+                "- Timeframe: When action must be completed\n"
+                "- Consequences: What happens if action not completed\n"
+                "- Severity Level: How serious the issue is\n\n"
+                
+                "EXAMPLE CORRECTIVE ACTION SPECIFICATION:\n"
+                "'Corrective Actions for Non-Compliance:\\n\n"
+                "If required actions are not completed by the specified deadline:\\n\n"
+                "- Immediate: Your authorization will be flagged for enhanced monitoring\\n"
+                "- Within 24 hours: Your FedRAMP Marketplace rating will be downgraded\\n"
+                "- Within 72 hours: Your authorization may be suspended pending resolution\\n"
+                "- After 7 days: Authorization suspension will be implemented\\n\\n"
+                
+                "Severity of this event: HIGH - Immediate action required to avoid suspension'\\n\\n\"\n"
+                
+                "CSP CORRECTIVE ACTION MANAGEMENT:\\n"
+                "- Acknowledge: Immediately confirm receipt of warning\n"
+                "- Assess: Evaluate ability to meet requirements\n"
+                "- Escalate: Notify leadership of potential corrective actions\n"
+                "- Execute: Complete required actions before deadline\n"
+                "- Document: Maintain evidence of remediation efforts\n"
+                "- Verify: Confirm FedRAMP acknowledgment of compliance\n\n"
+                
+                "CORRECTIVE ACTION INDICATORS:\n"
+                "- Warning language (will result in, may lead to, could cause)\n"
+                "- Specific consequences (suspension, revocation, rating downgrade)\n"
+                "- Severity qualifiers (minor, moderate, serious, critical)\n"
+                "- Timeframes for escalation (immediate, within X hours/days)\n"
+                "- Remediation paths (to restore authorization, to remove rating)\n\n"
+                
+                "AUTOMATION OPPORTUNITIES:\n"
+                "1. Warning detection: Flag messages containing corrective action language\n"
+                "2. Severity parsing: Extract severity levels and consequences\n"
+                "3. Escalation alerts: Notify leadership of potential suspensions\n"
+                "4. Remediation tracking: Dashboard showing corrective action status\n"
+                "5. Evidence collection: Auto-gather proof of remediation efforts\n\n"
+                
+                "APPEAL PROCESS:\n"
+                "- Grounds for appeal: Incorrect facts, disproportionate action, extenuating circumstances\n"
+                "- Appeal timeframe: Typically within X business days of notification\n"
+                "- Required documentation: Evidence supporting appeal, proposed remediation\n"
+                "- Interim status: Authorization may remain during appeal review\n\n"
+                
+                "REMEDIATION PATH:\n"
+                "- Complete required actions: Address all identified issues\n"
+                "- Provide evidence: Submit proof of compliance to FedRAMP\n"
+                "- Request review: Ask FedRAMP to verify remediation\n"
+                "- Restore status: Work with FedRAMP to lift corrective actions\n\n"
+                
+                "EVIDENCE COLLECTION:\n"
+                "- Sample messages with clear corrective action specifications\n"
+                "- CSP remediation documentation and completion evidence\n"
+                "- Corrective action history and outcomes\n"
+                "- Appeal submissions and decisions\n\n"
+                
+                "Note: This requirement ensures CSPs understand the consequences of non-compliance. "
+                "CSPs must take corrective action warnings seriously and respond promptly to avoid "
+                "marketplace rating impacts or authorization suspension. FedRAMP controls the "
+                "specification of corrective actions - that is FedRAMP's responsibility.\"\n"
+            )
         }

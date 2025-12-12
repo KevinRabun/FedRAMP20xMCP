@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -33,19 +33,21 @@ class FRR_CCM_06_Analyzer(BaseFRRAnalyzer):
     - High: Yes
     
     **NIST Controls:**
-    - TODO: Add relevant NIST controls
+    - AC-4 (Information Flow Enforcement)
+    - SC-4 (Information in Shared System Resources)
+    - SI-12 (Information Management and Retention)
     
     **Related KSIs:**
-    - TODO: Add related KSI IDs
+    - KSI-AFR-01 (Automated reporting)
+    - KSI-MLA-01 (Machine learning for anomaly detection)
     
-    **Detectability:** No
+    **Detectability:** Partial
     
     **Detection Strategy:**
-    TODO: This requirement is not directly code-detectable. This analyzer provides:
-        1. Evidence collection guidance and automation recommendations
-        2. Manual validation procedures and checklists
-        3. Related documentation and artifact requirements
-        4. Integration points with other compliance tools
+    Application code analyzers detect sanitization, redaction, and information
+    protection mechanisms. Infrastructure and CI/CD analyzers are not applicable
+    as protecting sensitive information in reports is an application-level data
+    processing and documentation concern.
     """
     
     FRR_ID = "FRR-CCM-06"
@@ -87,43 +89,55 @@ class FRR_CCM_06_Analyzer(BaseFRRAnalyzer):
         
         Detects sensitive information protection:
         - Sanitization functions
-        - Information leakage detection (similar to ADS-05)
+        - Information leakage detection
         """
         findings = []
-        lines = code.split('\\n')
         
-        # Try AST analysis first
         try:
             parser = ASTParser(CodeLanguage.PYTHON)
             tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
             if tree and tree.root_node:
-                code_bytes = code.encode('utf-8')
+                # Check for sanitization/redaction functions
+                func_defs = parser.find_nodes_by_type(tree.root_node, 'function_definition')
+                for func_def in func_defs:
+                    func_text = parser.get_node_text(func_def, code_bytes)
+                    func_lower = func_text.lower()
+                    
+                    if any(keyword in func_lower for keyword in ['sanitize', 'redact', 'mask', 'scrub', 'filter_sensitive']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Information protection mechanism detected",
+                            description="Found sanitization/redaction function",
+                            severity=Severity.INFO,
+                            line_number=func_def.start_point[0] + 1,
+                            code_snippet=func_text.split('\n')[0],
+                            recommendation="Ensure sensitive information protected in reports."
+                        ))
+                    
+                    if 'report' in func_lower and any(kw in func_lower for kw in ['protect', 'secure', 'hide']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Report protection function detected",
+                            description="Found function protecting report information",
+                            severity=Severity.INFO,
+                            line_number=func_def.start_point[0] + 1,
+                            code_snippet=func_text.split('\n')[0],
+                            recommendation="Verify no irresponsible disclosure in reports."
+                        ))
                 
-                # Check for sanitization functions
-                sanitize_functions = ['sanitize', 'redact', 'mask', 'scrub', 'filter_sensitive']
-                for func_name in sanitize_functions:
-                    func_nodes = parser.find_nodes_by_type(tree.root_node, 'function_definition')
-                    for node in func_nodes:
-                        node_text = parser.get_node_text(node, code_bytes)
-                        if func_name in node_text.lower():
-                            line_num = node.start_point[0] + 1
-                            findings.append(Finding(
-                                frr_id=self.FRR_ID,
-                                title="Information protection mechanism detected",
-                                description=f"Found sanitization function: {func_name}",
-                                severity=Severity.INFO,
-                                line_number=line_num,
-                                code_snippet=lines[line_num-1].strip() if line_num <= len(lines) else "",
-                                recommendation="Ensure sensitive information protected in Ongoing Authorization Reports."
-                            ))
+                return findings
         except Exception:
             pass
         
         # Regex fallback
+        lines = code.split('\n')
         protection_patterns = [
             r'sanitize',
             r'redact.*sensitive',
             r'protect.*information',
+            r'mask.*data',
         ]
         
         for i, line in enumerate(lines, 1):
@@ -131,70 +145,165 @@ class FRR_CCM_06_Analyzer(BaseFRRAnalyzer):
                 if re.search(pattern, line, re.IGNORECASE):
                     findings.append(Finding(
                         frr_id=self.FRR_ID,
-                        title="Information protection pattern detected",
-                        description=f"Found protection pattern: {pattern}",
+                        title="Information protection detected",
+                        description=f"Found pattern: {pattern}",
                         severity=Severity.INFO,
                         line_number=i,
                         code_snippet=line.strip(),
-                        recommendation="Verify no irresponsible disclosure of sensitive information."
+                        recommendation="Verify no irresponsible disclosure."
                     ))
                     break
         
-        return findings
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze C# code for FRR-CCM-06 compliance using AST.
         
-        TODO: Implement C# analysis
+        Detects information protection mechanisms in C#.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for C#
+        try:
+            parser = ASTParser(CodeLanguage.CSHARP)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                method_declarations = parser.find_nodes_by_type(tree.root_node, 'method_declaration')
+                for method in method_declarations:
+                    method_text = parser.get_node_text(method, code_bytes)
+                    method_lower = method_text.lower()
+                    
+                    if any(keyword in method_lower for keyword in ['sanitize', 'redact', 'mask', 'scrub']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Information protection method detected",
+                            description="Found sanitization method",
+                            severity=Severity.INFO,
+                            line_number=method.start_point[0] + 1,
+                            code_snippet=method_text.split('\n')[0],
+                            recommendation="Ensure sensitive information protected in reports."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(?:Sanitize|Redact|Mask|Scrub).*(?:Report|Information)', line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Information protection detected",
+                    description="Found protection code",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Verify no irresponsible disclosure."
+                ))
+        
         return findings
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Java code for FRR-CCM-06 compliance using AST.
         
-        TODO: Implement Java analysis
+        Detects information protection mechanisms in Java.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for Java
+        try:
+            parser = ASTParser(CodeLanguage.JAVA)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                method_declarations = parser.find_nodes_by_type(tree.root_node, 'method_declaration')
+                for method in method_declarations:
+                    method_text = parser.get_node_text(method, code_bytes)
+                    method_lower = method_text.lower()
+                    
+                    if any(keyword in method_lower for keyword in ['sanitize', 'redact', 'mask', 'scrub']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Information protection method detected",
+                            description="Found sanitization method",
+                            severity=Severity.INFO,
+                            line_number=method.start_point[0] + 1,
+                            code_snippet=method_text.split('\n')[0],
+                            recommendation="Ensure sensitive information protected in reports."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(?:sanitize|redact|mask|scrub).*(?:Report|Information)', line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Information protection detected",
+                    description="Found protection code",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Verify no irresponsible disclosure."
+                ))
+        
         return findings
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze TypeScript/JavaScript code for FRR-CCM-06 compliance using AST.
         
-        TODO: Implement TypeScript analysis
+        Detects information protection mechanisms in TypeScript/JavaScript.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for TypeScript
+        try:
+            parser = ASTParser(CodeLanguage.TYPESCRIPT)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                function_declarations = parser.find_nodes_by_type(tree.root_node, 'function_declaration')
+                for func_decl in function_declarations:
+                    func_text = parser.get_node_text(func_decl, code_bytes)
+                    func_lower = func_text.lower()
+                    
+                    if any(keyword in func_lower for keyword in ['sanitize', 'redact', 'mask', 'scrub']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Information protection function detected",
+                            description="Found sanitization function",
+                            severity=Severity.INFO,
+                            line_number=func_decl.start_point[0] + 1,
+                            code_snippet=func_text.split('\n')[0],
+                            recommendation="Ensure sensitive information protected in reports."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(?:sanitize|redact|mask|scrub).*(?:report|information)', line, re.IGNORECASE):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Information protection detected",
+                    description="Found protection code",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Verify no irresponsible disclosure."
+                ))
+        
         return findings
     
     # ============================================================================
@@ -205,32 +314,20 @@ class FRR_CCM_06_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Bicep infrastructure code for FRR-CCM-06 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        NOT APPLICABLE: Protecting sensitive information in Ongoing Authorization
+        Reports is an application-level data processing and documentation concern,
+        not infrastructure configuration.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        return []
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Terraform infrastructure code for FRR-CCM-06 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        NOT APPLICABLE: Protecting sensitive information in reports is application
+        data processing, not infrastructure configuration.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        return []
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
@@ -240,85 +337,131 @@ class FRR_CCM_06_Analyzer(BaseFRRAnalyzer):
         """
         Analyze GitHub Actions workflow for FRR-CCM-06 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        NOT APPLICABLE: Protecting sensitive information in reports is application
+        data processing and documentation, not CI/CD automation.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Azure Pipelines YAML for FRR-CCM-06 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        NOT APPLICABLE: Report information protection is application concern, not CI/CD.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze GitLab CI YAML for FRR-CCM-06 compliance.
         
-        TODO: Implement GitLab CI analysis
+        NOT APPLICABLE: Report information protection is application concern, not CI/CD.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> List[str]:
         """
-        Get recommendations for automating evidence collection for FRR-CCM-06.
-        
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        Returns Azure Resource Graph and KQL queries for evidence collection.
+        """
+        return [
+            # Query 1: Information sanitization logs
+            """AppTraces
+| where TimeGenerated > ago(90d)
+| where Message contains 'sanitize' or Message contains 'redact' or Message contains 'mask'
+| where Message contains 'report' or Message contains 'sensitive'
+| summarize SanitizationCount = count() by bin(TimeGenerated, 1d)
+| order by TimeGenerated desc""",
+            
+            # Query 2: Report generation with protection
+            """AppEvents
+| where TimeGenerated > ago(90d)
+| where Name contains 'ReportGenerated' or Name contains 'ReportPublished'
+| where Properties contains 'sanitized' or Properties contains 'redacted'
+| project TimeGenerated, Name, Properties
+| order by TimeGenerated desc""",
+            
+            # Query 3: Sensitive data access for reports
+            """AppRequests
+| where TimeGenerated > ago(90d)
+| where Url contains 'report' or Url contains 'authorization'
+| where Properties contains 'sensitive' or Properties contains 'protected'
+| summarize RequestCount = count() by bin(TimeGenerated, 1d)
+| order by TimeGenerated desc"""
+        ]
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Returns list of evidence artifacts to collect.
+        """
+        return [
+            "Information disclosure policy documentation",
+            "Sensitive information handling procedures",
+            "Report sanitization guidelines",
+            "Sample Ongoing Authorization Reports (with sensitive information redacted)",
+            "Information classification schema",
+            "Report review process documentation",
+            "Sanitization function source code or configuration",
+            "Report generation logs showing protection mechanisms",
+            "Security review records for published reports",
+            "Incident reports related to information disclosure (if any)"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Provides recommendations for automated evidence collection.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "automated_queries": [
+                {
+                    "name": "Report Sanitization Tracking",
+                    "description": "Monitor sanitization of sensitive information in reports",
+                    "query": """AppTraces
+| where TimeGenerated > ago(90d)
+| where Message contains 'sanitize' or Message contains 'redact'
+| where Message contains 'report'
+| summarize SanitizationEvents = count() by bin(TimeGenerated, 1d)
+| order by TimeGenerated desc""",
+                    "schedule": "Quarterly (before each report publication)"
+                },
+                {
+                    "name": "Information Protection Compliance",
+                    "description": "Verify information protection mechanisms in report generation",
+                    "query": """AppEvents
+| where TimeGenerated > ago(90d)
+| where Name == 'ReportGenerated'
+| extend IsSanitized = Properties contains 'sanitized'
+| summarize Total = count(), Sanitized = countif(IsSanitized) by bin(TimeGenerated, 1d)
+| extend ComplianceRate = (Sanitized * 100.0) / Total
+| order by TimeGenerated desc""",
+                    "schedule": "Monthly"
+                }
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "evidence_artifacts": [
+                {
+                    "name": "Information Disclosure Policy",
+                    "description": "Policy governing disclosure of sensitive information in reports",
+                    "location": "Azure Storage Account / policy-documents container"
+                },
+                {
+                    "name": "Report Sanitization Logs",
+                    "description": "Logs showing sanitization of sensitive information",
+                    "location": "Azure Monitor Logs / Application Insights"
+                },
+                {
+                    "name": "Published Report Samples",
+                    "description": "Samples of published reports demonstrating information protection",
+                    "location": "Azure Storage Account / published-reports container"
+                }
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "implementation_notes": [
+                "Configure Application Insights custom events for report sanitization",
+                "Implement automated scanning of reports for sensitive information patterns",
+                "Document information classification schema for report content",
+                "Maintain audit trail of report review and approval process",
+                "Establish escalation procedures for sensitive information concerns",
+                "Use Azure Information Protection for automatic data classification"
             ]
         }

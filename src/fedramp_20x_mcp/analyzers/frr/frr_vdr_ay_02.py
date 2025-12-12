@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,54 @@ class FRR_VDR_AY_02_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-AY-02.
+        Get queries for collecting evidence of resilient architecture design.
         
-        TODO: Add evidence collection guidance
+        Focuses on architecture decisions that reduce vulnerability risk and simplify detection/response.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "architecture_documentation": [
+                "Query architecture review repositories for security-by-design decisions and threat models",
+                "Search design documentation for keywords: 'defense in depth', 'least privilege', 'fail secure', 'zero trust'",
+                "Verify architecture decision records (ADRs) include vulnerability mitigation rationale"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "azure_resource_graph": [
+                "Resources | where type =~ 'microsoft.network/networksecuritygroups' | where properties.securityRules | project id, name, defaultSecurityRules=properties.defaultSecurityRules, customRules=properties.securityRules | where array_length(customRules) > 0",
+                "Resources | where type =~ 'microsoft.keyvault/vaults' | where properties.enableRbacAuthorization == true | where properties.enableSoftDelete == true | where properties.enablePurgeProtection == true | project id, name, rbacEnabled=properties.enableRbacAuthorization, softDeleteEnabled=properties.enableSoftDelete",
+                "Resources | where type =~ 'microsoft.compute/virtualmachines' | where properties.storageProfile.osDisk.encryptionSettings.enabled == true | project id, name, encryptionEnabled=properties.storageProfile.osDisk.encryptionSettings.enabled"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "defender_for_cloud": [
+                "SecurityRecommendation | where RecommendationName contains 'secure by default' or RecommendationName contains 'least privilege' | where RecommendationState == 'Active' | project TimeGenerated, RecommendationName, ResourceId, RemediationSteps",
+                "SecureScoreControls | where ControlName contains 'design' or ControlName contains 'architecture' | project TimeGenerated, ControlName, CurrentScore, MaxScore, PercentageScore, UnhealthyResourceCount"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for demonstrating resilient design practices.
+        
+        Focuses on architecture decisions that mitigate vulnerabilities by default.
+        """
+        return [
+            "Architecture design documents showing security-by-design principles (defense in depth, least privilege, fail secure)",
+            "Threat model documentation demonstrating vulnerability risk analysis during design phase",
+            "Architecture decision records (ADRs) with security rationale for technology and pattern choices",
+            "Infrastructure-as-code templates showing secure defaults (encryption, network isolation, access controls)",
+            "Defender for Cloud Secure Score reports showing high scores in architecture-related controls",
+            "Code review records demonstrating security-focused design review processes",
+            "Security champion training materials on secure architecture patterns and vulnerability-resistant design"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Get recommendations for automating resilient design evidence collection.
+        
+        Focuses on demonstrating security-by-design architecture decisions.
+        """
+        return {
+            "architecture_reviews": "Implement automated architecture review gates in CI/CD requiring ADRs with security rationale before deploying new services or major changes",
+            "threat_modeling": "Integrate automated threat modeling tools (Microsoft Threat Modeling Tool, OWASP Threat Dragon) into design phase with mandatory completion before implementation",
+            "secure_defaults": "Use Azure Policy to enforce secure-by-default configurations (encryption, private endpoints, RBAC) preventing deployment of insecure resources",
+            "design_scoring": "Configure Defender for Cloud Secure Score monitoring focused on architecture controls, with automated alerts when scores decrease indicating design regressions"
         }

@@ -21,7 +21,7 @@ def test_analyzer_metadata():
     assert analyzer.FRR_ID == "FRR-RSC-03", "FRR_ID should be FRR-RSC-03"
     assert analyzer.FAMILY == "RSC", "Family should be RSC"
     assert analyzer.FRR_NAME == "Privileged Accounts Security Settings Guidance", "Title mismatch"
-    assert analyzer.PRIMARY_KEYWORD == "MUST", "Keyword mismatch"
+    assert analyzer.PRIMARY_KEYWORD == "SHOULD", "Keyword mismatch"
     assert analyzer.IMPACT_LOW == True, "Impact Low mismatch"
     assert analyzer.IMPACT_MODERATE == True, "Impact Moderate mismatch"
     assert analyzer.IMPACT_HIGH == True, "Impact High mismatch"
@@ -33,9 +33,15 @@ def test_evidence_automation_recommendations():
     """Test evidence automation recommendations."""
     analyzer = FRR_RSC_03_Analyzer()
     
+    # Test 3 separate evidence methods
+    queries = analyzer.get_evidence_collection_queries()
+    artifacts = analyzer.get_evidence_artifacts()
     recommendations = analyzer.get_evidence_automation_recommendations()
-    assert recommendations['frr_id'] == "FRR-RSC-03", "FRR_ID mismatch"
-    # TODO: Add more assertions for evidence recommendations
+    
+    # Verify structure
+    assert 'automated_queries' in queries
+    assert 'evidence_artifacts' in artifacts
+    assert 'implementation_notes' in recommendations
     
     print("[PASS] test_evidence_automation_recommendations PASSED")
 

@@ -10,7 +10,7 @@ Impact Levels: Moderate
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -236,47 +236,39 @@ class FRR_VDR_TF_MO_07_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
-        """
-        Get recommendations for automating evidence collection for FRR-VDR-TF-MO-07.
-        
-        TODO: Add evidence collection guidance
-        """
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """Get queries for Moderate risk-based mitigation timeframes (middle: between High 15/30/30/90 and Low 60/90/90/180/365)."""
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
-            ]
+            "Risk-based timeframe calculations": {
+                "description": "Calculate mitigation timeframes based on impact/internet/exploitability (Moderate: middle values)",
+                "defender_kql": "SecurityAssessment | extend MitigationDays = case(ImpactLevel == 'N5' and InternetReachable == true and LikelyExploitable == true, 30, ImpactLevel == 'N4' and InternetReachable == true, 45, ImpactLevel == 'N4', 60, ImpactLevel in ('N1', 'N2', 'N3'), 120, 180)"
+            },
+            "Mitigation SLA compliance": {
+                "description": "Track compliance with Moderate risk-based timeframes"
+            },
+            "SLA violation monitoring": {
+                "description": "Monitor vulns exceeding Moderate mitigation timeframes"
+            }
+        }
+
+    def get_evidence_artifacts(self) -> List[str]:
+        """Get artifacts for Moderate risk-based mitigation."""
+        return [
+            "Vulnerability mitigation timeframe calculations (Moderate: middle between High and Low)",
+            "Mitigation SLA compliance reports",
+            "Risk-based timeframe documentation (impact + internet + exploitability)",
+            "SLA violation reports"
+        ]
+
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """Get automation recommendations for Moderate risk-based mitigation."""
+        return {
+            "automated_timeframe_calculation": {
+                "description": "Auto-calculate Moderate risk-based mitigation timeframes",
+                "rationale": "Ensures consistent application of Moderate timeframes per FRR-VDR-TF-MO-07"
+            },
+            "sla_compliance_tracking": {
+                "description": "Track Moderate mitigation SLA compliance",
+                "rationale": "Provides visibility into Moderate timeframe compliance"
+            }
         }

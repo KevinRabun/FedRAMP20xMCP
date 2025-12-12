@@ -29,15 +29,30 @@ def test_analyzer_metadata():
     print("[PASS] test_analyzer_metadata PASSED")
 
 
-def test_evidence_automation_recommendations():
-    """Test evidence automation recommendations."""
+def test_evidence_collection():
+    """Test evidence collection methods for ongoing operational remediation."""
     analyzer = FRR_VDR_TF_LO_07_Analyzer()
     
-    recommendations = analyzer.get_evidence_automation_recommendations()
-    assert recommendations['frr_id'] == "FRR-VDR-TF-LO-07", "FRR_ID mismatch"
-    # TODO: Add more assertions for evidence recommendations
+    # Test evidence collection queries
+    queries = analyzer.get_evidence_collection_queries()
+    assert 'Ongoing vulnerability remediation activity' in queries, "Missing ongoing remediation queries"
+    assert 'Routine operations integration' in queries, "Missing routine operations queries"
+    assert 'Risk-based remediation decisions' in queries, "Missing risk decision queries"
     
-    print("[PASS] test_evidence_automation_recommendations PASSED")
+    # Test evidence artifacts
+    artifacts = analyzer.get_evidence_artifacts()
+    assert len(artifacts) > 0, "Should have evidence artifacts"
+    artifacts_text = ' '.join(artifacts).lower()
+    assert 'ongoing' in artifacts_text or 'remediation' in artifacts_text, "Missing ongoing/remediation artifact"
+    assert 'routine' in artifacts_text or 'operations' in artifacts_text, "Missing routine operations artifact"
+    assert 'risk' in artifacts_text, "Missing risk artifact"
+    
+    # Test automation recommendations
+    recommendations = analyzer.get_evidence_automation_recommendations()
+    assert 'ongoing_remediation_tracking' in recommendations, "Missing ongoing tracking"
+    assert 'maintenance_window_integration' in recommendations, "Missing maintenance integration"
+    
+    print("[PASS] test_evidence_collection PASSED")
 
 
 # TODO: Add language-specific tests
@@ -57,8 +72,7 @@ def run_all_tests():
     """Run all FRR-VDR-TF-LO-07 tests."""
     test_functions = [
         ("Analyzer metadata", test_analyzer_metadata),
-        ("Evidence automation recommendations", test_evidence_automation_recommendations),
-        # TODO: Add more test functions
+        ("Evidence collection", test_evidence_collection),
     ]
     
     passed = 0

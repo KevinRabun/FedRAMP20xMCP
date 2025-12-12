@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,57 @@ class FRR_VDR_AG_04_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-AG-04.
+        Get queries for collecting evidence of agency notifications to FedRAMP.
         
-        TODO: Add evidence collection guidance
+        This requirement mandates AGENCIES notify FedRAMP when requesting extra vulnerability info from CSPs.
+        Evidence should demonstrate agency email notifications sent to info@fedramp.gov.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "email_audit_queries": [
+                "Search agency email systems for sent messages to info@fedramp.gov",
+                "Filter by subject keywords: 'additional vulnerability information', 'supplemental data request'",
+                "Verify email body includes CSP name, information request details, and justification",
+                "Query for confirmation/acknowledgment responses from FedRAMP"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "ticketing_system_queries": [
+                "Query ServiceNow/Jira for tickets tracking extra vulnerability information requests to CSPs",
+                "Filter by custom fields: notification_sent_to_fedramp='true', notification_date, email_confirmation_id",
+                "Join with agency request records to verify notification sent within required timeframe"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "notification_tracking": [
+                "Query notification tracking database for entries matching FRR-VDR-AG-04 requirement",
+                "Filter by notification_type='vulnerability_info_request', recipient='info@fedramp.gov'",
+                "Generate audit trail of notifications with timestamps, requestor, and CSP details"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for demonstrating FedRAMP notification compliance.
+        
+        Focuses on agency notification records and email communications.
+        """
+        return [
+            "Copies of emails sent to info@fedramp.gov notifying of extra vulnerability information requests",
+            "Email confirmation receipts or acknowledgment responses from FedRAMP",
+            "Notification tracking logs with timestamps, CSP names, and information request details",
+            "Agency policy documentation requiring FedRAMP notification per FRR-VDR-AG-04",
+            "Training materials for agency personnel on notification requirements",
+            "Quarterly reports summarizing all FedRAMP notifications sent (count, timeliness, response status)"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Get recommendations for automating agency FedRAMP notification tracking.
+        
+        This requirement is NOT code-detectable (agency process, not provider code).
+        Automation focuses on notification workflows and audit trails.
+        """
+        return {
+            "automated_notification": "Integrate request approval workflow with automated email to info@fedramp.gov upon agency head approval of extra vulnerability information requests",
+            "tracking_system": "Implement notification tracking system that logs all FedRAMP notifications with metadata (timestamp, CSP, information type, confirmation status)",
+            "compliance_dashboard": "Create dashboard showing all agency requests to CSPs for extra vulnerability info, with notification status (sent, pending, overdue)",
+            "quarterly_reporting": "Automate quarterly reports summarizing FedRAMP notifications sent, response times, and compliance metrics for agency governance review"
         }

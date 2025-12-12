@@ -248,6 +248,7 @@ class FRR_ADS_03_Analyzer(BaseFRRAnalyzer):
             'frr_id': self.FRR_ID,
             'frr_name': self.FRR_NAME,
             'code_detectable': 'Partial',
+            'automation_feasibility': 'High - Can automate documentation scanning, service name extraction, impact level verification, and completeness checking',
             'automation_approach': 'Automated documentation scanning for service lists with impact level designations',
             'evidence_artifacts': [
                 'README.md or SERVICES.md containing service list',
@@ -272,9 +273,229 @@ class FRR_ADS_03_Analyzer(BaseFRRAnalyzer):
                 'Azure Static Web Apps - for hosting service catalogs',
                 'Trust Center platforms - for centralized authorization data'
             ],
+            'azure_services': [
+                'Azure Static Web Apps (hosting service catalog documentation)',
+                'Azure Repos (version control for service documentation)',
+                'Azure DevOps (CI/CD for documentation validation)',
+                'Azure CDN (global distribution of service documentation)',
+                'Azure Storage Static Website (alternative hosting for service catalogs)'
+            ],
+            'collection_methods': [
+                'Automated documentation file scanning (README.md, SERVICES.md, docs/)',
+                'Natural language processing to extract service names',
+                'Impact level keyword detection (Low, Moderate, High)',
+                'Service name validation against cloud provider marketing names',
+                'Completeness scoring based on required sections',
+                'Public URL accessibility verification'
+            ],
+            'implementation_steps': [
+                '1. Scan repository for documentation files (README.md, SERVICES.md, docs/ folder)',
+                '2. Parse documentation for "service list" or "authorized services" sections',
+                '3. Extract service names and categorize by impact level (Low/Moderate/High)',
+                '4. Validate service names match public cloud provider marketing names (e.g., "Azure Key Vault" not "key vault")',
+                '5. Check for excluded services section (services NOT included)',
+                '6. Verify documentation is publicly accessible via web URL',
+                '7. Generate completeness report with findings and recommendations'
+            ],
             'integration_points': [
                 'Export to OSCAL SSP (System Security Plan) format',
                 'Link to public trust center URLs',
                 'CI/CD checks to validate documentation completeness'
             ]
         }
+    
+    def get_evidence_collection_queries(self) -> List[dict]:
+        """
+        Get specific queries for collecting FRR-ADS-03 evidence.
+        
+        Returns:
+            List of evidence collection queries specific to service list documentation
+        """
+        return [
+            {
+                'method_type': 'Documentation Scan',
+                'name': 'Service List Documentation Discovery',
+                'description': 'Scan repository for documentation files containing service lists with impact level designations',
+                'command': 'find . -type f \\( -name "README.md" -o -name "SERVICES.md" -o -path "*/docs/*" \\) -exec grep -l -i "service.*list\\|authorized.*services\\|included.*services" {} \\;',
+                'purpose': 'Locate documentation files that should contain the detailed service list required by FRR-ADS-03',
+                'evidence_type': 'Documentation file inventory with service list indicators',
+                'validation_checks': [
+                    'At least one documentation file contains "service list" keywords',
+                    'Documentation includes section headers like "Services Included" or "Authorization Scope"',
+                    'File is in standard documentation location (README, docs/)',
+                    'Content is human-readable (Markdown, HTML, or plain text)'
+                ],
+                'storage_location': 'Evidence/ADS-03/documentation-scans/'
+            },
+            {
+                'method_type': 'Content Analysis',
+                'name': 'Impact Level Verification',
+                'description': 'Extract and verify impact level designations (Low, Moderate, High) for each listed service',
+                'command': 'grep -E -i "(low|moderate|high)\\s+(impact|level)" README.md SERVICES.md docs/*.md | python scripts/parse_impact_levels.py',
+                'purpose': 'Confirm that each service in the list is clearly designated with its authorized impact level',
+                'evidence_type': 'Impact level designation report',
+                'validation_checks': [
+                    'Each service has explicit impact level (Low, Moderate, or High)',
+                    'Impact levels use FedRAMP standard terminology',
+                    'Services are grouped or tagged by impact level',
+                    'No ambiguous or missing impact level designations'
+                ],
+                'storage_location': 'Evidence/ADS-03/impact-level-reports/'
+            },
+            {
+                'method_type': 'Service Name Extraction',
+                'name': 'Specific Service Name Validation',
+                'description': 'Extract service names and validate they match standard public cloud marketing materials (not generic terms)',
+                'command': 'python scripts/extract_service_names.py --input README.md --cloud-provider azure --validate-marketing-names',
+                'purpose': 'Ensure service names are "clear feature or service names that align with standard public marketing materials" per FRR-ADS-03',
+                'evidence_type': 'Service name inventory with marketing name validation',
+                'validation_checks': [
+                    'Service names match official cloud provider marketing names (e.g., "Azure Key Vault" not "key vault service")',
+                    'No vague or generic terms like "storage service" or "compute resources"',
+                    'Service names include appropriate qualifiers (SKUs, tiers, editions)',
+                    'Names are consistent with cloud provider documentation'
+                ],
+                'storage_location': 'Evidence/ADS-03/service-name-validation/'
+            },
+            {
+                'method_type': 'Completeness Check',
+                'name': 'Authorization Scope Completeness Assessment',
+                'description': 'Verify service list is complete enough for customers to determine authorization scope without requesting additional information',
+                'command': 'python scripts/assess_completeness.py --documentation README.md --checklist frr-ads-03-completeness.json',
+                'purpose': 'Validate that the service list meets FRR-ADS-03 requirement: "complete enough for a potential customer to determine which services are and are not included"',
+                'evidence_type': 'Completeness assessment report',
+                'validation_checks': [
+                    'All major service categories represented (compute, storage, database, networking, etc.)',
+                    'Services NOT included explicitly listed',
+                    'Edge cases addressed (e.g., regional limitations, SKU restrictions)',
+                    'No ambiguous statements requiring customer to contact provider for clarification'
+                ],
+                'storage_location': 'Evidence/ADS-03/completeness-reports/'
+            },
+            {
+                'method_type': 'Public Accessibility Verification',
+                'name': 'Service Documentation Public URL Check',
+                'description': 'Verify service list documentation is publicly accessible without authentication',
+                'command': 'curl -I -s https://github.com/{owner}/{repo}/blob/main/README.md | grep "HTTP/2 200"',
+                'purpose': 'Confirm service list is publicly shared as required by FRR-ADS-03 (customers can access without requesting authorization data)',
+                'evidence_type': 'HTTP accessibility report',
+                'validation_checks': [
+                    'Documentation URL returns HTTP 200 (accessible)',
+                    'No authentication required to view service list',
+                    'URL is stable and versioned appropriately',
+                    'Content is indexed by search engines (if applicable)'
+                ],
+                'storage_location': 'Evidence/ADS-03/accessibility-checks/'
+            },
+            {
+                'method_type': 'OSCAL Integration',
+                'name': 'Service List in OSCAL SSP Verification',
+                'description': 'Verify service list is also represented in machine-readable OSCAL System Security Plan format',
+                'command': 'jq \'.["system-security-plan"].["system-characteristics"].["authorization-boundary"].diagrams[] | select(.description | contains("service"))\' ssp.json',
+                'purpose': 'Ensure service list is available in both human-readable (README) and machine-readable (OSCAL) formats per ADS family requirements',
+                'evidence_type': 'OSCAL SSP service inventory',
+                'validation_checks': [
+                    'OSCAL SSP includes service inventory section',
+                    'Services listed in OSCAL match those in README/SERVICES.md',
+                    'Impact levels in OSCAL match documentation',
+                    'OSCAL format validates against FedRAMP schema'
+                ],
+                'storage_location': 'Evidence/ADS-03/oscal-service-lists/'
+            }
+        ]
+    
+    def get_evidence_artifacts(self) -> List[dict]:
+        """
+        Get list of evidence artifacts for FRR-ADS-03 compliance.
+        
+        Returns:
+            List of evidence artifacts specific to service list documentation
+        """
+        return [
+            {
+                'artifact_name': 'Service List Documentation',
+                'artifact_type': 'Markdown/HTML Documentation',
+                'description': 'README.md, SERVICES.md, or docs/ files containing the detailed service list with impact levels',
+                'collection_method': 'Extract from Git repository at main/master branch, verify content includes required sections',
+                'validation_checks': [
+                    'File exists in repository root or docs/ folder',
+                    'Contains "Services Included" or equivalent section',
+                    'Lists specific services with clear names',
+                    'Includes impact level designations (Low, Moderate, High)',
+                    'Specifies services NOT included in authorization'
+                ],
+                'storage_location': 'Evidence/ADS-03/documentation/service-list-README.md',
+                'retention_period': '7 years per FedRAMP requirements'
+            },
+            {
+                'artifact_name': 'Service Name Validation Report',
+                'artifact_type': 'Automated Analysis Report',
+                'description': 'Report validating that service names match standard cloud provider public marketing materials',
+                'collection_method': 'Run automated script to extract service names and compare against official cloud provider service catalogs',
+                'validation_checks': [
+                    'All service names validated against cloud provider marketing names',
+                    'No generic or vague terms used (e.g., "storage" → "Azure Blob Storage")',
+                    'Naming conventions consistent with cloud provider documentation',
+                    'Report includes confidence scores for name matching'
+                ],
+                'storage_location': 'Evidence/ADS-03/reports/service-name-validation.json',
+                'retention_period': '7 years'
+            },
+            {
+                'artifact_name': 'Impact Level Designation Matrix',
+                'artifact_type': 'Compliance Matrix',
+                'description': 'Table or matrix showing each service mapped to its authorized impact level(s)',
+                'collection_method': 'Parse documentation to extract service-to-impact-level mappings, generate structured matrix',
+                'validation_checks': [
+                    'Every service has at least one impact level designation',
+                    'Impact levels use FedRAMP standard terminology (Low, Moderate, High)',
+                    'No services with ambiguous or missing impact levels',
+                    'Matrix cross-references with OSCAL SSP service inventory'
+                ],
+                'storage_location': 'Evidence/ADS-03/matrices/impact-level-matrix.csv',
+                'retention_period': '7 years'
+            },
+            {
+                'artifact_name': 'Completeness Assessment Report',
+                'artifact_type': 'Validation Report',
+                'description': 'Report assessing whether service list is complete enough for customers to determine authorization scope',
+                'collection_method': 'Automated checklist evaluation + manual review to confirm no critical gaps',
+                'validation_checks': [
+                    'All major service categories addressed (compute, storage, network, database, security, identity)',
+                    'Services NOT included are explicitly listed',
+                    'Edge cases documented (regional limitations, SKU exclusions)',
+                    'No statements requiring customer to contact provider for clarification',
+                    'Reviewer confirms a potential customer could determine scope independently'
+                ],
+                'storage_location': 'Evidence/ADS-03/reports/completeness-assessment.pdf',
+                'retention_period': '7 years'
+            },
+            {
+                'artifact_name': 'Public Accessibility Evidence',
+                'artifact_type': 'HTTP Test Results',
+                'description': 'Evidence showing service list documentation is publicly accessible via web URL without authentication',
+                'collection_method': 'Automated HTTP tests with curl/wget, screenshots of public-facing pages',
+                'validation_checks': [
+                    'URL returns HTTP 200 status',
+                    'No authentication required to view',
+                    'Content is served over HTTPS',
+                    'Page loads successfully in standard web browser'
+                ],
+                'storage_location': 'Evidence/ADS-03/accessibility/public-url-tests.json',
+                'retention_period': '7 years (monthly snapshots)'
+            },
+            {
+                'artifact_name': 'OSCAL SSP Service Inventory',
+                'artifact_type': 'OSCAL JSON Document',
+                'description': 'Machine-readable OSCAL System Security Plan (SSP) containing service inventory section',
+                'collection_method': 'Extract service inventory component from OSCAL SSP file, validate against FedRAMP schema',
+                'validation_checks': [
+                    'OSCAL SSP validates against FedRAMP profile schema',
+                    'Service inventory section present in system-characteristics',
+                    'Services listed match human-readable documentation',
+                    'Impact levels in OSCAL match README/SERVICES.md designations'
+                ],
+                'storage_location': 'Evidence/ADS-03/oscal/ssp-service-inventory.json',
+                'retention_period': '7 years'
+            }
+        ]

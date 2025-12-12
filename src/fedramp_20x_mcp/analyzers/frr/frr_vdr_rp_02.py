@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,54 @@ class FRR_VDR_RP_02_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-RP-02.
+        Get queries for collecting evidence of high-level vulnerability activity overviews.
         
-        TODO: Add evidence collection guidance
+        Returns queries to verify comprehensive reporting of all VDR activities in monthly reports.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "Monthly report content verification": [
+                "SecurityReports | where ReportType == 'Vulnerability Monthly Summary' | where TimeGenerated > ago(90d) | project TimeGenerated, IncludesDisclosureProgram, IncludesBugBounty, IncludesPenTest, IncludesAssessments, OverviewSections",
+                "DocumentContent | where DocumentType == 'VDR Monthly Report' | where Content contains 'vulnerability disclosure' or Content contains 'bug bounty' or Content contains 'penetration test' | project DocumentDate, ContentSections"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "Vulnerability disclosure program activity": [
+                "SecurityIncident | where IncidentType == 'Vulnerability Disclosure' | where TimeGenerated > ago(30d) | summarize DisclosuresReceived=count(), AvgResponseTime=avg(TimeToResponse) by bin(TimeGenerated, 1d)",
+                "DisclosureProgram | where TimeGenerated > ago(30d) | project TimeGenerated, SubmitterType, VulnerabilitySeverity, Status, ResolutionTime"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
+            "Bug bounty program activity": [
+                "BugBountySubmissions | where TimeGenerated > ago(30d) | summarize SubmissionsReceived=count(), BountiesPaid=sum(BountyAmount), ValidFindings=countif(Status == 'Valid') by bin(TimeGenerated, 1d)",
+                "HackerOneActivity | where TimeGenerated > ago(30d) | project TimeGenerated, ReportID, Severity, Status, BountyAmount"
             ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "Penetration testing and assessments": [
+                "PenTestResults | where TestDate > ago(30d) | project TestDate, TestType, FindingsCount, CriticalCount, HighCount, Scope",
+                "VulnerabilityAssessments | where AssessmentDate > ago(30d) | summarize AssessmentsCompleted=count(), TotalFindings=sum(FindingsCount) by AssessmentType, bin(AssessmentDate, 1d)"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for high-level activity overviews.
+        """
+        return [
+            "Monthly VDR reports with high-level overviews section (last 12 months)",
+            "Vulnerability disclosure program documentation and activity summaries",
+            "Bug bounty program reports (submissions, payouts, valid findings summaries)",
+            "Penetration testing reports and executive summaries",
+            "Vulnerability assessment reports and findings summaries",
+            "Security scanning activity reports (automated tools, coverage metrics)",
+            "Third-party security audit reports and summaries",
+            "Incident response activity summaries related to vulnerabilities"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Get recommendations for automating evidence collection.
+        """
+        return {
+            "Comprehensive activity aggregation": "Automatically compile high-level overviews from all VDR activity sources (disclosure programs, bug bounty platforms, pentest tools, vulnerability scanners)",
+            "Monthly summary generation": "Generate executive summaries of all vulnerability activities in standardized format (vulnerability types, counts, severities, response times)",
+            "Program integration": "Integrate data from bug bounty platforms (HackerOne, Bugcrowd), pentest tools (Burp, Metasploit reports), assessment tools (Qualys, Tenable)",
+            "Trending and metrics": "Include month-over-month trends and key performance indicators in overviews (detection rates, response times, program effectiveness)",
+            "Automated report inclusion": "Embed high-level overview sections automatically in monthly reports with drill-down capabilities for detailed data"
         }

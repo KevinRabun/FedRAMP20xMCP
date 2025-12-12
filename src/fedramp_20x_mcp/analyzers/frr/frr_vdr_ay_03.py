@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,57 @@ class FRR_VDR_AY_03_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-AY-03.
+        Get queries for collecting evidence of automated vulnerability detection services.
         
-        TODO: Add evidence collection guidance
+        Focuses on detecting use of automated scanning and vulnerability management tools.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "azure_resource_graph": [
+                "Resources | where type =~ 'microsoft.security/automations' | where properties.isEnabled == true | project id, name, location, isEnabled=properties.isEnabled, sources=properties.sources",
+                "Resources | where type =~ 'microsoft.security/assessmentsmetadata' | where properties.assessmentType == 'BuiltIn' | project id, name, displayName=properties.displayName, severity=properties.severity, implementationEffort=properties.implementationEffort"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "defender_for_cloud": [
+                "SecurityAssessment | where AssessmentType == 'Automated' | summarize count() by AssessmentName, Severity, TimeGenerated | where TimeGenerated > ago(30d)",
+                "SecurityRecommendation | where RecommendationName contains 'automated' or RemediationSteps contains 'automated scanning' | where RecommendationState == 'Active' | project TimeGenerated, RecommendationName, ResourceId, RemediationSteps"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
+            "vulnerability_assessment": [
+                "AzureDiagnostics | where Category == 'SqlVulnerabilityAssessmentScanResults' | where TimeGenerated > ago(30d) | summarize ScanCount=count() by Resource, bin(TimeGenerated, 1d)",
+                "AzureDiagnostics | where Category == 'ContainerRegistryScanEvent' | where TimeGenerated > ago(30d) | summarize ImageScans=count() by RegistryName_s, bin(TimeGenerated, 1d)"
             ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "devops_integration": [
+                "Query CI/CD logs for automated security scanning tools (SAST, DAST, SCA, container scanning)",
+                "Filter by pipeline stage names: security-scan, vulnerability-check, dependency-audit",
+                "Verify automated scans configured in GitHub Actions, Azure Pipelines, or GitLab CI"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for demonstrating automated vulnerability detection.
+        
+        Focuses on automated scanning service usage and integration.
+        """
+        return [
+            "Defender for Cloud configuration showing enabled automated assessment policies",
+            "Vulnerability assessment scan results from SQL databases, container registries, and VMs",
+            "CI/CD pipeline definitions showing automated security scanning stages (SAST, DAST, SCA)",
+            "Azure Security Center automation workflows for vulnerability detection and alerting",
+            "Integration configurations for third-party scanning tools (Qualys, Tenable, Rapid7)",
+            "Automated scan schedules and execution logs demonstrating regular vulnerability detection",
+            "Metrics reports showing detection coverage (% resources scanned, scan frequency, automation rate)"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Get recommendations for automating vulnerability detection evidence collection.
+        
+        Focuses on demonstrating use of automated scanning services.
+        """
+        return {
+            "defender_enablement": "Enable all relevant Defender for Cloud plans (Servers, SQL, Storage, Containers, App Service) for comprehensive automated vulnerability detection across Azure resources",
+            "ci_cd_integration": "Integrate automated security scanning in CI/CD pipelines using GitHub Advanced Security, Azure DevOps scanning extensions, or third-party tools (SonarQube, Snyk, Checkmarx)",
+            "continuous_scanning": "Configure automated recurring scans for all resource types (VMs, databases, containers, code repos) with alerting on new vulnerabilities detected",
+            "evidence_dashboard": "Create automated dashboard showing scanning coverage metrics: % resources scanned, scan frequency, automation rate, mean time to detect (MTTD) vulnerabilities"
         }

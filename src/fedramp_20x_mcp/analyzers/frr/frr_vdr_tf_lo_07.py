@@ -10,7 +10,7 @@ Impact Levels: Low
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -236,47 +236,137 @@ class FRR_VDR_TF_LO_07_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get automated queries for collecting evidence of ongoing operational vulnerability remediation.
+        
+        Returns structured queries for ongoing remediation activity, routine operations integration,
+        and risk-based remediation decisions per FRR-VDR-TF-LO-07 (Low impact).
+        """
+        return {
+            "Ongoing vulnerability remediation activity": {
+                "description": "Track remediation of remaining vulnerabilities (post-timeframe or lower priority) during routine operations",
+                "remediation_activity_query": """
+                    SecurityAssessment
+                    | where TimeGenerated > ago(180d)
+                    | where AssessmentType == 'Vulnerability'
+                    | where Properties.status.code in ('Mitigated', 'Remediated', 'InProgress')
+                    | extend RemediationCategory = case(
+                        datetime_diff('day', now(), TimeGenerated) > 365, 'Beyond SLA',
+                        datetime_diff('day', now(), TimeGenerated) > 180, 'Extended Timeline',
+                        'Within SLA'
+                    )
+                    | summarize RemediationCount = count(), LastRemediation = max(TimeGenerated) by RemediationCategory, Severity = tostring(Properties.severity)
+                    | project RemediationCategory, Severity, RemediationCount, LastRemediation
+                """,
+                "azure_monitor_kql": """
+                    AzureDiagnostics
+                    | where Category == 'VulnerabilityManagement'
+                    | where OperationName in ('VulnerabilityMitigated', 'VulnerabilityRemediated')
+                    | extend RemediationType = extract(@'Type=(\\w+)', 1, Message)  // Patch, Configuration, Compensating
+                    | extend Priority = extract(@'Priority=(\\w+)', 1, Message)  // Low, Medium, High
+                    | where Priority in ('Low', 'Medium')  // Ongoing/routine remediation, not urgent
+                    | summarize RemediationEvents = count(), LastActivity = max(TimeGenerated) by RemediationType, Priority, bin(TimeGenerated, 7d)
+                    | project Week = TimeGenerated, RemediationType, Priority, RemediationEvents, LastActivity
+                """
+            },
+            "Routine operations integration": {
+                "description": "Track vulnerability remediation integrated into routine maintenance windows and operational activities",
+                "maintenance_window_query": """
+                    AzureDiagnostics
+                    | where Category == 'MaintenanceActivity'
+                    | where OperationName contains 'Maintenance'
+                    | extend VulnRemediationIncluded = Message contains 'vulnerability' or Message contains 'patch' or Message contains 'remediation'
+                    | where VulnRemediationIncluded
+                    | extend MaintenanceType = extract(@'Type=(\\w+)', 1, Message)  // Scheduled, Emergency, Routine
+                    | summarize MaintenanceEvents = count(), VulnRemediations = countif(VulnRemediationIncluded) by MaintenanceType, bin(TimeGenerated, 30d)
+                    | project Month = TimeGenerated, MaintenanceType, MaintenanceEvents, VulnRemediations, IntegrationRate = todouble(VulnRemediations) / todouble(MaintenanceEvents) * 100
+                """,
+                "change_management_query": """
+                    // Example ServiceNow change request query
+                    // SELECT change_number, change_type, planned_start, actual_start, short_description
+                    // FROM change_request
+                    // WHERE change_type IN ('Standard', 'Normal')
+                    // AND (short_description LIKE '%vulnerability%' OR short_description LIKE '%patch%' OR short_description LIKE '%remediation%')
+                    // AND sys_created_on > DATE_SUB(NOW(), INTERVAL 90 DAY)
+                """
+            },
+            "Risk-based remediation decisions": {
+                "description": "Track provider decisions on which remaining vulnerabilities to remediate based on risk assessment",
+                "risk_decision_tracking_query": """
+                    SecurityAssessment
+                    | where TimeGenerated > ago(180d)
+                    | where AssessmentType == 'Vulnerability'
+                    | extend RiskScore = todouble(Properties.metadata.riskScore)
+                    | extend BusinessImpact = tostring(Properties.metadata.businessImpact)
+                    | extend RemediationDecision = case(
+                        Properties.status.code in ('Mitigated', 'Remediated'), 'Remediate',
+                        Properties.status.code == 'Accepted', 'Accept',
+                        Properties.status.code == 'InProgress', 'InProgress',
+                        'Pending'
+                    )
+                    | summarize VulnerabilityCount = count() by RemediationDecision, Severity = tostring(Properties.severity), BusinessImpact
+                    | project RemediationDecision, Severity, BusinessImpact, VulnerabilityCount
+                """,
+                "risk_register_query": """
+                    // Example risk register query
+                    // SELECT vuln_id, risk_score, business_impact, likelihood, remediation_cost, remediation_decision, decision_rationale
+                    // FROM vulnerability_risk_register
+                    // WHERE remediation_decision IN ('Remediate', 'Accept', 'InProgress')
+                    // AND decision_date > DATE_SUB(NOW(), INTERVAL 90 DAY)
+                """
+            }
+        }
+
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts needed to demonstrate ongoing operational remediation compliance.
+        
+        Returns artifacts for ongoing remediation activity, routine operations integration,
+        and risk-based decisions per FRR-VDR-TF-LO-07.
+        """
+        return [
+            "Ongoing vulnerability remediation activity logs from past 180 days (post-SLA or lower priority vulnerabilities)",
+            "Vulnerability remediation events integrated into routine maintenance windows and operational activities",
+            "Maintenance window schedules showing vulnerability remediation as part of routine operations",
+            "Change management records for vulnerability remediation during standard/normal change windows",
+            "Risk-based remediation decisions and rationale for remaining vulnerabilities (remediate vs accept vs defer)",
+            "Risk register showing provider decisions on which vulnerabilities to address during routine operations",
+            "Remediation priority classifications (Low/Medium vulnerabilities addressed during routine ops, High/Critical via expedited processes)",
+            "Operational metrics: vulnerability backlog reduction rate, remediation velocity, risk acceptance criteria"
+        ]
+
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
         """
         Get recommendations for automating evidence collection for FRR-VDR-TF-LO-07.
         
-        TODO: Add evidence collection guidance
+        Returns automation strategies for tracking ongoing remediation, integrating with
+        routine operations, and documenting risk-based remediation decisions.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
-            ]
+            "ongoing_remediation_tracking": {
+                "description": "Track all vulnerability remediation activity, including post-SLA and lower priority vulnerabilities addressed during routine operations",
+                "implementation": "Use Azure Monitor to log all remediation events (patching, configuration changes, compensating controls) regardless of timeframe compliance",
+                "rationale": "Demonstrates ongoing operational remediation per FRR-VDR-TF-LO-07 SHOULD requirement - provider addresses remaining vulnerabilities as determined necessary"
+            },
+            "maintenance_window_integration": {
+                "description": "Integrate vulnerability remediation into routine maintenance window planning and execution",
+                "implementation": "Use change management system to tag maintenance windows including vulnerability remediation, track remediation rate per maintenance cycle",
+                "rationale": "Shows vulnerability remediation is part of routine operations, not just reactive incident response (Low impact relaxed approach)"
+            },
+            "risk_based_decision_documentation": {
+                "description": "Document provider decisions on which remaining vulnerabilities to remediate vs accept based on risk assessment",
+                "implementation": "Use risk register or ticketing system to record remediation decisions with rationale (business impact, remediation cost, compensating controls)",
+                "rationale": "Demonstrates provider determines necessity of remediation per FRR-VDR-TF-LO-07 - 'as determined necessary by the provider'"
+            },
+            "backlog_reduction_metrics": {
+                "description": "Track vulnerability backlog reduction over time to show ongoing remediation progress",
+                "implementation": "Use compliance dashboard to visualize total open vulnerabilities, remediation velocity (vulns closed per week/month), backlog age distribution",
+                "rationale": "Provides evidence that remaining vulnerabilities are being addressed during routine operations, even if at relaxed pace (Low impact)"
+            },
+            "remediation_priority_framework": {
+                "description": "Implement remediation priority framework: Urgent (within SLA) vs Routine (during operations)",
+                "implementation": "Classify vulnerabilities as Urgent (High/Critical, internet-exposed, exploitable) or Routine (Low/Medium, internal, theoretical) for scheduling",
+                "rationale": "Enables systematic remediation: Urgent via dedicated effort, Routine via operational integration per FRR-VDR-TF-LO-07"
+            }
         }

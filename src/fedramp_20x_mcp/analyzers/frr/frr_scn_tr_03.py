@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -253,47 +253,48 @@ class FRR_SCN_TR_03_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-SCN-TR-03.
+        Provides queries for collecting evidence of FRR-SCN-TR-03 compliance.
         
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        Returns:
+            Dict containing query strings for various platforms
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "azure_resource_graph": [
+                "Resources | where type =~ 'microsoft.insights/actiongroups' | project id, name, properties",
+                "Resources | where type =~ 'microsoft.logic/workflows' | project id, name"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "azure_cli": [
+                "az monitor action-group list --query '[].{Name:name, Enabled:enabled}'",
+                "az logic workflow list --query '[].{Name:name, State:state}'"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Lists artifacts to collect as evidence of FRR-SCN-TR-03 compliance.
+        
+        Returns:
+            List of artifact descriptions
+        """
+        return [
+            "Final transformative change plans",
+            "10-day notification timeline documentation",
+            "Final notification delivery logs",
+            "Updated security impact assessments",
+            "Stakeholder acknowledgment of final plans"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Provides recommendations for automating evidence collection for FRR-SCN-TR-03.
+        
+        Returns:
+            Dict mapping automation areas to implementation guidance
+        """
+        return {
+            "final_notification": "Automate final notification workflow triggered 10 days before implementation",
+            "timeline_enforcement": "Use change management system to enforce 10-day timeline",
+            "acknowledgment_tracking": "Implement automated tracking of stakeholder acknowledgments"
         }

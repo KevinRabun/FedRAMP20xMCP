@@ -245,47 +245,97 @@ class FRR_RSC_10_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> dict:
         """
-        Get recommendations for automating evidence collection for FRR-RSC-10.
+        Get KQL queries and API endpoints for collecting FRR-RSC-10 evidence.
         
-        TODO: Add evidence collection guidance
+        Returns automated queries to collect evidence of versioning and release
+        history for recommended secure default settings.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "automated_queries": [
+                # Azure DevOps: Repository commits for baseline configuration
+                """Resources
+                | where type =~ 'microsoft.devops/repository'
+                | where name contains 'baseline' or name contains 'defaults' or name contains 'security-config'
+                | project name, type, resourceGroup, subscriptionId, lastCommitDate=properties.lastCommitDate""",
+                
+                # Azure Storage: Versioned configuration files
+                """Resources
+                | where type =~ 'microsoft.storage/storageaccounts'
+                | extend hasVersioning = properties.blobContainerVersioning == 'Enabled'
+                | where hasVersioning == true
+                | project name, type, resourceGroup, subscriptionId, versioningEnabled=properties.blobContainerVersioning""",
+                
+                # GitHub API: Release history for secure defaults
+                """# Manual: GET https://api.github.com/repos/{org}/{repo}/releases
+                # Filter for repos containing secure configuration baselines
+                # Extract: version tags, release dates, change descriptions"""
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "manual_queries": [
+                "Review GitHub/Azure DevOps release history for baseline configurations",
+                "Check CHANGELOG.md or RELEASE-NOTES.md for version history",
+                "Verify semantic versioning (e.g., v1.0.0, v1.1.0) for baseline changes"
+            ]
+        }
+    
+    def get_evidence_artifacts(self) -> dict:
+        """
+        Get list of evidence artifacts for FRR-RSC-10 compliance.
+        
+        Returns documentation and files demonstrating versioning and release
+        history for secure default settings.
+        """
+        return {
+            "evidence_artifacts": [
+                "VERSIONING-POLICY.md - Policy requiring versioning for secure defaults",
+                "CHANGELOG.md - Release history for baseline configuration changes",
+                "baselines/v1.0.0/ - Versioned baseline configuration files",
+                "baselines/v1.1.0/ - Updated baseline with change description",
+                "RELEASE-NOTES.md - Detailed release notes for each version",
+                "VERSION-TAGS.txt - Git tags showing version history",
+                "MIGRATION-GUIDE.md - Instructions for upgrading between versions"
+            ]
+        }
+    
+    def get_evidence_automation_recommendations(self) -> dict:
+        """
+        Get recommendations for automating FRR-RSC-10 evidence collection.
+        
+        Returns guidance for implementing versioning and release history
+        for recommended secure default settings.
+        """
+        return {
+            "implementation_notes": [
+                "1. Implement semantic versioning",
+                "   - Use semantic versioning (vMAJOR.MINOR.PATCH) for baseline configurations",
+                "   - MAJOR: Breaking changes to security settings",
+                "   - MINOR: New security settings added",
+                "   - PATCH: Documentation/clarification updates",
+                "   - Example: v1.0.0 → v1.1.0 (added MFA requirement)",
+                "",
+                "2. Maintain CHANGELOG.md",
+                "   - Document all changes to secure default settings",
+                "   - Include: version, date, description of changes, security impact",
+                "   - Follow Keep a Changelog format",
+                "   - Example entry: '## [1.1.0] - 2024-01-15 - Added MFA requirement for admin accounts'",
+                "",
+                "3. Version control baseline files",
+                "   - Store baseline configurations in Git repository",
+                "   - Create Git tags for each version (e.g., git tag v1.1.0)",
+                "   - Store versioned files in separate directories (baselines/v1.0.0/, v1.1.0/)",
+                "   - Enable Azure Blob Storage versioning for published baselines",
+                "",
+                "4. Publish release notes",
+                "   - Create GitHub Releases for each baseline version",
+                "   - Include release notes explaining changes and migration steps",
+                "   - Link to updated guidance documentation",
+                "   - Notify customers of new versions via email/blog",
+                "",
+                "5. Automate version tracking",
+                "   - CI/CD pipeline to validate version bumps on baseline changes",
+                "   - Automated CHANGELOG.md updates from commit messages",
+                "   - Version number in baseline file headers",
+                "   - Example: GitHub Actions workflow checking for version tag on merge"
             ]
         }

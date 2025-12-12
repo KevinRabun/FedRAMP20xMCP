@@ -78,204 +78,95 @@ class FRR_MAS_04_Analyzer(BaseFRRAnalyzer):
         )
     
     # ============================================================================
-    # APPLICATION CODE ANALYZERS (AST-first for supported languages)
+    # APPLICATION CODE ANALYZERS
     # ============================================================================
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Python code for FRR-MAS-04 compliance using AST.
-        
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
+        """MAS-04 NOT code-detectable: Metadata documentation is operational."""
+        return []
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for FRR-MAS-04 compliance using AST.
-        
-        TODO: Implement C# analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        """MAS-04 NOT code-detectable: Metadata documentation is operational."""
+        return []
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for FRR-MAS-04 compliance using AST.
-        
-        TODO: Implement Java analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        """MAS-04 NOT code-detectable: Metadata documentation is operational."""
+        return []
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for FRR-MAS-04 compliance using AST.
-        
-        TODO: Implement TypeScript analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
-        return findings
+        """MAS-04 NOT code-detectable: Metadata documentation is operational."""
+        return []
     
     # ============================================================================
     # INFRASTRUCTURE AS CODE ANALYZERS (Regex-based)
     # ============================================================================
     
     def analyze_bicep(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Bicep infrastructure code for FRR-MAS-04 compliance.
-        
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        """MAS-04 NOT code-detectable: Metadata documentation is operational."""
+        return []
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Terraform infrastructure code for FRR-MAS-04 compliance.
-        
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        """MAS-04 NOT code-detectable: Metadata documentation is operational."""
+        return []
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
     # ============================================================================
     
     def analyze_github_actions(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitHub Actions workflow for FRR-MAS-04 compliance.
-        
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        """MAS-04 NOT code-detectable: Metadata documentation is operational."""
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Azure Pipelines YAML for FRR-MAS-04 compliance.
-        
-        TODO: Implement Azure Pipelines analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        """MAS-04 NOT code-detectable: Metadata documentation is operational."""
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitLab CI YAML for FRR-MAS-04 compliance.
-        
-        TODO: Implement GitLab CI analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        """MAS-04 NOT code-detectable: Metadata documentation is operational."""
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
-        """
-        Get recommendations for automating evidence collection for FRR-MAS-04.
-        
-        TODO: Add evidence collection guidance
-        """
+    def get_evidence_collection_queries(self) -> dict:
+        """KQL queries for metadata documentation."""
+        from typing import Dict, Any
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "automated_queries": [
+                "# Query 1: Resources with metadata tags\nResources\n| extend Metadata = tostring(tags)\n| extend DataClassification = tostring(tags.dataClassification)\n| extend Owner = tostring(tags.owner)\n| project name, type, location, DataClassification, Owner, Metadata",
+                "# Query 2: Resource Groups with metadata\nResourceContainers\n| where type == 'microsoft.resources/subscriptions/resourcegroups'\n| extend Tags = tostring(tags)\n| project name, location, Tags",
+                "# Query 3: Resources handling federal data\nResources\n| where tags contains 'federalData' or tags contains 'pii'\n| project name, type, tags"
+            ]
+        }
+
+    def get_evidence_artifacts(self) -> dict:
+        """Required evidence artifacts for FRR-MAS-04."""
+        from typing import Dict, Any
+        return {
+            "evidence_artifacts": [
+                "Resource metadata documentation (tags, labels, annotations)",
+                "Data classification metadata for federal customer data",
+                "Resource ownership and responsibility metadata",
+                "Data lifecycle metadata (retention, disposal)",
+                "Security classification metadata",
+                "Compliance scope metadata",
+                "Metadata schema definition and standards",
+                "Metadata validation procedures and evidence"
+            ]
+        }
+
+    def get_evidence_automation_recommendations(self) -> dict:
+        """Implementation recommendations for FRR-MAS-04."""
+        from typing import Dict, Any
+        return {
+            "implementation_notes": [
+                "Implement consistent resource tagging strategy with metadata standards",
+                "Include data classification metadata for federal customer data",
+                "Document resource ownership and responsibility in metadata",
+                "Use Azure Policy to enforce required metadata tags",
+                "Implement metadata validation in deployment pipelines",
+                "Maintain metadata schema documentation",
+                "Review and update metadata quarterly for accuracy"
             ]
         }

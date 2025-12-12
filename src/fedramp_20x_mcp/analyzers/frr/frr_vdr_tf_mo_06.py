@@ -10,7 +10,7 @@ Impact Levels: Moderate
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,39 @@ class FRR_VDR_TF_MO_06_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
-        """
-        Get recommendations for automating evidence collection for FRR-VDR-TF-MO-06.
-        
-        TODO: Add evidence collection guidance
-        """
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """Get queries for N4/N5 incident handling (Moderate: treat internet-reachable exploitable N4/N5 as incidents)."""
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
-            ]
+            "N4/N5 vulnerability incident tracking": {
+                "description": "Track internet-reachable likely exploitable N4/N5 vulns as security incidents",
+                "defender_kql": "SecurityIncident | where IncidentSource == 'Vulnerability' and ImpactLevel in ('N4', 'N5') and InternetReachable == true and LikelyExploitable == true"
+            },
+            "Incident closure tracking": {
+                "description": "Track incident closure when N4/N5 vulns mitigated to N3 or below"
+            },
+            "Internet reachability verification": {
+                "description": "Verify internet-reachability status for N4/N5 vulns"
+            }
+        }
+
+    def get_evidence_artifacts(self) -> List[str]:
+        """Get artifacts for N4/N5 incident handling."""
+        return [
+            "Security incident records for N4/N5 vulnerabilities",
+            "Internet reachability assessment reports",
+            "Exploit likelihood analysis for N4/N5 vulns",
+            "Incident closure documentation when mitigated to N3 or below"
+        ]
+
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """Get automation recommendations for N4/N5 incident handling."""
+        return {
+            "automated_incident_creation": {
+                "description": "Auto-create incidents for internet-reachable exploitable N4/N5 vulns",
+                "rationale": "Ensures N4/N5 vulns treated as incidents per FRR-VDR-TF-MO-06"
+            },
+            "automated_incident_closure": {
+                "description": "Auto-close incidents when vulns mitigated to N3 or below",
+                "rationale": "Tracks incident lifecycle per FRR-VDR-TF-MO-06 mitigation criteria"
+            }
         }

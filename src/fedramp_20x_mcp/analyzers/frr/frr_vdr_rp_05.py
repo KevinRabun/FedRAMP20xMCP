@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,45 @@ class FRR_VDR_RP_05_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-RP-05.
+        Get queries for collecting evidence of comprehensive vulnerability details reporting.
         
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        Returns queries to verify required fields included in vulnerability reports (non-accepted).
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "Monthly report content verification": [
+                "SecurityReports | where ReportType == 'Vulnerability Monthly Summary' | where TimeGenerated > ago(90d) | extend HasRequiredFields = (Content contains 'CVE' or Content contains 'vulnerability ID') and Content contains 'severity' and Content contains 'affected resources' | project TimeGenerated, HasRequiredFields, VulnerabilityCount",
+                "VulnerabilityReports | where TimeGenerated > ago(30d) | where Status != 'Accepted' | summarize ReportedCount=count() by HasCVE=isnotnull(CVEID), HasSeverity=isnotnull(Severity), HasAffectedResources=isnotnull(AffectedResources), HasDetectionDate=isnotnull(DetectionDate)"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "Required vulnerability fields tracking": [
+                "microsoft.security/assessments | where properties.status.code != 'Healthy' | extend HasRequiredFields = isnotnull(properties.resourceDetails.id) and isnotnull(properties.status.severity) and isnotnull(properties.metadata.displayName) | summarize VulnerabilitiesWithFields=countif(HasRequiredFields == true), Total=count()",
+                "DefenderFindings | where TimeGenerated > ago(30d) | where Status != 'Accepted' | project VulnerabilityID, HasCVE=isnotnull(CVEID), HasSeverity=isnotnull(Severity), HasAffectedResource=isnotnull(ResourceID), HasDetectionDate=isnotnull(TimeGenerated), HasRemediationGuidance=isnotnull(RemediationSteps)"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for vulnerability details reporting.
+        """
+        return [
+            "Monthly VDR reports with comprehensive vulnerability details (last 12 months)",
+            "Vulnerability tracking database with required fields (CVE/ID, severity, affected resources, detection date, remediation status)",
+            "Report templates showing mandatory fields for non-accepted vulnerabilities",
+            "Sample vulnerability entries demonstrating complete information",
+            "Vulnerability management system configuration (required fields enforcement)",
+            "Data completeness metrics (percentage of vulnerabilities with all required fields)",
+            "Accepted vulnerabilities separately tracked (excluded from detailed reporting per FRR-VDR-RP-06)"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Get recommendations for automating evidence collection.
+        """
+        return {
+            "Required fields enforcement": "Configure vulnerability tracking systems to require all mandatory fields for non-accepted vulnerabilities (CVE/ID, severity, affected resources, detection date, remediation status)",
+            "Automated data validation": "Implement pre-report validation checks ensuring all non-accepted vulnerabilities have complete required information before report generation",
+            "Template-based reporting": "Use standardized report templates that automatically populate required vulnerability details from tracking systems (Azure Monitor Workbooks, Power BI)",
+            "Accepted vulnerability filtering": "Automatically exclude accepted vulnerabilities from detailed reporting requirements (separate tracking per FRR-VDR-RP-06)",
+            "Completeness monitoring": "Track and alert on vulnerabilities missing required information fields, ensure data quality before monthly reporting"
         }

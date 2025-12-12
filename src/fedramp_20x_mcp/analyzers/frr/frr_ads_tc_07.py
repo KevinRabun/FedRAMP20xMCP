@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -91,42 +91,59 @@ class FRR_ADS_TC_07_Analyzer(BaseFRRAnalyzer):
         - Response time optimization
         """
         findings = []
-        lines = code.split('\n')
         
-        # Try AST analysis first
         try:
             parser = ASTParser(CodeLanguage.PYTHON)
             tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
             if tree and tree.root_node:
-                code_bytes = code.encode('utf-8')
+                # Check for performance-related functions
+                func_defs = parser.find_nodes_by_type(tree.root_node, 'function_definition')
+                for func_def in func_defs:
+                    func_text = parser.get_node_text(func_def, code_bytes)
+                    func_lower = func_text.lower()
+                    
+                    if any(keyword in func_lower for keyword in ['monitor_performance', 'health_check', 'response_time', 'latency', 'availability', 'uptime']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Performance monitoring function detected",
+                            description="Found function for monitoring performance or availability",
+                            severity=Severity.INFO,
+                            line_number=func_def.start_point[0] + 1,
+                            code_snippet=func_text.split('\n')[0],
+                            recommendation="Ensure responsive performance and minimal service disruptions."
+                        ))
                 
-                # Check for performance functions
-                performance_functions = ['monitor_performance', 'check_response_time', 'measure_latency', 'health_check']
-                for func_name in performance_functions:
-                    func_nodes = parser.find_nodes_by_type(tree.root_node, 'function_definition')
-                    for node in func_nodes:
-                        node_text = parser.get_node_text(node, code_bytes)
-                        if func_name in node_text.lower():
-                            line_num = node.start_point[0] + 1
-                            findings.append(Finding(
-                                frr_id=self.FRR_ID,
-                                title="Performance monitoring detected",
-                                description=f"Found performance function: {func_name}",
-                                severity=Severity.INFO,
-                                line_number=line_num,
-                                code_snippet=lines[line_num-1].strip() if line_num <= len(lines) else "",
-                                recommendation="Ensure responsive performance and minimized service disruptions."
-                            ))
+                # Check for timeout/retry configurations
+                assignments = parser.find_nodes_by_type(tree.root_node, 'assignment')
+                for assignment in assignments:
+                    assign_text = parser.get_node_text(assignment, code_bytes).lower()
+                    if any(keyword in assign_text for keyword in ['timeout', 'retry', 'backoff', 'circuit_breaker']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Resilience configuration detected",
+                            description="Found timeout/retry configuration for service disruption minimization",
+                            severity=Severity.INFO,
+                            line_number=assignment.start_point[0] + 1,
+                            code_snippet=assign_text.split('\n')[0],
+                            recommendation="Verify configuration supports responsive performance."
+                        ))
+                
+                return findings
         except Exception:
             pass
         
         # Regex fallback
+        lines = code.split('\n')
         performance_patterns = [
             r'performance.*monitor',
             r'response.*time',
             r'minimize.*disruption',
             r'service.*availability',
             r'health.*check',
+            r'timeout',
+            r'retry.*policy',
         ]
         
         for i, line in enumerate(lines, 1):
@@ -135,69 +152,182 @@ class FRR_ADS_TC_07_Analyzer(BaseFRRAnalyzer):
                     findings.append(Finding(
                         frr_id=self.FRR_ID,
                         title="Performance mechanism detected",
-                        description=f"Found performance pattern: {pattern}",
+                        description=f"Found pattern: {pattern}",
                         severity=Severity.INFO,
                         line_number=i,
                         code_snippet=line.strip(),
-                        recommendation="Ensure trust center delivers responsive performance with minimal disruptions."
+                        recommendation="Ensure responsive performance with minimal disruptions."
                     ))
                     break
         
-        return findings
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze C# code for FRR-ADS-TC-07 compliance using AST.
         
-        TODO: Implement C# analysis
+        Detects performance and availability mechanisms in C#.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for C#
+        try:
+            parser = ASTParser(CodeLanguage.CSHARP)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                # Check method declarations
+                method_declarations = parser.find_nodes_by_type(tree.root_node, 'method_declaration')
+                for method in method_declarations:
+                    method_text = parser.get_node_text(method, code_bytes)
+                    method_lower = method_text.lower()
+                    
+                    if any(keyword in method_lower for keyword in ['monitorperformance', 'healthcheck', 'responsetime', 'latency', 'availability']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Performance monitoring method detected",
+                            description="Found method for monitoring performance or availability",
+                            severity=Severity.INFO,
+                            line_number=method.start_point[0] + 1,
+                            code_snippet=method_text.split('\n')[0],
+                            recommendation="Ensure responsive performance with minimal disruptions."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(?:MonitorPerformance|HealthCheck|ResponseTime|Timeout|RetryPolicy)', line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Performance mechanism detected",
+                    description="Found performance or resilience code",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Verify responsive performance configuration."
+                ))
+        
         return findings
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Java code for FRR-ADS-TC-07 compliance using AST.
         
-        TODO: Implement Java analysis
+        Detects performance and availability mechanisms in Java.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for Java
+        try:
+            parser = ASTParser(CodeLanguage.JAVA)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                # Check method declarations
+                method_declarations = parser.find_nodes_by_type(tree.root_node, 'method_declaration')
+                for method in method_declarations:
+                    method_text = parser.get_node_text(method, code_bytes)
+                    method_lower = method_text.lower()
+                    
+                    if any(keyword in method_lower for keyword in ['monitorperformance', 'healthcheck', 'responsetime', 'latency', 'availability']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Performance monitoring method detected",
+                            description="Found method for monitoring performance or availability",
+                            severity=Severity.INFO,
+                            line_number=method.start_point[0] + 1,
+                            code_snippet=method_text.split('\n')[0],
+                            recommendation="Ensure responsive performance with minimal disruptions."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(?:monitorPerformance|healthCheck|responseTime|timeout|retryPolicy)', line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Performance mechanism detected",
+                    description="Found performance or resilience code",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Verify responsive performance configuration."
+                ))
+        
         return findings
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze TypeScript/JavaScript code for FRR-ADS-TC-07 compliance using AST.
         
-        TODO: Implement TypeScript analysis
+        Detects performance and availability mechanisms in TypeScript/JavaScript.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for TypeScript
+        try:
+            parser = ASTParser(CodeLanguage.TYPESCRIPT)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                # Check function declarations
+                function_declarations = parser.find_nodes_by_type(tree.root_node, 'function_declaration')
+                for func_decl in function_declarations:
+                    func_text = parser.get_node_text(func_decl, code_bytes)
+                    func_lower = func_text.lower()
+                    
+                    if any(keyword in func_lower for keyword in ['monitorperformance', 'healthcheck', 'responsetime', 'latency', 'availability']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Performance monitoring function detected",
+                            description="Found function for monitoring performance or availability",
+                            severity=Severity.INFO,
+                            line_number=func_decl.start_point[0] + 1,
+                            code_snippet=func_text.split('\n')[0],
+                            recommendation="Ensure responsive performance with minimal disruptions."
+                        ))
+                
+                # Check arrow functions
+                arrow_functions = parser.find_nodes_by_type(tree.root_node, 'arrow_function')
+                for arrow_func in arrow_functions:
+                    func_text = parser.get_node_text(arrow_func, code_bytes)
+                    if any(keyword in func_text.lower() for keyword in ['performance', 'health', 'timeout', 'retry']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Performance handler detected",
+                            description="Found handler for performance monitoring",
+                            severity=Severity.INFO,
+                            line_number=arrow_func.start_point[0] + 1,
+                            code_snippet=func_text.split('\n')[0],
+                            recommendation="Verify performance optimization."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(?:monitorPerformance|healthCheck|responseTime|timeout|retryPolicy)', line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Performance mechanism detected",
+                    description="Found performance or resilience code",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Verify responsive performance configuration."
+                ))
+        
         return findings
     
     # ============================================================================
@@ -208,16 +338,51 @@ class FRR_ADS_TC_07_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Bicep infrastructure code for FRR-ADS-TC-07 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        Detects high-availability and performance configurations.
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
+        # Check for availability zones
+        availability_zones_pattern = r"zones\s*:\s*\["
+        # Check for autoscaling
+        autoscale_pattern = r"resource\s+\w+\s+'Microsoft\.Insights/autoscaleSettings@"
+        # Check for Application Gateway with WAF
+        app_gateway_pattern = r"resource\s+\w+\s+'Microsoft\.Network/applicationGateways@"
+        
+        for i, line in enumerate(lines, 1):
+            if re.search(availability_zones_pattern, line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Availability zones configuration detected",
+                    description="Found availability zones for high availability",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Availability zones help minimize service disruptions."
+                ))
+            
+            if re.search(autoscale_pattern, line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Autoscaling configuration detected",
+                    description="Found autoscale settings for responsive performance",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Autoscaling helps maintain responsive performance under load."
+                ))
+            
+            if re.search(app_gateway_pattern, line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Application Gateway detected",
+                    description="Found Application Gateway for load balancing and performance",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Application Gateway helps ensure responsive performance."
+                ))
         
         return findings
     
@@ -225,14 +390,52 @@ class FRR_ADS_TC_07_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Terraform infrastructure code for FRR-ADS-TC-07 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        Detects high-availability and performance configurations.
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement Terraform regex patterns
+        # Check for availability zones
+        availability_zones_pattern = r'availability_zones\s*='
+        # Check for autoscaling
+        autoscale_pattern = r'resource\s+"azurerm_monitor_autoscale_setting"'
+        # Check for load balancing
+        load_balancer_pattern = r'resource\s+"(?:azurerm_lb|aws_lb|google_compute_forwarding_rule)"'
+        
+        for i, line in enumerate(lines, 1):
+            if re.search(availability_zones_pattern, line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Availability zones configuration detected",
+                    description="Found availability zones for high availability",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Availability zones help minimize service disruptions."
+                ))
+            
+            if re.search(autoscale_pattern, line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Autoscaling configuration detected",
+                    description="Found autoscale settings for responsive performance",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Autoscaling helps maintain responsive performance under load."
+                ))
+            
+            if re.search(load_balancer_pattern, line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Load balancer detected",
+                    description="Found load balancer for performance and availability",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Load balancing helps ensure responsive performance."
+                ))
+        
         return findings
     
     # ============================================================================
@@ -243,39 +446,38 @@ class FRR_ADS_TC_07_Analyzer(BaseFRRAnalyzer):
         """
         Analyze GitHub Actions workflow for FRR-ADS-TC-07 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        NOT APPLICABLE: Responsive performance and service disruption minimization are
+        runtime application and infrastructure concerns, not CI/CD pipeline concerns.
+        The requirement mandates that trust centers deliver responsive performance during
+        operations, which is implemented through application architecture, infrastructure
+        design (load balancing, autoscaling, availability zones), and monitoring, not
+        through build or deployment automation.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Azure Pipelines YAML for FRR-ADS-TC-07 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        NOT APPLICABLE: Responsive performance and service disruption minimization are
+        runtime application and infrastructure concerns, not CI/CD pipeline concerns.
+        The requirement mandates operational performance characteristics, which are
+        implemented through application code and infrastructure configuration, not
+        build or deployment automation.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze GitLab CI YAML for FRR-ADS-TC-07 compliance.
         
-        TODO: Implement GitLab CI analysis
+        NOT APPLICABLE: Responsive performance and service disruption minimization are
+        runtime application and infrastructure concerns, not CI/CD pipeline concerns.
+        The requirement mandates operational performance characteristics, which are
+        implemented through application code and infrastructure configuration, not
+        build or deployment automation.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
@@ -284,44 +486,84 @@ class FRR_ADS_TC_07_Analyzer(BaseFRRAnalyzer):
     def get_evidence_automation_recommendations(self) -> dict:
         """
         Get recommendations for automating evidence collection for FRR-ADS-TC-07.
-        
-        TODO: Add evidence collection guidance
         """
         return {
             'frr_id': self.FRR_ID,
             'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
+            'code_detectable': 'Yes',
+            'automation_approach': 'Automated detection through application code, infrastructure configuration analysis',
             'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+                "performance_metrics_report.json",
+                "availability_report.json",
+                "health_check_logs.json",
+                "autoscaling_configurations.json",
+                "load_balancer_configs.json",
+                "service_disruption_logs.json",
+                "infrastructure_availability_zones.json",
+                "performance_slo_definitions.md",
+                "performance_baseline_report.pdf",
+                "mttr_analysis_report.json",
             ],
             'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+                "AzureMetrics | where MetricName in ('ResponseTime', 'Availability') | summarize avg(Average), max(Maximum) by bin(TimeGenerated, 1h)",
+                "requests | summarize avg(duration), percentile(duration, 95), percentile(duration, 99) by bin(timestamp, 1h)",
+                "availabilityResults | where name == 'HealthCheck' | summarize SuccessRate=100.0*countif(success == true)/count() by bin(timestamp, 1h)",
+                "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.Insights/autoscalesettings",
+                "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.Network/loadBalancers",
+                "traces | where severityLevel >= 3 and (message contains 'disruption' or message contains 'outage')",
             ],
             'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
+                "1. Review documented performance SLOs and compare to actual metrics",
+                "2. Verify availability targets meet operational requirements (e.g., 99.9% uptime)",
+                "3. Validate health check endpoints respond within acceptable timeframes",
+                "4. Review autoscaling policies align with performance requirements",
+                "5. Confirm high-availability configurations (availability zones, load balancing)",
+                "6. Analyze service disruption logs and MTTR metrics",
             ],
             'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
+                "Azure Application Insights - Detailed performance telemetry and monitoring",
+                "Azure Monitor - Availability tracking and health checks",
+                "Azure Load Balancer / Application Gateway - Responsive performance and high availability",
+                "Azure Autoscale - Dynamic scaling for responsive performance",
+                "Azure Availability Zones - Minimize service disruptions",
             ],
             'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                "Export performance metrics to OSCAL format for automated reporting",
+                "Integrate with incident management systems for disruption tracking",
+                "Connect to capacity planning tools for performance optimization",
             ]
         }
+    
+    def get_evidence_collection_queries(self) -> Dict[str, str]:
+        """
+        Get queries for collecting evidence of FRR-ADS-TC-07 compliance.
+        
+        Returns dict mapping query names to query strings.
+        """
+        return {
+            "performance_metrics": "SELECT avg(duration), percentile(duration, 95) FROM requests WHERE timestamp > ago(7d)",
+            "availability_percentage": "SELECT count(*) as total, countif(success == true) as successful FROM requests WHERE timestamp > ago(30d)",
+            "health_check_status": "SELECT timestamp, resultCode, duration FROM availabilityResults WHERE name == 'HealthCheck' ORDER BY timestamp DESC",
+            "autoscaling_config": "az monitor autoscale show --resource-group <rg> --name <autoscale-name>",
+            "load_balancer_health": "az network lb probe list --resource-group <rg> --lb-name <lb-name>",
+            "service_disruptions": "SELECT timestamp, message FROM traces WHERE severityLevel >= 3 AND message contains 'disruption' OR message contains 'outage'",
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for FRR-ADS-TC-07 compliance.
+        
+        Returns list of artifact filenames.
+        """
+        return [
+            "performance_metrics_report.json",
+            "availability_report.json",
+            "health_check_logs.json",
+            "autoscaling_configurations.json",
+            "load_balancer_configs.json",
+            "service_disruption_logs.json",
+            "infrastructure_availability_zones.json",
+            "performance_slo_definitions.md",
+            "performance_baseline_report.pdf",
+            "mttr_analysis_report.json",
+        ]

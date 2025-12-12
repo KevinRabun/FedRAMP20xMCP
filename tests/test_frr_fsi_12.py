@@ -30,12 +30,23 @@ def test_analyzer_metadata():
 
 
 def test_evidence_automation_recommendations():
-    """Test evidence automation recommendations."""
+    """Test evidence collection methods return correct structure."""
     analyzer = FRR_FSI_12_Analyzer()
     
+    # Test get_evidence_collection_queries returns automated_queries
+    queries = analyzer.get_evidence_collection_queries()
+    assert isinstance(queries, dict), "Queries should be dict"
+    assert 'automated_queries' in queries, "Should have automated_queries key"
+    
+    # Test get_evidence_artifacts returns evidence_artifacts
+    artifacts = analyzer.get_evidence_artifacts()
+    assert isinstance(artifacts, dict), "Artifacts should be dict"
+    assert 'evidence_artifacts' in artifacts, "Should have evidence_artifacts key"
+    
+    # Test get_evidence_automation_recommendations returns implementation_notes
     recommendations = analyzer.get_evidence_automation_recommendations()
-    assert recommendations['frr_id'] == "FRR-FSI-12", "FRR_ID mismatch"
-    # TODO: Add more assertions for evidence recommendations
+    assert isinstance(recommendations, dict), "Recommendations should be dict"
+    assert 'implementation_notes' in recommendations, "Should have implementation_notes key"
     
     print("[PASS] test_evidence_automation_recommendations PASSED")
 

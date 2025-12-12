@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import Dict, List, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -81,74 +81,56 @@ class FRR_FSI_03_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Python code for FRR-FSI-03 compliance using AST.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST send emergency messages from specific addresses (fedramp_security@gsa.gov
+        or fedramp_security@fedramp.gov). This is a FedRAMP operational requirement
+        about sender address configuration, not a CSP code requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze C# code for FRR-FSI-03 compliance using AST.
         
-        TODO: Implement C# analysis
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST send emergency messages from specific addresses (fedramp_security@gsa.gov
+        or fedramp_security@fedramp.gov). This is a FedRAMP operational requirement
+        about sender address configuration, not a CSP code requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Java code for FRR-FSI-03 compliance using AST.
         
-        TODO: Implement Java analysis
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST send emergency messages from specific addresses (fedramp_security@gsa.gov
+        or fedramp_security@fedramp.gov). This is a FedRAMP operational requirement
+        about sender address configuration, not a CSP code requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze TypeScript/JavaScript code for FRR-FSI-03 compliance using AST.
         
-        TODO: Implement TypeScript analysis
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST send emergency messages from specific addresses (fedramp_security@gsa.gov
+        or fedramp_security@fedramp.gov). This is a FedRAMP operational requirement
+        about sender address configuration, not a CSP code requirement.
         """
-        findings = []
-        lines = code.split('\n')
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
+    
+    def analyze_javascript(self, code: str, file_path: str = "") -> List[Finding]:
+        """
+        Analyze JavaScript code for FRR-FSI-03 compliance using AST.
         
-        # TODO: Implement AST analysis for TypeScript
-        return findings
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST send emergency messages from specific addresses (fedramp_security@gsa.gov
+        or fedramp_security@fedramp.gov). This is a FedRAMP operational requirement
+        about sender address configuration, not a CSP code requirement.
+        """
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     # ============================================================================
     # INFRASTRUCTURE AS CODE ANALYZERS (Regex-based)
@@ -158,32 +140,23 @@ class FRR_FSI_03_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Bicep infrastructure code for FRR-FSI-03 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST send emergency messages from specific addresses (fedramp_security@gsa.gov
+        or fedramp_security@fedramp.gov). This is a FedRAMP operational requirement
+        about sender address configuration, not a CSP infrastructure requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Terraform infrastructure code for FRR-FSI-03 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST send emergency messages from specific addresses (fedramp_security@gsa.gov
+        or fedramp_security@fedramp.gov). This is a FedRAMP operational requirement
+        about sender address configuration, not a CSP infrastructure requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
@@ -193,85 +166,168 @@ class FRR_FSI_03_Analyzer(BaseFRRAnalyzer):
         """
         Analyze GitHub Actions workflow for FRR-FSI-03 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST send emergency messages from specific addresses (fedramp_security@gsa.gov
+        or fedramp_security@fedramp.gov). This is a FedRAMP operational requirement
+        about sender address configuration, not a CSP CI/CD requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Azure Pipelines YAML for FRR-FSI-03 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST send emergency messages from specific addresses (fedramp_security@gsa.gov
+        or fedramp_security@fedramp.gov). This is a FedRAMP operational requirement
+        about sender address configuration, not a CSP CI/CD requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze GitLab CI YAML for FRR-FSI-03 compliance.
         
-        TODO: Implement GitLab CI analysis
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST send emergency messages from specific addresses (fedramp_security@gsa.gov
+        or fedramp_security@fedramp.gov). This is a FedRAMP operational requirement
+        about sender address configuration, not a CSP CI/CD requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     # ============================================================================
-    # EVIDENCE COLLECTION SUPPORT
+    # EVIDENCE COLLECTION METHODS
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
         """
-        Get recommendations for automating evidence collection for FRR-FSI-03.
+        Return automated evidence collection queries for FRR-FSI-03.
         
-        TODO: Add evidence collection guidance
+        Returns:
+            Dict containing automated query specifications.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "automated_queries": [
+                "Note: FRR-FSI-03 is a FedRAMP-side requirement. CSPs verify FedRAMP "
+                "emergency messages received are from authorized sender addresses"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        """
+        Return list of evidence artifacts needed for FRR-FSI-03 compliance.
+        
+        Returns:
+            List of evidence artifact specifications.
+        """
+        return [
+            {
+                "artifact_id": "FSI-03-01",
+                "name": "Sample Emergency Messages",
+                "description": "Sample emergency/emergency test messages from FedRAMP showing sender addresses",
+                "collection_method": "Email Archive - Export emergency messages showing from: field"
+            },
+            {
+                "artifact_id": "FSI-03-02",
+                "name": "Sender Address Validation",
+                "description": "Email headers confirming messages sent from fedramp_security@gsa.gov or fedramp_security@fedramp.gov",
+                "collection_method": "Email Header Export - Show sender authentication"
+            },
+            {
+                "artifact_id": "FSI-03-03",
+                "name": "Whitelist Configuration",
+                "description": "CSP email gateway whitelist/allow rules for FedRAMP security addresses",
+                "collection_method": "Configuration Export - Email security gateway settings"
+            },
+            {
+                "artifact_id": "FSI-03-04",
+                "name": "Alert Routing Rules",
+                "description": "CSP alert system rules for messages from fedramp_security addresses (automatic escalation)",
+                "collection_method": "Configuration Export - Incident management system rules"
+            },
+            {
+                "artifact_id": "FSI-03-05",
+                "name": "Emergency Contact Documentation",
+                "description": "Documentation listing FedRAMP emergency contact addresses in CSP runbooks",
+                "collection_method": "Document Review - Emergency response procedures"
+            },
+            {
+                "artifact_id": "FSI-03-06",
+                "name": "Message Delivery Logs",
+                "description": "Email delivery logs showing successful receipt of messages from FedRAMP security addresses",
+                "collection_method": "Log Query - Email gateway delivery logs"
+            },
+            {
+                "artifact_id": "FSI-03-07",
+                "name": "Spoofing Detection Configuration",
+                "description": "Email security configuration detecting spoofed fedramp_security addresses",
+                "collection_method": "Configuration Export - Anti-spoofing/DMARC policy settings"
+            },
+            {
+                "artifact_id": "FSI-03-08",
+                "name": "Staff Training Materials",
+                "description": "Training documentation for recognizing legitimate FedRAMP emergency communications",
+                "collection_method": "Document Review - Security awareness training materials"
+            }
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Return recommendations for automating evidence collection for FRR-FSI-03.
+        
+        Returns:
+            Dict containing automation recommendations and implementation notes.
+        """
+        return {
+            "implementation_notes": (
+                "FRR-FSI-03 is a FedRAMP-side requirement: FedRAMP MUST send Emergency and "
+                "Emergency Test designated messages from specific security addresses "
+                "(fedramp_security@gsa.gov OR fedramp_security@fedramp.gov). This is NOT a "
+                "CSP implementation requirement.\n\n"
+                
+                "CSP ROLE:\n"
+                "- Recognize FedRAMP emergency sender addresses\n"
+                "- Whitelist FedRAMP security addresses in email gateways\n"
+                "- Configure automatic escalation for messages from these addresses\n"
+                "- Verify sender authenticity (SPF/DKIM/DMARC)\n\n"
+                
+                "FEDRAMP EMERGENCY ADDRESSES:\n"
+                "- fedramp_security@gsa.gov (primary GSA-based address)\n"
+                "- fedramp_security@fedramp.gov (FedRAMP domain address)\n"
+                "Note: Emergency and Emergency Test messages MUST come from these addresses\n\n"
+                
+                "MESSAGE TYPES:\n"
+                "- Emergency: Real security incidents requiring immediate CSP response\n"
+                "- Emergency Test: Drills/tests of emergency communication channels\n"
+                "Both message types MUST use designated security sender addresses\n\n"
+                
+                "CSP EMAIL SECURITY:\n"
+                "- Whitelist: Ensure FedRAMP security addresses never blocked as spam\n"
+                "- Authentication: Verify SPF/DKIM/DMARC for sender verification\n"
+                "- Anti-spoofing: Detect and block spoofed fedramp_security messages\n"
+                "- Alert routing: Auto-escalate messages from security addresses\n\n"
+                
+                "VERIFICATION PROCESS:\n"
+                "1. Check sender address matches authorized addresses\n"
+                "2. Verify email authentication (SPF/DKIM/DMARC pass)\n"
+                "3. Check for [EMERGENCY] or [EMERGENCY TEST] subject designator\n"
+                "4. Route to incident response team immediately\n\n"
+                
+                "AUTOMATION OPPORTUNITIES:\n"
+                "1. Email parsing: Automated sender address validation\n"
+                "2. Ticket creation: Auto-generate high-priority security tickets\n"
+                "3. Alert routing: Automatically page security team for emergency messages\n"
+                "4. Delivery verification: Monitor successful receipt of emergency messages\n\n"
+                
+                "EVIDENCE COLLECTION:\n"
+                "- Sample emergency messages with headers\n"
+                "- Email gateway whitelist configuration\n"
+                "- Alert routing/escalation rules\n"
+                "- Delivery logs showing receipt\n\n"
+                
+                "Note: This requirement ensures CSPs can identify and prioritize legitimate "
+                "FedRAMP security communications. CSPs should configure email systems to "
+                "recognize and escalate messages from these addresses but do not control the "
+                "sender addresses themselves - that is FedRAMP's responsibility."
+            )
         }

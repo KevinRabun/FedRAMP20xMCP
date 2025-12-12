@@ -10,7 +10,7 @@ Impact Levels: Low
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,127 @@ class FRR_VDR_TF_LO_04_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get automated queries for collecting evidence of six-month stable resource vulnerability scanning.
+        
+        Returns structured queries for Azure Monitor, Defender for Cloud, Resource Graph,
+        and CI/CD pipeline verification for Low impact stable resource scanning (six-month cadence).
+        """
+        return {
+            "Stable resource identification": {
+                "description": "Identify information resources NOT likely to drift (IaC-managed, immutable infra, static configs)",
+                "azure_resource_graph": """
+                    Resources
+                    | where tags['ChangeFrequency'] == 'Low' or tags['ManagedBy'] == 'IaC' or tags['Infrastructure'] == 'Immutable'
+                    | where type in ('microsoft.compute/virtualmachines', 'microsoft.storage/storageaccounts', 'microsoft.sql/servers')
+                    | project name, resourceGroup, type, tags, location
+                """,
+                "kql_query": """
+                    AzureActivity
+                    | where TimeGenerated > ago(180d)
+                    | where OperationNameValue endswith 'write' or OperationNameValue endswith 'delete'
+                    | summarize ChangeCount = count() by ResourceId
+                    | where ChangeCount < 5
+                    | project ResourceId, ChangeCount, StabilityIndicator = 'Low change frequency'
+                """
+            },
+            "Six-month vulnerability scanning on stable assets": {
+                "description": "Query vulnerability scans on stable resources at least every six months (180-day cadence)",
+                "defender_for_cloud_kql": """
+                    SecurityAssessment
+                    | where TimeGenerated > ago(180d)
+                    | where AssessmentType == 'Vulnerability'
+                    | where Properties.additionalData.assessedResourceType in ('VirtualMachine', 'SqlServer', 'StorageAccount', 'ContainerRegistry')
+                    | extend ResourceStability = Properties.metadata.tags['ChangeFrequency']
+                    | where ResourceStability == 'Low' or isempty(ResourceStability)
+                    | summarize LastScan = max(TimeGenerated), ScanCount = count() by ResourceId, ResourceType = Properties.additionalData.assessedResourceType
+                    | extend DaysSinceLastScan = datetime_diff('day', now(), LastScan)
+                    | extend SixMonthCompliance = iff(DaysSinceLastScan <= 180, 'Compliant', 'NonCompliant')
+                    | project ResourceId, ResourceType, LastScan, DaysSinceLastScan, ScanCount, SixMonthCompliance
+                """,
+                "azure_monitor_kql": """
+                    AzureDiagnostics
+                    | where Category == 'VulnerabilityAssessment'
+                    | where TimeGenerated > ago(180d)
+                    | extend ResourceStability = tostring(parse_json(properties_s).resourceTags.ChangeFrequency)
+                    | where ResourceStability == 'Low' or isempty(ResourceStability)
+                    | summarize LastScan = max(TimeGenerated), ScanCount = count() by Resource
+                    | extend DaysSinceLastScan = datetime_diff('day', now(), LastScan)
+                    | project Resource, LastScan, DaysSinceLastScan, ScanCount, SixMonthCompliance = iff(DaysSinceLastScan <= 180, 'Yes', 'No')
+                """
+            },
+            "Persistent stable resource scanning verification": {
+                "description": "Verify persistent vulnerability detection jobs for stable resources with six-month schedule",
+                "scheduled_jobs_query": """
+                    Resources
+                    | where type == 'microsoft.security/automations' or type == 'microsoft.compute/virtualmachines/extensions'
+                    | where properties.schedule.frequency == 'Month' and properties.schedule.interval == 6
+                    | where properties.targetResourceFilter contains 'ChangeFrequency=Low'
+                    | project name, resourceGroup, scheduleFrequency = properties.schedule.frequency, scheduleInterval = properties.schedule.interval, enabled = properties.enabled, targetFilter = properties.targetResourceFilter
+                """,
+                "automation_account_query": """
+                    AzureDiagnostics
+                    | where Category == 'JobLogs'
+                    | where RunbookName_s contains 'VulnerabilityScan' or RunbookName_s contains 'StableResourceAssessment'
+                    | where TimeGenerated > ago(180d)
+                    | extend ScheduleType = extract(@'Schedule=(\\w+)', 1, JobParameters_s)
+                    | where ScheduleType == 'SixMonth' or ScheduleType == 'Quarterly'
+                    | summarize RunCount = count(), LastRun = max(TimeGenerated) by RunbookName_s, ScheduleType
+                    | project RunbookName_s, ScheduleType, RunCount, LastRun, PersistenceStatus = 'Active'
+                """
+            }
+        }
+
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts needed to demonstrate six-month stable resource vulnerability scanning compliance.
+        
+        Returns artifacts for stable resource inventory, scanning schedules, execution logs,
+        and vulnerability assessment results per FRR-VDR-TF-LO-04.
+        """
+        return [
+            "Stable resource inventory with low drift indicators (IaC-managed, immutable infrastructure, static configurations)",
+            "Six-month vulnerability scanning schedule for stable resources (180-day cadence)",
+            "Vulnerability scan execution logs for past 365 days showing six-month frequency on stable assets",
+            "Vulnerability detection results from stable resource assessments (baseline scans at six-month intervals)",
+            "Vulnerability findings and severity classifications from stable resource scans",
+            "Persistent vulnerability scanning job configurations and automation schedules (six-month intervals)",
+            "Stable resource risk classifications and baseline stability metrics",
+            "Stable resource baseline configuration snapshots for vulnerability comparison across six-month periods"
+        ]
+
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
         """
         Get recommendations for automating evidence collection for FRR-VDR-TF-LO-04.
         
-        TODO: Add evidence collection guidance
+        Returns automation strategies for stable resource tagging, six-month scheduled scanning,
+        baseline configuration monitoring, and persistent scan execution.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
-            ]
+            "stable_resource_tagging": {
+                "description": "Tag stable resources (NOT likely to drift) with ChangeFrequency=Low for targeted six-month scanning",
+                "implementation": "Use Azure Policy or Terraform to tag IaC-managed resources, immutable infrastructure, and static configurations",
+                "rationale": "Enables automated identification of stable resources for six-month vulnerability scanning schedules (Low impact relaxed timeframe)"
+            },
+            "six_month_automated_scanning": {
+                "description": "Configure automated vulnerability scanning jobs for stable resources at six-month intervals (180-day cadence)",
+                "implementation": "Use Azure Automation with six-month schedules, Defender for Cloud scheduled assessments, or CI/CD quarterly pipeline triggers",
+                "rationale": "Provides persistent vulnerability detection on stable resources per FRR-VDR-TF-LO-04 Low impact requirements (relaxed from monthly for High)"
+            },
+            "baseline_configuration_monitoring": {
+                "description": "Monitor stable resource baseline configurations to detect drift and adjust scanning frequency if needed",
+                "implementation": "Use Azure Resource Graph change tracking, configuration snapshots, and stability metrics",
+                "rationale": "Ensures stable resources remain stable; if drift increases, escalate to monthly or weekly scanning per VDR-TF-LO-03/02"
+            },
+            "persistent_scan_execution": {
+                "description": "Verify persistent execution of six-month vulnerability scanning jobs with automated compliance checks",
+                "implementation": "Use Azure Monitor alerts on missed scans, automation account job logs, scheduled task health checks",
+                "rationale": "Ensures continuous six-month vulnerability detection on stable resources as required by SHOULD requirement"
+            },
+            "stable_resource_remediation_tracking": {
+                "description": "Track vulnerability remediation on stable resources with six-month review cycles",
+                "implementation": "Use vulnerability management dashboards, ticketing system integration, risk register updates",
+                "rationale": "Ensures detected vulnerabilities on stable resources are evaluated and mitigated per VDR evaluation/mitigation requirements"
+            }
         }

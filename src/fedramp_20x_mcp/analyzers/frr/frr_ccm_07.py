@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -25,7 +25,7 @@ class FRR_CCM_07_Analyzer(BaseFRRAnalyzer):
     
     **Family:** CCM - Collaborative Continuous Monitoring
     
-    **Primary Keyword:** MUST
+    **Primary Keyword:** MAY
     
     **Impact Levels:**
     - Low: Yes
@@ -33,19 +33,18 @@ class FRR_CCM_07_Analyzer(BaseFRRAnalyzer):
     - High: Yes
     
     **NIST Controls:**
-    - TODO: Add relevant NIST controls
+    - AC-4 (Information Flow Enforcement)
+    - SI-12 (Information Management and Retention)
     
     **Related KSIs:**
-    - TODO: Add related KSI IDs
+    - KSI-AFR-01 (Automated reporting)
     
-    **Detectability:** No
+    **Detectability:** Partial
     
     **Detection Strategy:**
-    TODO: This requirement is not directly code-detectable. This analyzer provides:
-        1. Evidence collection guidance and automation recommendations
-        2. Manual validation procedures and checklists
-        3. Related documentation and artifact requirements
-        4. Integration points with other compliance tools
+    Application code analyzers detect public sharing mechanisms and transparency
+    features. Infrastructure and CI/CD analyzers are not applicable as public
+    sharing decisions are policy and documentation concerns, not technical implementation.
     """
     
     FRR_ID = "FRR-CCM-07"
@@ -53,7 +52,7 @@ class FRR_CCM_07_Analyzer(BaseFRRAnalyzer):
     FRR_STATEMENT = """Providers MAY responsibly share some or all of the information an _Ongoing Authorization Report_ publicly or with other parties if the provider determines doing so will NOT _likely_ have an adverse effect on the _cloud service offering_."""
     FAMILY = "CCM"
     FAMILY_NAME = "Collaborative Continuous Monitoring"
-    PRIMARY_KEYWORD = "MUST"
+    PRIMARY_KEYWORD = "MAY"
     IMPACT_LOW = True
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
@@ -88,8 +87,47 @@ class FRR_CCM_07_Analyzer(BaseFRRAnalyzer):
         - Transparency mechanisms
         """
         findings = []
-        lines = code.split('\n')
         
+        try:
+            parser = ASTParser(CodeLanguage.PYTHON)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                # Check for public sharing functions
+                func_defs = parser.find_nodes_by_type(tree.root_node, 'function_definition')
+                for func_def in func_defs:
+                    func_text = parser.get_node_text(func_def, code_bytes)
+                    func_lower = func_text.lower()
+                    
+                    if 'public' in func_lower and any(kw in func_lower for kw in ['share', 'publish', 'report']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Public sharing mechanism detected",
+                            description="Found function for public report sharing",
+                            severity=Severity.INFO,
+                            line_number=func_def.start_point[0] + 1,
+                            code_snippet=func_text.split('\n')[0],
+                            recommendation="May responsibly share if no adverse effect."
+                        ))
+                    
+                    if 'transparency' in func_lower or 'disclosure' in func_lower:
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Transparency mechanism detected",
+                            description="Found transparency/disclosure function",
+                            severity=Severity.INFO,
+                            line_number=func_def.start_point[0] + 1,
+                            code_snippet=func_text.split('\n')[0],
+                            recommendation="Verify responsible sharing determination."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
         sharing_patterns = [
             r'public.*share',
             r'public.*report',
@@ -102,70 +140,165 @@ class FRR_CCM_07_Analyzer(BaseFRRAnalyzer):
                 if re.search(pattern, line, re.IGNORECASE):
                     findings.append(Finding(
                         frr_id=self.FRR_ID,
-                        title="Public sharing mechanism detected",
-                        description=f"Found sharing pattern: {pattern}",
+                        title="Public sharing detected",
+                        description=f"Found pattern: {pattern}",
                         severity=Severity.INFO,
                         line_number=i,
                         code_snippet=line.strip(),
-                        recommendation="May responsibly share report information publicly if no adverse effect."
+                        recommendation="May share if no adverse effect."
                     ))
                     break
         
-        return findings
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze C# code for FRR-CCM-07 compliance using AST.
         
-        TODO: Implement C# analysis
+        Detects public sharing mechanisms in C#.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for C#
+        try:
+            parser = ASTParser(CodeLanguage.CSHARP)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                method_declarations = parser.find_nodes_by_type(tree.root_node, 'method_declaration')
+                for method in method_declarations:
+                    method_text = parser.get_node_text(method, code_bytes)
+                    method_lower = method_text.lower()
+                    
+                    if 'public' in method_lower and any(kw in method_lower for kw in ['share', 'publish', 'report']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Public sharing method detected",
+                            description="Found method for public sharing",
+                            severity=Severity.INFO,
+                            line_number=method.start_point[0] + 1,
+                            code_snippet=method_text.split('\n')[0],
+                            recommendation="May share if no adverse effect."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(?:PublicShare|SharePublicly|PublishReport)', line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Public sharing detected",
+                    description="Found sharing code",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Verify responsible sharing."
+                ))
+        
         return findings
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Java code for FRR-CCM-07 compliance using AST.
         
-        TODO: Implement Java analysis
+        Detects public sharing mechanisms in Java.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for Java
+        try:
+            parser = ASTParser(CodeLanguage.JAVA)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                method_declarations = parser.find_nodes_by_type(tree.root_node, 'method_declaration')
+                for method in method_declarations:
+                    method_text = parser.get_node_text(method, code_bytes)
+                    method_lower = method_text.lower()
+                    
+                    if 'public' in method_lower and any(kw in method_lower for kw in ['share', 'publish', 'report']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Public sharing method detected",
+                            description="Found method for public sharing",
+                            severity=Severity.INFO,
+                            line_number=method.start_point[0] + 1,
+                            code_snippet=method_text.split('\n')[0],
+                            recommendation="May share if no adverse effect."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(?:publicShare|sharePublicly|publishReport)', line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Public sharing detected",
+                    description="Found sharing code",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Verify responsible sharing."
+                ))
+        
         return findings
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze TypeScript/JavaScript code for FRR-CCM-07 compliance using AST.
         
-        TODO: Implement TypeScript analysis
+        Detects public sharing mechanisms in TypeScript/JavaScript.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for TypeScript
+        try:
+            parser = ASTParser(CodeLanguage.TYPESCRIPT)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                function_declarations = parser.find_nodes_by_type(tree.root_node, 'function_declaration')
+                for func_decl in function_declarations:
+                    func_text = parser.get_node_text(func_decl, code_bytes)
+                    func_lower = func_text.lower()
+                    
+                    if 'public' in func_lower and any(kw in func_lower for kw in ['share', 'publish', 'report']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Public sharing function detected",
+                            description="Found function for public sharing",
+                            severity=Severity.INFO,
+                            line_number=func_decl.start_point[0] + 1,
+                            code_snippet=func_text.split('\n')[0],
+                            recommendation="May share if no adverse effect."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(?:publicShare|sharePublicly|publishReport)', line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Public sharing detected",
+                    description="Found sharing code",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Verify responsible sharing."
+                ))
+        
         return findings
     
     # ============================================================================
@@ -176,32 +309,19 @@ class FRR_CCM_07_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Bicep infrastructure code for FRR-CCM-07 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        NOT APPLICABLE: Decisions about public sharing of report information are
+        policy and documentation concerns, not infrastructure configuration.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        return []
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Terraform infrastructure code for FRR-CCM-07 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        NOT APPLICABLE: Public sharing decisions are policy concerns, not
+        infrastructure configuration.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        return []
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
@@ -211,85 +331,129 @@ class FRR_CCM_07_Analyzer(BaseFRRAnalyzer):
         """
         Analyze GitHub Actions workflow for FRR-CCM-07 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        NOT APPLICABLE: Public sharing decisions are policy and documentation
+        concerns, not CI/CD automation.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Azure Pipelines YAML for FRR-CCM-07 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        NOT APPLICABLE: Public sharing is policy concern, not CI/CD.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze GitLab CI YAML for FRR-CCM-07 compliance.
         
-        TODO: Implement GitLab CI analysis
+        NOT APPLICABLE: Public sharing is policy concern, not CI/CD.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> List[str]:
         """
-        Get recommendations for automating evidence collection for FRR-CCM-07.
-        
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        Returns Azure Resource Graph and KQL queries for evidence collection.
+        """
+        return [
+            # Query 1: Public report sharing activity
+            """AppEvents
+| where TimeGenerated > ago(90d)
+| where Name contains 'ReportPublished' or Name contains 'ReportShared'
+| where Properties contains 'public' or Properties contains 'external'
+| project TimeGenerated, Name, Properties
+| order by TimeGenerated desc""",
+            
+            # Query 2: Transparency portal access logs
+            """AppRequests
+| where TimeGenerated > ago(90d)
+| where Url contains 'transparency' or Url contains 'public-reports'
+| summarize AccessCount = count() by bin(TimeGenerated, 1d)
+| order by TimeGenerated desc""",
+            
+            # Query 3: Report disclosure decisions
+            """AppTraces
+| where TimeGenerated > ago(90d)
+| where Message contains 'disclosure' or Message contains 'public sharing'
+| where Message contains 'decision' or Message contains 'approved'
+| project TimeGenerated, Message, Properties
+| order by TimeGenerated desc"""
+        ]
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Returns list of evidence artifacts to collect.
+        """
+        return [
+            "Public sharing policy documentation",
+            "Disclosure decision process documentation",
+            "Risk assessment for public information sharing",
+            "List of publicly shared reports or report excerpts",
+            "Transparency portal documentation (if applicable)",
+            "Approval records for public disclosures",
+            "Public-facing report repository or website",
+            "Evidence of adverse effect analysis before sharing",
+            "Stakeholder communication about public disclosures",
+            "Public sharing decision matrix or criteria"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Provides recommendations for automated evidence collection.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "automated_queries": [
+                {
+                    "name": "Public Report Sharing Tracking",
+                    "description": "Monitor public sharing of report information",
+                    "query": """AppEvents
+| where TimeGenerated > ago(90d)
+| where Name == 'ReportPublished' or Name == 'ReportShared'
+| where Properties contains 'public'
+| summarize ShareCount = count() by bin(TimeGenerated, 1d)
+| order by TimeGenerated desc""",
+                    "schedule": "Quarterly"
+                },
+                {
+                    "name": "Transparency Portal Activity",
+                    "description": "Track access to public transparency portal",
+                    "query": """AppRequests
+| where TimeGenerated > ago(90d)
+| where Url contains 'transparency' or Url contains 'public'
+| summarize Requests = count(), UniqueUsers = dcount(UserId) by bin(TimeGenerated, 1d)
+| order by TimeGenerated desc""",
+                    "schedule": "Monthly"
+                }
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "evidence_artifacts": [
+                {
+                    "name": "Public Sharing Policy",
+                    "description": "Policy governing public disclosure of report information",
+                    "location": "Azure Storage Account / policy-documents container"
+                },
+                {
+                    "name": "Public Disclosure Records",
+                    "description": "Records of publicly shared report information",
+                    "location": "Azure Storage Account / public-disclosures container"
+                },
+                {
+                    "name": "Disclosure Decision Logs",
+                    "description": "Logs of decisions regarding public sharing",
+                    "location": "Azure Monitor Logs / Application Insights"
+                }
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "implementation_notes": [
+                "Document criteria for determining 'no adverse effect' on cloud service",
+                "Establish approval workflow for public information sharing",
+                "Maintain audit trail of all public disclosure decisions",
+                "Consider transparency portal for publishing approved information",
+                "Track public access to shared information",
+                "Regularly review public disclosures for continued appropriateness",
+                "Integrate with risk management process for disclosure decisions"
             ]
         }

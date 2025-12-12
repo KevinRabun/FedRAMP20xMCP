@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import Dict, List, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -156,39 +156,42 @@ class FRR_ICP_08_Analyzer(BaseFRRAnalyzer):
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for FRR-ICP-08 compliance using AST.
-        
-        TODO: Implement C# analysis
-        """
+        """Analyze C# for automation frameworks."""
         findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
+        has_automation = bool(re.search(r'(Workflow|Automation|Orchestration|EventDriven)', code, re.IGNORECASE))
+        if not has_automation:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID, requirement_id=self.FRR_ID,
+                title="No automation framework", description=f"FRR-ICP-08 recommends automated incident reporting.",
+                severity=Severity.LOW, file_path=file_path, line_number=1, code_snippet="",
+                recommendation="Consider implementing automated reporting: Hangfire, Azure Logic Apps, or workflow engines"
+            ))
         return findings
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for FRR-ICP-08 compliance using AST.
-        
-        TODO: Implement Java analysis
-        """
+        """Analyze Java for automation frameworks."""
         findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
+        has_automation = bool(re.search(r'(Workflow|Automation|Orchestration|EventDriven)', code, re.IGNORECASE))
+        if not has_automation:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID, requirement_id=self.FRR_ID,
+                title="No automation framework", description=f"FRR-ICP-08 recommends automated incident reporting.",
+                severity=Severity.LOW, file_path=file_path, line_number=1, code_snippet="",
+                recommendation="Consider implementing automated reporting: Spring Integration, Apache Camel, or workflow engines"
+            ))
         return findings
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for FRR-ICP-08 compliance using AST.
-        
-        TODO: Implement TypeScript analysis
-        """
+        """Analyze TypeScript for automation frameworks."""
         findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
+        has_automation = bool(re.search(r'(workflow|automation|orchestration|eventDriven)', code, re.IGNORECASE))
+        if not has_automation:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID, requirement_id=self.FRR_ID,
+                title="No automation framework", description=f"FRR-ICP-08 recommends automated incident reporting.",
+                severity=Severity.LOW, file_path=file_path, line_number=1, code_snippet="",
+                recommendation="Consider implementing automated reporting: n8n, workflow libraries, or event-driven patterns"
+            ))
         return findings
     
     # ============================================================================
@@ -196,34 +199,29 @@ class FRR_ICP_08_Analyzer(BaseFRRAnalyzer):
     # ============================================================================
     
     def analyze_bicep(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Bicep infrastructure code for FRR-ICP-08 compliance.
-        
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
-        """
+        """Analyze Bicep for automation services."""
         findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
+        has_automation = bool(re.search(r"resource\s+\w+\s+'Microsoft\.(Logic|Automation)", code))
+        if not has_automation:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID, requirement_id=self.FRR_ID,
+                title="No automation infrastructure", description=f"FRR-ICP-08 recommends automated reporting.",
+                severity=Severity.LOW, file_path=file_path, line_number=1, code_snippet="",
+                recommendation="Consider deploying: Logic Apps or Automation accounts"
+            ))
         return findings
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Terraform infrastructure code for FRR-ICP-08 compliance.
-        
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
-        """
+        """Analyze Terraform for automation services."""
         findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
+        has_automation = bool(re.search(r'resource\s+"(azurerm_logic_app|azurerm_automation|aws_lambda)"', code))
+        if not has_automation:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID, requirement_id=self.FRR_ID,
+                title="No automation infrastructure", description=f"FRR-ICP-08 recommends automated reporting.",
+                severity=Severity.LOW, file_path=file_path, line_number=1, code_snippet="",
+                recommendation="Consider deploying: azurerm_logic_app_workflow or aws_lambda_function"
+            ))
         return findings
     
     # ============================================================================
@@ -231,88 +229,56 @@ class FRR_ICP_08_Analyzer(BaseFRRAnalyzer):
     # ============================================================================
     
     def analyze_github_actions(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitHub Actions workflow for FRR-ICP-08 compliance.
-        
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        """Analyze GitHub Actions for automation workflows."""
+        return []  # Automated reporting is runtime operational
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Azure Pipelines YAML for FRR-ICP-08 compliance.
-        
-        TODO: Implement Azure Pipelines analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        """Analyze Azure Pipelines for automation workflows."""
+        return []  # Automated reporting is runtime operational
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitLab CI YAML for FRR-ICP-08 compliance.
-        
-        TODO: Implement GitLab CI analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        """Analyze GitLab CI for automation workflows."""
+        return []  # Automated reporting is runtime operational
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
-        """
-        Get recommendations for automating evidence collection for FRR-ICP-08.
-        
-        This requirement is not directly code-detectable. Provides manual validation guidance.
-        """
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """Get automated queries for FRR-ICP-08 evidence (automated incident reporting)."""
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
+            'automated_queries': [
+                "Resources | where type == 'microsoft.logic/workflows' or type == 'microsoft.automation/automationaccounts' | project name, type, resourceGroup",
+                "AzureActivity | where ResourceProviderValue contains 'Logic' or ResourceProviderValue contains 'Automation' | summarize by ResourceId",
+                "Resources | where tags contains 'automation' or tags contains 'workflow' | project name, type, resourceGroup"
+            ]
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """Get evidence artifacts for FRR-ICP-08 (automated incident reporting)."""
+        return {
             'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                "Automation framework documentation and architecture",
+                "Workflow engine configuration exports (Logic Apps, Automation accounts)",
+                "Automated reporting mechanism implementation",
+                "Historical automated incident reports",
+                "Integration testing evidence for automated reporting",
+                "Event-driven architecture documentation",
+                "Automation monitoring and alerting configuration",
+                "Manual vs automated reporting comparison metrics"
+            ]
+        }
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """Get automation recommendations for FRR-ICP-08 (automated incident reporting)."""
+        return {
+            'implementation_notes': [
+                "Implement automation frameworks (Azure Logic Apps, Azure Automation, workflow engines)",
+                "Configure event-driven architecture for incident detection and reporting",
+                "Automate report generation and distribution to all parties",
+                "Test automated reporting mechanisms with sample incidents",
+                "Monitor automation execution and failure rates",
+                "Document automation workflows and decision logic",
+                "Establish fallback procedures for automation failures"
             ]
         }

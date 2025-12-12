@@ -29,15 +29,28 @@ def test_analyzer_metadata():
     print("[PASS] test_analyzer_metadata PASSED")
 
 
-def test_evidence_automation_recommendations():
-    """Test evidence automation recommendations."""
+def test_evidence_collection():
+    """Test evidence collection methods."""
     analyzer = FRR_VDR_TF_HI_01_Analyzer()
     
-    recommendations = analyzer.get_evidence_automation_recommendations()
-    assert recommendations['frr_id'] == "FRR-VDR-TF-HI-01", "FRR_ID mismatch"
-    # TODO: Add more assertions for evidence recommendations
+    # Test queries
+    queries = analyzer.get_evidence_collection_queries()
+    assert "API service availability" in queries, "Missing API availability queries"
+    assert "Machine-readable format verification" in queries, "Missing format verification queries"
+    assert "7-day update frequency verification" in queries, "Missing update frequency queries"
     
-    print("[PASS] test_evidence_automation_recommendations PASSED")
+    # Test artifacts
+    artifacts = analyzer.get_evidence_artifacts()
+    assert any("API service documentation" in a for a in artifacts), "Missing API documentation"
+    assert any("machine-readable format" in a for a in artifacts), "Missing format verification"
+    assert any("weekly" in a.lower() or "7" in a for a in artifacts), "Missing 7-day frequency"
+    
+    # Test automation recommendations
+    recommendations = analyzer.get_evidence_automation_recommendations()
+    assert "REST API implementation" in recommendations, "Missing API recommendation"
+    assert "Machine-readable format enforcement" in recommendations, "Missing format recommendation"
+    
+    print("[PASS] test_evidence_collection PASSED")
 
 
 # TODO: Add language-specific tests
@@ -57,7 +70,7 @@ def run_all_tests():
     """Run all FRR-VDR-TF-HI-01 tests."""
     test_functions = [
         ("Analyzer metadata", test_analyzer_metadata),
-        ("Evidence automation recommendations", test_evidence_automation_recommendations),
+        ("Evidence collection", test_evidence_collection),
         # TODO: Add more test functions
     ]
     

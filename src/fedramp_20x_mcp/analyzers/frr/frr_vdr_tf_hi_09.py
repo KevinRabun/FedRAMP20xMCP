@@ -10,7 +10,7 @@ Impact Levels: High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -236,47 +236,50 @@ class FRR_VDR_TF_HI_09_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-TF-HI-09.
+        Get queries for collecting evidence of ongoing vulnerability mitigation during operations (High impact).
         
-        TODO: Add evidence collection guidance
+        Returns queries to verify remaining vulnerabilities are mitigated/remediated during routine operations.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "Ongoing remediation activity": [
+                "VulnerabilityRemediation | where TimeGenerated > ago(90d) | where RemediationType in ('Full Remediation', 'Compensating Control') | where Status in ('Completed', 'Validated') | summarize RemediationCount=count() by bin(TimeGenerated, 7d), RemediationType",
+                "ChangeManagement | where TimeGenerated > ago(90d) | where ChangeReason contains 'vulnerability' or ChangeReason contains 'security remediation' | where ChangeType in ('Patch', 'Configuration', 'Update') | project TimeGenerated, ChangeId, TargetResource, VulnerabilitiesAddressed=array_length(split(VulnerabilityIds, ','))"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "Routine operations remediation tracking": [
+                "MaintenanceWindows | where TimeGenerated > ago(180d) | join kind=inner (VulnerabilityRemediation | where Status == 'Completed') on MaintenanceWindowId | summarize RemediationsPerWindow=count(), AvgVulnerabilitiesClosed=avg(VulnerabilitiesCount) by bin(TimeGenerated, 30d)",
+                "PatchManagement | where TimeGenerated > ago(90d) | where PatchType in ('Security', 'Critical') | extend VulnerabilitiesPatched = array_length(CVEIds) | summarize TotalPatches=count(), TotalVulnerabilitiesAddressed=sum(VulnerabilitiesPatched) by bin(TimeGenerated, 30d)"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "Risk-based remediation decisions": [
+                "VulnerabilityManagement | where Status in ('Accepted Risk', 'Scheduled Remediation', 'Remediated') | where TimeGenerated > ago(180d) | extend RemediationDecision=case(Status=='Accepted Risk', 'Risk Accepted', Status=='Scheduled Remediation', 'Planned', 'Completed') | summarize DecisionCount=count() by RemediationDecision, ImpactLevel",
+                "SecurityGovernance | where GovernanceAction == 'Vulnerability Remediation Decision' | where TimeGenerated > ago(90d) | project TimeGenerated, VulnerabilityId, Decision, Justification, ApprovedBy, RiskLevel"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for ongoing vulnerability mitigation during operations.
+        """
+        return [
+            "Routine vulnerability remediation activity logs (patches, updates, configuration changes)",
+            "Maintenance window schedules and remediation records (planned vulnerability fixes)",
+            "Risk-based remediation decision records (provider determinations for necessary mitigations)",
+            "Compensating control implementations for accepted risks (alternative mitigations)",
+            "Patch management records (security patches addressing vulnerabilities)",
+            "Change management documentation for security remediations",
+            "Ongoing vulnerability posture metrics (trend analysis, reduction over time)",
+            "Remediation prioritization criteria (provider's risk-based decision framework)"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Get recommendations for automating evidence collection.
+        """
+        return {
+            "Automated remediation tracking": "Track all vulnerability remediation activity during routine operations (patch management systems, change management tools, ServiceNow integration)",
+            "Maintenance window coordination": "Coordinate vulnerability remediation with scheduled maintenance windows, track remediations per window (Azure Maintenance Configuration, change calendars)",
+            "Risk-based decision documentation": "Document provider's risk-based decisions for vulnerability remediation priority and timing (governance workflows, approval tracking)",
+            "Compensating control management": "Track implementation of compensating controls for vulnerabilities not immediately remediable (Azure Policy assignments, control implementation logs)",
+            "Ongoing posture monitoring": "Monitor vulnerability posture trends to demonstrate continuous improvement during operations (Log Analytics workspace, trend dashboards, Azure Workbooks)"
         }

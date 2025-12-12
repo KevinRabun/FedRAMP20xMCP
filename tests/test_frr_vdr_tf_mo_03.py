@@ -29,15 +29,29 @@ def test_analyzer_metadata():
     print("[PASS] test_analyzer_metadata PASSED")
 
 
-def test_evidence_automation_recommendations():
-    """Test evidence automation recommendations."""
+def test_evidence_collection():
+    """Test evidence collection methods for 14-day drift detection."""
     analyzer = FRR_VDR_TF_MO_03_Analyzer()
     
-    recommendations = analyzer.get_evidence_automation_recommendations()
-    assert recommendations['frr_id'] == "FRR-VDR-TF-MO-03", "FRR_ID mismatch"
-    # TODO: Add more assertions for evidence recommendations
+    # Test evidence collection queries
+    queries = analyzer.get_evidence_collection_queries()
+    assert 'Drift-prone resource identification' in queries, "Missing drift identification queries"
+    assert '14-day vulnerability scanning on drift-prone assets' in queries, "Missing 14-day scan queries"
+    assert 'Persistent drift detection verification' in queries, "Missing persistence queries"
     
-    print("[PASS] test_evidence_automation_recommendations PASSED")
+    # Test evidence artifacts
+    artifacts = analyzer.get_evidence_artifacts()
+    assert len(artifacts) > 0, "Should have evidence artifacts"
+    artifacts_text = ' '.join(artifacts).lower()
+    assert 'drift' in artifacts_text, "Missing drift artifact"
+    assert '14-day' in artifacts_text or 'fourteen-day' in artifacts_text, "Missing 14-day artifact"
+    
+    # Test automation recommendations
+    recommendations = analyzer.get_evidence_automation_recommendations()
+    assert 'drift_prone_resource_tagging' in recommendations, "Missing drift tagging"
+    assert 'fourteen_day_automated_scanning' in recommendations, "Missing 14-day scanning"
+    
+    print("[PASS] test_evidence_collection PASSED")
 
 
 # TODO: Add language-specific tests
@@ -57,8 +71,7 @@ def run_all_tests():
     """Run all FRR-VDR-TF-MO-03 tests."""
     test_functions = [
         ("Analyzer metadata", test_analyzer_metadata),
-        ("Evidence automation recommendations", test_evidence_automation_recommendations),
-        # TODO: Add more test functions
+        ("Evidence collection", test_evidence_collection),
     ]
     
     passed = 0

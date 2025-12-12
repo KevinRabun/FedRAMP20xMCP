@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -236,47 +236,39 @@ class FRR_VDR_TF_03_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
-        """
-        Get recommendations for automating evidence collection for FRR-VDR-TF-03.
-        
-        TODO: Add evidence collection guidance
-        """
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """Get queries for 192-day accepted vulnerability categorization."""
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
-            ]
+            "192-day threshold tracking": {
+                "description": "Track vulns NOT fully mitigated/remediated within 192 days of evaluation",
+                "defender_kql": "SecurityAssessment | extend DaysSinceEval = datetime_diff('day', now(), EvaluationTime) | extend IsAccepted = iff(DaysSinceEval >= 192 and RemediationStatus != 'FullyMitigated', 'Yes', 'No')"
+            },
+            "Accepted vulnerability categorization": {
+                "description": "Verify vulns exceeding 192 days categorized as accepted"
+            },
+            "Remediation status verification": {
+                "description": "Verify remediation status excludes fully mitigated/remediated vulns"
+            }
+        }
+
+    def get_evidence_artifacts(self) -> List[str]:
+        """Get artifacts for 192-day accepted vulnerability categorization."""
+        return [
+            "Vulnerability evaluation timestamps",
+            "192-day threshold tracking reports",
+            "Accepted vulnerability categorization records",
+            "Remediation status documentation"
+        ]
+
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """Get automation recommendations for 192-day categorization."""
+        return {
+            "automated_192day_threshold_monitoring": {
+                "description": "Auto-monitor 192-day threshold from evaluation",
+                "rationale": "Ensures timely accepted vuln categorization per FRR-VDR-TF-03"
+            },
+            "automated_accepted_vuln_categorization": {
+                "description": "Auto-categorize vulns as accepted when 192-day threshold reached",
+                "rationale": "Automates FRR-VDR-TF-03 compliance for long-term vulns"
+            }
         }

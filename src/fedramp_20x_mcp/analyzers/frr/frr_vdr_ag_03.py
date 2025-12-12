@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,56 @@ class FRR_VDR_AG_03_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-AG-03.
+        Get queries for collecting evidence of agency compliance with information request restrictions.
         
-        TODO: Add evidence collection guidance
+        This requirement restricts AGENCIES from requesting extra information from providers.
+        Evidence should demonstrate agency adherence to FedRAMP process boundaries.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "email_audit_queries": [
+                "Search agency email systems for requests to CSPs outside FedRAMP scope",
+                "Filter by keywords: 'additional information', 'extra documentation', 'supplemental data'",
+                "Verify requests include agency head authorization when exceptions made"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "ticketing_system_queries": [
+                "Query ServiceNow/Jira for agency tickets to CSPs requesting non-FedRAMP information",
+                "Filter by custom fields: request_type='additional_info', authorization_status",
+                "Join with approval workflows to verify agency head sign-off on exceptions"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "authorization_tracking": [
+                "Query authorization database for exception approvals by agency heads",
+                "Match exception IDs with corresponding information requests to CSPs",
+                "Generate audit trail of authorized vs unauthorized extra information requests"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for demonstrating agency restriction compliance.
+        
+        Focuses on agency processes and governance, not provider code.
+        """
+        return [
+            "Agency policy documentation restricting information requests to FedRAMP scope",
+            "Training materials for agency personnel on FedRAMP boundary compliance",
+            "Exception approval records from agency heads with demonstrable need justifications",
+            "Email/ticket audit logs showing agency adherence to FedRAMP process boundaries",
+            "Quarterly reports on information request compliance (authorized vs unauthorized)",
+            "Agency governance committee meeting minutes discussing FedRAMP scope enforcement"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Get recommendations for automating agency compliance tracking.
+        
+        This requirement is NOT code-detectable (agency process, not provider code).
+        Automation focuses on agency governance and audit trails.
+        """
+        return {
+            "dlp_integration": "Implement DLP policies to flag outbound requests to CSPs containing keywords like 'additional information' or 'extra documentation' outside standard FedRAMP templates",
+            "approval_workflow": "Configure automated approval workflows requiring agency head/delegate sign-off for any information requests beyond FedRAMP scope",
+            "audit_dashboard": "Create real-time dashboard showing all agency requests to CSPs, categorized by FedRAMP-required vs additional, with exception tracking",
+            "quarterly_reporting": "Automate quarterly compliance reports summarizing agency adherence to FedRAMP scope boundaries, flagging unauthorized requests for remediation"
         }

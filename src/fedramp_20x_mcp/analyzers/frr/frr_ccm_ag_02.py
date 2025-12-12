@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -83,74 +83,45 @@ class FRR_CCM_AG_02_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Python code for FRR-CCM-AG-02 compliance using AST.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        **NOT APPLICABLE:** This is an AGENCY requirement about resource allocation.
+        Agencies SHOULD consider security category and assign appropriate resources for
+        reviewing reports - this is a governance/resource management requirement for agencies,
+        not a code implementation requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
+        return []
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze C# code for FRR-CCM-AG-02 compliance using AST.
         
-        TODO: Implement C# analysis
+        **NOT APPLICABLE:** This is an AGENCY requirement about resource allocation.
+        Agencies SHOULD consider security category and assign appropriate resources for
+        reviewing reports - this is a governance/resource management requirement for agencies,
+        not a code implementation requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        return []
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Java code for FRR-CCM-AG-02 compliance using AST.
         
-        TODO: Implement Java analysis
+        **NOT APPLICABLE:** This is an AGENCY requirement about resource allocation.
+        Agencies SHOULD consider security category and assign appropriate resources for
+        reviewing reports - this is a governance/resource management requirement for agencies,
+        not a code implementation requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        return []
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze TypeScript/JavaScript code for FRR-CCM-AG-02 compliance using AST.
         
-        TODO: Implement TypeScript analysis
+        **NOT APPLICABLE:** This is an AGENCY requirement about resource allocation.
+        Agencies SHOULD consider security category and assign appropriate resources for
+        reviewing reports - this is a governance/resource management requirement for agencies,
+        not a code implementation requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
-        return findings
+        return []
     
     # ============================================================================
     # INFRASTRUCTURE AS CODE ANALYZERS (Regex-based)
@@ -160,32 +131,23 @@ class FRR_CCM_AG_02_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Bicep infrastructure code for FRR-CCM-AG-02 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        **NOT APPLICABLE:** This is an AGENCY requirement about resource allocation.
+        Agencies SHOULD consider security category and assign appropriate resources for
+        reviewing reports - this is a governance/resource management requirement for agencies,
+        not a code implementation requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        return []
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Terraform infrastructure code for FRR-CCM-AG-02 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        **NOT APPLICABLE:** This is an AGENCY requirement about resource allocation.
+        Agencies SHOULD consider security category and assign appropriate resources for
+        reviewing reports - this is a governance/resource management requirement for agencies,
+        not a code implementation requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        return []
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
@@ -195,85 +157,123 @@ class FRR_CCM_AG_02_Analyzer(BaseFRRAnalyzer):
         """
         Analyze GitHub Actions workflow for FRR-CCM-AG-02 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        **NOT APPLICABLE:** This is an AGENCY requirement about resource allocation.
+        Agencies SHOULD consider security category and assign appropriate resources for
+        reviewing reports - this is a governance/resource management requirement for agencies,
+        not a code implementation requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Azure Pipelines YAML for FRR-CCM-AG-02 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        **NOT APPLICABLE:** This is an AGENCY requirement about resource allocation.
+        Agencies SHOULD consider security category and assign appropriate resources for
+        reviewing reports - this is a governance/resource management requirement for agencies,
+        not a code implementation requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze GitLab CI YAML for FRR-CCM-AG-02 compliance.
         
-        TODO: Implement GitLab CI analysis
+        **NOT APPLICABLE:** This is an AGENCY requirement about resource allocation.
+        Agencies SHOULD consider security category and assign appropriate resources for
+        reviewing reports - this is a governance/resource management requirement for agencies,
+        not a code implementation requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> List[str]:
         """
-        Get recommendations for automating evidence collection for FRR-CCM-AG-02.
+        Returns Azure Resource Graph and KQL queries for evidence collection.
         
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        Note: This is an AGENCY requirement. Evidence focuses on agency documentation
+        of security categorization and resource allocation decisions.
+        """
+        return [
+            # Query 1: Not applicable - this is agency-side evidence
+            """// NOT APPLICABLE: This requirement applies to agency resource allocation
+// Agencies must document security categorization and resource assignment
+// Provider evidence: None - this is agency governance requirement""",
+            
+            # Query 2: Service provider metadata about security categories
+            """// Optional: CSP can track which security categories are deployed
+AzureResources
+| where type == 'microsoft.web/sites' or type == 'microsoft.compute/virtualmachines'
+| extend SecurityCategory = tostring(tags.SecurityCategory)
+| where isnotempty(SecurityCategory)
+| project name, type, SecurityCategory, resourceGroup
+| summarize count() by SecurityCategory""",
+            
+            # Query 3: Not applicable - agency internal process
+            """// NOT APPLICABLE: Agency internal resource allocation tracking
+// Agencies should maintain staffing records for continuous monitoring
+// Provider evidence: None - this is agency human resource requirement"""
+        ]
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Returns list of evidence artifacts to collect.
+        """
+        return [
+            "Agency ATO documentation showing security categorization",
+            "Agency staffing plan for continuous monitoring activities",
+            "Agency resource allocation decisions for review activities",
+            "Agency attendance records for Quarterly Reviews",
+            "Agency security personnel assignments to CSO monitoring",
+            "Agency risk management framework (RMF) documentation",
+            "Agency continuous monitoring strategy (ISCM)",
+            "Agency budgetary allocation for security review activities",
+            "Agency organizational charts showing security review roles",
+            "Agency training records for personnel reviewing authorization data"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Provides recommendations for automated evidence collection.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "automated_queries": [
+                {
+                    "name": "Security Category Tracking",
+                    "description": "Optional: Track deployed security categories for CSP reference",
+                    "query": """AzureResources
+| where isnotempty(tags.SecurityCategory)
+| summarize count() by tostring(tags.SecurityCategory)""",
+                    "schedule": "Quarterly",
+                    "note": "CSP can track security categories but cannot enforce agency resource allocation"
+                }
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "evidence_artifacts": [
+                {
+                    "name": "Agency ATO Documentation",
+                    "description": "Agency Authorization to Operate showing security category",
+                    "location": "Agency-provided documentation / external",
+                    "note": "Provider cannot generate this - agency-owned artifact"
+                },
+                {
+                    "name": "Agency Staffing Plan",
+                    "description": "Agency documentation of resource allocation for monitoring",
+                    "location": "Agency-provided documentation / external",
+                    "note": "Provider cannot generate this - agency-owned artifact"
+                }
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "implementation_notes": [
+                "This is an AGENCY requirement - agencies SHOULD allocate appropriate resources",
+                "Provider responsibility: None - this is internal agency governance",
+                "Agency responsibility: Consider security category when assigning staff",
+                "Agency responsibility: Allocate appropriate resources for ongoing monitoring",
+                "Higher security categories may require more experienced security personnel",
+                "Agencies should budget for continuous monitoring activities",
+                "Provider can support: Provide clear security categorization in documentation",
+                "Provider can support: Facilitate agency participation in Quarterly Reviews",
+                "Evidence source: Agency internal HR and budget documentation"
             ]
         }

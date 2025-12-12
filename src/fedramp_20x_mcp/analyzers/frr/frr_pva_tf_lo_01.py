@@ -80,77 +80,32 @@ class FRR_PVA_TF_LO_01_Analyzer(BaseFRRAnalyzer):
     # ============================================================================
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
+        """Analyze Python code for FRR-PVA-TF-LO-01 compliance.
+        
+        PVA-TF-LO-01 NOT code-detectable: Quarterly non-machine validation frequency is operational.
         """
-        Analyze Python code for FRR-PVA-TF-LO-01 compliance using AST.
-        
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
+        return []
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for FRR-PVA-TF-LO-01 compliance using AST.
+        """Analyze C# code for FRR-PVA-TF-LO-01 compliance.
         
-        TODO: Implement C# analysis
+        PVA-TF-LO-01 NOT code-detectable: Quarterly non-machine validation frequency is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        return []
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for FRR-PVA-TF-LO-01 compliance using AST.
+        """Analyze Java code for FRR-PVA-TF-LO-01 compliance.
         
-        TODO: Implement Java analysis
+        PVA-TF-LO-01 NOT code-detectable: Quarterly non-machine validation frequency is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        return []
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for FRR-PVA-TF-LO-01 compliance using AST.
+        """Analyze TypeScript/JavaScript code for FRR-PVA-TF-LO-01 compliance.
         
-        TODO: Implement TypeScript analysis
+        PVA-TF-LO-01 NOT code-detectable: Quarterly non-machine validation frequency is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
-        return findings
+        return []
     
     # ============================================================================
     # INFRASTRUCTURE AS CODE ANALYZERS (Regex-based)
@@ -174,106 +129,103 @@ class FRR_PVA_TF_LO_01_Analyzer(BaseFRRAnalyzer):
         return findings
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Terraform infrastructure code for FRR-PVA-TF-LO-01 compliance.
+        """Analyze Terraform infrastructure code for FRR-PVA-TF-LO-01 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        Quarterly non-machine validation frequency is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        return []
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
     # ============================================================================
     
     def analyze_github_actions(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitHub Actions workflow for FRR-PVA-TF-LO-01 compliance.
+        """Analyze GitHub Actions workflow for FRR-PVA-TF-LO-01 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        Quarterly non-machine validation frequency is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Azure Pipelines YAML for FRR-PVA-TF-LO-01 compliance.
+        """Analyze Azure Pipelines YAML for FRR-PVA-TF-LO-01 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        Quarterly non-machine validation frequency is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitLab CI YAML for FRR-PVA-TF-LO-01 compliance.
+        """Analyze GitLab CI YAML for FRR-PVA-TF-LO-01 compliance.
         
-        TODO: Implement GitLab CI analysis
+        Quarterly non-machine validation frequency is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    # ============================================================================
+    # EVIDENCE COLLECTION METHODS
+    # ============================================================================
+    
+    def get_evidence_collection_queries(self) -> dict:
         """
-        Get recommendations for automating evidence collection for FRR-PVA-TF-LO-01.
+        Get KQL queries for collecting evidence of quarterly non-machine validation.
         
-        TODO: Add evidence collection guidance
+        Returns queries to detect validation frequency for non-machine resources (Low impact).
         """
         return {
             'frr_id': self.FRR_ID,
             'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
+            'automated_queries': [
+                # Resources with validation-frequency and non-machine-validation tags
+                "Resources | where tags contains 'validation-frequency' and tags contains 'non-machine-validation' and tags['impact-level'] == 'Low' | project name, type, tags, location",
+                
+                # Validation activities for non-machine resources (3-month frequency check)
+                "AzureActivity | where OperationNameValue contains 'Validation' and Properties contains 'non-machine' and Properties contains 'impact-level:Low' | project TimeGenerated, Caller, OperationNameValue, Properties | summarize LastValidation=max(TimeGenerated) by Caller | where LastValidation < ago(90d)",
+                
+                # Resources requiring quarterly validation (Low impact non-machine)
+                "Resources | where tags contains 'resource-type:non-machine' and tags['impact-level'] == 'Low' | project name, type, tags['validation-frequency'], tags['last-validation-date']"
+            ]
+        }
+    
+    def get_evidence_artifacts(self) -> dict:
+        """
+        Get list of evidence artifacts for demonstrating quarterly validation compliance.
+        
+        Returns documentation and records demonstrating validation frequency adherence.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
             'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                "Validation schedule for non-machine resources (Low impact, quarterly)",
+                "Validation execution records with timestamps per KSI",
+                "Non-machine resource inventory and classification (Low impact)",
+                "Validation frequency compliance reports (90-day intervals)",
+                "Validation completion tracking and alerting for overdue validations",
+                "KSI validation results and findings for non-machine resources",
+                "Validation process documentation and procedures (Low impact specific)",
+                "Validation automation and scheduling configuration"
+            ]
+        }
+    
+    def get_evidence_automation_recommendations(self) -> dict:
+        """
+        Get recommendations for implementing quarterly non-machine validation.
+        
+        Returns implementation notes for validation scheduling and tracking (Low impact).
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
+            'implementation_notes': [
+                "Define validation schedule for non-machine KSIs (Low impact: quarterly/90-day intervals)",
+                "Tag Azure resources with 'validation-frequency', 'non-machine-validation', 'resource-type:non-machine', and 'impact-level:Low' metadata",
+                "Document validation processes and procedures for non-machine resources",
+                "Track validation execution with timestamps and update last-validation-date tags",
+                "Maintain validation completion records per KSI for non-machine resources",
+                "Configure alerting for validations approaching 90-day deadline (Low impact)",
+                "Review validation frequency compliance and update procedures quarterly"
             ]
         }

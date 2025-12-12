@@ -81,200 +81,88 @@ class FRR_PVA_06_Analyzer(BaseFRRAnalyzer):
     # ============================================================================
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Python code for FRR-PVA-06 compliance using AST.
-        
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
+        """PVA-06 NOT code-detectable: Complete validation assessment is operational."""
+        return []
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for FRR-PVA-06 compliance using AST.
-        
-        TODO: Implement C# analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        """PVA-06 NOT code-detectable: Complete validation assessment is operational."""
+        return []
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for FRR-PVA-06 compliance using AST.
-        
-        TODO: Implement Java analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        """PVA-06 NOT code-detectable: Complete validation assessment is operational."""
+        return []
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for FRR-PVA-06 compliance using AST.
-        
-        TODO: Implement TypeScript analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
-        return findings
+        """PVA-06 NOT code-detectable: Complete validation assessment is operational."""
+        return []
     
     # ============================================================================
     # INFRASTRUCTURE AS CODE ANALYZERS (Regex-based)
     # ============================================================================
     
     def analyze_bicep(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Bicep infrastructure code for FRR-PVA-06 compliance.
-        
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        """Complete validation assessment is operational."""
+        return []
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Terraform infrastructure code for FRR-PVA-06 compliance.
-        
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        """Complete validation assessment is operational."""
+        return []
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
     # ============================================================================
     
     def analyze_github_actions(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitHub Actions workflow for FRR-PVA-06 compliance.
-        
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        """Complete validation assessment is operational."""
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Azure Pipelines YAML for FRR-PVA-06 compliance.
-        
-        TODO: Implement Azure Pipelines analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        """Complete validation assessment is operational."""
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitLab CI YAML for FRR-PVA-06 compliance.
-        
-        TODO: Implement GitLab CI analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        """Complete validation assessment is operational."""
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
-        """
-        Get recommendations for automating evidence collection for FRR-PVA-06.
-        
-        TODO: Add evidence collection guidance
-        """
+    def get_evidence_collection_queries(self) -> dict:
+        """Get Azure Resource Graph / KQL queries for evidence collection."""
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
+            'automated_queries': [
+                "Resources | where tags['validation-assessment'] == 'complete' | project name, type, resourceGroup, tags",
+                "AzureActivity | where OperationNameValue contains 'assessment' | project TimeGenerated, Caller, OperationNameValue, ResourceGroup",
+                "Resources | extend assessmentScope = tostring(tags['assessment-scope']) | where assessmentScope contains 'validation' | project name, type, assessmentScope, tags['assessors']"
+            ]
+        }
+
+    def get_evidence_artifacts(self) -> dict:
+        """Get list of evidence artifacts to collect."""
+        return {
             'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                "Complete validation assessment scope documentation",
+                "Assessment of validation procedures (code, pipelines, configurations, automation)",
+                "Assessor coverage documentation (all necessary assessors engaged)",
+                "Validation code review reports",
+                "Pipeline and configuration assessment results",
+                "Automation tool assessment documentation",
+                "Assessment execution evidence for all CSO components",
+                "Gap analysis and remediation tracking for validation procedures"
+            ]
+        }
+
+    def get_evidence_automation_recommendations(self) -> dict:
+        """Get recommendations for implementing automated evidence collection."""
+        return {
+            'implementation_notes': [
+                "Define complete assessment scope for validation procedures",
+                "Tag all validation resources with 'validation-assessment' and 'assessment-scope'",
+                "Engage all necessary assessors for comprehensive coverage",
+                "Document assessment of code, pipelines, configurations, and automation tools",
+                "Track assessment coverage across all CSO components",
+                "Maintain assessment execution evidence and findings",
+                "Review assessment completeness and coverage quarterly"
             ]
         }

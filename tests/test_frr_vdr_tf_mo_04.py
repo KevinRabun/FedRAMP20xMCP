@@ -29,15 +29,21 @@ def test_analyzer_metadata():
     print("[PASS] test_analyzer_metadata PASSED")
 
 
-def test_evidence_automation_recommendations():
-    """Test evidence automation recommendations."""
+def test_evidence_collection():
+    """Test evidence collection methods for monthly stable resource scanning."""
     analyzer = FRR_VDR_TF_MO_04_Analyzer()
     
-    recommendations = analyzer.get_evidence_automation_recommendations()
-    assert recommendations['frr_id'] == "FRR-VDR-TF-MO-04", "FRR_ID mismatch"
-    # TODO: Add more assertions for evidence recommendations
+    queries = analyzer.get_evidence_collection_queries()
+    assert 'Stable resource identification' in queries, "Missing stable identification"
+    assert 'Monthly vulnerability scanning on stable assets' in queries, "Missing monthly scan"
     
-    print("[PASS] test_evidence_automation_recommendations PASSED")
+    artifacts = analyzer.get_evidence_artifacts()
+    assert len(artifacts) > 0, "Should have artifacts"
+    
+    recommendations = analyzer.get_evidence_automation_recommendations()
+    assert 'stable_resource_tagging' in recommendations, "Missing tagging"
+    
+    print("[PASS] test_evidence_collection PASSED")
 
 
 # TODO: Add language-specific tests
@@ -57,8 +63,7 @@ def run_all_tests():
     """Run all FRR-VDR-TF-MO-04 tests."""
     test_functions = [
         ("Analyzer metadata", test_analyzer_metadata),
-        ("Evidence automation recommendations", test_evidence_automation_recommendations),
-        # TODO: Add more test functions
+        ("Evidence collection", test_evidence_collection),
     ]
     
     passed = 0

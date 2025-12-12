@@ -20,8 +20,9 @@ def test_analyzer_metadata():
     
     assert analyzer.FRR_ID == "FRR-SCN-TR-01", "FRR_ID should be FRR-SCN-TR-01"
     assert analyzer.FAMILY == "SCN", "Family should be SCN"
-    assert analyzer.FRR_NAME == "N/A", "Title mismatch"
+    assert analyzer.FRR_NAME == None, "Title should be None"
     assert analyzer.PRIMARY_KEYWORD == "SHOULD", "Keyword mismatch"
+    assert analyzer.CODE_DETECTABLE == "Partial", "CODE_DETECTABLE should be Partial"
     assert analyzer.IMPACT_LOW == True, "Impact Low mismatch"
     assert analyzer.IMPACT_MODERATE == True, "Impact Moderate mismatch"
     assert analyzer.IMPACT_HIGH == True, "Impact High mismatch"
@@ -29,15 +30,26 @@ def test_analyzer_metadata():
     print("[PASS] test_analyzer_metadata PASSED")
 
 
-def test_evidence_automation_recommendations():
-    """Test evidence automation recommendations."""
+def test_evidence_collection_methods():
+    """Test evidence collection methods."""
     analyzer = FRR_SCN_TR_01_Analyzer()
     
-    recommendations = analyzer.get_evidence_automation_recommendations()
-    assert recommendations['frr_id'] == "FRR-SCN-TR-01", "FRR_ID mismatch"
-    # TODO: Add more assertions for evidence recommendations
+    # Test queries method
+    queries = analyzer.get_evidence_collection_queries()
+    assert isinstance(queries, dict), "Queries should be a dict"
+    assert len(queries) > 0, "Should have query platforms"
     
-    print("[PASS] test_evidence_automation_recommendations PASSED")
+    # Test artifacts method
+    artifacts = analyzer.get_evidence_artifacts()
+    assert isinstance(artifacts, list), "Artifacts should be a list"
+    assert len(artifacts) > 0, "Should have artifacts"
+    
+    # Test recommendations method
+    recommendations = analyzer.get_evidence_automation_recommendations()
+    assert isinstance(recommendations, dict), "Recommendations should be a dict"
+    assert len(recommendations) > 0, "Should have recommendations"
+    
+    print("[PASS] test_evidence_collection_methods PASSED")
 
 
 # TODO: Add language-specific tests
@@ -57,7 +69,7 @@ def run_all_tests():
     """Run all FRR-SCN-TR-01 tests."""
     test_functions = [
         ("Analyzer metadata", test_analyzer_metadata),
-        ("Evidence automation recommendations", test_evidence_automation_recommendations),
+        ("Evidence collection methods", test_evidence_collection_methods),
         # TODO: Add more test functions
     ]
     

@@ -80,77 +80,32 @@ class FRR_PVA_TF_LM_02_Analyzer(BaseFRRAnalyzer):
     # ============================================================================
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
+        """Analyze Python code for FRR-PVA-TF-LM-02 compliance.
+        
+        PVA-TF-LM-02 NOT code-detectable: 3-day machine validation frequency is operational.
         """
-        Analyze Python code for FRR-PVA-TF-LM-02 compliance using AST.
-        
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
+        return []
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for FRR-PVA-TF-LM-02 compliance using AST.
+        """Analyze C# code for FRR-PVA-TF-LM-02 compliance.
         
-        TODO: Implement C# analysis
+        PVA-TF-LM-02 NOT code-detectable: 3-day machine validation frequency is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        return []
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for FRR-PVA-TF-LM-02 compliance using AST.
+        """Analyze Java code for FRR-PVA-TF-LM-02 compliance.
         
-        TODO: Implement Java analysis
+        PVA-TF-LM-02 NOT code-detectable: 3-day machine validation frequency is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        return []
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for FRR-PVA-TF-LM-02 compliance using AST.
+        """Analyze TypeScript/JavaScript code for FRR-PVA-TF-LM-02 compliance.
         
-        TODO: Implement TypeScript analysis
+        PVA-TF-LM-02 NOT code-detectable: 3-day machine validation frequency is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
-        return findings
+        return []
     
     # ============================================================================
     # INFRASTRUCTURE AS CODE ANALYZERS (Regex-based)
@@ -174,106 +129,76 @@ class FRR_PVA_TF_LM_02_Analyzer(BaseFRRAnalyzer):
         return findings
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Terraform infrastructure code for FRR-PVA-TF-LM-02 compliance.
+        """Analyze Terraform infrastructure code for FRR-PVA-TF-LM-02 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        3-day machine validation frequency is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        return []
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
     # ============================================================================
     
     def analyze_github_actions(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitHub Actions workflow for FRR-PVA-TF-LM-02 compliance.
+        """Analyze GitHub Actions workflow for FRR-PVA-TF-LM-02 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        3-day machine validation frequency is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Azure Pipelines YAML for FRR-PVA-TF-LM-02 compliance.
+        """Analyze Azure Pipelines YAML for FRR-PVA-TF-LM-02 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        3-day machine validation frequency is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitLab CI YAML for FRR-PVA-TF-LM-02 compliance.
+        """Analyze GitLab CI YAML for FRR-PVA-TF-LM-02 compliance.
         
-        TODO: Implement GitLab CI analysis
+        3-day machine validation frequency is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
-        """
-        Get recommendations for automating evidence collection for FRR-PVA-TF-LM-02.
-        
-        TODO: Add evidence collection guidance
-        """
+    def get_evidence_collection_queries(self) -> dict:
+        """KQL queries for 3-day machine validation evidence (Moderate impact)."""
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
+            'automated_queries': [
+                "// Query 1: Resources tagged for 3-day validation (machine-based, Moderate impact)\nResources\n| where tags['validation-frequency'] == '3-day' and tags['resource-type'] == 'machine' and tags['impact-level'] == 'Moderate'\n| project resourceId, name, type, tags, location",
+                "// Query 2: 3-day validation activities (machine-based, 72-hour frequency)\nAzureActivity\n| where TimeGenerated > ago(3d)\n| where OperationNameValue contains 'validation'\n| where Properties contains '\"resource-type\":\"machine\"' and Properties contains '\"impact-level\":\"Moderate\"'\n| project TimeGenerated, ResourceId, OperationNameValue, Properties\n| order by TimeGenerated desc",
+                "// Query 3: Resources requiring 3-day validation (machine-based, Moderate impact)\nResources\n| where tags['requires-validation'] == 'true' and tags['resource-type'] == 'machine' and tags['impact-level'] == 'Moderate'\n| where tags['validation-frequency'] == '3-day'\n| project resourceId, name, type, tags"
+            ]
+        }
+
+    def get_evidence_artifacts(self) -> dict:
+        """Documentation artifacts for 3-day machine validation (Moderate impact)."""
+        return {
             'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                "Validation schedule for machine-based resources (3-day intervals)",
+                "Validation execution records per KSI (72-hour frequency)",
+                "Machine-based resource inventory (Moderate impact)",
+                "Validation frequency compliance reports (3-day intervals)",
+                "Validation completion tracking and overdue alerting",
+                "KSI validation results for machine-based resources",
+                "Validation process documentation (Moderate impact specific)",
+                "Validation automation and scheduling configuration"
+            ]
+        }
+
+    def get_evidence_automation_recommendations(self) -> dict:
+        """Implementation recommendations for 3-day machine validation (Moderate impact)."""
+        return {
+            'implementation_notes': [
+                "Define validation schedule for machine-based resources (every 3 days, 72-hour intervals)",
+                "Tag resources with validation-frequency='3-day', resource-type='machine', impact-level='Moderate' metadata",
+                "Document validation processes for machine-based resources (Moderate impact)",
+                "Track validation execution with timestamps and completion status",
+                "Maintain validation completion records per KSI",
+                "Configure alerting for validation overdue (72-hour deadline)",
+                "Review validation frequency compliance every 3 days"
             ]
         }

@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import Dict, List, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -159,39 +159,52 @@ class FRR_ICP_03_Analyzer(BaseFRRAnalyzer):
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for FRR-ICP-03 compliance using AST.
-        
-        TODO: Implement C# analysis
-        """
+        """Analyze C# code for FRR-ICP-03 CISA reporting mechanisms."""
         findings = []
-        lines = code.split('\n')
+        has_alerting = bool(re.search(r'(ILogger|SendGrid|HttpClient.*Post)', code))
+        has_cisa = bool(re.search(r'cisa|government.*reporting', code, re.IGNORECASE))
+        has_attack_vector = bool(re.search(r'attack.*vector|threat.*classification', code, re.IGNORECASE))
         
-        # TODO: Implement AST analysis for C#
+        if not has_alerting:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID, requirement_id=self.FRR_ID,
+                title="No CISA reporting mechanism detected",
+                description=f"C# code in '{file_path}' lacks CISA reporting. FRR-ICP-03 requires CISA reporting for specific incidents.",
+                severity=Severity.HIGH, file_path=file_path, line_number=1, code_snippet="",
+                recommendation="Implement CISA reporting: 1) Add HttpClient for CISA API, 2) Attack vector classification, 3) Integration with https://myservices.cisa.gov/irf"
+            ))
         return findings
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for FRR-ICP-03 compliance using AST.
-        
-        TODO: Implement Java analysis
-        """
+        """Analyze Java code for FRR-ICP-03 CISA reporting mechanisms."""
         findings = []
-        lines = code.split('\n')
+        has_alerting = bool(re.search(r'(HttpClient|sendEmail)', code, re.IGNORECASE))
+        has_cisa = bool(re.search(r'cisa|government.*reporting', code, re.IGNORECASE))
         
-        # TODO: Implement AST analysis for Java
+        if not has_alerting:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID, requirement_id=self.FRR_ID,
+                title="No CISA reporting mechanism detected",
+                description=f"Java code in '{file_path}' lacks CISA reporting. FRR-ICP-03 requires CISA reporting for specific incidents.",
+                severity=Severity.HIGH, file_path=file_path, line_number=1, code_snippet="",
+                recommendation="Implement CISA reporting: HttpClient for CISA API integration"
+            ))
         return findings
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for FRR-ICP-03 compliance using AST.
-        
-        TODO: Implement TypeScript analysis
-        """
+        """Analyze TypeScript/JavaScript code for FRR-ICP-03 CISA reporting mechanisms."""
         findings = []
-        lines = code.split('\n')
+        has_alerting = bool(re.search(r'(axios|fetch)', code, re.IGNORECASE))
+        has_cisa = bool(re.search(r'cisa|government.*reporting', code, re.IGNORECASE))
         
-        # TODO: Implement AST analysis for TypeScript
+        if not has_alerting:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID, requirement_id=self.FRR_ID,
+                title="No CISA reporting mechanism detected",
+                description=f"TypeScript code in '{file_path}' lacks CISA reporting. FRR-ICP-03 requires CISA reporting for specific incidents.",
+                severity=Severity.HIGH, file_path=file_path, line_number=1, code_snippet="",
+                recommendation="Implement CISA reporting: axios/fetch for CISA API integration"
+            ))
         return findings
     
     # ============================================================================
@@ -199,34 +212,36 @@ class FRR_ICP_03_Analyzer(BaseFRRAnalyzer):
     # ============================================================================
     
     def analyze_bicep(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Bicep infrastructure code for FRR-ICP-03 compliance.
-        
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
-        """
+        """Analyze Bicep infrastructure for CISA reporting resources."""
         findings = []
-        lines = code.split('\n')
+        has_logic_app = bool(re.search(r"resource\s+\w+\s+'Microsoft\.Logic/workflows", code))
+        has_function = bool(re.search(r"resource\s+\w+\s+'Microsoft\.Web/sites.*kind:\s*'functionapp'", code, re.DOTALL))
         
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
+        if not (has_logic_app or has_function):
+            findings.append(Finding(
+                ksi_id=self.FRR_ID, requirement_id=self.FRR_ID,
+                title="No CISA reporting automation detected",
+                description=f"Bicep template '{file_path}' lacks CISA reporting automation. FRR-ICP-03 requires CISA reporting infrastructure.",
+                severity=Severity.MEDIUM, file_path=file_path, line_number=1, code_snippet="",
+                recommendation="Deploy CISA reporting automation: Logic Apps or Functions for CISA API integration"
+            ))
         return findings
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Terraform infrastructure code for FRR-ICP-03 compliance.
-        
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
-        """
+        """Analyze Terraform infrastructure for CISA reporting resources."""
         findings = []
-        lines = code.split('\n')
+        has_azure_logic = bool(re.search(r'resource\s+"azurerm_logic_app_workflow"', code))
+        has_azure_function = bool(re.search(r'resource\s+"azurerm_function_app"', code))
+        has_aws_lambda = bool(re.search(r'resource\s+"aws_lambda_function"', code))
         
-        # TODO: Implement Terraform regex patterns
+        if not (has_azure_logic or has_azure_function or has_aws_lambda):
+            findings.append(Finding(
+                ksi_id=self.FRR_ID, requirement_id=self.FRR_ID,
+                title="No CISA reporting automation detected",
+                description=f"Terraform '{file_path}' lacks CISA reporting automation. FRR-ICP-03 requires CISA reporting infrastructure.",
+                severity=Severity.MEDIUM, file_path=file_path, line_number=1, code_snippet="",
+                recommendation="Deploy automation: azurerm_logic_app_workflow, azurerm_function_app, or aws_lambda_function for CISA reporting"
+            ))
         return findings
     
     # ============================================================================
@@ -234,88 +249,61 @@ class FRR_ICP_03_Analyzer(BaseFRRAnalyzer):
     # ============================================================================
     
     def analyze_github_actions(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitHub Actions workflow for FRR-ICP-03 compliance.
-        
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        """Analyze GitHub Actions for CISA reporting workflows."""
+        return []  # CISA reporting is runtime operational, not typically in CI/CD
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Azure Pipelines YAML for FRR-ICP-03 compliance.
-        
-        TODO: Implement Azure Pipelines analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        """Analyze Azure Pipelines for CISA reporting."""
+        return []  # CISA reporting is runtime operational
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitLab CI YAML for FRR-ICP-03 compliance.
-        
-        TODO: Implement GitLab CI analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        """Analyze GitLab CI for CISA reporting."""
+        return []  # CISA reporting is runtime operational
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
-        """
-        Get recommendations for automating evidence collection for FRR-ICP-03.
-        
-        This requirement is not directly code-detectable. Provides manual validation guidance.
-        """
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """Get evidence collection queries for CISA reporting."""
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            'automated_queries': [
+                "// Logic Apps - CISA reporting workflows",
+                "resources | where type =~ 'Microsoft.Logic/workflows'",
+                "| extend state = properties.state",
+                "| project name, resourceGroup, state, location"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """Get evidence artifacts for FRR-ICP-03."""
+        return {
+            'evidence_artifacts': [
+                "1. Incident Response Plan - CISA Reporting: Documented procedures for CISA reporting including 1-hour requirement, CISA attack vector taxonomy mapping, CISA Federal Incident Notification Guidelines compliance, CISA Incident Reporting System (IRS) access credentials, and attack vector classification process.",
+                "2. CISA IRS Account and Credentials: Evidence of CISA Incident Reporting System account at https://myservices.cisa.gov/irf including account credentials, authorized users, access logs, and training on CISA IRS usage.",
+                "3. Attack Vector Classification Logic: Documentation or code showing how incidents are classified against CISA attack vectors taxonomy (https://www.cisa.gov/federal-incident-notification-guidelines#attack-vectors-taxonomy) including automated classification where possible, manual review process for ambiguous cases, and decision tree for CISA reporting determination.",
+                "4. Historical CISA Incident Reports: Records of past incidents reported to CISA showing incident identification timestamp, CISA reporting timestamp (within 1 hour), attack vector classification, CISA IRS submission confirmation, and CISA case numbers.",
+                "5. CISA Reporting Automation: Logic Apps, Functions, or automation scripts for CISA reporting including CISA IRS API integration (if available), attack vector detection logic, 1-hour reporting capability, and notification to incident response team.",
+                "6. Staff Training - CISA Reporting: Training records for incident response team including CISA Federal Incident Notification Guidelines training, attack vector taxonomy familiarization, CISA IRS system training, and 1-hour reporting requirement awareness.",
+                "7. CISA Reporting Templates: Pre-configured templates for CISA incident reports including required fields per CISA guidelines, attack vector taxonomy references, and submission workflow.",
+                "8. Testing Evidence - CISA Reporting: Records of CISA reporting testing including tabletop exercises with CISA reporting scenarios, CISA IRS system testing, 1-hour reporting capability validation, and feedback from CISA coordination."
+            ]
+        }
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """Get automation recommendations for FRR-ICP-03."""
+        return {
+            'implementation_notes': (
+                "FRR-ICP-03 requires Providers to MUST responsibly report incidents to CISA within 1 hour if the incident matches CISA attack vectors taxonomy. This is a conditional MUST requirement that applies only to specific incident types defined by CISA Federal Incident Notification Guidelines.\\n\\n"
+                "COMPLIANCE APPROACH:\\n"
+                "1. CISA Attack Vector Classification: Implement logic to determine if incidents match CISA attack vectors (Ransomware, Phishing, Supply Chain Compromise, etc.) per https://www.cisa.gov/federal-incident-notification-guidelines#attack-vectors-taxonomy\\n"
+                "2. CISA IRS Integration: Obtain CISA Incident Reporting System account at https://myservices.cisa.gov/irf and integrate reporting workflow\\n"
+                "3. 1-Hour Reporting: Automate or expedite CISA reporting to meet 1-hour requirement for applicable incidents\\n"
+                "4. CISA Guidelines Compliance: Follow CISA Federal Incident Notification Guidelines at https://www.cisa.gov/federal-incident-notification-guidelines\\n\\n"
+                "RECOMMENDED AZURE SERVICES:\\n"
+                "1. Azure Logic Apps: Automate CISA reporting workflows with attack vector classification and CISA IRS integration\\n"
+                "2. Azure Functions: Create serverless functions for CISA attack vector detection and reporting\\n"
+                "3. Azure Monitor: Detect incidents that may match CISA attack vectors\\n\\n"
+                "LIMITATION: Code analysis detects CISA reporting INFRASTRUCTURE, not actual runtime CISA reporting. Compliance validated through operational records of historical CISA incident reports."
+            )
         }

@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,54 @@ class FRR_VDR_RP_01_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-RP-01.
+        Get queries for collecting evidence of monthly vulnerability reporting.
         
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        Returns queries to verify persistent monthly reporting of detection and response activity.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "Monthly report generation": [
+                "ReportingSystem | where ReportType == 'Vulnerability Monthly Summary' | where TimeGenerated > ago(90d) | summarize ReportCount=count() by bin(TimeGenerated, 30d), RecipientParty",
+                "SecurityReports | where Category == 'Vulnerability Detection and Response' | where Frequency == 'Monthly' | project GeneratedDate, ReportPeriodStart, ReportPeriodEnd, RecipientParties"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "Vulnerability detection activity": [
+                "SecurityAlert | where TimeGenerated > ago(30d) | summarize VulnerabilitiesDetected=count() by bin(TimeGenerated, 1d), Severity",
+                "microsoft.security/assessments | where properties.status.code != 'Healthy' | summarize VulnerabilityCount=count() by properties.status.severity, bin(TimeGenerated, 1d)"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
+            "Response activity tracking": [
+                "Remediation | where Category == 'Vulnerability' | where TimeGenerated > ago(30d) | summarize RemediationsCompleted=count(), AvgTimeToRemediate=avg(TimeToResolve) by bin(TimeGenerated, 1d)",
+                "ChangeManagement | where ChangeType == 'Security Patch' | where TimeGenerated > ago(30d) | project TimeGenerated, AffectedResources, PatchDetails, CompletionStatus"
             ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "Report delivery tracking": [
+                "AuditLogs | where OperationName == 'Send Vulnerability Report' | where TimeGenerated > ago(90d) | project TimeGenerated, RecipientParties, ReportPeriod, DeliveryStatus",
+                "EmailLogs | where Subject contains 'Monthly Vulnerability Report' | where TimeGenerated > ago(90d) | summarize ReportsSent=count() by bin(TimeGenerated, 30d), Recipient"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for monthly vulnerability reporting.
+        """
+        return [
+            "Monthly vulnerability detection and response reports (last 12 months minimum)",
+            "Report distribution lists (FedRAMP, agencies, authorizing officials)",
+            "Report delivery confirmation receipts (email delivery, portal access logs)",
+            "Report generation automation configuration (scheduled jobs, report templates)",
+            "Vulnerability tracking data sources (Defender for Cloud, vulnerability scanners, SIEM)",
+            "Response activity documentation (remediation tickets, patch deployment logs)",
+            "Historical trend analysis reports (vulnerability counts, response times over time)",
+            "ADS compliance documentation (authorization data handling procedures)"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Get recommendations for automating evidence collection.
+        """
+        return {
+            "Automated report generation": "Implement scheduled monthly vulnerability reports aggregating all detection and response activity (Azure Monitor Workbooks, Power BI, custom reporting)",
+            "Comprehensive data aggregation": "Centralize vulnerability data from all sources (Defender for Cloud, scanners, SIEM) for complete monthly summaries",
+            "Persistent delivery mechanism": "Automate report distribution to all necessary parties monthly (email automation, secure portal, API integration)",
+            "ADS compliance tracking": "Tag vulnerability reports as authorization data, track through ADS process (metadata tagging, audit trails)",
+            "Trend analysis automation": "Generate month-over-month trend charts for vulnerability detection and response metrics (PowerBI dashboards, Azure Monitor insights)"
         }

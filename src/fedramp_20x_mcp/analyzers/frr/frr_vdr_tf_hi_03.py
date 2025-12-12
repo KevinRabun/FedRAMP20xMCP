@@ -10,7 +10,7 @@ Impact Levels: High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,50 @@ class FRR_VDR_TF_HI_03_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-TF-HI-03.
+        Get queries for collecting evidence of 7-day drift detection scanning (High impact).
         
-        TODO: Add evidence collection guidance
+        Returns queries to verify weekly vulnerability detection on drift-prone resources.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "Drift-prone resource identification": [
+                "Resources | where Tags contains 'drift-prone' or DeploymentMethod == 'Manual' or ConfigurationManagement == 'None' | project ResourceId, ResourceType, LastConfigChange, DriftRiskScore",
+                "ChangeTracking | summarize ChangeCount=count() by Computer, bin(TimeGenerated, 7d) | where ChangeCount > 10 | project Computer, ChangeCount, DriftLikelihood='High'"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "Weekly vulnerability scanning on drift-prone assets": [
+                "VulnerabilityScans | where TimeGenerated > ago(30d) | where TargetResourceDriftProne == true | summarize ScanCount=count() by bin(TimeGenerated, 7d), ResourceId | where ScanCount >= 1",
+                "DefenderVulnerabilityAssessments | where AssessmentType == 'Drift Detection' | where TimeGenerated > ago(7d) | project TimeGenerated, ResourceId, DriftDetected, VulnerabilitiesFound"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "Persistent drift detection verification": [
+                "SecurityCenter | where RecommendationType == 'ConfigurationDrift' | where TimeGenerated > ago(30d) | summarize DriftDetections=count() by bin(TimeGenerated, 7d), Resource",
+                "ConfigurationComplianceScans | where ScanType == 'Drift' | where TimeGenerated > ago(7d) | summarize WeeklyScanCount=count(), DriftInstancesFound=countif(DriftDetected==true) by ResourceGroup"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for 7-day drift detection.
+        """
+        return [
+            "Drift-prone resource inventory (assets likely to drift: manual deployments, unmanaged configs)",
+            "Weekly vulnerability scanning schedule for drift-prone resources (at least every 7 days)",
+            "Drift detection scan execution logs (last 30 days, verify weekly cadence)",
+            "Configuration drift detection results (baseline comparisons, change tracking)",
+            "Vulnerability findings from drift-prone resource scans (last 30 days)",
+            "Persistent scanning job configurations (automated weekly drift detection)",
+            "Resource drift risk classifications (criteria for identifying drift-prone assets)",
+            "Baseline configurations for drift comparison (IaC templates, approved configs)"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Get recommendations for automating evidence collection.
+        """
+        return {
+            "Drift-prone resource tagging": "Automatically identify and tag resources likely to drift (manual deployments, no config management, frequent changes) using Azure Policy or Resource Graph queries",
+            "Automated weekly drift scanning": "Configure automated vulnerability scanning at least weekly for all drift-prone resources (Microsoft Defender for Cloud, Azure Security Center)",
+            "Configuration baseline monitoring": "Implement automated configuration drift detection using desired state configuration or IaC comparison (Azure Automation State Configuration, Terraform drift detection)",
+            "Persistent scan execution": "Ensure scanning jobs run continuously on drift-prone resources without manual intervention (Azure Automation runbooks, scheduled Logic Apps)",
+            "Drift remediation tracking": "Track detected configuration drift and associated vulnerabilities for remediation (Log Analytics workspace, custom dashboards, Azure Workbooks)"
         }

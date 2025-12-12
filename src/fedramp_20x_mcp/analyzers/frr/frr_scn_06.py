@@ -252,47 +252,84 @@ class FRR_SCN_06_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> dict:
         """
-        Get recommendations for automating evidence collection for FRR-SCN-06.
-        
-        TODO: Add evidence collection guidance
+        Get automated queries for collecting evidence of FedRAMP best practices adherence.
         """
         return {
             'frr_id': self.FRR_ID,
             'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            'azure_resource_graph': [
+                "// Find documentation resources referencing FedRAMP guidance",
+                "Resources | where type =~ 'microsoft.appconfiguration/configurationstores' | where tags contains 'fedramp-guidance'",
+                "// Find Wiki/documentation with FedRAMP references",
+                "Resources | where type =~ 'microsoft.visualstudio/account/project' | project name, properties.wiki"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            'azure_monitor_kql': [
+                "// Track access to FedRAMP guidance documentation",
+                "AppTraces | where Properties.DocumentCategory == 'FedRAMPGuidance' | project timestamp, Properties.DocumentId, Properties.AccessedBy",
+                "// Change assessment following FedRAMP templates",
+                "AzureDiagnostics | where ResourceType == 'DEVOPS' | where Message contains 'FedRAMP template' | project TimeGenerated, Caller, Message"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
+            'azure_cli': [
+                "az devops wiki page show --wiki <wiki> --path '/FedRAMP/Change-Assessment-Guide'",
+                "az repos show --repository <repo> --query 'documentation/fedramp'"
+            ]
+        }
+
+    def get_evidence_artifacts(self) -> dict:
+        """
+        Get evidence artifacts demonstrating use of FedRAMP best practices.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
+            'code_locations': [
+                'Change assessment templates referencing FedRAMP guidance (templates/change-assessment/)',
+                'FedRAMP best practices documentation (docs/fedramp/)',
+                'SCN notification templates following FedRAMP format (templates/scn/)',
+                'Training materials on FedRAMP change management (training/fedramp-change/)'
+            ],
+            'documentation': [
+                'Evidence of FedRAMP best practices adoption in procedures',
+                'Training records for FedRAMP significant change guidance',
+                'Change assessment forms referencing FedRAMP technical assistance',
+                'Links to FedRAMP.gov resources in change management documentation',
+                'Records of consultations with FedRAMP PMO on change assessment'
+            ],
+            'configuration_samples': [
+                'Change workflow templates based on FedRAMP guidance',
+                'SCN notification format following FedRAMP standards',
+                'Change type classifications aligned with FedRAMP definitions',
+                'Assessment checklists derived from FedRAMP best practices'
+            ]
+        }
+
+    def get_evidence_automation_recommendations(self) -> dict:
+        """
+        Get recommendations for automating evidence collection for FedRAMP guidance adherence.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
+            'code_detectable': 'Partial',
+            'implementation_notes': [
+                'Documentation systems can track references to FedRAMP guidance',
+                'Templates can embed FedRAMP best practices and technical assistance',
+                'Training systems can enforce completion of FedRAMP change management training',
+                'Change workflows can require attestation of FedRAMP guidance review',
+                'Audit logs can track access to FedRAMP documentation and resources'
             ],
             'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
+                'Azure DevOps Wiki - Centralized FedRAMP guidance documentation',
+                'GitHub Pages - Published FedRAMP best practices for teams',
+                'Learning Management System - FedRAMP training tracking',
+                'SharePoint - Document library for FedRAMP resources'
             ],
             'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                'Links to FedRAMP.gov in change management systems',
+                'References to FedRAMP technical assistance in templates',
+                'Integration with FedRAMP PMO consultation process',
+                'Automated reminders to review FedRAMP guidance for significant changes'
             ]
         }

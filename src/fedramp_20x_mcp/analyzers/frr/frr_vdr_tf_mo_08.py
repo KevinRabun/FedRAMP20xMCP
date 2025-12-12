@@ -10,7 +10,7 @@ Impact Levels: Moderate
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -236,47 +236,39 @@ class FRR_VDR_TF_MO_08_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
-        """
-        Get recommendations for automating evidence collection for FRR-VDR-TF-MO-08.
-        
-        TODO: Add evidence collection guidance
-        """
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """Get queries for Moderate ongoing operational remediation."""
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
-            ]
+            "Ongoing remediation activity": {
+                "description": "Track ongoing vulnerability remediation during routine operations (Moderate)",
+                "defender_kql": "SecurityAssessment | where RemediationStatus == 'InProgress' and ImpactLevel == 'Moderate' | project TimeGenerated, VulnerabilityId, RemediationActivity"
+            },
+            "Routine operations integration": {
+                "description": "Verify remediation integrated into routine operations (Moderate)"
+            },
+            "Risk-based remediation decisions": {
+                "description": "Track provider-determined remediation priorities (Moderate)"
+            }
+        }
+
+    def get_evidence_artifacts(self) -> List[str]:
+        """Get artifacts for Moderate ongoing operational remediation."""
+        return [
+            "Ongoing remediation activity logs (Moderate impact)",
+            "Routine operations integration documentation",
+            "Risk-based remediation decision records",
+            "Vulnerability remediation workflow documentation"
+        ]
+
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """Get automation recommendations for Moderate ongoing operational remediation."""
+        return {
+            "operational_remediation_tracking": {
+                "description": "Track ongoing remediation activities during routine operations",
+                "rationale": "Provides visibility into Moderate ongoing remediation per FRR-VDR-TF-MO-08"
+            },
+            "risk_based_prioritization": {
+                "description": "Support risk-based remediation prioritization",
+                "rationale": "Enables provider-determined remediation decisions per FRR-VDR-TF-MO-08"
+            }
         }

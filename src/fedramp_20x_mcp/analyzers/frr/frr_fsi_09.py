@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import Dict, List, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -79,76 +79,79 @@ class FRR_FSI_09_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-FSI-09 compliance using AST.
+        Analyze Python code for FRR-FSI-09 compliance.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
+        This analyzer is NOT APPLICABLE because FRR-FSI-09 requires CSPs to establish
+        and maintain a dedicated email address (FedRAMP Security Inbox) to receive
+        messages from FedRAMP. This is an operational email infrastructure requirement
+        that cannot be detected in application code.
         
-        Detection targets:
-        - TODO: List what patterns to detect
+        Args:
+            code: Python source code to analyze
+            file_path: Optional path to the file being analyzed
+            
+        Returns:
+            Empty list (operational requirement, not code-detectable)
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
+        # NOT APPLICABLE: Operational email infrastructure requirement
+        return []
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze C# code for FRR-FSI-09 compliance using AST.
+        Analyze C# code for FRR-FSI-09 compliance.
         
-        TODO: Implement C# analysis
+        This analyzer is NOT APPLICABLE because FRR-FSI-09 requires CSPs to establish
+        and maintain a dedicated email address (FedRAMP Security Inbox) to receive
+        messages from FedRAMP. This is an operational email infrastructure requirement
+        that cannot be detected in application code.
+        
+        Args:
+            code: C# source code to analyze
+            file_path: Optional path to the file being analyzed
+            
+        Returns:
+            Empty list (operational requirement, not code-detectable)
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        # NOT APPLICABLE: Operational email infrastructure requirement
+        return []
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Java code for FRR-FSI-09 compliance using AST.
+        Analyze Java code for FRR-FSI-09 compliance.
         
-        TODO: Implement Java analysis
+        This analyzer is NOT APPLICABLE because FRR-FSI-09 requires CSPs to establish
+        and maintain a dedicated email address (FedRAMP Security Inbox) to receive
+        messages from FedRAMP. This is an operational email infrastructure requirement
+        that cannot be detected in application code.
+        
+        Args:
+            code: Java source code to analyze
+            file_path: Optional path to the file being analyzed
+            
+        Returns:
+            Empty list (operational requirement, not code-detectable)
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        # NOT APPLICABLE: Operational email infrastructure requirement
+        return []
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze TypeScript/JavaScript code for FRR-FSI-09 compliance using AST.
+        Analyze TypeScript/JavaScript code for FRR-FSI-09 compliance.
         
-        TODO: Implement TypeScript analysis
+        This analyzer is NOT APPLICABLE because FRR-FSI-09 requires CSPs to establish
+        and maintain a dedicated email address (FedRAMP Security Inbox) to receive
+        messages from FedRAMP. This is an operational email infrastructure requirement
+        that cannot be detected in application code.
+        
+        Args:
+            code: TypeScript/JavaScript source code to analyze
+            file_path: Optional path to the file being analyzed
+            
+        Returns:
+            Empty list (operational requirement, not code-detectable)
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
-        return findings
+        # NOT APPLICABLE: Operational email infrastructure requirement
+        return []
     
     # ============================================================================
     # INFRASTRUCTURE AS CODE ANALYZERS (Regex-based)
@@ -156,34 +159,45 @@ class FRR_FSI_09_Analyzer(BaseFRRAnalyzer):
     
     def analyze_bicep(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Bicep infrastructure code for FRR-FSI-09 compliance.
+        Analyze Bicep IaC for FRR-FSI-09 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        This analyzer is NOT APPLICABLE because FRR-FSI-09 requires CSPs to establish
+        and maintain a dedicated email address (FedRAMP Security Inbox) to receive
+        messages from FedRAMP. This is an operational email infrastructure requirement
+        that cannot be detected in infrastructure-as-code templates. Email service setup
+        is typically configured through cloud provider consoles or operational procedures,
+        not IaC.
+        
+        Args:
+            code: Bicep IaC code to analyze
+            file_path: Optional path to the file being analyzed
+            
+        Returns:
+            Empty list (operational requirement, not IaC-detectable)
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        # NOT APPLICABLE: Operational email infrastructure requirement
+        return []
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Terraform infrastructure code for FRR-FSI-09 compliance.
+        Analyze Terraform IaC for FRR-FSI-09 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        This analyzer is NOT APPLICABLE because FRR-FSI-09 requires CSPs to establish
+        and maintain a dedicated email address (FedRAMP Security Inbox) to receive
+        messages from FedRAMP. This is an operational email infrastructure requirement
+        that cannot be detected in infrastructure-as-code templates. Email service setup
+        is typically configured through cloud provider consoles or operational procedures,
+        not IaC.
+        
+        Args:
+            code: Terraform IaC code to analyze
+            file_path: Optional path to the file being analyzed
+            
+        Returns:
+            Empty list (operational requirement, not IaC-detectable)
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        # NOT APPLICABLE: Operational email infrastructure requirement
+        return []
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
@@ -193,85 +207,164 @@ class FRR_FSI_09_Analyzer(BaseFRRAnalyzer):
         """
         Analyze GitHub Actions workflow for FRR-FSI-09 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
-        """
-        findings = []
-        lines = code.split('\n')
+        This analyzer is NOT APPLICABLE because FRR-FSI-09 requires CSPs to establish
+        and maintain a dedicated email address (FedRAMP Security Inbox) to receive
+        messages from FedRAMP. This is an operational email infrastructure requirement
+        that cannot be detected in CI/CD pipelines.
         
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        Args:
+            code: GitHub Actions YAML workflow
+            file_path: Optional path to the file being analyzed
+            
+        Returns:
+            Empty list (operational requirement, not CI/CD-detectable)
+        """
+        # NOT APPLICABLE: Operational email infrastructure requirement
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Azure Pipelines YAML for FRR-FSI-09 compliance.
         
-        TODO: Implement Azure Pipelines analysis
-        """
-        findings = []
-        lines = code.split('\n')
+        This analyzer is NOT APPLICABLE because FRR-FSI-09 requires CSPs to establish
+        and maintain a dedicated email address (FedRAMP Security Inbox) to receive
+        messages from FedRAMP. This is an operational email infrastructure requirement
+        that cannot be detected in CI/CD pipelines.
         
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        Args:
+            code: Azure Pipelines YAML
+            file_path: Optional path to the file being analyzed
+            
+        Returns:
+            Empty list (operational requirement, not CI/CD-detectable)
+        """
+        # NOT APPLICABLE: Operational email infrastructure requirement
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze GitLab CI YAML for FRR-FSI-09 compliance.
+        Analyze GitLab CI configuration for FRR-FSI-09 compliance.
         
-        TODO: Implement GitLab CI analysis
+        This analyzer is NOT APPLICABLE because FRR-FSI-09 requires CSPs to establish
+        and maintain a dedicated email address (FedRAMP Security Inbox) to receive
+        messages from FedRAMP. This is an operational email infrastructure requirement
+        that cannot be detected in CI/CD pipelines.
+        
+        Args:
+            code: GitLab CI YAML configuration
+            file_path: Optional path to the file being analyzed
+            
+        Returns:
+            Empty list (operational requirement, not CI/CD-detectable)
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        # NOT APPLICABLE: Operational email infrastructure requirement
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
         """
-        Get recommendations for automating evidence collection for FRR-FSI-09.
+        Get Azure Resource Graph and other queries for evidence collection.
         
-        TODO: Add evidence collection guidance
+        Returns a dict with 'automated_queries' key containing query notes.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            'automated_queries': [
+                "FRR-FSI-09 is an operational requirement for CSPs to establish and maintain "
+                "a dedicated email address to receive FedRAMP messages. Evidence cannot be "
+                "collected through automated queries of Azure resources or code repositories. "
+                "Evidence should consist of CSP's operational procedures and documentation "
+                "for the FedRAMP Security Inbox (FSI)."
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get list of evidence artifacts to collect for FRR-FSI-09 compliance.
+        
+        Returns a dict with 'evidence_artifacts' key containing artifact list.
+        """
+        return {
+            'evidence_artifacts': [
+                "1. Email Configuration Documentation: Record of the dedicated email address "
+                "established as the FedRAMP Security Inbox (FSI), including email domain, "
+                "address format, and establishment date.",
+                
+                "2. Inbox Monitoring Procedures: Documented procedures for monitoring the FSI, "
+                "including frequency of checks, responsible personnel, escalation paths, and "
+                "after-hours/weekend coverage.",
+                
+                "3. Message Processing Workflow: Documented workflow for processing FedRAMP "
+                "messages received in the FSI, including triage procedures, response timeframes, "
+                "and tracking mechanisms.",
+                
+                "4. Access Control Records: List of personnel authorized to access the FSI, "
+                "including role-based access controls, audit logs of access events, and "
+                "periodic access reviews.",
+                
+                "5. Inbox Maintenance Records: Records of FSI maintenance activities, including "
+                "mailbox size monitoring, spam filtering configuration, backup procedures, and "
+                "any service interruptions or migrations.",
+                
+                "6. Response Time Metrics: Historical records of CSP response times to FedRAMP "
+                "messages received in the FSI, demonstrating compliance with FRR-FSI-06 timeframes "
+                "and FRR-FSI-08 transparency requirements.",
+                
+                "7. FedRAMP Communication Policy: Internal policy document specifying the FSI as "
+                "the official channel for receiving FedRAMP messages, including references to "
+                "related requirements (FSI-01 through FSI-08).",
+                
+                "8. Inbox Availability Records: Uptime records for the FSI email service, including "
+                "any redundancy or failover mechanisms to ensure continuous availability for "
+                "receiving FedRAMP messages."
+            ]
+        }
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get recommendations for automating evidence collection.
+        
+        Returns a dict with 'implementation_notes' key containing guidance.
+        """
+        return {
+            'implementation_notes': (
+                "FRR-FSI-09 requires CSPs to establish and maintain a dedicated email address "
+                "(FedRAMP Security Inbox) to receive messages from FedRAMP. This is an operational "
+                "email infrastructure requirement that cannot be detected through code analysis, "
+                "IaC templates, or CI/CD pipelines.\n\n"
+                
+                "COMPLIANCE APPROACH:\n"
+                "1. Email Service Setup: CSPs should establish a dedicated, monitored email address "
+                "specifically for receiving FedRAMP communications. This is typically a role-based "
+                "email address (e.g., fedramp-security@csp.example) rather than a personal address.\n\n"
+                
+                "2. Operational Procedures: CSPs must document and implement procedures for:\n"
+                "   - Regular monitoring of the FSI (24/7 for High systems, business hours for others)\n"
+                "   - Triage and response to FedRAMP messages within required timeframes (FRR-FSI-06)\n"
+                "   - Escalation of urgent/emergency messages (FRR-FSI-03, FRR-FSI-04)\n"
+                "   - Tracking and responding to required actions (FRR-FSI-05, FRR-FSI-07)\n\n"
+                
+                "3. Access Control: Implement appropriate access controls for the FSI, ensuring only "
+                "authorized personnel can access FedRAMP messages while maintaining audit logs of all "
+                "access events.\n\n"
+                
+                "4. Availability & Redundancy: Ensure the FSI email service has appropriate availability "
+                "guarantees, backup mechanisms, and failover capabilities to prevent loss of FedRAMP "
+                "messages.\n\n"
+                
+                "EVIDENCE COLLECTION:\n"
+                "Evidence for FRR-FSI-09 consists of operational documentation and records, not code "
+                "or infrastructure configurations. Key evidence includes:\n"
+                "- Email configuration documentation showing the FSI email address\n"
+                "- Procedures for monitoring and responding to FSI messages\n"
+                "- Access control records and audit logs\n"
+                "- Response time metrics and availability records\n"
+                "- Internal policies designating the FSI as the official FedRAMP communication channel\n\n"
+                
+                "NOT APPLICABLE: This requirement cannot be validated through automated code analysis, "
+                "IaC scanning, or CI/CD pipeline checks. Compliance is demonstrated through operational "
+                "procedures and documentation, not code artifacts."
+            )
         }

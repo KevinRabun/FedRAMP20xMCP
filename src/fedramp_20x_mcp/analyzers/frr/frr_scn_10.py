@@ -251,47 +251,84 @@ class FRR_SCN_10_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> dict:
         """
-        Get recommendations for automating evidence collection for FRR-SCN-10.
-        
-        TODO: Add evidence collection guidance
+        Get automated queries for collecting evidence of additional SCN information.
         """
         return {
             'frr_id': self.FRR_ID,
             'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            'azure_resource_graph': [
+                "// Find SCN templates with optional fields",
+                "Resources | where type =~ 'microsoft.appconfiguration/configurationstores' | where tags contains 'scn-optional-fields'",
+                "// Find SCN with additional context",
+                "Resources | where type =~ 'microsoft.storage/storageaccounts' | where name contains 'scn'"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            'azure_monitor_kql': [
+                "// SCN submissions with additional information",
+                "AppTraces | where Properties.Activity == 'SCN-Submission' | where Properties.OptionalFieldsCount > 0 | project timestamp, Properties.SCN_ID, Properties.OptionalFields",
+                "// Enhanced SCN content",
+                "AzureDiagnostics | where Category == 'SCN' | where additional_info_s != '' | project TimeGenerated, scn_id_s, additional_info_s"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
+            'azure_cli': [
+                "az storage blob download --account-name <account> --container-name scn --name <scn-id>.json",
+                "az cosmosdb sql item read --account-name <account> --database-name scn --container-name notifications --item-id <scn-id>"
+            ]
+        }
+
+    def get_evidence_artifacts(self) -> dict:
+        """
+        Get evidence artifacts demonstrating additional relevant SCN information.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
+            'code_locations': [
+                'SCN template with optional fields (templates/scn-extended-template.json)',
+                'Additional context fields (src/scn/optional-fields.ts)',
+                'SCN enhancement logic (src/scn/enrichment.py)',
+                'Optional field configuration (config/scn-optional.yml)'
+            ],
+            'documentation': [
+                'List of recommended additional SCN fields',
+                'Examples of enhanced SCNs with additional context',
+                'Guidance on when to include additional information',
+                'Sample SCNs with supplementary details',
+                'Benefits of including additional relevant information'
+            ],
+            'configuration_samples': [
+                'SCN template with optional field sections',
+                'Form supporting additional information entry',
+                'Database schema with optional SCN columns',
+                'API accepting optional SCN parameters'
+            ]
+        }
+
+    def get_evidence_automation_recommendations(self) -> dict:
+        """
+        Get recommendations for automating evidence collection for additional SCN info.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
+            'code_detectable': 'Partial',
+            'implementation_notes': [
+                'Templates can include optional fields for additional information',
+                'Forms can provide sections for supplementary SCN context',
+                'APIs can accept optional parameters for enhanced SCN content',
+                'Storage schemas support additional information fields',
+                'Guidance can recommend helpful additional information to include'
             ],
             'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
+                'Azure Storage - Flexible schema for additional SCN data',
+                'Cosmos DB - Schema-less storage for varied additional fields',
+                'Azure Forms - Optional field sections for SCN enhancement',
+                'Azure API Management - Optional parameters for SCN APIs'
             ],
             'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                'Templates with optional field support',
+                'Forms with supplementary information sections',
+                'APIs with optional parameter handling',
+                'Storage supporting variable SCN content'
             ]
         }

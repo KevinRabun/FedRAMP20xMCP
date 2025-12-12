@@ -10,7 +10,7 @@ Impact Levels: High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,50 @@ class FRR_VDR_TF_HI_02_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-TF-HI-02.
+        Get queries for collecting evidence of daily vulnerability sampling (High impact).
         
-        TODO: Add evidence collection guidance
+        Returns queries to verify daily vulnerability detection on representative samples.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "Daily vulnerability scan execution": [
+                "VulnerabilityScans | where TimeGenerated > ago(30d) | where ScanType == 'Sample' | summarize ScanCount=count() by bin(TimeGenerated, 1d) | where ScanCount >= 1",
+                "DefenderVulnerabilityAssessments | where AssessmentType == 'Representative Sample' | where TimeGenerated > ago(7d) | summarize DailyScanCount=count() by bin(TimeGenerated, 1d)"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "Representative sampling strategy": [
+                "AssetInventory | where AssetType == 'Machine-based' | summarize TotalAssets=count(), SampledAssets=countif(IncludedInDailySample==true) by ResourceGroup | extend SamplePercentage=todouble(SampledAssets)/todouble(TotalAssets)*100",
+                "ScanConfiguration | where ScanType == 'Daily Sample' | project TimeGenerated, SamplingStrategy, RepresentativeCriteria, AssetSelectionLogic"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "Persistent scanning verification": [
+                "VulnerabilityScanJobs | where JobType == 'Daily Sample Scan' | where TimeGenerated > ago(30d) | summarize SuccessfulScans=countif(Status=='Completed'), FailedScans=countif(Status=='Failed') by bin(TimeGenerated, 1d)",
+                "SecurityCenter | where RecommendationName contains 'vulnerability' | where TimeGenerated > ago(7d) | summarize FindingsCount=count() by bin(TimeGenerated, 1d), Severity"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for daily vulnerability sampling.
+        """
+        return [
+            "Vulnerability scanning schedule configuration (daily frequency for High impact samples)",
+            "Representative sampling strategy documentation (asset selection criteria)",
+            "Daily scan execution logs (last 30 days, verify daily cadence)",
+            "Asset inventory with sampling assignments (machine-based resources)",
+            "Scan results showing daily vulnerability detections on sampled assets",
+            "Sampling coverage reports (percentage of similar assets represented)",
+            "Persistent scanning job configurations (automated daily execution)",
+            "Vulnerability findings from daily sample scans (last 30 days)"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Get recommendations for automating evidence collection.
+        """
+        return {
+            "Automated daily scanning": "Configure automated vulnerability scanning of representative asset samples at least daily for High impact systems (Microsoft Defender for Cloud, Qualys, Tenable scheduled scans)",
+            "Representative sampling strategy": "Implement automated asset grouping and representative sample selection for similar machine-based resources (Azure Resource Graph queries, tagging strategies)",
+            "Persistent scan execution": "Ensure scanning jobs run continuously without manual intervention, monitor for missed scans (Azure Automation runbooks, Logic Apps)",
+            "Scan result aggregation": "Collect and aggregate daily scan results for reporting and trend analysis (Log Analytics workspace, custom dashboards)",
+            "Coverage monitoring": "Track sampling coverage to ensure representative assets are consistently scanned (Azure Monitor alerts, coverage metrics)"
         }

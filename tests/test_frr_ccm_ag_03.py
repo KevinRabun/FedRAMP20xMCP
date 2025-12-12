@@ -34,8 +34,9 @@ def test_evidence_automation_recommendations():
     analyzer = FRR_CCM_AG_03_Analyzer()
     
     recommendations = analyzer.get_evidence_automation_recommendations()
-    assert recommendations['frr_id'] == "FRR-CCM-AG-03", "FRR_ID mismatch"
-    # TODO: Add more assertions for evidence recommendations
+    assert 'automated_queries' in recommendations, "Missing automated_queries"
+    assert 'evidence_artifacts' in recommendations, "Missing evidence_artifacts"
+    assert 'implementation_notes' in recommendations, "Missing implementation_notes"
     
     print("[PASS] test_evidence_automation_recommendations PASSED")
 

@@ -10,7 +10,7 @@ Impact Levels: High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,50 @@ class FRR_VDR_TF_HI_04_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-TF-HI-04.
+        Get queries for collecting evidence of monthly vulnerability detection on stable resources (High impact).
         
-        TODO: Add evidence collection guidance
+        Returns queries to verify monthly vulnerability detection on non-drift-prone resources.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "Stable resource identification": [
+                "Resources | where Tags !contains 'drift-prone' and DeploymentMethod == 'IaC' and ConfigurationManagement in ('Desired State', 'Managed') | project ResourceId, ResourceType, LastConfigChange, StabilityScore",
+                "ChangeTracking | summarize ChangeCount=count() by Computer, bin(TimeGenerated, 30d) | where ChangeCount <= 5 | project Computer, ChangeCount, StabilityLevel='High'"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "Monthly vulnerability scanning on stable assets": [
+                "VulnerabilityScans | where TimeGenerated > ago(90d) | where TargetResourceDriftProne == false | summarize ScanCount=count() by bin(TimeGenerated, 30d), ResourceId | where ScanCount >= 1",
+                "DefenderVulnerabilityAssessments | where AssessmentType == 'Standard' | where TimeGenerated > ago(30d) | where ResourceStability == 'Stable' | project TimeGenerated, ResourceId, VulnerabilitiesFound"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "Persistent monthly scanning verification": [
+                "VulnerabilityScanJobs | where JobType == 'Monthly Scan' | where TimeGenerated > ago(90d) | summarize MonthlyScanCount=count() by bin(TimeGenerated, 30d), ResourceGroup | where MonthlyScanCount >= 1",
+                "SecurityCenter | where RecommendationType == 'Vulnerability' | where TimeGenerated > ago(30d) | where ResourceType !in (dynamic(['drift-prone'])) | summarize FindingsCount=count() by Severity"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for monthly vulnerability detection on stable resources.
+        """
+        return [
+            "Stable resource inventory (assets NOT likely to drift: IaC-managed, desired state configs)",
+            "Monthly vulnerability scanning schedule for stable resources (at least every 30 days)",
+            "Monthly scan execution logs (last 90 days, verify monthly cadence)",
+            "Resource stability classifications (criteria for identifying stable assets)",
+            "Vulnerability findings from stable resource scans (last 90 days)",
+            "Persistent scanning job configurations (automated monthly execution)",
+            "Configuration management evidence (IaC templates, desired state configs showing stability)",
+            "Scan coverage reports showing stable resource inclusion"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Get recommendations for automating evidence collection.
+        """
+        return {
+            "Stable resource tagging": "Automatically identify and tag stable resources (IaC-managed, low change frequency, managed configs) using Azure Policy or Resource Graph queries",
+            "Automated monthly scanning": "Configure automated vulnerability scanning at least monthly for all stable (non-drift-prone) resources (Microsoft Defender for Cloud, scheduled assessments)",
+            "Resource stability monitoring": "Track resource change frequency and configuration management status to identify stable resources (Azure Resource Graph, change tracking analytics)",
+            "Persistent scan execution": "Ensure scanning jobs run continuously on stable resources without manual intervention (Azure Automation runbooks, scheduled monthly execution)",
+            "Scan coverage tracking": "Monitor that all stable resources receive monthly vulnerability scans, alert on missed scans (Log Analytics workspace, Azure Monitor alerts)"
         }

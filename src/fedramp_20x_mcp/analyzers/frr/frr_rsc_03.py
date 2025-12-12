@@ -5,7 +5,7 @@ Providers SHOULD create and maintain guidance that explains security-related set
 
 Official FedRAMP 20x Requirement
 Source: FRR-RSC (Resource Categorization) family
-Primary Keyword: MUST
+Primary Keyword: SHOULD
 Impact Levels: Low, Moderate, High
 """
 
@@ -25,7 +25,7 @@ class FRR_RSC_03_Analyzer(BaseFRRAnalyzer):
     
     **Family:** RSC - Resource Categorization
     
-    **Primary Keyword:** MUST
+    **Primary Keyword:** SHOULD
     
     **Impact Levels:**
     - Low: Yes
@@ -195,47 +195,41 @@ class FRR_RSC_03_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
-        """
-        Get recommendations for automating evidence collection for FRR-RSC-03.
-        
-        This requirement is not directly code-detectable. Provides manual validation guidance.
-        """
+    def get_evidence_collection_queries(self) -> dict:
+        """KQL queries for privileged account security settings documentation evidence."""
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
+            'automated_queries': [
+                "// Query 1: Privileged role assignments and security settings changes\nAzureActivity\n| where TimeGenerated > ago(90d)\n| where OperationNameValue contains 'roleAssignments' or OperationNameValue contains 'SecuritySettings'\n| where Properties contains 'privileged' or Properties contains 'Contributor' or Properties contains 'Owner'\n| project TimeGenerated, Caller, ResourceId, OperationNameValue, Properties\n| order by TimeGenerated desc",
+                "// Query 2: Resources tagged with privileged-settings-documented metadata\nResources\n| where tags['privileged-settings-documented'] == 'true'\n| project resourceId, name, type, tags, location",
+                "// Query 3: Privileged role definitions (non-admin elevated access)\nAuthorizationManagementResources\n| where type == 'microsoft.authorization/roledefinitions'\n| where properties.roleName contains 'Contributor' or properties.roleName contains 'Operator'\n| where properties.roleName !contains 'Owner'\n| project id, properties"
+            ]
+        }
+
+    def get_evidence_artifacts(self) -> dict:
+        """Documentation artifacts for privileged account security settings guidance."""
+        return {
             'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                "PRIVILEGED-SETTINGS.md or equivalent documentation file",
+                "List of privileged-only security settings (non-admin elevated access)",
+                "Security impact analysis for privileged settings",
+                "Configuration change procedures for privileged accounts",
+                "Privileged access security baseline",
+                "Privileged role assignment audit logs",
+                "Least privilege analysis documentation",
+                "Risk assessment for privileged setting changes"
+            ]
+        }
+
+    def get_evidence_automation_recommendations(self) -> dict:
+        """Implementation recommendations for privileged account security settings guidance."""
+        return {
+            'implementation_notes': [
+                "Create PRIVILEGED-SETTINGS.md documenting privileged-only security settings",
+                "List each security setting controllable by privileged (non-admin) accounts",
+                "Document security implications for privileged settings (CIA triad impact)",
+                "Define change procedures and approval workflows for privileged access",
+                "Tag resources with privileged-settings-documented metadata",
+                "Maintain audit logs of privileged setting changes (90-day retention)",
+                "Review and update privileged settings documentation quarterly"
             ]
         }

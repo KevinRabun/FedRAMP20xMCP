@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import Dict, List, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -83,74 +83,61 @@ class FRR_CCM_QR_09_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Python code for FRR-CCM-QR-09 compliance using AST.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        NOT APPLICABLE: This requirement governs provider meeting documentation
+        practices (recording/transcribing Quarterly Reviews and making them
+        available to necessary parties), not application code implementation.
+        CSPs implement this through meeting recording policies, storage systems,
+        and access management for necessary parties.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
+        return []  # NOT APPLICABLE - process/data management recommendation
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze C# code for FRR-CCM-QR-09 compliance using AST.
         
-        TODO: Implement C# analysis
+        NOT APPLICABLE: This requirement governs provider meeting documentation
+        practices (recording/transcribing Quarterly Reviews and making them
+        available to necessary parties), not application code implementation.
+        CSPs implement this through meeting recording policies, storage systems,
+        and access management for necessary parties.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        return []  # NOT APPLICABLE - process/data management recommendation
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Java code for FRR-CCM-QR-09 compliance using AST.
         
-        TODO: Implement Java analysis
+        NOT APPLICABLE: This requirement governs provider meeting documentation
+        practices (recording/transcribing Quarterly Reviews and making them
+        available to necessary parties), not application code implementation.
+        CSPs implement this through meeting recording policies, storage systems,
+        and access management for necessary parties.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        return []  # NOT APPLICABLE - process/data management recommendation
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze TypeScript/JavaScript code for FRR-CCM-QR-09 compliance using AST.
         
-        TODO: Implement TypeScript analysis
+        NOT APPLICABLE: This requirement governs provider meeting documentation
+        practices (recording/transcribing Quarterly Reviews and making them
+        available to necessary parties), not application code implementation.
+        CSPs implement this through meeting recording policies, storage systems,
+        and access management for necessary parties.
         """
-        findings = []
-        lines = code.split('\n')
+        return []  # NOT APPLICABLE - process/data management recommendation
+    
+    def analyze_javascript(self, code: str, file_path: str = "") -> List[Finding]:
+        """
+        Analyze JavaScript code for FRR-CCM-QR-09 compliance using AST.
         
-        # TODO: Implement AST analysis for TypeScript
-        return findings
+        NOT APPLICABLE: This requirement governs provider meeting documentation
+        practices (recording/transcribing Quarterly Reviews and making them
+        available to necessary parties), not application code implementation.
+        CSPs implement this through meeting recording policies, storage systems,
+        and access management for necessary parties.
+        """
+        return []  # NOT APPLICABLE - process/data management recommendation
     
     # ============================================================================
     # INFRASTRUCTURE AS CODE ANALYZERS (Regex-based)
@@ -158,34 +145,27 @@ class FRR_CCM_QR_09_Analyzer(BaseFRRAnalyzer):
     
     def analyze_bicep(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Bicep infrastructure code for FRR-CCM-QR-09 compliance.
+        Analyze Bicep IaC for FRR-CCM-QR-09 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        NOT APPLICABLE: This requirement governs provider meeting documentation
+        practices (recording/transcribing Quarterly Reviews and making them
+        available to necessary parties), not infrastructure code implementation.
+        CSPs implement this through meeting recording policies, storage systems,
+        and access management for necessary parties.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        return []  # NOT APPLICABLE - process/data management recommendation
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Terraform infrastructure code for FRR-CCM-QR-09 compliance.
+        Analyze Terraform IaC for FRR-CCM-QR-09 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        NOT APPLICABLE: This requirement governs provider meeting documentation
+        practices (recording/transcribing Quarterly Reviews and making them
+        available to necessary parties), not infrastructure code implementation.
+        CSPs implement this through meeting recording policies, storage systems,
+        and access management for necessary parties.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        return []  # NOT APPLICABLE - process/data management recommendation
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
@@ -195,85 +175,162 @@ class FRR_CCM_QR_09_Analyzer(BaseFRRAnalyzer):
         """
         Analyze GitHub Actions workflow for FRR-CCM-QR-09 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        NOT APPLICABLE: This requirement governs provider meeting documentation
+        practices (recording/transcribing Quarterly Reviews and making them
+        available to necessary parties), not CI/CD pipeline configuration.
+        CSPs implement this through meeting recording policies, storage systems,
+        and access management for necessary parties.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []  # NOT APPLICABLE - process/data management recommendation
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Azure Pipelines YAML for FRR-CCM-QR-09 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        NOT APPLICABLE: This requirement governs provider meeting documentation
+        practices (recording/transcribing Quarterly Reviews and making them
+        available to necessary parties), not CI/CD pipeline configuration.
+        CSPs implement this through meeting recording policies, storage systems,
+        and access management for necessary parties.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
-    
-    def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitLab CI YAML for FRR-CCM-QR-09 compliance.
-        
-        TODO: Implement GitLab CI analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []  # NOT APPLICABLE - process/data management recommendation
     
     # ============================================================================
-    # EVIDENCE COLLECTION SUPPORT
+    # EVIDENCE COLLECTION METHODS
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
         """
-        Get recommendations for automating evidence collection for FRR-CCM-QR-09.
+        Return automated evidence collection queries for FRR-CCM-QR-09.
         
-        TODO: Add evidence collection guidance
+        Returns:
+            Dict containing automated query specifications for Quarterly Review
+            recording/transcription practices.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "automated_queries": [
+                "Note: FRR-CCM-QR-09 requires manual verification of meeting recording/"
+                "transcription policies, storage systems, and access for necessary parties"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        """
+        Return list of evidence artifacts needed for FRR-CCM-QR-09 compliance.
+        
+        Returns:
+            List of evidence artifact specifications for Quarterly Review
+            recording/transcription verification.
+        """
+        return [
+            {
+                "artifact_id": "CCM-QR-09-01",
+                "name": "Meeting Recording Policy",
+                "description": "Policy document defining when/how Quarterly Reviews are recorded or transcribed",
+                "collection_method": "Document Review - Obtain meeting recording/transcription policy"
+            },
+            {
+                "artifact_id": "CCM-QR-09-02",
+                "name": "Recording System Documentation",
+                "description": "Documentation of recording platform/system used for Quarterly Reviews",
+                "collection_method": "Document Review - Obtain recording system configuration"
+            },
+            {
+                "artifact_id": "CCM-QR-09-03",
+                "name": "Storage Location Evidence",
+                "description": "Evidence showing where recordings/transcripts are stored with authorization data",
+                "collection_method": "Screenshot - Storage location in authorization data portal (FRR-ADS-06/07)"
+            },
+            {
+                "artifact_id": "CCM-QR-09-04",
+                "name": "Sample Recording",
+                "description": "Sample recording or transcript from recent Quarterly Review",
+                "collection_method": "File Collection - Obtain redacted sample recording/transcript"
+            },
+            {
+                "artifact_id": "CCM-QR-09-05",
+                "name": "Access Control Configuration",
+                "description": "Configuration showing necessary parties have access to recordings/transcripts",
+                "collection_method": "Screenshot - Access permissions in storage system"
+            },
+            {
+                "artifact_id": "CCM-QR-09-06",
+                "name": "Necessary Parties List",
+                "description": "List defining 'necessary parties' who should have access to recordings/transcripts",
+                "collection_method": "Document Review - Obtain necessary parties definition"
+            },
+            {
+                "artifact_id": "CCM-QR-09-07",
+                "name": "Access Log",
+                "description": "Log showing necessary parties accessing recordings/transcripts",
+                "collection_method": "Log Extraction - Export access logs from storage system"
+            },
+            {
+                "artifact_id": "CCM-QR-09-08",
+                "name": "Retention Schedule",
+                "description": "Retention schedule for Quarterly Review recordings/transcripts",
+                "collection_method": "Document Review - Obtain retention policy"
+            },
+            {
+                "artifact_id": "CCM-QR-09-09",
+                "name": "Recording Quality Standards",
+                "description": "Standards defining acceptable recording/transcription quality",
+                "collection_method": "Document Review - Obtain quality standards documentation"
+            },
+            {
+                "artifact_id": "CCM-QR-09-10",
+                "name": "Integration with Authorization Data",
+                "description": "Evidence showing recordings/transcripts integrated with authorization data (FRR-ADS-06/07)",
+                "collection_method": "Screenshot - Portal showing recordings alongside other authorization data"
+            }
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Return recommendations for automating evidence collection for FRR-CCM-QR-09.
+        
+        Returns:
+            Dict containing automation recommendations and implementation notes.
+        """
+        return {
+            "implementation_notes": (
+                "FRR-CCM-QR-09 (SHOULD) recommends recording or transcribing Quarterly Reviews "
+                "and making them available to necessary parties with authorization data (FRR-ADS-06/07). "
+                "This is a process/data management recommendation.\n\n"
+                
+                "RECORDING/TRANSCRIPTION IMPLEMENTATION:\n"
+                "- Recording platform integration (e.g., Teams, Zoom, WebEx)\n"
+                "- Automatic recording triggers for QR meetings\n"
+                "- Transcription service integration (e.g., Azure Cognitive Services)\n"
+                "- Quality verification for recordings/transcripts\n\n"
+                
+                "STORAGE INTEGRATION:\n"
+                "- Store recordings/transcripts with authorization data (FRR-ADS-06/07)\n"
+                "- Link to specific Quarterly Review events\n"
+                "- Searchable metadata (date, participants, topics)\n"
+                "- Retention policy enforcement\n\n"
+                
+                "ACCESS MANAGEMENT:\n"
+                "- Define 'necessary parties' (typically agencies using the service)\n"
+                "- Role-based access control (RBAC) for recordings/transcripts\n"
+                "- Access audit logging\n"
+                "- Integration with authorization data access controls\n\n"
+                
+                "AUTOMATION OPPORTUNITIES:\n"
+                "1. API queries to recording platform for QR recordings\n"
+                "2. Azure Resource Graph queries for storage locations\n"
+                "3. Azure Policy to verify retention policies\n"
+                "4. Access control audits via Azure AD/Entra ID logs\n"
+                "5. Integration checks with authorization data portal\n\n"
+                
+                "EVIDENCE COLLECTION:\n"
+                "- Recording policy documentation\n"
+                "- Storage location verification\n"
+                "- Access logs for necessary parties\n"
+                "- Sample recordings/transcripts\n"
+                "- Integration with authorization data\n\n"
+                
+                "Note: This is a SHOULD requirement (recommendation). Implementation demonstrates "
+                "commitment to transparency and provides valuable reference for agencies."
+            )
         }

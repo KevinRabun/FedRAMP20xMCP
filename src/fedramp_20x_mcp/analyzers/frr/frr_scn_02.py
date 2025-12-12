@@ -264,47 +264,85 @@ class FRR_SCN_02_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> dict:
         """
-        Get recommendations for automating evidence collection for FRR-SCN-02.
-        
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        Get automated queries for collecting evidence of change management procedures.
         """
         return {
             'frr_id': self.FRR_ID,
             'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            'azure_resource_graph': [
+                "// Find DevOps projects with change management policies",
+                "Resources | where type =~ 'microsoft.visualstudio/account/project' | project name, properties.policies",
+                "// Find App Configuration stores with change tracking",
+                "Resources | where type =~ 'microsoft.appconfiguration/configurationstores' | project name, properties.changeTracking"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            'azure_monitor_kql': [
+                "// Change management activity logs",
+                "AzureActivity | where OperationNameValue contains 'Microsoft.Resources/deployments' | where ActivityStatusValue == 'Success' | project TimeGenerated, Caller, OperationNameValue, ResourceGroup",
+                "// DevOps pipeline runs for change validation",
+                "AppTraces | where Properties.PipelineStage in ('Test', 'Approval', 'Deploy') | project timestamp, Properties.ChangeId, Properties.Stage"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
+            'azure_cli': [
+                "az pipelines list --organization <org> --project <project>",
+                "az devops policy list --organization <org> --project <project>",
+                "az repos policy list --repository <repo>"
+            ]
+        }
+
+    def get_evidence_artifacts(self) -> dict:
+        """
+        Get evidence artifacts demonstrating change management procedures.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
+            'code_locations': [
+                'CI/CD pipeline definitions (.github/workflows/, azure-pipelines.yml, .gitlab-ci.yml)',
+                'Change management scripts (scripts/change-management/)',
+                'Testing frameworks (tests/, test-plans/)',
+                'Approval workflows (CODEOWNERS, branch protection rules)'
+            ],
+            'documentation': [
+                'Change management procedures document',
+                'Security plan section on change control (CM-3, CM-4)',
+                'Pipeline approval logs and evidence',
+                'Test results and validation reports',
+                'Post-change assessment reports'
+            ],
+            'configuration_samples': [
+                'Azure DevOps pipeline with approval gates',
+                'GitHub branch protection rules',
+                'Automated test suite configuration',
+                'Change tracking database schema'
+            ]
+        }
+
+    def get_evidence_automation_recommendations(self) -> dict:
+        """
+        Get recommendations for automating evidence collection for change procedures.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
+            'code_detectable': 'Partial',
+            'implementation_notes': [
+                'CI/CD pipelines provide automated change planning and testing evidence',
+                'Approval gates and branch protection enforce documented procedures',
+                'Automated testing validates changes before deployment',
+                'Change tracking tools provide documentation and assessment records',
+                'DevOps platforms (Azure DevOps, GitHub Actions, GitLab CI) enforce workflow procedures'
             ],
             'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
+                'Azure DevOps - Pipeline approvals, work item tracking, test management',
+                'GitHub Actions - Workflow automation, required reviewers, status checks',
+                'Azure Repos - Branch policies, required approvals, build validation',
+                'Azure Test Plans - Test case management and execution tracking'
             ],
             'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                'DevOps API for pipeline execution history and approval records',
+                'Git history for change documentation and traceability',
+                'Test frameworks for automated validation evidence',
+                'Change management tools for procedure compliance tracking'
             ]
         }

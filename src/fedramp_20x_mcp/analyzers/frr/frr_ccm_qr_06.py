@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import Dict, List, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -81,76 +81,47 @@ class FRR_CCM_QR_06_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-CCM-QR-06 compliance using AST.
+        Analyze Python code for FRR-CCM-QR-06 compliance.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
+        **NOT APPLICABLE:** This requirement mandates that providers publicly include
+        the target date for their next Quarterly Review in authorization data (FRR-ADS-01).
+        It's a data publication requirement about what information must be publicly available,
+        not how CSP application code is written.
         
-        Detection targets:
-        - TODO: List what patterns to detect
+        **Detection Strategy:** N/A - Public data publication requirement for authorization
+        data content, not code implementation.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
+        return []
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze C# code for FRR-CCM-QR-06 compliance using AST.
+        Analyze C# code for FRR-CCM-QR-06 compliance.
         
-        TODO: Implement C# analysis
+        **NOT APPLICABLE:** This requirement mandates that providers publicly include
+        the next QR date in authorization data. It's a public data publication requirement,
+        not C# code implementation.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        return []
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Java code for FRR-CCM-QR-06 compliance using AST.
+        Analyze Java code for FRR-CCM-QR-06 compliance.
         
-        TODO: Implement Java analysis
+        **NOT APPLICABLE:** This requirement mandates that providers publicly include
+        the next QR date in authorization data. It's a public data publication requirement,
+        not Java code implementation.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        return []
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze TypeScript/JavaScript code for FRR-CCM-QR-06 compliance using AST.
+        Analyze TypeScript/JavaScript code for FRR-CCM-QR-06 compliance.
         
-        TODO: Implement TypeScript analysis
+        **NOT APPLICABLE:** This requirement mandates that providers publicly include
+        the next QR date in authorization data. It's a public data publication requirement,
+        not TypeScript/JavaScript code implementation.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
-        return findings
+        return []
     
     # ============================================================================
     # INFRASTRUCTURE AS CODE ANALYZERS (Regex-based)
@@ -160,32 +131,21 @@ class FRR_CCM_QR_06_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Bicep infrastructure code for FRR-CCM-QR-06 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        **NOT APPLICABLE:** This requirement mandates that providers publicly include
+        the next QR date in authorization data. Infrastructure code doesn't control
+        public authorization data content.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        return []
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Terraform infrastructure code for FRR-CCM-QR-06 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        **NOT APPLICABLE:** This requirement mandates that providers publicly include
+        the next QR date in authorization data. Infrastructure code doesn't control
+        public authorization data content.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        return []
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
@@ -195,85 +155,138 @@ class FRR_CCM_QR_06_Analyzer(BaseFRRAnalyzer):
         """
         Analyze GitHub Actions workflow for FRR-CCM-QR-06 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        **NOT APPLICABLE:** This requirement mandates that providers publicly include
+        the next QR date in authorization data. CI/CD pipelines don't control public
+        authorization data content.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Azure Pipelines YAML for FRR-CCM-QR-06 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        **NOT APPLICABLE:** This requirement mandates that providers publicly include
+        the next QR date in authorization data. CI/CD pipelines don't control public
+        authorization data content.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze GitLab CI YAML for FRR-CCM-QR-06 compliance.
         
-        TODO: Implement GitLab CI analysis
+        **NOT APPLICABLE:** This requirement mandates that providers publicly include
+        the next QR date in authorization data. CI/CD pipelines don't control public
+        authorization data content.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> List[str]:
+        """
+        Get automated queries for collecting evidence of FRR-CCM-QR-06 compliance.
+        
+        **NOT APPLICABLE:** This requirement mandates that providers publicly include
+        the next QR date in authorization data. Evidence verifies public availability
+        of this date information.
+        """
+        return [
+            "# Note: This is a public data publication requirement - verify authorization data sources"
+        ]
+    
+    def get_evidence_artifacts(self) -> List[Dict[str, Any]]:
+        """
+        Get list of evidence artifacts to collect for FRR-CCM-QR-06 compliance.
+        
+        Returns evidence related to public availability of next QR date.
+        """
+        return [
+            {
+                "artifact_name": "Public Authorization Data Screenshot",
+                "description": "Screenshot showing next QR target date publicly displayed in authorization data per FRR-ADS-01",
+                "collection_method": "Manual capture from public portal/website",
+                "frequency": "Quarterly after each QR date update"
+            },
+            {
+                "artifact_name": "Authorization Data Publication Record",
+                "description": "System records showing when next QR date was published to authorization data",
+                "collection_method": "Query content management system logs",
+                "frequency": "Quarterly"
+            },
+            {
+                "artifact_name": "Public URL with QR Date",
+                "description": "URL of publicly accessible page containing next QR target date",
+                "collection_method": "Document URL and timestamp",
+                "frequency": "Quarterly"
+            },
+            {
+                "artifact_name": "Next QR Date Value",
+                "description": "The actual target date value published for next Quarterly Review",
+                "collection_method": "Extract from public authorization data",
+                "frequency": "Quarterly"
+            },
+            {
+                "artifact_name": "Public Access Verification",
+                "description": "Test results confirming next QR date is publicly accessible without authentication",
+                "collection_method": "Automated accessibility test from external IP",
+                "frequency": "Quarterly"
+            },
+            {
+                "artifact_name": "Authorization Data Completeness Check",
+                "description": "Verification that QR date is included with other required FRR-ADS-01 authorization data elements",
+                "collection_method": "Manual checklist against FRR-ADS-01 requirements",
+                "frequency": "Quarterly"
+            },
+            {
+                "artifact_name": "QR Date Update Policy",
+                "description": "Policy/procedure for updating next QR date in public authorization data",
+                "collection_method": "Document review",
+                "frequency": "Annual or when updated"
+            },
+            {
+                "artifact_name": "Stakeholder Notification Records",
+                "description": "Records showing stakeholders were notified when next QR date was published/updated",
+                "collection_method": "Email logs or notification system records",
+                "frequency": "Quarterly when date changes"
+            },
+            {
+                "artifact_name": "Date Format Validation",
+                "description": "Verification that QR date is in clear, unambiguous format (e.g., YYYY-MM-DD or 'January 15, 2026')",
+                "collection_method": "Manual review of published date format",
+                "frequency": "Quarterly"
+            },
+            {
+                "artifact_name": "Public Transparency Attestation",
+                "description": "Provider attestation that next QR date is publicly included in authorization data per requirement",
+                "collection_method": "Signed attestation document",
+                "frequency": "Quarterly"
+            }
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
         """
         Get recommendations for automating evidence collection for FRR-CCM-QR-06.
         
-        TODO: Add evidence collection guidance
+        Provides guidance on verifying public availability of next QR date.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
-            ]
+            "automated_queries": self.get_evidence_collection_queries(),
+            "evidence_artifacts": self.get_evidence_artifacts(),
+            "implementation_notes": (
+                "FRR-CCM-QR-06 requires providers to publicly include the target date for their next "
+                "Quarterly Review with authorization data (per FRR-ADS-01). This is NOT a code requirement - "
+                "it mandates public data publication. Evidence collection focuses on: "
+                "(1) Verifying next QR date is visible in public authorization data, "
+                "(2) Confirming date is publicly accessible without authentication, "
+                "(3) Validating date is included with other FRR-ADS-01 required elements, "
+                "(4) Testing that external users can view the date information. "
+                "Automate by: Web scraping public authorization data URL to extract QR date, "
+                "automated accessibility testing from external IP addresses, monitoring content management "
+                "system for QR date field updates, and validating date format consistency. "
+                "Key difference from FRR-CCM-QR-05: QR-05 requires registration/calendar info for necessary parties, "
+                "QR-06 requires next QR date for PUBLIC (everyone). Related to FRR-ADS-01 (public authorization data)."
+            )
         }

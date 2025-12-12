@@ -34,8 +34,15 @@ def test_evidence_automation_recommendations():
     analyzer = FRR_CCM_QR_11_Analyzer()
     
     recommendations = analyzer.get_evidence_automation_recommendations()
-    assert recommendations['frr_id'] == "FRR-CCM-QR-11", "FRR_ID mismatch"
-    # TODO: Add more assertions for evidence recommendations
+    assert 'implementation_notes' in recommendations, "Missing implementation_notes"
+    assert isinstance(recommendations['implementation_notes'], str), "implementation_notes should be string"
+    
+    artifacts = analyzer.get_evidence_artifacts()
+    assert isinstance(artifacts, list), "Artifacts should be a list"
+    assert len(artifacts) == 10, f"Expected 10 artifacts, got {len(artifacts)}"
+    
+    queries = analyzer.get_evidence_collection_queries()
+    assert 'automated_queries' in queries, "Missing automated_queries"
     
     print("[PASS] test_evidence_automation_recommendations PASSED")
 

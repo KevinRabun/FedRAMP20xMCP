@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import Dict, List, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -170,39 +170,51 @@ class FRR_ICP_09_Analyzer(BaseFRRAnalyzer):
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for FRR-ICP-09 compliance using AST.
-        
-        TODO: Implement C# analysis
-        """
+        """Analyze C# for machine-readable format generation."""
         findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
+        has_format = bool(re.search(r'(JsonSerializer|XmlSerializer|JsonConvert|ToJson|ToXml)', code))
+        if not has_format:
+            findings.append(Finding(
+                frr_id=self.FRR_ID,
+                severity=Severity.LOW,  # SHOULD requirement
+                message="No machine-readable format generation detected",
+                details="FRR-ICP-09 recommends machine-readable incident reports. Consider implementing JSON/XML serialization.",
+                file_path=file_path,
+                line_number=1,
+                recommendation="Consider implementing JSON/XML serialization: System.Text.Json or Newtonsoft.Json"
+            ))
         return findings
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for FRR-ICP-09 compliance using AST.
-        
-        TODO: Implement Java analysis
-        """
+        """Analyze Java for machine-readable format generation."""
         findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
+        has_format = bool(re.search(r'(ObjectMapper|Gson|Jackson|XmlMapper)', code))
+        if not has_format:
+            findings.append(Finding(
+                frr_id=self.FRR_ID,
+                severity=Severity.LOW,  # SHOULD requirement
+                message="No machine-readable format generation detected",
+                details="FRR-ICP-09 recommends machine-readable incident reports. Consider implementing JSON/XML serialization.",
+                file_path=file_path,
+                line_number=1,
+                recommendation="Consider implementing JSON/XML serialization: Jackson, Gson, or JAXB"
+            ))
         return findings
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for FRR-ICP-09 compliance using AST.
-        
-        TODO: Implement TypeScript analysis
-        """
+        """Analyze TypeScript for machine-readable format generation."""
         findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
+        has_format = bool(re.search(r'(JSON\.stringify|toJSON|xml2js|fast-xml-parser)', code, re.IGNORECASE))
+        if not has_format:
+            findings.append(Finding(
+                frr_id=self.FRR_ID,
+                severity=Severity.LOW,  # SHOULD requirement
+                message="No machine-readable format generation detected",
+                details="FRR-ICP-09 recommends machine-readable incident reports. Consider implementing JSON/XML serialization.",
+                file_path=file_path,
+                line_number=1,
+                recommendation="Consider implementing JSON/XML serialization: JSON.stringify or xml2js"
+            ))
         return findings
     
     # ============================================================================
@@ -210,123 +222,68 @@ class FRR_ICP_09_Analyzer(BaseFRRAnalyzer):
     # ============================================================================
     
     def analyze_bicep(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Bicep infrastructure code for FRR-ICP-09 compliance.
-        
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        """Analyze Bicep for API/data services."""
+        return []  # Machine-readable format generation is application logic
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Terraform infrastructure code for FRR-ICP-09 compliance.
-        
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        """Analyze Terraform for API/data services."""
+        return []  # Machine-readable format generation is application logic
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
     # ============================================================================
     
     def analyze_github_actions(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitHub Actions workflow for FRR-ICP-09 compliance.
-        
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        """Analyze GitHub Actions for data export."""
+        return []  # Machine-readable format generation is runtime operational
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Azure Pipelines YAML for FRR-ICP-09 compliance.
-        
-        TODO: Implement Azure Pipelines analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        """Analyze Azure Pipelines for data export."""
+        return []  # Machine-readable format generation is runtime operational
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitLab CI YAML for FRR-ICP-09 compliance.
-        
-        TODO: Implement GitLab CI analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        """Analyze GitLab CI for data export."""
+        return []  # Machine-readable format generation is runtime operational
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
-        """
-        Get recommendations for automating evidence collection for FRR-ICP-09.
-        
-        This requirement is not directly code-detectable. Provides manual validation guidance.
-        """
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """KQL queries for machine-readable format evidence."""
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "automated_queries": [
+                "# Query 1: API Management and Function Apps\nResources\n| where type =~ 'microsoft.apimanagement/service' or type =~ 'microsoft.web/sites'\n| where kind contains 'function' or name contains 'api'\n| extend Format = tostring(properties.format)\n| project name, type, location, Format, tags",
+                "# Query 2: Storage accounts for structured data\nResources\n| where type =~ 'microsoft.storage/storageaccounts'\n| where tags contains 'incident' or tags contains 'report'\n| project name, type, location, kind, tags",
+                "# Query 3: Data Factory for format pipelines\nResources\n| where type =~ 'microsoft.datafactory/factories'\n| project name, location, tags"
+            ]
+        }
+
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """Required evidence artifacts for FRR-ICP-09."""
+        return {
+            "evidence_artifacts": [
+                "Machine-readable format specification (JSON/XML schema)",
+                "API endpoint documentation for incident reports",
+                "Sample machine-readable incident reports",
+                "Format validation test results",
+                "Serialization library configuration",
+                "API integration documentation",
+                "Machine-readable format conversion logs",
+                "Format compliance test evidence"
+            ]
+        }
+
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """Implementation recommendations for FRR-ICP-09."""
+        return {
+            "implementation_notes": [
+                "Implement JSON/XML serialization in incident reporting system",
+                "Create API endpoints exposing machine-readable incident reports",
+                "Define schema for machine-readable incident report format",
+                "Validate machine-readable output against schema",
+                "Test format compatibility with FedRAMP tools/consumers",
+                "Document machine-readable format structure and access methods",
+                "Implement automated format conversion for existing reports"
             ]
         }

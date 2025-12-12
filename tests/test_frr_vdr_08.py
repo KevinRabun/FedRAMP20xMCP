@@ -258,7 +258,7 @@ def test_analyzer_metadata():
     assert analyzer.IMPACT_LOW is True
     assert analyzer.IMPACT_MODERATE is True
     assert analyzer.IMPACT_HIGH is True
-    assert analyzer.CODE_DETECTABLE is True
+    assert analyzer.CODE_DETECTABLE == "Yes"
     assert analyzer.IMPLEMENTATION_STATUS == "IMPLEMENTED"
     assert len(analyzer.NIST_CONTROLS) >= 3
     assert len(analyzer.RELATED_KSIS) >= 2

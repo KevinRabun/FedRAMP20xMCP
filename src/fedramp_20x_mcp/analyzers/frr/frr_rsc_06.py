@@ -61,7 +61,7 @@ class FRR_RSC_06_Analyzer(BaseFRRAnalyzer):
         ("CM-6", "Configuration Settings"),
         ("CM-2", "Baseline Configuration")
     ]
-    CODE_DETECTABLE = "Yes"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = []
     
@@ -232,47 +232,97 @@ class FRR_RSC_06_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> dict:
         """
-        Get recommendations for automating evidence collection for FRR-RSC-06.
+        Get KQL queries and API endpoints for collecting FRR-RSC-06 evidence.
         
-        TODO: Add evidence collection guidance
+        Returns automated queries to collect evidence of export capabilities
+        for security settings in machine-readable formats (JSON, YAML, XML).
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "automated_queries": [
+                # Azure Resource Graph: API endpoints with export logic
+                """Resources
+                | where type =~ 'microsoft.web/sites' or type =~ 'microsoft.apimanagement/service'
+                | extend hasExportEndpoint = properties contains 'export' or properties contains '/api/export' or properties contains 'download'
+                | where hasExportEndpoint == true
+                | project name, type, resourceGroup, subscriptionId, properties""",
+                
+                # Azure Monitor: Export API calls (last 90 days)
+                """AzureDiagnostics
+                | where Category == 'ApplicationInsights' and TimeGenerated > ago(90d)
+                | where url_s contains '/api/export' or url_s contains '/api/settings/export' or url_s contains '/download/config'
+                | summarize ExportCallCount=count() by url_s, bin(TimeGenerated, 1d)
+                | order by TimeGenerated desc""",
+                
+                # Azure Policy: Custom policies checking export capabilities
+                """PolicyResources
+                | where type =~ 'microsoft.authorization/policydefinitions'
+                | where properties.policyRule contains 'export' or properties.metadata.category == 'Configuration Management'
+                | project policyName=name, category=properties.metadata.category, effect=properties.policyRule.then.effect
+                | where tags contains 'rsc-06' or tags contains 'export-capability'"""
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "manual_queries": [
+                "Review API documentation for /api/export or /api/settings/download endpoints",
+                "Check DevOps repositories for export scripts/tools",
+                "Verify Azure Automation runbooks for configuration export"
+            ]
+        }
+    
+    def get_evidence_artifacts(self) -> dict:
+        """
+        Get list of evidence artifacts for FRR-RSC-06 compliance.
+        
+        Returns documentation and sample exports demonstrating machine-readable
+        export capability for security settings.
+        """
+        return {
+            "evidence_artifacts": [
+                "EXPORT-CAPABILITY.md - Documentation of export API/tool",
+                "API-DOCS.md - Endpoints for exporting security settings",
+                "exports/sample-settings.json - Sample JSON export of security settings",
+                "exports/sample-config.yaml - Sample YAML export of configuration",
+                "scripts/export-settings.py - Automation script for settings export",
+                "audit-logs/ - Logs showing regular use of export capability",
+                "EXPORT-FORMATS.md - Documentation of supported export formats (JSON/YAML/XML)"
+            ]
+        }
+    
+    def get_evidence_automation_recommendations(self) -> dict:
+        """
+        Get recommendations for automating FRR-RSC-06 evidence collection.
+        
+        Returns guidance for implementing and documenting machine-readable
+        export capabilities for all security settings.
+        """
+        return {
+            "implementation_notes": [
+                "1. Implement export API/tool",
+                "   - Create REST API or CLI tool to export all security settings",
+                "   - Support machine-readable formats: JSON, YAML, XML",
+                "   - Include all security settings (auth, authorization, encryption, audit, network)",
+                "   - Example: GET /api/settings/export returns JSON with all settings",
+                "",
+                "2. Define export schema",
+                "   - Document export format in schemas/settings-export.json",
+                "   - Include: setting name, value, default, last modified, compliance status",
+                "   - Version control schema to track changes",
+                "   - Support multiple export formats (JSON/YAML/XML)",
+                "",
+                "3. Tag export resources",
+                "   - Tag export APIs with 'rsc-06:export-capability'",
+                "   - Tag Azure Functions/Automation implementing export with 'fedramp:rsc-06'",
+                "   - Enable KQL queries to identify export tools",
+                "",
+                "4. Automate regular exports",
+                "   - Schedule Azure Automation runbook to export settings weekly",
+                "   - Store exports in Azure Blob Storage with versioning",
+                "   - Track export history for compliance auditing",
+                "   - Example: Weekly cron job running export-settings.py",
+                "",
+                "5. Log export activity",
+                "   - Enable Application Insights for export API calls",
+                "   - Retain logs for 90 days minimum",
+                "   - Track: who exported, what settings, which format, timestamp"
             ]
         }

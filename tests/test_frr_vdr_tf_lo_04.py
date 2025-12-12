@@ -29,15 +29,30 @@ def test_analyzer_metadata():
     print("[PASS] test_analyzer_metadata PASSED")
 
 
-def test_evidence_automation_recommendations():
-    """Test evidence automation recommendations."""
+def test_evidence_collection():
+    """Test evidence collection methods for six-month stable resource vulnerability scanning."""
     analyzer = FRR_VDR_TF_LO_04_Analyzer()
     
-    recommendations = analyzer.get_evidence_automation_recommendations()
-    assert recommendations['frr_id'] == "FRR-VDR-TF-LO-04", "FRR_ID mismatch"
-    # TODO: Add more assertions for evidence recommendations
+    # Test evidence collection queries
+    queries = analyzer.get_evidence_collection_queries()
+    assert 'Stable resource identification' in queries, "Missing stable resource identification queries"
+    assert 'Six-month vulnerability scanning on stable assets' in queries, "Missing six-month scanning queries"
+    assert 'Persistent stable resource scanning verification' in queries, "Missing persistence queries"
     
-    print("[PASS] test_evidence_automation_recommendations PASSED")
+    # Test evidence artifacts
+    artifacts = analyzer.get_evidence_artifacts()
+    assert len(artifacts) > 0, "Should have evidence artifacts"
+    artifacts_text = ' '.join(artifacts).lower()
+    assert 'stable' in artifacts_text, "Missing stable resource artifact"
+    assert 'six-month' in artifacts_text, "Missing six-month artifact"
+    assert 'persistent' in artifacts_text, "Missing persistent artifact"
+    
+    # Test automation recommendations
+    recommendations = analyzer.get_evidence_automation_recommendations()
+    assert 'stable_resource_tagging' in recommendations, "Missing stable resource tagging"
+    assert 'six_month_automated_scanning' in recommendations, "Missing six-month scanning"
+    
+    print("[PASS] test_evidence_collection PASSED")
 
 
 # TODO: Add language-specific tests
@@ -57,8 +72,7 @@ def run_all_tests():
     """Run all FRR-VDR-TF-LO-04 tests."""
     test_functions = [
         ("Analyzer metadata", test_analyzer_metadata),
-        ("Evidence automation recommendations", test_evidence_automation_recommendations),
-        # TODO: Add more test functions
+        ("Evidence collection", test_evidence_collection),
     ]
     
     passed = 0

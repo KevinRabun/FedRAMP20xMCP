@@ -5,7 +5,7 @@ Providers SHOULD offer the capability to compare all current settings for _top-l
 
 Official FedRAMP 20x Requirement
 Source: FRR-RSC (Resource Categorization) family
-Primary Keyword: MUST
+Primary Keyword: SHOULD
 Impact Levels: Low, Moderate, High
 """
 
@@ -25,7 +25,7 @@ class FRR_RSC_05_Analyzer(BaseFRRAnalyzer):
     
     **Family:** RSC - Resource Categorization
     
-    **Primary Keyword:** MUST
+    **Primary Keyword:** SHOULD
     
     **Impact Levels:**
     - Low: Yes
@@ -53,7 +53,7 @@ class FRR_RSC_05_Analyzer(BaseFRRAnalyzer):
     FRR_STATEMENT = """Providers SHOULD offer the capability to compare all current settings for _top-level administrative accounts_ and _privileged accounts_ to the recommended secure defaults."""
     FAMILY = "RSC"
     FAMILY_NAME = "Resource Categorization"
-    PRIMARY_KEYWORD = "MUST"
+    PRIMARY_KEYWORD = "SHOULD"
     IMPACT_LOW = True
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
@@ -61,7 +61,7 @@ class FRR_RSC_05_Analyzer(BaseFRRAnalyzer):
         ("CM-6", "Configuration Settings"),
         ("CM-7", "Least Functionality")
     ]
-    CODE_DETECTABLE = "Yes"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = []
     
@@ -232,47 +232,97 @@ class FRR_RSC_05_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> dict:
         """
-        Get recommendations for automating evidence collection for FRR-RSC-05.
+        Get KQL queries and API endpoints for collecting FRR-RSC-05 evidence.
         
-        TODO: Add evidence collection guidance
+        Returns automated queries to collect evidence of comparison capabilities
+        for validating admin/privileged account settings against secure defaults.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "automated_queries": [
+                # Azure Resource Graph: API endpoints with comparison logic
+                """Resources
+                | where type =~ 'microsoft.web/sites' or type =~ 'microsoft.apimanagement/service'
+                | extend hasComparisonEndpoint = properties contains 'compare' or properties contains 'validate'
+                | where hasComparisonEndpoint == true
+                | project name, type, resourceGroup, subscriptionId, properties""",
+                
+                # Azure Monitor: API calls to comparison endpoints (last 90 days)
+                """AzureDiagnostics
+                | where Category == 'ApplicationInsights' and TimeGenerated > ago(90d)
+                | where url_s contains '/api/compare' or url_s contains '/api/validate' or url_s contains '/settings/compare'
+                | summarize ComparisonCallCount=count() by url_s, bin(TimeGenerated, 1d)
+                | order by TimeGenerated desc""",
+                
+                # Azure Policy: Custom policies checking settings compliance
+                """PolicyResources
+                | where type =~ 'microsoft.authorization/policydefinitions'
+                | where properties.policyRule contains 'compare' or properties.metadata.category == 'Security Settings'
+                | project policyName=name, category=properties.metadata.category, effect=properties.policyRule.then.effect
+                | where tags contains 'rsc-05' or tags contains 'comparison-capability'"""
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "manual_queries": [
+                "Review API documentation for /api/admin/compare-settings endpoints",
+                "Check DevOps repositories for settings comparison scripts/tools",
+                "Verify Azure Automation runbooks for configuration validation"
+            ]
+        }
+    
+    def get_evidence_artifacts(self) -> dict:
+        """
+        Get list of evidence artifacts for FRR-RSC-05 compliance.
+        
+        Returns documentation and configuration files demonstrating comparison
+        capability for admin/privileged account settings.
+        """
+        return {
+            "evidence_artifacts": [
+                "COMPARISON-CAPABILITY.md - Documentation of comparison tool/API",
+                "API-DOCS.md - Endpoints for comparing current vs default settings",
+                "COMPARISON-RESULTS/ - Sample comparison reports for admin accounts",
+                "scripts/compare-settings.py - Automation script for settings validation",
+                "config/secure-defaults.yaml - Reference secure defaults configuration",
+                "audit-logs/ - Logs showing regular use of comparison capability",
+                "DEVIATION-REPORTS/ - Reports of deviations from secure defaults"
+            ]
+        }
+    
+    def get_evidence_automation_recommendations(self) -> dict:
+        """
+        Get recommendations for automating FRR-RSC-05 evidence collection.
+        
+        Returns guidance for implementing and documenting comparison capabilities
+        to validate admin/privileged account settings against secure defaults.
+        """
+        return {
+            "implementation_notes": [
+                "1. Implement comparison API/tool",
+                "   - Create REST API or CLI tool to compare current settings vs secure defaults",
+                "   - Support comparison for ALL admin/privileged account settings",
+                "   - Return deviation report with severity levels",
+                "   - Example: GET /api/admin/compare/{accountId} returns JSON with diffs",
+                "",
+                "2. Define secure defaults baseline",
+                "   - Document recommended secure defaults in config/secure-defaults.yaml",
+                "   - Include MFA requirements, password policies, least privilege roles",
+                "   - Version control baseline configuration",
+                "   - Update baseline when requirements change",
+                "",
+                "3. Tag comparison resources",
+                "   - Tag comparison APIs with 'rsc-05:comparison-capability'",
+                "   - Tag Azure Automation/Functions implementing comparison with 'fedramp:rsc-05'",
+                "   - Enable KQL queries to identify comparison tools",
+                "",
+                "4. Automate regular comparisons",
+                "   - Schedule Azure Automation runbook to compare settings weekly",
+                "   - Generate comparison reports in Azure Blob Storage",
+                "   - Alert on critical deviations from secure defaults",
+                "   - Example: Weekly cron job running compare-settings.py",
+                "",
+                "5. Log comparison activity",
+                "   - Enable Application Insights for comparison API calls",
+                "   - Retain logs for 90 days minimum",
+                "   - Track: who compared, which accounts, deviations found"
             ]
         }

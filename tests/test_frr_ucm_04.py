@@ -29,15 +29,34 @@ def test_analyzer_metadata():
     print("[PASS] test_analyzer_metadata PASSED")
 
 
-def test_evidence_automation_recommendations():
-    """Test evidence automation recommendations."""
+def test_evidence_collection():
+    """Test evidence collection support."""
     analyzer = FRR_UCM_04_Analyzer()
     
-    recommendations = analyzer.get_evidence_automation_recommendations()
-    assert recommendations['frr_id'] == "FRR-UCM-04", "FRR_ID mismatch"
-    # TODO: Add more assertions for evidence recommendations
+    # Test evidence queries
+    queries = analyzer.get_evidence_collection_queries()
+    assert isinstance(queries, dict), "Evidence queries must be a dict"
+    assert "azure_resource_graph" in queries or "azure_cli" in queries, "Must include Azure queries"
     
-    print("[PASS] test_evidence_automation_recommendations PASSED")
+    # Test evidence artifacts
+    artifacts = analyzer.get_evidence_artifacts()
+    assert isinstance(artifacts, list), "Evidence artifacts must be a list"
+    assert len(artifacts) > 0, "Must specify evidence artifacts"
+    
+    # Test automation recommendations
+    recommendations = analyzer.get_evidence_automation_recommendations()
+    assert isinstance(recommendations, dict), "Recommendations must be a dict"
+    assert len(recommendations) > 0, "Must provide automation recommendations"
+    
+    print("[PASS] test_evidence_collection PASSED")
+
+
+def test_metadata():
+    """Test analyzer metadata."""
+    analyzer = FRR_UCM_04_Analyzer()
+    assert analyzer.FRR_NAME == "Update Streams (High)", f"Expected FRR_NAME='Update Streams (High)', got {analyzer.FRR_NAME}"
+    assert analyzer.CODE_DETECTABLE == "Yes", f"Expected CODE_DETECTABLE='Yes', got {analyzer.CODE_DETECTABLE}"
+    print("[PASS] test_metadata PASSED")
 
 
 # TODO: Add language-specific tests
@@ -57,8 +76,8 @@ def run_all_tests():
     """Run all FRR-UCM-04 tests."""
     test_functions = [
         ("Analyzer metadata", test_analyzer_metadata),
-        ("Evidence automation recommendations", test_evidence_automation_recommendations),
-        # TODO: Add more test functions
+        ("Evidence collection", test_evidence_collection),
+        ("Metadata", test_metadata),
     ]
     
     passed = 0

@@ -143,7 +143,7 @@ We follow FIPS 140-2 guidelines and use validated modules where possible.
 
 
 def test_analyzer_metadata():
-    """Test FRR-UCM-01 analyzer metadata."""
+    """Test analyzer metadata."""
     analyzer = FRR_UCM_01_Analyzer()
     
     assert analyzer.FRR_ID == "FRR-UCM-01", "FRR_ID should be FRR-UCM-01"
@@ -154,11 +154,29 @@ def test_analyzer_metadata():
     assert analyzer.IMPACT_MODERATE == True, "Impact Moderate should be True"
     assert analyzer.IMPACT_HIGH == True, "Impact High should be True"
     
-    # Check evidence automation
-    evidence = analyzer.get_evidence_automation_recommendations()
-    assert evidence['frr_id'] == "FRR-UCM-01", "Evidence FRR ID mismatch"
-    
     print("[PASS] test_analyzer_metadata PASSED")
+
+
+def test_evidence_collection():
+    """Test evidence collection support."""
+    analyzer = FRR_UCM_01_Analyzer()
+    
+    # Test evidence queries
+    queries = analyzer.get_evidence_collection_queries()
+    assert isinstance(queries, dict), "Evidence queries must be a dict"
+    assert "azure_resource_graph" in queries or "azure_cli" in queries, "Must include Azure queries"
+    
+    # Test evidence artifacts
+    artifacts = analyzer.get_evidence_artifacts()
+    assert isinstance(artifacts, list), "Evidence artifacts must be a list"
+    assert len(artifacts) > 0, "Must specify evidence artifacts"
+    
+    # Test automation recommendations
+    recommendations = analyzer.get_evidence_automation_recommendations()
+    assert isinstance(recommendations, dict), "Recommendations must be a dict"
+    assert len(recommendations) > 0, "Must provide automation recommendations"
+    
+    print("[PASS] test_evidence_collection PASSED")
 
 
 def run_all_tests():
@@ -172,6 +190,7 @@ def run_all_tests():
         ("Non-documentation file ignored", test_non_documentation_file_ignored),
         ("Partial documentation", test_partial_documentation),
         ("Analyzer metadata", test_analyzer_metadata),
+        ("Evidence collection", test_evidence_collection),
     ]
     
     passed = 0

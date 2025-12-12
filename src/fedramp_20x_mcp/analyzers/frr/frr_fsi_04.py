@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import Dict, List, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -81,74 +81,56 @@ class FRR_FSI_04_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Python code for FRR-FSI-04 compliance using AST.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST post public notices 10 business days before emergency test messages.
+        This is a FedRAMP operational/communication requirement, not a CSP code
+        requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze C# code for FRR-FSI-04 compliance using AST.
         
-        TODO: Implement C# analysis
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST post public notices 10 business days before emergency test messages.
+        This is a FedRAMP operational/communication requirement, not a CSP code
+        requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Java code for FRR-FSI-04 compliance using AST.
         
-        TODO: Implement Java analysis
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST post public notices 10 business days before emergency test messages.
+        This is a FedRAMP operational/communication requirement, not a CSP code
+        requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze TypeScript/JavaScript code for FRR-FSI-04 compliance using AST.
         
-        TODO: Implement TypeScript analysis
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST post public notices 10 business days before emergency test messages.
+        This is a FedRAMP operational/communication requirement, not a CSP code
+        requirement.
         """
-        findings = []
-        lines = code.split('\n')
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
+    
+    def analyze_javascript(self, code: str, file_path: str = "") -> List[Finding]:
+        """
+        Analyze JavaScript code for FRR-FSI-04 compliance using AST.
         
-        # TODO: Implement AST analysis for TypeScript
-        return findings
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST post public notices 10 business days before emergency test messages.
+        This is a FedRAMP operational/communication requirement, not a CSP code
+        requirement.
+        """
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     # ============================================================================
     # INFRASTRUCTURE AS CODE ANALYZERS (Regex-based)
@@ -158,32 +140,23 @@ class FRR_FSI_04_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Bicep infrastructure code for FRR-FSI-04 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST post public notices 10 business days before emergency test messages.
+        This is a FedRAMP operational/communication requirement, not a CSP
+        infrastructure requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Terraform infrastructure code for FRR-FSI-04 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST post public notices 10 business days before emergency test messages.
+        This is a FedRAMP operational/communication requirement, not a CSP
+        infrastructure requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
@@ -193,85 +166,173 @@ class FRR_FSI_04_Analyzer(BaseFRRAnalyzer):
         """
         Analyze GitHub Actions workflow for FRR-FSI-04 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST post public notices 10 business days before emergency test messages.
+        This is a FedRAMP operational/communication requirement, not a CSP CI/CD
+        requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Azure Pipelines YAML for FRR-FSI-04 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST post public notices 10 business days before emergency test messages.
+        This is a FedRAMP operational/communication requirement, not a CSP CI/CD
+        requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze GitLab CI YAML for FRR-FSI-04 compliance.
         
-        TODO: Implement GitLab CI analysis
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST post public notices 10 business days before emergency test messages.
+        This is a FedRAMP operational/communication requirement, not a CSP CI/CD
+        requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     # ============================================================================
-    # EVIDENCE COLLECTION SUPPORT
+    # EVIDENCE COLLECTION METHODS
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
         """
-        Get recommendations for automating evidence collection for FRR-FSI-04.
+        Return automated evidence collection queries for FRR-FSI-04.
         
-        TODO: Add evidence collection guidance
+        Returns:
+            Dict containing automated query specifications.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "automated_queries": [
+                "Note: FRR-FSI-04 is a FedRAMP-side requirement. CSPs verify they "
+                "received advance notice (10+ business days) before emergency test messages"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        """
+        Return list of evidence artifacts needed for FRR-FSI-04 compliance.
+        
+        Returns:
+            List of evidence artifact specifications.
+        """
+        return [
+            {
+                "artifact_id": "FSI-04-01",
+                "name": "Emergency Test Notices",
+                "description": "Public notices posted by FedRAMP announcing upcoming emergency tests (10+ business days advance)",
+                "collection_method": "Document Review - Archive of FedRAMP public announcements/website posts"
+            },
+            {
+                "artifact_id": "FSI-04-02",
+                "name": "Notice Timing Verification",
+                "description": "Evidence showing notices posted at least 10 business days before corresponding test messages",
+                "collection_method": "Timeline Analysis - Compare notice dates to test message dates"
+            },
+            {
+                "artifact_id": "FSI-04-03",
+                "name": "Notice Content Review",
+                "description": "Review of notice content showing explanation of expected actions and timeframes",
+                "collection_method": "Document Review - Analyze notice text for required elements"
+            },
+            {
+                "artifact_id": "FSI-04-04",
+                "name": "CSP Notification Tracking",
+                "description": "CSP records showing receipt and acknowledgment of FedRAMP emergency test notices",
+                "collection_method": "Log Query - Email receipts and ticket creation for test notifications"
+            },
+            {
+                "artifact_id": "FSI-04-05",
+                "name": "Test Preparation Documentation",
+                "description": "CSP documentation of preparations made after receiving advance notice",
+                "collection_method": "Document Review - Test preparation checklists and briefing materials"
+            },
+            {
+                "artifact_id": "FSI-04-06",
+                "name": "Staff Communication",
+                "description": "Internal CSP communications to staff about upcoming emergency tests",
+                "collection_method": "Document Review - Staff briefings and alert notifications"
+            },
+            {
+                "artifact_id": "FSI-04-07",
+                "name": "Response Planning",
+                "description": "CSP response plans developed based on expected actions/timeframes in notice",
+                "collection_method": "Document Review - Test response procedures and resource allocation"
+            },
+            {
+                "artifact_id": "FSI-04-08",
+                "name": "Notice Monitoring Process",
+                "description": "CSP process for monitoring FedRAMP website/channels for emergency test notices",
+                "collection_method": "Document Review - Standard operating procedures for notice monitoring"
+            }
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Return recommendations for automating evidence collection for FRR-FSI-04.
+        
+        Returns:
+            Dict containing automation recommendations and implementation notes.
+        """
+        return {
+            "implementation_notes": (
+                "FRR-FSI-04 is a FedRAMP-side requirement: FedRAMP MUST post public notices "
+                "at least 10 business days before Emergency Test messages. Notices MUST include "
+                "explanation of likely expected actions and timeframes. This is NOT a CSP "
+                "implementation requirement.\n\n"
+                
+                "CSP ROLE:\n"
+                "- Monitor FedRAMP public channels for emergency test notices\n"
+                "- Receive and acknowledge advance notifications (10+ business days)\n"
+                "- Prepare staff and systems based on notice content\n"
+                "- Participate in emergency tests when conducted\n\n"
+                
+                "NOTICE REQUIREMENTS (FedRAMP responsibility):\n"
+                "- Timing: At least 10 business days advance notice\n"
+                "- Content: Explanation of likely expected actions\n"
+                "- Content: Timeframes for the emergency test\n"
+                "- Distribution: Public posting (accessible to all CSPs)\n\n"
+                
+                "NOTICE CHANNELS (where FedRAMP posts):\n"
+                "- FedRAMP.gov website (public announcements section)\n"
+                "- FedRAMP mailing lists/newsletters\n"
+                "- Direct email to authorized CSP contacts\n"
+                "- Cloud.gov or other FedRAMP communication platforms\n\n"
+                
+                "CSP PREPARATION ACTIVITIES:\n"
+                "1. Monitor FedRAMP channels for test notices\n"
+                "2. Acknowledge receipt of notices internally\n"
+                "3. Brief incident response teams on expected actions\n"
+                "4. Review and prepare response procedures\n"
+                "5. Allocate resources based on test scope\n"
+                "6. Notify stakeholders of scheduled test\n\n"
+                
+                "NOTICE CONTENT (what CSPs should expect):\n"
+                "- Test date and time (or date range)\n"
+                "- Type of emergency scenario being tested\n"
+                "- Expected CSP actions (e.g., acknowledge message, provide status update)\n"
+                "- Response timeframes (e.g., acknowledge within 2 hours)\n"
+                "- Test objectives and success criteria\n\n"
+                
+                "AUTOMATION OPPORTUNITIES:\n"
+                "1. RSS/webhook monitoring: Subscribe to FedRAMP announcement feeds\n"
+                "2. Email parsing: Auto-detect emergency test notice keywords\n"
+                "3. Ticket creation: Auto-generate test preparation tasks\n"
+                "4. Calendar integration: Auto-schedule test dates\n\n"
+                
+                "EVIDENCE COLLECTION:\n"
+                "- Copies of public notices (screenshots/archives)\n"
+                "- Notice receipt timestamps\n"
+                "- Internal preparation documentation\n"
+                "- Staff briefing records\n\n"
+                
+                "Note: This requirement ensures CSPs have adequate preparation time before "
+                "emergency tests. CSPs should establish processes for monitoring and responding "
+                "to advance notices but do not control the notice posting - that is FedRAMP's "
+                "responsibility."
+            )
         }

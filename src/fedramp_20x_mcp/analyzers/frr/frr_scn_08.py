@@ -62,7 +62,7 @@ class FRR_SCN_08_Analyzer(BaseFRRAnalyzer):
         ("SI-12", "Information Management and Retention"),
         ("PM-15", "Security and Privacy Groups and Associations"),
     ]
-    CODE_DETECTABLE = "Yes"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
         "KSI-MLA-01",
@@ -254,47 +254,84 @@ class FRR_SCN_08_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> dict:
         """
-        Get recommendations for automating evidence collection for FRR-SCN-08.
-        
-        TODO: Add evidence collection guidance
+        Get automated queries for collecting evidence of SCN machine-readable formats.
         """
         return {
             'frr_id': self.FRR_ID,
             'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            'azure_resource_graph': [
+                "// Find storage with SCN in machine-readable formats",
+                "Resources | where type =~ 'microsoft.storage/storageaccounts' | project name, properties",
+                "// Find databases storing SCN data",
+                "Resources | where type =~ 'microsoft.sql/servers/databases' | project name, properties"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            'azure_monitor_kql': [
+                "// Access to machine-readable SCN files",
+                "StorageBlobLogs | where Uri contains 'scn' and (Uri endswith '.json' or Uri endswith '.xml') | project TimeGenerated, AccountName, Uri",
+                "// API access to SCN data",
+                "AppTraces | where Properties.Endpoint contains '/api/scn' | project timestamp, Properties.Format"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
+            'azure_cli': [
+                "az storage blob list --account-name <account> --container-name scn --query '[].{name:name,contentType:properties.contentType}'",
+                "az sql db query --server <server> --database <db> --name <scn-query>"
+            ]
+        }
+
+    def get_evidence_artifacts(self) -> dict:
+        """
+        Get evidence artifacts demonstrating SCN in human and machine-readable formats.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
+            'code_locations': [
+                'SCN export to JSON/XML (src/scn/export.py)',
+                'SCN API endpoints (src/api/scn-endpoints.ts)',
+                'SCN schema definitions (schemas/scn.json)',
+                'SCN format converters (tools/scn-converter/)'
+            ],
+            'documentation': [
+                'Sample SCN in JSON format',
+                'Sample SCN in XML format',
+                'Sample SCN in human-readable format (PDF/HTML)',
+                'SCN schema documentation',
+                'API documentation for programmatic SCN access'
+            ],
+            'configuration_samples': [
+                'Storage account with SCN in multiple formats',
+                'Database schema for SCN storage',
+                'API configuration for SCN retrieval',
+                'Export configuration for human/machine formats'
+            ]
+        }
+
+    def get_evidence_automation_recommendations(self) -> dict:
+        """
+        Get recommendations for automating evidence collection for SCN formats.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
+            'code_detectable': 'Partial',
+            'implementation_notes': [
+                'APIs can generate SCN in JSON/XML machine-readable formats',
+                'Export tools convert SCN to human-readable formats (PDF, HTML)',
+                'Storage systems maintain SCN in multiple format versions',
+                'Schema validation ensures machine-readable format compliance',
+                'Content negotiation allows format selection via API'
             ],
             'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
+                'Azure Storage - Multi-format SCN archival',
+                'Azure SQL Database - Structured SCN data',
+                'Azure API Management - SCN API with format negotiation',
+                'Azure Functions - SCN format conversion'
             ],
             'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                'REST APIs for machine-readable SCN retrieval',
+                'Export tools for human-readable SCN generation',
+                'Storage accounts for multi-format SCN archival',
+                'Schema validators for format compliance'
             ]
         }

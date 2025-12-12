@@ -86,47 +86,98 @@ class FRR_ADS_09_Analyzer(BaseFRRAnalyzer):
         Analyze Python code for FRR-ADS-09 compliance using AST.
         
         Detects historical data retention mechanisms:
-        - Versioning systems
+        - Versioning systems (git libraries, version control)
         - Retention policies (3 years = 1095 days)
-        - Archive mechanisms
+        - Archive mechanisms (backup, archive storage)
+        - Version history management
+        
+        Uses AST for accurate detection with regex fallback.
         """
         findings = []
-        lines = code.split('\n')
         
-        # Try AST analysis first
+        # AST-based analysis
         try:
             parser = ASTParser(CodeLanguage.PYTHON)
             tree = parser.parse(code)
+            code_bytes = code.encode('utf-8')
+            
             if tree and tree.root_node:
-                code_bytes = code.encode('utf-8')
+                # Find retention/versioning/archive functions
+                retention_functions = [
+                    'set_retention', 'configure_retention', 'retention_policy',
+                    'archive_data', 'create_archive', 'backup_data', 'create_backup',
+                    'version_data', 'create_version', 'version_history',
+                    'store_historical', 'retain_historical'
+                ]
                 
-                # Check for versioning/archive functions
-                versioning_functions = ['archive', 'version', 'retain', 'history', 'backup']
-                for func_name in versioning_functions:
-                    func_nodes = parser.find_nodes_by_type(tree.root_node, 'function_definition')
-                    for node in func_nodes:
-                        node_text = parser.get_node_text(node, code_bytes)
-                        if func_name in node_text.lower():
-                            line_num = node.start_point[0] + 1
+                for func_name in retention_functions:
+                    calls = parser.find_function_calls(tree.root_node, func_name, code_bytes)
+                    for call_node in calls:
+                        line_num = call_node.start_point[0] + 1
+                        call_text = parser.get_node_text(call_node, code_bytes)
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Historical data retention function detected",
+                            description=f"Found retention/versioning function: {func_name}()",
+                            severity=Severity.INFO,
+                            line_number=line_num,
+                            code_snippet=call_text,
+                            recommendation="Ensure this mechanism retains authorization data for 3 years (1095 days)."
+                        ))
+                
+                # Check for retention period literals (3 years, 1095 days, 36 months)
+                number_nodes = parser.find_nodes_by_type(tree.root_node, 'integer')
+                retention_values = [1095, 365 * 3, 36]  # days, days, months
+                for num_node in number_nodes:
+                    num_text = parser.get_node_text(num_node, code_bytes)
+                    try:
+                        num_val = int(num_text)
+                        if num_val in retention_values:
+                            line_num = num_node.start_point[0] + 1
                             findings.append(Finding(
                                 frr_id=self.FRR_ID,
-                                title="Historical data retention mechanism detected",
-                                description=f"Found {func_name} function for data retention",
+                                title="3-year retention period detected",
+                                description=f"Found retention value: {num_val}",
                                 severity=Severity.INFO,
                                 line_number=line_num,
-                                code_snippet=lines[line_num-1].strip() if line_num <= len(lines) else "",
-                                recommendation="Ensure historical authorization data retained for 3 years."
+                                code_snippet=num_text,
+                                recommendation="Verify this retention period applies to authorization data."
                             ))
+                    except ValueError:
+                        pass
+                
+                # Check string literals for retention/versioning keywords
+                string_literals = parser.find_nodes_by_type(tree.root_node, 'string')
+                retention_keywords = ['3 year', '1095 day', 'retention', 'version history', 'archive', 'historical data']
+                for str_node in string_literals:
+                    str_text = parser.get_node_text(str_node, code_bytes).lower()
+                    if any(keyword in str_text for keyword in retention_keywords):
+                        line_num = str_node.start_point[0] + 1
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Retention/versioning reference detected",
+                            description="Found retention policy or versioning reference",
+                            severity=Severity.INFO,
+                            line_number=line_num,
+                            code_snippet=parser.get_node_text(str_node, code_bytes)[:100],
+                            recommendation="Verify 3-year retention for authorization data."
+                        ))
+                
+                if findings:
+                    return findings
         except Exception:
-            pass  # Fall back to regex
+            pass
         
-        # Regex fallback for retention patterns
+        # Regex fallback
+        lines = code.split('\n')
         retention_patterns = [
             r'retention.*3.*year',
-            r'retain.*1095.*day',  # 3 years in days
+            r'retain.*1095.*day',
+            r'36.*month.*retention',
             r'historical.*version',
             r'archive.*authorization',
             r'version.*history',
+            r'backup.*retention',
         ]
         
         for i, line in enumerate(lines, 1):
@@ -134,7 +185,7 @@ class FRR_ADS_09_Analyzer(BaseFRRAnalyzer):
                 if re.search(pattern, line, re.IGNORECASE):
                     findings.append(Finding(
                         frr_id=self.FRR_ID,
-                        title="Retention policy detected",
+                        title="Retention policy pattern detected",
                         description=f"Found retention pattern: {pattern}",
                         severity=Severity.INFO,
                         line_number=i,
@@ -144,60 +195,239 @@ class FRR_ADS_09_Analyzer(BaseFRRAnalyzer):
                     break
         
         return findings
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze C# code for FRR-ADS-09 compliance using AST.
         
-        TODO: Implement C# analysis
+        Detects historical data retention mechanisms:
+        - Retention policy methods
+        - Versioning/archive methods
+        - Backup configuration
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for C#
+        try:
+            parser = ASTParser(CodeLanguage.CSHARP)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf-8')
+            
+            if tree and tree.root_node:
+                # Find retention/versioning methods
+                retention_methods = [
+                    'SetRetention', 'ConfigureRetention', 'RetentionPolicy',
+                    'ArchiveData', 'CreateArchive', 'BackupData', 'CreateBackup',
+                    'VersionData', 'CreateVersion', 'VersionHistory',
+                    'StoreHistorical', 'RetainHistorical'
+                ]
+                
+                for method_name in retention_methods:
+                    calls = parser.find_function_calls(tree.root_node, method_name, code_bytes)
+                    for call_node in calls:
+                        line_num = call_node.start_point[0] + 1
+                        call_text = parser.get_node_text(call_node, code_bytes)
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Historical data retention method detected",
+                            description=f"Found retention method: {method_name}",
+                            severity=Severity.INFO,
+                            line_number=line_num,
+                            code_snippet=call_text,
+                            recommendation="Ensure this mechanism retains authorization data for 3 years."
+                        ))
+                
+                # Check string literals for retention keywords
+                string_literals = parser.find_nodes_by_type(tree.root_node, 'string_literal')
+                retention_keywords = ['3 year', '1095 day', 'retention', 'version history', 'archive']
+                for str_node in string_literals:
+                    str_text = parser.get_node_text(str_node, code_bytes).lower()
+                    if any(keyword in str_text for keyword in retention_keywords):
+                        line_num = str_node.start_point[0] + 1
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Retention policy reference detected",
+                            description="Found retention/versioning reference",
+                            severity=Severity.INFO,
+                            line_number=line_num,
+                            code_snippet=parser.get_node_text(str_node, code_bytes)[:100],
+                            recommendation="Verify 3-year retention for authorization data."
+                        ))
+                
+                if findings:
+                    return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(SetRetention|RetentionPolicy|ArchiveData|VersionHistory)', line, re.IGNORECASE):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Retention method pattern detected",
+                    description="Found potential retention method",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Ensure 3-year retention for authorization data."
+                ))
+        
         return findings
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Java code for FRR-ADS-09 compliance using AST.
         
-        TODO: Implement Java analysis
+        Detects historical data retention mechanisms:
+        - Retention policy methods
+        - Versioning/archive methods
+        - Backup configuration
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for Java
+        try:
+            parser = ASTParser(CodeLanguage.JAVA)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf-8')
+            
+            if tree and tree.root_node:
+                # Find retention/versioning methods
+                retention_methods = [
+                    'setRetention', 'configureRetention', 'retentionPolicy',
+                    'archiveData', 'createArchive', 'backupData', 'createBackup',
+                    'versionData', 'createVersion', 'versionHistory',
+                    'storeHistorical', 'retainHistorical'
+                ]
+                
+                for method_name in retention_methods:
+                    calls = parser.find_function_calls(tree.root_node, method_name, code_bytes)
+                    for call_node in calls:
+                        line_num = call_node.start_point[0] + 1
+                        call_text = parser.get_node_text(call_node, code_bytes)
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Historical data retention method detected",
+                            description=f"Found retention method: {method_name}()",
+                            severity=Severity.INFO,
+                            line_number=line_num,
+                            code_snippet=call_text,
+                            recommendation="Ensure this mechanism retains authorization data for 3 years."
+                        ))
+                
+                # Check string literals for retention keywords
+                string_literals = parser.find_nodes_by_type(tree.root_node, 'string_literal')
+                retention_keywords = ['3 year', '1095 day', 'retention', 'version history', 'archive']
+                for str_node in string_literals:
+                    str_text = parser.get_node_text(str_node, code_bytes).lower()
+                    if any(keyword in str_text for keyword in retention_keywords):
+                        line_num = str_node.start_point[0] + 1
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Retention policy reference detected",
+                            description="Found retention/versioning reference",
+                            severity=Severity.INFO,
+                            line_number=line_num,
+                            code_snippet=parser.get_node_text(str_node, code_bytes)[:100],
+                            recommendation="Verify 3-year retention for authorization data."
+                        ))
+                
+                if findings:
+                    return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(setRetention|retentionPolicy|archiveData|versionHistory)', line, re.IGNORECASE):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Retention method pattern detected",
+                    description="Found potential retention method",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Ensure 3-year retention for authorization data."
+                ))
+        
         return findings
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze TypeScript/JavaScript code for FRR-ADS-09 compliance using AST.
         
-        TODO: Implement TypeScript analysis
+        Detects historical data retention mechanisms:
+        - Retention policy functions
+        - Versioning/archive functions
+        - Backup configuration
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for TypeScript
+        try:
+            parser = ASTParser(CodeLanguage.TYPESCRIPT)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf-8')
+            
+            if tree and tree.root_node:
+                # Find retention/versioning functions
+                retention_functions = [
+                    'setRetention', 'configureRetention', 'retentionPolicy',
+                    'archiveData', 'createArchive', 'backupData', 'createBackup',
+                    'versionData', 'createVersion', 'versionHistory',
+                    'storeHistorical', 'retainHistorical'
+                ]
+                
+                for func_name in retention_functions:
+                    calls = parser.find_function_calls(tree.root_node, func_name, code_bytes)
+                    for call_node in calls:
+                        line_num = call_node.start_point[0] + 1
+                        call_text = parser.get_node_text(call_node, code_bytes)
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Historical data retention function detected",
+                            description=f"Found retention function: {func_name}()",
+                            severity=Severity.INFO,
+                            line_number=line_num,
+                            code_snippet=call_text,
+                            recommendation="Ensure this mechanism retains authorization data for 3 years."
+                        ))
+                
+                # Check string literals for retention keywords
+                string_literals = parser.find_nodes_by_type(tree.root_node, 'string')
+                retention_keywords = ['3 year', '1095 day', 'retention', 'version history', 'archive']
+                for str_node in string_literals:
+                    str_text = parser.get_node_text(str_node, code_bytes).lower()
+                    if any(keyword in str_text for keyword in retention_keywords):
+                        line_num = str_node.start_point[0] + 1
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Retention policy reference detected",
+                            description="Found retention/versioning reference",
+                            severity=Severity.INFO,
+                            line_number=line_num,
+                            code_snippet=parser.get_node_text(str_node, code_bytes)[:100],
+                            recommendation="Verify 3-year retention for authorization data."
+                        ))
+                
+                if findings:
+                    return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(setRetention|retentionPolicy|archiveData|versionHistory)', line, re.IGNORECASE):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Retention function pattern detected",
+                    description="Found potential retention function",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Ensure 3-year retention for authorization data."
+                ))
+        
         return findings
     
     # ============================================================================
@@ -208,16 +438,63 @@ class FRR_ADS_09_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Bicep infrastructure code for FRR-ADS-09 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        Detects Azure resources with retention/versioning capabilities:
+        - Azure Backup retention policies
+        - Storage account blob retention/versioning
+        - Storage account soft delete configuration
+        - Recovery Services vault configurations
+        
+        Note: Uses regex patterns as tree-sitter does not support Bicep.
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
+        # Azure resources with retention/versioning
+        retention_resources = [
+            r'Microsoft\.RecoveryServices/vaults',  # Azure Backup
+            r'Microsoft\.Storage/storageAccounts.*blobServices.*containers',  # Blob retention
+            r'Microsoft\.Backup/BackupVaults',
+        ]
+        
+        # Retention policy properties
+        retention_properties = [
+            r'retentionPolicy',
+            r'retentionDuration',
+            r'retentionInDays.*1095',  # 3 years
+            r'daysOfTheMonth.*36',  # 36 months
+            r'enableVersioning.*true',
+            r'deleteRetentionPolicy',
+            r'days.*1095',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            # Check for retention resources
+            for pattern in retention_resources:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Retention-capable Azure resource detected",
+                        description=f"Found retention resource: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Ensure retention policy configured for 3 years (1095 days) for authorization data."
+                    ))
+                    break
+            
+            # Check for retention properties
+            for pattern in retention_properties:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Retention policy configuration detected",
+                        description=f"Found retention setting: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Verify 3-year retention period for historical authorization data."
+                    ))
+                    break
         
         return findings
     
@@ -225,14 +502,63 @@ class FRR_ADS_09_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Terraform infrastructure code for FRR-ADS-09 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        Detects resources with retention/versioning capabilities:
+        - Azure Backup retention policies
+        - Storage account blob retention/versioning
+        - Recovery Services vault configurations
+        
+        Note: Uses regex patterns as tree-sitter does not support Terraform.
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement Terraform regex patterns
+        # Terraform resources with retention
+        retention_resources = [
+            r'azurerm_recovery_services_vault',
+            r'azurerm_backup_policy',
+            r'azurerm_storage_account.*versioning',
+            r'azurerm_storage_management_policy',
+        ]
+        
+        # Retention policy properties
+        retention_properties = [
+            r'retention_daily.*count.*=.*1095',
+            r'retention_yearly.*count.*=.*3',
+            r'retention_monthly.*count.*=.*36',
+            r'enable_versioning.*=.*true',
+            r'delete_retention_policy',
+            r'days.*=.*1095',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            # Check for retention resources
+            for pattern in retention_resources:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Retention-capable resource detected",
+                        description=f"Found retention resource: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Ensure retention policy configured for 3 years for authorization data."
+                    ))
+                    break
+            
+            # Check for retention properties
+            for pattern in retention_properties:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Retention policy configuration detected",
+                        description=f"Found retention setting: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Verify 3-year retention period for historical authorization data."
+                    ))
+                    break
+        
         return findings
     
     # ============================================================================
@@ -243,38 +569,126 @@ class FRR_ADS_09_Analyzer(BaseFRRAnalyzer):
         """
         Analyze GitHub Actions workflow for FRR-ADS-09 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        Detects backup/archive automation:
+        - Backup workflows
+        - Archive creation jobs
+        - Versioning automation
+        - Retention policy management
+        
+        Note: Uses regex patterns as tree-sitter does not support YAML.
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement GitHub Actions analysis
+        # Backup/archive automation patterns
+        retention_patterns = [
+            r'backup.*authorization',
+            r'archive.*data',
+            r'create.*backup',
+            r'retention.*policy',
+            r'version.*history',
+            r'historical.*data',
+            r'backup.*schedule',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            for pattern in retention_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Backup/archive workflow detected",
+                        description=f"Found retention automation: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Ensure workflow maintains 3-year retention for authorization data."
+                    ))
+                    break
+        
         return findings
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Azure Pipelines YAML for FRR-ADS-09 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        Detects backup/archive automation:
+        - Backup tasks
+        - Archive creation steps
+        - Versioning automation
+        - Retention policy management
+        
+        Note: Uses regex patterns as tree-sitter does not support YAML.
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement Azure Pipelines analysis
+        # Backup/archive automation patterns
+        retention_patterns = [
+            r'backup.*authorization',
+            r'archive.*data',
+            r'create.*backup',
+            r'retention.*policy',
+            r'version.*history',
+            r'historical.*data',
+            r'backup.*task',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            for pattern in retention_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Backup/archive pipeline detected",
+                        description=f"Found retention automation: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Ensure pipeline maintains 3-year retention for authorization data."
+                    ))
+                    break
+        
         return findings
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze GitLab CI YAML for FRR-ADS-09 compliance.
         
-        TODO: Implement GitLab CI analysis
+        Detects backup/archive automation:
+        - Backup jobs
+        - Archive creation stages
+        - Versioning automation
+        - Retention policy management
+        
+        Note: Uses regex patterns as tree-sitter does not support YAML.
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement GitLab CI analysis
+        # Backup/archive automation patterns
+        retention_patterns = [
+            r'backup.*authorization',
+            r'archive.*data',
+            r'create.*backup',
+            r'retention.*policy',
+            r'version.*history',
+            r'historical.*data',
+            r'backup.*job',
+        ]
+        
+        for i, line in enumerate(lines, 1):
+            for pattern in retention_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Backup/archive job detected",
+                        description=f"Found retention automation: {pattern}",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Ensure job maintains 3-year retention for authorization data."
+                    ))
+                    break
+        
         return findings
     
     # ============================================================================
@@ -285,43 +699,168 @@ class FRR_ADS_09_Analyzer(BaseFRRAnalyzer):
         """
         Get recommendations for automating evidence collection for FRR-ADS-09.
         
-        TODO: Add evidence collection guidance
+        FRR-ADS-09 requires retaining historical versions of authorization data
+        for 3 years. Evidence focuses on retention policies, backup configurations,
+        version history, and storage settings.
         """
         return {
             'frr_id': self.FRR_ID,
             'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            'code_detectable': 'Yes',
+            'automation_feasibility': 'High - retention policies and versioning configurations are code-detectable in storage, backup, and version control systems',
+            'azure_services': [
+                'Azure Backup - Automated backup with retention policies',
+                'Azure Storage - Blob versioning and soft delete for 3-year retention',
+                'Azure Recovery Services - Vault-based retention management',
+                'Azure Policy - Enforce retention policy compliance',
+                'Azure Resource Graph - Query retention configurations across resources'
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            'collection_methods': [
+                'Query storage account retention policies (3 years/1095 days)',
+                'Retrieve backup retention schedules from Recovery Services vaults',
+                'Export blob versioning configurations from storage accounts',
+                'Collect version history logs from authorization data repositories',
+                'Review backup job history and retention compliance',
+                'Audit soft delete and point-in-time restore configurations'
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            'implementation_steps': [
+                '1. Configure Azure Storage blob versioning with 3-year retention',
+                '2. Set up Azure Backup with 1095-day (3-year) retention policy',
+                '3. Enable soft delete on storage accounts (365-day minimum)',
+                '4. Configure Recovery Services vault retention policies',
+                '5. Implement automated backup schedules with retention enforcement',
+                '6. Set up Azure Policy to validate 3-year retention compliance',
+                '7. Configure version history tracking for authorization data'
             ]
         }
+    
+    def get_evidence_collection_queries(self) -> list:
+        """
+        Get specific queries for collecting FRR-ADS-09 evidence.
+        
+        Returns queries for retention policies, backup configurations,
+        versioning settings, and historical data management.
+        """
+        return [
+            {
+                'name': 'Storage Account Retention Policies',
+                'type': 'Azure Resource Graph',
+                'query': '''resources
+| where type == "microsoft.storage/storageaccounts"
+| extend blobRetention = properties.blobServices.retentionPolicy
+| extend retentionDays = toint(blobRetention.days)
+| extend versioningEnabled = tobool(properties.blobServices.containerDeleteRetentionPolicy.enabled)
+| where retentionDays >= 1095 or versioningEnabled == true
+| project name, resourceGroup, subscriptionId, retentionDays, versioningEnabled, softDeleteEnabled=blobRetention.enabled, location''',
+                'description': 'Query storage accounts with 3-year (1095-day) retention policies or versioning enabled for historical authorization data'
+            },
+            {
+                'name': 'Azure Backup Retention Policies',
+                'type': 'Azure Resource Graph',
+                'query': '''resources
+| where type == "microsoft.recoveryservices/vaults"
+| extend backupPolicies = properties.backupPolicies
+| mv-expand policy = backupPolicies
+| extend retentionDaily = toint(policy.retentionPolicy.dailySchedule.retentionDuration.count)
+| extend retentionYearly = toint(policy.retentionPolicy.yearlySchedule.retentionDuration.count)
+| where retentionDaily >= 1095 or retentionYearly >= 3
+| project name, resourceGroup, policyName=policy.name, retentionDaily, retentionYearly, location''',
+                'description': 'Retrieve backup vaults with 3-year retention policies configured for authorization data backups'
+            },
+            {
+                'name': 'Blob Versioning Configuration',
+                'type': 'KQL',
+                'query': '''AzureDiagnostics
+| where ResourceType == "STORAGEACCOUNTS"
+| where OperationName == "GetBlobServiceProperties" or OperationName == "SetBlobServiceProperties"
+| extend versioningEnabled = tostring(properties_s.versioning)
+| extend changeTracking = tostring(properties_s.changeFeed)
+| where versioningEnabled == "true" or changeTracking == "true"
+| project TimeGenerated, ResourceId, versioningEnabled, changeTracking, retentionDays=properties_s.deleteRetentionPolicy
+| order by TimeGenerated desc''',
+                'description': 'Monitor blob versioning configurations and change tracking for historical authorization data'
+            },
+            {
+                'name': 'Backup Job History and Retention',
+                'type': 'KQL',
+                'query': '''AzureDiagnostics
+| where ResourceProvider == "MICROSOFT.RECOVERYSERVICES"
+| where Category == "AzureBackupReport"
+| where OperationName == "Backup" or OperationName == "Restore"
+| extend retentionDuration = toint(properties_s.retentionDuration)
+| where retentionDuration >= 1095
+| summarize BackupCount=count(), LastBackup=max(TimeGenerated) by ResourceId, retentionDuration
+| project ResourceId, BackupCount, LastBackup, RetentionYears=retentionDuration/365, ComplianceStatus=iff(retentionDuration >= 1095, "Compliant", "Non-Compliant")''',
+                'description': 'Track backup job execution and verify 3-year retention compliance for authorization data'
+            },
+            {
+                'name': 'Version History Access Logs',
+                'type': 'KQL',
+                'query': '''StorageBlobLogs
+| where OperationName == "GetBlobVersion" or OperationName == "ListBlobVersions"
+| where Uri contains "authorization-data" or Uri contains "fedramp"
+| extend versionId = tostring(properties_s.versionId)
+| extend versionAge = datetime_diff("day", now(), TimeGenerated)
+| where versionAge <= 1095
+| summarize AccessCount=count(), LastAccessed=max(TimeGenerated) by AccountName, ContainerName, BlobName, versionId
+| project AccountName, ContainerName, BlobName, VersionId=versionId, AccessCount, LastAccessed, VersionAgeDays=versionAge''',
+                'description': 'Monitor access to historical versions of authorization data within 3-year retention window'
+            },
+            {
+                'name': 'Soft Delete and Point-in-Time Restore',
+                'type': 'Azure Resource Graph',
+                'query': '''resources
+| where type == "microsoft.storage/storageaccounts"
+| extend softDeleteRetention = toint(properties.deleteRetentionPolicy.days)
+| extend pointInTimeRestore = tobool(properties.restorePolicy.enabled)
+| extend restoreDays = toint(properties.restorePolicy.days)
+| where softDeleteRetention >= 365 or (pointInTimeRestore == true and restoreDays >= 365)
+| project name, resourceGroup, subscriptionId, softDeleteDays=softDeleteRetention, pointInTimeRestoreEnabled=pointInTimeRestore, restoreDays, location''',
+                'description': 'Verify soft delete and point-in-time restore configurations support 3-year retention requirement'
+            }
+        ]
+    
+    def get_evidence_artifacts(self) -> list:
+        """
+        Get list of evidence artifacts to collect for FRR-ADS-09.
+        
+        Returns artifacts demonstrating 3-year historical data retention.
+        """
+        return [
+            {
+                'name': 'Storage Retention Policy Configuration',
+                'description': 'Export of storage account retention policies showing 3-year (1095-day) retention for authorization data blobs',
+                'location': 'Azure Storage account blob service properties',
+                'format': 'JSON export with retention duration, versioning settings, and soft delete configuration'
+            },
+            {
+                'name': 'Azure Backup Retention Schedules',
+                'description': 'Backup policy configurations from Recovery Services vaults showing 3-year retention schedules',
+                'location': 'Azure Recovery Services vaults / Backup policies',
+                'format': 'JSON export with daily/monthly/yearly retention counts and policy details'
+            },
+            {
+                'name': 'Version History Logs',
+                'description': 'Version history records for authorization data showing versions retained for 3 years',
+                'location': 'Azure Storage blob version metadata / version control system',
+                'format': 'CSV or JSON with version IDs, creation timestamps, retention status, access logs'
+            },
+            {
+                'name': 'Backup Job Execution History',
+                'description': 'Historical backup job logs demonstrating regular backup execution and successful retention',
+                'location': 'Azure Monitor logs / Recovery Services vault reports',
+                'format': 'Log export showing backup timestamps, job status, retention applied, data protected'
+            },
+            {
+                'name': 'Azure Policy Compliance Report',
+                'description': 'Policy compliance status report for retention policy enforcement across authorization data storage',
+                'location': 'Azure Policy compliance dashboard',
+                'format': 'PDF or JSON report showing compliant/non-compliant resources and policy definitions'
+            },
+            {
+                'name': 'Historical Data Access Audit',
+                'description': 'Audit logs showing access to historical versions of authorization data within 3-year retention window',
+                'location': 'Azure Storage analytics logs / Azure Monitor',
+                'format': 'CSV export with access timestamps, user identities, version accessed, operation type'
+            }
+        ]

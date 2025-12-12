@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,39 @@ class FRR_VDR_10_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
-        """
-        Get recommendations for automating evidence collection for FRR-VDR-10.
-        
-        TODO: Add evidence collection guidance
-        """
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """Get queries for vulnerability evaluation factors."""
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
-            ]
+            "Context-based evaluation": {
+                "description": "Verify vulns evaluated considering CSO context (asset criticality, data sensitivity, blast radius, etc.)",
+                "defender_kql": "SecurityAssessment | extend EvalFactors = bag_pack('AssetCriticality', AssetCriticality, 'DataSensitivity', DataSensitivity, 'BlastRadius', BlastRadius)"
+            },
+            "Evaluation factor tracking": {
+                "description": "Track which evaluation factors applied per FRR-VDR-10"
+            },
+            "Factor completeness": {
+                "description": "Verify evaluation considers required factors"
+            }
+        }
+
+    def get_evidence_artifacts(self) -> List[str]:
+        """Get artifacts for vulnerability evaluation factors."""
+        return [
+            "Vulnerability evaluation records with CSO context",
+            "Evaluation factor documentation",
+            "Factor application tracking per vulnerability",
+            "Context-based risk assessments"
+        ]
+
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """Get automation recommendations for evaluation factors."""
+        return {
+            "automated_context_collection": {
+                "description": "Auto-collect CSO context for vulnerability evaluation",
+                "rationale": "Ensures comprehensive evaluation per FRR-VDR-10 factors"
+            },
+            "factor_based_evaluation": {
+                "description": "Apply evaluation factors systematically",
+                "rationale": "Provides consistent context-based vuln evaluation per FRR-VDR-10"
+            }
         }

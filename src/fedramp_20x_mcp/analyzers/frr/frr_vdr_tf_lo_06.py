@@ -10,7 +10,7 @@ Impact Levels: Low
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -236,47 +236,173 @@ class FRR_VDR_TF_LO_06_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get automated queries for collecting evidence of risk-based mitigation timeframe compliance.
+        
+        Returns structured queries for timeframe calculations, compliance tracking, and SLA monitoring
+        based on potential adverse impact, internet reachability, and exploitability (Low impact - relaxed timeframes).
+        """
+        return {
+            "Risk-based mitigation timeframe calculations": {
+                "description": "Calculate mitigation timeframes based on impact level (N1-N5), internet reachability, and exploitability - Low impact has relaxed timeframes vs High",
+                "timeframe_calculation_query": """
+                    SecurityAssessment
+                    | where TimeGenerated > ago(180d)
+                    | where AssessmentType == 'Vulnerability'
+                    | extend PotentialImpact = tostring(Properties.severity)  // N1-N5 or Critical/High/Medium/Low
+                    | extend InternetReachable = tobool(Properties.metadata.internetExposed)
+                    | extend LikelyExploitable = tobool(Properties.metadata.exploitAvailable)
+                    | extend MitigationTimeframe = case(
+                        // Low impact relaxed timeframes (vs High: 15/30/90, Moderate: 30/60/180)
+                        PotentialImpact in ('N5', 'Critical') and InternetReachable and LikelyExploitable, 60,  // High: 15, Moderate: 30, Low: 60
+                        PotentialImpact in ('N4', 'High') and InternetReachable and LikelyExploitable, 90,       // High: 30, Moderate: 60, Low: 90
+                        PotentialImpact in ('N5', 'Critical') and (not(InternetReachable) or not(LikelyExploitable)), 90,  // High: 30, Moderate: 60, Low: 90
+                        PotentialImpact in ('N4', 'High') and (not(InternetReachable) or not(LikelyExploitable)), 180,     // High: 90, Moderate: 180, Low: 365
+                        365  // All other vulnerabilities: 1 year for Low impact
+                    )
+                    | project ResourceId, PotentialImpact, InternetReachable, LikelyExploitable, MitigationTimeframe, EvaluationDate = TimeGenerated
+                """,
+                "azure_resource_graph": """
+                    securityresources
+                    | where type == 'microsoft.security/assessments'
+                    | extend severity = properties.status.severity
+                    | extend internetExposed = properties.metadata.internetExposed
+                    | extend exploitable = properties.metadata.exploitAvailable
+                    | extend timeframe = case(
+                        severity == 'Critical' and internetExposed and exploitable, '60 days',
+                        severity == 'High' and internetExposed and exploitable, '90 days',
+                        severity == 'Critical' and (not(internetExposed) or not(exploitable)), '90 days',
+                        severity == 'High' and (not(internetExposed) or not(exploitable)), '180 days',
+                        '365 days'
+                    )
+                    | project id, severity, internetExposed, exploitable, timeframe
+                """
+            },
+            "Mitigation timeframe compliance tracking": {
+                "description": "Track compliance with risk-based mitigation timeframes from evaluation to mitigation completion",
+                "compliance_tracking_query": """
+                    SecurityAssessment
+                    | where TimeGenerated > ago(180d)
+                    | where AssessmentType == 'Vulnerability'
+                    | extend EvaluationDate = TimeGenerated
+                    | extend PotentialImpact = tostring(Properties.severity)
+                    | extend InternetReachable = tobool(Properties.metadata.internetExposed)
+                    | extend LikelyExploitable = tobool(Properties.metadata.exploitAvailable)
+                    | join kind=leftouter (
+                        SecurityRecommendation
+                        | where Properties.status in ('Mitigated', 'Remediated')
+                        | extend MitigationDate = TimeGenerated, VulnId = ResourceId
+                    ) on $left.ResourceId == $right.VulnId
+                    | extend MitigationTimeframe = case(
+                        PotentialImpact in ('N5', 'Critical') and InternetReachable and LikelyExploitable, 60,
+                        PotentialImpact in ('N4', 'High') and InternetReachable and LikelyExploitable, 90,
+                        PotentialImpact in ('N5', 'Critical') and (not(InternetReachable) or not(LikelyExploitable)), 90,
+                        PotentialImpact in ('N4', 'High') and (not(InternetReachable) or not(LikelyExploitable)), 180,
+                        365
+                    )
+                    | extend DaysToMitigate = datetime_diff('day', coalesce(MitigationDate, now()), EvaluationDate)
+                    | extend ComplianceStatus = case(
+                        isnotnull(MitigationDate) and DaysToMitigate <= MitigationTimeframe, 'Compliant',
+                        isnotnull(MitigationDate) and DaysToMitigate > MitigationTimeframe, 'Late',
+                        isnull(MitigationDate) and DaysToMitigate <= MitigationTimeframe, 'Pending',
+                        'Overdue'
+                    )
+                    | project ResourceId, PotentialImpact, InternetReachable, LikelyExploitable, EvaluationDate, MitigationDate, MitigationTimeframe, DaysToMitigate, ComplianceStatus
+                """,
+                "ticketing_system_query": """
+                    // Example ServiceNow or Jira query
+                    // SELECT vuln_id, severity, internet_exposed, exploitable, evaluation_date, mitigation_date,
+                    //        required_timeframe_days, actual_days_to_mitigate,
+                    //        CASE WHEN actual_days_to_mitigate <= required_timeframe_days THEN 'Compliant' ELSE 'Violation' END as status
+                    // FROM vulnerability_mitigation_tracking
+                    // WHERE system_impact_level = 'Low'
+                """
+            },
+            "SLA violation and risk reporting": {
+                "description": "Monitor SLA violations for mitigation timeframes and report high-risk overdue vulnerabilities",
+                "sla_violation_query": """
+                    SecurityAssessment
+                    | where TimeGenerated > ago(90d)
+                    | where AssessmentType == 'Vulnerability'
+                    | extend PotentialImpact = tostring(Properties.severity)
+                    | extend InternetReachable = tobool(Properties.metadata.internetExposed)
+                    | extend LikelyExploitable = tobool(Properties.metadata.exploitAvailable)
+                    | extend EvaluationDate = TimeGenerated
+                    | extend MitigationTimeframe = case(
+                        PotentialImpact in ('N5', 'Critical') and InternetReachable and LikelyExploitable, 60,
+                        PotentialImpact in ('N4', 'High') and InternetReachable and LikelyExploitable, 90,
+                        PotentialImpact in ('N5', 'Critical') and (not(InternetReachable) or not(LikelyExploitable)), 90,
+                        PotentialImpact in ('N4', 'High') and (not(InternetReachable) or not(LikelyExploitable)), 180,
+                        365
+                    )
+                    | extend DaysSinceEvaluation = datetime_diff('day', now(), EvaluationDate)
+                    | extend DaysOverdue = DaysSinceEvaluation - MitigationTimeframe
+                    | where Properties.status.code != 'Mitigated' and DaysOverdue > 0
+                    | summarize VulnerabilitiesOverdue = count(), AvgDaysOverdue = avg(DaysOverdue), MaxDaysOverdue = max(DaysOverdue) by PotentialImpact, InternetReachable, LikelyExploitable, MitigationTimeframe
+                    | project PotentialImpact, InternetReachable, LikelyExploitable, MitigationTimeframe, VulnerabilitiesOverdue, AvgDaysOverdue, MaxDaysOverdue
+                """,
+                "compliance_rate_query": """
+                    SecurityAssessment
+                    | where TimeGenerated > ago(90d)
+                    | where AssessmentType == 'Vulnerability'
+                    | summarize TotalVulns = count(),
+                                MitigatedOnTime = countif(Properties.status.code == 'Mitigated' and datetime_diff('day', now(), TimeGenerated) <= 180)
+                    | extend ComplianceRate = todouble(MitigatedOnTime) / todouble(TotalVulns) * 100
+                    | project TotalVulns, MitigatedOnTime, ComplianceRate
+                """
+            }
+        }
+
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts needed to demonstrate risk-based mitigation timeframe compliance.
+        
+        Returns artifacts for timeframe calculations, mitigation tracking, and compliance reporting
+        per FRR-VDR-TF-LO-06 (Low impact relaxed timeframes).
+        """
+        return [
+            "Risk-based mitigation timeframe calculations for all vulnerabilities (impact + internet reachability + exploitability → timeframe days)",
+            "Mitigation timeframes table: Low impact relaxed (N5 internet/exploitable: 60d vs 15d High, N4 internet/exploitable: 90d vs 30d High, N5 other: 90d vs 30d High, N4 other: 180d vs 90d High, All other: 365d)",
+            "Vulnerability evaluation timestamps and mitigation completion timestamps for timeframe compliance tracking",
+            "Time-to-mitigation metrics for all vulnerabilities (evaluation → mitigation delta in days)",
+            "Mitigation timeframe SLA compliance reports showing percentage of vulnerabilities mitigated within required timeframes (Low impact system)",
+            "SLA violation reports for vulnerabilities NOT mitigated within risk-based timeframes (overdue tracking)",
+            "Risk classifications for all vulnerabilities (impact level, internet reachability, exploitability assessment)",
+            "Mitigation status tracking: Pending (within timeframe), Compliant (mitigated on time), Late (mitigated but overdue), Overdue (not yet mitigated past deadline)"
+        ]
+
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
         """
         Get recommendations for automating evidence collection for FRR-VDR-TF-LO-06.
         
-        TODO: Add evidence collection guidance
+        Returns automation strategies for risk-based timeframe calculations, mitigation tracking,
+        and SLA compliance monitoring (Low impact relaxed timeframes).
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
-            ]
+            "automated_timeframe_calculation": {
+                "description": "Automatically calculate mitigation timeframes based on impact, internet reachability, and exploitability (Low impact relaxed timeframes)",
+                "implementation": "Use Azure Policy or Logic Apps to evaluate vulnerability metadata and assign timeframes: 60/90/90/180/365 days for Low impact",
+                "rationale": "Provides consistent, risk-based timeframe assignments per FRR-VDR-TF-LO-06 SHOULD requirement (relaxed from High: 15/30/30/90 days)"
+            },
+            "mitigation_deadline_tracking": {
+                "description": "Track mitigation deadlines for each vulnerability from evaluation date + calculated timeframe",
+                "implementation": "Store evaluation date and timeframe in vulnerability management system, calculate deadline as evaluation_date + timeframe_days",
+                "rationale": "Enables proactive mitigation planning and SLA compliance monitoring per risk-based timeframes"
+            },
+            "sla_violation_alerting": {
+                "description": "Alert on vulnerabilities approaching or exceeding mitigation timeframes",
+                "implementation": "Use Azure Monitor alerts at 80% of timeframe (e.g., 48 days for 60-day timeframe), escalate at violation",
+                "rationale": "Prevents SLA violations by providing early warning when mitigation is delayed (Low impact system)"
+            },
+            "compliance_dashboard": {
+                "description": "Real-time compliance dashboard showing mitigation timeframe SLA status by risk category",
+                "implementation": "Use Azure Monitor workbooks to visualize Pending/Compliant/Late/Overdue by impact/internet/exploitability combinations",
+                "rationale": "Provides visibility into FRR-VDR-TF-LO-06 compliance and identifies areas needing attention"
+            },
+            "risk_based_prioritization": {
+                "description": "Prioritize mitigation work based on shortest timeframes (60/90-day deadlines first, then 180/365-day)",
+                "implementation": "Use ticketing system priority levels tied to mitigation timeframes: Critical=60d, High=90d, Medium=180d, Low=365d",
+                "rationale": "Ensures high-risk vulnerabilities (internet-exposed, exploitable, high impact) are addressed first per SHOULD requirement"
+            }
         }

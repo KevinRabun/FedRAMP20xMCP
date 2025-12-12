@@ -10,7 +10,7 @@ Impact Levels: High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,50 @@ class FRR_VDR_TF_HI_05_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-TF-HI-05.
+        Get queries for collecting evidence of 2-day vulnerability evaluation (High impact).
         
-        TODO: Add evidence collection guidance
+        Returns queries to verify vulnerabilities are evaluated within 2 days of detection.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "Vulnerability evaluation time tracking": [
+                "VulnerabilityManagement | where DetectedDate > ago(90d) | extend EvaluationDelay=datetime_diff('day', EvaluationDate, DetectedDate) | where EvaluationDelay <= 2 | summarize OnTimeCount=count(), TotalCount=dcount(VulnerabilityId) | extend ComplianceRate=todouble(OnTimeCount)/todouble(TotalCount)*100",
+                "SecurityFindings | where TimeGenerated > ago(30d) | where FindingType == 'Vulnerability' | extend EvalTime=datetime_diff('hour', properties.EvaluatedTimestamp, TimeGenerated) | where EvalTime <= 48 | project VulnerabilityId, DetectedTime=TimeGenerated, EvaluatedTime=properties.EvaluatedTimestamp, EvalTimeHours=EvalTime"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "FRR-VDR-07/08/09 evaluation tracking": [
+                "VulnerabilityEvaluations | where TimeGenerated > ago(90d) | where EvaluationType in ('Criticality', 'Exploitability', 'Impact') | extend DaysToEval=datetime_diff('day', EvaluationTimestamp, DetectionTimestamp) | summarize AvgDaysToEval=avg(DaysToEval), MaxDaysToEval=max(DaysToEval) by EvaluationType",
+                "ComplianceAssessments | where AssessmentType == 'VDR Evaluation' | where TimeGenerated > ago(30d) | project VulnerabilityId, DetectionDate, CriticalityEvalDate, ExploitabilityEvalDate, ImpactEvalDate, WithinTwoDays=iff(datetime_diff('day', CriticalityEvalDate, DetectionDate) <= 2, true, false)"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "Evaluation SLA violations": [
+                "VulnerabilityManagement | where DetectedDate > ago(90d) | extend EvaluationDelay=datetime_diff('day', EvaluationDate, DetectedDate) | where EvaluationDelay > 2 | summarize ViolationCount=count(), AvgDelayDays=avg(EvaluationDelay) by bin(DetectedDate, 7d)",
+                "AlertManagement | where AlertType == 'VDR Evaluation Overdue' | where TimeGenerated > ago(30d) | project TimeGenerated, VulnerabilityId, DaysOverdue, SeverityLevel"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for 2-day vulnerability evaluation.
+        """
+        return [
+            "Vulnerability evaluation tracking system (records detection and evaluation timestamps)",
+            "Evaluation timeline reports (showing time from detection to evaluation completion)",
+            "FRR-VDR-07/08/09 evaluation records (criticality, exploitability, impact assessments)",
+            "2-day SLA compliance reports (percentage of vulnerabilities evaluated within 2 days)",
+            "Automated evaluation workflow configurations (trigger evaluations upon detection)",
+            "Evaluation assignment and notification logs (security team task assignments)",
+            "SLA violation alerts and reports (vulnerabilities exceeding 2-day evaluation window)",
+            "Evaluation methodology documentation (process for assessing per FRR-VDR-07/08/09)"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Get recommendations for automating evidence collection.
+        """
+        return {
+            "Automated evaluation workflow": "Implement automated workflow to trigger evaluation tasks immediately upon vulnerability detection (Azure Logic Apps, ServiceNow integration)",
+            "2-day SLA tracking": "Track time from detection to evaluation completion, alert when approaching 2-day threshold (Azure Monitor alerts, custom metrics)",
+            "FRR-VDR-07/08/09 evaluation automation": "Automate initial criticality/exploitability/impact assessments using CVSS scores and threat intelligence (Microsoft Defender for Cloud, vulnerability databases)",
+            "Evaluation assignment automation": "Automatically assign evaluation tasks to security team members upon detection (Azure DevOps, ServiceNow task creation)",
+            "Compliance reporting": "Generate automated reports showing percentage of vulnerabilities evaluated within 2 days (Log Analytics workspace, Azure Workbooks)"
         }

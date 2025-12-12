@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -233,47 +233,39 @@ class FRR_KSI_02_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
-        """
-        Get recommendations for automating evidence collection for FRR-KSI-02.
-        
-        TODO: Add evidence collection guidance
-        """
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """Get queries for KSI implementation summaries."""
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
-            ]
+            "KSI summary documentation": {
+                "description": "Verify simple high-level summaries exist for EACH of 72 KSIs",
+                "query": "Check KSI documentation includes: implementation description, evidence, status, notes"
+            },
+            "Summary completeness": {
+                "description": "Verify summaries include required elements per FRR-KSI-02"
+            },
+            "Summary maintenance": {
+                "description": "Track KSI summary updates and maintenance"
+            }
+        }
+
+    def get_evidence_artifacts(self) -> List[str]:
+        """Get artifacts for KSI implementation summaries."""
+        return [
+            "KSI implementation summaries (72 total - one per KSI)",
+            "Summary content verification (description, evidence, status, notes)",
+            "Summary maintenance logs",
+            "Gap analysis for missing/incomplete summaries"
+        ]
+
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """Get automation recommendations for KSI summaries."""
+        return {
+            "automated_summary_collection": {
+                "description": "Auto-collect KSI summaries from documentation/systems",
+                "rationale": "Ensures complete summaries for all 72 KSIs per FRR-KSI-02"
+            },
+            "summary_completeness_validation": {
+                "description": "Validate summaries include required elements",
+                "rationale": "Verifies FRR-KSI-02 compliance for all KSI summaries"
+            }
         }

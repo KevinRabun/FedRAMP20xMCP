@@ -251,47 +251,84 @@ class FRR_SCN_07_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> dict:
         """
-        Get recommendations for automating evidence collection for FRR-SCN-07.
-        
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        Get automated queries for collecting evidence of notification mechanism documentation.
         """
         return {
             'frr_id': self.FRR_ID,
             'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            'azure_resource_graph': [
+                "// Find documentation storage for notification mechanisms",
+                "Resources | where type =~ 'microsoft.storage/storageaccounts' | where tags contains 'documentation' | project name, location",
+                "// Find Wiki/documentation repositories",
+                "Resources | where type =~ 'microsoft.visualstudio/account/project' | project name, properties"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            'azure_monitor_kql': [
+                "// Access to notification mechanism documentation",
+                "StorageBlobLogs | where Uri contains 'notification' or Uri contains 'scn' | project TimeGenerated, AccountName, Uri, CallerIpAddress",
+                "// Documentation updates for notification procedures",
+                "AzureActivity | where ResourceProvider == 'Microsoft.Storage' | where OperationNameValue contains 'write' | project TimeGenerated, Caller, ResourceGroup"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
+            'azure_cli': [
+                "az storage blob list --account-name <account> --container-name documentation --prefix notification",
+                "az devops wiki page list --wiki <wiki> --path /Procedures/Notifications"
+            ]
+        }
+
+    def get_evidence_artifacts(self) -> dict:
+        """
+        Get evidence artifacts demonstrating notification mechanism documentation.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
+            'code_locations': [
+                'Notification configuration documentation (docs/notifications/)',
+                'Communication channel specifications (docs/communications/)',
+                'SCN distribution list management (config/scn-recipients.yml)',
+                'Notification mechanism accessibility documentation (README.md)'
+            ],
+            'documentation': [
+                'Documented notification mechanisms (email, portal, API, etc.)',
+                'Accessibility procedures for notification mechanisms',
+                'Communication channel descriptions and access instructions',
+                'Contact information for notification inquiries',
+                'Examples of notification delivery for each mechanism'
+            ],
+            'configuration_samples': [
+                'Email notification configuration with SMTP settings',
+                'Portal notification system with access URL',
+                'API endpoint documentation for programmatic notifications',
+                'Distribution list management procedures'
+            ]
+        }
+
+    def get_evidence_automation_recommendations(self) -> dict:
+        """
+        Get recommendations for automating evidence collection for notification documentation.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
+            'code_detectable': 'Partial',
+            'implementation_notes': [
+                'Documentation systems track notification mechanism descriptions',
+                'Configuration management ensures notification settings are documented',
+                'Access logs demonstrate notification documentation is accessible',
+                'Version control tracks updates to notification procedures',
+                'Multiple notification mechanisms provide flexibility per requirement'
             ],
             'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
+                'Azure DevOps Wiki - Centralized notification documentation',
+                'SharePoint - Document library for communication procedures',
+                'GitHub Pages - Published notification mechanism guides',
+                'Azure Storage - Accessible storage for notification documentation'
             ],
             'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                'Documentation storage with version control',
+                'Access logs for documentation accessibility verification',
+                'Configuration management for notification settings',
+                'Training systems for notification procedure awareness'
             ]
         }

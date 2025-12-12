@@ -255,47 +255,85 @@ class FRR_SCN_03_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> dict:
         """
-        Get recommendations for automating evidence collection for FRR-SCN-03.
-        
-        TODO: Add evidence collection guidance
+        Get automated queries for collecting evidence of change evaluation and typing.
         """
         return {
             'frr_id': self.FRR_ID,
             'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            'azure_resource_graph': [
+                "// Find DevOps projects with change typing workflows",
+                "Resources | where type =~ 'microsoft.visualstudio/account/project' | project name, properties.changeClassification",
+                "// Find App Configuration with change type labels",
+                "Resources | where type =~ 'microsoft.appconfiguration/configurationstores' | project name, tags"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            'azure_monitor_kql': [
+                "// Change evaluation and typing activity",
+                "AzureActivity | where OperationNameValue contains 'Microsoft.Resources/deployments' | where Properties contains 'changeType' | project TimeGenerated, Caller, Properties.changeType",
+                "// DevOps pipeline with change classification",
+                "AppTraces | where Properties.ChangeType in ('Significant', 'Standard', 'Emergency') | project timestamp, Properties.ChangeId, Properties.ChangeType"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
+            'azure_cli': [
+                "az pipelines variable-group list --organization <org> --project <project>",
+                "az devops work-item show --id <id> --fields System.ChangeType",
+                "az repos pr show --id <pr-id> --query labels"
+            ]
+        }
+
+    def get_evidence_artifacts(self) -> dict:
+        """
+        Get evidence artifacts demonstrating change evaluation and type labeling.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
+            'code_locations': [
+                'Change classification logic (scripts/change-classification/)',
+                'Pipeline definitions with change type checks (.github/workflows/, azure-pipelines.yml)',
+                'Change type constants and enums (src/constants/change-types.ts)',
+                'Change evaluation automation (tools/evaluate-change.py)'
+            ],
+            'documentation': [
+                'Change type definitions (Significant, Standard, Emergency)',
+                'Change evaluation criteria and decision trees',
+                'FedRAMP change type mapping documentation',
+                'Change type assignment records in work tracking system',
+                'Change evaluation reports and approval evidence'
+            ],
+            'configuration_samples': [
+                'Pipeline with change type classification step',
+                'Work item template with change type field',
+                'Automated change type detection rules',
+                'Change type validation in deployment gates'
+            ]
+        }
+
+    def get_evidence_automation_recommendations(self) -> dict:
+        """
+        Get recommendations for automating evidence collection for change evaluation.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
+            'code_detectable': 'Partial',
+            'implementation_notes': [
+                'CI/CD pipelines can enforce change type classification before deployment',
+                'Work item tracking systems can require change type field for all changes',
+                'Automated tools can analyze change scope and suggest change types',
+                'Change type validation can be implemented as deployment gate',
+                'DevOps platforms provide APIs to track change type assignments'
             ],
             'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
+                'Azure DevOps - Work item custom fields for change types',
+                'GitHub Issues - Labels for change type classification',
+                'Azure Logic Apps - Automated change evaluation workflows',
+                'Azure Functions - Custom change classification logic'
             ],
             'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                'DevOps API for change type metadata',
+                'Work item tracking system for change type assignment history',
+                'Deployment pipelines for change type enforcement',
+                'Audit logs for change type classification decisions'
             ]
         }

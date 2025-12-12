@@ -253,47 +253,84 @@ class FRR_SCN_09_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> dict:
         """
-        Get recommendations for automating evidence collection for FRR-SCN-09.
-        
-        TODO: Add evidence collection guidance
+        Get automated queries for collecting evidence of required SCN information.
         """
         return {
             'frr_id': self.FRR_ID,
             'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            'azure_resource_graph': [
+                "// Find SCN templates with required fields",
+                "Resources | where type =~ 'microsoft.appconfiguration/configurationstores' | where tags contains 'scn-template'",
+                "// Find SCN validation rules",
+                "Resources | where type =~ 'microsoft.logic/workflows' | where properties.definition contains 'scn-validation'"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            'azure_monitor_kql': [
+                "// SCN validation activity",
+                "AppTraces | where Properties.Activity == 'SCN-Validation' | project timestamp, Properties.RequiredFields, Properties.ValidationResult",
+                "// SCN submission with required information",
+                "AzureDiagnostics | where Category == 'SCN' | project TimeGenerated, scn_id_s, change_type_s, impact_assessment_s"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
+            'azure_cli': [
+                "az webapp config appsettings list --name <app> --resource-group <rg> --query '[?name==\"SCN_TEMPLATE\"]'",
+                "az logic workflow show --name scn-validator --resource-group <rg>"
+            ]
+        }
+
+    def get_evidence_artifacts(self) -> dict:
+        """
+        Get evidence artifacts demonstrating required SCN information fields.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
+            'code_locations': [
+                'SCN template with required fields (templates/scn-template.json)',
+                'SCN validation logic (src/scn/validator.py)',
+                'Required field definitions (src/scn/required-fields.ts)',
+                'SCN submission form (ui/components/scn-form.tsx)'
+            ],
+            'documentation': [
+                'List of required SCN information fields',
+                'SCN template with all required fields populated',
+                'Validation rules for required information',
+                'Sample SCNs demonstrating required content',
+                'Field-by-field descriptions of required information'
+            ],
+            'configuration_samples': [
+                'SCN template enforcing required fields',
+                'Form validation for SCN submissions',
+                'Database schema with required SCN columns',
+                'API validation for SCN required information'
+            ]
+        }
+
+    def get_evidence_automation_recommendations(self) -> dict:
+        """
+        Get recommendations for automating evidence collection for SCN required fields.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
+            'code_detectable': 'Partial',
+            'implementation_notes': [
+                'Templates can enforce required SCN information fields',
+                'Form validation ensures required fields are populated',
+                'Schema validation checks for required information presence',
+                'APIs can reject SCN submissions missing required fields',
+                'Automated checks verify completeness of SCN content'
             ],
             'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
+                'Azure Logic Apps - SCN validation workflows',
+                'Azure Functions - Required field validation',
+                'Azure API Management - SCN submission validation',
+                'Azure SQL Database - Schema enforcement for required fields'
             ],
             'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                'Templates with required field definitions',
+                'Validation logic for SCN completeness checks',
+                'APIs with required field validation',
+                'Database schemas enforcing required information'
             ]
         }

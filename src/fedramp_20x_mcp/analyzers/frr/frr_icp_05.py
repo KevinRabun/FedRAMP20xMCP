@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import Dict, List, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -171,39 +171,42 @@ class FRR_ICP_05_Analyzer(BaseFRRAnalyzer):
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for FRR-ICP-05 compliance using AST.
-        
-        TODO: Implement C# analysis
-        """
+        """Analyze C# for repository/storage integration."""
         findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
+        has_storage = bool(re.search(r'(BlobClient|StorageAccount|FileShare|Azure\.Storage)', code))
+        if not has_storage:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID, requirement_id=self.FRR_ID,
+                title="No storage integration", description=f"FRR-ICP-05 requires secure repository availability.",
+                severity=Severity.HIGH, file_path=file_path, line_number=1, code_snippet="",
+                recommendation="Implement storage: BlobClient, Azure.Storage, or FileShare"
+            ))
         return findings
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for FRR-ICP-05 compliance using AST.
-        
-        TODO: Implement Java analysis
-        """
+        """Analyze Java for repository/storage integration."""
         findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
+        has_storage = bool(re.search(r'(BlobClient|S3Client|StorageClient|FileUpload)', code))
+        if not has_storage:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID, requirement_id=self.FRR_ID,
+                title="No storage integration", description=f"FRR-ICP-05 requires secure repository availability.",
+                severity=Severity.HIGH, file_path=file_path, line_number=1, code_snippet="",
+                recommendation="Implement storage: BlobClient, S3Client, or StorageClient"
+            ))
         return findings
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for FRR-ICP-05 compliance using AST.
-        
-        TODO: Implement TypeScript analysis
-        """
+        """Analyze TypeScript for repository/storage integration."""
         findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
+        has_storage = bool(re.search(r'(BlobServiceClient|@azure/storage|aws-sdk.*s3|multer)', code, re.IGNORECASE))
+        if not has_storage:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID, requirement_id=self.FRR_ID,
+                title="No storage integration", description=f"FRR-ICP-05 requires secure repository availability.",
+                severity=Severity.HIGH, file_path=file_path, line_number=1, code_snippet="",
+                recommendation="Implement storage: @azure/storage-blob, aws-sdk/s3, or multer"
+            ))
         return findings
     
     # ============================================================================
@@ -211,34 +214,29 @@ class FRR_ICP_05_Analyzer(BaseFRRAnalyzer):
     # ============================================================================
     
     def analyze_bicep(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Bicep infrastructure code for FRR-ICP-05 compliance.
-        
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
-        """
+        """Analyze Bicep for secure storage infrastructure."""
         findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
+        has_storage = bool(re.search(r"resource\s+\w+\s+'Microsoft\.Storage/storageAccounts", code))
+        if not has_storage:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID, requirement_id=self.FRR_ID,
+                title="No storage infrastructure", description=f"FRR-ICP-05 requires secure repository for incident reports.",
+                severity=Severity.MEDIUM, file_path=file_path, line_number=1, code_snippet="",
+                recommendation="Deploy storage: Microsoft.Storage/storageAccounts with blob containers"
+            ))
         return findings
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Terraform infrastructure code for FRR-ICP-05 compliance.
-        
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
-        """
+        """Analyze Terraform for secure storage infrastructure."""
         findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
+        has_storage = bool(re.search(r'resource\s+"(azurerm_storage_account|aws_s3_bucket)"', code))
+        if not has_storage:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID, requirement_id=self.FRR_ID,
+                title="No storage infrastructure", description=f"FRR-ICP-05 requires secure repository for incident reports.",
+                severity=Severity.MEDIUM, file_path=file_path, line_number=1, code_snippet="",
+                recommendation="Deploy storage: azurerm_storage_account or aws_s3_bucket"
+            ))
         return findings
     
     # ============================================================================
@@ -246,88 +244,56 @@ class FRR_ICP_05_Analyzer(BaseFRRAnalyzer):
     # ============================================================================
     
     def analyze_github_actions(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitHub Actions workflow for FRR-ICP-05 compliance.
-        
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        """Analyze GitHub Actions for artifact upload."""
+        return []  # Report availability is runtime operational, not CI/CD
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Azure Pipelines YAML for FRR-ICP-05 compliance.
-        
-        TODO: Implement Azure Pipelines analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        """Analyze Azure Pipelines for artifact upload."""
+        return []  # Report availability is runtime operational
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitLab CI YAML for FRR-ICP-05 compliance.
-        
-        TODO: Implement GitLab CI analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        """Analyze GitLab CI for artifact upload."""
+        return []  # Report availability is runtime operational
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
-        """
-        Get recommendations for automating evidence collection for FRR-ICP-05.
-        
-        This requirement is not directly code-detectable. Provides manual validation guidance.
-        """
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """Get automated queries for FRR-ICP-05 evidence (incident report repository availability)."""
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
+            'automated_queries': [
+                "Resources | where type == 'microsoft.storage/storageaccounts' | extend blobEnabled = properties.enableBlobServices | project name, resourceGroup, location, blobEnabled",
+                "AzureActivity | where ResourceProviderValue == 'Microsoft.Storage' and OperationNameValue contains 'blobServices' | summarize by ResourceId, Properties",
+                "Resources | where type contains 'storage' or type contains 's3' | project name, type, resourceGroup"
+            ]
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """Get evidence artifacts for FRR-ICP-05 (incident report repository availability)."""
+        return {
             'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                "Incident report repository documentation (USDA Connect access, trust center URL)",
+                "Storage account/S3 bucket configuration exports",
+                "Access control policies for repository (RBAC, IAM)",
+                "Historical incident report uploads (list, timestamps)",
+                "Repository integration testing evidence",
+                "Secure file upload mechanism documentation",
+                "Trust center or repository availability SLA",
+                "FedRAMP repository access credentials/configuration"
+            ]
+        }
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """Get automation recommendations for FRR-ICP-05 (incident report repository availability)."""
+        return {
+            'implementation_notes': [
+                "Deploy secure storage infrastructure (Azure Storage Account, AWS S3)",
+                "Configure integration with FedRAMP repository (USDA Connect) or trust center",
+                "Implement secure file upload mechanisms (encryption in transit and at rest)",
+                "Configure access controls (RBAC, IAM policies) for repository",
+                "Test incident report upload and availability",
+                "Document repository access procedures for FedRAMP and agency customers",
+                "Monitor storage availability and access logs"
             ]
         }

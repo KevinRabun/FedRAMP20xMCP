@@ -10,7 +10,7 @@ Impact Levels: High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,50 @@ class FRR_VDR_TF_HI_07_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-TF-HI-07.
+        Get queries for collecting evidence of treating N5 non-internet vulnerabilities as incidents (High impact).
         
-        TODO: Add evidence collection guidance
+        Returns queries to verify non-internet-reachable exploitable N5 vulnerabilities are treated as security incidents.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "N5 internal vulnerability incident creation": [
+                "SecurityIncidents | where TimeGenerated > ago(90d) | where IncidentType == 'Vulnerability' | where properties.ImpactLevel == 'N5' | where properties.InternetReachable == false | where properties.Exploitable == true | project TimeGenerated, IncidentId, VulnerabilityId, Location='Internal', Status",
+                "VulnerabilityManagement | where ImpactRating == 'N5' | where InternetFacing == false | where ExploitabilityScore >= 0.8 | extend IncidentCreated = isnotnull(IncidentId) | summarize TotalN5Internal=count(), IncidentsCreated=countif(IncidentCreated) by bin(DetectionDate, 7d)"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "Non-internet-reachable vulnerability detection": [
+                "NetworkTopology | where ExternallyAccessible == false | join kind=inner (VulnerabilityScans | where ImpactLevel == 'N5') on ResourceId | project ResourceId, VulnerabilityId, ImpactLevel='N5', Location='Internal', ExploitAvailable",
+                "DefenderVulnerabilityAssessments | where TimeGenerated > ago(30d) | where Severity == 'Critical' | where properties.InternetExposure == false | extend ImpactLevel='N5' | project VulnerabilityId, ResourceId, ImpactLevel, InternalLocation, ExploitKnown"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "Incident status through partial mitigation to N4": [
+                "SecurityIncidents | where IncidentType == 'Vulnerability' | where properties.InitialImpact == 'N5' | where properties.InternetReachable == false | extend DaysOpen=datetime_diff('day', now(), TimeGenerated) | extend ClosedAtN4=iff(properties.MitigatedImpact <= 'N4' and Status == 'Closed', true, false) | summarize IncidentsOpen=countif(Status=='Active'), IncidentsMitigated=countif(ClosedAtN4) by bin(TimeGenerated, 7d)",
+                "VulnerabilityRemediation | where InitialImpact == 'N5' | where InternetFacing == false | where RemediationType == 'Partial Mitigation' | extend MitigatedToN4=iff(CurrentImpact <= 'N4', true, false) | project VulnerabilityId, InitialImpact, CurrentImpact, MitigatedToN4, RemediationDate"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for treating N5 non-internet vulnerabilities as incidents.
+        """
+        return [
+            "Security incident records for N5 internal vulnerabilities (non-internet-reachable, exploitable)",
+            "Internal asset inventory with vulnerability mappings (private networks, no external access)",
+            "Network segmentation documentation (confirming non-internet-reachable status)",
+            "Exploitability assessments for N5 internal vulnerabilities (exploit availability, lateral movement risk)",
+            "Incident response procedures for N5 internal vulnerabilities (isolation, containment)",
+            "Partial mitigation tracking (status until reduced to N4 or below)",
+            "N5 impact level classifications per FRR-VDR-09 (potential adverse impact for internal systems)",
+            "Incident closure records showing mitigation to N4 or below"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Get recommendations for automating evidence collection.
+        """
+        return {
+            "Automated incident creation for internal N5": "Automatically create security incidents when non-internet-reachable exploitable N5 vulnerabilities are detected (Azure Sentinel automation rules, Logic Apps)",
+            "Internal exposure detection": "Identify internal-only resources with N5 vulnerabilities using network topology and segmentation data (Azure Network Watcher, NSG flow logs)",
+            "Exploitability assessment": "Automatically assess exploitability for lateral movement and internal threats (Microsoft Threat Intelligence, attack path analysis)",
+            "Incident tracking until N4 mitigation": "Track incident status until partial mitigation reduces impact to N4 or below (Azure Sentinel incident management, custom fields)",
+            "N5 internal impact classification": "Automate N5 impact level classification for internal vulnerabilities per FRR-VDR-09 (custom logic based on asset criticality, data access, privilege level)"
         }

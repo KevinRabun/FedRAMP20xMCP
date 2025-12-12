@@ -82,23 +82,79 @@ class FRR_ADS_EX_01_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-ADS-EX-01 compliance.
+        Analyze Python code for FRR-ADS-EX-01 compliance using AST.
         
         Detects legacy self-managed repository usage:
-        - Legacy repository references
-        - Rev5 authorization indicators
+        - Legacy repository configuration references
+        - Rev5 authorization level indicators
         - Self-managed storage systems
         """
         findings = []
-        lines = code.split('\n')
         
-        # Legacy repository patterns
+        try:
+            parser = ASTParser(CodeLanguage.PYTHON)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                # Check string literals for legacy repository references
+                string_literals = parser.find_nodes_by_type(tree.root_node, 'string')
+                for string_node in string_literals:
+                    string_text = parser.get_node_text(string_node, code_bytes).lower()
+                    if any(keyword in string_text for keyword in ['legacy repository', 'self-managed repository', 'rev5', 'fedramp high']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Legacy repository reference detected",
+                            description="Found legacy self-managed repository or Rev5 High reference",
+                            severity=Severity.INFO,
+                            line_number=string_node.start_point[0] + 1,
+                            code_snippet=string_text[:100],
+                            recommendation="If FedRAMP Rev5 High authorized with legacy self-managed repository, may be exempt from ADS requirements."
+                        ))
+                
+                # Check variable assignments for repository configuration
+                assignments = parser.find_nodes_by_type(tree.root_node, 'assignment')
+                for assignment in assignments:
+                    assign_text = parser.get_node_text(assignment, code_bytes).lower()
+                    if any(keyword in assign_text for keyword in ['legacy_repository', 'self_managed_repo', 'rev5_authorized', 'fedramp_high']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Legacy repository configuration detected",
+                            description="Found legacy repository or Rev5 High configuration variable",
+                            severity=Severity.INFO,
+                            line_number=assignment.start_point[0] + 1,
+                            code_snippet=assign_text.split('\n')[0],
+                            recommendation="Document legacy repository exemption status for compliance."
+                        ))
+                
+                # Check comments for exemption documentation
+                if tree.root_node.children:
+                    for child in tree.root_node.children:
+                        if child.type == 'comment':
+                            comment_text = parser.get_node_text(child, code_bytes).lower()
+                            if 'legacy' in comment_text and 'exempt' in comment_text:
+                                findings.append(Finding(
+                                    frr_id=self.FRR_ID,
+                                    title="Legacy exemption documentation detected",
+                                    description="Found documentation of legacy repository exemption",
+                                    severity=Severity.INFO,
+                                    line_number=child.start_point[0] + 1,
+                                    code_snippet=comment_text[:100],
+                                    recommendation="Maintain exemption documentation for audit purposes."
+                                ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
         legacy_patterns = [
             r'legacy.*repository',
-            r'self.*managed.*repository',
-            r'rev5.*authorized',
-            r'fedramp.*high.*legacy',
-            r'legacy.*authorization.*data',
+            r'self.*managed.*repo',
+            r'rev5.*(?:authorized|high)',
+            r'fedramp.*high',
+            r'legacy.*exempt',
         ]
         
         for i, line in enumerate(lines, 1):
@@ -106,70 +162,207 @@ class FRR_ADS_EX_01_Analyzer(BaseFRRAnalyzer):
                 if re.search(pattern, line, re.IGNORECASE):
                     findings.append(Finding(
                         frr_id=self.FRR_ID,
-                        title="Legacy repository reference detected",
-                        description=f"Found legacy repository pattern: {pattern}",
+                        title="Legacy repository pattern detected",
+                        description=f"Found pattern: {pattern}",
                         severity=Severity.INFO,
                         line_number=i,
                         code_snippet=line.strip(),
-                        recommendation="FedRAMP Rev5 High providers with legacy self-managed repository may be exempt from ADS requirements until further notice."
+                        recommendation="Rev5 High providers with legacy self-managed repository may be exempt from ADS requirements."
                     ))
                     break
         
-        return findings
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze C# code for FRR-ADS-EX-01 compliance using AST.
         
-        TODO: Implement C# analysis
+        Detects legacy self-managed repository usage in C# applications.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for C#
+        try:
+            parser = ASTParser(CodeLanguage.CSHARP)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                # Check string literals
+                string_literals = parser.find_nodes_by_type(tree.root_node, 'string_literal')
+                for string_node in string_literals:
+                    string_text = parser.get_node_text(string_node, code_bytes).lower()
+                    if any(keyword in string_text for keyword in ['legacy repository', 'self-managed', 'rev5', 'fedramp high']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Legacy repository reference detected",
+                            description="Found legacy self-managed repository or Rev5 reference",
+                            severity=Severity.INFO,
+                            line_number=string_node.start_point[0] + 1,
+                            code_snippet=string_text[:100],
+                            recommendation="Document legacy repository exemption if applicable."
+                        ))
+                
+                # Check variable declarations
+                variable_declarations = parser.find_nodes_by_type(tree.root_node, 'variable_declaration')
+                for var_decl in variable_declarations:
+                    var_text = parser.get_node_text(var_decl, code_bytes).lower()
+                    if any(keyword in var_text for keyword in ['legacyrepository', 'selfmanagedrepo', 'rev5authorized']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Legacy repository configuration detected",
+                            description="Found legacy repository configuration variable",
+                            severity=Severity.INFO,
+                            line_number=var_decl.start_point[0] + 1,
+                            code_snippet=var_text.split('\n')[0],
+                            recommendation="Maintain exemption documentation for compliance."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(?:legacy|self-managed).*repository|Rev5.*(?:High|Authorized)|FedRAMP.*High', line, re.IGNORECASE):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Legacy repository reference detected",
+                    description="Found legacy repository or Rev5 High reference",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Document exemption status for audit purposes."
+                ))
+        
         return findings
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Java code for FRR-ADS-EX-01 compliance using AST.
         
-        TODO: Implement Java analysis
+        Detects legacy self-managed repository usage in Java applications.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for Java
+        try:
+            parser = ASTParser(CodeLanguage.JAVA)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                # Check string literals
+                string_literals = parser.find_nodes_by_type(tree.root_node, 'string_literal')
+                for string_node in string_literals:
+                    string_text = parser.get_node_text(string_node, code_bytes).lower()
+                    if any(keyword in string_text for keyword in ['legacy repository', 'self-managed', 'rev5', 'fedramp high']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Legacy repository reference detected",
+                            description="Found legacy self-managed repository or Rev5 reference",
+                            severity=Severity.INFO,
+                            line_number=string_node.start_point[0] + 1,
+                            code_snippet=string_text[:100],
+                            recommendation="Document legacy repository exemption if applicable."
+                        ))
+                
+                # Check field declarations
+                field_declarations = parser.find_nodes_by_type(tree.root_node, 'field_declaration')
+                for field_decl in field_declarations:
+                    field_text = parser.get_node_text(field_decl, code_bytes).lower()
+                    if any(keyword in field_text for keyword in ['legacyrepository', 'selfmanagedrepo', 'rev5authorized']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Legacy repository configuration detected",
+                            description="Found legacy repository field declaration",
+                            severity=Severity.INFO,
+                            line_number=field_decl.start_point[0] + 1,
+                            code_snippet=field_text.split('\n')[0],
+                            recommendation="Maintain exemption documentation for compliance."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(?:legacy|self-managed).*repository|Rev5.*(?:High|Authorized)|FedRAMP.*High', line, re.IGNORECASE):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Legacy repository reference detected",
+                    description="Found legacy repository or Rev5 High reference",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Document exemption status for audit purposes."
+                ))
+        
         return findings
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze TypeScript/JavaScript code for FRR-ADS-EX-01 compliance using AST.
         
-        TODO: Implement TypeScript analysis
+        Detects legacy self-managed repository usage in TypeScript/JavaScript.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for TypeScript
+        try:
+            parser = ASTParser(CodeLanguage.TYPESCRIPT)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                # Check string literals
+                string_literals = parser.find_nodes_by_type(tree.root_node, 'string')
+                for string_node in string_literals:
+                    string_text = parser.get_node_text(string_node, code_bytes).lower()
+                    if any(keyword in string_text for keyword in ['legacy repository', 'self-managed', 'rev5', 'fedramp high']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Legacy repository reference detected",
+                            description="Found legacy self-managed repository or Rev5 reference",
+                            severity=Severity.INFO,
+                            line_number=string_node.start_point[0] + 1,
+                            code_snippet=string_text[:100],
+                            recommendation="Document legacy repository exemption if applicable."
+                        ))
+                
+                # Check variable declarations
+                variable_declarations = parser.find_nodes_by_type(tree.root_node, 'variable_declaration')
+                for var_decl in variable_declarations:
+                    var_text = parser.get_node_text(var_decl, code_bytes).lower()
+                    if any(keyword in var_text for keyword in ['legacyrepository', 'selfmanagedrepo', 'rev5authorized']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Legacy repository configuration detected",
+                            description="Found legacy repository configuration variable",
+                            severity=Severity.INFO,
+                            line_number=var_decl.start_point[0] + 1,
+                            code_snippet=var_text.split('\n')[0],
+                            recommendation="Maintain exemption documentation for compliance."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(?:legacy|self-managed).*repository|Rev5.*(?:High|Authorized)|FedRAMP.*High', line, re.IGNORECASE):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Legacy repository reference detected",
+                    description="Found legacy repository or Rev5 High reference",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Document exemption status for audit purposes."
+                ))
+        
         return findings
     
     # ============================================================================
@@ -180,32 +373,39 @@ class FRR_ADS_EX_01_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Bicep infrastructure code for FRR-ADS-EX-01 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        NOT APPLICABLE: Legacy self-managed repository exemption is a policy
+        and authorization status determination, not an infrastructure configuration
+        requirement. The exemption applies to FedRAMP Rev5 High authorized providers
+        who use legacy self-managed repositories for authorization data.
+        
+        This is determined through:
+        1. Authorization status documentation (Rev5 High)
+        2. Repository type assessment (self-managed vs. trust center)
+        3. Policy decision (exemption granted by FedRAMP)
+        
+        These are organizational and policy-level determinations, not
+        infrastructure code concerns.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        return []
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Terraform infrastructure code for FRR-ADS-EX-01 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
-        """
-        findings = []
-        lines = code.split('\n')
+        NOT APPLICABLE: Legacy self-managed repository exemption is a policy
+        and authorization status determination, not an infrastructure configuration
+        requirement. The exemption applies to FedRAMP Rev5 High authorized providers
+        who use legacy self-managed repositories for authorization data.
         
-        # TODO: Implement Terraform regex patterns
-        return findings
+        This is determined through:
+        1. Authorization status documentation (Rev5 High)
+        2. Repository type assessment (self-managed vs. trust center)
+        3. Policy decision (exemption granted by FedRAMP)
+        
+        These are organizational and policy-level determinations, not
+        infrastructure code concerns.
+        """
+        return []
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
@@ -215,39 +415,37 @@ class FRR_ADS_EX_01_Analyzer(BaseFRRAnalyzer):
         """
         Analyze GitHub Actions workflow for FRR-ADS-EX-01 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        NOT APPLICABLE: Legacy self-managed repository exemption is a policy
+        and authorization status determination, not a CI/CD pipeline concern.
+        The exemption applies based on organizational authorization status
+        (Rev5 High) and repository architecture decisions (legacy self-managed),
+        not on build or deployment automation configurations.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Azure Pipelines YAML for FRR-ADS-EX-01 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        NOT APPLICABLE: Legacy self-managed repository exemption is a policy
+        and authorization status determination, not a CI/CD pipeline concern.
+        The exemption applies based on organizational authorization status
+        (Rev5 High) and repository architecture decisions (legacy self-managed),
+        not on build or deployment automation configurations.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze GitLab CI YAML for FRR-ADS-EX-01 compliance.
         
-        TODO: Implement GitLab CI analysis
+        NOT APPLICABLE: Legacy self-managed repository exemption is a policy
+        and authorization status determination, not a CI/CD pipeline concern.
+        The exemption applies based on organizational authorization status
+        (Rev5 High) and repository architecture decisions (legacy self-managed),
+        not on build or deployment automation configurations.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
@@ -257,43 +455,101 @@ class FRR_ADS_EX_01_Analyzer(BaseFRRAnalyzer):
         """
         Get recommendations for automating evidence collection for FRR-ADS-EX-01.
         
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        This is an exemption requirement - not code-detectable, requires documentation review.
         """
         return {
             'frr_id': self.FRR_ID,
             'frr_name': self.FRR_NAME,
             'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
+            'automation_feasibility': 'Low - exemption determination requires manual policy review',
+            'automation_approach': 'Manual validation - review authorization status, repository architecture, and exemption documentation',
             'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
+                'N/A - This is a policy exemption requirement, not a technical implementation',
             ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            'collection_methods': [
+                'Review FedRAMP authorization letter (confirm Rev5 High status)',
+                'Review repository architecture documentation (confirm self-managed vs. trust center)',
+                'Review exemption decision documentation from FedRAMP',
+                'Interview CSO/compliance officer about exemption status',
+                'Validate authorization data management approach',
+            ],
+            'implementation_steps': [
+                '1. Verify organization has FedRAMP Rev5 High authorization',
+                '2. Document current repository architecture (self-managed vs. trust center)',
+                '3. If using legacy self-managed repository, request exemption confirmation from FedRAMP',
+                '4. Maintain exemption documentation for audit purposes',
+                '5. Monitor for FedRAMP policy updates (exemption is "until future notice")',
+                '6. Plan for eventual migration to trust center when exemption expires',
+                '7. Document exemption applicability in SSP and POA&M',
             ]
         }
+    
+    def get_evidence_collection_queries(self) -> List[dict]:
+        """
+        Get automated queries for collecting evidence of FRR-ADS-EX-01 compliance.
+        
+        Returns queries for exemption documentation validation.
+        """
+        return [
+            {
+                'query_name': 'FedRAMP Authorization Package Review',
+                'query_type': 'Manual',
+                'query': 'Review FedRAMP authorization letter to confirm Rev5 High authorization status',
+                'data_source': 'FedRAMP authorization documentation',
+                'evidence_type': 'Authorization status verification (Rev5 High)',
+            },
+            {
+                'query_name': 'Repository Architecture Documentation',
+                'query_type': 'Manual',
+                'query': 'Review system architecture diagrams and SSP to confirm self-managed repository usage',
+                'data_source': 'System Security Plan (SSP) and architecture documents',
+                'evidence_type': 'Repository type verification (legacy self-managed)',
+            },
+            {
+                'query_name': 'Exemption Decision Documentation',
+                'query_type': 'Manual',
+                'query': 'Obtain and review FedRAMP exemption decision memo or communication',
+                'data_source': 'FedRAMP correspondence and policy decisions',
+                'evidence_type': 'Exemption authorization from FedRAMP',
+            },
+            {
+                'query_name': 'Configuration Management Database Query',
+                'query_type': 'Manual',
+                'query': 'Query CMDB for authorization data repository configuration and classification',
+                'data_source': 'Configuration Management Database (CMDB)',
+                'evidence_type': 'Repository configuration and ownership details',
+            },
+            {
+                'query_name': 'Policy Change Tracking',
+                'query_type': 'Manual',
+                'query': 'Monitor FedRAMP policy updates and guidance documents for exemption status changes',
+                'data_source': 'FedRAMP website, policy announcements, GSA communications',
+                'evidence_type': 'Current exemption status and policy changes',
+            },
+            {
+                'query_name': 'Continuous Monitoring Plan Review',
+                'query_type': 'Manual',
+                'query': 'Review ConMon plan for exemption documentation and ADS requirement applicability',
+                'data_source': 'Continuous Monitoring (ConMon) plan and POA&M',
+                'evidence_type': 'Exemption tracking in continuous monitoring',
+            },
+        ]
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for FRR-ADS-EX-01 compliance.
+        
+        Returns specific documents needed to demonstrate exemption eligibility.
+        """
+        return [
+            'FedRAMP Rev5 High authorization letter',
+            'System Security Plan (SSP) documenting legacy self-managed repository',
+            'Repository architecture diagram showing self-managed authorization data storage',
+            'Exemption decision memo or email from FedRAMP',
+            'Documentation of "until future notice" exemption applicability',
+            'POA&M entry for eventual migration to trust center (if planned)',
+            'Authorization data management policy document',
+            'Continuous Monitoring (ConMon) plan with exemption notation',
+            'Audit trail of FedRAMP policy monitoring (for exemption status changes)',
+            'Interview notes with CSO/compliance officer confirming exemption status',
+        ]

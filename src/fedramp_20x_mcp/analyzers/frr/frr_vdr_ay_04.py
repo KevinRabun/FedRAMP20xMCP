@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,56 @@ class FRR_VDR_AY_04_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-AY-04.
+        Get queries for collecting evidence of vulnerability detection on resource changes.
         
-        TODO: Add evidence collection guidance
+        Focuses on detecting automated scanning triggered by new or significantly changed resources.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "ci_cd_pipeline_scans": [
+                "Query CI/CD pipeline logs for security scans triggered on code changes (commits, PRs)",
+                "Filter by pipeline stages: pre-commit hooks, PR gates, build-time scanning",
+                "Verify automated SAST, DAST, SCA, container scanning runs on every code change"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "azure_resource_graph": [
+                "ResourceChanges | where changeType in ('Create', 'Update') | where properties has 'significant' | join kind=inner (Resources | where type =~ 'microsoft.security/assessments') on $left.resourceId == $right.id | project TimeGenerated, resourceId, changeType, assessmentTime=properties.timeGenerated",
+                "Resources | where type =~ 'microsoft.containerregistry/registries' | where properties.policies.quarantinePolicy.status == 'enabled' | project id, name, quarantineEnabled=properties.policies.quarantinePolicy.status, scanOnPush=properties.policies.trustPolicy.status"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
+            "defender_for_cloud": [
+                "SecurityAssessment | where TimeGenerated > ago(7d) | join kind=inner (AzureActivity | where OperationNameValue has 'Create' or OperationNameValue has 'Update') on $left.ResourceId == $right.ResourceId | summarize AssessmentCount=count() by ResourceId, OperationNameValue, bin(TimeGenerated, 1h)",
+                "ContainerRegistryVulnerabilityAssessment | where TimeGenerated > ago(7d) | where ScanTrigger == 'OnPush' or ScanTrigger == 'OnUpdate' | summarize ScanCount=count() by RegistryName, ImageName, ScanTrigger"
             ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "change_tracking": [
+                "ConfigurationChange | where TimeGenerated > ago(30d) | where ConfigChangeType in ('Software', 'Files', 'Registry') | join kind=inner (SecurityBaseline | where TimeGenerated > ago(30d)) on $left.Computer == $right.Computer | summarize ChangeCount=count(), VulnScanCount=count() by Computer, ConfigChangeType"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for demonstrating detection on changes.
+        
+        Focuses on automated scan triggers tied to resource changes.
+        """
+        return [
+            "CI/CD pipeline configurations showing automated security scans on code commits and PRs",
+            "Container registry settings showing scan-on-push enabled for all registries",
+            "Defender for Cloud assessment logs correlated with Azure Activity Log resource changes",
+            "Change tracking reports showing vulnerability scans triggered after configuration changes",
+            "Infrastructure-as-code validation logs showing security scans on template changes",
+            "Automated scan metrics: % changes triggering scans, time delta between change and scan, scan coverage",
+            "Webhook or event-driven automation logs showing vulnerability scans triggered by resource create/update events"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Get recommendations for automating detection on changes evidence collection.
+        
+        Focuses on ensuring scans automatically trigger on resource changes.
+        """
+        return {
+            "ci_cd_gates": "Enforce automated security scanning as mandatory gates in CI/CD pipelines for all code changes, with branch protection preventing merges without scan completion",
+            "scan_on_push": "Enable scan-on-push for all container registries with quarantine policies preventing deployment of unscanned or vulnerable images",
+            "event_driven_scanning": "Configure event-driven vulnerability scanning using Azure Event Grid to trigger Defender assessments automatically on resource creation or significant updates",
+            "change_correlation": "Implement automated reporting correlating Azure Activity Log changes with Security Assessment timestamps to demonstrate scan coverage on changes (target: >95% changes scanned within 24h)"
         }

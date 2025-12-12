@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,47 @@ class FRR_VDR_06_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-06.
+        Provides queries for collecting evidence of FRR-VDR-06 compliance.
         
-        TODO: Add evidence collection guidance
+        Returns:
+            Dict containing query strings for various platforms
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "azure_monitor_kql": [
+                "SecurityRecommendation | extend Status = properties.status | where Status =~ 'Dismissed' or Status =~ 'FalsePositive' | project TimeGenerated, DisplayName, Reason = properties.statusReason",
+                "SecurityAlert | where Status =~ 'Dismissed' | project TimeGenerated, AlertName, DismissalReason = properties.dismissalReason"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "azure_cli": [
+                "az security assessment list --query \"[?properties.status.code=='NotApplicable'].{Name:displayName, Reason:properties.status.description}\""
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Lists artifacts to collect as evidence of FRR-VDR-06 compliance.
+        
+        Returns:
+            List of artifact descriptions
+        """
+        return [
+            "False positive evaluation methodology documentation",
+            "Records of vulnerability assessments showing false positive determinations",
+            "Context analysis reports for dismissed vulnerabilities",
+            "False positive rate metrics and trends",
+            "Approval records for false positive designations"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Provides recommendations for automating evidence collection for FRR-VDR-06.
+        
+        Returns:
+            Dict mapping automation areas to implementation guidance
+        """
+        return {
+            "false_positive_tracking": "Use Defender for Cloud or similar tool to track dismissed/false positive vulnerabilities",
+            "context_documentation": "Automate capture of dismissal reasons and context in vulnerability management system",
+            "evidence_collection": "Export monthly reports of false positive evaluations with justifications"
         }

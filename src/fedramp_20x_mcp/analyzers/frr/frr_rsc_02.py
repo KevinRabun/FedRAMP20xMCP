@@ -190,47 +190,41 @@ class FRR_RSC_02_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
-        """
-        Get recommendations for automating evidence collection for FRR-RSC-02.
-        
-        This requirement is not directly code-detectable. Provides manual validation guidance.
-        """
+    def get_evidence_collection_queries(self) -> dict:
+        """KQL queries for admin account security settings documentation evidence."""
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
+            'automated_queries': [
+                "// Query 1: Admin-only security settings changes\nAzureActivity\n| where TimeGenerated > ago(90d)\n| where OperationNameValue contains 'Microsoft.Security' or OperationNameValue contains 'SecuritySettings'\n| where Caller in (dynamic(['owner', 'administrator']))\n| project TimeGenerated, Caller, ResourceId, OperationNameValue, Properties\n| order by TimeGenerated desc",
+                "// Query 2: Resources tagged with security-settings-documented metadata\nResources\n| where tags['security-settings-documented'] == 'true'\n| project resourceId, name, type, tags, location",
+                "// Query 3: Security baseline policies (admin-only)\nPolicyResources\n| where type == 'microsoft.authorization/policyassignments'\n| where properties.displayName contains 'security' or properties.displayName contains 'baseline'\n| project id, name, properties"
+            ]
+        }
+
+    def get_evidence_artifacts(self) -> dict:
+        """Documentation artifacts for admin account security settings guidance."""
+        return {
             'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                "SECURITY-SETTINGS.md or equivalent documentation file",
+                "List of admin-only security settings and their implications",
+                "Security impact analysis for each admin-controlled setting",
+                "Configuration change procedures for security settings",
+                "Security baseline documentation",
+                "Admin security settings audit logs",
+                "Security posture management documentation",
+                "Risk assessment for security setting changes"
+            ]
+        }
+
+    def get_evidence_automation_recommendations(self) -> dict:
+        """Implementation recommendations for admin account security settings guidance."""
+        return {
+            'implementation_notes': [
+                "Create SECURITY-SETTINGS.md documenting admin-only security settings",
+                "List each security setting controllable only by admin accounts",
+                "Document security implications for each setting (CIA triad impact)",
+                "Define change procedures and approval workflows",
+                "Tag resources with security-settings-documented metadata",
+                "Maintain audit logs of security setting changes (90-day retention)",
+                "Review and update security settings documentation quarterly"
             ]
         }

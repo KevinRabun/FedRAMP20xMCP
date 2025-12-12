@@ -61,7 +61,7 @@ class FRR_RSC_07_Analyzer(BaseFRRAnalyzer):
         ("CM-6", "Configuration Settings"),
         ("AC-3", "Access Enforcement")
     ]
-    CODE_DETECTABLE = "Yes"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = []
     
@@ -261,47 +261,99 @@ class FRR_RSC_07_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> dict:
         """
-        Get recommendations for automating evidence collection for FRR-RSC-07.
+        Get KQL queries and API endpoints for collecting FRR-RSC-07 evidence.
         
-        TODO: Add evidence collection guidance
+        Returns automated queries to collect evidence of API capabilities
+        for viewing and adjusting security settings.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "automated_queries": [
+                # Azure Resource Graph: API Management services with settings endpoints
+                """Resources
+                | where type =~ 'microsoft.apimanagement/service' or type =~ 'microsoft.web/sites'
+                | extend hasSettingsAPI = properties contains '/api/settings' or properties contains '/api/config' or properties contains '/api/security'
+                | where hasSettingsAPI == true
+                | project name, type, resourceGroup, subscriptionId, properties""",
+                
+                # Azure Monitor: Settings API calls (GET/PUT) (last 90 days)
+                """AzureDiagnostics
+                | where Category == 'ApplicationInsights' and TimeGenerated > ago(90d)
+                | where (url_s contains '/api/settings' or url_s contains '/api/config' or url_s contains '/api/security')
+                | where httpMethod_s in ('GET', 'PUT', 'PATCH', 'POST')
+                | summarize GetCount=countif(httpMethod_s=='GET'), UpdateCount=countif(httpMethod_s in ('PUT','PATCH','POST')) by url_s, bin(TimeGenerated, 1d)
+                | order by TimeGenerated desc""",
+                
+                # Azure Policy: API access policies
+                """PolicyResources
+                | where type =~ 'microsoft.authorization/policydefinitions'
+                | where properties.policyRule contains 'api' or properties.metadata.category == 'API Management'
+                | project policyName=name, category=properties.metadata.category, effect=properties.policyRule.then.effect
+                | where tags contains 'rsc-07' or tags contains 'api-capability'"""
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "manual_queries": [
+                "Review API documentation for GET/PUT /api/settings endpoints",
+                "Check OpenAPI/Swagger specs for security settings APIs",
+                "Verify Azure API Management policies for settings access"
+            ]
+        }
+    
+    def get_evidence_artifacts(self) -> dict:
+        """
+        Get list of evidence artifacts for FRR-RSC-07 compliance.
+        
+        Returns documentation and API specs demonstrating API capability
+        for viewing and adjusting security settings.
+        """
+        return {
+            "evidence_artifacts": [
+                "API-CAPABILITY.md - Documentation of settings API",
+                "openapi-spec.yaml - OpenAPI/Swagger specification for settings endpoints",
+                "ENDPOINTS.md - List of GET/PUT endpoints for security settings",
+                "api-examples/ - Sample API requests/responses for settings management",
+                "audit-logs/ - Logs showing API usage for viewing/adjusting settings",
+                "AUTHENTICATION.md - API authentication/authorization documentation",
+                "RATE-LIMITS.md - API rate limiting and throttling policies"
+            ]
+        }
+    
+    def get_evidence_automation_recommendations(self) -> dict:
+        """
+        Get recommendations for automating FRR-RSC-07 evidence collection.
+        
+        Returns guidance for implementing and documenting API capabilities
+        for viewing and adjusting all security settings.
+        """
+        return {
+            "implementation_notes": [
+                "1. Implement settings management API",
+                "   - Create RESTful API for viewing (GET) and adjusting (PUT/PATCH) security settings",
+                "   - Support all security settings (authentication, authorization, encryption, audit, network)",
+                "   - Implement proper authentication (OAuth 2.0, API keys) and authorization (RBAC)",
+                "   - Example: GET /api/settings, PUT /api/settings/{settingId}",
+                "",
+                "2. Document API endpoints",
+                "   - Create OpenAPI/Swagger specification in openapi-spec.yaml",
+                "   - Document all GET/PUT/PATCH endpoints for settings",
+                "   - Include request/response schemas, error codes, authentication requirements",
+                "   - Host API documentation on developer portal",
+                "",
+                "3. Tag API resources",
+                "   - Tag API Management/Azure Functions with 'rsc-07:api-capability'",
+                "   - Tag endpoints with 'fedramp:settings-api' for KQL queries",
+                "   - Enable Application Insights for API monitoring",
+                "",
+                "4. Implement API security",
+                "   - Enforce authentication on all settings endpoints",
+                "   - Implement rate limiting (e.g., 100 requests/minute)",
+                "   - Log all GET/PUT operations with user identity, timestamp, setting changed",
+                "   - Validate input on PUT/PATCH to prevent injection attacks",
+                "",
+                "5. Monitor API usage",
+                "   - Enable Application Insights for all settings API calls",
+                "   - Retain logs for 90 days minimum",
+                "   - Track: who accessed, which settings, read vs write operations",
+                "   - Alert on suspicious activity (excessive PUTs, unauthorized access)"
             ]
         }

@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import Dict, List, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -158,39 +158,42 @@ class FRR_ICP_07_Analyzer(BaseFRRAnalyzer):
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for FRR-ICP-07 compliance using AST.
-        
-        TODO: Implement C# analysis
-        """
+        """Analyze C# for final report generation."""
         findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
+        has_report = bool(re.search(r'(GenerateReport|CreateReport|FinalReport|IncidentSummary)', code, re.IGNORECASE))
+        if not has_report:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID, requirement_id=self.FRR_ID,
+                title="No report generation", description=f"FRR-ICP-07 requires final incident reports.",
+                severity=Severity.HIGH, file_path=file_path, line_number=1, code_snippet="",
+                recommendation="Implement final incident report generation"
+            ))
         return findings
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for FRR-ICP-07 compliance using AST.
-        
-        TODO: Implement Java analysis
-        """
+        """Analyze Java for final report generation."""
         findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
+        has_report = bool(re.search(r'(generateReport|createReport|finalReport|incidentSummary)', code, re.IGNORECASE))
+        if not has_report:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID, requirement_id=self.FRR_ID,
+                title="No report generation", description=f"FRR-ICP-07 requires final incident reports.",
+                severity=Severity.HIGH, file_path=file_path, line_number=1, code_snippet="",
+                recommendation="Implement final incident report generation"
+            ))
         return findings
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for FRR-ICP-07 compliance using AST.
-        
-        TODO: Implement TypeScript analysis
-        """
+        """Analyze TypeScript for final report generation."""
         findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
+        has_report = bool(re.search(r'(generateReport|createReport|finalReport|incidentSummary)', code, re.IGNORECASE))
+        if not has_report:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID, requirement_id=self.FRR_ID,
+                title="No report generation", description=f"FRR-ICP-07 requires final incident reports.",
+                severity=Severity.HIGH, file_path=file_path, line_number=1, code_snippet="",
+                recommendation="Implement final incident report generation"
+            ))
         return findings
     
     # ============================================================================
@@ -198,123 +201,68 @@ class FRR_ICP_07_Analyzer(BaseFRRAnalyzer):
     # ============================================================================
     
     def analyze_bicep(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Bicep infrastructure code for FRR-ICP-07 compliance.
-        
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        """Analyze Bicep for report generation services."""
+        return []  # Final report generation is runtime operational
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Terraform infrastructure code for FRR-ICP-07 compliance.
-        
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        """Analyze Terraform for report generation services."""
+        return []  # Final report generation is runtime operational
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
     # ============================================================================
     
     def analyze_github_actions(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitHub Actions workflow for FRR-ICP-07 compliance.
-        
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        """Analyze GitHub Actions for report generation."""
+        return []  # Final report generation is runtime operational
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Azure Pipelines YAML for FRR-ICP-07 compliance.
-        
-        TODO: Implement Azure Pipelines analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        """Analyze Azure Pipelines for report generation."""
+        return []  # Final report generation is runtime operational
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitLab CI YAML for FRR-ICP-07 compliance.
-        
-        TODO: Implement GitLab CI analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        """Analyze GitLab CI for report generation."""
+        return []  # Final report generation is runtime operational
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
-        """
-        Get recommendations for automating evidence collection for FRR-ICP-07.
-        
-        This requirement is not directly code-detectable. Provides manual validation guidance.
-        """
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """Get automated queries for FRR-ICP-07 evidence (final incident reports)."""
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
+            'automated_queries': [
+                "AzureActivity | where OperationNameValue contains 'report' or OperationNameValue contains 'document' | summarize by ResourceId, TimeGenerated",
+                "Resources | where type contains 'storage' or type contains 'cosmosdb' | project name, type, resourceGroup",
+                "AzureDiagnostics | where Category == 'AuditEvent' and Message contains 'incident' | project TimeGenerated, Message"
+            ]
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """Get evidence artifacts for FRR-ICP-07 (final incident reports)."""
+        return {
             'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                "Final incident report template and procedures (section of IRP)",
+                "Historical final incident reports",
+                "Root cause analysis documentation",
+                "Incident timeline and impact assessment",
+                "Remediation steps and recovery actions documentation",
+                "Lessons learned and post-mortem reports",
+                "Final report generation mechanism documentation",
+                "Report distribution and acknowledgment records"
+            ]
+        }
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """Get automation recommendations for FRR-ICP-07 (final incident reports)."""
+        return {
+            'implementation_notes': [
+                "Implement automated final incident report generation",
+                "Establish final report template with required sections (root cause, timeline, impact, remediation, lessons learned)",
+                "Configure report generation triggers (incident closure/resolution)",
+                "Implement comprehensive data collection for reports (timeline, logs, impact metrics)",
+                "Automate report distribution to all parties (FedRAMP, CISA if applicable, agencies)",
+                "Test final report generation with sample incidents",
+                "Document final reporting procedures and timelines"
             ]
         }

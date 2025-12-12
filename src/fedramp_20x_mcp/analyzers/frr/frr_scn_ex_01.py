@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -253,47 +253,48 @@ class FRR_SCN_EX_01_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-SCN-EX-01.
+        Provides queries for collecting evidence of FRR-SCN-EX-01 compliance.
         
-        TODO: Add evidence collection guidance
+        Returns:
+            Dict containing query strings for various platforms
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "azure_resource_graph": [
+                "Resources | where type =~ 'microsoft.insights/actiongroups' | project id, name, properties",
+                "Resources | where type =~ 'microsoft.logic/workflows' | project id, name, properties"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "azure_cli": [
+                "az monitor action-group list --query '[].{Name:name, Enabled:enabled}'",
+                "az logic workflow list --query '[].{Name:name, State:state}'"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Lists artifacts to collect as evidence of FRR-SCN-EX-01 compliance.
+        
+        Returns:
+            List of artifact descriptions
+        """
+        return [
+            "Corrective Action Plan (CAP) documentation",
+            "Change delay requirements specified in CAP conditions",
+            "Advance approval requirements for changes",
+            "Change request workflow configurations",
+            "CAP compliance tracking records"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Provides recommendations for automating evidence collection for FRR-SCN-EX-01.
+        
+        Returns:
+            Dict mapping automation areas to implementation guidance
+        """
+        return {
+            "change_workflow": "Implement approval gates in CI/CD pipelines that reference CAP requirements",
+            "delay_tracking": "Use Azure DevOps or similar to track change delays required by CAP",
+            "approval_process": "Configure automated checks that validate CAP conditions before allowing changes"
         }

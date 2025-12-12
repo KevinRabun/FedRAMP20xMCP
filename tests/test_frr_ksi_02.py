@@ -29,15 +29,21 @@ def test_analyzer_metadata():
     print("[PASS] test_analyzer_metadata PASSED")
 
 
-def test_evidence_automation_recommendations():
-    """Test evidence automation recommendations."""
+def test_evidence_collection():
+    """Test evidence collection methods."""
     analyzer = FRR_KSI_02_Analyzer()
     
-    recommendations = analyzer.get_evidence_automation_recommendations()
-    assert recommendations['frr_id'] == "FRR-KSI-02", "FRR_ID mismatch"
-    # TODO: Add more assertions for evidence recommendations
+    queries = analyzer.get_evidence_collection_queries()
+    assert 'KSI summary documentation' in queries, "Missing KSI summary documentation"
+    assert 'Summary completeness' in queries, "Missing summary completeness"
     
-    print("[PASS] test_evidence_automation_recommendations PASSED")
+    artifacts = analyzer.get_evidence_artifacts()
+    assert len(artifacts) > 0, "Missing evidence artifacts"
+    
+    recommendations = analyzer.get_evidence_automation_recommendations()
+    assert 'automated_summary_collection' in recommendations, "Missing summary collection"
+    
+    print("[PASS] test_evidence_collection PASSED")
 
 
 # TODO: Add language-specific tests
@@ -57,8 +63,7 @@ def run_all_tests():
     """Run all FRR-KSI-02 tests."""
     test_functions = [
         ("Analyzer metadata", test_analyzer_metadata),
-        ("Evidence automation recommendations", test_evidence_automation_recommendations),
-        # TODO: Add more test functions
+        ("Evidence collection", test_evidence_collection),
     ]
     
     passed = 0

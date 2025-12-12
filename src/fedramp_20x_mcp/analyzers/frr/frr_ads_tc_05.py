@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -95,41 +95,58 @@ class FRR_ADS_TC_05_Analyzer(BaseFRRAnalyzer):
         - Inventory reporting functions
         """
         findings = []
-        lines = code.split('\n')
         
-        # Try AST analysis first
         try:
             parser = ASTParser(CodeLanguage.PYTHON)
             tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
             if tree and tree.root_node:
-                code_bytes = code.encode('utf-8')
+                # Check for inventory-related functions
+                func_defs = parser.find_nodes_by_type(tree.root_node, 'function_definition')
+                for func_def in func_defs:
+                    func_text = parser.get_node_text(func_def, code_bytes)
+                    func_lower = func_text.lower()
+                    
+                    if any(keyword in func_lower for keyword in ['inventory', 'track_access', 'access_history', 'user_list', 'system_list', 'access_log']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Access inventory function detected",
+                            description="Found function for tracking access inventory or history",
+                            severity=Severity.INFO,
+                            line_number=func_def.start_point[0] + 1,
+                            code_snippet=func_text.split('\n')[0],
+                            recommendation="Ensure inventory and history maintained and available to FedRAMP without interruption."
+                        ))
                 
-                # Check for inventory functions
-                inventory_functions = ['inventory', 'track_access', 'log_access', 'access_history', 'user_inventory']
-                for func_name in inventory_functions:
-                    func_nodes = parser.find_nodes_by_type(tree.root_node, 'function_definition')
-                    for node in func_nodes:
-                        node_text = parser.get_node_text(node, code_bytes)
-                        if func_name in node_text.lower():
-                            line_num = node.start_point[0] + 1
-                            findings.append(Finding(
-                                frr_id=self.FRR_ID,
-                                title="Access inventory mechanism detected",
-                                description=f"Found inventory function: {func_name}",
-                                severity=Severity.INFO,
-                                line_number=line_num,
-                                code_snippet=lines[line_num-1].strip() if line_num <= len(lines) else "",
-                                recommendation="Ensure inventory and history of federal agency access maintained and available to FedRAMP."
-                            ))
+                # Check for database/logging calls related to inventory
+                call_expressions = parser.find_nodes_by_type(tree.root_node, 'call')
+                for call in call_expressions:
+                    call_text = parser.get_node_text(call, code_bytes).lower()
+                    if any(keyword in call_text for keyword in ['log_access', 'record_access', 'save_inventory', 'track_user']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Access tracking call detected",
+                            description="Found call to track or log access",
+                            severity=Severity.INFO,
+                            line_number=call.start_point[0] + 1,
+                            code_snippet=call_text.split('\n')[0],
+                            recommendation="Verify inventory data is retained and accessible without interruption."
+                        ))
+                
+                return findings
         except Exception:
             pass
         
         # Regex fallback
+        lines = code.split('\n')
         inventory_patterns = [
             r'access.*inventory',
             r'user.*history',
             r'track.*access',
             r'inventory.*users',
+            r'access.*log',
+            r'maintain.*inventory',
         ]
         
         for i, line in enumerate(lines, 1):
@@ -138,7 +155,7 @@ class FRR_ADS_TC_05_Analyzer(BaseFRRAnalyzer):
                     findings.append(Finding(
                         frr_id=self.FRR_ID,
                         title="Access inventory pattern detected",
-                        description=f"Found inventory pattern: {pattern}",
+                        description=f"Found pattern: {pattern}",
                         severity=Severity.INFO,
                         line_number=i,
                         code_snippet=line.strip(),
@@ -147,60 +164,173 @@ class FRR_ADS_TC_05_Analyzer(BaseFRRAnalyzer):
                     break
         
         return findings
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze C# code for FRR-ADS-TC-05 compliance using AST.
         
-        TODO: Implement C# analysis
+        Detects access inventory mechanisms in C#.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for C#
+        try:
+            parser = ASTParser(CodeLanguage.CSHARP)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                # Check method declarations
+                method_declarations = parser.find_nodes_by_type(tree.root_node, 'method_declaration')
+                for method in method_declarations:
+                    method_text = parser.get_node_text(method, code_bytes)
+                    method_lower = method_text.lower()
+                    
+                    if any(keyword in method_lower for keyword in ['inventory', 'trackaccess', 'accesshistory', 'userlist', 'accesslog']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Access inventory method detected",
+                            description="Found method for tracking access inventory",
+                            severity=Severity.INFO,
+                            line_number=method.start_point[0] + 1,
+                            code_snippet=method_text.split('\n')[0],
+                            recommendation="Ensure inventory maintained and available to FedRAMP."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(?:Inventory|TrackAccess|AccessHistory|UserList|AccessLog)', line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Access inventory reference detected",
+                    description="Found access inventory tracking",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Verify inventory maintained without interruption."
+                ))
+        
         return findings
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Java code for FRR-ADS-TC-05 compliance using AST.
         
-        TODO: Implement Java analysis
+        Detects access inventory mechanisms in Java.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for Java
+        try:
+            parser = ASTParser(CodeLanguage.JAVA)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                # Check method declarations
+                method_declarations = parser.find_nodes_by_type(tree.root_node, 'method_declaration')
+                for method in method_declarations:
+                    method_text = parser.get_node_text(method, code_bytes)
+                    method_lower = method_text.lower()
+                    
+                    if any(keyword in method_lower for keyword in ['inventory', 'trackaccess', 'accesshistory', 'userlist', 'accesslog']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Access inventory method detected",
+                            description="Found method for tracking access inventory",
+                            severity=Severity.INFO,
+                            line_number=method.start_point[0] + 1,
+                            code_snippet=method_text.split('\n')[0],
+                            recommendation="Ensure inventory maintained and available to FedRAMP."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(?:inventory|trackAccess|accessHistory|userList|accessLog)', line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Access inventory reference detected",
+                    description="Found access inventory tracking",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Verify inventory maintained without interruption."
+                ))
+        
         return findings
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze TypeScript/JavaScript code for FRR-ADS-TC-05 compliance using AST.
         
-        TODO: Implement TypeScript analysis
+        Detects access inventory mechanisms in TypeScript/JavaScript.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for TypeScript
+        try:
+            parser = ASTParser(CodeLanguage.TYPESCRIPT)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                # Check function declarations
+                function_declarations = parser.find_nodes_by_type(tree.root_node, 'function_declaration')
+                for func_decl in function_declarations:
+                    func_text = parser.get_node_text(func_decl, code_bytes)
+                    func_lower = func_text.lower()
+                    
+                    if any(keyword in func_lower for keyword in ['inventory', 'trackaccess', 'accesshistory', 'userlist', 'accesslog']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Access inventory function detected",
+                            description="Found function for tracking access inventory",
+                            severity=Severity.INFO,
+                            line_number=func_decl.start_point[0] + 1,
+                            code_snippet=func_text.split('\n')[0],
+                            recommendation="Ensure inventory maintained and available to FedRAMP."
+                        ))
+                
+                # Check arrow functions
+                arrow_functions = parser.find_nodes_by_type(tree.root_node, 'arrow_function')
+                for arrow_func in arrow_functions:
+                    func_text = parser.get_node_text(arrow_func, code_bytes)
+                    if any(keyword in func_text.lower() for keyword in ['inventory', 'track', 'history', 'access']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Access tracking handler detected",
+                            description="Found handler for access inventory",
+                            severity=Severity.INFO,
+                            line_number=arrow_func.start_point[0] + 1,
+                            code_snippet=func_text.split('\n')[0],
+                            recommendation="Verify inventory data retained."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(?:inventory|trackAccess|accessHistory|userList|accessLog)', line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Access inventory reference detected",
+                    description="Found access inventory tracking",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Verify inventory maintained without interruption."
+                ))
+        
         return findings
     
     # ============================================================================
@@ -211,32 +341,35 @@ class FRR_ADS_TC_05_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Bicep infrastructure code for FRR-ADS-TC-05 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        NOT APPLICABLE: Maintaining inventory and history of federal agency users/systems
+        with access to authorization data is an application-level data management concern,
+        not infrastructure configuration. The requirement mandates:
+        
+        1. Inventory tracking (application database/storage)
+        2. Access history retention (application logging)
+        3. Continuous availability to FedRAMP (application feature)
+        
+        These are implemented through application code, databases, and logging systems,
+        not through infrastructure-as-code templates.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        return []
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Terraform infrastructure code for FRR-ADS-TC-05 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
-        """
-        findings = []
-        lines = code.split('\n')
+        NOT APPLICABLE: Maintaining inventory and history of federal agency users/systems
+        with access to authorization data is an application-level data management concern,
+        not infrastructure configuration. The requirement mandates:
         
-        # TODO: Implement Terraform regex patterns
-        return findings
+        1. Inventory tracking (application database/storage)
+        2. Access history retention (application logging)
+        3. Continuous availability to FedRAMP (application feature)
+        
+        These are implemented through application code, databases, and logging systems,
+        not through infrastructure-as-code templates.
+        """
+        return []
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
@@ -246,85 +379,203 @@ class FRR_ADS_TC_05_Analyzer(BaseFRRAnalyzer):
         """
         Analyze GitHub Actions workflow for FRR-ADS-TC-05 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        NOT APPLICABLE: Inventory and history of federal agency access is an application
+        data management concern, not CI/CD pipeline concern. The requirement mandates
+        maintaining and providing access to inventory data, which is an application
+        feature, not a build or deployment automation concern.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Azure Pipelines YAML for FRR-ADS-TC-05 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        NOT APPLICABLE: Inventory and history of federal agency access is an application
+        data management concern, not CI/CD pipeline concern. The requirement mandates
+        maintaining and providing access to inventory data, which is an application
+        feature, not a build or deployment automation concern.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze GitLab CI YAML for FRR-ADS-TC-05 compliance.
         
-        TODO: Implement GitLab CI analysis
+        NOT APPLICABLE: Inventory and history of federal agency access is an application
+        data management concern, not CI/CD pipeline concern. The requirement mandates
+        maintaining and providing access to inventory data, which is an application
+        feature, not a build or deployment automation concern.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> List[str]:
         """
-        Get recommendations for automating evidence collection for FRR-ADS-TC-05.
+        Provide specific queries for collecting evidence of FRR-ADS-TC-05 compliance.
         
-        TODO: Add evidence collection guidance
+        Returns:
+            List of queries for various tools and platforms to collect evidence
+            of access inventory and history maintenance.
+        """
+        return [
+            # Azure Resource Graph - Query resources with access tracking
+            "Resources | where type =~ 'Microsoft.Web/sites' or type =~ 'Microsoft.Sql/servers/databases' | extend accessTracking = properties.accessTracking | project name, resourceGroup, type, accessTracking",
+            
+            # Azure Monitor - Access inventory logs
+            "AppRequests | extend UserId = tostring(customDimensions.UserId), SystemId = tostring(customDimensions.SystemId) | where isnotempty(UserId) or isnotempty(SystemId) | summarize AccessCount = count(), FirstAccess = min(TimeGenerated), LastAccess = max(TimeGenerated) by UserId, SystemId | order by LastAccess desc",
+            
+            # Application Insights - Inventory maintenance events
+            "customEvents | where name in ('InventoryUpdated', 'AccessRecorded', 'UserAdded', 'SystemAdded') | extend EntityId = tostring(customDimensions.EntityId), EntityType = tostring(customDimensions.EntityType) | project timestamp, name, EntityId, EntityType",
+            
+            # Azure AD audit logs - Federal agency user access
+            "AuditLogs | where Category == 'UserManagement' or Category == 'ApplicationManagement' | extend Initiator = tostring(InitiatedBy.user.userPrincipalName), Target = tostring(TargetResources[0].displayName), Action = OperationName | where Target contains 'FedRAMP' or Target contains 'Federal' | project TimeGenerated, Action, Initiator, Target",
+            
+            # Activity logs - System access changes
+            "AzureActivity | where CategoryValue == 'Administrative' and OperationNameValue contains 'ROLEASSIGNMENTS' | extend Caller = tostring(Caller), Resource = tostring(Resource), Status = tostring(ActivityStatusValue) | project TimeGenerated, OperationNameValue, Caller, Resource, Status",
+            
+            # Custom application logs - Inventory queries
+            "traces | where message contains 'inventory' or message contains 'access history' or message contains 'federal agency' | extend severity = tostring(severityLevel) | summarize count() by severity, bin(timestamp, 1d)"
+        ]
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        List artifacts that serve as evidence for FRR-ADS-TC-05 compliance.
+        
+        Returns:
+            List of evidence artifacts including documents, logs, and reports
+            that demonstrate inventory and history maintenance.
+        """
+        return [
+            "Access inventory database export (current federal agency users and systems)",
+            "Access history reports (last 3 years minimum)",
+            "User provisioning and deprovisioning logs",
+            "System access grant and revocation audit trail",
+            "Inventory maintenance schedule and procedures documentation",
+            "FedRAMP access reports showing continuous availability",
+            "Database retention policy configuration for inventory data",
+            "Backup and disaster recovery plan for inventory system",
+            "Monitoring dashboards showing inventory system uptime and availability",
+            "Access control matrix for federal agency users and systems"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Provide recommendations for automating evidence collection for FRR-ADS-TC-05.
+        
+        Returns guidance on automated evidence collection for:
+        - Access inventory tracking
+        - History maintenance and retention
+        - Continuous availability to FedRAMP
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "frr_id": self.FRR_ID,
+            "frr_name": self.FRR_NAME,
+            "powershell_scripts": [
+                {
+                    "name": "export_access_inventory",
+                    "description": "Export current inventory of federal agency access",
+                    "script": """
+# Export access inventory for federal agencies
+$databaseServer = "<database-server>"
+$databaseName = "<database-name>"
+
+# Connect to inventory database
+$query = @"
+SELECT 
+    UserId, 
+    UserName, 
+    SystemId, 
+    SystemName, 
+    AccessLevel, 
+    GrantedDate, 
+    LastAccessDate,
+    FederalAgency
+FROM AccessInventory
+WHERE FederalAgency IS NOT NULL
+ORDER BY LastAccessDate DESC
+"@
+
+Invoke-Sqlcmd -ServerInstance $databaseServer -Database $databaseName -Query $query | Export-Csv -Path "access_inventory_$(Get-Date -Format 'yyyyMMdd').csv" -NoTypeInformation
+                    """
+                },
+                {
+                    "name": "check_inventory_availability",
+                    "description": "Check inventory system availability and uptime",
+                    "script": """
+# Check inventory system availability
+$inventoryEndpoint = "<inventory-api-endpoint>"
+$resourceGroup = "<resource-group>"
+
+# Check web app status
+Get-AzWebApp -ResourceGroupName $resourceGroup | Where-Object {$_.Name -like '*inventory*'} | Select-Object Name, State, AvailabilityState, @{N='Uptime';E={(Get-AzMetric -ResourceId $_.Id -MetricName 'Http2xx' -TimeGrain 01:00:00).Data}}
+
+# Test endpoint availability
+Test-NetConnection -ComputerName $inventoryEndpoint -Port 443
+                    """
+                }
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "cli_commands": [
+                {
+                    "tool": "az",
+                    "command": "az sql db show --server <server> --name <db> --resource-group <rg> --query '{name:name, status:status, earliestRestoreDate:earliestRestoreDate, retentionDays:longTermRetentionBackupResourceId}'",
+                    "description": "Check inventory database status and retention"
+                },
+                {
+                    "tool": "az",
+                    "command": "az monitor metrics list --resource <inventory-resource-id> --metric 'Availability' --interval PT1H --query 'value[].timeseries[].data[].{Time:timeStamp, Availability:average}'",
+                    "description": "Check inventory system availability metrics"
+                },
+                {
+                    "tool": "az",
+                    "command": "az sql db audit-policy show --server <server> --name <db> --resource-group <rg>",
+                    "description": "Verify audit policy for inventory database"
+                }
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
+            "api_queries": [
+                {
+                    "service": "Azure SQL Database API",
+                    "endpoint": "GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.Sql/servers/{server}/databases/{database}",
+                    "description": "Get inventory database configuration and retention settings"
+                },
+                {
+                    "service": "Azure Monitor API",
+                    "endpoint": "GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.Web/sites/{site}/providers/Microsoft.Insights/metrics",
+                    "description": "Get inventory system availability metrics"
+                }
             ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
+            "monitoring_queries": [
+                {
+                    "service": "Azure Monitor",
+                    "query": "AzureDiagnostics | where ResourceType == 'SERVERS/DATABASES' and Category == 'SQLSecurityAuditEvents' | where Statement contains 'AccessInventory' | summarize count() by OperationName, bin(TimeGenerated, 1h)",
+                    "description": "Track inventory database access and modifications"
+                },
+                {
+                    "service": "Azure Application Insights",
+                    "query": "availabilityResults | where name contains 'inventory' | summarize AvailabilityRate = avg(success) * 100, AvgDuration = avg(duration) by bin(timestamp, 1h)",
+                    "description": "Monitor inventory system uptime and availability"
+                }
             ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "collection_notes": [
+                "Export access inventory daily to demonstrate continuous maintenance",
+                "Retain access history for minimum 3 years per FedRAMP requirements",
+                "Document inventory update frequency and procedures",
+                "Maintain backup copies of inventory data for disaster recovery",
+                "Monitor inventory system availability to ensure no interruption",
+                "Implement automated alerts for inventory system downtime"
+            ],
+            "best_practices": [
+                "Use Azure SQL Database with geo-replication for high availability",
+                "Configure automated backups with long-term retention (3+ years)",
+                "Implement real-time replication to secondary region",
+                "Set up Azure Monitor alerts for inventory system health",
+                "Use Application Insights to track inventory access patterns",
+                "Maintain audit trail of all inventory modifications",
+                "Document data retention policies in System Security Plan (SSP)",
+                "Test disaster recovery procedures quarterly",
+                "Provide FedRAMP read-only access to live inventory system",
+                "Implement automated reporting for FedRAMP access requests"
             ]
         }

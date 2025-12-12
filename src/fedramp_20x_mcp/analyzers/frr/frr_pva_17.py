@@ -80,77 +80,32 @@ class FRR_PVA_17_Analyzer(BaseFRRAnalyzer):
     # ============================================================================
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
+        """Analyze Python code for FRR-PVA-17 compliance.
+        
+        PVA-17 NOT code-detectable: Assessor assessment summary delivery is operational.
         """
-        Analyze Python code for FRR-PVA-17 compliance using AST.
-        
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
+        return []
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for FRR-PVA-17 compliance using AST.
+        """Analyze C# code for FRR-PVA-17 compliance.
         
-        TODO: Implement C# analysis
+        PVA-17 NOT code-detectable: Assessor assessment summary delivery is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        return []
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for FRR-PVA-17 compliance using AST.
+        """Analyze Java code for FRR-PVA-17 compliance.
         
-        TODO: Implement Java analysis
+        PVA-17 NOT code-detectable: Assessor assessment summary delivery is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        return []
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for FRR-PVA-17 compliance using AST.
+        """Analyze TypeScript/JavaScript code for FRR-PVA-17 compliance.
         
-        TODO: Implement TypeScript analysis
+        PVA-17 NOT code-detectable: Assessor assessment summary delivery is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
-        return findings
+        return []
     
     # ============================================================================
     # INFRASTRUCTURE AS CODE ANALYZERS (Regex-based)
@@ -174,106 +129,103 @@ class FRR_PVA_17_Analyzer(BaseFRRAnalyzer):
         return findings
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Terraform infrastructure code for FRR-PVA-17 compliance.
+        """Analyze Terraform infrastructure code for FRR-PVA-17 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        Assessor assessment summary delivery is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        return []
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
     # ============================================================================
     
     def analyze_github_actions(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitHub Actions workflow for FRR-PVA-17 compliance.
+        """Analyze GitHub Actions workflow for FRR-PVA-17 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        Assessor assessment summary delivery is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Azure Pipelines YAML for FRR-PVA-17 compliance.
+        """Analyze Azure Pipelines YAML for FRR-PVA-17 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        Assessor assessment summary delivery is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitLab CI YAML for FRR-PVA-17 compliance.
+        """Analyze GitLab CI YAML for FRR-PVA-17 compliance.
         
-        TODO: Implement GitLab CI analysis
+        Assessor assessment summary delivery is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    # ============================================================================
+    # EVIDENCE COLLECTION METHODS
+    # ============================================================================
+    
+    def get_evidence_collection_queries(self) -> dict:
         """
-        Get recommendations for automating evidence collection for FRR-PVA-17.
+        Get KQL queries for collecting evidence of assessment summary delivery.
         
-        TODO: Add evidence collection guidance
+        Returns queries to detect assessment summary documentation.
         """
         return {
             'frr_id': self.FRR_ID,
             'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
+            'automated_queries': [
+                # Resources with assessment-summary tags
+                "Resources | where tags contains 'assessment-summary' | project name, type, tags, location",
+                
+                # Assessment activities involving summary delivery
+                "AzureActivity | where OperationNameValue contains 'Assessment' and Properties contains 'assessment-summary' | project TimeGenerated, Caller, OperationNameValue, Properties",
+                
+                # Resources with ksi-summary and authorization-data metadata
+                "Resources | where tags contains 'ksi-summary' or tags contains 'authorization-data' | project name, type, tags['ksi-summary'], tags['authorization-data']"
+            ]
+        }
+    
+    def get_evidence_artifacts(self) -> dict:
+        """
+        Get list of evidence artifacts for demonstrating assessment summary delivery.
+        
+        Returns documentation and records demonstrating summary completion.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
             'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                "Assessment summary documentation for each KSI",
+                "Assessment process and methodology summary per KSI",
+                "Assessment findings and evaluation results per KSI",
+                "Authorization data package with embedded KSI summaries",
+                "Summary delivery tracking and completion records",
+                "KSI-level assessment documentation and evidence",
+                "Assessment report templates and summary formats",
+                "Authorization data integration and submission procedures"
+            ]
+        }
+    
+    def get_evidence_automation_recommendations(self) -> dict:
+        """
+        Get recommendations for implementing assessment summary delivery.
+        
+        Returns implementation notes for summary documentation and delivery.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
+            'implementation_notes': [
+                "Define assessor procedures for delivering KSI-level assessment summaries",
+                "Tag Azure resources with 'assessment-summary', 'ksi-summary', and 'authorization-data' metadata",
+                "Document assessment process and findings for each KSI",
+                "Track assessment summary delivery and authorization data package completion",
+                "Maintain KSI-level assessment documentation and evidence",
+                "Provide assessors with summary templates and delivery procedures",
+                "Review assessment summary quality and authorization data integration quarterly"
             ]
         }

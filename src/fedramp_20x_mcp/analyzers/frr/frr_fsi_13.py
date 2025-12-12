@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import Dict, List, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -231,47 +231,153 @@ class FRR_FSI_13_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
         """
-        Get recommendations for automating evidence collection for FRR-FSI-13.
+        Get Azure Resource Graph and other queries for evidence collection.
         
-        TODO: Add evidence collection guidance
+        Returns a dict with 'automated_queries' key containing query notes.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            'automated_queries': [
+                "FRR-FSI-13 is an operational requirement for CSPs to SHOULD promptly and "
+                "automatically acknowledge receipt of messages received from FedRAMP in the "
+                "FedRAMP Security Inbox (FSI). Evidence cannot be collected through automated "
+                "queries of Azure resources or code repositories. Evidence should consist of "
+                "email system acknowledgment configuration and operational records."
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """
+        Get list of evidence artifacts to collect for FRR-FSI-13 compliance.
+        
+        Returns a dict with 'evidence_artifacts' key containing artifact list.
+        """
+        return {
+            'evidence_artifacts': [
+                "1. Automatic Acknowledgment Configuration: Email system configuration "
+                "showing automatic acknowledgment (auto-reply or receipt notification) "
+                "enabled for the FedRAMP Security Inbox, with template message text and "
+                "trigger conditions (e.g., automatic acknowledgment for all inbound emails "
+                "from @fedramp.gov and @gsa.gov domains).",
+                
+                "2. Acknowledgment Timeliness Policy: Documented policy or configuration "
+                "specifying 'prompt' acknowledgment timing (e.g., immediate automatic reply "
+                "upon message receipt, within seconds or minutes). Policy should address "
+                "both automated acknowledgment and any manual acknowledgment scenarios.",
+                
+                "3. Acknowledgment Message Templates: Email templates used for automatic "
+                "acknowledgment of FedRAMP messages, demonstrating professional and clear "
+                "communication that confirms receipt and provides expected response timeframe "
+                "or next steps.",
+                
+                "4. Email System Logs: Logs from the FSI email system showing automatic "
+                "acknowledgment messages sent in response to inbound FedRAMP messages, "
+                "including timestamps demonstrating prompt (immediate) acknowledgment.",
+                
+                "5. Acknowledgment Testing Records: Test results or validation records "
+                "demonstrating that automatic acknowledgment functions correctly, including "
+                "test messages sent to the FSI and corresponding acknowledgment responses, "
+                "with timing measurements.",
+                
+                "6. Acknowledgment Reliability Monitoring: Monitoring configuration or "
+                "reports tracking acknowledgment message delivery success rate, failures, "
+                "and any gaps in automatic acknowledgment functionality (should be near 100% "
+                "reliability).",
+                
+                "7. Acknowledgment Failure Procedures: Documented procedures for handling "
+                "acknowledgment failures (e.g., email system outage, auto-reply malfunction), "
+                "including manual acknowledgment protocols and escalation procedures to "
+                "ensure FedRAMP messages are acknowledged even if automation fails.",
+                
+                "8. Historical Acknowledgment Records: Sample records of acknowledgment "
+                "messages sent over time, demonstrating consistent and prompt acknowledgment "
+                "of FedRAMP messages in compliance with the SHOULD requirement."
+            ]
+        }
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get recommendations for automating evidence collection.
+        
+        Returns a dict with 'implementation_notes' key containing guidance.
+        """
+        return {
+            'implementation_notes': (
+                "FRR-FSI-13 is a SHOULD (recommended but not mandatory) requirement for CSPs to "
+                "promptly and automatically acknowledge receipt of messages received from FedRAMP "
+                "in their FedRAMP Security Inbox (FSI). This is an email system configuration and "
+                "operational procedure requirement that cannot be detected through code analysis, "
+                "IaC templates, or CI/CD pipelines.\n\n"
+                
+                "COMPLIANCE APPROACH:\n"
+                "1. Automatic Acknowledgment Configuration: Enable automatic acknowledgment (auto-reply "
+                "or receipt notification) on the FSI email system. Common implementations:\n"
+                "   - Exchange/Outlook: Configure Automatic Replies or Inbox Rules for auto-reply\n"
+                "   - Gmail/Google Workspace: Configure Vacation Responder or Filters with auto-reply\n"
+                "   - Custom email systems: Implement server-side auto-response for inbound messages\n"
+                "   - Trigger: Automatic acknowledgment for emails from @fedramp.gov and @gsa.gov domains\n\n"
+                
+                "2. Acknowledgment Timing: Ensure 'prompt' acknowledgment timing, typically:\n"
+                "   - Immediate: Automatic acknowledgment within seconds of message receipt\n"
+                "   - Real-time: No delay between message arrival and acknowledgment\n"
+                "   - Consistent: Acknowledgment occurs 24/7 without business hour restrictions\n"
+                "   - Reliable: Near 100% acknowledgment rate with monitoring for failures\n\n"
+                
+                "3. Acknowledgment Message Content: Create professional acknowledgment templates that:\n"
+                "   - Confirm receipt of FedRAMP message\n"
+                "   - Provide expected response timeframe (per FRR-FSI-14/15/16 requirements)\n"
+                "   - Include contact information for urgent matters\n"
+                "   - Reassure sender that message was received and will be processed\n"
+                "   Example: 'This is an automated acknowledgment confirming receipt of your message to "
+                "   the [CSO Name] FedRAMP Security Inbox. We will respond within [timeframe] per FedRAMP "
+                "   requirements. For urgent matters, please contact [contact info].'\n\n"
+                
+                "4. Acknowledgment Monitoring: Track acknowledgment functionality and reliability:\n"
+                "   - Monitor auto-reply rule/filter status (enabled/disabled)\n"
+                "   - Log all acknowledgment messages sent with timestamps\n"
+                "   - Alert on acknowledgment failures or email system outages\n"
+                "   - Regular testing of acknowledgment functionality (monthly recommended)\n"
+                "   - Track acknowledgment delivery success rate (target: 100%)\n\n"
+                
+                "5. Failure Handling: Establish procedures for acknowledgment failures:\n"
+                "   - Automated alerts when acknowledgment doesn't occur within expected timeframe\n"
+                "   - Manual acknowledgment procedures during email system outages\n"
+                "   - Escalation procedures for critical FedRAMP messages requiring immediate attention\n"
+                "   - Backup communication channels if primary FSI is unavailable\n\n"
+                
+                "EVIDENCE COLLECTION:\n"
+                "Evidence for FRR-FSI-13 consists of email system configuration and operational records, "
+                "not code or infrastructure configurations. Key evidence includes:\n"
+                "- Email system configuration showing automatic acknowledgment enabled\n"
+                "- Policy defining 'prompt' acknowledgment timing (immediate/automatic)\n"
+                "- Acknowledgment message templates demonstrating professional communication\n"
+                "- Email system logs showing acknowledgment messages with timestamps\n"
+                "- Testing records demonstrating acknowledgment functionality\n"
+                "- Monitoring data tracking acknowledgment reliability\n"
+                "- Procedures for handling acknowledgment failures\n"
+                "- Historical records demonstrating consistent acknowledgment practice\n\n"
+                
+                "'SHOULD' INTERPRETATION:\n"
+                "FRR-FSI-13 uses PRIMARY_KEYWORD 'SHOULD', meaning this is a recommended practice but "
+                "not mandatory. However, best practices suggest implementing automatic acknowledgment:\n"
+                "- Improves communication with FedRAMP\n"
+                "- Demonstrates professionalism and responsiveness\n"
+                "- Provides assurance that messages were received\n"
+                "- Reduces follow-up inquiries from FedRAMP\n"
+                "- Minimal implementation effort (simple email system configuration)\n\n"
+                
+                "RELATIONSHIP TO OTHER REQUIREMENTS:\n"
+                "FRR-FSI-13 supports other FSI requirements:\n"
+                "- FRR-FSI-09: Establish FSI email address\n"
+                "- FRR-FSI-11: Maintain FSI without disruption (acknowledgment demonstrates availability)\n"
+                "- FRR-FSI-14/15/16: Response timeframe requirements (acknowledgment confirms receipt before "
+                "  full response required)\n"
+                "Automatic acknowledgment provides immediate confirmation while CSP prepares full response "
+                "within required timeframe.\n\n"
+                
+                "NOT APPLICABLE: This requirement cannot be validated through automated code analysis, "
+                "IaC scanning, or CI/CD pipeline checks. Compliance is demonstrated through email system "
+                "configuration, acknowledgment message logs, and operational procedures, not code artifacts."
+            )
         }

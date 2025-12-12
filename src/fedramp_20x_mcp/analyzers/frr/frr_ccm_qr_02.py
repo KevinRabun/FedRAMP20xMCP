@@ -10,7 +10,7 @@ Impact Levels: Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -81,76 +81,41 @@ class FRR_CCM_QR_02_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-CCM-QR-02 compliance using AST.
+        Analyze Python code for FRR-CCM-QR-02 compliance.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        NOT APPLICABLE: This requirement mandates that providers MUST host
+        synchronous quarterly review meetings for Moderate/High impact systems.
+        It's a process/meeting requirement, not a code implementation requirement.
+        This is the mandatory version of FRR-CCM-QR-01 (which is SHOULD for Low).
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
+        return []
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze C# code for FRR-CCM-QR-02 compliance using AST.
+        Analyze C# code for FRR-CCM-QR-02 compliance.
         
-        TODO: Implement C# analysis
+        NOT APPLICABLE: Provider process requirement for hosting quarterly
+        review meetings (Moderate/High - mandatory). Not detectable in code.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        return []
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Java code for FRR-CCM-QR-02 compliance using AST.
+        Analyze Java code for FRR-CCM-QR-02 compliance.
         
-        TODO: Implement Java analysis
+        NOT APPLICABLE: Provider process requirement for hosting quarterly
+        review meetings (Moderate/High - mandatory). Not detectable in code.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        return []
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze TypeScript/JavaScript code for FRR-CCM-QR-02 compliance using AST.
+        Analyze TypeScript/JavaScript code for FRR-CCM-QR-02 compliance.
         
-        TODO: Implement TypeScript analysis
+        NOT APPLICABLE: Provider process requirement for hosting quarterly
+        review meetings (Moderate/High - mandatory). Not detectable in code.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
-        return findings
+        return []
     
     # ============================================================================
     # INFRASTRUCTURE AS CODE ANALYZERS (Regex-based)
@@ -160,32 +125,19 @@ class FRR_CCM_QR_02_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Bicep infrastructure code for FRR-CCM-QR-02 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        NOT APPLICABLE: Provider process requirement for hosting quarterly
+        review meetings. Not detectable in infrastructure.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        return []
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Terraform infrastructure code for FRR-CCM-QR-02 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        NOT APPLICABLE: Provider process requirement for hosting quarterly
+        review meetings. Not detectable in infrastructure.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        return []
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
@@ -195,85 +147,153 @@ class FRR_CCM_QR_02_Analyzer(BaseFRRAnalyzer):
         """
         Analyze GitHub Actions workflow for FRR-CCM-QR-02 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        NOT APPLICABLE: Provider process requirement for hosting quarterly
+        review meetings. Not detectable in CI/CD.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Azure Pipelines YAML for FRR-CCM-QR-02 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        NOT APPLICABLE: Provider process requirement for hosting quarterly
+        review meetings. Not detectable in CI/CD.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze GitLab CI YAML for FRR-CCM-QR-02 compliance.
         
-        TODO: Implement GitLab CI analysis
+        NOT APPLICABLE: Provider process requirement for hosting quarterly
+        review meetings. Not detectable in CI/CD.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> List[Dict[str, Any]]:
         """
-        Get recommendations for automating evidence collection for FRR-CCM-QR-02.
+        Get automated queries for evidence collection.
         
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        Returns queries that can be executed against cloud platforms,
+        logging systems, or configuration management tools.
+        """
+        return [
+            {
+                "query_type": "Calendar/Meeting System",
+                "platform": "Microsoft 365, Google Calendar, etc.",
+                "query": "Search for recurring meetings with 'Quarterly Review' or 'QR' in title every 3 months",
+                "description": "Verify provider hosts quarterly review meetings at 3-month intervals (MUST for Moderate/High)"
+            },
+            {
+                "query_type": "Meeting Attendance Records",
+                "platform": "Meeting system, ticketing system",
+                "query": "List attendees for Quarterly Review meetings to verify 'all necessary parties' are invited",
+                "description": "Confirm agencies and other necessary parties have access to quarterly reviews"
+            },
+            {
+                "query_type": "Compliance Tracking",
+                "platform": "Compliance management system",
+                "query": "Verify quarterly review schedule maintained for all Moderate/High impact systems",
+                "description": "Ensure MUST requirement is met for Moderate/High (unlike SHOULD for Low in QR-01)"
+            }
+        ]
+    
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        """
+        Get list of evidence artifacts to collect.
+        
+        Returns specific files, logs, configurations, or documentation
+        that demonstrate compliance.
+        """
+        return [
+            {
+                "artifact_type": "Quarterly Review Meeting Invitations",
+                "location": "Calendar system",
+                "description": "Calendar invitations for quarterly review meetings every 3 months, showing 'all necessary parties' invited (MANDATORY for Moderate/High)",
+                "collection_method": "Export from calendar system"
+            },
+            {
+                "artifact_type": "Quarterly Review Meeting Minutes",
+                "location": "Document repository",
+                "description": "Minutes/notes from quarterly review meetings showing discussions of relevant Ongoing Authorization Report aspects",
+                "collection_method": "Manual - Collect from document storage"
+            },
+            {
+                "artifact_type": "Quarterly Review Attendance Records",
+                "location": "Meeting system",
+                "description": "Attendance records showing which agencies and necessary parties participated in quarterly reviews",
+                "collection_method": "Export from meeting system"
+            },
+            {
+                "artifact_type": "Quarterly Review Schedule",
+                "location": "Project management system",
+                "description": "Schedule showing quarterly review meetings planned at 3-month intervals throughout the year (mandatory compliance)",
+                "collection_method": "Manual - Export from project tracking"
+            },
+            {
+                "artifact_type": "Quarterly Review Agendas",
+                "location": "Document repository",
+                "description": "Agendas for quarterly reviews showing topics from Ongoing Authorization Reports determined most relevant to agencies",
+                "collection_method": "Manual - Collect from document storage"
+            },
+            {
+                "artifact_type": "Meeting Recordings (Optional)",
+                "location": "Video conferencing system",
+                "description": "Recordings of quarterly review meetings demonstrating synchronous nature and agency participation",
+                "collection_method": "Export from video platform"
+            },
+            {
+                "artifact_type": "Necessary Parties List",
+                "location": "Compliance documentation",
+                "description": "Documentation defining who 'all necessary parties' are for quarterly reviews (agencies, FedRAMP, etc.)",
+                "collection_method": "Manual - Collect from compliance records"
+            },
+            {
+                "artifact_type": "Ongoing Authorization Report References",
+                "location": "Quarterly review materials",
+                "description": "References showing which aspects of Ongoing Authorization Reports were reviewed in each quarterly meeting",
+                "collection_method": "Manual - Extract from meeting materials"
+            },
+            {
+                "artifact_type": "Agency Feedback Records",
+                "location": "Email, ticketing system",
+                "description": "Agency feedback on quarterly reviews showing engagement and value",
+                "collection_method": "Manual - Email/ticket archives"
+            },
+            {
+                "artifact_type": "Compliance Attestation",
+                "location": "Compliance documentation",
+                "description": "Attestation that provider hosts quarterly reviews as required for Moderate/High systems (MUST requirement)",
+                "collection_method": "Manual - Compliance team creates"
+            }
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get recommendations for automating evidence collection.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "automated_queries": self.get_evidence_collection_queries(),
+            "evidence_artifacts": self.get_evidence_artifacts(),
+            "implementation_notes": [
+                "NOT APPLICABLE for code analysis - This is a provider meeting/process requirement (Moderate/High - MANDATORY)",
+                "Requirement: Providers MUST host synchronous Quarterly Reviews every 3 months with all necessary parties",
+                "Frequency: Every 3 months (quarterly)",
+                "Format: Synchronous (real-time meeting, not asynchronous)",
+                "Attendees: Open to 'all necessary parties' (agencies using the service, potentially FedRAMP)",
+                "Content: Review aspects of recent Ongoing Authorization Reports most relevant to agencies",
+                "Impact Levels: Moderate and High ONLY (MUST requirement)",
+                "Difference from QR-01: QR-01 is SHOULD for Low impact; QR-02 is MUST for Moderate/High",
+                "No Opt-Out: Unlike QR-01, there is no option to document decision not to host (MUST is mandatory)",
+                "Key Evidence: Meeting invitations/schedules at 3-month intervals, attendance records, meeting minutes, agendas",
+                "Automation Level: Partial - Can query calendar systems and document repositories for meeting artifacts",
+                "Related Requirements: FRR-CCM-QR-01 (Low impact SHOULD version), FRR-ADS-06/07 (authorization data)",
+                "Provider Determines: Which aspects of Ongoing Authorization Reports are most relevant to agencies for review",
+                "Compliance Critical: This is mandatory for Moderate/High - failure to host quarterly reviews is non-compliance",
+                "Monitoring: Track quarterly review schedule, attendance patterns, agency participation rates"
             ]
         }

@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -83,74 +83,45 @@ class FRR_CCM_AG_04_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Python code for FRR-CCM-AG-04 compliance using AST.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        **NOT APPLICABLE:** This is an AGENCY requirement about notifying providers.
+        Agencies SHOULD formally notify providers of significant concerns - this is a
+        governance/communication requirement for agencies, not a code implementation
+        requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
+        return []
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze C# code for FRR-CCM-AG-04 compliance using AST.
         
-        TODO: Implement C# analysis
+        **NOT APPLICABLE:** This is an AGENCY requirement about notifying providers.
+        Agencies SHOULD formally notify providers of significant concerns - this is a
+        governance/communication requirement for agencies, not a code implementation
+        requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        return []
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Java code for FRR-CCM-AG-04 compliance using AST.
         
-        TODO: Implement Java analysis
+        **NOT APPLICABLE:** This is an AGENCY requirement about notifying providers.
+        Agencies SHOULD formally notify providers of significant concerns - this is a
+        governance/communication requirement for agencies, not a code implementation
+        requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        return []
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze TypeScript/JavaScript code for FRR-CCM-AG-04 compliance using AST.
         
-        TODO: Implement TypeScript analysis
+        **NOT APPLICABLE:** This is an AGENCY requirement about notifying providers.
+        Agencies SHOULD formally notify providers of significant concerns - this is a
+        governance/communication requirement for agencies, not a code implementation
+        requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
-        return findings
+        return []
     
     # ============================================================================
     # INFRASTRUCTURE AS CODE ANALYZERS (Regex-based)
@@ -160,32 +131,23 @@ class FRR_CCM_AG_04_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Bicep infrastructure code for FRR-CCM-AG-04 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        **NOT APPLICABLE:** This is an AGENCY requirement about notifying providers.
+        Agencies SHOULD formally notify providers of significant concerns - this is a
+        governance/communication requirement for agencies, not a code implementation
+        requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        return []
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Terraform infrastructure code for FRR-CCM-AG-04 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        **NOT APPLICABLE:** This is an AGENCY requirement about notifying providers.
+        Agencies SHOULD formally notify providers of significant concerns - this is a
+        governance/communication requirement for agencies, not a code implementation
+        requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        return []
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
@@ -195,85 +157,135 @@ class FRR_CCM_AG_04_Analyzer(BaseFRRAnalyzer):
         """
         Analyze GitHub Actions workflow for FRR-CCM-AG-04 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        **NOT APPLICABLE:** This is an AGENCY requirement about notifying providers.
+        Agencies SHOULD formally notify providers of significant concerns - this is a
+        governance/communication requirement for agencies, not a code implementation
+        requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Azure Pipelines YAML for FRR-CCM-AG-04 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        **NOT APPLICABLE:** This is an AGENCY requirement about notifying providers.
+        Agencies SHOULD formally notify providers of significant concerns - this is a
+        governance/communication requirement for agencies, not a code implementation
+        requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze GitLab CI YAML for FRR-CCM-AG-04 compliance.
         
-        TODO: Implement GitLab CI analysis
+        **NOT APPLICABLE:** This is an AGENCY requirement about notifying providers.
+        Agencies SHOULD formally notify providers of significant concerns - this is a
+        governance/communication requirement for agencies, not a code implementation
+        requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> List[str]:
         """
-        Get recommendations for automating evidence collection for FRR-CCM-AG-04.
+        Returns Azure Resource Graph and KQL queries for evidence collection.
         
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        Note: This is an AGENCY requirement. Evidence focuses on agency documentation
+        of formal notifications sent to providers about significant concerns.
+        """
+        return [
+            # Query 1: Provider tracking of received agency concerns (optional)
+            """// Optional: CSP can track formal notifications received from agencies
+AppEvents
+| where TimeGenerated > ago(180d)
+| where Name == 'AgencyNotification' or Name == 'AgencyConcernReceived'
+| extend AgencyId = tostring(Properties.agency_id)
+| extend SeverityLevel = tostring(Properties.severity)
+| where SeverityLevel == 'Significant' or SeverityLevel == 'High'
+| project TimeGenerated, AgencyId, Name, Properties
+| order by TimeGenerated desc""",
+            
+            # Query 2: Not applicable - agency-side communication tracking
+            """// NOT APPLICABLE: This requirement applies to agency communication
+// Agencies must track formal notifications sent to providers
+// Provider evidence: Receipt logs, response documentation""",
+            
+            # Query 3: Provider incident management (related)
+            """// Related: Track provider responses to agency concerns
+AppEvents
+| where TimeGenerated > ago(180d)
+| where Name contains 'AgencyConcern' or Name contains 'EscalationResponse'
+| extend AgencyId = tostring(Properties.agency_id)
+| summarize ResponseCount = count() by AgencyId, bin(TimeGenerated, 30d)
+| order by TimeGenerated desc"""
+        ]
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Returns list of evidence artifacts to collect.
+        """
+        return [
+            "Agency formal notification letters to provider",
+            "Agency documentation of significant concerns identified",
+            "Agency correspondence regarding potential service removal",
+            "Provider receipt acknowledgments of agency notifications",
+            "Agency escalation procedures for significant concerns",
+            "Agency risk assessment triggering notification",
+            "Provider response to agency concerns",
+            "Agency decision records on continued use of CSO",
+            "Agency communication policy for provider notifications",
+            "Timeline of agency-provider communications regarding concerns"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Provides recommendations for automated evidence collection.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "automated_queries": [
+                {
+                    "name": "Agency Notification Receipt Tracking",
+                    "description": "Optional: Track formal notifications received from agencies",
+                    "query": """AppEvents
+| where TimeGenerated > ago(180d)
+| where Name == 'AgencyNotificationReceived'
+| extend AgencyId = tostring(Properties.agency_id)
+| summarize NotificationCount = count() by AgencyId, bin(TimeGenerated, 30d)
+| order by TimeGenerated desc""",
+                    "schedule": "Monthly",
+                    "note": "CSP can track but cannot enforce agency notification practices"
+                }
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "evidence_artifacts": [
+                {
+                    "name": "Agency Notification Letters",
+                    "description": "Formal letters from agencies regarding significant concerns",
+                    "location": "Agency-provided documentation / secure email archive",
+                    "note": "Provider receives these - agency-generated artifact"
+                },
+                {
+                    "name": "Provider Response Documentation",
+                    "description": "Provider acknowledgments and responses to agency concerns",
+                    "location": "Internal correspondence / customer management system",
+                    "note": "CSP should maintain records of all formal agency communications"
+                }
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "implementation_notes": [
+                "This is an AGENCY requirement - agencies SHOULD notify providers",
+                "Applies when: Agency has significant concerns from reports or reviews",
+                "Significant concerns: Issues that may lead to service removal from operation",
+                "Provider responsibility: Accept and respond to agency notifications",
+                "Agency responsibility: Formally notify provider of significant concerns",
+                "'Formally notify' indicates official, documented communication",
+                "Notification triggers: Ongoing Authorization Report issues, Quarterly Review findings",
+                "Provider can support: Maintain clear escalation contacts for agencies",
+                "Provider can support: Acknowledge receipt of agency notifications promptly",
+                "Provider can support: Respond to concerns with remediation plans",
+                "Evidence source: Agency correspondence and provider receipt logs",
+                "This is communication/governance, not technical implementation"
             ]
         }

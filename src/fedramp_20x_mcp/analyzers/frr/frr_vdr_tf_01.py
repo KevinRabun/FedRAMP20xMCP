@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,170 @@ class FRR_VDR_TF_01_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> List[Dict[str, str]]:
+        """
+        Get specific queries for evidence collection automation for FRR-VDR-TF-01.
+        
+        Returns:
+            List of query dictionaries for collecting monthly VDR reports
+        """
+        return [
+            {
+                "query_type": "Azure Storage Account REST API",
+                "query_name": "List monthly VDR reports",
+                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Storage/storageAccounts/{accountName}/blobServices/default/containers/vdr-reports/blobs?api-version=2022-09-01&prefix=monthly/{YYYY}/{MM}/",
+                "purpose": "Retrieve all monthly vulnerability detection and response reports from centralized storage"
+            },
+            {
+                "query_type": "Microsoft Defender for Cloud REST API",
+                "query_name": "Vulnerability assessment summary for report period",
+                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.Security/assessments?api-version=2020-01-01&$filter=properties/status/code eq 'Unhealthy' and properties/metadata/assessmentType eq 'Vulnerability' and properties/status/firstEvaluationDate ge '{startDate}' and properties/status/firstEvaluationDate le '{endDate}'",
+                "purpose": "Collect vulnerability findings discovered during the reporting month for inclusion in monthly report"
+            },
+            {
+                "query_type": "Azure DevOps REST API",
+                "query_name": "Vulnerability remediation work items completed in month",
+                "query": "GET https://dev.azure.com/{organization}/{project}/_apis/wit/wiql?api-version=7.0 (WIQL: SELECT [System.Id], [System.Title], [Microsoft.VSTS.Common.ResolvedDate], [Custom.CVE] FROM WorkItems WHERE [System.WorkItemType] = 'Vulnerability' AND [System.State] = 'Closed' AND [Microsoft.VSTS.Common.ResolvedDate] >= '{startDate}' AND [Microsoft.VSTS.Common.ResolvedDate] < '{endDate}')",
+                "purpose": "Query remediated vulnerabilities to show response activity in monthly report"
+            },
+            {
+                "query_type": "Azure Monitor KQL",
+                "query_name": "Vulnerability scanning execution logs for month",
+                "query": """AzureDiagnostics
+| where ResourceProvider == "MICROSOFT.SECURITY"
+| where Category == "VulnerabilityAssessment"
+| where TimeGenerated >= datetime({startDate}) and TimeGenerated < datetime({endDate})
+| summarize ScanCount = count(), LastScan = max(TimeGenerated), Resources = dcount(ResourceId) by ScanType = OperationName
+| project ScanType, ScanCount, LastScan, Resources
+| order by ScanCount desc""",
+                "purpose": "Document vulnerability scanning activity (detection) for monthly report"
+            },
+            {
+                "query_type": "Power BI REST API",
+                "query_name": "Monthly VDR dashboard report export",
+                "query": "POST https://api.powerbi.com/v1.0/myorg/groups/{groupId}/reports/{reportId}/ExportTo (body: {\"format\": \"PDF\", \"powerBIReportConfiguration\": {\"reportLevelFilters\": [{\"filter\": \"Month eq '{YYYY-MM}'\"}]}})",
+                "purpose": "Export human-readable PDF dashboard showing VDR activity for the month (detection metrics, response metrics, trends)"
+            },
+            {
+                "query_type": "Microsoft Purview REST API",
+                "query_name": "Monthly report distribution log",
+                "query": "GET https://graph.microsoft.com/v1.0/sites/{siteId}/lists/VDR-Report-Distribution/items?$filter=fields/ReportMonth eq '{YYYY-MM}'&$select=fields",
+                "purpose": "Verify monthly report was distributed to all necessary parties (CISO, Authorizing Official, FedRAMP PMO)"
+            }
+        ]
+    
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        """
+        Get descriptions of evidence artifacts to collect for FRR-VDR-TF-01.
+        
+        Returns:
+            List of artifact dictionaries describing required reports
+        """
+        return [
+            {
+                "artifact_name": "Monthly Vulnerability Detection and Response Report",
+                "artifact_type": "PDF report (human-readable)",
+                "description": "Comprehensive monthly report in consistent format showing: vulnerabilities detected (count by severity, trends), remediation activity (closed vulnerabilities, MTTR), scanning coverage (% of assets scanned), and executive summary",
+                "collection_method": "Power BI report export to PDF via REST API, or Azure Logic App aggregating Defender for Cloud + DevOps data into Word template",
+                "storage_location": "Azure Storage Account /evidence/frr-vdr-tf-01/monthly-reports/{YYYY-MM}/"
+            },
+            {
+                "artifact_name": "Report Distribution Evidence",
+                "artifact_type": "Excel spreadsheet or SharePoint list export",
+                "description": "Log showing monthly report was sent to all necessary parties including: recipient names, email delivery confirmation, send date, acknowledgment date",
+                "collection_method": "Export from SharePoint list tracking report distribution, or query Microsoft Graph API for email send confirmation",
+                "storage_location": "Azure Storage Account /evidence/frr-vdr-tf-01/distribution-logs/{YYYY-MM}/"
+            },
+            {
+                "artifact_name": "Vulnerability Detection Activity Data",
+                "artifact_type": "JSON or CSV file",
+                "description": "Raw data supporting the monthly report showing: scan execution logs, vulnerability findings discovered in month (with CVE IDs, severity, affected resources), scan coverage metrics",
+                "collection_method": "Azure Monitor KQL query export and Microsoft Defender for Cloud REST API export",
+                "storage_location": "Azure Storage Account /evidence/frr-vdr-tf-01/detection-data/{YYYY-MM}/"
+            },
+            {
+                "artifact_name": "Vulnerability Response Activity Data",
+                "artifact_type": "JSON or CSV file",
+                "description": "Raw data showing remediation activity: closed/resolved vulnerabilities, mean time to remediation (MTTR), overdue vulnerabilities, remediation trends",
+                "collection_method": "Azure DevOps work item query export via REST API",
+                "storage_location": "Azure Storage Account /evidence/frr-vdr-tf-01/response-data/{YYYY-MM}/"
+            },
+            {
+                "artifact_name": "Monthly Report Template and Format Specification",
+                "artifact_type": "Word/PDF template document",
+                "description": "Documented template showing consistent report format including required sections (executive summary, detection metrics, response metrics, trends, action items), ensuring human readability standards",
+                "collection_method": "Store versioned report template in Azure Storage or SharePoint document library",
+                "storage_location": "Azure Storage Account /evidence/frr-vdr-tf-01/report-template/"
+            },
+            {
+                "artifact_name": "12-Month VDR Reporting Archive",
+                "artifact_type": "ZIP file or folder of PDFs",
+                "description": "Complete archive of 12 consecutive monthly VDR reports demonstrating ongoing compliance with monthly reporting requirement",
+                "collection_method": "Automated Azure Logic App collecting monthly reports into annual archive each January",
+                "storage_location": "Azure Storage Account /evidence/frr-vdr-tf-01/annual-archive/{YYYY}/"
+            }
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
         """
         Get recommendations for automating evidence collection for FRR-VDR-TF-01.
         
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        Returns:
+            Dict containing automation recommendations
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "frr_id": self.FRR_ID,
+            "frr_name": self.FRR_NAME,
+            "primary_keyword": "MUST",
+            "impact_levels": ["Low", "Moderate", "High"],
+            "evidence_type": "automated report generation with manual review",
+            "automation_feasibility": "high",
+            "azure_services": [
+                "Power BI (for human-readable dashboard and PDF export)",
+                "Azure Logic Apps (for automated monthly report generation and distribution)",
+                "Microsoft Defender for Cloud (vulnerability detection data source)",
+                "Azure DevOps (vulnerability remediation tracking)",
+                "Azure Monitor (scanning activity logs)",
+                "Microsoft Graph API (email distribution verification)",
+                "Azure Storage Account (report archive)"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "collection_methods": [
+                "Power BI scheduled report export to PDF (human-readable format)",
+                "Azure Logic App trigger on 1st of month to aggregate detection and response data",
+                "Microsoft Defender for Cloud REST API for vulnerability findings summary",
+                "Azure DevOps REST API for remediation activity metrics",
+                "Azure Monitor KQL query for scanning coverage and execution logs",
+                "Microsoft Graph API to send report via email to distribution list",
+                "SharePoint list or Azure Table Storage to track distribution and acknowledgments"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
+            "implementation_steps": [
+                "1. Create Power BI workspace with VDR dashboard connecting to Defender for Cloud, Azure DevOps, and Azure Monitor data sources",
+                "2. Design Power BI report with human-readable visualizations: vulnerability trends, detection/response metrics, executive summary page",
+                "3. Configure Power BI scheduled export to PDF on 1st of each month via REST API",
+                "4. Deploy Azure Logic App with monthly recurrence trigger to orchestrate report generation workflow",
+                "5. Logic App steps: (a) Export Power BI report to PDF, (b) Upload to Azure Storage, (c) Send email via Graph API to distribution list, (d) Log distribution in SharePoint list",
+                "6. Create SharePoint list 'VDR-Report-Distribution' with columns: ReportMonth, RecipientName, SentDate, AcknowledgedDate",
+                "7. Implement Power Automate flow to track email opens and log acknowledgments in SharePoint list",
+                "8. Configure Azure Storage lifecycle management for 7-year retention of monthly reports",
+                "9. Document report template and format specification in Azure Storage /report-template/",
+                "10. Create annual Logic App (January trigger) to archive previous 12 months of reports into ZIP file for assessors"
             ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
+            "evidence_artifacts": [
+                "Monthly Vulnerability Detection and Response Report (PDF)",
+                "Report Distribution Evidence (SharePoint list export)",
+                "Vulnerability Detection Activity Data (JSON/CSV)",
+                "Vulnerability Response Activity Data (JSON/CSV)",
+                "Monthly Report Template and Format Specification (Word/PDF)",
+                "12-Month VDR Reporting Archive (ZIP)"
             ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
-            ]
+            "manual_validation_steps": [
+                "1. Review 3 consecutive monthly reports to verify consistent format (same sections, same metrics, human-readable)",
+                "2. Verify report is human-readable: no raw JSON/XML, includes executive summary, uses charts/tables, avoids technical jargon",
+                "3. Confirm report includes both detection activity (scans run, vulnerabilities found) and response activity (vulnerabilities remediated, MTTR)",
+                "4. Check distribution log to ensure report sent to all necessary parties (CISO, Authorizing Official, FedRAMP PMO, security team)",
+                "5. Verify monthly cadence: reports generated every month, no gaps in 12-month period",
+                "6. Interview security team to confirm report recipients find format useful and actionable"
+            ],
+            "update_frequency": "Monthly (automated generation on 1st of month)",
+            "responsible_party": "Security Operations Team / GRC Team"
         }

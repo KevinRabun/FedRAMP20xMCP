@@ -10,7 +10,7 @@ Impact Levels: Low
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,50 @@ class FRR_VDR_TF_LO_01_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-TF-LO-01.
+        Get queries for collecting evidence of monthly machine-readable VDR history (Low impact).
         
-        TODO: Add evidence collection guidance
+        Returns queries to verify historical VDR data available in machine-readable format, updated monthly.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "API service availability for VDR history": [
+                "ApiManagement | where TimeGenerated > ago(30d) | where ApiPath contains 'vulnerability' or ApiPath contains 'vdr' | summarize RequestCount=count(), UniqueCallers=dcount(CallerIPAddress) by bin(TimeGenerated, 7d)",
+                "ApplicationInsights | where TimeGenerated > ago(30d) | where OperationName contains 'GetVulnerabilityHistory' | project TimeGenerated, ResultCode, ResponseTime, CallerIdentity"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "Machine-readable format verification": [
+                "ApiResponses | where TimeGenerated > ago(30d) | where Endpoint contains 'vdr/history' | extend IsMachineReadable = (ContentType in ('application/json', 'application/xml', 'text/csv')) | summarize MachineReadableCount=countif(IsMachineReadable), TotalResponses=count()",
+                "DataExports | where ExportType == 'VDR History' | where TimeGenerated > ago(30d) | project TimeGenerated, Format, RecordCount, ExportedTo"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "Monthly update frequency verification": [
+                "VulnerabilityDataUpdates | summarize LastUpdate=max(TimeGenerated) by DataType | extend DaysSinceUpdate=datetime_diff('day', now(), LastUpdate) | where DaysSinceUpdate <= 30",
+                "DataRefreshJobs | where JobType == 'VDR History Sync' | where TimeGenerated > ago(30d) | summarize RefreshCount=count() by bin(TimeGenerated, 7d) | where RefreshCount >= 1"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for monthly machine-readable VDR history.
+        """
+        return [
+            "API service documentation for VDR history endpoint (machine-readable formats: JSON, XML, CSV)",
+            "API access logs showing authorized party usage (last 90 days)",
+            "Data refresh job schedules and execution logs (at least monthly updates for Low impact)",
+            "Sample API responses demonstrating machine-readable format (JSON/XML/CSV structures)",
+            "Historical data retention policy (minimum 30 days for Low impact systems)",
+            "API authentication and authorization configurations (necessary parties access)",
+            "Data freshness monitoring alerts (trigger if updates exceed 30 days)",
+            "Integration examples for automated VDR data retrieval"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Get recommendations for automating evidence collection.
+        """
+        return {
+            "REST API implementation": "Implement RESTful API for VDR history providing machine-readable formats (JSON/XML/CSV) with authentication for necessary parties (Azure API Management, OAuth2)",
+            "Automated monthly updates": "Schedule automated data refresh jobs at least every 30 days for Low impact systems (Azure Data Factory, scheduled Logic Apps)",
+            "Machine-readable format enforcement": "Ensure all API responses use structured machine-readable formats, avoid PDF/human-only formats (JSON schema validation, OpenAPI specifications)",
+            "Data freshness monitoring": "Implement automated monitoring of data update frequency, alert if updates exceed 30-day threshold (Azure Monitor alerts, custom metrics)",
+            "Access tracking": "Log all API access by authorized parties, track usage patterns and data consumption (API Management analytics, Application Insights)"
         }

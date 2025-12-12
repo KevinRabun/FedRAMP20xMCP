@@ -291,32 +291,23 @@ class FRR_ADS_02_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Bicep infrastructure code for FRR-ADS-02 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        FRR-ADS-02 requires automation to ensure consistency between human-readable
+        and machine-readable authorization data formats. Infrastructure code analysis
+        is not directly applicable since this requirement focuses on documentation
+        generation automation, not infrastructure resources.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        return []
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Terraform infrastructure code for FRR-ADS-02 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        FRR-ADS-02 requires automation to ensure consistency between human-readable
+        and machine-readable authorization data formats. Infrastructure code analysis
+        is not directly applicable since this requirement focuses on documentation
+        generation automation, not infrastructure resources.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        return []
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
@@ -426,6 +417,7 @@ class FRR_ADS_02_Analyzer(BaseFRRAnalyzer):
             'frr_id': self.FRR_ID,
             'frr_name': self.FRR_NAME,
             'code_detectable': 'Yes',
+            'automation_feasibility': 'High - Can automate detection of format conversion functions, CI/CD pipeline analysis, build artifact comparison, and consistency verification',
             'automation_approach': 'Automated detection of format consistency automation through code analysis (document generators, converters) and CI/CD pipeline scanning',
             'evidence_artifacts': [
                 'Source code with format conversion functions',
@@ -457,6 +449,30 @@ class FRR_ADS_02_Analyzer(BaseFRRAnalyzer):
                 'Azure Static Web Apps for documentation hosting',
                 'Git for version control and single source'
             ],
+            'azure_services': [
+                'Azure DevOps (CI/CD pipelines for automated doc generation)',
+                'Azure Static Web Apps (hosting generated documentation)',
+                'Azure Storage (storing build artifacts and generated formats)',
+                'Azure Repos (version control for single source of truth)',
+                'Azure Pipelines (build automation for format consistency)'
+            ],
+            'collection_methods': [
+                'Static code analysis to detect format conversion functions',
+                'CI/CD pipeline configuration scanning',
+                'Build artifact comparison (timestamp and content analysis)',
+                'Git repository analysis for single-source documentation',
+                'Automated format consistency validation',
+                'Build log analysis for generation process verification'
+            ],
+            'implementation_steps': [
+                '1. Scan codebase for format conversion/generation functions (oscal_to_html, json_to_markdown, etc.)',
+                '2. Analyze CI/CD pipelines for documentation generation automation',
+                '3. Compare generated artifacts (HTML vs JSON) for content consistency',
+                '4. Verify timestamps show simultaneous generation from same source',
+                '5. Check Git history confirms single source of truth for documentation',
+                '6. Review build logs to confirm automated generation process',
+                '7. Test format conversion automation with sample inputs'
+            ],
             'integration_points': [
                 'CI/CD automation for consistent generation',
                 'OSCAL format export for compliance reporting',
@@ -465,3 +481,197 @@ class FRR_ADS_02_Analyzer(BaseFRRAnalyzer):
                 'Documentation as code practices'
             ]
         }
+    
+    def get_evidence_collection_queries(self) -> List[dict]:
+        """
+        Get specific queries for collecting FRR-ADS-02 evidence.
+        
+        Returns:
+            List of evidence collection queries specific to format consistency verification
+        """
+        return [
+            {
+                'method_type': 'Code Analysis',
+                'name': 'Format Conversion Function Detection',
+                'description': 'Scan source code repositories for format conversion and document generation functions',
+                'command': 'grep -r -E "(oscal_to_html|json_to_markdown|render_template|generate_docs|to_html|to_markdown|ObjectMapper|JsonSerializer)" src/ --include="*.py" --include="*.cs" --include="*.java" --include="*.ts"',
+                'purpose': 'Identify automated format conversion functions that ensure consistency between human-readable and machine-readable formats',
+                'evidence_type': 'Source code with format conversion automation',
+                'validation_checks': [
+                    'Verify functions convert from single source to multiple formats',
+                    'Check for bidirectional consistency (HTML ↔ JSON)',
+                    'Confirm error handling for format conversion failures',
+                    'Validate input validation before conversion'
+                ],
+                'storage_location': 'Evidence/ADS-02/code-analysis-reports/'
+            },
+            {
+                'method_type': 'CI/CD Pipeline Scan',
+                'name': 'Documentation Generation Pipeline Analysis',
+                'description': 'Analyze CI/CD pipeline configurations for automated documentation generation',
+                'command': 'find .github/workflows/ .azure-pipelines/ .gitlab-ci.yml -type f -exec grep -l -E "(mkdocs|sphinx-build|docusaurus|generate.*docs|oscal.*convert)" {} \\;',
+                'purpose': 'Verify CI/CD pipelines automatically generate both human-readable and machine-readable formats from single source',
+                'evidence_type': 'CI/CD pipeline configuration files',
+                'validation_checks': [
+                    'Pipeline generates both HTML and JSON/OSCAL formats',
+                    'Generation happens in same build step from same source',
+                    'Build fails if formats are inconsistent',
+                    'Artifacts are stored with matching timestamps'
+                ],
+                'storage_location': 'Evidence/ADS-02/pipeline-configurations/'
+            },
+            {
+                'method_type': 'Build Artifact Comparison',
+                'name': 'Format Consistency Verification',
+                'description': 'Compare generated human-readable and machine-readable formats for content consistency',
+                'command': 'python scripts/compare_formats.py --html docs/output.html --json docs/output.json --report evidence/consistency-report.json',
+                'purpose': 'Validate that human-readable HTML and machine-readable JSON contain identical information',
+                'evidence_type': 'Format consistency comparison report',
+                'validation_checks': [
+                    'All data fields present in both formats',
+                    'Values match exactly between formats',
+                    'Timestamps indicate simultaneous generation',
+                    'No data loss or transformation errors'
+                ],
+                'storage_location': 'Evidence/ADS-02/consistency-reports/'
+            },
+            {
+                'method_type': 'Git Repository Analysis',
+                'name': 'Single Source Documentation Verification',
+                'description': 'Analyze Git repository to confirm single source of truth for documentation',
+                'command': 'git log --all --oneline --name-only -- docs/source/ | grep -E "(README|docs/source/)" | head -100',
+                'purpose': 'Verify documentation is maintained in single source location and generated formats are derived, not manually edited',
+                'evidence_type': 'Git commit history showing documentation source management',
+                'validation_checks': [
+                    'Changes only occur in source directory (e.g., docs/source/)',
+                    'Generated formats (HTML/JSON) are not manually edited',
+                    'Build automation regenerates outputs on source changes',
+                    'No direct commits to generated format directories'
+                ],
+                'storage_location': 'Evidence/ADS-02/git-analysis/'
+            },
+            {
+                'method_type': 'Build Log Analysis',
+                'name': 'Automated Generation Process Verification',
+                'description': 'Review CI/CD build logs to confirm automated format generation',
+                'command': 'curl -H "Authorization: Bearer $GITHUB_TOKEN" https://api.github.com/repos/{owner}/{repo}/actions/runs?event=push | jq ".workflow_runs[0].logs_url"',
+                'purpose': 'Confirm automation successfully generates both formats from single source during builds',
+                'evidence_type': 'CI/CD build logs showing format generation',
+                'validation_checks': [
+                    'Build logs show execution of format conversion commands',
+                    'Both HTML and JSON generation completed successfully',
+                    'No manual intervention during generation process',
+                    'Timestamps show sequential generation within same build'
+                ],
+                'storage_location': 'Evidence/ADS-02/build-logs/'
+            },
+            {
+                'method_type': 'OSCAL Validation',
+                'name': 'Machine-Readable Format Compliance',
+                'description': 'Validate generated OSCAL JSON files comply with FedRAMP schema requirements',
+                'command': 'oscal-cli validate --schema https://pages.nist.gov/OSCAL/schema/json/oscal-ssp-schema.json --file system-security-plan.json',
+                'purpose': 'Ensure machine-readable OSCAL format is valid and equivalent to human-readable documentation',
+                'evidence_type': 'OSCAL validation report',
+                'validation_checks': [
+                    'OSCAL JSON validates against official schema',
+                    'All required FedRAMP fields are present',
+                    'Content matches corresponding HTML documentation',
+                    'No schema validation errors or warnings'
+                ],
+                'storage_location': 'Evidence/ADS-02/oscal-validation/'
+            }
+        ]
+    
+    def get_evidence_artifacts(self) -> List[dict]:
+        """
+        Get list of evidence artifacts for FRR-ADS-02 compliance.
+        
+        Returns:
+            List of evidence artifacts specific to format consistency verification
+        """
+        return [
+            {
+                'artifact_name': 'Source Code Analysis Report',
+                'artifact_type': 'Code Scan Results',
+                'description': 'Report identifying all format conversion and document generation functions in source code',
+                'collection_method': 'Automated static code analysis using grep/AST parsers to detect conversion functions',
+                'validation_checks': [
+                    'Report lists all conversion functions (Python, C#, Java, TypeScript)',
+                    'Functions documented with input/output format specifications',
+                    'Error handling verified for conversion failures',
+                    'Code review confirms single-source-to-multiple-formats pattern'
+                ],
+                'storage_location': 'Evidence/ADS-02/code-analysis/source-code-report.json',
+                'retention_period': '7 years per FedRAMP requirements'
+            },
+            {
+                'artifact_name': 'CI/CD Pipeline Configuration',
+                'artifact_type': 'Pipeline YAML Files',
+                'description': 'GitHub Actions, Azure Pipelines, or GitLab CI configurations showing automated documentation generation',
+                'collection_method': 'Extract pipeline YAML files from repository and analyze for doc generation steps',
+                'validation_checks': [
+                    'Pipeline includes steps for both HTML and JSON generation',
+                    'Generation uses same source input for both formats',
+                    'Build fails if consistency checks fail',
+                    'Artifacts published include both formats with matching timestamps'
+                ],
+                'storage_location': 'Evidence/ADS-02/pipelines/workflow-configs/',
+                'retention_period': '7 years'
+            },
+            {
+                'artifact_name': 'Generated Format Samples',
+                'artifact_type': 'Documentation Artifacts',
+                'description': 'Sample outputs in both human-readable (HTML/Markdown) and machine-readable (JSON/OSCAL) formats from same source',
+                'collection_method': 'Capture build artifacts from recent pipeline runs showing both format outputs',
+                'validation_checks': [
+                    'HTML and JSON files generated from same CI/CD run',
+                    'Timestamps match (generated within same minute)',
+                    'Content comparison shows data consistency',
+                    'File sizes reasonable for complete documentation'
+                ],
+                'storage_location': 'Evidence/ADS-02/generated-formats/',
+                'retention_period': '7 years (retain quarterly samples)'
+            },
+            {
+                'artifact_name': 'Build Logs - Format Generation',
+                'artifact_type': 'CI/CD Execution Logs',
+                'description': 'Build logs showing automated execution of format conversion and documentation generation',
+                'collection_method': 'Download logs from CI/CD platform API (GitHub Actions, Azure DevOps, GitLab)',
+                'validation_checks': [
+                    'Logs show successful execution of generation commands',
+                    'Both format generation steps completed without errors',
+                    'Timestamps confirm sequential generation in same build',
+                    'No manual intervention logged during generation'
+                ],
+                'storage_location': 'Evidence/ADS-02/build-logs/',
+                'retention_period': '7 years (retain monthly samples)'
+            },
+            {
+                'artifact_name': 'Format Consistency Report',
+                'artifact_type': 'Validation Report',
+                'description': 'Automated comparison report verifying consistency between human-readable and machine-readable formats',
+                'collection_method': 'Run automated comparison script that parses both formats and validates data equivalence',
+                'validation_checks': [
+                    'All data fields present in both HTML and JSON',
+                    'Field values match exactly (no data loss or transformation)',
+                    'Structural consistency (sections, controls, parameters)',
+                    'No discrepancies identified between formats'
+                ],
+                'storage_location': 'Evidence/ADS-02/consistency-reports/',
+                'retention_period': '7 years (generate and retain monthly)'
+            },
+            {
+                'artifact_name': 'Git Repository Documentation Source History',
+                'artifact_type': 'Version Control Analysis',
+                'description': 'Git history showing single source of truth for documentation with no direct edits to generated formats',
+                'collection_method': 'Extract git log for documentation directories, analyze commit patterns to verify single-source approach',
+                'validation_checks': [
+                    'Source files (e.g., docs/source/) have commit history',
+                    'Generated format directories (e.g., docs/build/) excluded from version control or generated via CI/CD',
+                    'No manual commits editing HTML or JSON outputs directly',
+                    'All documentation changes flow through source → automation → formats'
+                ],
+                'storage_location': 'Evidence/ADS-02/git-analysis/',
+                'retention_period': '7 years (quarterly snapshots)'
+            }
+        ]

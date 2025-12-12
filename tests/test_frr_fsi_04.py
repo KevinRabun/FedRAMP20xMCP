@@ -33,9 +33,18 @@ def test_evidence_automation_recommendations():
     """Test evidence automation recommendations."""
     analyzer = FRR_FSI_04_Analyzer()
     
+    # Test evidence collection queries
+    queries = analyzer.get_evidence_collection_queries()
+    assert 'automated_queries' in queries, "Should have automated_queries key"
+    
+    # Test evidence artifacts
+    artifacts = analyzer.get_evidence_artifacts()
+    assert len(artifacts) > 0, "Should have evidence artifacts"
+    assert 'artifact_id' in artifacts[0], "Artifacts should have artifact_id"
+    
+    # Test automation recommendations
     recommendations = analyzer.get_evidence_automation_recommendations()
-    assert recommendations['frr_id'] == "FRR-FSI-04", "FRR_ID mismatch"
-    # TODO: Add more assertions for evidence recommendations
+    assert 'implementation_notes' in recommendations, "Should have implementation_notes key"
     
     print("[PASS] test_evidence_automation_recommendations PASSED")
 

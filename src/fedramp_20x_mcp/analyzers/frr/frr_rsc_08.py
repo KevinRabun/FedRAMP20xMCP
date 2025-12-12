@@ -61,7 +61,7 @@ class FRR_RSC_08_Analyzer(BaseFRRAnalyzer):
         ("CM-6", "Configuration Settings"),
         ("CM-2", "Baseline Configuration")
     ]
-    CODE_DETECTABLE = "Yes"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = []
     
@@ -249,47 +249,98 @@ class FRR_RSC_08_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> dict:
         """
-        Get recommendations for automating evidence collection for FRR-RSC-08.
+        Get KQL queries and API endpoints for collecting FRR-RSC-08 evidence.
         
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        Returns automated queries to collect evidence of machine-readable
+        configuration guidance (JSON/YAML/XML schemas) for secure settings.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "automated_queries": [
+                # Azure Blob Storage: Configuration guidance files
+                """Resources
+                | where type =~ 'microsoft.storage/storageaccounts'
+                | extend hasConfigDocs = properties contains 'config' or properties contains 'schema' or properties contains 'guidance'
+                | where hasConfigDocs == true
+                | project name, type, resourceGroup, subscriptionId, properties""",
+                
+                # Azure Monitor: Downloads of configuration guidance (last 90 days)
+                """AzureDiagnostics
+                | where Category == 'StorageRead' and TimeGenerated > ago(90d)
+                | where Uri_s contains 'secure-config' or Uri_s contains 'schema.json' or Uri_s contains 'baseline.yaml'
+                | summarize DownloadCount=count() by Uri_s, bin(TimeGenerated, 1d)
+                | order by TimeGenerated desc""",
+                
+                # Azure DevOps: Configuration guidance repositories
+                """Resources
+                | where type =~ 'microsoft.devops/repository'
+                | where name contains 'config' or name contains 'baseline' or name contains 'guidance'
+                | project name, type, resourceGroup, subscriptionId"""
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "manual_queries": [
+                "Review documentation for published configuration guidance files",
+                "Check DevOps repositories for baseline configuration schemas (JSON/YAML)",
+                "Verify customer-facing documentation includes machine-readable format downloads"
+            ]
+        }
+    
+    def get_evidence_artifacts(self) -> dict:
+        """
+        Get list of evidence artifacts for FRR-RSC-08 compliance.
+        
+        Returns documentation and sample machine-readable configuration guidance
+        files (JSON/YAML/XML schemas) for secure settings.
+        """
+        return {
+            "evidence_artifacts": [
+                "CONFIG-GUIDANCE.md - Documentation explaining machine-readable guidance",
+                "schemas/secure-baseline.json - JSON schema for secure configuration",
+                "schemas/secure-baseline.yaml - YAML version of secure configuration",
+                "schemas/config-schema.xsd - XML schema definition for validation",
+                "CUSTOMER-GUIDE.md - Instructions for customers to use guidance files",
+                "TOOL-INTEGRATION.md - How third-party tools can consume guidance",
+                "VERSION-HISTORY.md - Changelog for baseline configuration versions"
+            ]
+        }
+    
+    def get_evidence_automation_recommendations(self) -> dict:
+        """
+        Get recommendations for automating FRR-RSC-08 evidence collection.
+        
+        Returns guidance for creating and publishing machine-readable secure
+        configuration guidance for customers and third-party tools.
+        """
+        return {
+            "implementation_notes": [
+                "1. Create machine-readable guidance files",
+                "   - Generate JSON/YAML/XML schemas for secure configuration baselines",
+                "   - Include: all security settings, recommended values, rationale, NIST control mappings",
+                "   - Document schema structure and validation rules",
+                "   - Example: schemas/secure-baseline.json with all admin/privileged account settings",
+                "",
+                "2. Publish guidance for customer access",
+                "   - Host guidance files in Azure Blob Storage or GitHub repository",
+                "   - Make files publicly accessible or accessible to customers",
+                "   - Provide download links in customer documentation",
+                "   - Version guidance files (e.g., v1.0.0, v1.1.0) for tracking",
+                "",
+                "3. Document usage instructions",
+                "   - Create CUSTOMER-GUIDE.md explaining how to use guidance files",
+                "   - Provide code examples for parsing JSON/YAML/XML",
+                "   - Explain how to compare current settings against baseline",
+                "   - Include integration instructions for popular tools (Terraform, Ansible, PowerShell DSC)",
+                "",
+                "4. Automate guidance generation",
+                "   - Create CI/CD pipeline to generate updated guidance from IaC templates",
+                "   - Auto-publish new versions when baseline changes",
+                "   - Track guidance usage via download logs",
+                "   - Example: GitHub Actions workflow to export secure baselines to JSON/YAML",
+                "",
+                "5. Enable third-party tool integration",
+                "   - Provide REST API for programmatic access to guidance",
+                "   - Support standard formats (JSON Schema, OpenAPI, YAML)",
+                "   - Document API endpoints and authentication",
+                "   - Example: GET /api/config/baseline returns JSON with secure settings"
             ]
         }

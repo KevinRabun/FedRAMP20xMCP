@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import Dict, List, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -158,39 +158,42 @@ class FRR_ICP_06_Analyzer(BaseFRRAnalyzer):
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for FRR-ICP-06 compliance using AST.
-        
-        TODO: Implement C# analysis
-        """
+        """Analyze C# for data redaction/PII handling."""
         findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
+        has_redaction = bool(re.search(r'(Redact|Sanitize|Mask|Scrub)', code, re.IGNORECASE))
+        if not has_redaction:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID, requirement_id=self.FRR_ID,
+                title="No redaction mechanism", description=f"FRR-ICP-06 requires data redaction for responsible disclosure.",
+                severity=Severity.HIGH, file_path=file_path, line_number=1, code_snippet="",
+                recommendation="Implement data redaction mechanisms before sharing incident info"
+            ))
         return findings
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for FRR-ICP-06 compliance using AST.
-        
-        TODO: Implement Java analysis
-        """
+        """Analyze Java for data redaction/PII handling."""
         findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
+        has_redaction = bool(re.search(r'(redact|sanitize|mask|scrub)', code, re.IGNORECASE))
+        if not has_redaction:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID, requirement_id=self.FRR_ID,
+                title="No redaction mechanism", description=f"FRR-ICP-06 requires data redaction for responsible disclosure.",
+                severity=Severity.HIGH, file_path=file_path, line_number=1, code_snippet="",
+                recommendation="Implement data redaction mechanisms before sharing incident info"
+            ))
         return findings
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for FRR-ICP-06 compliance using AST.
-        
-        TODO: Implement TypeScript analysis
-        """
+        """Analyze TypeScript for data redaction/PII handling."""
         findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
+        has_redaction = bool(re.search(r'(redact|sanitize|mask|scrub)', code, re.IGNORECASE))
+        if not has_redaction:
+            findings.append(Finding(
+                ksi_id=self.FRR_ID, requirement_id=self.FRR_ID,
+                title="No redaction mechanism", description=f"FRR-ICP-06 requires data redaction for responsible disclosure.",
+                severity=Severity.HIGH, file_path=file_path, line_number=1, code_snippet="",
+                recommendation="Implement data redaction mechanisms before sharing incident info"
+            ))
         return findings
     
     # ============================================================================
@@ -198,123 +201,68 @@ class FRR_ICP_06_Analyzer(BaseFRRAnalyzer):
     # ============================================================================
     
     def analyze_bicep(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Bicep infrastructure code for FRR-ICP-06 compliance.
-        
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        """Analyze Bicep for redaction services."""
+        return []  # Data redaction is runtime application logic
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Terraform infrastructure code for FRR-ICP-06 compliance.
-        
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        """Analyze Terraform for redaction services."""
+        return []  # Data redaction is runtime application logic
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
     # ============================================================================
     
     def analyze_github_actions(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitHub Actions workflow for FRR-ICP-06 compliance.
-        
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        """Analyze GitHub Actions for redaction steps."""
+        return []  # Data redaction is runtime operational
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Azure Pipelines YAML for FRR-ICP-06 compliance.
-        
-        TODO: Implement Azure Pipelines analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        """Analyze Azure Pipelines for redaction steps."""
+        return []  # Data redaction is runtime operational
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitLab CI YAML for FRR-ICP-06 compliance.
-        
-        TODO: Implement GitLab CI analysis
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        """Analyze GitLab CI for redaction steps."""
+        return []  # Data redaction is runtime operational
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
-        """
-        Get recommendations for automating evidence collection for FRR-ICP-06.
-        
-        TODO: Add evidence collection guidance
-        """
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """Get automated queries for FRR-ICP-06 evidence (responsible disclosure/redaction)."""
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
+            'automated_queries': [
+                "AzureDiagnostics | where ResourceProvider == 'MICROSOFT.COGNITIVESERVICES' and Category == 'TextAnalytics' | project TimeGenerated, OperationName",
+                "Resources | where type contains 'cognitiveservices' or tags contains 'pii-detection' | project name, type, resourceGroup",
+                "AzureActivity | where OperationNameValue contains 'redact' or OperationNameValue contains 'sanitize' | summarize by ResourceId"
+            ]
+        }
+    
+    def get_evidence_artifacts(self) -> Dict[str, Any]:
+        """Get evidence artifacts for FRR-ICP-06 (responsible disclosure/redaction)."""
+        return {
             'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                "Data classification policy and procedures",
+                "Redaction mechanism implementation documentation",
+                "PII detection and filtering configuration",
+                "Sensitive information handling procedures (section of IRP)",
+                "Historical incident reports showing redacted content",
+                "Data sanitization testing evidence",
+                "Staff training records on responsible disclosure",
+                "Incident disclosure approval workflows"
+            ]
+        }
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """Get automation recommendations for FRR-ICP-06 (responsible disclosure/redaction)."""
+        return {
+            'implementation_notes': [
+                "Implement automated data redaction mechanisms (pattern matching, entity recognition)",
+                "Configure PII detection services (Azure Text Analytics, AWS Comprehend)",
+                "Establish data classification framework for incident information",
+                "Implement approval workflows for incident disclosure",
+                "Test redaction mechanisms with sample incident data",
+                "Train staff on identifying sensitive information to redact",
+                "Monitor redacted disclosures for accidental exposure"
             ]
         }

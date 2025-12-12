@@ -10,7 +10,7 @@ Impact Levels: Low
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,150 @@ class FRR_VDR_TF_LO_05_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get automated queries for collecting evidence of 7-day vulnerability evaluation compliance.
+        
+        Returns structured queries for vulnerability evaluation time tracking, FRR-VDR-07/08/09
+        evaluation completeness, and 7-day SLA compliance monitoring (Low impact - relaxed from 2-day High).
+        """
+        return {
+            "Vulnerability evaluation time tracking": {
+                "description": "Track time from vulnerability detection to evaluation completion (per FRR-VDR-07/08/09) - 7-day SLA for Low impact",
+                "defender_for_cloud_kql": """
+                    SecurityAssessment
+                    | where TimeGenerated > ago(90d)
+                    | where AssessmentType == 'Vulnerability'
+                    | extend DetectionTime = TimeGenerated
+                    | join kind=inner (
+                        SecurityRecommendation
+                        | where TimeGenerated > ago(90d)
+                        | where Properties.status == 'Evaluated'
+                        | extend EvaluationTime = TimeGenerated, VulnId = ResourceId
+                    ) on $left.ResourceId == $right.VulnId
+                    | extend DaysToEvaluate = datetime_diff('day', EvaluationTime, DetectionTime)
+                    | extend SevenDayCompliance = iff(DaysToEvaluate <= 7, 'Compliant', 'NonCompliant')
+                    | project ResourceId, DetectionTime, EvaluationTime, DaysToEvaluate, SevenDayCompliance, Severity = Properties.severity
+                """,
+                "azure_monitor_kql": """
+                    AzureDiagnostics
+                    | where Category == 'VulnerabilityManagement'
+                    | where OperationName in ('VulnerabilityDetected', 'VulnerabilityEvaluated')
+                    | extend VulnId = extract(@'VulnId=(\\w+)', 1, Message)
+                    | summarize DetectionTime = minif(TimeGenerated, OperationName == 'VulnerabilityDetected'),
+                                EvaluationTime = maxif(TimeGenerated, OperationName == 'VulnerabilityEvaluated') by VulnId, Resource
+                    | where isnotnull(EvaluationTime)
+                    | extend DaysToEvaluate = datetime_diff('day', EvaluationTime, DetectionTime)
+                    | extend SevenDayCompliance = iff(DaysToEvaluate <= 7, 'Yes', 'No')
+                    | project VulnId, Resource, DetectionTime, EvaluationTime, DaysToEvaluate, SevenDayCompliance
+                """
+            },
+            "FRR-VDR-07/08/09 evaluation completeness tracking": {
+                "description": "Verify ALL vulnerabilities are evaluated per FRR-VDR-07 (asset criticality), FRR-VDR-08 (exploit intelligence), FRR-VDR-09 (compensating controls)",
+                "evaluation_status_query": """
+                    SecurityAssessment
+                    | where TimeGenerated > ago(90d)
+                    | where AssessmentType == 'Vulnerability'
+                    | extend EvaluationStatus = Properties.status.code
+                    | extend AssetCriticalityEvaluated = isnotnull(Properties.metadata.assetCriticality)
+                    | extend ExploitIntelEvaluated = isnotnull(Properties.metadata.exploitAvailable)
+                    | extend CompensatingControlsEvaluated = isnotnull(Properties.metadata.compensatingControls)
+                    | extend VDR_07_08_09_Complete = AssetCriticalityEvaluated and ExploitIntelEvaluated and CompensatingControlsEvaluated
+                    | summarize TotalVulns = count(), EvaluatedVulns = countif(VDR_07_08_09_Complete == true) by bin(TimeGenerated, 1d)
+                    | extend EvaluationCompleteness = todouble(EvaluatedVulns) / todouble(TotalVulns) * 100
+                    | project TimeGenerated, TotalVulns, EvaluatedVulns, EvaluationCompleteness
+                """,
+                "ticketing_system_query": """
+                    // Example ServiceNow or Jira query pattern
+                    // SELECT vuln_id, detection_date, evaluation_date, asset_criticality_score, exploit_available, compensating_controls
+                    // FROM vulnerability_tickets
+                    // WHERE evaluation_date IS NOT NULL
+                    // AND DATEDIFF(day, detection_date, evaluation_date) <= 7
+                """
+            },
+            "Seven-day SLA compliance monitoring": {
+                "description": "Monitor compliance with 7-day evaluation SLA and identify violations",
+                "sla_violation_query": """
+                    SecurityAssessment
+                    | where TimeGenerated > ago(90d)
+                    | where AssessmentType == 'Vulnerability'
+                    | extend DetectionTime = TimeGenerated
+                    | join kind=leftouter (
+                        SecurityRecommendation
+                        | where Properties.status == 'Evaluated'
+                        | extend EvaluationTime = TimeGenerated, VulnId = ResourceId
+                    ) on $left.ResourceId == $right.VulnId
+                    | extend DaysToEvaluate = datetime_diff('day', coalesce(EvaluationTime, now()), DetectionTime)
+                    | extend SLAStatus = case(
+                        isnotnull(EvaluationTime) and DaysToEvaluate <= 7, 'Met',
+                        isnotnull(EvaluationTime) and DaysToEvaluate > 7, 'Violated',
+                        isnull(EvaluationTime) and DaysToEvaluate <= 7, 'Pending',
+                        'Overdue'
+                    )
+                    | summarize count() by SLAStatus, bin(DetectionTime, 1d)
+                    | project DetectionTime, SLAStatus, VulnerabilityCount = count_
+                """,
+                "compliance_dashboard_query": """
+                    SecurityAssessment
+                    | where TimeGenerated > ago(30d)
+                    | where AssessmentType == 'Vulnerability'
+                    | summarize TotalVulns = count(),
+                                EvaluatedWithin7Days = countif(datetime_diff('day', now(), TimeGenerated) <= 7 and Properties.status == 'Evaluated')
+                    | extend SevenDayComplianceRate = todouble(EvaluatedWithin7Days) / todouble(TotalVulns) * 100
+                    | project TotalVulns, EvaluatedWithin7Days, SevenDayComplianceRate
+                """
+            }
+        }
+
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts needed to demonstrate 7-day vulnerability evaluation compliance.
+        
+        Returns artifacts for evaluation time tracking, FRR-VDR-07/08/09 evaluation records,
+        and SLA compliance per FRR-VDR-TF-LO-05.
+        """
+        return [
+            "Vulnerability detection timestamps from past 90 days",
+            "Vulnerability evaluation timestamps showing completion of FRR-VDR-07/08/09 evaluation",
+            "Time-to-evaluation metrics for all detected vulnerabilities (detection → evaluation delta)",
+            "7-day SLA compliance reports showing percentage of vulnerabilities evaluated within 7 days (Low impact relaxed from 2-day High)",
+            "FRR-VDR-07/08/09 evaluation records (asset criticality assessments, exploit intelligence checks, compensating control reviews)",
+            "SLA violation reports for vulnerabilities NOT evaluated within 7 days",
+            "Automated evaluation workflow logs showing FRR-VDR-07/08/09 processing",
+            "Ticketing system records with evaluation timestamps and VDR-07/08/09 evaluation data"
+        ]
+
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
         """
         Get recommendations for automating evidence collection for FRR-VDR-TF-LO-05.
         
-        TODO: Add evidence collection guidance
+        Returns automation strategies for evaluation time tracking, FRR-VDR-07/08/09
+        evaluation workflows, and 7-day SLA monitoring.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
-            ]
+            "evaluation_time_tracking": {
+                "description": "Automatically track time from vulnerability detection to evaluation completion (7-day SLA for Low impact)",
+                "implementation": "Use Azure Monitor Log Analytics queries to calculate detection-to-evaluation time delta, store in compliance dashboard",
+                "rationale": "Provides real-time visibility into 7-day evaluation SLA compliance per FRR-VDR-TF-LO-05 (relaxed from 2-day High)"
+            },
+            "automated_vdr_07_08_09_evaluation": {
+                "description": "Automate FRR-VDR-07/08/09 evaluation steps (asset criticality, exploit intelligence, compensating controls)",
+                "implementation": "Integrate asset inventory for criticality scoring, threat intelligence feeds for exploit data, configuration management for controls",
+                "rationale": "Ensures ALL vulnerabilities are evaluated per required FRR-VDR-07/08/09 criteria within 7-day timeframe"
+            },
+            "sla_violation_alerting": {
+                "description": "Alert on vulnerabilities approaching or exceeding 7-day evaluation SLA",
+                "implementation": "Use Azure Monitor alerts at 5-day mark for vulnerabilities not yet evaluated, escalate at 7-day violation",
+                "rationale": "Prevents SLA violations by providing early warning when evaluation is delayed (Low impact 7-day SLA)"
+            },
+            "evaluation_workflow_automation": {
+                "description": "Automate vulnerability evaluation workflow to ensure FRR-VDR-07/08/09 steps are completed systematically",
+                "implementation": "Use Logic Apps or automation scripts to orchestrate asset criticality lookup, exploit checks, and control reviews",
+                "rationale": "Reduces manual effort and ensures consistent, timely evaluation per FRR-VDR-07/08/09 within 7-day SLA"
+            },
+            "evaluation_completeness_tracking": {
+                "description": "Track evaluation completeness to ensure ALL vulnerabilities receive full FRR-VDR-07/08/09 evaluation",
+                "implementation": "Use compliance dashboard to show % of vulnerabilities with complete VDR-07/08/09 evaluation data",
+                "rationale": "Ensures MUST requirement is met - ALL vulnerabilities evaluated per FRR-VDR-07/08/09 within 7 days (Low impact)"
+            }
         }

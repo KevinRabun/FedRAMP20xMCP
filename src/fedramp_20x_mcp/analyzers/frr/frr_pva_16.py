@@ -80,77 +80,32 @@ class FRR_PVA_16_Analyzer(BaseFRRAnalyzer):
     # ============================================================================
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
+        """Analyze Python code for FRR-PVA-16 compliance.
+        
+        PVA-16 NOT code-detectable: Assessor procedure adherence verification is operational.
         """
-        Analyze Python code for FRR-PVA-16 compliance using AST.
-        
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
-        """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
+        return []
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze C# code for FRR-PVA-16 compliance using AST.
+        """Analyze C# code for FRR-PVA-16 compliance.
         
-        TODO: Implement C# analysis
+        PVA-16 NOT code-detectable: Assessor procedure adherence verification is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        return []
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Java code for FRR-PVA-16 compliance using AST.
+        """Analyze Java code for FRR-PVA-16 compliance.
         
-        TODO: Implement Java analysis
+        PVA-16 NOT code-detectable: Assessor procedure adherence verification is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        return []
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze TypeScript/JavaScript code for FRR-PVA-16 compliance using AST.
+        """Analyze TypeScript/JavaScript code for FRR-PVA-16 compliance.
         
-        TODO: Implement TypeScript analysis
+        PVA-16 NOT code-detectable: Assessor procedure adherence verification is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
-        return findings
+        return []
     
     # ============================================================================
     # INFRASTRUCTURE AS CODE ANALYZERS (Regex-based)
@@ -174,106 +129,103 @@ class FRR_PVA_16_Analyzer(BaseFRRAnalyzer):
         return findings
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Terraform infrastructure code for FRR-PVA-16 compliance.
+        """Analyze Terraform infrastructure code for FRR-PVA-16 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        Assessor procedure adherence verification is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        return []
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
     # ============================================================================
     
     def analyze_github_actions(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitHub Actions workflow for FRR-PVA-16 compliance.
+        """Analyze GitHub Actions workflow for FRR-PVA-16 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        Assessor procedure adherence verification is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze Azure Pipelines YAML for FRR-PVA-16 compliance.
+        """Analyze Azure Pipelines YAML for FRR-PVA-16 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        Assessor procedure adherence verification is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
-        """
-        Analyze GitLab CI YAML for FRR-PVA-16 compliance.
+        """Analyze GitLab CI YAML for FRR-PVA-16 compliance.
         
-        TODO: Implement GitLab CI analysis
+        Assessor procedure adherence verification is operational.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    # ============================================================================
+    # EVIDENCE COLLECTION METHODS
+    # ============================================================================
+    
+    def get_evidence_collection_queries(self) -> dict:
         """
-        Get recommendations for automating evidence collection for FRR-PVA-16.
+        Get KQL queries for collecting evidence of procedure adherence assessment.
         
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        Returns queries to detect procedure adherence verification activities.
         """
         return {
             'frr_id': self.FRR_ID,
             'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
+            'automated_queries': [
+                # Resources with procedure-adherence tags
+                "Resources | where tags contains 'procedure-adherence' | project name, type, tags, location",
+                
+                # Assessment activities verifying procedure adherence
+                "AzureActivity | where OperationNameValue contains 'Assessment' and Properties contains 'procedure-adherence' | project TimeGenerated, Caller, OperationNameValue, Properties",
+                
+                # Resources with adherence-verification and procedure-enforcement metadata
+                "Resources | where tags contains 'adherence-verification' or tags contains 'procedure-enforcement' | project name, type, tags['adherence-verification'], tags['procedure-enforcement']"
+            ]
+        }
+    
+    def get_evidence_artifacts(self) -> dict:
+        """
+        Get list of evidence artifacts for demonstrating procedure adherence assessment.
+        
+        Returns documentation and records demonstrating adherence verification.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
             'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                "Procedure adherence assessment documentation and methodology",
+                "Procedure execution evidence and audit trails",
+                "Process enforcement mechanisms and controls",
+                "Adherence verification findings and reports",
+                "Procedure effectiveness assessment and consistency evaluation",
+                "Non-adherence detection and remediation documentation",
+                "Procedure enforcement automation and monitoring",
+                "Assessment methodology prohibiting document-only verification"
+            ]
+        }
+    
+    def get_evidence_automation_recommendations(self) -> dict:
+        """
+        Get recommendations for implementing procedure adherence verification.
+        
+        Returns implementation notes for adherence assessment and enforcement.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
+            'implementation_notes': [
+                "Define assessor procedures for verifying procedure adherence (beyond document existence)",
+                "Tag Azure resources with 'procedure-adherence', 'adherence-verification', and 'procedure-enforcement' metadata",
+                "Document procedure execution evidence and enforcement mechanisms",
+                "Track assessor adherence verification activities and findings",
+                "Maintain audit trails demonstrating consistent procedure following",
+                "Provide assessors with adherence evidence and enforcement documentation",
+                "Review procedure adherence assessment methodology and enforcement effectiveness quarterly"
             ]
         }

@@ -29,15 +29,28 @@ def test_analyzer_metadata():
     print("[PASS] test_analyzer_metadata PASSED")
 
 
-def test_evidence_automation_recommendations():
-    """Test evidence automation recommendations."""
+def test_evidence_collection():
+    """Test evidence collection methods."""
     analyzer = FRR_VDR_TF_HI_09_Analyzer()
     
-    recommendations = analyzer.get_evidence_automation_recommendations()
-    assert recommendations['frr_id'] == "FRR-VDR-TF-HI-09", "FRR_ID mismatch"
-    # TODO: Add more assertions for evidence recommendations
+    # Test queries
+    queries = analyzer.get_evidence_collection_queries()
+    assert "Ongoing remediation activity" in queries, "Missing remediation activity queries"
+    assert "Routine operations remediation tracking" in queries, "Missing operations tracking queries"
+    assert "Risk-based remediation decisions" in queries, "Missing decision tracking queries"
     
-    print("[PASS] test_evidence_automation_recommendations PASSED")
+    # Test artifacts
+    artifacts = analyzer.get_evidence_artifacts()
+    assert any("routine" in a.lower() or "ongoing" in a.lower() for a in artifacts), "Missing routine operations"
+    assert any("remediation" in a.lower() or "mitigation" in a.lower() for a in artifacts), "Missing remediation/mitigation"
+    assert any("risk" in a.lower() or "decision" in a.lower() for a in artifacts), "Missing risk-based decisions"
+    
+    # Test automation recommendations
+    recommendations = analyzer.get_evidence_automation_recommendations()
+    assert "Automated remediation tracking" in recommendations, "Missing tracking recommendation"
+    assert "Risk-based decision documentation" in recommendations, "Missing decision documentation recommendation"
+    
+    print("[PASS] test_evidence_collection PASSED")
 
 
 # TODO: Add language-specific tests
@@ -57,7 +70,7 @@ def run_all_tests():
     """Run all FRR-VDR-TF-HI-09 tests."""
     test_functions = [
         ("Analyzer metadata", test_analyzer_metadata),
-        ("Evidence automation recommendations", test_evidence_automation_recommendations),
+        ("Evidence collection", test_evidence_collection),
         # TODO: Add more test functions
     ]
     

@@ -29,15 +29,28 @@ def test_analyzer_metadata():
     print("[PASS] test_analyzer_metadata PASSED")
 
 
-def test_evidence_automation_recommendations():
-    """Test evidence automation recommendations."""
+def test_evidence_collection():
+    """Test evidence collection methods."""
     analyzer = FRR_VDR_TF_HI_04_Analyzer()
     
-    recommendations = analyzer.get_evidence_automation_recommendations()
-    assert recommendations['frr_id'] == "FRR-VDR-TF-HI-04", "FRR_ID mismatch"
-    # TODO: Add more assertions for evidence recommendations
+    # Test queries
+    queries = analyzer.get_evidence_collection_queries()
+    assert "Stable resource identification" in queries, "Missing stable resource queries"
+    assert "Monthly vulnerability scanning on stable assets" in queries, "Missing scan queries"
+    assert "Persistent monthly scanning verification" in queries, "Missing persistence verification"
     
-    print("[PASS] test_evidence_automation_recommendations PASSED")
+    # Test artifacts
+    artifacts = analyzer.get_evidence_artifacts()
+    assert any("stable" in a.lower() for a in artifacts), "Missing stable resources"
+    assert any("monthly" in a.lower() or "30" in a for a in artifacts), "Missing monthly frequency"
+    assert any("not likely to drift" in a.lower() or "not drift" in a.lower() for a in artifacts), "Missing non-drift-prone"
+    
+    # Test automation recommendations
+    recommendations = analyzer.get_evidence_automation_recommendations()
+    assert "Stable resource tagging" in recommendations, "Missing tagging recommendation"
+    assert "Automated monthly scanning" in recommendations, "Missing scan recommendation"
+    
+    print("[PASS] test_evidence_collection PASSED")
 
 
 # TODO: Add language-specific tests
@@ -57,7 +70,7 @@ def run_all_tests():
     """Run all FRR-VDR-TF-HI-04 tests."""
     test_functions = [
         ("Analyzer metadata", test_analyzer_metadata),
-        ("Evidence automation recommendations", test_evidence_automation_recommendations),
+        ("Evidence collection", test_evidence_collection),
         # TODO: Add more test functions
     ]
     

@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -79,76 +79,42 @@ class FRR_CCM_AG_07_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-CCM-AG-07 compliance using AST.
+        Analyze Python code for FRR-CCM-AG-07 compliance.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        NOT APPLICABLE: This requirement mandates that agencies inform FedRAMP
+        (at info@fedramp.gov) after requesting additional information from CSPs.
+        It addresses agency notification obligations to FedRAMP, not CSP code
+        implementation. CSP role is passive: respond to agency requests and
+        potentially be copied on agency notifications to FedRAMP.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
+        return []
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze C# code for FRR-CCM-AG-07 compliance using AST.
+        Analyze C# code for FRR-CCM-AG-07 compliance.
         
-        TODO: Implement C# analysis
+        NOT APPLICABLE: Agency notification requirement to FedRAMP after
+        requesting additional information from CSPs. Not detectable in CSP code.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        return []
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Java code for FRR-CCM-AG-07 compliance using AST.
+        Analyze Java code for FRR-CCM-AG-07 compliance.
         
-        TODO: Implement Java analysis
+        NOT APPLICABLE: Agency notification requirement to FedRAMP after
+        requesting additional information from CSPs. Not detectable in CSP code.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        return []
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze TypeScript/JavaScript code for FRR-CCM-AG-07 compliance using AST.
+        Analyze TypeScript/JavaScript code for FRR-CCM-AG-07 compliance.
         
-        TODO: Implement TypeScript analysis
+        NOT APPLICABLE: Agency notification requirement to FedRAMP after
+        requesting additional information from CSPs. Not detectable in CSP code.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
-        return findings
+        return []
     
     # ============================================================================
     # INFRASTRUCTURE AS CODE ANALYZERS (Regex-based)
@@ -158,32 +124,19 @@ class FRR_CCM_AG_07_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Bicep infrastructure code for FRR-CCM-AG-07 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        NOT APPLICABLE: Agency notification requirement to FedRAMP after
+        requesting additional information. Not detectable in CSP infrastructure.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        return []
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Terraform infrastructure code for FRR-CCM-AG-07 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        NOT APPLICABLE: Agency notification requirement to FedRAMP after
+        requesting additional information. Not detectable in CSP infrastructure.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        return []
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
@@ -193,85 +146,138 @@ class FRR_CCM_AG_07_Analyzer(BaseFRRAnalyzer):
         """
         Analyze GitHub Actions workflow for FRR-CCM-AG-07 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        NOT APPLICABLE: Agency notification requirement to FedRAMP after
+        requesting additional information. Not detectable in CSP CI/CD.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Azure Pipelines YAML for FRR-CCM-AG-07 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        NOT APPLICABLE: Agency notification requirement to FedRAMP after
+        requesting additional information. Not detectable in CSP CI/CD.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze GitLab CI YAML for FRR-CCM-AG-07 compliance.
         
-        TODO: Implement GitLab CI analysis
+        NOT APPLICABLE: Agency notification requirement to FedRAMP after
+        requesting additional information. Not detectable in CSP CI/CD.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> List[Dict[str, Any]]:
         """
-        Get recommendations for automating evidence collection for FRR-CCM-AG-07.
+        Get automated queries for evidence collection.
         
-        TODO: Add evidence collection guidance
+        Returns queries that can be executed against cloud platforms,
+        logging systems, or configuration management tools.
+        """
+        return [
+            {
+                "query_type": "N/A",
+                "platform": "N/A",
+                "query": "N/A - Agency notification requirement to FedRAMP, not CSP implementation",
+                "description": "This requirement mandates agency notifications to FedRAMP after requesting additional information from CSPs"
+            }
+        ]
+    
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        """
+        Get list of evidence artifacts to collect.
+        
+        Returns specific files, logs, configurations, or documentation
+        that demonstrate compliance.
+        """
+        return [
+            {
+                "artifact_type": "Agency Email to FedRAMP",
+                "location": "Agency email records",
+                "description": "Email notifications from agency to info@fedramp.gov informing of additional information requests to CSP",
+                "collection_method": "Manual - Request from agency"
+            },
+            {
+                "artifact_type": "Agency Information Request to CSP",
+                "location": "Agency or CSP records",
+                "description": "Original agency request to CSP for additional information beyond FedRAMP requirements",
+                "collection_method": "Manual - Email/ticket archives"
+            },
+            {
+                "artifact_type": "CSP Response to Agency Request",
+                "location": "CSP files",
+                "description": "CSP's response to agency request for additional information",
+                "collection_method": "Manual - CSP creates and maintains"
+            },
+            {
+                "artifact_type": "FedRAMP Acknowledgement",
+                "location": "Agency email records",
+                "description": "FedRAMP acknowledgement of agency notification (if received)",
+                "collection_method": "Manual - Request from agency"
+            },
+            {
+                "artifact_type": "Agency Notification Log",
+                "location": "Agency tracking system",
+                "description": "Agency log tracking when notifications to FedRAMP were sent per FRR-CCM-AG-07",
+                "collection_method": "Manual - Request from agency"
+            },
+            {
+                "artifact_type": "Request Justification Documentation",
+                "location": "Agency files",
+                "description": "Agency documentation explaining why additional information was needed beyond FedRAMP requirements",
+                "collection_method": "Manual - Request from agency"
+            },
+            {
+                "artifact_type": "CSP Communication Records",
+                "location": "CSP ticketing/email system",
+                "description": "CSP records showing receipt of agency requests and responses provided",
+                "collection_method": "Manual - CSP archives"
+            },
+            {
+                "artifact_type": "FedRAMP Baseline Comparison",
+                "location": "Agency or CSP files",
+                "description": "Comparison showing how requested information goes beyond FedRAMP baseline requirements",
+                "collection_method": "Manual - Agency or CSP creates"
+            },
+            {
+                "artifact_type": "Agency Process Documentation",
+                "location": "Agency policy repository",
+                "description": "Agency procedures for notifying FedRAMP when requesting additional CSP information",
+                "collection_method": "Manual - Request from agency"
+            },
+            {
+                "artifact_type": "Notification Timeline",
+                "location": "Agency tracking system",
+                "description": "Timeline showing when agency requested information from CSP and when FedRAMP was notified",
+                "collection_method": "Manual - Agency creates"
+            }
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get recommendations for automating evidence collection.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "automated_queries": self.get_evidence_collection_queries(),
+            "evidence_artifacts": self.get_evidence_artifacts(),
+            "implementation_notes": [
+                "NOT APPLICABLE for CSP code analysis - This is an agency notification requirement",
+                "Requirement: Agencies MUST inform FedRAMP (info@fedramp.gov) AFTER requesting additional information from CSPs beyond FedRAMP requirements",
+                "Trigger: Agency requests additional information/materials from CSP beyond FedRAMP baseline",
+                "Action: Agency sends notification to info@fedramp.gov",
+                "Timing: AFTER requesting additional information (not before)",
+                "CSP Role: Passive - Receive and respond to agency requests, may be copied on FedRAMP notifications",
+                "Key Evidence: Agency emails to info@fedramp.gov, original agency requests to CSP, notification logs",
+                "Difference from CCM-AG-06: CCM-AG-06 limits when agencies CAN impose requirements; CCM-AG-07 requires notification AFTER requesting additional info",
+                "Automation Level: Minimal - This is primarily an agency communication obligation, not CSP implementation",
+                "Primary Responsibility: Agency (notifies FedRAMP after making requests)",
+                "CSP Responsibility: Track agency requests for additional information, respond appropriately, maintain records",
+                "Monitoring: CSPs should log all agency information requests to identify patterns and ensure proper channels"
             ]
         }

@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,50 @@ class FRR_VDR_RP_06_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-RP-06.
+        Get queries for collecting evidence of accepted vulnerability information reporting.
         
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        Returns queries to verify required information for accepted vulnerabilities in reports.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "Accepted vulnerabilities tracking": [
+                "VulnerabilityTracking | where Status == 'Accepted' | where TimeGenerated > ago(90d) | project TimeGenerated, VulnerabilityID, AcceptanceDate, AcceptanceReason, AcceptedBy, RiskJustification",
+                "RiskAcceptances | where AcceptanceType == 'Vulnerability' | where TimeGenerated > ago(90d) | summarize AcceptedCount=count() by HasReason=isnotnull(AcceptanceReason), HasJustification=isnotnull(RiskJustification), HasApprover=isnotnull(ApprovedBy)"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "Accepted vulnerability reporting": [
+                "SecurityReports | where ReportType == 'Vulnerability Monthly Summary' | where TimeGenerated > ago(90d) | extend HasAcceptedSection = Content contains 'accepted vulnerabilities' | project TimeGenerated, HasAcceptedSection, AcceptedVulnerabilityCount",
+                "MonthlyReports | where Category == 'VDR' | where TimeGenerated > ago(90d) | extend AcceptedVulnsDocumented = AcceptedVulnerabilitySection != null | summarize ReportsWithAccepted=countif(AcceptedVulnsDocumented == true), TotalReports=count()"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "Acceptance documentation completeness": [
+                "AcceptedVulnerabilities | where TimeGenerated > ago(90d) | summarize Total=count(), WithReason=countif(isnotnull(AcceptanceReason)), WithJustification=countif(isnotnull(RiskJustification)), WithApprover=countif(isnotnull(ApprovedBy)), WithReviewDate=countif(isnotnull(NextReviewDate))",
+                "ComplianceAudit | where AuditType == 'Accepted Vulnerability Review' | where TimeGenerated > ago(90d) | project TimeGenerated, VulnerabilityID, HasCompleteInfo, MissingFields"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for accepted vulnerability information.
+        """
+        return [
+            "Accepted vulnerabilities register (vulnerability ID, acceptance reason, risk justification, approver, acceptance date)",
+            "Monthly VDR reports with accepted vulnerabilities section (separate from non-accepted)",
+            "Risk acceptance documentation for each accepted vulnerability",
+            "Approval records showing authorization for each acceptance",
+            "Periodic review schedule for accepted vulnerabilities (ensuring ongoing validity)",
+            "Compensating controls documentation for accepted vulnerabilities",
+            "Trend analysis of accepted vulnerabilities (counts over time, acceptance reasons)",
+            "Accepted vulnerability report templates (required fields for FRR-VDR-RP-06)"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Get recommendations for automating evidence collection.
+        """
+        return {
+            "Accepted vulnerability tracking system": "Maintain separate tracking for accepted vulnerabilities with mandatory fields (ID, acceptance reason, risk justification, approver, date, review schedule)",
+            "Automated reporting inclusion": "Automatically include accepted vulnerabilities section in monthly VDR reports with required information fields",
+            "Acceptance workflow automation": "Implement formal approval workflow for vulnerability acceptance requiring all mandatory documentation (ServiceNow, Azure DevOps)",
+            "Periodic review automation": "Schedule automatic reviews of accepted vulnerabilities to validate continued acceptance (quarterly/annual review reminders)",
+            "Completeness validation": "Validate all accepted vulnerabilities have complete required information before inclusion in monthly reports (pre-report data checks)"
         }

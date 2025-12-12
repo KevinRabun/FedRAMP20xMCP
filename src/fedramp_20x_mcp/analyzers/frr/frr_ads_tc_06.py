@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -95,42 +95,58 @@ class FRR_ADS_TC_06_Analyzer(BaseFRRAnalyzer):
         - Log storage and retrieval
         """
         findings = []
-        lines = code.split('\n')
         
-        # Try AST analysis first
         try:
             parser = ASTParser(CodeLanguage.PYTHON)
             tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
             if tree and tree.root_node:
-                code_bytes = code.encode('utf-8')
+                # Check for logging-related functions
+                func_defs = parser.find_nodes_by_type(tree.root_node, 'function_definition')
+                for func_def in func_defs:
+                    func_text = parser.get_node_text(func_def, code_bytes)
+                    func_lower = func_text.lower()
+                    
+                    if any(keyword in func_lower for keyword in ['log_access', 'access_log', 'audit_log', 'track_access', 'record_access']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Access logging function detected",
+                            description="Found function for logging access to authorization data",
+                            severity=Severity.INFO,
+                            line_number=func_def.start_point[0] + 1,
+                            code_snippet=func_text.split('\n')[0],
+                            recommendation="Ensure logs stored for at least 6 months and available upon request."
+                        ))
                 
-                # Check for logging functions
-                logging_functions = ['log_access', 'access_log', 'audit_log', 'log_event', 'track_access']
-                for func_name in logging_functions:
-                    func_nodes = parser.find_nodes_by_type(tree.root_node, 'function_definition')
-                    for node in func_nodes:
-                        node_text = parser.get_node_text(node, code_bytes)
-                        if func_name in node_text.lower():
-                            line_num = node.start_point[0] + 1
-                            findings.append(Finding(
-                                frr_id=self.FRR_ID,
-                                title="Access logging mechanism detected",
-                                description=f"Found logging function: {func_name}",
-                                severity=Severity.INFO,
-                                line_number=line_num,
-                                code_snippet=lines[line_num-1].strip() if line_num <= len(lines) else "",
-                                recommendation="Ensure access logs stored for at least 6 months and available upon request."
-                            ))
+                # Check for retention period constants/variables (180 days = 6 months)
+                assignments = parser.find_nodes_by_type(tree.root_node, 'assignment')
+                for assignment in assignments:
+                    assign_text = parser.get_node_text(assignment, code_bytes)
+                    if any(keyword in assign_text.lower() for keyword in ['retention', '180', 'six_month', '6_month']) and 'log' in assign_text.lower():
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Log retention period detected",
+                            description="Found log retention configuration",
+                            severity=Severity.INFO,
+                            line_number=assignment.start_point[0] + 1,
+                            code_snippet=assign_text.split('\n')[0],
+                            recommendation="Verify retention period is at least 6 months (180 days)."
+                        ))
+                
+                return findings
         except Exception:
             pass
         
         # Regex fallback
+        lines = code.split('\n')
         logging_patterns = [
             r'log.*access',
             r'access.*log',
             r'6.*month.*retention',
-            r'180.*day.*log',
+            r'180.*day',
             r'audit.*log',
+            r'retention.*period',
         ]
         
         for i, line in enumerate(lines, 1):
@@ -139,7 +155,7 @@ class FRR_ADS_TC_06_Analyzer(BaseFRRAnalyzer):
                     findings.append(Finding(
                         frr_id=self.FRR_ID,
                         title="Access logging pattern detected",
-                        description=f"Found logging pattern: {pattern}",
+                        description=f"Found pattern: {pattern}",
                         severity=Severity.INFO,
                         line_number=i,
                         code_snippet=line.strip(),
@@ -148,60 +164,173 @@ class FRR_ADS_TC_06_Analyzer(BaseFRRAnalyzer):
                     break
         
         return findings
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze C# code for FRR-ADS-TC-06 compliance using AST.
         
-        TODO: Implement C# analysis
+        Detects access logging mechanisms in C#.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for C#
+        try:
+            parser = ASTParser(CodeLanguage.CSHARP)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                # Check method declarations
+                method_declarations = parser.find_nodes_by_type(tree.root_node, 'method_declaration')
+                for method in method_declarations:
+                    method_text = parser.get_node_text(method, code_bytes)
+                    method_lower = method_text.lower()
+                    
+                    if any(keyword in method_lower for keyword in ['logaccess', 'accesslog', 'auditlog', 'trackaccess', 'recordaccess']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Access logging method detected",
+                            description="Found method for logging access to authorization data",
+                            severity=Severity.INFO,
+                            line_number=method.start_point[0] + 1,
+                            code_snippet=method_text.split('\n')[0],
+                            recommendation="Ensure logs stored for at least 6 months."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(?:LogAccess|AccessLog|AuditLog|TrackAccess|RetentionDays.*180)', line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Access logging reference detected",
+                    description="Found access logging code",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Verify 6-month log retention."
+                ))
+        
         return findings
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Java code for FRR-ADS-TC-06 compliance using AST.
         
-        TODO: Implement Java analysis
+        Detects access logging mechanisms in Java.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for Java
+        try:
+            parser = ASTParser(CodeLanguage.JAVA)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                # Check method declarations
+                method_declarations = parser.find_nodes_by_type(tree.root_node, 'method_declaration')
+                for method in method_declarations:
+                    method_text = parser.get_node_text(method, code_bytes)
+                    method_lower = method_text.lower()
+                    
+                    if any(keyword in method_lower for keyword in ['logaccess', 'accesslog', 'auditlog', 'trackaccess', 'recordaccess']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Access logging method detected",
+                            description="Found method for logging access to authorization data",
+                            severity=Severity.INFO,
+                            line_number=method.start_point[0] + 1,
+                            code_snippet=method_text.split('\n')[0],
+                            recommendation="Ensure logs stored for at least 6 months."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(?:logAccess|accessLog|auditLog|trackAccess|retentionDays.*180)', line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Access logging reference detected",
+                    description="Found access logging code",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Verify 6-month log retention."
+                ))
+        
         return findings
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze TypeScript/JavaScript code for FRR-ADS-TC-06 compliance using AST.
         
-        TODO: Implement TypeScript analysis
+        Detects access logging mechanisms in TypeScript/JavaScript.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for TypeScript
+        try:
+            parser = ASTParser(CodeLanguage.TYPESCRIPT)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                # Check function declarations
+                function_declarations = parser.find_nodes_by_type(tree.root_node, 'function_declaration')
+                for func_decl in function_declarations:
+                    func_text = parser.get_node_text(func_decl, code_bytes)
+                    func_lower = func_text.lower()
+                    
+                    if any(keyword in func_lower for keyword in ['logaccess', 'accesslog', 'auditlog', 'trackaccess', 'recordaccess']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Access logging function detected",
+                            description="Found function for logging access to authorization data",
+                            severity=Severity.INFO,
+                            line_number=func_decl.start_point[0] + 1,
+                            code_snippet=func_text.split('\n')[0],
+                            recommendation="Ensure logs stored for at least 6 months."
+                        ))
+                
+                # Check arrow functions
+                arrow_functions = parser.find_nodes_by_type(tree.root_node, 'arrow_function')
+                for arrow_func in arrow_functions:
+                    func_text = parser.get_node_text(arrow_func, code_bytes)
+                    if any(keyword in func_text.lower() for keyword in ['log', 'audit', 'track', '180']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Logging handler detected",
+                            description="Found handler for access logging",
+                            severity=Severity.INFO,
+                            line_number=arrow_func.start_point[0] + 1,
+                            code_snippet=func_text.split('\n')[0],
+                            recommendation="Verify log retention period."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(?:logAccess|accessLog|auditLog|trackAccess|retentionDays.*180)', line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Access logging reference detected",
+                    description="Found access logging code",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Verify 6-month log retention."
+                ))
+        
         return findings
     
     # ============================================================================
@@ -212,16 +341,50 @@ class FRR_ADS_TC_06_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Bicep infrastructure code for FRR-ADS-TC-06 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        Detects Log Analytics workspace retention configuration for 6-month requirement.
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
+        # Check for Log Analytics workspace with retention period
+        log_analytics_pattern = r"resource\s+\w+\s+'Microsoft\.OperationalInsights/workspaces@"
+        retention_pattern = r"retentionInDays\s*:\s*(\d+)"
+        
+        for i, line in enumerate(lines, 1):
+            if re.search(log_analytics_pattern, line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Log Analytics workspace detected",
+                    description="Found Log Analytics workspace for access logging",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Verify retentionInDays is at least 180 days (6 months)."
+                ))
+            
+            retention_match = re.search(retention_pattern, line)
+            if retention_match:
+                retention_days = int(retention_match.group(1))
+                if retention_days < 180:
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Insufficient log retention period",
+                        description=f"Log retention set to {retention_days} days (minimum 180 required)",
+                        severity=Severity.WARNING,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Set retentionInDays to at least 180 days (6 months)."
+                    ))
+                else:
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Compliant log retention detected",
+                        description=f"Log retention set to {retention_days} days (meets 180-day requirement)",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Log retention meets FRR-ADS-TC-06 requirement."
+                    ))
         
         return findings
     
@@ -229,14 +392,51 @@ class FRR_ADS_TC_06_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Terraform infrastructure code for FRR-ADS-TC-06 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        Detects log retention configuration for 6-month requirement.
         """
         findings = []
         lines = code.split('\n')
         
-        # TODO: Implement Terraform regex patterns
+        # Check for Log Analytics workspace
+        log_analytics_pattern = r'resource\s+"azurerm_log_analytics_workspace"'
+        retention_pattern = r'retention_in_days\s*=\s*(\d+)'
+        
+        for i, line in enumerate(lines, 1):
+            if re.search(log_analytics_pattern, line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Log Analytics workspace detected",
+                    description="Found Log Analytics workspace for access logging",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Verify retention_in_days is at least 180 days (6 months)."
+                ))
+            
+            retention_match = re.search(retention_pattern, line)
+            if retention_match:
+                retention_days = int(retention_match.group(1))
+                if retention_days < 180:
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Insufficient log retention period",
+                        description=f"Log retention set to {retention_days} days (minimum 180 required)",
+                        severity=Severity.WARNING,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Set retention_in_days to at least 180 days (6 months)."
+                    ))
+                else:
+                    findings.append(Finding(
+                        frr_id=self.FRR_ID,
+                        title="Compliant log retention detected",
+                        description=f"Log retention set to {retention_days} days (meets 180-day requirement)",
+                        severity=Severity.INFO,
+                        line_number=i,
+                        code_snippet=line.strip(),
+                        recommendation="Log retention meets FRR-ADS-TC-06 requirement."
+                    ))
+        
         return findings
     
     # ============================================================================
@@ -247,85 +447,203 @@ class FRR_ADS_TC_06_Analyzer(BaseFRRAnalyzer):
         """
         Analyze GitHub Actions workflow for FRR-ADS-TC-06 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        NOT APPLICABLE: Access logging with 6-month retention is an application and
+        infrastructure logging concern, not CI/CD pipeline concern. The requirement
+        mandates logging access to authorization data and retaining logs, which is
+        implemented through application code and logging infrastructure (Log Analytics,
+        CloudWatch, etc.), not build/deployment automation.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Azure Pipelines YAML for FRR-ADS-TC-06 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        NOT APPLICABLE: Access logging with 6-month retention is an application and
+        infrastructure logging concern, not CI/CD pipeline concern. The requirement
+        mandates logging access to authorization data and retaining logs, which is
+        implemented through application code and logging infrastructure, not build
+        or deployment automation.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze GitLab CI YAML for FRR-ADS-TC-06 compliance.
         
-        TODO: Implement GitLab CI analysis
+        NOT APPLICABLE: Access logging with 6-month retention is an application and
+        infrastructure logging concern, not CI/CD pipeline concern. The requirement
+        mandates logging access to authorization data and retaining logs, which is
+        implemented through application code and logging infrastructure, not build
+        or deployment automation.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> List[str]:
         """
-        Get recommendations for automating evidence collection for FRR-ADS-TC-06.
+        Provide specific queries for collecting evidence of FRR-ADS-TC-06 compliance.
         
-        TODO: Add evidence collection guidance
+        Returns:
+            List of queries for various tools and platforms to collect evidence
+            of access logging with 6-month retention.
+        """
+        return [
+            # Azure Monitor - Access logs for authorization data
+            "AzureDiagnostics | where Category == 'AuditEvent' or Category == 'AccessLog' | where TimeGenerated >= ago(180d) | summarize count() by Resource, Category, bin(TimeGenerated, 1d) | order by TimeGenerated desc",
+            
+            # Application Insights - Authorization data access events
+            "customEvents | where name contains 'AuthorizationData' or name contains 'AccessLog' | where timestamp >= ago(180d) | extend UserId = tostring(customDimensions.UserId), Resource = tostring(customDimensions.Resource) | project timestamp, name, UserId, Resource",
+            
+            # Log Analytics workspace retention configuration
+            "Usage | summarize arg_max(TimeGenerated, *) by DataType | extend RetentionDays = toint(parse_json(tostring(parse_json(Properties).RetentionInDays))) | where RetentionDays < 180 | project DataType, RetentionDays, Workspace = _ResourceId",
+            
+            # Azure Activity Log - Log retention policy changes
+            "AzureActivity | where OperationNameValue contains 'DIAGNOSTICSETTINGS' or OperationNameValue contains 'RETENTION' | where TimeGenerated >= ago(90d) | extend Caller = tostring(Caller), Resource = tostring(Resource) | project TimeGenerated, OperationNameValue, Caller, Resource, ActivityStatusValue",
+            
+            # Access summary query (6-month window)
+            "AppRequests | where TimeGenerated >= ago(180d) | where Url contains 'authorization' or Url contains 'auth-data' | summarize AccessCount = count(), UniqueUsers = dcount(UserId), FirstAccess = min(TimeGenerated), LastAccess = max(TimeGenerated) by Url | order by AccessCount desc",
+            
+            # Retention compliance check
+            "AzureDiagnostics | summarize OldestLog = min(TimeGenerated), NewestLog = max(TimeGenerated), LogCount = count() by Resource | extend RetentionDays = datetime_diff('day', now(), OldestLog) | where RetentionDays >= 180 | project Resource, RetentionDays, OldestLog, NewestLog, LogCount"
+        ]
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        List artifacts that serve as evidence for FRR-ADS-TC-06 compliance.
+        
+        Returns:
+            List of evidence artifacts including logs, configurations, and reports
+            that demonstrate 6-month log retention and availability.
+        """
+        return [
+            "Access log exports for last 6 months (authorization data access)",
+            "Log Analytics workspace retention configuration (showing 180+ days)",
+            "Access log summaries by party/user for 6-month period",
+            "Log retention policy documentation",
+            "Audit trail showing log retention enforcement",
+            "Access request fulfillment records (logs provided to requesting parties)",
+            "Monitoring alerts configuration for log retention violations",
+            "Storage account configuration for archived logs (6+ months)",
+            "Log backup and disaster recovery procedures",
+            "Evidence of log availability upon party request (email/ticket records)"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Provide recommendations for automating evidence collection for FRR-ADS-TC-06.
+        
+        Returns guidance on automated evidence collection for:
+        - Access logging to authorization data
+        - 6-month log retention
+        - Log availability upon request
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "frr_id": self.FRR_ID,
+            "frr_name": self.FRR_NAME,
+            "powershell_scripts": [
+                {
+                    "name": "verify_log_retention",
+                    "description": "Verify Log Analytics workspace retention meets 6-month requirement",
+                    "script": """
+# Verify log retention configuration
+$workspaceId = "<workspace-id>"
+$resourceGroup = "<resource-group>"
+
+# Get workspace retention settings
+Get-AzOperationalInsightsWorkspace -ResourceGroupName $resourceGroup | 
+    Where-Object {$_.CustomerId -eq $workspaceId} | 
+    Select-Object Name, RetentionInDays, @{N='Compliant';E={$_.RetentionInDays -ge 180}}
+
+# Check oldest logs
+$query = "AzureDiagnostics | summarize OldestLog = min(TimeGenerated) by Resource"
+Invoke-AzOperationalInsightsQuery -WorkspaceId $workspaceId -Query $query
+                    """
+                },
+                {
+                    "name": "export_access_logs",
+                    "description": "Export access logs for 6-month period",
+                    "script": """
+# Export access logs for last 6 months
+$workspaceId = "<workspace-id>"
+$startDate = (Get-Date).AddDays(-180).ToString("yyyy-MM-ddTHH:mm:ss")
+$endDate = (Get-Date).ToString("yyyy-MM-ddTHH:mm:ss")
+
+$query = @"
+AzureDiagnostics 
+| where TimeGenerated between (datetime($startDate) .. datetime($endDate))
+| where Category == 'AuditEvent' or Category == 'AccessLog'
+| project TimeGenerated, Resource, Category, OperationName, ResultType, CallerIpAddress
+"@
+
+$results = Invoke-AzOperationalInsightsQuery -WorkspaceId $workspaceId -Query $query
+$results.Results | Export-Csv -Path "access_logs_6months_$(Get-Date -Format 'yyyyMMdd').csv" -NoTypeInformation
+                    """
+                }
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "cli_commands": [
+                {
+                    "tool": "az",
+                    "command": "az monitor log-analytics workspace show --workspace-name <workspace> --resource-group <rg> --query '{name:name, retentionInDays:retentionInDays, compliant:retentionInDays>=`180`}'",
+                    "description": "Check Log Analytics workspace retention configuration"
+                },
+                {
+                    "tool": "az",
+                    "command": "az monitor log-analytics query --workspace <workspace-id> --analytics-query 'AzureDiagnostics | summarize OldestLog=min(TimeGenerated), RetentionDays=datetime_diff(\"day\", now(), min(TimeGenerated)) by Resource'",
+                    "description": "Verify actual log retention in workspace"
+                },
+                {
+                    "tool": "az",
+                    "command": "az storage account show --name <storage> --resource-group <rg> --query '{name:name, blobRetentionDays:properties.deleteRetentionPolicy.days}'",
+                    "description": "Check storage account retention for archived logs"
+                }
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
+            "api_queries": [
+                {
+                    "service": "Azure Monitor API",
+                    "endpoint": "GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.OperationalInsights/workspaces/{workspace}",
+                    "description": "Get Log Analytics workspace retention configuration"
+                },
+                {
+                    "service": "Azure Monitor Logs API",
+                    "endpoint": "POST https://api.loganalytics.io/v1/workspaces/{workspaceId}/query",
+                    "description": "Query access logs for 6-month period",
+                    "body": "{\"query\": \"AzureDiagnostics | where TimeGenerated >= ago(180d) | where Category == 'AccessLog'\"}"
+                }
             ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
+            "monitoring_queries": [
+                {
+                    "service": "Azure Monitor",
+                    "query": "AzureDiagnostics | where Category == 'AuditEvent' or Category == 'AccessLog' | summarize LogCount = count(), OldestLog = min(TimeGenerated), NewestLog = max(TimeGenerated) by Resource | extend RetentionDays = datetime_diff('day', now(), OldestLog)",
+                    "description": "Monitor log retention compliance across resources"
+                },
+                {
+                    "service": "Azure Application Insights",
+                    "query": "customEvents | where name == 'AccessLogRequest' or name == 'LogRetrieval' | summarize count() by name, bin(timestamp, 1d)",
+                    "description": "Track log access requests from parties"
+                }
             ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "collection_notes": [
+                "Configure Log Analytics workspace with minimum 180-day retention",
+                "Export access log summaries monthly for 6-month compliance window",
+                "Maintain process for providing logs upon party request",
+                "Document log retention policy in System Security Plan (SSP)",
+                "Archive logs to long-term storage (Azure Blob, S3) after 6 months",
+                "Implement automated alerts for log retention violations"
+            ],
+            "best_practices": [
+                "Use Azure Log Analytics with 180+ day retention for access logs",
+                "Configure diagnostic settings to capture all authorization data access",
+                "Enable log archival to Azure Storage for long-term retention",
+                "Implement automated log export for party-specific access summaries",
+                "Set up Azure Monitor alerts for retention policy violations",
+                "Use Azure Policy to enforce minimum retention across all workspaces",
+                "Document log request fulfillment procedures for parties",
+                "Maintain audit trail of all log access and exports",
+                "Test log retrieval procedures quarterly",
+                "Consider Azure Blob immutable storage for tamper-proof log archives"
             ]
         }

@@ -255,47 +255,85 @@ class FRR_SCN_05_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> dict:
         """
-        Get recommendations for automating evidence collection for FRR-SCN-05.
-        
-        TODO: Add evidence collection guidance
+        Get automated queries for collecting evidence of historical SCN retention.
         """
         return {
             'frr_id': self.FRR_ID,
             'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            'azure_resource_graph': [
+                "// Find storage accounts with SCN archival",
+                "Resources | where type =~ 'microsoft.storage/storageaccounts' | where properties.minimumTlsVersion == '1.2' | project name, properties.lifecycleManagement",
+                "// Find databases with SCN history retention",
+                "Resources | where type =~ 'microsoft.sql/servers/databases' | project name, properties.retentionPolicy"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            'azure_monitor_kql': [
+                "// SCN document access logs",
+                "StorageBlobLogs | where Category == 'StorageRead' | where Uri contains 'scn' | project TimeGenerated, AccountName, Uri, CallerIpAddress",
+                "// SCN retention policy compliance",
+                "AzureDiagnostics | where ResourceType == 'DOCUMENTDB' | where Category == 'DataPlaneRequests' | where collectionName_s == 'scn-history'"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
+            'azure_cli': [
+                "az storage account management-policy show --account-name <account> --resource-group <rg>",
+                "az sql db show --name <db> --server <server> --resource-group <rg> --query retentionPolicy",
+                "az cosmosdb sql container show --account-name <account> --database-name <db> --name scn-history"
+            ]
+        }
+
+    def get_evidence_artifacts(self) -> dict:
+        """
+        Get evidence artifacts demonstrating historical SCN retention and availability.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
+            'code_locations': [
+                'SCN archival configuration (infrastructure/scn-storage.bicep)',
+                'SCN retention policy logic (src/scn/retention-policy.py)',
+                'SCN access control configuration (rbac/scn-access.yml)',
+                'SCN historical query APIs (src/api/scn-history.ts)'
+            ],
+            'documentation': [
+                'SCN retention policy (minimum until next annual assessment)',
+                'SCN storage and archival procedures',
+                'SCN access control matrix for necessary parties',
+                'Historical SCN inventory and catalog',
+                'SCN retention compliance reports'
+            ],
+            'configuration_samples': [
+                'Azure Storage with immutable blob storage for SCN archival',
+                'Database with minimum 1-year retention for SCN records',
+                'RBAC assignments granting SCN access to necessary parties',
+                'Lifecycle management policies for SCN retention'
+            ]
+        }
+
+    def get_evidence_automation_recommendations(self) -> dict:
+        """
+        Get recommendations for automating evidence collection for SCN retention.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
+            'code_detectable': 'Partial',
+            'implementation_notes': [
+                'Storage retention policies enforce minimum SCN retention periods',
+                'Immutable blob storage prevents premature SCN deletion',
+                'RBAC controls ensure necessary parties have SCN access',
+                'APIs provide programmatic access to historical SCN records',
+                'Audit logs track SCN access and retention compliance'
             ],
             'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
+                'Azure Storage - Immutable blob storage for SCN archival',
+                'Azure SQL Database - Structured SCN record retention',
+                'Cosmos DB - Distributed SCN history with TTL policies',
+                'Azure RBAC - Control access to historical SCN records'
             ],
             'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                'Storage lifecycle policies for automated SCN retention',
+                'Database retention policies for structured SCN data',
+                'RBAC for granting access to necessary parties',
+                'APIs for querying and retrieving historical SCN records'
             ]
         }

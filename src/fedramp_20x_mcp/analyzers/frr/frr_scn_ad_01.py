@@ -254,47 +254,78 @@ class FRR_SCN_AD_01_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> dict:
         """
-        Get recommendations for automating evidence collection for FRR-SCN-AD-01.
-        
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        Get automated queries for collecting evidence of adaptive change notifications.
         """
         return {
             'frr_id': self.FRR_ID,
             'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            'azure_monitor_kql': [
+                "// Adaptive change notifications within 10 business days",
+                "AppTraces | where Properties.ChangeType == 'Adaptive' | where Properties.NotificationSent == true | extend DaysSinceCompletion = datetime_diff('day', TimeGenerated, todatetime(Properties.CompletionDate)) | where DaysSinceCompletion <= 10 | project timestamp, Properties.ChangeId, Properties.NotificationDate, DaysSinceCompletion",
+                "// Notification delivery tracking",
+                "AzureDiagnostics | where Category == 'Notification' | where change_type_s == 'Adaptive' | project TimeGenerated, recipient_s, notification_status_s"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            'azure_cli': [
+                "az monitor log-analytics query --workspace <workspace-id> --analytics-query \"AppTraces | where Properties.ChangeType == 'Adaptive'\"",
+                "az cosmosdb sql item read --account-name <account> --database-name notifications --container-name adaptive-changes --item-id <change-id>"
+            ]
+        }
+
+    def get_evidence_artifacts(self) -> dict:
+        """
+        Get evidence artifacts demonstrating adaptive change notification timeliness.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
+            'code_locations': [
+                'Adaptive change workflow (src/workflows/adaptive-change.py)',
+                'Notification timing logic (src/notifications/timing-validator.ts)',
+                'Ten-day deadline enforcement (src/scn/deadline-tracker.py)',
+                'Notification scheduler (src/scheduler/scn-scheduler.yml)'
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
+            'documentation': [
+                'Adaptive change notification policy (10 business day requirement)',
+                'Sample adaptive change notifications sent within deadline',
+                'Notification timing reports and compliance metrics',
+                'Escalation procedures for missed deadlines',
+                'Adaptive change completion and notification tracking logs'
+            ],
+            'configuration_samples': [
+                'Workflow enforcing 10-day notification deadline',
+                'Automated reminder system for approaching deadlines',
+                'Notification tracking database with timestamps',
+                'Compliance dashboard showing timeliness metrics'
+            ]
+        }
+
+    def get_evidence_automation_recommendations(self) -> dict:
+        """
+        Get recommendations for automating evidence collection for adaptive change notifications.
+        """
+        return {
+            'frr_id': self.FRR_ID,
+            'frr_name': self.FRR_NAME,
+            'code_detectable': 'Partial',
+            'implementation_notes': [
+                'Workflows can enforce 10 business day notification deadline after adaptive changes',
+                'Tracking systems log completion dates and notification dates for compliance',
+                'Automated schedulers send notifications and track timeliness',
+                'Monitoring alerts flag approaching or missed deadlines',
+                'Reports demonstrate compliance with notification timing requirements'
             ],
             'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
+                'Azure Logic Apps - Workflow automation with deadline tracking',
+                'Azure Functions - Timer-triggered deadline monitoring',
+                'Cosmos DB - Notification tracking with timestamp queries',
+                'Azure Monitor - Alerting for missed notification deadlines'
             ],
             'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                'Change completion tracking integrated with notification system',
+                'Business day calculator for accurate deadline computation',
+                'Automated notification delivery with confirmation tracking',
+                'Compliance reporting for notification timeliness'
             ]
         }

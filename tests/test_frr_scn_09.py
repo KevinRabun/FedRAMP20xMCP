@@ -20,8 +20,9 @@ def test_analyzer_metadata():
     
     assert analyzer.FRR_ID == "FRR-SCN-09", "FRR_ID should be FRR-SCN-09"
     assert analyzer.FAMILY == "SCN", "Family should be SCN"
-    assert analyzer.FRR_NAME == "N/A", "Title mismatch"
+    assert analyzer.FRR_NAME == None, "Title mismatch"
     assert analyzer.PRIMARY_KEYWORD == "MUST", "Keyword mismatch"
+    assert analyzer.CODE_DETECTABLE == "Partial", "CODE_DETECTABLE should be Partial"
     assert analyzer.IMPACT_LOW == True, "Impact Low mismatch"
     assert analyzer.IMPACT_MODERATE == True, "Impact Moderate mismatch"
     assert analyzer.IMPACT_HIGH == True, "Impact High mismatch"
@@ -33,9 +34,19 @@ def test_evidence_automation_recommendations():
     """Test evidence automation recommendations."""
     analyzer = FRR_SCN_09_Analyzer()
     
+    # Test all 3 evidence methods
+    queries = analyzer.get_evidence_collection_queries()
+    assert queries['frr_id'] == "FRR-SCN-09", "FRR_ID mismatch in queries"
+    assert 'azure_resource_graph' in queries, "Missing automated_queries key"
+    
+    artifacts = analyzer.get_evidence_artifacts()
+    assert artifacts['frr_id'] == "FRR-SCN-09", "FRR_ID mismatch in artifacts"
+    assert 'code_locations' in artifacts, "Missing evidence_artifacts key"
+    
     recommendations = analyzer.get_evidence_automation_recommendations()
-    assert recommendations['frr_id'] == "FRR-SCN-09", "FRR_ID mismatch"
-    # TODO: Add more assertions for evidence recommendations
+    assert recommendations['frr_id'] == "FRR-SCN-09", "FRR_ID mismatch in recommendations"
+    assert recommendations['code_detectable'] == "Partial", "code_detectable should be Partial"
+    assert 'implementation_notes' in recommendations, "Missing implementation_notes key"
     
     print("[PASS] test_evidence_automation_recommendations PASSED")
 

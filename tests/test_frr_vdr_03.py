@@ -29,67 +29,74 @@ def test_analyzer_metadata():
     print("[PASS] test_analyzer_metadata PASSED")
 
 
-def test_evidence_automation_recommendations():
-    """Test evidence automation recommendations."""
+def test_evidence_collection():
+    """Test evidence collection methods."""
     analyzer = FRR_VDR_03_Analyzer()
     
+    # Test evidence queries
+    queries = analyzer.get_evidence_collection_queries()
+    assert isinstance(queries, dict), "Queries should be a dictionary"
+    assert "azure_monitor_kql" in queries, "Should have Azure Monitor KQL queries"
+    assert len(queries["azure_monitor_kql"]) > 0, "Should have at least one KQL query"
+    
+    # Test evidence artifacts
+    artifacts = analyzer.get_evidence_artifacts()
+    assert isinstance(artifacts, list), "Artifacts should be a list"
+    assert len(artifacts) > 0, "Should have at least one artifact"
+    
+    # Test automation recommendations
     recommendations = analyzer.get_evidence_automation_recommendations()
-    assert recommendations['frr_id'] == "FRR-VDR-03", "FRR_ID mismatch"
-    # TODO: Add more assertions for evidence recommendations
+    assert isinstance(recommendations, dict), "Recommendations should be a dictionary"
+    assert len(recommendations) > 0, "Should have at least one recommendation"
     
-    print("[PASS] test_evidence_automation_recommendations PASSED")
+    print("[PASS] test_evidence_collection PASSED")
 
 
-# TODO: Add language-specific tests
-# Examples:
-# - test_python_detection()
-# - test_csharp_detection()
-# - test_java_detection()
-# - test_typescript_detection()
-# - test_bicep_detection()
-# - test_terraform_detection()
-# - test_github_actions_detection()
-# - test_azure_pipelines_detection()
-# - test_compliant_code_passes()
-
-
-def run_all_tests():
-    """Run all FRR-VDR-03 tests."""
-    test_functions = [
-        ("Analyzer metadata", test_analyzer_metadata),
-        ("Evidence automation recommendations", test_evidence_automation_recommendations),
-        # TODO: Add more test functions
-    ]
+def test_metadata():
+    """Test analyzer metadata comprehensively."""
+    analyzer = FRR_VDR_03_Analyzer()
     
-    passed = 0
-    failed = 0
+    # Verify all required metadata fields
+    assert hasattr(analyzer, 'FRR_ID'), "Should have FRR_ID"
+    assert hasattr(analyzer, 'FAMILY'), "Should have FAMILY"
+    assert hasattr(analyzer, 'FRR_NAME'), "Should have FRR_NAME"
+    assert hasattr(analyzer, 'PRIMARY_KEYWORD'), "Should have PRIMARY_KEYWORD"
+    assert hasattr(analyzer, 'CODE_DETECTABLE'), "Should have CODE_DETECTABLE"
     
-    print("\n" + "=" * 70)
-    print(f"Running FRR-VDR-03 Tests ({len(test_functions)} tests)")
-    print("=" * 70 + "\n")
+    # Verify metadata values
+    assert analyzer.FRR_ID == "FRR-VDR-03"
+    assert analyzer.FAMILY == "VDR"
+    assert analyzer.FRR_NAME == "Timeframe Requirements"
+    assert analyzer.PRIMARY_KEYWORD == "MUST"
     
-    for test_name, test_func in test_functions:
-        try:
-            test_func()
-            passed += 1
-        except AssertionError as e:
-            print(f"[FAIL] {test_name} FAILED: {e}")
-            failed += 1
-        except Exception as e:
-            print(f"[FAIL] {test_name} ERROR: {e}")
-            failed += 1
-    
-    print("\n" + "=" * 70)
-    print(f"Test Results: {passed}/{len(test_functions)} passed, {failed} failed")
-    print("=" * 70)
-    
-    if failed == 0:
-        print("\nALL TESTS PASSED [PASS]\n")
-    else:
-        print(f"\nSOME TESTS FAILED [FAIL]\n")
-        print("TODO: Implement remaining tests to achieve 100% pass rate")
-        exit(1)
+    print("[PASS] test_metadata PASSED")
 
 
 if __name__ == "__main__":
-    run_all_tests()
+    import sys
+    passed = 0
+    failed = 0
+    
+    tests = [
+        test_analyzer_metadata,
+        test_evidence_collection,
+        test_metadata
+    ]
+    
+    for test in tests:
+        try:
+            test()
+            passed += 1
+        except AssertionError as e:
+            print(f"[FAIL] {test.__name__}: {e}")
+            failed += 1
+        except Exception as e:
+            print(f"[ERROR] {test.__name__}: {e}")
+            failed += 1
+    
+    print(f"\n{'='*50}")
+    print(f"Results: {passed} passed, {failed} failed")
+    print(f"{'='*50}")
+    
+    if failed > 0:
+        sys.exit(1)

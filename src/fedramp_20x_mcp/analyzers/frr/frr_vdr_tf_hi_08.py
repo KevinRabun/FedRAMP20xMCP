@@ -10,7 +10,7 @@ Impact Levels: High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,50 @@ class FRR_VDR_TF_HI_08_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-TF-HI-08.
+        Get queries for collecting evidence of partial mitigation timeframes (High impact).
         
-        TODO: Add evidence collection guidance
+        Returns queries to verify vulnerabilities are partially mitigated within timeframes based on impact, internet reachability, exploitability.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "Partial mitigation timeframe compliance": [
+                "VulnerabilityRemediation | where EvaluationDate > ago(180d) | extend MitigationDelay=datetime_diff('day', PartialMitigationDate, EvaluationDate) | extend TimeframeTarget=case(ImpactLevel=='N5' and InternetReachable==true and Exploitable==true, 15, ImpactLevel=='N4' and InternetReachable==true and Exploitable==true, 30, ImpactLevel=='N5' and InternetReachable==false and Exploitable==true, 30, 90) | extend WithinTimeframe=iff(MitigationDelay <= TimeframeTarget, true, false) | summarize ComplianceRate=countif(WithinTimeframe)/count()*100 by ImpactLevel, InternetReachable, Exploitable",
+                "SecurityRemediation | where TimeGenerated > ago(90d) | where RemediationType == 'Partial' | project VulnerabilityId, EvalDate=EvaluationTimestamp, MitigationDate=MitigationTimestamp, DaysToMitigate=datetime_diff('day', MitigationTimestamp, EvaluationTimestamp), Impact, InternetFacing, Exploitable"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "Risk-based timeframe tracking": [
+                "VulnerabilityManagement | where Status in ('Partially Mitigated', 'Mitigated') | extend TimeframeCategory=case(ImpactRating=='N5' and InternetFacing==true and ExploitabilityScore>=0.8, '15-day', ImpactRating=='N4' and InternetFacing==true and ExploitabilityScore>=0.8, '30-day', ImpactRating=='N5' and InternetFacing==false and ExploitabilityScore>=0.8, '30-day', '90-day') | summarize AvgDaysToMitigate=avg(datetime_diff('day', PartialMitigationDate, EvaluationDate)) by TimeframeCategory",
+                "RemediationTracking | where TimeGenerated > ago(180d) | project VulnId=VulnerabilityId, ImpactLevel, IsInternet=InternetReachable, IsExploitable=LikelyExploitable, EvalDate, MitigationDate, TimeToMitigate=datetime_diff('day', MitigationDate, EvalDate)"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "Timeframe SLA violations": [
+                "VulnerabilityManagement | where EvaluationDate > ago(180d) | where Status != 'Closed' | extend MitigationOverdue=datetime_diff('day', now(), EvaluationDate) | extend ExpectedTimeframe=case(ImpactRating=='N5' and InternetFacing==true and ExploitabilityScore>=0.8, 15, ImpactRating=='N4' and InternetFacing==true and ExploitabilityScore>=0.8, 30, ImpactRating=='N5' and InternetFacing==false and ExploitabilityScore>=0.8, 30, 90) | where MitigationOverdue > ExpectedTimeframe | summarize ViolationCount=count(), AvgOverdueDays=avg(MitigationOverdue-ExpectedTimeframe) by ImpactRating, InternetFacing",
+                "AlertManagement | where AlertType == 'Mitigation Overdue' | where TimeGenerated > ago(90d) | project TimeGenerated, VulnerabilityId, ImpactLevel, ExpectedTimeframe, DaysOverdue, InternetReachable, Exploitable"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for partial mitigation timeframes.
+        """
+        return [
+            "Partial mitigation timeframe matrix (15/30/90 days based on N4/N5, internet-reachable, exploitable)",
+            "Vulnerability evaluation and mitigation tracking (timestamps for both events)",
+            "Timeframe compliance reports (percentage meeting SLAs by risk category)",
+            "Risk-based remediation prioritization logic (impact + internet + exploitability factors)",
+            "Partial mitigation evidence (compensating controls, WAF rules, network segmentation)",
+            "SLA violation alerts and escalations (overdue mitigations by timeframe category)",
+            "Remediation workflow configurations (automated prioritization and assignment)",
+            "Historical mitigation performance metrics (average time to partial mitigation by risk level)"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Get recommendations for automating evidence collection.
+        """
+        return {
+            "Automated timeframe calculation": "Automatically calculate mitigation timeframe targets based on impact level (N4/N5), internet reachability, and exploitability (custom logic in vulnerability management system)",
+            "Risk-based remediation prioritization": "Prioritize remediation tasks by urgency using combined risk factors and remaining timeframe (ServiceNow priority matrix, Azure DevOps prioritization)",
+            "Timeframe SLA tracking": "Track days remaining for partial mitigation, alert teams when approaching deadlines (Azure Monitor alerts, custom metrics, countdown timers)",
+            "Partial mitigation documentation": "Document partial mitigation measures (compensating controls, temporary fixes) with timestamps (vulnerability management system, Azure Workbooks)",
+            "Compliance reporting": "Generate automated reports showing timeframe compliance rates by risk category (Log Analytics workspace, Power BI dashboards)"
         }

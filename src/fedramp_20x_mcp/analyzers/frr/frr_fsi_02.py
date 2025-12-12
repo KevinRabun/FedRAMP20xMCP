@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import Dict, List, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -81,74 +81,56 @@ class FRR_FSI_02_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Python code for FRR-FSI-02 compliance using AST.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST use criticality designators in subject lines when sending messages
+        requiring elevated response. This is a FedRAMP operational requirement
+        about message formatting, not a CSP code requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze C# code for FRR-FSI-02 compliance using AST.
         
-        TODO: Implement C# analysis
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST use criticality designators in subject lines when sending messages
+        requiring elevated response. This is a FedRAMP operational requirement
+        about message formatting, not a CSP code requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Java code for FRR-FSI-02 compliance using AST.
         
-        TODO: Implement Java analysis
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST use criticality designators in subject lines when sending messages
+        requiring elevated response. This is a FedRAMP operational requirement
+        about message formatting, not a CSP code requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze TypeScript/JavaScript code for FRR-FSI-02 compliance using AST.
         
-        TODO: Implement TypeScript analysis
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST use criticality designators in subject lines when sending messages
+        requiring elevated response. This is a FedRAMP operational requirement
+        about message formatting, not a CSP code requirement.
         """
-        findings = []
-        lines = code.split('\n')
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
+    
+    def analyze_javascript(self, code: str, file_path: str = "") -> List[Finding]:
+        """
+        Analyze JavaScript code for FRR-FSI-02 compliance using AST.
         
-        # TODO: Implement AST analysis for TypeScript
-        return findings
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST use criticality designators in subject lines when sending messages
+        requiring elevated response. This is a FedRAMP operational requirement
+        about message formatting, not a CSP code requirement.
+        """
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     # ============================================================================
     # INFRASTRUCTURE AS CODE ANALYZERS (Regex-based)
@@ -158,32 +140,23 @@ class FRR_FSI_02_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Bicep infrastructure code for FRR-FSI-02 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST use criticality designators in subject lines when sending messages
+        requiring elevated response. This is a FedRAMP operational requirement
+        about message formatting, not a CSP infrastructure requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Terraform infrastructure code for FRR-FSI-02 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST use criticality designators in subject lines when sending messages
+        requiring elevated response. This is a FedRAMP operational requirement
+        about message formatting, not a CSP infrastructure requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
@@ -193,85 +166,164 @@ class FRR_FSI_02_Analyzer(BaseFRRAnalyzer):
         """
         Analyze GitHub Actions workflow for FRR-FSI-02 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST use criticality designators in subject lines when sending messages
+        requiring elevated response. This is a FedRAMP operational requirement
+        about message formatting, not a CSP CI/CD requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Azure Pipelines YAML for FRR-FSI-02 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST use criticality designators in subject lines when sending messages
+        requiring elevated response. This is a FedRAMP operational requirement
+        about message formatting, not a CSP CI/CD requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze GitLab CI YAML for FRR-FSI-02 compliance.
         
-        TODO: Implement GitLab CI analysis
+        NOT APPLICABLE: This requirement applies to FedRAMP (not CSPs) - FedRAMP
+        MUST use criticality designators in subject lines when sending messages
+        requiring elevated response. This is a FedRAMP operational requirement
+        about message formatting, not a CSP CI/CD requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []  # NOT APPLICABLE - FedRAMP-side requirement
     
     # ============================================================================
-    # EVIDENCE COLLECTION SUPPORT
+    # EVIDENCE COLLECTION METHODS
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
         """
-        Get recommendations for automating evidence collection for FRR-FSI-02.
+        Return automated evidence collection queries for FRR-FSI-02.
         
-        TODO: Add evidence collection guidance
+        Returns:
+            Dict containing automated query specifications.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "automated_queries": [
+                "Note: FRR-FSI-02 is a FedRAMP-side requirement. CSPs verify FedRAMP "
+                "messages received use proper criticality designators in subject lines"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        """
+        Return list of evidence artifacts needed for FRR-FSI-02 compliance.
+        
+        Returns:
+            List of evidence artifact specifications.
+        """
+        return [
+            {
+                "artifact_id": "FSI-02-01",
+                "name": "Sample FedRAMP Critical Messages",
+                "description": "Sample high-priority FedRAMP messages showing criticality designators in subject lines",
+                "collection_method": "Email Archive - Export sample critical FedRAMP communications"
+            },
+            {
+                "artifact_id": "FSI-02-02",
+                "name": "Criticality Designator Reference",
+                "description": "Documentation of criticality designators used by FedRAMP (e.g., [URGENT], [ACTION REQUIRED])",
+                "collection_method": "Document Review - FedRAMP communication standards documentation"
+            },
+            {
+                "artifact_id": "FSI-02-03",
+                "name": "Email Parsing Rules",
+                "description": "CSP email system rules/filters for identifying FedRAMP critical messages by subject line",
+                "collection_method": "Configuration Export - Email gateway/filtering rules"
+            },
+            {
+                "artifact_id": "FSI-02-04",
+                "name": "Alert Escalation Configuration",
+                "description": "CSP alert system configuration for escalating FedRAMP messages with criticality designators",
+                "collection_method": "Configuration Export - Incident management/ticketing system rules"
+            },
+            {
+                "artifact_id": "FSI-02-05",
+                "name": "Response Time Tracking",
+                "description": "Logs showing CSP response times to FedRAMP messages by criticality level",
+                "collection_method": "Log Query - Incident management system response metrics"
+            },
+            {
+                "artifact_id": "FSI-02-06",
+                "name": "Staff Training Documentation",
+                "description": "Training materials for CSP staff on recognizing and responding to FedRAMP criticality designators",
+                "collection_method": "Document Review - Training curriculum and attendance records"
+            },
+            {
+                "artifact_id": "FSI-02-07",
+                "name": "Message Handling Procedures",
+                "description": "CSP procedures for triaging and responding to FedRAMP messages based on subject line criticality",
+                "collection_method": "Document Review - Standard operating procedures"
+            },
+            {
+                "artifact_id": "FSI-02-08",
+                "name": "Notification Distribution Lists",
+                "description": "CSP distribution lists/on-call schedules for critical FedRAMP communications",
+                "collection_method": "Configuration Export - Notification system settings"
+            }
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Return recommendations for automating evidence collection for FRR-FSI-02.
+        
+        Returns:
+            Dict containing automation recommendations and implementation notes.
+        """
+        return {
+            "implementation_notes": (
+                "FRR-FSI-02 is a FedRAMP-side requirement: FedRAMP MUST convey criticality "
+                "in message subject lines using specific designators when elevated response "
+                "is required. This is NOT a CSP implementation requirement.\n\n"
+                
+                "CSP ROLE:\n"
+                "- Recognize FedRAMP criticality designators in email subject lines\n"
+                "- Configure email systems to properly route/escalate critical messages\n"
+                "- Establish response procedures based on message criticality\n"
+                "- Train staff on criticality levels and response expectations\n\n"
+                
+                "CRITICALITY DESIGNATORS (examples):\n"
+                "- [URGENT] - Immediate action required\n"
+                "- [ACTION REQUIRED] - Response needed by specific deadline\n"
+                "- [TIME SENSITIVE] - Priority handling needed\n"
+                "- [CRITICAL] - High-priority security or compliance matter\n"
+                "Note: Actual designators defined by FedRAMP communication standards\n\n"
+                
+                "CSP MESSAGE HANDLING:\n"
+                "- Email filtering: Identify messages with criticality designators\n"
+                "- Automatic escalation: Route critical messages to appropriate teams\n"
+                "- Alert generation: Notify on-call personnel of urgent messages\n"
+                "- Response tracking: Monitor response times by criticality level\n\n"
+                
+                "RESPONSE TIME EXPECTATIONS:\n"
+                "- [URGENT]: Immediate acknowledgment (within hours)\n"
+                "- [ACTION REQUIRED]: Response by stated deadline\n"
+                "- [TIME SENSITIVE]: Priority handling, faster than standard\n"
+                "- Standard messages: Normal business response time\n\n"
+                
+                "AUTOMATION OPPORTUNITIES:\n"
+                "1. Email parsing: Automated extraction of criticality designators\n"
+                "2. Ticket creation: Auto-generate high-priority tickets from critical emails\n"
+                "3. Alert routing: Automatically page on-call staff for urgent messages\n"
+                "4. Response tracking: Dashboard showing response times by criticality\n\n"
+                
+                "EVIDENCE COLLECTION:\n"
+                "- Sample emails with criticality designators\n"
+                "- Email routing/filtering rules\n"
+                "- Alert escalation configurations\n"
+                "- Response time metrics by criticality level\n\n"
+                
+                "Note: This requirement ensures CSPs can appropriately prioritize and respond to "
+                "FedRAMP communications requiring elevated attention. CSPs should configure email "
+                "systems and procedures to recognize these designators but do not define the "
+                "designators themselves - that is FedRAMP's responsibility."
+            )
         }

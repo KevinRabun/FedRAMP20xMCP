@@ -29,15 +29,28 @@ def test_analyzer_metadata():
     print("[PASS] test_analyzer_metadata PASSED")
 
 
-def test_evidence_automation_recommendations():
-    """Test evidence automation recommendations."""
+def test_evidence_collection():
+    """Test evidence collection methods."""
     analyzer = FRR_VDR_TF_HI_08_Analyzer()
     
-    recommendations = analyzer.get_evidence_automation_recommendations()
-    assert recommendations['frr_id'] == "FRR-VDR-TF-HI-08", "FRR_ID mismatch"
-    # TODO: Add more assertions for evidence recommendations
+    # Test queries
+    queries = analyzer.get_evidence_collection_queries()
+    assert "Partial mitigation timeframe compliance" in queries, "Missing compliance queries"
+    assert "Risk-based timeframe tracking" in queries, "Missing risk tracking queries"
+    assert "Timeframe SLA violations" in queries, "Missing SLA violation queries"
     
-    print("[PASS] test_evidence_automation_recommendations PASSED")
+    # Test artifacts
+    artifacts = analyzer.get_evidence_artifacts()
+    assert any("timeframe" in a.lower() for a in artifacts), "Missing timeframe references"
+    assert any("partial mitigation" in a.lower() for a in artifacts), "Missing partial mitigation"
+    assert any("internet" in a.lower() and "exploitable" in a.lower() for a in artifacts), "Missing risk factors"
+    
+    # Test automation recommendations
+    recommendations = analyzer.get_evidence_automation_recommendations()
+    assert "Automated timeframe calculation" in recommendations, "Missing timeframe calculation recommendation"
+    assert "Risk-based remediation prioritization" in recommendations, "Missing prioritization recommendation"
+    
+    print("[PASS] test_evidence_collection PASSED")
 
 
 # TODO: Add language-specific tests
@@ -57,7 +70,7 @@ def run_all_tests():
     """Run all FRR-VDR-TF-HI-08 tests."""
     test_functions = [
         ("Analyzer metadata", test_analyzer_metadata),
-        ("Evidence automation recommendations", test_evidence_automation_recommendations),
+        ("Evidence collection", test_evidence_collection),
         # TODO: Add more test functions
     ]
     

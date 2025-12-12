@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -83,74 +83,45 @@ class FRR_CCM_AG_01_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Python code for FRR-CCM-AG-01 compliance using AST.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        **NOT APPLICABLE:** This is an AGENCY requirement about reviewing reports.
+        Agencies MUST review Ongoing Authorization Reports - this is a governance/process
+        requirement for agencies consuming CSP reports, not a code implementation requirement
+        for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
+        return []
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze C# code for FRR-CCM-AG-01 compliance using AST.
         
-        TODO: Implement C# analysis
+        **NOT APPLICABLE:** This is an AGENCY requirement about reviewing reports.
+        Agencies MUST review Ongoing Authorization Reports - this is a governance/process
+        requirement for agencies consuming CSP reports, not a code implementation requirement
+        for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        return []
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Java code for FRR-CCM-AG-01 compliance using AST.
         
-        TODO: Implement Java analysis
+        **NOT APPLICABLE:** This is an AGENCY requirement about reviewing reports.
+        Agencies MUST review Ongoing Authorization Reports - this is a governance/process
+        requirement for agencies consuming CSP reports, not a code implementation requirement
+        for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        return []
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze TypeScript/JavaScript code for FRR-CCM-AG-01 compliance using AST.
         
-        TODO: Implement TypeScript analysis
+        **NOT APPLICABLE:** This is an AGENCY requirement about reviewing reports.
+        Agencies MUST review Ongoing Authorization Reports - this is a governance/process
+        requirement for agencies consuming CSP reports, not a code implementation requirement
+        for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
-        return findings
+        return []
     
     # ============================================================================
     # INFRASTRUCTURE AS CODE ANALYZERS (Regex-based)
@@ -160,32 +131,23 @@ class FRR_CCM_AG_01_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Bicep infrastructure code for FRR-CCM-AG-01 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        **NOT APPLICABLE:** This is an AGENCY requirement about reviewing reports.
+        Agencies MUST review Ongoing Authorization Reports - this is a governance/process
+        requirement for agencies consuming CSP reports, not a code implementation requirement
+        for cloud service providers. Infrastructure code cannot implement agency review processes.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        return []
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Terraform infrastructure code for FRR-CCM-AG-01 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        **NOT APPLICABLE:** This is an AGENCY requirement about reviewing reports.
+        Agencies MUST review Ongoing Authorization Reports - this is a governance/process
+        requirement for agencies consuming CSP reports, not a code implementation requirement
+        for cloud service providers. Infrastructure code cannot implement agency review processes.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        return []
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
@@ -195,85 +157,143 @@ class FRR_CCM_AG_01_Analyzer(BaseFRRAnalyzer):
         """
         Analyze GitHub Actions workflow for FRR-CCM-AG-01 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        **NOT APPLICABLE:** This is an AGENCY requirement about reviewing reports.
+        Agencies MUST review Ongoing Authorization Reports - this is a governance/process
+        requirement for agencies consuming CSP reports, not a code implementation requirement
+        for cloud service providers. CI/CD pipelines cannot implement agency review processes.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Azure Pipelines YAML for FRR-CCM-AG-01 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        **NOT APPLICABLE:** This is an AGENCY requirement about reviewing reports.
+        Agencies MUST review Ongoing Authorization Reports - this is a governance/process
+        requirement for agencies consuming CSP reports, not a code implementation requirement
+        for cloud service providers. CI/CD pipelines cannot implement agency review processes.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze GitLab CI YAML for FRR-CCM-AG-01 compliance.
         
-        TODO: Implement GitLab CI analysis
+        **NOT APPLICABLE:** This is an AGENCY requirement about reviewing reports.
+        Agencies MUST review Ongoing Authorization Reports - this is a governance/process
+        requirement for agencies consuming CSP reports, not a code implementation requirement
+        for cloud service providers. CI/CD pipelines cannot implement agency review processes.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> List[str]:
         """
-        Get recommendations for automating evidence collection for FRR-CCM-AG-01.
+        Returns Azure Resource Graph and KQL queries for evidence collection.
         
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        Note: This is an AGENCY requirement. Evidence focuses on provider's delivery of
+        reports to agencies and agency documentation of their review processes.
+        """
+        return [
+            # Query 1: Report delivery tracking to agencies
+            """AppEvents
+| where TimeGenerated > ago(90d)
+| where Name == 'ReportDelivered' or Name == 'ReportShared'
+| where Properties contains 'agency' or Properties contains 'customer'
+| project TimeGenerated, Name, Properties, ReportId = tostring(Properties.report_id)
+| order by TimeGenerated desc""",
+            
+            # Query 2: Report access by agencies
+            """AppRequests
+| where TimeGenerated > ago(90d)
+| where Url contains 'ongoing-reports' or Url contains 'authorization-reports'
+| extend AgencyId = tostring(customDimensions.agency_id)
+| where isnotempty(AgencyId)
+| summarize AccessCount = count() by AgencyId, bin(TimeGenerated, 1d)
+| order by TimeGenerated desc""",
+            
+            # Query 3: Agency feedback or acknowledgment tracking
+            """AppTraces
+| where TimeGenerated > ago(90d)
+| where Message contains 'agency review' or Message contains 'report acknowledgment'
+| project TimeGenerated, Message, Properties
+| order by TimeGenerated desc"""
+        ]
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Returns list of evidence artifacts to collect.
+        """
+        return [
+            "Agency-specific report delivery documentation",
+            "Report distribution tracking logs showing agency receipt",
+            "Agency acknowledgment or feedback records",
+            "Agency ATO documentation referencing ongoing reports",
+            "Inter-agency communication about report review",
+            "Agency risk tolerance documentation",
+            "Agency POA&M updates reflecting report review",
+            "Agency continuous monitoring strategy documents",
+            "Service Level Agreements (SLA) for report delivery to agencies",
+            "Evidence that reports enable agencies to assess risk impact"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Provides recommendations for automated evidence collection.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "automated_queries": [
+                {
+                    "name": "Report Delivery to Agencies",
+                    "description": "Track delivery of Ongoing Authorization Reports to agency customers",
+                    "query": """AppEvents
+| where TimeGenerated > ago(90d)
+| where Name == 'ReportDelivered'
+| where Properties contains 'agency'
+| summarize DeliveryCount = count() by bin(TimeGenerated, 1d)
+| order by TimeGenerated desc""",
+                    "schedule": "Quarterly"
+                },
+                {
+                    "name": "Agency Report Access",
+                    "description": "Monitor agency access to ongoing reports",
+                    "query": """AppRequests
+| where TimeGenerated > ago(90d)
+| where Url contains 'ongoing-reports'
+| extend AgencyId = tostring(customDimensions.agency_id)
+| summarize UniqueAgencies = dcount(AgencyId), TotalAccess = count() by bin(TimeGenerated, 1d)
+| order by TimeGenerated desc""",
+                    "schedule": "Monthly"
+                }
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "evidence_artifacts": [
+                {
+                    "name": "Report Delivery Records",
+                    "description": "Records of report delivery to agency customers",
+                    "location": "Azure Storage Account / report-delivery container"
+                },
+                {
+                    "name": "Agency Access Logs",
+                    "description": "Logs showing agency access to ongoing reports",
+                    "location": "Azure Monitor Logs / Application Insights"
+                },
+                {
+                    "name": "Agency ATO Documentation",
+                    "description": "Agency Authorization to Operate documents referencing reports",
+                    "location": "Secure document repository / agency-ato folder"
+                }
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "implementation_notes": [
+                "This is an AGENCY requirement - agencies MUST review reports",
+                "Provider responsibility: Deliver reports to agencies in accessible format",
+                "Provider evidence: Document delivery and agency access to reports",
+                "Agency responsibility: Review reports and assess risk impact to their ATO",
+                "Provider should track: Report delivery, agency access, agency acknowledgment",
+                "Consider: Agency portal for report access with tracking",
+                "Coordinate with: Agency security teams and AOs (Authorizing Officials)",
+                "Agency evidence should include: Review procedures, risk assessments, ATO updates"
             ]
         }

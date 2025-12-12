@@ -21,7 +21,7 @@ def test_analyzer_metadata():
     assert analyzer.FRR_ID == "FRR-CCM-07", "FRR_ID should be FRR-CCM-07"
     assert analyzer.FAMILY == "CCM", "Family should be CCM"
     assert analyzer.FRR_NAME == "Responsible Public Sharing", "Title mismatch"
-    assert analyzer.PRIMARY_KEYWORD == "MUST", "Keyword mismatch"
+    assert analyzer.PRIMARY_KEYWORD == "MAY", "Keyword mismatch"
     assert analyzer.IMPACT_LOW == True, "Impact Low mismatch"
     assert analyzer.IMPACT_MODERATE == True, "Impact Moderate mismatch"
     assert analyzer.IMPACT_HIGH == True, "Impact High mismatch"
@@ -34,8 +34,9 @@ def test_evidence_automation_recommendations():
     analyzer = FRR_CCM_07_Analyzer()
     
     recommendations = analyzer.get_evidence_automation_recommendations()
-    assert recommendations['frr_id'] == "FRR-CCM-07", "FRR_ID mismatch"
-    # TODO: Add more assertions for evidence recommendations
+    assert 'automated_queries' in recommendations, "Missing automated_queries"
+    assert 'evidence_artifacts' in recommendations, "Missing evidence_artifacts"
+    assert 'implementation_notes' in recommendations, "Missing implementation_notes"
     
     print("[PASS] test_evidence_automation_recommendations PASSED")
 

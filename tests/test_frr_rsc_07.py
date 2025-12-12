@@ -25,6 +25,7 @@ def test_analyzer_metadata():
     assert analyzer.IMPACT_LOW == True, "Impact Low mismatch"
     assert analyzer.IMPACT_MODERATE == True, "Impact Moderate mismatch"
     assert analyzer.IMPACT_HIGH == True, "Impact High mismatch"
+    assert analyzer.CODE_DETECTABLE == "Partial", "Code detectable should be Partial"
     
     print("[PASS] test_analyzer_metadata PASSED")
 
@@ -33,9 +34,15 @@ def test_evidence_automation_recommendations():
     """Test evidence automation recommendations."""
     analyzer = FRR_RSC_07_Analyzer()
     
+    # Test all 3 evidence methods
+    queries = analyzer.get_evidence_collection_queries()
+    assert 'automated_queries' in queries, "Missing automated_queries key"
+    
+    artifacts = analyzer.get_evidence_artifacts()
+    assert 'evidence_artifacts' in artifacts, "Missing evidence_artifacts key"
+    
     recommendations = analyzer.get_evidence_automation_recommendations()
-    assert recommendations['frr_id'] == "FRR-RSC-07", "FRR_ID mismatch"
-    # TODO: Add more assertions for evidence recommendations
+    assert 'implementation_notes' in recommendations, "Missing implementation_notes key"
     
     print("[PASS] test_evidence_automation_recommendations PASSED")
 

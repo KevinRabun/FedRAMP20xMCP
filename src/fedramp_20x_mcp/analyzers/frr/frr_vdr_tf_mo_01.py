@@ -10,7 +10,7 @@ Impact Levels: Moderate
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,132 @@ class FRR_VDR_TF_MO_01_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """
+        Get automated queries for collecting evidence of 14-day machine-readable VDR history availability.
+        
+        Returns structured queries for API service availability, machine-readable format verification,
+        and 14-day update frequency tracking (Moderate impact - middle ground between 7-day High and 30-day Low).
+        """
+        return {
+            "API service availability for VDR history": {
+                "description": "Verify VDR history API services are available for automated retrieval by all necessary parties (14-day update cadence for Moderate impact)",
+                "api_availability_query": """
+                    AzureDiagnostics
+                    | where Category == 'ApplicationGatewayAccess' or Category == 'ApiManagement'
+                    | where RequestUri contains 'vulnerability' or RequestUri contains 'vdr' or RequestUri contains 'security'
+                    | where httpMethod_s == 'GET'
+                    | summarize RequestCount = count(), LastAccess = max(TimeGenerated), AvgResponseTime = avg(timeTaken_s) by RequestUri, resultCode_s
+                    | extend APIAvailability = iff(resultCode_s startswith '2', 'Available', 'Degraded')
+                    | project RequestUri, APIAvailability, RequestCount, LastAccess, AvgResponseTime
+                """,
+                "azure_resource_graph": """
+                    Resources
+                    | where type == 'microsoft.apimanagement/service' or type == 'microsoft.web/sites'
+                    | where tags['Purpose'] contains 'VDR' or tags['Purpose'] contains 'Vulnerability' or name contains 'vdr' or name contains 'vulnerability'
+                    | extend APIEndpoint = properties.gatewayUrl
+                    | extend ProvisioningState = properties.provisioningState
+                    | project name, resourceGroup, APIEndpoint, ProvisioningState, tags
+                """
+            },
+            "Machine-readable format verification": {
+                "description": "Verify VDR history is provided in machine-readable formats (JSON, XML, CSV) for automated processing",
+                "format_verification_query": """
+                    AzureDiagnostics
+                    | where Category == 'ApiManagement' or Category == 'ApplicationInsights'
+                    | where RequestUri contains 'vulnerability' or RequestUri contains 'vdr'
+                    | extend ResponseFormat = case(
+                        ResponseHeaders contains 'application/json', 'JSON',
+                        ResponseHeaders contains 'application/xml', 'XML',
+                        ResponseHeaders contains 'text/csv', 'CSV',
+                        'Other'
+                    )
+                    | summarize RequestCount = count() by ResponseFormat
+                    | extend MachineReadable = iff(ResponseFormat in ('JSON', 'XML', 'CSV'), 'Yes', 'No')
+                    | project ResponseFormat, MachineReadable, RequestCount
+                """,
+                "storage_format_query": """
+                    StorageBlobLogs
+                    | where TimeGenerated > ago(14d)
+                    | where Uri contains 'vdr-history' or Uri contains 'vulnerability-data'
+                    | extend FileExtension = extract(@'\\.(\\w+)$', 1, Uri)
+                    | extend MachineReadable = iff(FileExtension in ('json', 'xml', 'csv'), 'Yes', 'No')
+                    | summarize FileCount = count(), LastModified = max(TimeGenerated) by FileExtension, MachineReadable
+                    | project FileExtension, MachineReadable, FileCount, LastModified
+                """
+            },
+            "14-day update frequency tracking": {
+                "description": "Track persistent updates to VDR history at 14-day intervals (Moderate impact - middle between 7-day High and 30-day Low)",
+                "update_frequency_query": """
+                    AzureDiagnostics
+                    | where Category == 'VulnerabilityData' or Category == 'VDRHistory'
+                    | where OperationName contains 'Update' or OperationName contains 'Refresh'
+                    | summarize UpdateEvents = count(), LastUpdate = max(TimeGenerated), FirstUpdate = min(TimeGenerated) by bin(TimeGenerated, 14d)
+                    | extend DaysSinceLastUpdate = datetime_diff('day', now(), LastUpdate)
+                    | extend FourteenDayCompliance = iff(DaysSinceLastUpdate <= 14, 'Compliant', 'NonCompliant')
+                    | project UpdatePeriod = TimeGenerated, UpdateEvents, FirstUpdate, LastUpdate, DaysSinceLastUpdate, FourteenDayCompliance
+                """,
+                "scheduled_refresh_query": """
+                    Resources
+                    | where type == 'microsoft.automation/automationaccounts/schedules' or type == 'microsoft.logic/workflows'
+                    | where properties.frequency == 'Week' and properties.interval == 2  // Bi-weekly = 14 days
+                    | where name contains 'VDR' or name contains 'Vulnerability'
+                    | extend ScheduleFrequency = strcat(properties.frequency, '-', properties.interval)
+                    | extend Enabled = properties.enabled
+                    | project name, resourceGroup, ScheduleFrequency, Enabled, NextRun = properties.nextRun
+                """
+            }
+        }
+
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts needed to demonstrate 14-day machine-readable VDR history compliance.
+        
+        Returns artifacts for API service availability, machine-readable format verification,
+        and 14-day update frequency per FRR-VDR-TF-MO-01.
+        """
+        return [
+            "API service endpoints for VDR history retrieval (REST APIs, GraphQL, or similar)",
+            "API availability and performance metrics for VDR history services",
+            "Machine-readable format verification: JSON/XML/CSV response headers and file extensions for VDR history data",
+            "VDR history data samples in machine-readable formats (demonstration of automated retrieval capability)",
+            "14-day update frequency logs showing persistent refreshes of VDR history data (Moderate impact: middle between 7-day High and 30-day Low)",
+            "Scheduled job configurations for bi-weekly (14-day) VDR history updates",
+            "API access logs showing automated retrieval by necessary parties (security teams, auditors, compliance tools)",
+            "VDR history update timestamps for past 90 days demonstrating 14-day persistent update cadence"
+        ]
+
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
         """
         Get recommendations for automating evidence collection for FRR-VDR-TF-MO-01.
         
-        TODO: Add evidence collection guidance
+        Returns automation strategies for API service implementation, machine-readable format
+        enforcement, and 14-day update scheduling.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
-            ]
+            "api_service_implementation": {
+                "description": "Implement API service for automated VDR history retrieval by all necessary parties",
+                "implementation": "Use Azure API Management or Azure Functions to expose VDR history via REST API with machine-readable responses (JSON/XML/CSV)",
+                "rationale": "Enables automated retrieval per FRR-VDR-TF-MO-01 SHOULD requirement - VDR history available via API for necessary parties (Moderate impact)"
+            },
+            "machine_readable_format_enforcement": {
+                "description": "Enforce machine-readable formats (JSON/XML/CSV) for all VDR history responses",
+                "implementation": "Configure API Management policies to ensure Content-Type headers are application/json, application/xml, or text/csv; reject non-machine-readable formats",
+                "rationale": "Ensures VDR history is in machine-readable format per FRR-VDR-TF-MO-01 for automated processing"
+            },
+            "fourteen_day_update_scheduling": {
+                "description": "Schedule persistent VDR history updates every 14 days (bi-weekly cadence for Moderate impact)",
+                "implementation": "Use Azure Automation with bi-weekly schedule or Logic Apps with recurrence trigger at 14-day intervals",
+                "rationale": "Provides persistent 14-day updates per FRR-VDR-TF-MO-01 Moderate impact requirement (middle between 7-day High and 30-day Low)"
+            },
+            "update_frequency_monitoring": {
+                "description": "Monitor VDR history update frequency to ensure 14-day SLA compliance",
+                "implementation": "Use Azure Monitor alerts to detect missed 14-day updates, track last update timestamp, alert at 16-day mark if no refresh",
+                "rationale": "Ensures continuous 14-day update cadence per FRR-VDR-TF-MO-01 SHOULD requirement (Moderate impact system)"
+            },
+            "api_access_tracking": {
+                "description": "Track API access by necessary parties to demonstrate automated retrieval capability",
+                "implementation": "Use API Management analytics to log access patterns, consumer identities, request volumes for VDR history API",
+                "rationale": "Provides evidence that VDR history is available for automated retrieval by all necessary parties per requirement"
+            }
         }

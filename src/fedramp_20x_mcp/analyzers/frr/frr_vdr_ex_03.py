@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,50 @@ class FRR_VDR_EX_03_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-EX-03.
+        Get queries for collecting evidence of proper handling of authorized requests.
         
-        TODO: Add evidence collection guidance
+        Returns queries to verify no rejection of requests from law enforcement, Congress, IGs.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "Information request tracking": [
+                "SecurityIncident | where IncidentType == 'Information Request' | where RequestSource in ('Law Enforcement', 'Congress', 'Inspector General', 'FedRAMP') | project TimeGenerated, RequestSource, Status, ResponseTime",
+                "AuditLogs | where OperationName == 'Information Request Response' | project TimeGenerated, RequestID, RequestSource, Status, RejectionReason"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "No inappropriate rejections": [
+                "ServiceNowTickets | where Category == 'Information Request' | where Status == 'Rejected' | project TicketID, RequestSource, RejectionReason, ReviewedBy",
+                "ComplianceAudit | where AuditType == 'Information Request Handling' | where FindingType == 'Inappropriate Rejection' | project TimeGenerated, RequestID, Details"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "Authorized party response tracking": [
+                "CommunicationLogs | where RecipientType in ('Law Enforcement', 'Congressional Office', 'Inspector General') | project TimeGenerated, RecipientType, RequestID, ResponseProvided, TimeToResponse",
+                "LegalHold | where HoldType == 'Government Request' | project CaseID, RequestingAuthority, RequestDate, ResponseDate, Status"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for authorized request handling.
+        """
+        return [
+            "Information request handling policy (procedures for law enforcement, Congress, IG requests)",
+            "Historical request logs showing all authorized party requests and responses (no inappropriate rejections)",
+            "Legal compliance documentation (authority verification procedures)",
+            "Request tracking system screenshots (status: fulfilled, not rejected)",
+            "Communication records with authorized parties (timely responses)",
+            "Escalation procedures for sensitive requests",
+            "Training documentation for staff on handling authorized requests",
+            "Annual audit reports verifying no inappropriate rejections"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Get recommendations for automating evidence collection.
+        """
+        return {
+            "Request tracking system": "Implement tracking for all vulnerability information requests, flagging requests from law enforcement, Congress, IGs (priority handling, no rejection option)",
+            "Automated compliance checks": "Monitor for any rejected requests from authorized parties, alert compliance team immediately (Azure Monitor alerts, ServiceNow integration)",
+            "Response time monitoring": "Track time-to-response for authorized party requests, ensure timely fulfillment without delays or rejections",
+            "Authority verification": "Implement automated verification of requesting authority legitimacy (digital signatures, official channels)",
+            "Audit trail maintenance": "Maintain comprehensive audit logs of all authorized party interactions (Azure Monitor, immutable logs for legal compliance)"
         }

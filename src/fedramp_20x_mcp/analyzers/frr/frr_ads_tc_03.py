@@ -87,47 +87,61 @@ class FRR_ADS_TC_03_Analyzer(BaseFRRAnalyzer):
         Analyze Python code for FRR-ADS-TC-03 compliance using AST.
         
         Detects programmatic access mechanisms:
-        - API endpoints (/api, REST, GraphQL)
-        - API documentation
-        - Programmatic access patterns
+        - API endpoints (Flask routes, FastAPI endpoints)
+        - API documentation (Swagger/OpenAPI decorators)
+        - REST/GraphQL patterns
         """
         findings = []
-        lines = code.split('\n')
         
-        # Try AST analysis first
         try:
             parser = ASTParser(CodeLanguage.PYTHON)
             tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
             if tree and tree.root_node:
-                code_bytes = code.encode('utf-8')
+                # Detect decorators for API routes
+                decorators = parser.find_nodes_by_type(tree.root_node, 'decorator')
+                for decorator in decorators:
+                    decorator_text = parser.get_node_text(decorator, code_bytes).lower()
+                    if any(keyword in decorator_text for keyword in ['@app.route', '@app.get', '@app.post', '@api', '@router', '@bp.route']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="API endpoint decorator detected",
+                            description="Found API route/endpoint decorator for programmatic access",
+                            severity=Severity.INFO,
+                            line_number=decorator.start_point[0] + 1,
+                            code_snippet=decorator_text.split('\n')[0],
+                            recommendation="Ensure API endpoint is documented and provides access to authorization data."
+                        ))
                 
-                # Check for API-related functions
-                api_functions = ['api', 'rest', 'graphql', 'endpoint']
-                for func_name in api_functions:
-                    func_nodes = parser.find_nodes_by_type(tree.root_node, 'function_definition')
-                    for node in func_nodes:
-                        node_text = parser.get_node_text(node, code_bytes)
-                        if func_name in node_text.lower():
-                            line_num = node.start_point[0] + 1
-                            findings.append(Finding(
-                                frr_id=self.FRR_ID,
-                                title="Programmatic access endpoint detected",
-                                description=f"Found API function: {func_name}",
-                                severity=Severity.INFO,
-                                line_number=line_num,
-                                code_snippet=lines[line_num-1].strip() if line_num <= len(lines) else "",
-                                recommendation="Ensure documented programmatic access to all authorization data."
-                            ))
+                # Detect API/documentation functions
+                function_defs = parser.find_nodes_by_type(tree.root_node, 'function_definition')
+                for func_def in function_defs:
+                    func_text = parser.get_node_text(func_def, code_bytes)
+                    func_name_lower = func_text.lower()
+                    
+                    if any(keyword in func_name_lower for keyword in ['api', 'get_authorization_data', 'swagger', 'openapi', 'graphql', 'rest_endpoint']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Programmatic access function detected",
+                            description="Found function for API or programmatic access",
+                            severity=Severity.INFO,
+                            line_number=func_def.start_point[0] + 1,
+                            code_snippet=func_text.split('\n')[0],
+                            recommendation="Verify function provides documented programmatic access to authorization data."
+                        ))
+                
+                return findings
         except Exception:
-            pass  # Fall back to regex
+            pass
         
-        # Regex fallback for API patterns
+        # Regex fallback
+        lines = code.split('\n')
         api_patterns = [
-            r'/api/',
-            r'@app\.route',
-            r'@api\.',
-            r'rest.*api',
-            r'graphql',
+            r'@(?:app|api|router|bp)\.(?:route|get|post|put|delete)',
+            r'/api/.*authorization',
+            r'swagger|openapi',
+            r'graphql.*schema',
             r'programmatic.*access',
         ]
         
@@ -137,7 +151,7 @@ class FRR_ADS_TC_03_Analyzer(BaseFRRAnalyzer):
                     findings.append(Finding(
                         frr_id=self.FRR_ID,
                         title="API pattern detected",
-                        description=f"Found programmatic access pattern: {pattern}",
+                        description=f"Found pattern: {pattern}",
                         severity=Severity.INFO,
                         line_number=i,
                         code_snippet=line.strip(),
@@ -151,36 +165,168 @@ class FRR_ADS_TC_03_Analyzer(BaseFRRAnalyzer):
         """
         Analyze C# code for FRR-ADS-TC-03 compliance using AST.
         
-        TODO: Implement C# analysis
+        Detects programmatic access in C# applications.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for C#
+        try:
+            parser = ASTParser(CodeLanguage.CSHARP)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                # Detect method declarations with API attributes
+                method_declarations = parser.find_nodes_by_type(tree.root_node, 'method_declaration')
+                for method in method_declarations:
+                    method_text = parser.get_node_text(method, code_bytes)
+                    method_lower = method_text.lower()
+                    
+                    if any(keyword in method_lower for keyword in ['[httpget]', '[httppost]', '[route', '[apicontroller]', 'api', 'swagger']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="API endpoint method detected",
+                            description="Found API method for programmatic access",
+                            severity=Severity.INFO,
+                            line_number=method.start_point[0] + 1,
+                            code_snippet=method_text.split('\n')[0],
+                            recommendation="Ensure API method is documented and provides access to authorization data."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'\[Http(?:Get|Post|Put|Delete)\]|\[Route\(|\[ApiController\]|swagger|Swashbuckle', line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="API endpoint detected",
+                    description="Found API endpoint or documentation attribute",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Verify documented programmatic access to authorization data."
+                ))
+        
         return findings
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Java code for FRR-ADS-TC-03 compliance using AST.
         
-        TODO: Implement Java analysis
+        Detects programmatic access in Java applications.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for Java
+        try:
+            parser = ASTParser(CodeLanguage.JAVA)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                # Detect method declarations with Spring annotations
+                method_declarations = parser.find_nodes_by_type(tree.root_node, 'method_declaration')
+                for method in method_declarations:
+                    method_text = parser.get_node_text(method, code_bytes)
+                    method_lower = method_text.lower()
+                    
+                    if any(keyword in method_lower for keyword in ['@getmapping', '@postmapping', '@requestmapping', '@restcontroller', 'swagger', 'openapi']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="API endpoint method detected",
+                            description="Found Spring REST API endpoint",
+                            severity=Severity.INFO,
+                            line_number=method.start_point[0] + 1,
+                            code_snippet=method_text.split('\n')[0],
+                            recommendation="Ensure API endpoint is documented and provides access to authorization data."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'@(?:GetMapping|PostMapping|PutMapping|DeleteMapping|RequestMapping)|@RestController|@Api|swagger', line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="API endpoint detected",
+                    description="Found Spring REST API annotation",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Verify documented programmatic access to authorization data."
+                ))
+        
         return findings
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze TypeScript/JavaScript code for FRR-ADS-TC-03 compliance using AST.
         
-        TODO: Implement TypeScript analysis
+        Detects programmatic access in TypeScript/JavaScript.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for TypeScript
+        try:
+            parser = ASTParser(CodeLanguage.TYPESCRIPT)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                # Detect function declarations for API routes
+                function_declarations = parser.find_nodes_by_type(tree.root_node, 'function_declaration')
+                for func_decl in function_declarations:
+                    func_text = parser.get_node_text(func_decl, code_bytes)
+                    func_lower = func_text.lower()
+                    
+                    if any(keyword in func_lower for keyword in ['app.get', 'app.post', 'router.get', 'router.post', '@get(', '@post(', 'swagger']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="API endpoint function detected",
+                            description="Found API route handler",
+                            severity=Severity.INFO,
+                            line_number=func_decl.start_point[0] + 1,
+                            code_snippet=func_text.split('\n')[0],
+                            recommendation="Ensure API endpoint is documented and provides access to authorization data."
+                        ))
+                
+                # Check arrow functions for route handlers
+                arrow_functions = parser.find_nodes_by_type(tree.root_node, 'arrow_function')
+                for arrow_func in arrow_functions:
+                    func_text = parser.get_node_text(arrow_func, code_bytes)
+                    if any(keyword in func_text.lower() for keyword in ['app.get', 'app.post', 'router', 'api']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="API route handler detected",
+                            description="Found arrow function route handler",
+                            severity=Severity.INFO,
+                            line_number=arrow_func.start_point[0] + 1,
+                            code_snippet=func_text.split('\n')[0],
+                            recommendation="Verify documented programmatic access."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(?:app|router)\.(?:get|post|put|delete)|@(?:Get|Post)\(|swagger|openapi', line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="API endpoint detected",
+                    description="Found API route pattern",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Verify documented programmatic access to authorization data."
+                ))
+        
         return findings
     
     # ============================================================================
@@ -191,32 +337,41 @@ class FRR_ADS_TC_03_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Bicep infrastructure code for FRR-ADS-TC-03 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        NOT APPLICABLE: Programmatic access (API endpoints and documentation) is an
+        application-level feature, not an infrastructure configuration. The requirement
+        mandates that trust centers provide documented programmatic access to authorization
+        data, which is implemented through:
+        
+        1. Application code (REST APIs, GraphQL endpoints)
+        2. API documentation tools (Swagger/OpenAPI, API specifications)
+        3. API gateway configuration (which could be in IaC, but the documentation
+           requirement is application-level)
+        4. Authentication/authorization for API access (implemented in app code)
+        
+        While API Management resources could be deployed via Bicep, the core requirement
+        of providing and documenting API access is an application design concern.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        return []
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Terraform infrastructure code for FRR-ADS-TC-03 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
-        """
-        findings = []
-        lines = code.split('\n')
+        NOT APPLICABLE: Programmatic access (API endpoints and documentation) is an
+        application-level feature, not an infrastructure configuration. The requirement
+        mandates that trust centers provide documented programmatic access to authorization
+        data, which is implemented through:
         
-        # TODO: Implement Terraform regex patterns
-        return findings
+        1. Application code (REST APIs, GraphQL endpoints)
+        2. API documentation tools (Swagger/OpenAPI, API specifications)
+        3. API gateway configuration (which could be in IaC, but the documentation
+           requirement is application-level)
+        4. Authentication/authorization for API access (implemented in app code)
+        
+        While API Gateway resources could be deployed via Terraform, the core requirement
+        of providing and documenting API access is an application design concern.
+        """
+        return []
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
@@ -226,39 +381,34 @@ class FRR_ADS_TC_03_Analyzer(BaseFRRAnalyzer):
         """
         Analyze GitHub Actions workflow for FRR-ADS-TC-03 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        NOT APPLICABLE: Programmatic access (API endpoints and documentation) is an
+        application feature requirement, not a CI/CD pipeline concern. The requirement
+        mandates that the trust center application provides documented API access, which
+        is an application design decision, not a build or deployment automation concern.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Azure Pipelines YAML for FRR-ADS-TC-03 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        NOT APPLICABLE: Programmatic access (API endpoints and documentation) is an
+        application feature requirement, not a CI/CD pipeline concern. The requirement
+        mandates that the trust center application provides documented API access, which
+        is an application design decision, not a build or deployment automation concern.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze GitLab CI YAML for FRR-ADS-TC-03 compliance.
         
-        TODO: Implement GitLab CI analysis
+        NOT APPLICABLE: Programmatic access (API endpoints and documentation) is an
+        application feature requirement, not a CI/CD pipeline concern. The requirement
+        mandates that the trust center application provides documented API access, which
+        is an application design decision, not a build or deployment automation concern.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
@@ -268,43 +418,115 @@ class FRR_ADS_TC_03_Analyzer(BaseFRRAnalyzer):
         """
         Get recommendations for automating evidence collection for FRR-ADS-TC-03.
         
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        Partially code-detectable (can find API endpoints), requires documentation review.
         """
         return {
             'frr_id': self.FRR_ID,
             'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
+            'code_detectable': 'Partial',
+            'automation_feasibility': 'Medium - can detect API endpoints but requires documentation verification',
+            'automation_approach': 'Hybrid - automated endpoint detection + manual documentation review',
             'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
+                'Azure API Management - Centralized API gateway with built-in documentation portal',
+                'Azure App Service - Host trust center API with automatic Swagger generation',
+                'Azure Functions - Serverless API endpoints with OpenAPI extension',
+                'Azure Front Door - Global API routing and protection',
+                'Azure AD B2C - Programmatic access authentication and authorization',
             ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            'collection_methods': [
+                'Code review of API endpoint definitions',
+                'API documentation portal review (Swagger UI, ReDoc)',
+                'API specification file review (OpenAPI/Swagger JSON/YAML)',
+                'API authentication testing (verify programmatic access works)',
+                'API endpoint accessibility testing from external systems',
+                'Rate limiting and throttling verification',
+            ],
+            'implementation_steps': [
+                '1. Implement REST API endpoints for all authorization data',
+                '2. Generate API documentation using Swagger/OpenAPI',
+                '3. Deploy API documentation portal (Swagger UI)',
+                '4. Implement API authentication (API keys, OAuth2, JWT)',
+                '5. Configure CORS for cross-origin programmatic access',
+                '6. Test API accessibility from external systems',
+                '7. Document API endpoints in trust center documentation',
+                '8. Monitor API usage and access logs',
             ]
         }
+    
+    def get_evidence_collection_queries(self) -> List[dict]:
+        """
+        Get automated queries for collecting evidence of FRR-ADS-TC-03 compliance.
+        
+        Returns queries for verifying programmatic access.
+        """
+        return [
+            {
+                'query_name': 'API Requests to Trust Center',
+                'query_type': 'KQL',
+                'query': '''AppRequests
+| where Url contains "/api/" and (Url contains "trust-center" or Url contains "authorization-data")
+| summarize RequestCount = count(), UniqueClients = dcount(ClientIP) by bin(TimeGenerated, 1d), Url
+| order by TimeGenerated desc''',
+                'data_source': 'Application Insights',
+                'evidence_type': 'API usage logs showing programmatic access to authorization data',
+            },
+            {
+                'query_name': 'API Management Gateway Logs',
+                'query_type': 'KQL',
+                'query': '''AzureDiagnostics
+| where ResourceType == "APIMANAGEMENT"
+| where Category == "GatewayLogs"
+| where url_s contains "authorization" or url_s contains "trust-center"
+| summarize RequestCount = count() by bin(TimeGenerated, 1h), url_s, responseCode_d
+| order by TimeGenerated desc''',
+                'data_source': 'Azure API Management Logs',
+                'evidence_type': 'API Management gateway logs showing API access patterns',
+            },
+            {
+                'query_name': 'API Documentation Accessibility',
+                'query_type': 'Manual',
+                'query': 'Access trust center Swagger/OpenAPI documentation portal and verify all authorization data endpoints are documented',
+                'data_source': 'Swagger UI / API documentation portal',
+                'evidence_type': 'Screenshot of API documentation showing all endpoints',
+            },
+            {
+                'query_name': 'OpenAPI Specification Review',
+                'query_type': 'Manual',
+                'query': 'Review OpenAPI/Swagger JSON/YAML file to confirm all authorization data endpoints are specified',
+                'data_source': 'OpenAPI specification file (swagger.json, openapi.yaml)',
+                'evidence_type': 'OpenAPI specification file showing endpoint definitions',
+            },
+            {
+                'query_name': 'Programmatic Access Testing',
+                'query_type': 'Manual',
+                'query': 'Test API endpoints programmatically using curl, Postman, or API client to verify access works',
+                'data_source': 'API testing tool (curl, Postman, REST client)',
+                'evidence_type': 'API test results showing successful programmatic access',
+            },
+            {
+                'query_name': 'API Authentication Methods',
+                'query_type': 'Manual',
+                'query': 'Document authentication methods available for programmatic access (API keys, OAuth2, JWT)',
+                'data_source': 'API authentication documentation',
+                'evidence_type': 'Documentation of API authentication mechanisms',
+            },
+        ]
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for FRR-ADS-TC-03 compliance.
+        
+        Returns specific documents needed to demonstrate programmatic access.
+        """
+        return [
+            'OpenAPI/Swagger specification file (swagger.json or openapi.yaml)',
+            'API documentation portal screenshots (Swagger UI, ReDoc)',
+            'API endpoint inventory listing all authorization data endpoints',
+            'API authentication documentation (API keys, OAuth2, JWT setup)',
+            'API usage logs showing programmatic access requests',
+            'API testing results (Postman collections, curl commands, responses)',
+            'API client code examples (Python, JavaScript, C#, Java)',
+            'API rate limiting and throttling documentation',
+            'CORS configuration showing cross-origin programmatic access allowed',
+            'API gateway configuration (Azure API Management, AWS API Gateway)',
+        ]

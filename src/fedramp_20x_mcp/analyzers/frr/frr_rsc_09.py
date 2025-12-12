@@ -248,47 +248,99 @@ class FRR_RSC_09_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> dict:
         """
-        Get recommendations for automating evidence collection for FRR-RSC-09.
+        Get KQL queries and API endpoints for collecting FRR-RSC-09 evidence.
         
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        Returns automated queries to collect evidence of publicly available
+        secure configuration guidance.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "automated_queries": [
+                # Azure Static Web Apps: Public documentation sites
+                """Resources
+                | where type =~ 'microsoft.web/staticsites'
+                | extend hasPublicDocs = properties contains 'security' or properties contains 'guidance' or properties contains 'documentation'
+                | where hasPublicDocs == true
+                | project name, type, resourceGroup, subscriptionId, defaultHostname=properties.defaultHostname""",
+                
+                # Azure CDN: Public access to guidance files (last 90 days)
+                """AzureDiagnostics
+                | where ResourceType == 'CDNENDPOINTS' and TimeGenerated > ago(90d)
+                | where RequestUri_s contains 'guidance' or RequestUri_s contains 'docs' or RequestUri_s contains 'security-baseline'
+                | summarize PublicAccessCount=count() by RequestUri_s, bin(TimeGenerated, 1d)
+                | order by TimeGenerated desc""",
+                
+                # Azure Storage: Public blob containers for documentation
+                """Resources
+                | where type =~ 'microsoft.storage/storageaccounts'
+                | extend hasPublicContainers = properties.publicNetworkAccess == 'Enabled'
+                | where hasPublicContainers == true
+                | project name, type, resourceGroup, subscriptionId"""
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "manual_queries": [
+                "Verify company website has publicly accessible security guidance page",
+                "Check GitHub public repositories for published security baselines",
+                "Confirm documentation URLs are accessible without authentication"
+            ]
+        }
+    
+    def get_evidence_artifacts(self) -> dict:
+        """
+        Get list of evidence artifacts for FRR-RSC-09 compliance.
+        
+        Returns documentation and public URLs demonstrating publicly available
+        secure configuration guidance.
+        """
+        return {
+            "evidence_artifacts": [
+                "PUBLIC-GUIDANCE.md - Documentation listing public guidance URLs",
+                "https://docs.company.com/security/baseline - Public documentation URL",
+                "https://github.com/company/security-guidance - Public GitHub repository",
+                "PUBLICATION-POLICY.md - Policy requiring public guidance publication",
+                "ACCESS-LOGS.txt - Logs showing public access to guidance (no auth required)",
+                "CUSTOMER-FEEDBACK.md - Customer confirmation of guidance accessibility",
+                "SEO-RANKING.md - Search engine visibility for security guidance"
+            ]
+        }
+    
+    def get_evidence_automation_recommendations(self) -> dict:
+        """
+        Get recommendations for automating FRR-RSC-09 evidence collection.
+        
+        Returns guidance for publishing secure configuration guidance publicly
+        and collecting evidence of public availability.
+        """
+        return {
+            "implementation_notes": [
+                "1. Publish guidance on public website",
+                "   - Host security guidance on company docs site (e.g., docs.company.com/security)",
+                "   - Ensure no authentication required for access",
+                "   - Include all secure configuration recommendations (from RSC-08)",
+                "   - Example: Azure Static Web Apps with public access",
+                "",
+                "2. Publish guidance on GitHub",
+                "   - Create public GitHub repository (e.g., company/security-guidance)",
+                "   - Include README with guidance overview",
+                "   - Store machine-readable files (JSON/YAML from RSC-08)",
+                "   - Enable GitHub Pages for formatted documentation",
+                "",
+                "3. Implement public access monitoring",
+                "   - Enable Azure Application Insights on docs site",
+                "   - Track: page views, downloads, geographic distribution",
+                "   - Alert if guidance becomes unavailable",
+                "   - Retain logs for 90 days minimum",
+                "",
+                "4. Promote guidance discoverability",
+                "   - Submit guidance URLs to search engines",
+                "   - Link from main company website",
+                "   - Include in product documentation",
+                "   - Announce updates via blog/newsletter",
+                "",
+                "5. Validate public accessibility",
+                "   - Test URLs from external network (no VPN/auth)",
+                "   - Verify no 401/403 errors for guidance pages",
+                "   - Check guidance appears in search engine results",
+                "   - Quarterly accessibility testing"
             ]
         }

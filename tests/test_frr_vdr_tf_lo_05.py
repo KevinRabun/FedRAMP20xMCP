@@ -29,15 +29,30 @@ def test_analyzer_metadata():
     print("[PASS] test_analyzer_metadata PASSED")
 
 
-def test_evidence_automation_recommendations():
-    """Test evidence automation recommendations."""
+def test_evidence_collection():
+    """Test evidence collection methods for 7-day vulnerability evaluation compliance."""
     analyzer = FRR_VDR_TF_LO_05_Analyzer()
     
-    recommendations = analyzer.get_evidence_automation_recommendations()
-    assert recommendations['frr_id'] == "FRR-VDR-TF-LO-05", "FRR_ID mismatch"
-    # TODO: Add more assertions for evidence recommendations
+    # Test evidence collection queries
+    queries = analyzer.get_evidence_collection_queries()
+    assert 'Vulnerability evaluation time tracking' in queries, "Missing evaluation time tracking queries"
+    assert 'FRR-VDR-07/08/09 evaluation completeness tracking' in queries, "Missing VDR-07/08/09 queries"
+    assert 'Seven-day SLA compliance monitoring' in queries, "Missing SLA monitoring queries"
     
-    print("[PASS] test_evidence_automation_recommendations PASSED")
+    # Test evidence artifacts
+    artifacts = analyzer.get_evidence_artifacts()
+    assert len(artifacts) > 0, "Should have evidence artifacts"
+    artifacts_text = ' '.join(artifacts).lower()
+    assert '7-day' in artifacts_text or 'seven-day' in artifacts_text, "Missing 7-day artifact"
+    assert 'evaluation' in artifacts_text, "Missing evaluation artifact"
+    assert 'sla' in artifacts_text, "Missing SLA artifact"
+    
+    # Test automation recommendations
+    recommendations = analyzer.get_evidence_automation_recommendations()
+    assert 'evaluation_time_tracking' in recommendations, "Missing evaluation tracking"
+    assert 'automated_vdr_07_08_09_evaluation' in recommendations, "Missing VDR-07/08/09 automation"
+    
+    print("[PASS] test_evidence_collection PASSED")
 
 
 # TODO: Add language-specific tests
@@ -57,8 +72,7 @@ def run_all_tests():
     """Run all FRR-VDR-TF-LO-05 tests."""
     test_functions = [
         ("Analyzer metadata", test_analyzer_metadata),
-        ("Evidence automation recommendations", test_evidence_automation_recommendations),
-        # TODO: Add more test functions
+        ("Evidence collection", test_evidence_collection),
     ]
     
     passed = 0

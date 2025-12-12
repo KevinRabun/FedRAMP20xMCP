@@ -29,15 +29,28 @@ def test_analyzer_metadata():
     print("[PASS] test_analyzer_metadata PASSED")
 
 
-def test_evidence_automation_recommendations():
-    """Test evidence automation recommendations."""
+def test_evidence_collection():
+    """Test evidence collection methods."""
     analyzer = FRR_VDR_TF_HI_03_Analyzer()
     
-    recommendations = analyzer.get_evidence_automation_recommendations()
-    assert recommendations['frr_id'] == "FRR-VDR-TF-HI-03", "FRR_ID mismatch"
-    # TODO: Add more assertions for evidence recommendations
+    # Test queries
+    queries = analyzer.get_evidence_collection_queries()
+    assert "Drift-prone resource identification" in queries, "Missing drift identification queries"
+    assert "Weekly vulnerability scanning on drift-prone assets" in queries, "Missing scan queries"
+    assert "Persistent drift detection verification" in queries, "Missing persistence verification"
     
-    print("[PASS] test_evidence_automation_recommendations PASSED")
+    # Test artifacts
+    artifacts = analyzer.get_evidence_artifacts()
+    assert any("drift" in a.lower() for a in artifacts), "Missing drift detection"
+    assert any("weekly" in a.lower() or "7" in a for a in artifacts), "Missing weekly frequency"
+    assert any("persistent" in a.lower() for a in artifacts), "Missing persistent scanning"
+    
+    # Test automation recommendations
+    recommendations = analyzer.get_evidence_automation_recommendations()
+    assert "Drift-prone resource tagging" in recommendations, "Missing tagging recommendation"
+    assert "Automated weekly drift scanning" in recommendations, "Missing scan recommendation"
+    
+    print("[PASS] test_evidence_collection PASSED")
 
 
 # TODO: Add language-specific tests
@@ -57,7 +70,7 @@ def run_all_tests():
     """Run all FRR-VDR-TF-HI-03 tests."""
     test_functions = [
         ("Analyzer metadata", test_analyzer_metadata),
-        ("Evidence automation recommendations", test_evidence_automation_recommendations),
+        ("Evidence collection", test_evidence_collection),
         # TODO: Add more test functions
     ]
     

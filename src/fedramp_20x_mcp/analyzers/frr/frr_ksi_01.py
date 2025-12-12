@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,39 @@ class FRR_KSI_01_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
-        """
-        Get recommendations for automating evidence collection for FRR-KSI-01.
-        
-        TODO: Add evidence collection guidance
-        """
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
+        """Get queries for KSI application to cloud service offering."""
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
-            ]
+            "KSI coverage mapping": {
+                "description": "Map ALL KSIs to ALL aspects of CSO within FedRAMP scope",
+                "query": "Verify 72 KSIs applied to: infrastructure, applications, data, network, identity, monitoring"
+            },
+            "FedRAMP scope verification": {
+                "description": "Verify KSI application covers FedRAMP Minimum Assessment Scope"
+            },
+            "KSI implementation evidence": {
+                "description": "Collect evidence of KSI implementation across CSO"
+            }
+        }
+
+    def get_evidence_artifacts(self) -> List[str]:
+        """Get artifacts for KSI application."""
+        return [
+            "KSI coverage matrix (72 KSIs x CSO aspects)",
+            "FedRAMP Minimum Assessment Scope documentation",
+            "KSI implementation evidence per CSO aspect",
+            "Gap analysis for incomplete KSI coverage"
+        ]
+
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """Get automation recommendations for KSI application."""
+        return {
+            "automated_ksi_coverage_mapping": {
+                "description": "Auto-map 72 KSIs to CSO aspects within FedRAMP scope",
+                "rationale": "Ensures comprehensive KSI application per FRR-KSI-01"
+            },
+            "ksi_implementation_verification": {
+                "description": "Verify KSI implementation evidence across CSO",
+                "rationale": "Validates KSI application completeness per FRR-KSI-01"
+            }
         }

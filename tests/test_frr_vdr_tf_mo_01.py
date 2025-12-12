@@ -29,15 +29,30 @@ def test_analyzer_metadata():
     print("[PASS] test_analyzer_metadata PASSED")
 
 
-def test_evidence_automation_recommendations():
-    """Test evidence automation recommendations."""
+def test_evidence_collection():
+    """Test evidence collection methods for 14-day machine-readable VDR history."""
     analyzer = FRR_VDR_TF_MO_01_Analyzer()
     
-    recommendations = analyzer.get_evidence_automation_recommendations()
-    assert recommendations['frr_id'] == "FRR-VDR-TF-MO-01", "FRR_ID mismatch"
-    # TODO: Add more assertions for evidence recommendations
+    # Test evidence collection queries
+    queries = analyzer.get_evidence_collection_queries()
+    assert 'API service availability for VDR history' in queries, "Missing API availability queries"
+    assert 'Machine-readable format verification' in queries, "Missing format verification queries"
+    assert '14-day update frequency tracking' in queries, "Missing 14-day update queries"
     
-    print("[PASS] test_evidence_automation_recommendations PASSED")
+    # Test evidence artifacts
+    artifacts = analyzer.get_evidence_artifacts()
+    assert len(artifacts) > 0, "Should have evidence artifacts"
+    artifacts_text = ' '.join(artifacts).lower()
+    assert 'api' in artifacts_text, "Missing API artifact"
+    assert 'machine-readable' in artifacts_text, "Missing machine-readable artifact"
+    assert '14-day' in artifacts_text or 'fourteen-day' in artifacts_text, "Missing 14-day artifact"
+    
+    # Test automation recommendations
+    recommendations = analyzer.get_evidence_automation_recommendations()
+    assert 'api_service_implementation' in recommendations, "Missing API implementation"
+    assert 'fourteen_day_update_scheduling' in recommendations, "Missing 14-day scheduling"
+    
+    print("[PASS] test_evidence_collection PASSED")
 
 
 # TODO: Add language-specific tests
@@ -57,8 +72,7 @@ def run_all_tests():
     """Run all FRR-VDR-TF-MO-01 tests."""
     test_functions = [
         ("Analyzer metadata", test_analyzer_metadata),
-        ("Evidence automation recommendations", test_evidence_automation_recommendations),
-        # TODO: Add more test functions
+        ("Evidence collection", test_evidence_collection),
     ]
     
     passed = 0

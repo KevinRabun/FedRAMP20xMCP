@@ -88,8 +88,51 @@ class FRR_CCM_03_Analyzer(BaseFRRAnalyzer):
         - Target date publication
         """
         findings = []
-        lines = code.split('\n')
         
+        try:
+            parser = ASTParser(CodeLanguage.PYTHON)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                # Check for date-related variables and functions
+                func_defs = parser.find_nodes_by_type(tree.root_node, 'function_definition')
+                for func_def in func_defs:
+                    func_text = parser.get_node_text(func_def, code_bytes)
+                    func_lower = func_text.lower()
+                    
+                    if any(keyword in func_lower for keyword in ['next_report_date', 'target_date', 'upcoming_report']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Next report date publication detected",
+                            description="Found function for publishing next report date",
+                            severity=Severity.INFO,
+                            line_number=func_def.start_point[0] + 1,
+                            code_snippet=func_text.split('\n')[0],
+                            recommendation="Ensure next report date publicly included with authorization data."
+                        ))
+                
+                # Check for date field assignments
+                assignments = parser.find_nodes_by_type(tree.root_node, 'assignment')
+                for assignment in assignments:
+                    assign_text = parser.get_node_text(assignment, code_bytes).lower()
+                    if any(keyword in assign_text for keyword in ['next_report_date', 'target_date', 'upcoming_report_date']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Report date field detected",
+                            description="Found next report date field",
+                            severity=Severity.INFO,
+                            line_number=assignment.start_point[0] + 1,
+                            code_snippet=assign_text.split('\n')[0],
+                            recommendation="Verify date is publicly accessible with authorization data."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
         date_patterns = [
             r'next.*report.*date',
             r'target.*date',
@@ -103,7 +146,7 @@ class FRR_CCM_03_Analyzer(BaseFRRAnalyzer):
                     findings.append(Finding(
                         frr_id=self.FRR_ID,
                         title="Report date publication detected",
-                        description=f"Found date pattern: {pattern}",
+                        description=f"Found pattern: {pattern}",
                         severity=Severity.INFO,
                         line_number=i,
                         code_snippet=line.strip(),
@@ -112,60 +155,155 @@ class FRR_CCM_03_Analyzer(BaseFRRAnalyzer):
                     break
         
         return findings
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze C# code for FRR-CCM-03 compliance using AST.
         
-        TODO: Implement C# analysis
+        Detects next report date publication in C#.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for C#
+        try:
+            parser = ASTParser(CodeLanguage.CSHARP)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                method_declarations = parser.find_nodes_by_type(tree.root_node, 'method_declaration')
+                for method in method_declarations:
+                    method_text = parser.get_node_text(method, code_bytes)
+                    method_lower = method_text.lower()
+                    
+                    if any(keyword in method_lower for keyword in ['nextreportdate', 'targetdate', 'upcomingreport']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Next report date publication detected",
+                            description="Found method for publishing next report date",
+                            severity=Severity.INFO,
+                            line_number=method.start_point[0] + 1,
+                            code_snippet=method_text.split('\n')[0],
+                            recommendation="Ensure date publicly included with authorization data."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(?:NextReportDate|TargetDate|UpcomingReport)', line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Report date detected",
+                    description="Found report date code",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Verify date is publicly accessible."
+                ))
+        
         return findings
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Java code for FRR-CCM-03 compliance using AST.
         
-        TODO: Implement Java analysis
+        Detects next report date publication in Java.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for Java
+        try:
+            parser = ASTParser(CodeLanguage.JAVA)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                method_declarations = parser.find_nodes_by_type(tree.root_node, 'method_declaration')
+                for method in method_declarations:
+                    method_text = parser.get_node_text(method, code_bytes)
+                    method_lower = method_text.lower()
+                    
+                    if any(keyword in method_lower for keyword in ['nextreportdate', 'targetdate', 'upcomingreport']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Next report date publication detected",
+                            description="Found method for publishing next report date",
+                            severity=Severity.INFO,
+                            line_number=method.start_point[0] + 1,
+                            code_snippet=method_text.split('\n')[0],
+                            recommendation="Ensure date publicly included with authorization data."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(?:nextReportDate|targetDate|upcomingReport)', line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Report date detected",
+                    description="Found report date code",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Verify date is publicly accessible."
+                ))
+        
         return findings
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze TypeScript/JavaScript code for FRR-CCM-03 compliance using AST.
         
-        TODO: Implement TypeScript analysis
+        Detects next report date publication in TypeScript/JavaScript.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for TypeScript
+        try:
+            parser = ASTParser(CodeLanguage.TYPESCRIPT)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                function_declarations = parser.find_nodes_by_type(tree.root_node, 'function_declaration')
+                for func_decl in function_declarations:
+                    func_text = parser.get_node_text(func_decl, code_bytes)
+                    func_lower = func_text.lower()
+                    
+                    if any(keyword in func_lower for keyword in ['nextreportdate', 'targetdate', 'upcomingreport']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Next report date publication detected",
+                            description="Found function for publishing next report date",
+                            severity=Severity.INFO,
+                            line_number=func_decl.start_point[0] + 1,
+                            code_snippet=func_text.split('\n')[0],
+                            recommendation="Ensure date publicly included with authorization data."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(?:nextReportDate|targetDate|upcomingReport)', line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Report date detected",
+                    description="Found report date code",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Verify date is publicly accessible."
+                ))
+        
         return findings
     
     # ============================================================================
@@ -176,32 +314,21 @@ class FRR_CCM_03_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Bicep infrastructure code for FRR-CCM-03 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        NOT APPLICABLE: Publishing the target date for the next Ongoing Authorization Report
+        is an application-level feature requiring a user interface, API endpoint, or public
+        documentation page. This is not an infrastructure configuration concern but an
+        application functionality implemented in application code, not IaC templates.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        return []
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Terraform infrastructure code for FRR-CCM-03 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        NOT APPLICABLE: Publishing the target date for next report is an application-level
+        feature, not an infrastructure configuration concern.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        return []
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
@@ -211,39 +338,30 @@ class FRR_CCM_03_Analyzer(BaseFRRAnalyzer):
         """
         Analyze GitHub Actions workflow for FRR-CCM-03 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        NOT APPLICABLE: Publishing the target date for next report requires application-level
+        features (UI, API, documentation). While CI/CD could automate updates, the requirement
+        mandates public display of the date, which is an application functionality concern,
+        not a build/deployment automation concern.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Azure Pipelines YAML for FRR-CCM-03 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        NOT APPLICABLE: Publishing the target date for next report is an application-level
+        feature, not a CI/CD automation concern.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze GitLab CI YAML for FRR-CCM-03 compliance.
         
-        TODO: Implement GitLab CI analysis
+        NOT APPLICABLE: Publishing the target date for next report is an application-level
+        feature, not a CI/CD automation concern.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
@@ -252,44 +370,60 @@ class FRR_CCM_03_Analyzer(BaseFRRAnalyzer):
     def get_evidence_automation_recommendations(self) -> dict:
         """
         Get recommendations for automating evidence collection for FRR-CCM-03.
-        
-        This requirement is not directly code-detectable. Provides manual validation guidance.
         """
         return {
             'frr_id': self.FRR_ID,
             'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
+            'code_detectable': 'Partial',
+            'automation_approach': 'Partial automation - detect date publication code, manual validation for public visibility',
             'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+                "authorization_data_webpage_screenshot.png",
+                "next_report_date_api_response.json",
+                "public_authorization_data.json",
+                "report_date_documentation.pdf",
+                "authorization_portal_config.json",
             ],
             'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+                "GET https://authorization-portal.example.com/api/authorization-data (verify next_report_date field exists)",
+                "traces | where message contains 'next report date' or message contains 'target date' | project timestamp, message",
             ],
             'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
+                "1. Visit public authorization data page/portal and verify next report date is displayed",
+                "2. Confirm next report date is included in authorization data per FRR-ADS-01",
+                "3. Verify date format is clear and human-readable",
+                "4. Check API endpoint includes next_report_date field",
+                "5. Validate date is accessible to all necessary parties without authentication",
             ],
             'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
+                "Azure App Service - Host public authorization portal",
+                "Azure API Management - Expose authorization data API",
+                "Azure Static Web Apps - Publish authorization data webpage",
             ],
             'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                "Integrate with authorization data publication system (FRR-ADS-01)",
+                "Connect to report scheduling system to auto-update date",
             ]
         }
+    
+    def get_evidence_collection_queries(self) -> dict:
+        """
+        Get queries for collecting evidence of FRR-CCM-03 compliance.
+        """
+        return {
+            "authorization_data_api": "GET /api/authorization-data (check for next_report_date field)",
+            "date_publication_logs": "traces | where message contains 'next report date' or message contains 'publish' | project timestamp, message",
+            "public_access_logs": "requests | where url contains 'authorization' and url contains 'date' | summarize count() by bin(timestamp, 1d)",
+        }
+    
+    def get_evidence_artifacts(self) -> list:
+        """
+        Get list of evidence artifacts for FRR-CCM-03 compliance.
+        """
+        return [
+            "authorization_data_webpage_screenshot.png",
+            "next_report_date_api_response.json",
+            "public_authorization_data.json",
+            "report_date_documentation.pdf",
+            "authorization_portal_config.json",
+            "public_access_verification.json",
+        ]

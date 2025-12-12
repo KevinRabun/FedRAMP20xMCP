@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,50 @@ class FRR_VDR_RP_04_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-RP-04.
+        Get queries for collecting evidence of responsible public disclosure capability.
         
-        TODO: Add evidence collection guidance
+        Returns queries to verify ability to safely disclose vulnerabilities publicly when appropriate.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "Public disclosure risk assessment process": [
+                "PublicDisclosures | where TimeGenerated > ago(180d) | project TimeGenerated, VulnerabilityID, RiskAssessmentPerformed, ExploitLikelihood, DisclosureApproved",
+                "RiskAssessments | where AssessmentType == 'Public Disclosure Decision' | where TimeGenerated > ago(180d) | project TimeGenerated, VulnerabilityID, ExploitRisk, ApprovedForPublicRelease, ApprovalAuthority"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "Public disclosure activities": [
+                "BlogPosts | where Category == 'Security' and Type == 'Vulnerability Disclosure' | where PublishDate > ago(180d) | project PublishDate, VulnerabilityID, DisclosureType, RemediationStatus",
+                "SecurityAdvisories | where AdvisoryType == 'Public' | where TimeGenerated > ago(180d) | project TimeGenerated, CVEID, Severity, RemediationAvailable, ExploitPublic"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "Remediation before disclosure verification": [
+                "VulnerabilityLifecycle | where PublicDisclosureDate != null | extend DaysBetweenFixAndDisclosure = datetime_diff('day', PublicDisclosureDate, RemediationDate) | where DaysBetweenFixAndDisclosure >= 0 | project VulnerabilityID, RemediationDate, PublicDisclosureDate, DaysBetweenFixAndDisclosure",
+                "RemediationTracking | where Status == 'Remediated' | where PublicDisclosureScheduled == true | project VulnerabilityID, RemediationCompletedDate, PlannedDisclosureDate, DisclosureReason"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for responsible public disclosure.
+        """
+        return [
+            "Public disclosure policy (risk assessment criteria, approval process)",
+            "Risk assessment documentation for public disclosures (exploit likelihood evaluations)",
+            "Public vulnerability disclosures and advisories (blog posts, CVE filings, security bulletins)",
+            "Disclosure timing evidence (remediation completed before public disclosure)",
+            "Approval records for public disclosures (security team, legal review)",
+            "Coordinated disclosure communications (affected parties notified before public release)",
+            "Post-disclosure monitoring (no exploitation incidents following public disclosure)",
+            "Public disclosure templates (responsible format, sufficient detail without exploit code)"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Get recommendations for automating evidence collection.
+        """
+        return {
+            "Risk-based disclosure decision framework": "Implement systematic risk assessment for all public disclosure decisions (exploit likelihood, remediation status, coordinated disclosure timing)",
+            "Disclosure approval workflow": "Automate public disclosure approval process with security team and legal review (ServiceNow workflows, approval chains)",
+            "Remediation-first enforcement": "Prevent public disclosure until remediation is complete and validated (automated checks, disclosure gates)",
+            "Coordinated disclosure automation": "Track notifications to affected parties before public disclosure, ensure proper lead time (email tracking, acknowledgment receipts)",
+            "Post-disclosure monitoring": "Monitor for exploitation attempts following public disclosure, track effectiveness of responsible disclosure practices (Azure Security Center alerts, threat intelligence feeds)"
         }

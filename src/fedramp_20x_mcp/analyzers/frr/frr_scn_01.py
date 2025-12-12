@@ -62,7 +62,7 @@ class FRR_SCN_01_Analyzer(BaseFRRAnalyzer):
         ("PM-15", "Security and Privacy Groups and Associations"),
         ("CP-2", "Contingency Plan")
     ]
-    CODE_DETECTABLE = "Yes"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = ["KSI-ICP-08", "KSI-ICP-09"]
     
@@ -238,47 +238,100 @@ class FRR_SCN_01_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> dict:
         """
-        Get recommendations for automating evidence collection for FRR-SCN-01.
+        Get KQL queries for collecting FRR-SCN-01 evidence.
         
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        Returns queries to collect evidence of Significant Change Notification
+        systems and notification delivery to FedRAMP and agency customers.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "automated_queries": [
+                # Azure Monitor: Email notifications sent (last 90 days)
+                """AzureDiagnostics
+                | where TimeGenerated > ago(90d)
+                | where Category == 'EmailDelivery' or OperationName contains 'SendEmail'
+                | where RecipientAddress_s contains 'fedramp' or RecipientAddress_s contains 'agency' or RecipientAddress_s contains 'customer'
+                | project TimeGenerated, RecipientAddress_s, Subject_s, DeliveryStatus_s
+                | order by TimeGenerated desc""",
+                
+                # Azure Logic Apps/Functions: Notification workflows
+                """Resources
+                | where type =~ 'microsoft.logic/workflows' or type =~ 'microsoft.web/sites'
+                | where name contains 'notification' or name contains 'scn' or name contains 'alert'
+                | project name, type, resourceGroup, subscriptionId, properties""",
+                
+                # SendGrid/Communication Services: Notification logs
+                """AzureDiagnostics
+                | where ResourceProvider == 'MICROSOFT.COMMUNICATION'
+                | where TimeGenerated > ago(90d)
+                | summarize NotificationCount=count() by EmailTo_s, bin(TimeGenerated, 1d)
+                | where EmailTo_s contains 'fedramp' or EmailTo_s contains 'gov'
+                | order by TimeGenerated desc"""
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "manual_queries": [
+                "Review email server logs for SCN deliveries to FedRAMP email addresses",
+                "Check notification service (SendGrid/SES) for customer notification lists",
+                "Verify notification templates include FedRAMP contact addresses"
+            ]
+        }
+    
+    def get_evidence_artifacts(self) -> dict:
+        """
+        Get list of evidence artifacts for FRR-SCN-01 compliance.
+        
+        Returns documentation and logs demonstrating Significant Change
+        Notification delivery to required parties.
+        """
+        return {
+            "evidence_artifacts": [
+                "SCN-POLICY.md - Policy requiring notification to FedRAMP and all customers",
+                "NOTIFICATION-TEMPLATES/ - Email templates for SCN notifications",
+                "scn-logs/ - Delivery logs showing notifications sent to FedRAMP/customers",
+                "RECIPIENT-LIST.md - Maintained list of FedRAMP and agency contacts",
+                "notification-config.yaml - Configuration for notification service",
+                "AUDIT-TRAIL.md - Tracking of all SCN notifications sent (dates, recipients)",
+                "CUSTOMER-CONFIRMATION/ - Customer acknowledgments of SCN receipt"
+            ]
+        }
+    
+    def get_evidence_automation_recommendations(self) -> dict:
+        """
+        Get recommendations for automating FRR-SCN-01 evidence collection.
+        
+        Returns guidance for implementing and documenting Significant Change
+        Notification systems with required recipient coverage.
+        """
+        return {
+            "implementation_notes": [
+                "1. Implement notification system",
+                "   - Use Azure Communication Services, SendGrid, or AWS SES",
+                "   - Create notification service with recipient management",
+                "   - Support multiple delivery channels (email, webhook, portal)",
+                "   - Example: Azure Logic App triggered by SCN events",
+                "",
+                "2. Maintain recipient lists",
+                "   - Store FedRAMP contact email addresses (info@fedramp.gov, etc.)",
+                "   - Maintain list of all agency customer contacts",
+                "   - Support recipient groups (FedRAMP, Agency-A, Agency-B)",
+                "   - Quarterly validation of contact information accuracy",
+                "",
+                "3. Implement notification templates",
+                "   - Create SCN email templates with required information",
+                "   - Include: change description, impact, timeline, action required",
+                "   - Support different SCN types (security, service, incident)",
+                "   - Version control templates in Git",
+                "",
+                "4. Enable audit logging",
+                "   - Log all SCN notifications: timestamp, recipients, content, delivery status",
+                "   - Enable Application Insights on notification service",
+                "   - Retain logs for 90 days minimum (365 days recommended)",
+                "   - Alert on delivery failures to FedRAMP/customers",
+                "",
+                "5. Automate evidence collection",
+                "   - Schedule monthly KQL queries to extract notification logs",
+                "   - Generate SCN summary report (count, recipients, delivery rate)",
+                "   - Store logs in Azure Blob Storage for compliance review",
+                "   - Example: Power Automate flow exporting SCN logs to SharePoint"
             ]
         }

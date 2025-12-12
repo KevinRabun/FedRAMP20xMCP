@@ -34,8 +34,11 @@ def test_evidence_automation_recommendations():
     analyzer = FRR_CCM_04_Analyzer()
     
     recommendations = analyzer.get_evidence_automation_recommendations()
-    assert recommendations['frr_id'] == "FRR-CCM-04", "FRR_ID mismatch"
-    # TODO: Add more assertions for evidence recommendations
+    assert 'automated_queries' in recommendations, "Missing automated_queries"
+    assert 'evidence_artifacts' in recommendations, "Missing evidence_artifacts"
+    assert 'implementation_notes' in recommendations, "Missing implementation_notes"
+    assert len(recommendations['automated_queries']) > 0, "No automated queries"
+    assert len(recommendations['evidence_artifacts']) > 0, "No evidence artifacts"
     
     print("[PASS] test_evidence_automation_recommendations PASSED")
 

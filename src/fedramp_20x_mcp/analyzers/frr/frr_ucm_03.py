@@ -10,7 +10,7 @@ Impact Levels: Moderate
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -62,7 +62,7 @@ class FRR_UCM_03_Analyzer(BaseFRRAnalyzer):
         ("SC-12", "Cryptographic Key Establishment and Management"),
         ("IA-7", "Cryptographic Module Authentication"),
     ]
-    CODE_DETECTABLE = True  # Detects non-FIPS cryptographic modules (SHOULD = recommendation)
+    CODE_DETECTABLE = "Yes"  # Detects non-FIPS cryptographic modules (SHOULD = recommendation)
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
         "KSI-CNA-05",  # Encryption in transit
@@ -304,47 +304,48 @@ class FRR_UCM_03_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-UCM-03.
+        Provides queries for collecting evidence of FRR-UCM-03 compliance.
         
-        TODO: Add evidence collection guidance
+        Returns:
+            Dict containing query strings for various platforms
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "azure_resource_graph": [
+                "Resources | where type =~ 'microsoft.keyvault/vaults' | extend skuName = tostring(properties.sku.name) | project id, name, skuName, location",
+                "Resources | where type =~ 'microsoft.storage/storageaccounts' | extend infraEncryption = tostring(properties.encryption.requireInfrastructureEncryption) | project id, name, infraEncryption"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "azure_cli": [
+                "az keyvault list --query '[].{Name:name, SKU:properties.sku.name}'",
+                "az storage account list --query '[].{Name:name, Encryption:properties.encryption}'"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Lists artifacts to collect as evidence of FRR-UCM-03 compliance.
+        
+        Returns:
+            List of artifact descriptions
+        """
+        return [
+            "Cryptographic module inventory with NIST CMVP validation status (Moderate impact)",
+            "Azure Key Vault configuration for Moderate impact systems",
+            "Code scan results for Moderate impact applications",
+            "Documentation of FIPS-validated modules used for federal data protection",
+            "Storage encryption configuration for Moderate impact data"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Provides recommendations for automating evidence collection for FRR-UCM-03.
+        
+        Returns:
+            Dict mapping automation areas to implementation guidance
+        """
+        return {
+            "policy_enforcement": "Deploy Azure Policy for Moderate impact systems (SHOULD = recommendation)",
+            "code_scanning": "Implement SAST for Moderate impact applications to detect weak crypto",
+            "inventory_tracking": "Maintain separate crypto inventory for Moderate impact services"
         }

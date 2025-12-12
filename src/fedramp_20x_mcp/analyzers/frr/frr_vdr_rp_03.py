@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,50 @@ class FRR_VDR_RP_03_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-RP-03.
+        Get queries for collecting evidence of responsible disclosure practices.
         
-        TODO: Add evidence collection guidance
+        Returns queries to verify no irresponsible disclosure while maintaining sufficient transparency.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "Disclosure policy compliance": [
+                "SecurityReports | where ReportType == 'Vulnerability Monthly Summary' | where TimeGenerated > ago(90d) | extend HasExploitableDetails = (Content contains 'proof of concept' or Content contains 'exploit code' or Content contains 'technical details') | project TimeGenerated, HasExploitableDetails, RedactionApplied, RecipientParties",
+                "DocumentReview | where DocumentType == 'Vulnerability Report' | where ReviewType == 'Disclosure Safety' | project DocumentDate, SensitiveDetailsRemoved, SufficientForDecisionMaking, ReviewerApproval"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "Information sanitization verification": [
+                "PublicDisclosures | where TimeGenerated > ago(90d) | project TimeGenerated, VulnerabilityID, PublicDetailLevel, InternalDetailLevel, RedactionApplied",
+                "ComplianceAudit | where AuditType == 'Vulnerability Disclosure Review' | where FindingType in ('Oversharing', 'Insufficient Information') | project TimeGenerated, VulnerabilityID, IssueDescription, Resolution"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "Authorized party full disclosure tracking": [
+                "SecureCommunications | where RecipientType in ('FedRAMP', 'Authorizing Agency', 'Law Enforcement') | where MessageType == 'Full Vulnerability Details' | project TimeGenerated, RecipientParty, VulnerabilityID, DetailLevel, DeliveryMethod",
+                "ConfidentialReports | where TimeGenerated > ago(90d) | where Audience == 'Authorized Parties Only' | project TimeGenerated, ReportID, VulnerabilitiesDisclosed, DetailLevel"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for responsible disclosure practices.
+        """
+        return [
+            "Vulnerability disclosure policy (responsible disclosure procedures, information sanitization guidelines)",
+            "Monthly reports to authorized parties (redacted vs. full detail versions)",
+            "Disclosure review and approval process documentation",
+            "Redaction guidelines for public vs. authorized party communications",
+            "Historical disclosure audit results (no irresponsible oversharing incidents)",
+            "Training documentation for staff on responsible disclosure practices",
+            "Examples of properly sanitized public disclosures (sufficient for decision-making, no exploitable details)",
+            "Secure communication channels for full details to authorized parties (encryption, access controls)"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Get recommendations for automating evidence collection.
+        """
+        return {
+            "Automated redaction tools": "Implement content analysis tools to identify and redact sensitive exploit details before disclosure (Azure Information Protection, DLP policies for technical details)",
+            "Tiered disclosure process": "Maintain separate disclosure processes: sanitized summaries for general audiences, full technical details for authorized parties only (access-controlled portals, encrypted delivery)",
+            "Pre-disclosure review": "Require automated and human review of all vulnerability disclosures before release, flagging potentially irresponsible details (content analysis, security team approval)",
+            "Sufficient information verification": "Ensure all disclosures contain enough information for risk-based decisions without revealing exploitable specifics (impact descriptions, affected components, severity ratings)",
+            "Audit trail maintenance": "Track all disclosure decisions, redactions applied, and approvals given (Azure Monitor audit logs, compliance documentation)"
         }

@@ -10,7 +10,7 @@ Impact Levels: High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -83,74 +83,45 @@ class FRR_CCM_AG_03_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Python code for FRR-CCM-AG-03 compliance using AST.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
-        
-        Detection targets:
-        - TODO: List what patterns to detect
+        **NOT APPLICABLE:** This is an AGENCY requirement about designating senior officials.
+        Agencies SHOULD designate a senior information security official for High impact systems -
+        this is a governance/human resources requirement for agencies, not a code implementation
+        requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
+        return []
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze C# code for FRR-CCM-AG-03 compliance using AST.
         
-        TODO: Implement C# analysis
+        **NOT APPLICABLE:** This is an AGENCY requirement about designating senior officials.
+        Agencies SHOULD designate a senior information security official for High impact systems -
+        this is a governance/human resources requirement for agencies, not a code implementation
+        requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        return []
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Java code for FRR-CCM-AG-03 compliance using AST.
         
-        TODO: Implement Java analysis
+        **NOT APPLICABLE:** This is an AGENCY requirement about designating senior officials.
+        Agencies SHOULD designate a senior information security official for High impact systems -
+        this is a governance/human resources requirement for agencies, not a code implementation
+        requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        return []
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze TypeScript/JavaScript code for FRR-CCM-AG-03 compliance using AST.
         
-        TODO: Implement TypeScript analysis
+        **NOT APPLICABLE:** This is an AGENCY requirement about designating senior officials.
+        Agencies SHOULD designate a senior information security official for High impact systems -
+        this is a governance/human resources requirement for agencies, not a code implementation
+        requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
-        return findings
+        return []
     
     # ============================================================================
     # INFRASTRUCTURE AS CODE ANALYZERS (Regex-based)
@@ -160,32 +131,23 @@ class FRR_CCM_AG_03_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Bicep infrastructure code for FRR-CCM-AG-03 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        **NOT APPLICABLE:** This is an AGENCY requirement about designating senior officials.
+        Agencies SHOULD designate a senior information security official for High impact systems -
+        this is a governance/human resources requirement for agencies, not a code implementation
+        requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        return []
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Terraform infrastructure code for FRR-CCM-AG-03 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        **NOT APPLICABLE:** This is an AGENCY requirement about designating senior officials.
+        Agencies SHOULD designate a senior information security official for High impact systems -
+        this is a governance/human resources requirement for agencies, not a code implementation
+        requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        return []
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
@@ -195,85 +157,132 @@ class FRR_CCM_AG_03_Analyzer(BaseFRRAnalyzer):
         """
         Analyze GitHub Actions workflow for FRR-CCM-AG-03 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        **NOT APPLICABLE:** This is an AGENCY requirement about designating senior officials.
+        Agencies SHOULD designate a senior information security official for High impact systems -
+        this is a governance/human resources requirement for agencies, not a code implementation
+        requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Azure Pipelines YAML for FRR-CCM-AG-03 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        **NOT APPLICABLE:** This is an AGENCY requirement about designating senior officials.
+        Agencies SHOULD designate a senior information security official for High impact systems -
+        this is a governance/human resources requirement for agencies, not a code implementation
+        requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze GitLab CI YAML for FRR-CCM-AG-03 compliance.
         
-        TODO: Implement GitLab CI analysis
+        **NOT APPLICABLE:** This is an AGENCY requirement about designating senior officials.
+        Agencies SHOULD designate a senior information security official for High impact systems -
+        this is a governance/human resources requirement for agencies, not a code implementation
+        requirement for cloud service providers.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> List[str]:
         """
-        Get recommendations for automating evidence collection for FRR-CCM-AG-03.
+        Returns Azure Resource Graph and KQL queries for evidence collection.
         
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        Note: This is an AGENCY requirement for High impact systems. Evidence focuses
+        on agency documentation of senior official designation and participation.
+        """
+        return [
+            # Query 1: Not applicable - this is agency-side HR evidence
+            """// NOT APPLICABLE: This requirement applies to agency HR/staffing for High impact
+// Agencies must designate senior security officials for High impact system reviews
+// Provider evidence: None - this is agency human resources requirement""",
+            
+            # Query 2: Optional - track High impact customer engagement
+            """// Optional: CSP can track Quarterly Review participation for High impact customers
+AppEvents
+| where TimeGenerated > ago(90d)
+| where Name == 'QuarterlyReview' or Name == 'ReportReview'
+| extend ImpactLevel = tostring(Properties.impact_level)
+| where ImpactLevel == 'High'
+| extend AgencyId = tostring(Properties.agency_id)
+| summarize ReviewCount = count() by AgencyId, bin(TimeGenerated, 30d)
+| order by TimeGenerated desc""",
+            
+            # Query 3: Not applicable - agency internal staffing
+            """// NOT APPLICABLE: Agency internal designation of senior officials
+// Agencies should maintain records of senior official appointments
+// Provider evidence: None - this is agency governance requirement"""
+        ]
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Returns list of evidence artifacts to collect.
+        """
+        return [
+            "Agency designation letter for senior security official (High impact systems)",
+            "Agency organizational chart showing senior official role",
+            "Senior official's resume or credentials documentation",
+            "Agency attendance records for Quarterly Reviews (High impact systems)",
+            "Senior official's review notes or reports",
+            "Agency ATO documentation showing senior official authority",
+            "Agency policy on senior official designation requirements",
+            "Senior official's delegation of authority documentation",
+            "Agency training records for senior officials on continuous monitoring",
+            "Communication records between senior official and CSP"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Provides recommendations for automated evidence collection.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "automated_queries": [
+                {
+                    "name": "High Impact Customer Engagement Tracking",
+                    "description": "Optional: Track engagement with High impact system agencies",
+                    "query": """AppEvents
+| where TimeGenerated > ago(90d)
+| where Name contains 'QuarterlyReview' or Name contains 'ReportReview'
+| extend ImpactLevel = tostring(Properties.impact_level)
+| where ImpactLevel == 'High'
+| summarize count() by bin(TimeGenerated, 7d)
+| order by TimeGenerated desc""",
+                    "schedule": "Quarterly",
+                    "note": "CSP can track but cannot enforce agency senior official designation"
+                }
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "evidence_artifacts": [
+                {
+                    "name": "Senior Official Designation Letter",
+                    "description": "Agency letter designating senior official for High impact reviews",
+                    "location": "Agency-provided documentation / external",
+                    "note": "Provider cannot generate this - agency-owned artifact"
+                },
+                {
+                    "name": "Quarterly Review Attendance",
+                    "description": "Records showing senior official participation",
+                    "location": "Meeting minutes / attendance records",
+                    "note": "CSP can document who attended from agency side"
+                }
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "implementation_notes": [
+                "This is an AGENCY requirement for High impact systems ONLY",
+                "Applies when: Agency system includes CSO with High security category",
+                "Provider responsibility: None - this is internal agency HR/governance",
+                "Agency responsibility: Designate senior information security official",
+                "Senior official duties: Review Ongoing Authorization Reports for High impact",
+                "Senior official duties: Represent agency at Quarterly Reviews for High impact",
+                "'Senior' indicates appropriate authority and experience level",
+                "Provider can support: Coordinate with designated senior officials",
+                "Provider can support: Provide clear contact information to senior officials",
+                "Provider can support: Track participation in Quarterly Reviews",
+                "Evidence source: Agency HR documentation and meeting records",
+                "Not required for Low or Moderate impact systems (AG-03 is High only)"
             ]
         }

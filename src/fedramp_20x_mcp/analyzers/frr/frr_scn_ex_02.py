@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -254,47 +254,48 @@ class FRR_SCN_EX_02_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-SCN-EX-02.
+        Provides queries for collecting evidence of FRR-SCN-EX-02 compliance.
         
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        Returns:
+            Dict containing query strings for various platforms
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "azure_resource_graph": [
+                "Resources | where type =~ 'microsoft.insights/activitylogalerts' | project id, name, properties",
+                "Resources | where type =~ 'microsoft.logic/workflows' | where properties.state == 'Enabled' | project id, name"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "azure_cli": [
+                "az monitor activity-log list --query '[].{Time:eventTimestamp, Category:category, Operation:operationName}'",
+                "az logic workflow list --query '[?state==`Enabled`].{Name:name, State:state}'"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Lists artifacts to collect as evidence of FRR-SCN-EX-02 compliance.
+        
+        Returns:
+            List of artifact descriptions
+        """
+        return [
+            "Emergency change procedures documentation",
+            "Incident response playbooks with emergency change authorization",
+            "Retroactive SCN notification templates and examples",
+            "Post-incident assessment reports",
+            "Emergency change audit logs and approvals"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Provides recommendations for automating evidence collection for FRR-SCN-EX-02.
+        
+        Returns:
+            Dict mapping automation areas to implementation guidance
+        """
+        return {
+            "emergency_workflow": "Implement emergency change workflows with automated retroactive notification",
+            "incident_tracking": "Use incident management systems to track emergency changes and post-incident assessments",
+            "audit_logging": "Configure comprehensive audit logging for all emergency change activities"
         }

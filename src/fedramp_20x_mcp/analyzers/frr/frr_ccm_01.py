@@ -90,9 +90,51 @@ class FRR_CCM_01_Analyzer(BaseFRRAnalyzer):
         - Report formatting and distribution
         """
         findings = []
-        lines = code.split('\n')
         
-        # Report generation patterns
+        try:
+            parser = ASTParser(CodeLanguage.PYTHON)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                # Check for report generation functions
+                func_defs = parser.find_nodes_by_type(tree.root_node, 'function_definition')
+                for func_def in func_defs:
+                    func_text = parser.get_node_text(func_def, code_bytes)
+                    func_lower = func_text.lower()
+                    
+                    if any(keyword in func_lower for keyword in ['ongoing_authorization_report', 'quarterly_report', 'authorization_summary']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Ongoing Authorization Report generation detected",
+                            description="Found function for generating ongoing authorization reports",
+                            severity=Severity.INFO,
+                            line_number=func_def.start_point[0] + 1,
+                            code_snippet=func_text.split('\n')[0],
+                            recommendation="Ensure report available every 3 months in human-readable format."
+                        ))
+                
+                # Check for 3-month/90-day intervals in assignments
+                assignments = parser.find_nodes_by_type(tree.root_node, 'assignment')
+                for assignment in assignments:
+                    assign_text = parser.get_node_text(assignment, code_bytes).lower()
+                    if ('90' in assign_text or '3' in assign_text) and any(keyword in assign_text for keyword in ['month', 'day', 'quarter']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Quarterly reporting interval detected",
+                            description="Found 3-month/90-day reporting configuration",
+                            severity=Severity.INFO,
+                            line_number=assignment.start_point[0] + 1,
+                            code_snippet=assign_text.split('\n')[0],
+                            recommendation="Verify quarterly report generation schedule."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
         report_patterns = [
             r'ongoing.*authorization.*report',
             r'quarterly.*report',
@@ -107,69 +149,164 @@ class FRR_CCM_01_Analyzer(BaseFRRAnalyzer):
                     findings.append(Finding(
                         frr_id=self.FRR_ID,
                         title="Authorization report mechanism detected",
-                        description=f"Found report pattern: {pattern}",
+                        description=f"Found pattern: {pattern}",
                         severity=Severity.INFO,
                         line_number=i,
                         code_snippet=line.strip(),
-                        recommendation="Ensure Ongoing Authorization Report available every 3 months in human-readable format."
+                        recommendation="Ensure report available every 3 months in human-readable format."
                     ))
                     break
         
-        return findings
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
         return findings
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze C# code for FRR-CCM-01 compliance using AST.
         
-        TODO: Implement C# analysis
+        Detects ongoing authorization report generation in C#.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for C#
+        try:
+            parser = ASTParser(CodeLanguage.CSHARP)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                method_declarations = parser.find_nodes_by_type(tree.root_node, 'method_declaration')
+                for method in method_declarations:
+                    method_text = parser.get_node_text(method, code_bytes)
+                    method_lower = method_text.lower()
+                    
+                    if any(keyword in method_lower for keyword in ['ongoingauthorizationreport', 'quarterlyreport', 'authorizationsummary']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Ongoing Authorization Report generation detected",
+                            description="Found method for generating ongoing authorization reports",
+                            severity=Severity.INFO,
+                            line_number=method.start_point[0] + 1,
+                            code_snippet=method_text.split('\n')[0],
+                            recommendation="Ensure report available every 3 months in human-readable format."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(?:OngoingAuthorizationReport|QuarterlyReport|AuthorizationSummary)', line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Authorization report mechanism detected",
+                    description="Found authorization report code",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Verify quarterly report generation."
+                ))
+        
         return findings
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Java code for FRR-CCM-01 compliance using AST.
         
-        TODO: Implement Java analysis
+        Detects ongoing authorization report generation in Java.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for Java
+        try:
+            parser = ASTParser(CodeLanguage.JAVA)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                method_declarations = parser.find_nodes_by_type(tree.root_node, 'method_declaration')
+                for method in method_declarations:
+                    method_text = parser.get_node_text(method, code_bytes)
+                    method_lower = method_text.lower()
+                    
+                    if any(keyword in method_lower for keyword in ['ongoingauthorizationreport', 'quarterlyreport', 'authorizationsummary']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Ongoing Authorization Report generation detected",
+                            description="Found method for generating ongoing authorization reports",
+                            severity=Severity.INFO,
+                            line_number=method.start_point[0] + 1,
+                            code_snippet=method_text.split('\n')[0],
+                            recommendation="Ensure report available every 3 months in human-readable format."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(?:ongoingAuthorizationReport|quarterlyReport|authorizationSummary)', line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Authorization report mechanism detected",
+                    description="Found authorization report code",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Verify quarterly report generation."
+                ))
+        
         return findings
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze TypeScript/JavaScript code for FRR-CCM-01 compliance using AST.
         
-        TODO: Implement TypeScript analysis
+        Detects ongoing authorization report generation in TypeScript/JavaScript.
         """
         findings = []
-        lines = code.split('\n')
         
-        # TODO: Implement AST analysis for TypeScript
+        try:
+            parser = ASTParser(CodeLanguage.TYPESCRIPT)
+            tree = parser.parse(code)
+            code_bytes = code.encode('utf8')
+            
+            if tree and tree.root_node:
+                function_declarations = parser.find_nodes_by_type(tree.root_node, 'function_declaration')
+                for func_decl in function_declarations:
+                    func_text = parser.get_node_text(func_decl, code_bytes)
+                    func_lower = func_text.lower()
+                    
+                    if any(keyword in func_lower for keyword in ['ongoingauthorizationreport', 'quarterlyreport', 'authorizationsummary']):
+                        findings.append(Finding(
+                            frr_id=self.FRR_ID,
+                            title="Ongoing Authorization Report generation detected",
+                            description="Found function for generating ongoing authorization reports",
+                            severity=Severity.INFO,
+                            line_number=func_decl.start_point[0] + 1,
+                            code_snippet=func_text.split('\n')[0],
+                            recommendation="Ensure report available every 3 months in human-readable format."
+                        ))
+                
+                return findings
+        except Exception:
+            pass
+        
+        # Regex fallback
+        lines = code.split('\n')
+        for i, line in enumerate(lines, 1):
+            if re.search(r'(?:ongoingAuthorizationReport|quarterlyReport|authorizationSummary)', line):
+                findings.append(Finding(
+                    frr_id=self.FRR_ID,
+                    title="Authorization report mechanism detected",
+                    description="Found authorization report code",
+                    severity=Severity.INFO,
+                    line_number=i,
+                    code_snippet=line.strip(),
+                    recommendation="Verify quarterly report generation."
+                ))
+        
         return findings
     
     # ============================================================================
@@ -180,32 +317,24 @@ class FRR_CCM_01_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Bicep infrastructure code for FRR-CCM-01 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        NOT APPLICABLE: Ongoing Authorization Reports are business process and documentation
+        requirements that must be prepared quarterly (every 3 months) covering system status,
+        changes, incidents, and compliance. This is not an infrastructure configuration concern
+        but a policy and procedural requirement involving manual compilation of system data into
+        human-readable reports.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        return []
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Terraform infrastructure code for FRR-CCM-01 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        NOT APPLICABLE: Ongoing Authorization Reports are business process and documentation
+        requirements that must be prepared quarterly (every 3 months) covering system status,
+        changes, incidents, and compliance. This is not an infrastructure configuration concern
+        but a policy and procedural requirement.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        return []
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
@@ -215,39 +344,33 @@ class FRR_CCM_01_Analyzer(BaseFRRAnalyzer):
         """
         Analyze GitHub Actions workflow for FRR-CCM-01 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        NOT APPLICABLE: Ongoing Authorization Reports are business process and documentation
+        requirements that must be prepared quarterly. While CI/CD pipelines could potentially
+        automate data collection for reports, the requirement mandates human-readable reports
+        covering system status, changes, and compliance - this is a policy and procedural
+        requirement, not a CI/CD automation concern.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Azure Pipelines YAML for FRR-CCM-01 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        NOT APPLICABLE: Ongoing Authorization Reports are business process and documentation
+        requirements that must be prepared quarterly. This is a policy and procedural
+        requirement for human-readable reporting, not a CI/CD pipeline concern.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze GitLab CI YAML for FRR-CCM-01 compliance.
         
-        TODO: Implement GitLab CI analysis
+        NOT APPLICABLE: Ongoing Authorization Reports are business process and documentation
+        requirements that must be prepared quarterly. This is a policy and procedural
+        requirement for human-readable reporting, not a CI/CD pipeline concern.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
@@ -256,44 +379,77 @@ class FRR_CCM_01_Analyzer(BaseFRRAnalyzer):
     def get_evidence_automation_recommendations(self) -> dict:
         """
         Get recommendations for automating evidence collection for FRR-CCM-01.
-        
-        This requirement is not directly code-detectable. Provides manual validation guidance.
         """
         return {
             'frr_id': self.FRR_ID,
             'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
+            'code_detectable': 'Partial',
+            'automation_approach': 'Partial automation - detect report generation code, manual validation for report content and distribution',
             'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+                "ongoing_authorization_report_q1.pdf",
+                "ongoing_authorization_report_q2.pdf",
+                "ongoing_authorization_report_q3.pdf",
+                "ongoing_authorization_report_q4.pdf",
+                "report_distribution_logs.json",
+                "report_generation_schedule.json",
+                "quarterly_summary_template.docx",
+                "report_access_list.json",
             ],
             'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+                "AzureDiagnostics | where Category == 'ApplicationLogs' and Message contains 'authorization report' | project TimeGenerated, Message",
+                "traces | where message contains 'quarterly report' or message contains 'ongoing authorization' | summarize count() by bin(timestamp, 90d)",
+                "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.Security/secureScores",
+                "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.Security/assessments",
             ],
             'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
+                "1. Review quarterly Ongoing Authorization Reports for completeness (every 3 months)",
+                "2. Verify reports are in human-readable format (PDF, Word, or HTML)",
+                "3. Confirm reports cover entire period since previous summary",
+                "4. Validate reports include required high-level summaries (incidents, changes, vulnerabilities, etc.)",
+                "5. Verify reports are distributed to all necessary parties (FedRAMP, Agency AO, etc.)",
+                "6. Check report generation schedule aligns with 3-month requirement",
             ],
             'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
+                "Azure Monitor - Collect system activity and changes for reports",
+                "Microsoft Defender for Cloud - Security posture and vulnerability data",
+                "Azure Policy - Compliance status for reports",
+                "Azure Log Analytics - Incident and event data aggregation",
+                "Azure DevOps/GitHub - Change tracking for reports",
             ],
             'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+                "Export compliance data to report generation tools",
+                "Integrate with document management systems for report distribution",
+                "Connect to GRC platforms for automated report compilation",
+                "Use Azure Resource Graph for infrastructure change tracking",
             ]
         }
+    
+    def get_evidence_collection_queries(self) -> dict:
+        """
+        Get queries for collecting evidence of FRR-CCM-01 compliance.
+        """
+        return {
+            "report_generation_logs": "SELECT timestamp, message FROM application_logs WHERE message LIKE '%ongoing authorization report%' OR message LIKE '%quarterly report%'",
+            "quarterly_report_count": "SELECT COUNT(*) as report_count FROM reports WHERE type = 'ongoing_authorization' AND timestamp > ago(365d) GROUP BY bin(timestamp, 90d)",
+            "report_distribution": "SELECT timestamp, recipient, report_name FROM distribution_logs WHERE report_type = 'ongoing_authorization'",
+            "security_incidents_summary": "SecurityIncident | where TimeGenerated > ago(90d) | summarize count() by Severity",
+            "configuration_changes": "AzureActivity | where OperationNameValue contains 'write' and TimeGenerated > ago(90d) | summarize count() by ResourceType",
+            "vulnerability_summary": "az security assessment list --query \"[?status.code=='Unhealthy']\"",
+        }
+    
+    def get_evidence_artifacts(self) -> list:
+        """
+        Get list of evidence artifacts for FRR-CCM-01 compliance.
+        """
+        return [
+            "ongoing_authorization_report_q1.pdf",
+            "ongoing_authorization_report_q2.pdf",
+            "ongoing_authorization_report_q3.pdf",
+            "ongoing_authorization_report_q4.pdf",
+            "report_distribution_logs.json",
+            "report_generation_schedule.json",
+            "quarterly_summary_template.docx",
+            "report_access_list.json",
+            "report_approval_records.json",
+            "quarterly_metrics_summary.xlsx",
+        ]

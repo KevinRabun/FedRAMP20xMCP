@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,164 @@ class FRR_VDR_11_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> List[Dict[str, str]]:
+        """
+        Get specific queries for evidence collection automation for FRR-VDR-11.
+        
+        Returns:
+            List of query dictionaries for collecting deviation documentation
+        """
+        return [
+            {
+                "query_type": "Azure Storage Account REST API",
+                "query_name": "Retrieve deviation documentation from authorization data store",
+                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Storage/storageAccounts/{accountName}/blobServices/default/containers/authorization-data/blobs?api-version=2022-09-01&prefix=deviations/",
+                "purpose": "List all deviation documentation files stored in Azure Storage for the cloud service offering"
+            },
+            {
+                "query_type": "Azure Resource Graph KQL",
+                "query_name": "Resources with deviation tags",
+                "query": """Resources
+| where tags contains 'fedramp-deviation'
+| project resourceId = id, resourceName = name, resourceType = type, 
+    deviationReason = tags['fedramp-deviation-reason'], 
+    customerImpact = tags['fedramp-deviation-impact'],
+    approvalDate = tags['fedramp-deviation-approved'],
+    resourceGroup, subscriptionId
+| order by resourceName""",
+                "purpose": "Identify Azure resources that have documented deviations from FedRAMP recommendations"
+            },
+            {
+                "query_type": "Azure DevOps REST API",
+                "query_name": "Deviation work items and approval records",
+                "query": "GET https://dev.azure.com/{organization}/{project}/_apis/wit/wiql?api-version=7.0 (WIQL: SELECT [System.Id], [System.Title], [Custom.DeviationReason], [Custom.CustomerImpact] FROM WorkItems WHERE [System.WorkItemType] = 'FedRAMP Deviation' AND [System.State] = 'Approved')",
+                "purpose": "Query Azure DevOps for formal deviation requests and approval documentation"
+            },
+            {
+                "query_type": "Azure Monitor KQL",
+                "query_name": "Access logs for authorization data documentation",
+                "query": """StorageBlobLogs
+| where AccountName == 'authorizationdata'
+| where ObjectKey contains 'deviations/'
+| where OperationName in ('PutBlob', 'GetBlob')
+| summarize LastModified = max(TimeGenerated), AccessCount = count() by ObjectKey, CallerIpAddress
+| project ObjectKey, LastModified, AccessCount, CallerIpAddress
+| order by LastModified desc""",
+                "purpose": "Track creation and access of deviation documentation to ensure it's current and accessible for assessors"
+            },
+            {
+                "query_type": "Microsoft Purview REST API",
+                "query_name": "Data catalog search for FedRAMP deviation documents",
+                "query": "POST https://{accountName}.purview.azure.com/catalog/api/search/query?api-version=2022-03-01-preview (body: {\"keywords\": \"FedRAMP deviation\", \"filter\": {\"and\": [{\"collectionId\": \"authorization-data\"}]}})",
+                "purpose": "Search data catalog for all documents tagged as FedRAMP deviations to ensure comprehensive documentation"
+            }
+        ]
+    
+    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+        """
+        Get descriptions of evidence artifacts to collect for FRR-VDR-11.
+        
+        Returns:
+            List of artifact dictionaries describing required documentation
+        """
+        return [
+            {
+                "artifact_name": "Deviation Documentation Register",
+                "artifact_type": "Excel workbook or JSON file",
+                "description": "Complete register of all instances where the provider chose not to meet FedRAMP recommendations, including deviation reason, customer impact analysis, and authorization data reference",
+                "collection_method": "Query Azure Resource Graph for tagged resources and Azure Storage for documentation files, consolidate into structured register",
+                "storage_location": "Azure Storage Account /evidence/frr-vdr-11/deviation-register/{YYYY-MM}/"
+            },
+            {
+                "artifact_name": "Customer Impact Assessment Documents",
+                "artifact_type": "PDF/Word documents",
+                "description": "Detailed assessment for each deviation explaining the resulting implications for customers, including security impact, operational considerations, and mitigation measures",
+                "collection_method": "Retrieve from Azure Storage authorization-data container /deviations/{deviation-id}/customer-impact-assessment.pdf",
+                "storage_location": "Azure Storage Account /evidence/frr-vdr-11/customer-impact-assessments/"
+            },
+            {
+                "artifact_name": "Authorization Data Package Inclusion Proof",
+                "artifact_type": "PDF report with screenshots",
+                "description": "Evidence showing that deviation documentation is included in the authorization data package submitted to FedRAMP, including table of contents excerpt and file listings",
+                "collection_method": "Export authorization data package metadata from Azure Storage, capture screenshots of deviation section in SSP appendices",
+                "storage_location": "Azure Storage Account /evidence/frr-vdr-11/authorization-data-proof/{YYYY-MM}/"
+            },
+            {
+                "artifact_name": "Deviation Approval Records",
+                "artifact_type": "Azure DevOps work item export (JSON/Excel)",
+                "description": "Formal approval records for each documented deviation, including approval date, approver identity (CISO, Authorizing Official), and approval rationale",
+                "collection_method": "Export work items from Azure DevOps using REST API filtered for 'FedRAMP Deviation' work item type with 'Approved' state",
+                "storage_location": "Azure Storage Account /evidence/frr-vdr-11/approvals/{YYYY-MM}/"
+            },
+            {
+                "artifact_name": "Deviation Documentation Access Audit Log",
+                "artifact_type": "CSV file",
+                "description": "Audit log showing creation, modification, and access of deviation documentation to demonstrate ongoing maintenance and assessor accessibility",
+                "collection_method": "Query Azure Storage Analytics logs for blob operations on /deviations/ path using Azure Monitor KQL",
+                "storage_location": "Azure Storage Account /evidence/frr-vdr-11/access-logs/{YYYY-MM}/"
+            },
+            {
+                "artifact_name": "Quarterly Deviation Review Report",
+                "artifact_type": "PDF report",
+                "description": "Quarterly executive report summarizing all active deviations, customer impact, any changes to deviation status, and plan for achieving full FedRAMP recommendation compliance",
+                "collection_method": "Manual compilation by GRC team aggregating deviation register data, customer feedback, and remediation roadmap",
+                "storage_location": "Azure Storage Account /evidence/frr-vdr-11/quarterly-reviews/{YYYY-QQ}/"
+            }
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
         """
         Get recommendations for automating evidence collection for FRR-VDR-11.
         
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        Returns:
+            Dict containing automation recommendations
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "frr_id": self.FRR_ID,
+            "frr_name": self.FRR_NAME,
+            "primary_keyword": "MUST",
+            "impact_levels": ["Low", "Moderate", "High"],
+            "evidence_type": "manual (with automated collection support)",
+            "automation_feasibility": "medium",
+            "azure_services": [
+                "Azure Storage Account (for authorization data storage)",
+                "Azure Resource Graph (for tagged resource tracking)",
+                "Azure DevOps (for deviation workflow and approvals)",
+                "Azure Monitor (for access audit logs)",
+                "Microsoft Purview (for data catalog and discovery)"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "collection_methods": [
+                "Azure Storage REST API to list and retrieve deviation documentation files",
+                "Azure Resource Graph query to identify resources with 'fedramp-deviation' tags",
+                "Azure DevOps work item queries for formal deviation approval records",
+                "Azure Monitor KQL queries for documentation access audit logs",
+                "Microsoft Purview search API for comprehensive deviation document discovery"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
+            "implementation_steps": [
+                "1. Establish Azure Storage account with /authorization-data/deviations/ container for centralized documentation",
+                "2. Implement Azure Resource tagging standard: 'fedramp-deviation', 'fedramp-deviation-reason', 'fedramp-deviation-impact', 'fedramp-deviation-approved'",
+                "3. Configure Azure DevOps project with custom 'FedRAMP Deviation' work item type including fields for reason, customer impact, and approval workflow",
+                "4. Enable Azure Storage Analytics and Azure Monitor integration for access logging",
+                "5. Create Azure Logic App to automatically generate deviation register by querying Resource Graph, Storage API, and DevOps API monthly",
+                "6. Implement Azure Function to validate that each deviation has required documentation (reason document, customer impact assessment, approval record) before marking as complete",
+                "7. Configure Microsoft Purview to catalog all deviation documents with appropriate metadata for assessor discovery"
             ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
+            "evidence_artifacts": [
+                "Deviation Documentation Register (Excel/JSON)",
+                "Customer Impact Assessment Documents (PDF/Word per deviation)",
+                "Authorization Data Package Inclusion Proof (PDF with screenshots)",
+                "Deviation Approval Records (Azure DevOps export)",
+                "Deviation Documentation Access Audit Log (CSV)",
+                "Quarterly Deviation Review Report (PDF)"
             ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
-            ]
+            "manual_validation_steps": [
+                "1. For each documented deviation, verify that a clear reason is stated explaining why the FedRAMP recommendation was not met",
+                "2. Review customer impact assessment to ensure implications are thoroughly analyzed (security, operational, compliance)",
+                "3. Confirm deviation documentation is included in the authorization data package (check SSP appendix, RET supplements)",
+                "4. Verify formal approval exists from appropriate authority (CISO, Authorizing Official) for each deviation",
+                "5. Interview GRC team to understand deviation tracking process and quarterly review cadence",
+                "6. Sample 3-5 deviations and trace from Resource Graph tag → Documentation file → DevOps approval → Authorization data inclusion"
+            ],
+            "update_frequency": "Real-time for new deviations, monthly register update, quarterly review report",
+            "responsible_party": "GRC Team / Security Compliance Manager"
         }

@@ -1,11 +1,10 @@
-"""
-FRR-RSC-04: Secure Defaults on Provisioning
+"""FRR-RSC-04: Secure Defaults on Provisioning
 
 Providers SHOULD set all settings to their recommended secure defaults for _top-level administrative accounts_ and _privileged accounts_ when initially provisioned.
 
 Official FedRAMP 20x Requirement
 Source: FRR-RSC (Resource Categorization) family
-Primary Keyword: MUST
+Primary Keyword: SHOULD
 Impact Levels: Low, Moderate, High
 """
 
@@ -25,7 +24,7 @@ class FRR_RSC_04_Analyzer(BaseFRRAnalyzer):
     
     **Family:** RSC - Resource Categorization
     
-    **Primary Keyword:** MUST
+    **Primary Keyword:** SHOULD
     
     **Impact Levels:**
     - Low: Yes
@@ -52,7 +51,7 @@ class FRR_RSC_04_Analyzer(BaseFRRAnalyzer):
     FRR_STATEMENT = """Providers SHOULD set all settings to their recommended secure defaults for _top-level administrative accounts_ and _privileged accounts_ when initially provisioned."""
     FAMILY = "RSC"
     FAMILY_NAME = "Resource Categorization"
-    PRIMARY_KEYWORD = "MUST"
+    PRIMARY_KEYWORD = "SHOULD"
     IMPACT_LOW = True
     IMPACT_MODERATE = True
     IMPACT_HIGH = True
@@ -61,7 +60,7 @@ class FRR_RSC_04_Analyzer(BaseFRRAnalyzer):
         ("IA-5", "Authenticator Management"),
         ("CM-6", "Configuration Settings")
     ]
-    CODE_DETECTABLE = "Yes"
+    CODE_DETECTABLE = "Partial"
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = ["KSI-IAM-01", "KSI-IAM-05"]
     
@@ -226,48 +225,41 @@ class FRR_RSC_04_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
-        """
-        Get recommendations for automating evidence collection for secure provisioning defaults.
-        """
+    def get_evidence_collection_queries(self) -> dict:
+        """KQL queries for secure provisioning defaults evidence."""
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Partial',
-            'automation_approach': 'Automated IaC scanning for secure defaults on privileged account provisioning, combined with configuration exports from IAM systems',
+            'automated_queries': [
+                "// Query 1: Admin account provisioning with security settings\nAzureActivity\n| where TimeGenerated > ago(90d)\n| where OperationNameValue contains 'MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE'\n| where Properties contains 'Owner' or Properties contains 'Administrator'\n| project TimeGenerated, Caller, ResourceId, OperationNameValue, Properties\n| order by TimeGenerated desc",
+                "// Query 2: Password policy and MFA enforcement\nSigninLogs\n| where TimeGenerated > ago(30d)\n| where UserPrincipalName contains 'admin'\n| summarize MFARequired = countif(AuthenticationRequirement == 'multiFactorAuthentication'), Total = count() by UserPrincipalName\n| extend MFAPercentage = (MFARequired * 100) / Total",
+                "// Query 3: Resources tagged with secure-defaults metadata\nResources\n| where tags['secure-defaults'] == 'true'\n| where tags['account-type'] in ('admin', 'privileged')\n| project resourceId, name, type, tags, location"
+            ]
+        }
+
+    def get_evidence_artifacts(self) -> dict:
+        """Documentation artifacts for secure provisioning defaults."""
+        return {
             'evidence_artifacts': [
-                'Bicep/Terraform templates for privileged account provisioning',
-                'IAM policy configurations (Azure AD, AWS IAM)',
-                'Password policy settings',
-                'MFA enforcement status for admin accounts',
-                'Role/privilege assignment records for top-level accounts',
-                'Account provisioning audit logs'
-            ],
-            'collection_queries': [
-                'Bicep/Terraform scan: Check for admin account resources with secure defaults',
-                'Azure: Get-AzADUser | Where-Object {$_.IsAdmin} | Get-MFA Status',
-                'AWS: aws iam list-users --query "Users[?contains(AttachedPolicies, \'AdministratorAccess\')]"',
-                'KQL: AzureActivity | where OperationNameValue contains "MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE" and Properties contains "Owner" or Properties contains "Administrator"'
-            ],
-            'manual_validation_steps': [
-                '1. Export current IAM/AAD configuration for all privileged accounts',
-                '2. Verify each admin account has MFA/strong auth enabled',
-                '3. Check password policies meet minimum requirements (14+ chars, complexity, rotation)',
-                '4. Review role assignments to ensure least privilege',
-                '5. Validate that provisioning templates use secure defaults',
-                '6. Document any exceptions with risk acceptance'
-            ],
-            'recommended_services': [
-                'Azure Policy: Enforce secure defaults via policy',
-                'Azure AD Conditional Access: MFA enforcement',
-                'AWS Config Rules: IAM password policy compliance',
-                'Azure Privileged Identity Management (PIM): JIT admin access',
-                'Terraform Sentinel: Policy-as-code for secure provisioning'
-            ],
-            'integration_points': [
-                'OSCAL SSP: Document provisioning security controls',
-                'CI/CD: Pre-deployment validation of IaC templates',
-                'SIEM: Alert on admin account provisioning without secure defaults',
-                'Identity Governance: Periodic access reviews for privileged accounts'
+                "Bicep/Terraform templates for privileged account provisioning",
+                "IAM policy configurations (Azure AD, AWS IAM)",
+                "Password policy settings (14+ chars, complexity, rotation)",
+                "MFA enforcement status for admin accounts",
+                "Role/privilege assignment records for top-level accounts",
+                "Account provisioning audit logs (90-day retention)",
+                "Secure defaults documentation",
+                "Exception/risk acceptance records"
+            ]
+        }
+
+    def get_evidence_automation_recommendations(self) -> dict:
+        """Implementation recommendations for secure provisioning defaults."""
+        return {
+            'implementation_notes': [
+                "Use IaC templates (Bicep/Terraform) with secure defaults for admin provisioning",
+                "Enforce MFA for all admin and privileged accounts (Azure AD Conditional Access)",
+                "Set password policies: 14+ characters, complexity, 90-day rotation",
+                "Apply least privilege principles during role assignment",
+                "Tag resources with secure-defaults and account-type metadata",
+                "Validate provisioning templates in CI/CD pipeline",
+                "Maintain audit logs of admin account provisioning (90-day minimum)"
             ]
         }

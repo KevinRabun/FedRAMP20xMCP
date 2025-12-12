@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import Dict, List, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -80,76 +80,47 @@ class FRR_CCM_QR_07_Analyzer(BaseFRRAnalyzer):
     
     def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Python code for FRR-CCM-QR-07 compliance using AST.
+        Analyze Python code for FRR-CCM-QR-07 compliance.
         
-        TODO: Implement Python analysis
-        - Use ASTParser(CodeLanguage.PYTHON)
-        - Use tree.root_node and code_bytes
-        - Use find_nodes_by_type() for AST nodes
-        - Fallback to regex if AST fails
+        **NOT APPLICABLE:** This requirement recommends (SHOULD) that providers include
+        additional relevant information in Quarterly Reviews. It's a content/behavioral
+        recommendation about what to discuss in meetings, not how CSP application code
+        is written.
         
-        Detection targets:
-        - TODO: List what patterns to detect
+        **Detection Strategy:** N/A - Meeting content recommendation (SHOULD), not code
+        implementation. Provider determines what additional info is relevant to agencies.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST-based analysis
-        # Example from FRR-VDR-08:
-        # try:
-        #     parser = ASTParser(CodeLanguage.PYTHON)
-        #     tree = parser.parse(code)
-        #     code_bytes = code.encode('utf8')
-        #     
-        #     if tree and tree.root_node:
-        #         # Find relevant nodes
-        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
-        #         for node in nodes:
-        #             node_text = parser.get_node_text(node, code_bytes)
-        #             # Check for violations
-        #         
-        #         return findings
-        # except Exception:
-        #     pass
-        
-        # TODO: Implement regex fallback
-        return findings
+        return []
     
     def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze C# code for FRR-CCM-QR-07 compliance using AST.
+        Analyze C# code for FRR-CCM-QR-07 compliance.
         
-        TODO: Implement C# analysis
+        **NOT APPLICABLE:** This requirement recommends including additional relevant
+        information in Quarterly Reviews. It's a content/behavioral recommendation about
+        meeting content, not C# code implementation.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for C#
-        return findings
+        return []
     
     def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze Java code for FRR-CCM-QR-07 compliance using AST.
+        Analyze Java code for FRR-CCM-QR-07 compliance.
         
-        TODO: Implement Java analysis
+        **NOT APPLICABLE:** This requirement recommends including additional relevant
+        information in Quarterly Reviews. It's a content/behavioral recommendation about
+        meeting content, not Java code implementation.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for Java
-        return findings
+        return []
     
     def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
         """
-        Analyze TypeScript/JavaScript code for FRR-CCM-QR-07 compliance using AST.
+        Analyze TypeScript/JavaScript code for FRR-CCM-QR-07 compliance.
         
-        TODO: Implement TypeScript analysis
+        **NOT APPLICABLE:** This requirement recommends including additional relevant
+        information in Quarterly Reviews. It's a content/behavioral recommendation about
+        meeting content, not TypeScript/JavaScript code implementation.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement AST analysis for TypeScript
-        return findings
+        return []
     
     # ============================================================================
     # INFRASTRUCTURE AS CODE ANALYZERS (Regex-based)
@@ -159,32 +130,21 @@ class FRR_CCM_QR_07_Analyzer(BaseFRRAnalyzer):
         """
         Analyze Bicep infrastructure code for FRR-CCM-QR-07 compliance.
         
-        TODO: Implement Bicep analysis
-        - Detect relevant Azure resources
-        - Check for compliance violations
+        **NOT APPLICABLE:** This requirement recommends including additional relevant
+        information in Quarterly Reviews. Infrastructure code doesn't control meeting
+        content or presentation materials.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Bicep regex patterns
-        # Example:
-        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
-        
-        return findings
+        return []
     
     def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Terraform infrastructure code for FRR-CCM-QR-07 compliance.
         
-        TODO: Implement Terraform analysis
-        - Detect relevant resources
-        - Check for compliance violations
+        **NOT APPLICABLE:** This requirement recommends including additional relevant
+        information in Quarterly Reviews. Infrastructure code doesn't control meeting
+        content or presentation materials.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Terraform regex patterns
-        return findings
+        return []
     
     # ============================================================================
     # CI/CD PIPELINE ANALYZERS (Regex-based)
@@ -194,85 +154,139 @@ class FRR_CCM_QR_07_Analyzer(BaseFRRAnalyzer):
         """
         Analyze GitHub Actions workflow for FRR-CCM-QR-07 compliance.
         
-        TODO: Implement GitHub Actions analysis
-        - Check for required steps/actions
-        - Verify compliance configuration
+        **NOT APPLICABLE:** This requirement recommends including additional relevant
+        information in Quarterly Reviews. CI/CD pipelines don't control meeting content
+        or presentation materials.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitHub Actions analysis
-        return findings
+        return []
     
     def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze Azure Pipelines YAML for FRR-CCM-QR-07 compliance.
         
-        TODO: Implement Azure Pipelines analysis
+        **NOT APPLICABLE:** This requirement recommends including additional relevant
+        information in Quarterly Reviews. CI/CD pipelines don't control meeting content
+        or presentation materials.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement Azure Pipelines analysis
-        return findings
+        return []
     
     def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
         """
         Analyze GitLab CI YAML for FRR-CCM-QR-07 compliance.
         
-        TODO: Implement GitLab CI analysis
+        **NOT APPLICABLE:** This requirement recommends including additional relevant
+        information in Quarterly Reviews. CI/CD pipelines don't control meeting content
+        or presentation materials.
         """
-        findings = []
-        lines = code.split('\n')
-        
-        # TODO: Implement GitLab CI analysis
-        return findings
+        return []
     
     # ============================================================================
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> List[str]:
+        """
+        Get automated queries for collecting evidence of FRR-CCM-QR-07 compliance.
+        
+        **NOT APPLICABLE:** This requirement recommends (SHOULD) including additional
+        relevant information in Quarterly Reviews. Evidence demonstrates consideration
+        of what additional content to include.
+        """
+        return [
+            "# Note: This is a meeting content recommendation (SHOULD) - evidence shows consideration of additional content"
+        ]
+    
+    def get_evidence_artifacts(self) -> List[Dict[str, Any]]:
+        """
+        Get list of evidence artifacts to collect for FRR-CCM-QR-07 compliance.
+        
+        Returns evidence related to including additional content in QRs.
+        """
+        return [
+            {
+                "artifact_name": "QR Presentation Materials",
+                "description": "Copies of QR presentations showing additional information beyond required topics",
+                "collection_method": "Archive QR presentation files after each meeting",
+                "frequency": "Quarterly after each QR"
+            },
+            {
+                "artifact_name": "Additional Content List",
+                "description": "Documentation of what additional information was included in each QR and why it was relevant",
+                "collection_method": "Meeting notes or content checklist",
+                "frequency": "Quarterly"
+            },
+            {
+                "artifact_name": "Agency Feedback on Content",
+                "description": "Agency responses/feedback on usefulness of additional information provided",
+                "collection_method": "Survey results or feedback emails",
+                "frequency": "Quarterly after each QR"
+            },
+            {
+                "artifact_name": "Content Relevance Assessment",
+                "description": "Provider's documented decision-making process for determining what additional info is relevant to agencies",
+                "collection_method": "Internal meeting notes or content planning documents",
+                "frequency": "Quarterly before each QR"
+            },
+            {
+                "artifact_name": "QR Agenda with Additional Topics",
+                "description": "Meeting agendas showing additional topics beyond required QR content",
+                "collection_method": "Save final meeting agendas",
+                "frequency": "Quarterly"
+            },
+            {
+                "artifact_name": "Meeting Minutes Excerpt",
+                "description": "Portions of meeting minutes documenting additional content shared and agency questions/discussion",
+                "collection_method": "Extract from official meeting minutes",
+                "frequency": "Quarterly after each QR"
+            },
+            {
+                "artifact_name": "Trend Analysis Reports",
+                "description": "Example additional content: trend analysis, metrics insights, or proactive updates shared with agencies",
+                "collection_method": "Archive supplemental reports provided during QRs",
+                "frequency": "Quarterly"
+            },
+            {
+                "artifact_name": "Best Practice Implementation",
+                "description": "Example additional content: documentation of best practices implemented that may benefit agencies",
+                "collection_method": "Supplemental documentation shared in QRs",
+                "frequency": "Quarterly when applicable"
+            },
+            {
+                "artifact_name": "Content Selection Policy",
+                "description": "Policy or guidance for determining what constitutes relevant additional information for agencies",
+                "collection_method": "Document review",
+                "frequency": "Annual or when updated"
+            },
+            {
+                "artifact_name": "Compliance Attestation",
+                "description": "Provider attestation that consideration was given to including relevant additional information per SHOULD requirement",
+                "collection_method": "Signed attestation document",
+                "frequency": "Quarterly"
+            }
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
         """
         Get recommendations for automating evidence collection for FRR-CCM-QR-07.
         
-        TODO: Add evidence collection guidance
+        Provides guidance on demonstrating consideration of additional QR content.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
-            ]
+            "automated_queries": self.get_evidence_collection_queries(),
+            "evidence_artifacts": self.get_evidence_artifacts(),
+            "implementation_notes": (
+                "FRR-CCM-QR-07 recommends (SHOULD) that providers include additional information in "
+                "Quarterly Reviews that they determine is relevant to agencies. This is NOT a code requirement - "
+                "it's a content/behavioral recommendation about meeting presentations. The key word is SHOULD "
+                "(recommendation, not mandatory). Evidence collection focuses on: "
+                "(1) Demonstrating consideration of what additional content might benefit agencies, "
+                "(2) Documenting what additional information was actually included, "
+                "(3) Showing agency feedback on usefulness of additional content, "
+                "(4) Maintaining records of supplemental materials provided. "
+                "Automate by: Archiving all QR presentation materials, tracking presentation slide counts/topics "
+                "beyond required content, collecting agency feedback surveys, and maintaining content planning "
+                "documentation. This is discretionary (SHOULD) - providers determine what's relevant. "
+                "Contrast with mandatory requirements like FRR-CCM-QR-04 (MUST NOT disclose sensitive info). "
+                "Related to overall QR process but focused on value-added content beyond minimum requirements."
+            )
         }

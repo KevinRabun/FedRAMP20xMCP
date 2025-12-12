@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,52 @@ class FRR_VDR_AY_05_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-AY-05.
+        Get queries for collecting evidence of security posture maintenance during scanning.
         
-        TODO: Add evidence collection guidance
+        Focuses on detecting security configuration weakening or temporary disablement for scanning.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "azure_policy_compliance": [
+                "PolicyResources | where type =~ 'microsoft.policyinsights/policystates' | where properties.complianceState == 'NonCompliant' | where properties.policyDefinitionAction in ('deny', 'audit') | where properties.policyDefinitionName contains 'firewall' or properties.policyDefinitionName contains 'encryption' or properties.policyDefinitionName contains 'authentication' | project TimeGenerated, resourceId, policyDefinitionName, complianceState=properties.complianceState, exemptionReason=properties.resourceTags['exemption-reason']",
+                "PolicyResources | where type =~ 'microsoft.authorization/policyexemptions' | where properties.exemptionCategory == 'Waiver' | where properties.displayName contains 'scan' or properties.description contains 'vulnerability assessment' | project id, name, resourceId=properties.policyAssignmentId, exemptionReason=properties.displayName"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "change_tracking": [
+                "ConfigurationChange | where ConfigChangeType == 'SecurityBaseline' | where ChangeCategory in ('Firewall', 'Encryption', 'Authentication') | where PreviousValue has 'enabled' and CurrentValue has 'disabled' | project TimeGenerated, Computer, ConfigChangeType, ChangeCategory, PreviousValue, CurrentValue, ChangeDescription",
+                "AzureActivity | where OperationNameValue contains 'disable' or OperationNameValue contains 'delete' | where ResourceType in ('Microsoft.Network/networkSecurityGroups', 'Microsoft.Security/securityContacts', 'Microsoft.KeyVault/vaults') | project TimeGenerated, Caller, OperationNameValue, ResourceId, ActivityStatusValue, Properties"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "defender_for_cloud": [
+                "SecurityRecommendation | where RecommendationName contains 'should be enabled' or RecommendationName contains 'should not be disabled' | where RecommendationState == 'Active' | where RecommendationSeverity in ('High', 'Medium') | project TimeGenerated, RecommendationName, ResourceId, RecommendationState, RemediationSteps",
+                "SecurityAlert | where AlertName contains 'security feature disabled' or AlertName contains 'protection disabled' | project TimeGenerated, AlertName, AlertSeverity, CompromisedEntity, RemediationSteps"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for demonstrating security posture maintenance.
+        
+        Focuses on absence of security weakening for scanning purposes.
+        """
+        return [
+            "Azure Policy compliance reports showing no exemptions for security controls (firewall, encryption, authentication) justified by scanning activities",
+            "Change tracking logs demonstrating security controls remain enabled during vulnerability assessment periods",
+            "Defender for Cloud recommendations showing no active alerts for disabled security features",
+            "Vulnerability scanner configuration documentation showing authenticated scanning methods that don't require security control disablement",
+            "Azure Activity Log audit trail showing no administrative actions disabling security features during scan windows",
+            "Network security group (NSG) configuration history showing consistent firewall rules (no temporary 'allow all' for scanning)",
+            "Key Vault audit logs showing encryption keys and access policies unchanged during vulnerability assessments"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Get recommendations for automating security posture maintenance evidence.
+        
+        Focuses on preventing security weakening for scanning purposes.
+        """
+        return {
+            "policy_enforcement": "Implement Azure Policy 'deny' assignments preventing disablement of core security controls (encryption, firewalls, authentication) with no exemptions for scanning activities",
+            "authenticated_scanning": "Configure vulnerability scanners to use authenticated/credentialed scanning methods (Azure RBAC, service principals) that don't require security control weakening",
+            "change_alerting": "Enable automated alerts on any changes to security baseline configurations, firewall rules, or encryption settings during vulnerability assessment windows",
+            "compliance_dashboard": "Create real-time compliance dashboard showing security control status (encryption, networking, access controls) with automated alerts on any deviations correlated with scanning schedules"
         }

@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,52 @@ class FRR_VDR_AG_02_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-AG-02.
+        Provides queries for collecting evidence of FRR-VDR-AG-02 compliance.
         
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        Note: This is an agency requirement (not provider). Queries support agency POA&M validation.
+        
+        Returns:
+            Dict containing query strings for various platforms
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "azure_devops": [
+                "SELECT [System.Id], [System.Title], [System.State], [Custom.VulnerabilityID] FROM WorkItems WHERE [System.WorkItemType] = 'POAM Item' AND [System.State] <> 'Closed'"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "servicenow_api": [
+                "GET /api/now/table/u_poam?sysparm_query=u_vulnerability_source=Cloud Provider^active=true"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Lists artifacts to collect as evidence of FRR-VDR-AG-02 compliance.
+        
+        Note: This is an agency requirement - artifacts demonstrate agency POA&M management.
+        
+        Returns:
+            List of artifact descriptions
+        """
+        return [
+            "Agency POA&M documentation with items linked to provider vulnerability reports",
+            "Risk acceptance documentation for accepted vulnerabilities",
+            "Tracking records showing vulnerability-to-POAM mappings",
+            "Agency security policy documentation regarding POA&M maintenance",
+            "Audit logs showing POA&M updates triggered by provider vulnerability reports"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Provides recommendations for automating evidence collection for FRR-VDR-AG-02.
+        
+        Note: This is an agency requirement - recommendations support agency POA&M tracking.
+        
+        Returns:
+            Dict mapping automation areas to implementation guidance
+        """
+        return {
+            "poam_integration": "Integrate provider vulnerability feeds with agency POA&M system (e.g., ServiceNow, Azure DevOps)",
+            "automated_mapping": "Implement automated mapping of provider vulnerabilities to POA&M items based on criticality",
+            "evidence_collection": "Generate quarterly reports showing POA&M items linked to provider vulnerabilities"
         }

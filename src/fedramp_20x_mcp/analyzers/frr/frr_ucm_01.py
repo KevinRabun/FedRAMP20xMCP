@@ -13,7 +13,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -511,3 +511,53 @@ Suggested file: SECURITY.md or docs/cryptography.md"""
             ))
         
         return findings
+    
+    # ============================================================================
+    # EVIDENCE COLLECTION SUPPORT
+    # ============================================================================
+    
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
+        """
+        Provides queries for collecting evidence of FRR-UCM-01 compliance.
+        
+        Returns:
+            Dict containing query strings for various platforms
+        """
+        return {
+            "azure_resource_graph": [
+                "Resources | where type =~ 'microsoft.keyvault/vaults' | project id, name, properties",
+                "Resources | where type =~ 'microsoft.security/compliances' | project id, name"
+            ],
+            "azure_cli": [
+                "az keyvault list --query '[].{Name:name, Location:location}'",
+                "az security compliance list --query '[].{Name:name, State:state}'"
+            ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Lists artifacts to collect as evidence of FRR-UCM-01 compliance.
+        
+        Returns:
+            List of artifact descriptions
+        """
+        return [
+            "Cryptographic module documentation (SECURITY.md or equivalent)",
+            "NIST CMVP validation certificates for each module",
+            "List mapping services to cryptographic modules used",
+            "Update stream documentation for validated modules",
+            "Cryptographic module inventory and validation status matrix"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Provides recommendations for automating evidence collection for FRR-UCM-01.
+        
+        Returns:
+            Dict mapping automation areas to implementation guidance
+        """
+        return {
+            "module_inventory": "Automate scanning of code repositories for cryptographic library usage",
+            "validation_tracking": "Maintain database of CMVP certificates linked to deployed modules",
+            "documentation_generation": "Generate cryptographic module documentation from inventory"
+        }

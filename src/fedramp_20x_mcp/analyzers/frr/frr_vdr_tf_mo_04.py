@@ -10,7 +10,7 @@ Impact Levels: Moderate
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,80 @@ class FRR_VDR_TF_MO_04_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, Any]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-TF-MO-04.
+        Get automated queries for collecting evidence of monthly stable resource vulnerability scanning.
         
-        TODO: Add evidence collection guidance
+        Returns queries for stable resource identification, monthly scanning, and persistent detection
+        (Moderate impact - same as High, different from six-month Low).
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
-            ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
-            ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
-            ]
+            "Stable resource identification": {
+                "description": "Identify resources NOT likely to drift (IaC-managed, immutable, static configs)",
+                "azure_resource_graph": """
+                    Resources
+                    | where tags['ChangeFrequency'] == 'Low' or tags['ManagedBy'] == 'IaC' or tags['Infrastructure'] == 'Immutable'
+                    | where type in ('microsoft.compute/virtualmachines', 'microsoft.storage/storageaccounts', 'microsoft.sql/servers')
+                    | project name, resourceGroup, type, tags, location
+                """
+            },
+            "Monthly vulnerability scanning on stable assets": {
+                "description": "Query scans on stable resources at monthly intervals (Moderate: same as High monthly, vs six-month Low)",
+                "defender_for_cloud_kql": """
+                    SecurityAssessment
+                    | where TimeGenerated > ago(90d)
+                    | where AssessmentType == 'Vulnerability'
+                    | extend ResourceStability = Properties.metadata.tags['ChangeFrequency']
+                    | where ResourceStability == 'Low' or isempty(ResourceStability)
+                    | summarize LastScan = max(TimeGenerated), ScanCount = count() by ResourceId
+                    | extend DaysSinceLastScan = datetime_diff('day', now(), LastScan)
+                    | extend MonthlyCompliance = iff(DaysSinceLastScan <= 30, 'Compliant', 'NonCompliant')
+                    | project ResourceId, LastScan, DaysSinceLastScan, ScanCount, MonthlyCompliance
+                """
+            },
+            "Persistent stable resource scanning verification": {
+                "description": "Verify persistent scanning jobs for stable resources with monthly schedule",
+                "scheduled_jobs_query": """
+                    Resources
+                    | where type == 'microsoft.security/automations'
+                    | where properties.schedule.frequency == 'Month' and properties.schedule.interval == 1
+                    | where properties.targetResourceFilter contains 'ChangeFrequency=Low'
+                    | project name, resourceGroup, scheduleFrequency = properties.schedule.frequency, enabled = properties.enabled
+                """
+            }
+        }
+
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for monthly stable resource vulnerability scanning.
+        """
+        return [
+            "Stable resource inventory with low drift indicators (IaC-managed, immutable infrastructure)",
+            "Monthly vulnerability scanning schedule for stable resources (Moderate: same as High, vs six-month Low)",
+            "Vulnerability scan execution logs showing monthly frequency on stable assets",
+            "Vulnerability detection results from stable resource assessments",
+            "Persistent vulnerability scanning job configurations with monthly intervals",
+            "Stable resource risk classifications and baseline stability metrics"
+        ]
+
+    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+        """
+        Get recommendations for automating evidence collection for FRR-VDR-TF-MO-04.
+        """
+        return {
+            "stable_resource_tagging": {
+                "description": "Tag stable resources with ChangeFrequency=Low for monthly scanning",
+                "implementation": "Use Azure Policy or Terraform to tag IaC-managed resources",
+                "rationale": "Enables automated identification of stable resources for monthly scanning (Moderate impact)"
+            },
+            "monthly_automated_scanning": {
+                "description": "Configure automated scanning for stable resources at monthly intervals",
+                "implementation": "Use Azure Automation with monthly schedules or Defender for Cloud monthly assessments",
+                "rationale": "Provides persistent vulnerability detection on stable resources per FRR-VDR-TF-MO-04"
+            },
+            "persistent_scan_execution": {
+                "description": "Verify persistent execution of monthly scanning jobs",
+                "implementation": "Use Azure Monitor alerts on missed scans, automation job logs",
+                "rationale": "Ensures continuous monthly vulnerability detection as required (Moderate impact)"
+            }
         }

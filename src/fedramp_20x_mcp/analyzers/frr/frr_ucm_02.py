@@ -71,7 +71,7 @@ class FRR_UCM_02_Analyzer(BaseFRRAnalyzer):
         ("SC-12", "Cryptographic Key Establishment and Management"),
         ("IA-7", "Cryptographic Module Authentication"),
     ]
-    CODE_DETECTABLE = True  # Extensive crypto analysis implemented
+    CODE_DETECTABLE = "Yes"  # Extensive crypto analysis implemented
     IMPLEMENTATION_STATUS = "IMPLEMENTED"
     RELATED_KSIS = [
         "KSI-CNA-05",  # Encryption in transit
@@ -810,137 +810,48 @@ class FRR_UCM_02_Analyzer(BaseFRRAnalyzer):
         """FRR-UCM-02 focuses on code and IaC crypto usage. No CI/CD detection."""
         return []
     
-    def get_evidence_automation_recommendations(self) -> Dict[str, Any]:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-UCM-02.
+        Provides queries for collecting evidence of FRR-UCM-02 compliance.
         
         Returns:
-            Dict containing automation recommendations
+            Dict containing query strings for various platforms
         """
         return {
-            "frr_id": self.frr_id,
-            "frr_name": "Use of Validated Cryptographic Modules",
-            "primary_keyword": "MUST",
-            "impact_levels": ["Low", "Moderate", "High"],
-            "evidence_type": "automated",
-            "automation_feasibility": "high",
-            "azure_services": [
-                "Azure Key Vault",
-                "Azure Policy",
-                "Microsoft Defender for Cloud",
-                "Azure Resource Graph"
+            "azure_resource_graph": [
+                "Resources | where type =~ 'microsoft.keyvault/vaults' | extend skuName = tostring(properties.sku.name) | project id, name, skuName, location",
+                "Resources | where type =~ 'microsoft.storage/storageaccounts' | extend infraEncryption = tostring(properties.encryption.requireInfrastructureEncryption) | project id, name, infraEncryption"
             ],
-            "collection_methods": [
-                "Azure Policy to audit Key Vault SKU and HSM usage",
-                "Code scanning tools to detect weak crypto algorithms",
-                "Azure Resource Graph query for storage encryption settings",
-                "Key Vault metrics for cryptographic operations",
-                "Inventory of all cryptographic modules with FIPS validation status"
-            ],
-            "implementation_steps": [
-                "1. Deploy Azure Policy to require Premium Key Vault SKU for production",
-                "2. Implement code scanning in CI/CD to detect MD5/SHA1/DES usage",
-                "3. Create Azure Resource Graph query for encryption configurations",
-                "4. Document FIPS 140-2/140-3 validation certificates for all crypto modules",
-                "5. Configure alerts for non-compliant cryptographic operations",
-                "6. Generate monthly report of cryptographic module usage and validation status"
-            ],
-            "evidence_artifacts": [
-                "Cryptographic Module Inventory (list of all modules with NIST CMVP validation numbers)",
-                "Azure Key Vault Configuration Report (SKU, HSM usage, key types)",
-                "Code Scan Results (identifying weak crypto algorithm usage)",
-                "Storage Encryption Configuration Export (infrastructure encryption status)",
-                "FIPS Validation Certificates (documentation of validated modules)"
-            ],
-            "update_frequency": "monthly",
-            "responsible_party": "Cloud Security Team / Cryptography Team"
+            "azure_cli": [
+                "az keyvault list --query '[].{Name:name, SKU:properties.sku.name, Location:location}'",
+                "az storage account list --query '[].{Name:name, Encryption:properties.encryption}'"
+            ]
         }
     
-    def get_evidence_collection_queries(self) -> List[Dict[str, str]]:
+    def get_evidence_artifacts(self) -> List[str]:
         """
-        Get specific queries for evidence collection automation.
+        Lists artifacts to collect as evidence of FRR-UCM-02 compliance.
         
         Returns:
-            List of query dictionaries
+            List of artifact descriptions
         """
         return [
-            {
-                "query_type": "Azure Resource Graph KQL",
-                "query_name": "Key Vaults with Premium SKU (HSM support)",
-                "query": """Resources
-| where type == 'microsoft.keyvault/vaults'
-| extend skuName = tostring(properties.sku.name)
-| project name, resourceGroup, location, skuName, subscriptionId
-| order by skuName, name""",
-                "purpose": "Identify Key Vaults with Premium SKU supporting HSM-backed FIPS 140-2 keys"
-            },
-            {
-                "query_type": "Azure Resource Graph KQL",
-                "query_name": "Storage Accounts with infrastructure encryption",
-                "query": """Resources
-| where type == 'microsoft.storage/storageaccounts'
-| extend infraEncryption = tostring(properties.encryption.requireInfrastructureEncryption)
-| extend keySource = tostring(properties.encryption.keySource)
-| project name, resourceGroup, location, infraEncryption, keySource, subscriptionId
-| where infraEncryption != 'true'
-| order by name""",
-                "purpose": "Audit storage accounts for FIPS-compliant infrastructure encryption"
-            },
-            {
-                "query_type": "Azure Policy Compliance REST API",
-                "query_name": "Cryptographic module compliance policy status",
-                "query": "GET https://management.azure.com/subscriptions/{subscriptionId}/providers/Microsoft.PolicyInsights/policyStates/latest/summarize?api-version=2019-10-01&$filter=policyDefinitionName eq 'require-fips-crypto'",
-                "purpose": "Track compliance with custom policy requiring FIPS 140-2 validated crypto"
-            },
-            {
-                "query_type": "Static Code Analysis Query",
-                "query_name": "Weak cryptographic algorithm detection",
-                "query": "grep -r -E '(MD5|SHA1|DES|RC4|hashlib\\.md5|hashlib\\.sha1)' --include='*.py' --include='*.cs' --include='*.java' --include='*.ts'",
-                "purpose": "Identify weak/non-FIPS crypto algorithms in source code"
-            }
+            "Cryptographic module inventory with NIST CMVP validation certificate numbers",
+            "FIPS 140-2/140-3 validation certificates for all cryptographic modules",
+            "Azure Key Vault configuration report (SKU, HSM usage, key types)",
+            "Code scan results showing no weak crypto algorithms (MD5, SHA1, DES, RC4)",
+            "Storage encryption configuration showing infrastructure encryption enabled"
         ]
     
-    def get_evidence_artifacts(self) -> List[Dict[str, str]]:
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
         """
-        Get descriptions of evidence artifacts to collect.
+        Provides recommendations for automating evidence collection for FRR-UCM-02.
         
         Returns:
-            List of artifact dictionaries
+            Dict mapping automation areas to implementation guidance
         """
-        return [
-            {
-                "artifact_name": "Cryptographic Module Inventory",
-                "artifact_type": "Excel spreadsheet",
-                "description": "Complete list of all cryptographic modules used, including library name, version, algorithm, NIST CMVP validation certificate number, and validation level",
-                "collection_method": "Manual documentation combined with automated code scanning",
-                "storage_location": "Azure Storage Account /evidence/frr-ucm-02/crypto-inventory/"
-            },
-            {
-                "artifact_name": "FIPS Validation Certificates",
-                "artifact_type": "PDF documents",
-                "description": "NIST CMVP validation certificates for all cryptographic modules used in production",
-                "collection_method": "Download from NIST CMVP website (https://csrc.nist.gov/projects/cryptographic-module-validation-program/validated-modules)",
-                "storage_location": "Azure Storage Account /evidence/frr-ucm-02/certificates/"
-            },
-            {
-                "artifact_name": "Azure Key Vault Configuration Report",
-                "artifact_type": "JSON export",
-                "description": "Configuration of all Key Vaults showing SKU (Premium for HSM), key types (RSA-HSM), and cryptographic operations",
-                "collection_method": "Azure Resource Graph query exported via Azure CLI",
-                "storage_location": "Azure Storage Account /evidence/frr-ucm-02/keyvault-config/"
-            },
-            {
-                "artifact_name": "Code Scan Results for Weak Crypto",
-                "artifact_type": "SARIF file",
-                "description": "Static analysis results showing no usage of MD5, SHA1, DES, RC4, or other non-FIPS algorithms",
-                "collection_method": "CI/CD pipeline SAST tools (SonarQube, Semgrep, CodeQL)",
-                "storage_location": "Azure DevOps artifacts or GitHub Actions artifacts"
-            },
-            {
-                "artifact_name": "Storage Encryption Configuration",
-                "artifact_type": "CSV export",
-                "description": "All storage accounts showing infrastructure encryption enabled and customer-managed key usage with Key Vault HSM backing",
-                "collection_method": "Azure Resource Graph query exported to CSV",
-                "storage_location": "Azure Storage Account /evidence/frr-ucm-02/storage-encryption/"
-            }
-        ]
+        return {
+            "policy_enforcement": "Deploy Azure Policy to require Premium Key Vault SKU and infrastructure encryption",
+            "code_scanning": "Implement SAST in CI/CD to detect weak crypto algorithms (MD5, SHA1, DES, RC4)",
+            "inventory_tracking": "Automate cryptographic module inventory with CMVP validation status tracking"
+        }

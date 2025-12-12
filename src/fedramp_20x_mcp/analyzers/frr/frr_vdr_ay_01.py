@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -236,47 +236,52 @@ class FRR_VDR_AY_01_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-AY-01.
+        Get queries for collecting evidence of partial mitigation implementation.
         
-        TODO: Add evidence collection guidance
+        Focuses on detecting progressive mitigation actions when full remediation impossible.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "azure_resource_graph": [
+                "Resources | where type =~ 'microsoft.security/assessments' | where properties.status.code == 'Unhealthy' | where properties.metadata.severity in ('High', 'Medium') | join kind=inner (ResourceContainers | where type =~ 'microsoft.resources/subscriptions') on subscriptionId | project id, name, type, subscriptionId, resourceGroup, severity=properties.metadata.severity, status=properties.status, partialMitigations=properties.metadata.remediationDescription",
+                "PolicyResources | where type =~ 'microsoft.policyinsights/policystates' | where properties.complianceState == 'NonCompliant' | where properties.policyDefinitionAction == 'audit' | project policyAssignmentId, resourceId, complianceState=properties.complianceState, mitigationNotes=properties.metadata.mitigationDescription"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "defender_for_cloud": [
+                "SecurityRecommendation | where RecommendationState == 'Active' | where RecommendationSeverity in ('High', 'Medium') | where RemediationSteps contains 'partial' or AdditionalData contains 'compensating control' | project TimeGenerated, RecommendationName, RecommendationSeverity, ResourceId, RemediationSteps, PartialMitigationStatus=AdditionalData",
+                "SecurityAlert | where AlertSeverity in ('High', 'Medium') | where CompromisedEntity has 'mitigation' | project TimeGenerated, AlertName, AlertSeverity, CompromisedEntity, RemediationSteps, MitigationProgress"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "change_tracking": [
+                "ConfigurationChange | where ConfigChangeType == 'SecurityBaseline' | where ChangeCategory == 'Mitigation' | where SeverityLevel in ('Critical', 'Warning') | project TimeGenerated, Computer, ConfigChangeType, ChangeCategory, PreviousValue, CurrentValue, MitigationDescription",
+                "Update | where UpdateState == 'Needed' | where Classification in ('Security Updates', 'Critical Updates') | where Optional == false | project TimeGenerated, Computer, Title, Classification, PartialDeploymentNotes"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for demonstrating partial mitigation practices.
+        
+        Focuses on progressive and persistent mitigation documentation.
+        """
+        return [
+            "Partial mitigation plans documenting interim controls when full remediation infeasible",
+            "Risk acceptance records explaining why full remediation impossible and mitigation timeline",
+            "Compensating controls documentation showing progressive hardening steps",
+            "Vulnerability management reports showing mitigation progress over time (prompt, progressive, persistent)",
+            "Change logs documenting incremental security improvements toward full remediation",
+            "Azure Policy audit results showing non-compliant resources with documented mitigation strategies",
+            "Defender for Cloud recommendations with partial mitigation status and completion percentages"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Get recommendations for automating partial mitigation evidence collection.
+        
+        Focuses on tracking progressive mitigation actions over time.
+        """
+        return {
+            "mitigation_tracking": "Implement automated tracking system for partial mitigations using Azure DevOps/ServiceNow to record incremental security improvements with timestamps and completion percentages",
+            "progressive_reporting": "Configure automated monthly reports showing mitigation progress for unresolvable vulnerabilities, including timeline graphs and risk trend analysis",
+            "compensating_controls": "Use Azure Policy to enforce compensating controls as interim measures, with automated compliance reporting showing partial mitigation effectiveness",
+            "persistent_monitoring": "Enable continuous monitoring via Defender for Cloud to track partial mitigation status and alert when improvements plateau or regress, ensuring persistent progress"
         }

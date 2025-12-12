@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,55 @@ class FRR_VDR_EX_01_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-EX-01.
+        Get queries for collecting evidence of additional reporting capability.
         
-        This requirement is not directly code-detectable. Provides manual validation guidance.
+        This requirement is conditional (MAY be required) - focuses on ability to provide additional reports.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'No',
-            'automation_approach': 'Manual validation required - use evidence collection queries and documentation review',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "reporting_system_queries": [
+                "Query vulnerability management system for custom report templates and configurations",
+                "Search for FedRAMP CAP-related report definitions and scheduled delivery mechanisms",
+                "Verify reporting system supports configurable frequency (daily, weekly, on-demand)"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "agency_agreements": [
+                "Query contract management system for FedRAMP agreements specifying custom reporting requirements",
+                "Search for CAP (Corrective Action Plan) documents requiring additional vulnerability reporting",
+                "Identify inter-agency agreements with non-standard vulnerability disclosure terms"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "report_delivery_logs": [
+                "Query audit logs for vulnerability report deliveries to federal agencies outside standard schedule",
+                "Filter by report types: custom vulnerability scans, alternative formats, expedited reporting",
+                "Verify delivery mechanisms: secure email, SFTP, agency portals, API integrations"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for demonstrating additional reporting capability.
+        
+        Focuses on flexibility to meet custom federal agency reporting needs.
+        """
+        return [
+            "Vulnerability reporting system documentation showing customizable templates and frequencies",
+            "FedRAMP Corrective Action Plan (CAP) documents specifying custom vulnerability reporting terms",
+            "Agency-specific agreements documenting alternative vulnerability reporting requirements",
+            "Custom report samples demonstrating ability to provide alternative formats (CSV, JSON, OSCAL, PDF)",
+            "Report delivery logs showing successful transmission of custom vulnerability reports to agencies",
+            "Configuration screenshots showing adjustable reporting frequency settings",
+            "API documentation for on-demand vulnerability report generation and retrieval"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Get recommendations for automating additional reporting evidence collection.
+        
+        This requirement is NOT code-detectable (conditional capability, not mandatory implementation).
+        """
+        return {
+            "flexible_reporting": "Implement vulnerability reporting system with configurable templates and frequencies to support diverse federal agency requirements per CAPs or agreements",
+            "multi_format_export": "Enable vulnerability report export in multiple formats (CSV, JSON, OSCAL, PDF, Excel) to accommodate varying agency preferences",
+            "delivery_automation": "Configure automated report delivery via multiple channels (secure email, SFTP, agency portals, RESTful APIs) with audit logging",
+            "cap_tracking": "Maintain centralized repository of FedRAMP CAPs and agency agreements with custom reporting requirements, ensuring compliance tracking and timely delivery"
         }

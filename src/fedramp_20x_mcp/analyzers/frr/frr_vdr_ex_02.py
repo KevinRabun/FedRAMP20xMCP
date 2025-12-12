@@ -10,7 +10,7 @@ Impact Levels: Low, Moderate, High
 """
 
 import re
-from typing import List
+from typing import List, Dict, Any
 from ..base import Finding, Severity
 from .base import BaseFRRAnalyzer
 from ..ast_utils import ASTParser, CodeLanguage
@@ -234,47 +234,50 @@ class FRR_VDR_EX_02_Analyzer(BaseFRRAnalyzer):
     # EVIDENCE COLLECTION SUPPORT
     # ============================================================================
     
-    def get_evidence_automation_recommendations(self) -> dict:
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
         """
-        Get recommendations for automating evidence collection for FRR-VDR-EX-02.
+        Get queries for collecting evidence of detailed vulnerability information sharing capability.
         
-        TODO: Add evidence collection guidance
+        Returns queries to verify ability to provide sensitive vulnerability details per CAPs.
         """
         return {
-            'frr_id': self.FRR_ID,
-            'frr_name': self.FRR_NAME,
-            'code_detectable': 'Unknown',
-            'automation_approach': 'TODO: Fully automated detection through code, IaC, and CI/CD analysis',
-            'evidence_artifacts': [
-                # TODO: List evidence artifacts to collect
-                # Examples:
-                # - "Configuration export from service X"
-                # - "Access logs showing activity Y"
-                # - "Documentation showing policy Z"
+            "Vulnerability disclosure tracking": [
+                "SecurityIncident | where IncidentType == 'Vulnerability Disclosure Request' | project TimeGenerated, RequestedBy, VulnerabilityIDs, SensitivityLevel, SharedDetails",
+                "AuditLogs | where OperationName == 'Request Vulnerability Details' | where Status == 'Success' | project TimeGenerated, RequestedBy, VulnerabilityID"
             ],
-            'collection_queries': [
-                # TODO: Add KQL or API queries for evidence
-                # Examples for Azure:
-                # - "AzureDiagnostics | where Category == 'X' | project TimeGenerated, Property"
-                # - "GET https://management.azure.com/subscriptions/{subscriptionId}/..."
+            "Secure sharing mechanisms": [
+                "Resources | where type == 'microsoft.keyvault/vaults' | project name, properties.enabledForDeployment, properties.accessPolicies",
+                "AzureDiagnostics | where ResourceType == 'VAULTS' and Category == 'AuditEvent' | where OperationName == 'SecretGet' | project TimeGenerated, identity_claim_upn_s"
             ],
-            'manual_validation_steps': [
-                # TODO: Add manual validation procedures
-                # 1. "Review documentation for X"
-                # 2. "Verify configuration setting Y"
-                # 3. "Interview stakeholder about Z"
-            ],
-            'recommended_services': [
-                # TODO: List Azure/AWS services that help with this requirement
-                # Examples:
-                # - "Azure Policy - for configuration validation"
-                # - "Azure Monitor - for activity logging"
-                # - "Microsoft Defender for Cloud - for security posture"
-            ],
-            'integration_points': [
-                # TODO: List integration with other tools
-                # Examples:
-                # - "Export to OSCAL format for automated reporting"
-                # - "Integrate with ServiceNow for change management"
+            "Investigation response records": [
+                "SecurityAlert | where AlertType contains 'Vulnerability' | project TimeGenerated, AlertName, Entities, RemediationSteps, InvestigationState",
+                "ServiceNowTickets | where Category == 'Vulnerability Investigation' | project TicketID, RequestedDetails, ProvidedInformation, Requester"
             ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for detailed vulnerability information sharing.
+        """
+        return [
+            "Vulnerability disclosure policy documentation (process for sharing sensitive details)",
+            "Secure communication channel configurations (encrypted email, secure portals, key vaults)",
+            "CAP agreements specifying detailed information requirements",
+            "Historical disclosure logs showing information shared with FedRAMP/agencies",
+            "Access control policies for sensitive vulnerability data",
+            "Secure sharing portal screenshots (authentication, encryption, audit logging)",
+            "Examples of detailed vulnerability reports (redacted for demonstration)",
+            "Investigation response procedures documentation"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Get recommendations for automating evidence collection.
+        """
+        return {
+            "Secure disclosure platform": "Implement secure portal for sharing detailed vulnerability information with authorized parties (Azure Key Vault for secrets, encrypted channels)",
+            "Disclosure tracking system": "Maintain audit logs of all detailed vulnerability information requests and responses (Azure Monitor, security ticketing integration)",
+            "Access controls": "Enforce role-based access to sensitive vulnerability details (Azure RBAC, conditional access policies for investigation teams)",
+            "CAP compliance monitoring": "Track disclosure requirements from CAPs and agency agreements, ensure timely and complete responses",
+            "Automated redaction": "Implement tools to safely redact sensitive exploit details for different audience sensitivity levels"
         }
