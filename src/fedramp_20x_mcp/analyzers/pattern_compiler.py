@@ -56,25 +56,31 @@ class PatternCompiler:
         """
         compiled = CompiledPattern(pattern=pattern)
         
-        # Compile regex patterns for each language
-        for language, lang_config in pattern.languages.items():
-            if 'regex_fallback' in lang_config:
-                try:
-                    regex = re.compile(
-                        lang_config['regex_fallback'],
-                        re.MULTILINE | re.IGNORECASE
+        # Handle both old (dict) and new (list) language formats
+        if isinstance(pattern.languages, dict):
+            # Old format: languages as dict with per-language configs
+            for language, lang_config in pattern.languages.items():
+                if 'regex_fallback' in lang_config:
+                    try:
+                        regex = re.compile(
+                            lang_config['regex_fallback'],
+                            re.MULTILINE | re.IGNORECASE
+                        )
+                        compiled.compiled_regexes[language] = regex
+                    except re.error as e:
+                        print(f"Warning: Failed to compile regex for {pattern.pattern_id} ({language}): {e}",
+                              file=__import__('sys').stderr)
+            
+            # Build AST query cache
+            for language, lang_config in pattern.languages.items():
+                if 'ast_queries' in lang_config:
+                    compiled.ast_query_cache[language] = self._optimize_ast_queries(
+                        lang_config['ast_queries']
                     )
-                    compiled.compiled_regexes[language] = regex
-                except re.error as e:
-                    print(f"Warning: Failed to compile regex for {pattern.pattern_id} ({language}): {e}",
-                          file=__import__('sys').stderr)
-        
-        # Build AST query cache
-        for language, lang_config in pattern.languages.items():
-            if 'ast_queries' in lang_config:
-                compiled.ast_query_cache[language] = self._optimize_ast_queries(
-                    lang_config['ast_queries']
-                )
+        elif isinstance(pattern.languages, list):
+            # New format: languages as list (shared ast_queries/regex_patterns handled at pattern level)
+            # No per-language compilation needed, handled by pattern engine
+            pass
         
         # Build dependency sets
         if pattern.requires_all:

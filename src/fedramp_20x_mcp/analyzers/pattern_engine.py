@@ -627,7 +627,11 @@ class PatternEngine:
         
         languages = set()
         for pattern in self.patterns.values():
-            languages.update(pattern.languages.keys())
+            # Handle both list and dict formats for languages
+            if isinstance(pattern.languages, dict):
+                languages.update(pattern.languages.keys())
+            elif isinstance(pattern.languages, list):
+                languages.update(pattern.languages)
         
         return {
             'total_patterns': len(self.patterns),

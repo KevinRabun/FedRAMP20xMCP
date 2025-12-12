@@ -1,0 +1,298 @@
+# ADS (Audit Data System) Patterns for FedRAMP 20x Compliance
+# Family: ADS - Audit Data System Requirements
+# These patterns detect compliance with FRR-ADS requirements for machine-readable audit data
+
+---
+pattern_id: ads.machine_readable.json_export
+name: JSON Export for Audit Data
+family: ADS
+severity: high
+description: |
+  Detects JSON serialization of audit data for machine-readable format compliance.
+  FRR-ADS requires audit data to be available in machine-readable formats (JSON/XML).
+pattern_type: function_call
+languages:
+  - python
+  - csharp
+  - java
+  - typescript
+ast_queries:
+  - query_type: function_call
+    target: json.dumps
+  - query_type: function_call
+    target: JsonSerializer.Serialize
+  - query_type: function_call
+    target: JSON.stringify
+  - query_type: function_call
+    target: ObjectMapper
+regex_patterns:
+  - pattern: json\.dumps\(
+    flags: IGNORECASE
+  - pattern: JsonSerializer\.Serialize
+    flags: IGNORECASE
+  - pattern: JSON\.stringify
+    flags: IGNORECASE
+finding_template:
+  title: JSON export detected for audit data
+  description: Code exports data in JSON format for machine-readable compliance
+  recommendation: Ensure this export includes all required audit fields per FRR-ADS
+  references:
+    - FRR-ADS-01
+    - FRR-ADS-02
+
+---
+pattern_id: ads.machine_readable.xml_export
+name: XML Export for Audit Data
+family: ADS
+severity: medium
+description: Detects XML serialization for machine-readable audit data
+pattern_type: function_call
+languages:
+  - python
+  - csharp
+  - java
+ast_queries:
+  - query_type: function_call
+    target: xml.etree.ElementTree
+  - query_type: function_call
+    target: XmlSerializer
+  - query_type: function_call
+    target: DocumentBuilder
+regex_patterns:
+  - pattern: xml\.etree\.ElementTree
+    flags: IGNORECASE
+  - pattern: XmlSerializer
+    flags: IGNORECASE
+finding_template:
+  title: XML export detected for audit data
+  description: Code exports data in XML format for machine-readable compliance
+  recommendation: Validate XML schema matches FedRAMP OSCAL requirements
+  references:
+    - FRR-ADS-01
+
+---
+pattern_id: ads.api_endpoint.rest
+name: REST API for Audit Data Access
+family: ADS
+severity: high
+description: Detects REST API endpoints for programmatic audit data access
+pattern_type: decorator
+languages:
+  - python
+  - csharp
+  - java
+  - typescript
+ast_queries:
+  - query_type: decorator
+    target: "@app.route"
+  - query_type: decorator
+    target: "@api.route"
+  - query_type: decorator
+    target: "[HttpGet]"
+  - query_type: decorator
+    target: "@GetMapping"
+regex_patterns:
+  - pattern: '@app\.route.*audit|@api\.route.*audit'
+    flags: IGNORECASE
+  - pattern: '\[HttpGet.*Audit\]'
+    flags: IGNORECASE
+  - pattern: '@GetMapping.*audit'
+    flags: IGNORECASE
+finding_template:
+  title: REST API endpoint for audit data access
+  description: API endpoint provides programmatic access to audit data
+  recommendation: Ensure endpoint requires authentication and implements rate limiting
+  references:
+    - FRR-ADS-03
+
+---
+pattern_id: ads.structured_logging.structured_format
+name: Structured Logging Format
+family: ADS
+severity: high
+description: Detects use of structured logging libraries for audit trails
+pattern_type: import
+languages:
+  - python
+  - csharp
+  - java
+  - typescript
+ast_queries:
+  - query_type: import_statement
+    target: structlog
+  - query_type: import_statement
+    target: Serilog
+  - query_type: import_statement
+    target: logstash
+  - query_type: import_statement
+    target: winston
+regex_patterns:
+  - pattern: 'import structlog|from structlog'
+    flags: IGNORECASE
+  - pattern: 'using Serilog'
+    flags: IGNORECASE
+  - pattern: 'import.*winston'
+    flags: IGNORECASE
+finding_template:
+  title: Structured logging library detected
+  description: Code uses structured logging for machine-parseable audit trails
+  recommendation: Configure structured logger to output JSON with required audit fields
+  references:
+    - FRR-ADS-02
+    - KSI-MLA-01
+
+---
+pattern_id: ads.audit_fields.required_fields
+name: Required Audit Fields
+family: ADS
+severity: critical
+description: Detects presence of required audit fields (timestamp, user, action, resource)
+pattern_type: configuration
+languages:
+  - python
+  - csharp
+  - java
+  - typescript
+regex_patterns:
+  - pattern: 'timestamp.*user.*action.*resource'
+    flags: IGNORECASE | DOTALL
+  - pattern: '"timestamp".*"userId".*"action".*"resourceId"'
+    flags: IGNORECASE | DOTALL
+finding_template:
+  title: Required audit fields configured
+  description: Logging includes required audit fields (timestamp, user, action, resource)
+  recommendation: Validate all audit events include these fields consistently
+  references:
+    - FRR-ADS-02
+
+---
+pattern_id: ads.query_api.filtering
+name: Audit Data Query API
+family: ADS
+severity: medium
+description: Detects query/filtering capabilities for audit data retrieval
+pattern_type: function_definition
+languages:
+  - python
+  - csharp
+  - java
+  - typescript
+regex_patterns:
+  - pattern: 'def.*query.*audit|def.*filter.*audit'
+    flags: IGNORECASE
+  - pattern: 'public.*Query.*Audit|public.*Filter.*Audit'
+    flags: IGNORECASE
+  - pattern: 'function.*queryAudit|function.*filterAudit'
+    flags: IGNORECASE
+finding_template:
+  title: Audit data query API detected
+  description: API provides filtering/querying capabilities for audit data
+  recommendation: Ensure query API supports date range, user, and action type filters
+  references:
+    - FRR-ADS-03
+
+---
+pattern_id: ads.missing_machine_readable
+name: Missing Machine-Readable Format
+family: ADS
+severity: critical
+description: Detects absence of machine-readable export capabilities
+pattern_type: configuration
+languages:
+  - python
+  - csharp
+  - java
+  - typescript
+requires_absence:
+  - ads.machine_readable.json_export
+  - ads.machine_readable.xml_export
+finding_template:
+  title: No machine-readable audit data export detected
+  description: Code lacks JSON or XML export capabilities for audit data
+  recommendation: Implement JSON/XML export per FRR-ADS-01 requirements
+  severity: critical
+  references:
+    - FRR-ADS-01
+
+---
+pattern_id: ads.iac.azure_monitor_export
+name: Azure Monitor Data Export
+family: ADS
+severity: high
+description: Detects Azure Monitor data export configuration for audit data
+pattern_type: resource
+languages:
+  - bicep
+  - terraform
+ast_queries:
+  - query_type: resource_type
+    target: Microsoft.Insights/dataCollectionRules
+  - query_type: resource_type
+    target: azurerm_monitor_data_collection_rule
+regex_patterns:
+  - pattern: 'Microsoft\.Insights/dataCollectionRules'
+    flags: IGNORECASE
+  - pattern: 'resource.*azurerm_monitor_data_collection_rule'
+    flags: IGNORECASE
+finding_template:
+  title: Azure Monitor data export configured
+  description: IaC configures Azure Monitor data export for audit data
+  recommendation: Ensure export destination supports long-term retention (730 days)
+  references:
+    - FRR-ADS-01
+    - FRR-ADS-04
+
+---
+pattern_id: ads.iac.log_analytics_workspace
+name: Log Analytics Workspace for Audit Data
+family: ADS
+severity: high
+description: Detects Log Analytics workspace configuration for centralized audit storage
+pattern_type: resource
+languages:
+  - bicep
+  - terraform
+ast_queries:
+  - query_type: resource_type
+    target: Microsoft.OperationalInsights/workspaces
+  - query_type: resource_type
+    target: azurerm_log_analytics_workspace
+regex_patterns:
+  - pattern: 'Microsoft\.OperationalInsights/workspaces'
+    flags: IGNORECASE
+  - pattern: 'resource.*azurerm_log_analytics_workspace'
+    flags: IGNORECASE
+  - pattern: 'retention_in_days\s*=\s*730'
+    flags: IGNORECASE
+finding_template:
+  title: Log Analytics workspace for audit data
+  description: IaC provisions Log Analytics for centralized audit storage
+  recommendation: Verify retention is set to 730 days minimum for FedRAMP compliance
+  references:
+    - FRR-ADS-04
+    - KSI-MLA-01
+
+---
+pattern_id: ads.cicd.audit_export_step
+name: CI/CD Audit Data Export Step
+family: ADS
+severity: medium
+description: Detects CI/CD pipeline step for automated audit data export
+pattern_type: pipeline
+languages:
+  - github_actions
+  - azure_pipelines
+  - gitlab_ci
+regex_patterns:
+  - pattern: 'name:.*[Ee]xport.*[Aa]udit|run:.*export.*audit'
+    flags: IGNORECASE
+  - pattern: 'displayName:.*Export Audit|script:.*export.*audit'
+    flags: IGNORECASE
+  - pattern: 'script:.*audit.*export'
+    flags: IGNORECASE
+finding_template:
+  title: Automated audit data export in CI/CD
+  description: CI/CD pipeline includes automated audit data export step
+  recommendation: Schedule regular exports and validate format compliance
+  references:
+    - FRR-ADS-01
