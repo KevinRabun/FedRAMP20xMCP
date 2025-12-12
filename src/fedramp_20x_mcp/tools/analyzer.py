@@ -5,7 +5,8 @@ Provides MCP tools for analyzing Infrastructure as Code, application code, and C
 """
 
 from typing import Optional
-from ..analyzers.ksi.factory import get_factory
+from ..analyzers.ksi.factory import get_factory as get_ksi_factory
+from ..analyzers.frr.factory import get_factory as get_frr_factory
 from ..analyzers import AnalysisResult, Finding, Severity
 
 
@@ -41,12 +42,20 @@ async def analyze_infrastructure_code_impl(
     if file_type_lower == "tf":
         file_type_lower = "terraform"
     
-    # Get factory and run all KSI analyzers for this language
-    factory = get_factory()
+    # Get factories and run all KSI and FRR analyzers for this language
+    ksi_factory = get_ksi_factory()
+    frr_factory = get_frr_factory()
     all_findings = []
     
-    for ksi_id in factory.list_ksis():
-        result = factory.analyze(ksi_id, code, file_type_lower, file_path)
+    # Run KSI analyzers
+    for ksi_id in ksi_factory.list_ksis():
+        result = ksi_factory.analyze(ksi_id, code, file_type_lower, file_path)
+        if result and result.findings:
+            all_findings.extend(result.findings)
+    
+    # Run FRR analyzers
+    for frr_id in frr_factory.list_frrs():
+        result = frr_factory.analyze(frr_id, code, file_type_lower, file_path)
         if result and result.findings:
             all_findings.extend(result.findings)
     
@@ -108,12 +117,20 @@ async def analyze_application_code_impl(
             "error": f"Unsupported language: {language}. Supported languages: python, csharp, java, typescript, javascript"
         }
     
-    # Get factory and run all KSI analyzers for this language
-    factory = get_factory()
+    # Get factories and run all KSI and FRR analyzers for this language
+    ksi_factory = get_ksi_factory()
+    frr_factory = get_frr_factory()
     all_findings = []
     
-    for ksi_id in factory.list_ksis():
-        result = factory.analyze(ksi_id, code, language_normalized, file_path)
+    # Run KSI analyzers
+    for ksi_id in ksi_factory.list_ksis():
+        result = ksi_factory.analyze(ksi_id, code, language_normalized, file_path)
+        if result and result.findings:
+            all_findings.extend(result.findings)
+    
+    # Run FRR analyzers
+    for frr_id in frr_factory.list_frrs():
+        result = frr_factory.analyze(frr_id, code, language_normalized, file_path)
         if result and result.findings:
             all_findings.extend(result.findings)
     
@@ -171,12 +188,20 @@ async def analyze_cicd_pipeline_impl(
     }
     language_normalized = pipeline_map.get(pipeline_type.lower(), pipeline_type.lower())
     
-    # Get factory and run all KSI analyzers for this pipeline type
-    factory = get_factory()
+    # Get factories and run all KSI and FRR analyzers for this pipeline type
+    ksi_factory = get_ksi_factory()
+    frr_factory = get_frr_factory()
     all_findings = []
     
-    for ksi_id in factory.list_ksis():
-        result = factory.analyze(ksi_id, code, language_normalized, file_path)
+    # Run KSI analyzers
+    for ksi_id in ksi_factory.list_ksis():
+        result = ksi_factory.analyze(ksi_id, code, language_normalized, file_path)
+        if result and result.findings:
+            all_findings.extend(result.findings)
+    
+    # Run FRR analyzers
+    for frr_id in frr_factory.list_frrs():
+        result = frr_factory.analyze(frr_id, code, language_normalized, file_path)
         if result and result.findings:
             all_findings.extend(result.findings)
     
