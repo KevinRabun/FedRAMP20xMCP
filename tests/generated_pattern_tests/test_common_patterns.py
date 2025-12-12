@@ -75,8 +75,10 @@ output resourceLocation string = location
 
     def test_common_identity_managed_identity_positive(self, analyzer):
         """Test common.identity.managed_identity: Managed Identity Usage - Should detect"""
-        code = """# Code that triggers common.identity.managed_identity
-trigger_pattern = True"""
+        code = """from azure.identity.DefaultAzureCredential import *
+
+def main():
+    pass"""
         
         result = analyzer.analyze(code, "python")
         

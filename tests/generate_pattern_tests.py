@@ -218,17 +218,44 @@ from fedramp_20x_mcp.analyzers.base import Severity'''
         if ast_queries:
             query = ast_queries[0]
             target = query.get('target', '')
+            query_type = query.get('query_type', '')
             
-            if 'import' in pattern_type or 'import' in pattern_id:
-                return f"import {target}\n\ndef main():\n    pass"
+            # Handle import patterns with actual library names
+            if ('import' in pattern_type or 'import' in pattern_id or 'import' in query_type.lower()) and target:
+                # Handle different import formats
+                if '.' in target or '@' in target:
+                    return f"from {target} import *\n\ndef main():\n    pass"
+                else:
+                    return f"import {target}\n\ndef main():\n    pass"
             elif 'function_call' in pattern_type:
                 return f"result = {target}(data)\nprint(result)"
             elif 'class' in pattern_type:
                 return f"class MyClass({target}):\n    pass"
         
-        # Fallback: use regex patterns
+        # Fallback: analyze regex patterns for specific vulnerability types
         if regex_patterns:
             pattern = regex_patterns[0]
+            
+            # Debug mode patterns
+            if 'DEBUG' in pattern and 'True' in pattern:
+                return "DEBUG = True\napp.debug = True"
+            
+            # Hardcoded secrets
+            if 'password' in pattern.lower() or 'secret' in pattern.lower():
+                return 'password = "hardcoded123"\napi_key = "secret"'
+            
+            # Weak crypto
+            if 'md5' in pattern.lower() or 'sha1' in pattern.lower():
+                return "import hashlib\nhash = hashlib.md5(data.encode())"
+            
+            # Code injection
+            if 'eval' in pattern or 'exec' in pattern:
+                return "user_input = request.args.get('code')\nresult = eval(user_input)"
+            
+            # Logging patterns
+            if 'logging' in pattern.lower() or 'logger' in pattern.lower():
+                return "import logging\nlogging.basicConfig(level=logging.INFO)"
+            
             return f"# Pattern: {pattern}\ncode_with_pattern = True"
         
         # Generic fallback

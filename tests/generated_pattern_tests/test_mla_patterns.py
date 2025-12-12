@@ -53,7 +53,7 @@ if __name__ == "__main__":
 
     def test_mla_logging_azure_monitor_positive(self, analyzer):
         """Test mla.logging.azure_monitor: Azure Monitor Integration - Should detect"""
-        code = """import opencensus.ext.azure
+        code = """from opencensus.ext.azure import *
 
 def main():
     pass"""
