@@ -106,7 +106,71 @@ tools/
     "retired": false,
     "detection_patterns": ["iam.mfa", "iam.phishing_resistant"],
     "related_ksis": ["KSI-IAM-02"],
-    "related_frrs": ["FRR-ADS-AC-01"]
+    "related_frrs": ["FRR-ADS-AC-01"],
+    
+    "guidance": {
+      "evidence_collection": [
+        "Microsoft Entra ID Conditional Access policy exports",
+        "MFA method configuration screenshots",
+        "User authentication logs (successful MFA events)"
+      ],
+      "implementation_checklist": [
+        "Enable Microsoft Entra ID Conditional Access",
+        "Configure FIDO2 security key registration",
+        "Deploy Windows Hello for Business",
+        "Disable SMS and voice call MFA methods",
+        "Test MFA enforcement for all user accounts"
+      ],
+      "automation_opportunities": [
+        "Azure Policy to enforce Conditional Access",
+        "PowerShell script to audit MFA methods",
+        "Log Analytics query for MFA usage tracking"
+      ],
+      "azure_services": ["Microsoft Entra ID", "Conditional Access", "Azure Monitor"]
+    }
+  },
+  
+  "KSI-CED-01": {
+    "id": "KSI-CED-01",
+    "name": "General Education",
+    "statement": "Require and monitor the effectiveness of training...",
+    "family": "CED",
+    "family_name": "Cybersecurity Education",
+    "impact_levels": ["Low", "Moderate"],
+    "nist_controls": [
+      {"id": "at-2", "name": "Literacy Training and Awareness"}
+    ],
+    "code_detectable": false,
+    "implementation_status": "NOT_IMPLEMENTED",
+    "retired": false,
+    "detection_patterns": [],
+    
+    "guidance": {
+      "evidence_collection": [
+        "Training completion reports from LMS",
+        "Training attendance records",
+        "Quiz/assessment results",
+        "Training content versions and dates",
+        "Annual training acknowledgment forms"
+      ],
+      "implementation_checklist": [
+        "Deploy or integrate Learning Management System (LMS)",
+        "Create security awareness training curriculum",
+        "Assign training to all employees in Microsoft Entra ID",
+        "Configure automated reminders for incomplete training",
+        "Set up quarterly training completion reports",
+        "Review and update training content annually"
+      ],
+      "automation_opportunities": [
+        "Microsoft Entra ID learning path assignments",
+        "Power Automate flow to send training reminders",
+        "Log Analytics to track completion rates",
+        "Azure Function to export compliance reports"
+      ],
+      "azure_services": ["Microsoft Entra ID", "Azure Blob Storage", "Log Analytics"],
+      "process_based": true,
+      "requires_documentation": true
+    }
   }
 }
 ```
@@ -147,32 +211,62 @@ iam.phishing_resistant:
 
 ### Implementation Phases
 
-#### Phase 1: Data Extraction (Week 1)
-- [ ] Extract all KSI metadata to `ksi_metadata.json`
-- [ ] Extract all FRR metadata to `frr_metadata.json`
-- [ ] Create migration script to validate extracted data against current analyzers
-- [ ] Build data loader module
+#### Phase 1: Data Extraction (Week 1) ✅ COMPLETE
+- [x] Extract all KSI metadata to `ksi_metadata.json` (72 requirements)
+- [x] Extract all FRR metadata to `frr_metadata.json` (199 requirements)
+- [x] Create migration script to validate extracted data against current analyzers
+- [ ] Build data loader module (defer to Phase 2)
+- [ ] **Add guidance properties** to metadata schema:
+  - [ ] `evidence_collection[]` - What artifacts to collect for audit
+  - [ ] `implementation_checklist[]` - Step-by-step implementation tasks
+  - [ ] `automation_opportunities[]` - What can be automated
+  - [ ] `azure_services[]` - Recommended Azure services
+  - [ ] `process_based` (boolean) - True for NOT_IMPLEMENTED KSIs
+  - [ ] `requires_documentation` (boolean) - True if policy/procedure docs needed
 
 **Files Created:**
-- `data/requirements/ksi_metadata.json`
-- `data/requirements/frr_metadata.json`
-- `scripts/extract_metadata.py`
-- `src/fedramp_20x_mcp/data_loader_v2.py`
+- `data/requirements/ksi_metadata.json` ✅ (89.58 KB, 72 KSIs)
+- `data/requirements/frr_metadata.json` ✅ (210.50 KB, 199 FRRs)
+- `scripts/extract_metadata.py` ✅ (455 lines)
+- `data/requirements/extraction_summary.json` ✅
+
+**Key Insight from Phase 1:**
+The 27 NOT_IMPLEMENTED KSIs (process-based requirements like training, documentation, incident reports) still need guidance for:
+1. Evidence collection (what artifacts auditors need)
+2. Implementation checklists (how to set up processes)
+3. Automation opportunities (what can be tracked programmatically)
+4. Documentation requirements (policies, procedures, SOPs)
+
+This guidance is currently provided by `generate_implementation_checklist` tool but should be **embedded in the metadata** so the new architecture can surface it without needing separate tool invocations.
 
 **Expected LOC Reduction:** 0 (data extraction only)
 
-#### Phase 2: Pattern Library (Week 2)
+#### Phase 2: Pattern Library & Guidance Extraction (Week 2)
+- [ ] **Extract guidance from existing tools/templates** to metadata
+  - [ ] Mine `generate_implementation_checklist` for checklist items
+  - [ ] Extract evidence requirements from `get_infrastructure_code_for_ksi`
+  - [ ] Document Azure service recommendations per family
+  - [ ] Identify automation opportunities per requirement
 - [ ] Identify common detection patterns across analyzers
 - [ ] Create pattern library files (YAML)
 - [ ] Implement pattern engine for AST-based matching
 - [ ] Build pattern compiler (YAML → executable detection logic)
+- [ ] **Validate dual-purpose design:**
+  - [ ] Code-detectable KSIs: patterns + guidance
+  - [ ] Process-based KSIs: guidance only (no patterns)
 
 **Files Created:**
+- `scripts/extract_guidance.py` - Mine guidance from existing tools
 - `data/patterns/iam_patterns.yaml`
 - `data/patterns/vdr_patterns.yaml`
+- `data/patterns/ced_guidance.yaml` - Process-based family (no code patterns)
 - `data/patterns/...` (10-15 pattern files)
 - `src/fedramp_20x_mcp/analyzers/pattern_engine.py`
 - `src/fedramp_20x_mcp/analyzers/pattern_compiler.py`
+
+**Files Updated:**
+- `data/requirements/ksi_metadata.json` - Add `guidance` property to all 72 KSIs
+- `data/requirements/frr_metadata.json` - Add `guidance` property to all 199 FRRs
 
 **Expected LOC Reduction:** 0 (building new infrastructure)
 

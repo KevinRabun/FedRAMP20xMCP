@@ -30,5 +30,9 @@
   },
   "ksi_implemented": 38,
   "frr_implemented": 199,
-  "ksi_retired": 7
+  "ksi_retired": 7,
+  "ksi_process_based": 34,
+  "frr_process_based": 0,
+  "ksi_code_detectable": 38,
+  "frr_code_detectable": 199
 }

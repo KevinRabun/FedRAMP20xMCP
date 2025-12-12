@@ -16,7 +16,64 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_01.py",
-    "class_name": "KSI_AFR_01_Analyzer"
+    "class_name": "KSI_AFR_01_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Microsoft Defender for Cloud security posture scores",
+        "Vulnerability assessment scan results",
+        "Remediation tracking reports",
+        "Compliance dashboard screenshots",
+        "Security recommendations status",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Enable Microsoft Defender for Cloud",
+        "Configure vulnerability scanning",
+        "Set up security recommendations tracking",
+        "Enable Defender plans for all resource types",
+        "Configure compliance standards (FedRAMP)",
+        "Set up automated remediation where possible",
+        "Schedule regular vulnerability scans",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Microsoft Defender for Cloud continuous export",
+        "Automated vulnerability scanning in CI/CD",
+        "Azure DevOps pipeline for security testing",
+        "GitHub Advanced Security for code scanning"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Policy",
+        "Log Analytics",
+        "Microsoft Defender for Cloud",
+        "Security Center"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-AFR-02": {
     "id": "KSI-AFR-02",
@@ -35,7 +92,64 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_02.py",
-    "class_name": "KSI_AFR_02_Analyzer"
+    "class_name": "KSI_AFR_02_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Microsoft Defender for Cloud security posture scores",
+        "Vulnerability assessment scan results",
+        "Remediation tracking reports",
+        "Compliance dashboard screenshots",
+        "Security recommendations status",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Enable Microsoft Defender for Cloud",
+        "Configure vulnerability scanning",
+        "Set up security recommendations tracking",
+        "Enable Defender plans for all resource types",
+        "Configure compliance standards (FedRAMP)",
+        "Set up automated remediation where possible",
+        "Schedule regular vulnerability scans",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Microsoft Defender for Cloud continuous export",
+        "Automated vulnerability scanning in CI/CD",
+        "Azure DevOps pipeline for security testing",
+        "GitHub Advanced Security for code scanning"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Policy",
+        "Log Analytics",
+        "Microsoft Defender for Cloud",
+        "Security Center"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-AFR-03": {
     "id": "KSI-AFR-03",
@@ -91,7 +205,64 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_03.py",
-    "class_name": "KSI_AFR_03_Analyzer"
+    "class_name": "KSI_AFR_03_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Microsoft Defender for Cloud security posture scores",
+        "Vulnerability assessment scan results",
+        "Remediation tracking reports",
+        "Compliance dashboard screenshots",
+        "Security recommendations status",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Enable Microsoft Defender for Cloud",
+        "Configure vulnerability scanning",
+        "Set up security recommendations tracking",
+        "Enable Defender plans for all resource types",
+        "Configure compliance standards (FedRAMP)",
+        "Set up automated remediation where possible",
+        "Schedule regular vulnerability scans",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Microsoft Defender for Cloud continuous export",
+        "Automated vulnerability scanning in CI/CD",
+        "Azure DevOps pipeline for security testing",
+        "GitHub Advanced Security for code scanning"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Policy",
+        "Log Analytics",
+        "Microsoft Defender for Cloud",
+        "Security Center"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-AFR-04": {
     "id": "KSI-AFR-04",
@@ -271,7 +442,64 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_04.py",
-    "class_name": "KSI_AFR_04_Analyzer"
+    "class_name": "KSI_AFR_04_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Microsoft Defender for Cloud security posture scores",
+        "Vulnerability assessment scan results",
+        "Remediation tracking reports",
+        "Compliance dashboard screenshots",
+        "Security recommendations status"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Enable Microsoft Defender for Cloud",
+        "Configure vulnerability scanning",
+        "Set up security recommendations tracking",
+        "Enable Defender plans for all resource types",
+        "Configure compliance standards (FedRAMP)",
+        "Set up automated remediation where possible",
+        "Schedule regular vulnerability scans",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Microsoft Defender for Cloud continuous export",
+        "Automated vulnerability scanning in CI/CD",
+        "Azure DevOps pipeline for security testing",
+        "GitHub Advanced Security for code scanning",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Policy",
+        "Log Analytics",
+        "Microsoft Defender for Cloud",
+        "Security Center"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-AFR-05": {
     "id": "KSI-AFR-05",
@@ -359,7 +587,64 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_05.py",
-    "class_name": "KSI_AFR_05_Analyzer"
+    "class_name": "KSI_AFR_05_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Microsoft Defender for Cloud security posture scores",
+        "Vulnerability assessment scan results",
+        "Remediation tracking reports",
+        "Compliance dashboard screenshots",
+        "Security recommendations status"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Enable Microsoft Defender for Cloud",
+        "Configure vulnerability scanning",
+        "Set up security recommendations tracking",
+        "Enable Defender plans for all resource types",
+        "Configure compliance standards (FedRAMP)",
+        "Set up automated remediation where possible",
+        "Schedule regular vulnerability scans",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Microsoft Defender for Cloud continuous export",
+        "Automated vulnerability scanning in CI/CD",
+        "Azure DevOps pipeline for security testing",
+        "GitHub Advanced Security for code scanning",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Policy",
+        "Log Analytics",
+        "Microsoft Defender for Cloud",
+        "Security Center"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-AFR-06": {
     "id": "KSI-AFR-06",
@@ -378,7 +663,64 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_06.py",
-    "class_name": "KSI_AFR_06_Analyzer"
+    "class_name": "KSI_AFR_06_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Microsoft Defender for Cloud security posture scores",
+        "Vulnerability assessment scan results",
+        "Remediation tracking reports",
+        "Compliance dashboard screenshots",
+        "Security recommendations status",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Enable Microsoft Defender for Cloud",
+        "Configure vulnerability scanning",
+        "Set up security recommendations tracking",
+        "Enable Defender plans for all resource types",
+        "Configure compliance standards (FedRAMP)",
+        "Set up automated remediation where possible",
+        "Schedule regular vulnerability scans",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Microsoft Defender for Cloud continuous export",
+        "Automated vulnerability scanning in CI/CD",
+        "Azure DevOps pipeline for security testing",
+        "GitHub Advanced Security for code scanning"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Policy",
+        "Log Analytics",
+        "Microsoft Defender for Cloud",
+        "Security Center"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-AFR-07": {
     "id": "KSI-AFR-07",
@@ -397,7 +739,64 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_07.py",
-    "class_name": "KSI_AFR_07_Analyzer"
+    "class_name": "KSI_AFR_07_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Microsoft Defender for Cloud security posture scores",
+        "Vulnerability assessment scan results",
+        "Remediation tracking reports",
+        "Compliance dashboard screenshots",
+        "Security recommendations status"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Enable Microsoft Defender for Cloud",
+        "Configure vulnerability scanning",
+        "Set up security recommendations tracking",
+        "Enable Defender plans for all resource types",
+        "Configure compliance standards (FedRAMP)",
+        "Set up automated remediation where possible",
+        "Schedule regular vulnerability scans",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Microsoft Defender for Cloud continuous export",
+        "Automated vulnerability scanning in CI/CD",
+        "Azure DevOps pipeline for security testing",
+        "GitHub Advanced Security for code scanning",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Policy",
+        "Log Analytics",
+        "Microsoft Defender for Cloud",
+        "Security Center"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-AFR-08": {
     "id": "KSI-AFR-08",
@@ -416,7 +815,64 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_08.py",
-    "class_name": "KSI_AFR_08_Analyzer"
+    "class_name": "KSI_AFR_08_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Microsoft Defender for Cloud security posture scores",
+        "Vulnerability assessment scan results",
+        "Remediation tracking reports",
+        "Compliance dashboard screenshots",
+        "Security recommendations status",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Enable Microsoft Defender for Cloud",
+        "Configure vulnerability scanning",
+        "Set up security recommendations tracking",
+        "Enable Defender plans for all resource types",
+        "Configure compliance standards (FedRAMP)",
+        "Set up automated remediation where possible",
+        "Schedule regular vulnerability scans",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Microsoft Defender for Cloud continuous export",
+        "Automated vulnerability scanning in CI/CD",
+        "Azure DevOps pipeline for security testing",
+        "GitHub Advanced Security for code scanning"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Policy",
+        "Log Analytics",
+        "Microsoft Defender for Cloud",
+        "Security Center"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-AFR-09": {
     "id": "KSI-AFR-09",
@@ -435,7 +891,64 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_09.py",
-    "class_name": "KSI_AFR_09_Analyzer"
+    "class_name": "KSI_AFR_09_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Microsoft Defender for Cloud security posture scores",
+        "Vulnerability assessment scan results",
+        "Remediation tracking reports",
+        "Compliance dashboard screenshots",
+        "Security recommendations status",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Enable Microsoft Defender for Cloud",
+        "Configure vulnerability scanning",
+        "Set up security recommendations tracking",
+        "Enable Defender plans for all resource types",
+        "Configure compliance standards (FedRAMP)",
+        "Set up automated remediation where possible",
+        "Schedule regular vulnerability scans",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Microsoft Defender for Cloud continuous export",
+        "Automated vulnerability scanning in CI/CD",
+        "Azure DevOps pipeline for security testing",
+        "GitHub Advanced Security for code scanning"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Policy",
+        "Log Analytics",
+        "Microsoft Defender for Cloud",
+        "Security Center"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-AFR-10": {
     "id": "KSI-AFR-10",
@@ -454,7 +967,64 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_10.py",
-    "class_name": "KSI_AFR_10_Analyzer"
+    "class_name": "KSI_AFR_10_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Microsoft Defender for Cloud security posture scores",
+        "Vulnerability assessment scan results",
+        "Remediation tracking reports",
+        "Compliance dashboard screenshots",
+        "Security recommendations status",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Enable Microsoft Defender for Cloud",
+        "Configure vulnerability scanning",
+        "Set up security recommendations tracking",
+        "Enable Defender plans for all resource types",
+        "Configure compliance standards (FedRAMP)",
+        "Set up automated remediation where possible",
+        "Schedule regular vulnerability scans",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Microsoft Defender for Cloud continuous export",
+        "Automated vulnerability scanning in CI/CD",
+        "Azure DevOps pipeline for security testing",
+        "GitHub Advanced Security for code scanning"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Policy",
+        "Log Analytics",
+        "Microsoft Defender for Cloud",
+        "Security Center"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-AFR-11": {
     "id": "KSI-AFR-11",
@@ -470,7 +1040,65 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_11.py",
-    "class_name": "KSI_AFR_11_Analyzer"
+    "class_name": "KSI_AFR_11_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Microsoft Defender for Cloud security posture scores",
+        "Vulnerability assessment scan results",
+        "Remediation tracking reports",
+        "Compliance dashboard screenshots",
+        "Security recommendations status"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Enable Microsoft Defender for Cloud",
+        "Configure vulnerability scanning",
+        "Set up security recommendations tracking",
+        "Enable Defender plans for all resource types",
+        "Configure compliance standards (FedRAMP)",
+        "Set up automated remediation where possible",
+        "Schedule regular vulnerability scans",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Microsoft Defender for Cloud continuous export",
+        "Automated vulnerability scanning in CI/CD",
+        "Azure DevOps pipeline for security testing",
+        "GitHub Advanced Security for code scanning",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Key Vault configuration",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Policy",
+        "Log Analytics",
+        "Microsoft Defender for Cloud",
+        "Security Center"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-CED-01": {
     "id": "KSI-CED-01",
@@ -514,7 +1142,62 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_ced_01.py",
-    "class_name": "KSI_CED_01_Analyzer"
+    "class_name": "KSI_CED_01_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Training completion reports",
+        "Training content versions",
+        "Quiz/assessment results",
+        "Attendance records",
+        "Annual acknowledgment forms",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Select or deploy Learning Management System (LMS)",
+        "Develop security awareness training curriculum",
+        "Create role-specific training modules",
+        "Assign training to employees via Microsoft Entra ID groups",
+        "Set up automated training reminders",
+        "Configure completion tracking and reporting",
+        "Schedule annual training refreshers",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Power Automate for training reminders",
+        "Microsoft Entra ID learning path assignments",
+        "Azure Function to export training completion reports",
+        "LMS integration via API for automated tracking"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics",
+        "Microsoft Learn"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-CED-02": {
     "id": "KSI-CED-02",
@@ -550,7 +1233,62 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_ced_02.py",
-    "class_name": "KSI_CED_02_Analyzer"
+    "class_name": "KSI_CED_02_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Training completion reports",
+        "Training content versions",
+        "Quiz/assessment results",
+        "Attendance records",
+        "Annual acknowledgment forms",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Select or deploy Learning Management System (LMS)",
+        "Develop security awareness training curriculum",
+        "Create role-specific training modules",
+        "Assign training to employees via Microsoft Entra ID groups",
+        "Set up automated training reminders",
+        "Configure completion tracking and reporting",
+        "Schedule annual training refreshers",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Power Automate for training reminders",
+        "Microsoft Entra ID learning path assignments",
+        "Azure Function to export training completion reports",
+        "LMS integration via API for automated tracking"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics",
+        "Microsoft Learn"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-CED-03": {
     "id": "KSI-CED-03",
@@ -582,7 +1320,62 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_ced_03.py",
-    "class_name": "KSI_CED_03_Analyzer"
+    "class_name": "KSI_CED_03_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Training completion reports",
+        "Training content versions",
+        "Quiz/assessment results",
+        "Attendance records",
+        "Annual acknowledgment forms",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Select or deploy Learning Management System (LMS)",
+        "Develop security awareness training curriculum",
+        "Create role-specific training modules",
+        "Assign training to employees via Microsoft Entra ID groups",
+        "Set up automated training reminders",
+        "Configure completion tracking and reporting",
+        "Schedule annual training refreshers",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Power Automate for training reminders",
+        "Microsoft Entra ID learning path assignments",
+        "Azure Function to export training completion reports",
+        "LMS integration via API for automated tracking"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics",
+        "Microsoft Learn"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-CED-04": {
     "id": "KSI-CED-04",
@@ -601,7 +1394,62 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_ced_04.py",
-    "class_name": "KSI_CED_04_Analyzer"
+    "class_name": "KSI_CED_04_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Training completion reports",
+        "Training content versions",
+        "Quiz/assessment results",
+        "Attendance records",
+        "Annual acknowledgment forms",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Select or deploy Learning Management System (LMS)",
+        "Develop security awareness training curriculum",
+        "Create role-specific training modules",
+        "Assign training to employees via Microsoft Entra ID groups",
+        "Set up automated training reminders",
+        "Configure completion tracking and reporting",
+        "Schedule annual training refreshers",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Power Automate for training reminders",
+        "Microsoft Entra ID learning path assignments",
+        "Azure Function to export training completion reports",
+        "LMS integration via API for automated tracking"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics",
+        "Microsoft Learn"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-CMT-01": {
     "id": "KSI-CMT-01",
@@ -649,7 +1497,44 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cmt_01.py",
-    "class_name": "KSI_CMT_01_Analyzer"
+    "class_name": "KSI_CMT_01_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Log Analytics"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-CMT-02": {
     "id": "KSI-CMT-02",
@@ -697,7 +1582,44 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cmt_02.py",
-    "class_name": "KSI_CMT_02_Analyzer"
+    "class_name": "KSI_CMT_02_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Log Analytics"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-CMT-03": {
     "id": "KSI-CMT-03",
@@ -733,7 +1655,45 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cmt_03.py",
-    "class_name": "KSI_CMT_03_Analyzer"
+    "class_name": "KSI_CMT_03_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-CMT-04": {
     "id": "KSI-CMT-04",
@@ -777,7 +1737,45 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cmt_04.py",
-    "class_name": "KSI_CMT_04_Analyzer"
+    "class_name": "KSI_CMT_04_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-CMT-05": {
     "id": "KSI-CMT-05",
@@ -793,7 +1791,45 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cmt_05.py",
-    "class_name": "KSI_CMT_05_Analyzer"
+    "class_name": "KSI_CMT_05_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-CNA-01": {
     "id": "KSI-CNA-01",
@@ -833,7 +1869,65 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cna_01.py",
-    "class_name": "KSI_CNA_01_Analyzer"
+    "class_name": "KSI_CNA_01_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Network topology diagrams",
+        "NSG rule exports",
+        "Azure Firewall configuration",
+        "Virtual network configuration",
+        "DDoS protection settings"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Design network architecture with security zones",
+        "Deploy Azure Virtual Network with subnets",
+        "Configure Network Security Groups (NSGs)",
+        "Set up Azure Firewall or third-party NVA",
+        "Enable DDoS Protection Standard",
+        "Configure Azure Bastion for secure access",
+        "Document network topology and data flows",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Terraform modules for network infrastructure",
+        "Azure Firewall rule deployment via IaC",
+        "NSG flow logs analysis with Network Watcher",
+        "Automated network topology discovery",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Bastion",
+        "Azure Blob Storage",
+        "Azure Firewall",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Virtual Network",
+        "Log Analytics",
+        "Network Security Groups"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-CNA-02": {
     "id": "KSI-CNA-02",
@@ -909,7 +2003,64 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cna_02.py",
-    "class_name": "KSI_CNA_02_Analyzer"
+    "class_name": "KSI_CNA_02_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Network topology diagrams",
+        "NSG rule exports",
+        "Azure Firewall configuration",
+        "Virtual network configuration",
+        "DDoS protection settings"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Design network architecture with security zones",
+        "Deploy Azure Virtual Network with subnets",
+        "Configure Network Security Groups (NSGs)",
+        "Set up Azure Firewall or third-party NVA",
+        "Enable DDoS Protection Standard",
+        "Configure Azure Bastion for secure access",
+        "Document network topology and data flows",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Terraform modules for network infrastructure",
+        "Azure Firewall rule deployment via IaC",
+        "NSG flow logs analysis with Network Watcher",
+        "Automated network topology discovery",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Bastion",
+        "Azure Blob Storage",
+        "Azure Firewall",
+        "Azure Monitor",
+        "Azure Virtual Network",
+        "Log Analytics",
+        "Network Security Groups"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-CNA-03": {
     "id": "KSI-CNA-03",
@@ -961,7 +2112,65 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cna_03.py",
-    "class_name": "KSI_CNA_03_Analyzer"
+    "class_name": "KSI_CNA_03_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Network topology diagrams",
+        "NSG rule exports",
+        "Azure Firewall configuration",
+        "Virtual network configuration",
+        "DDoS protection settings"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Design network architecture with security zones",
+        "Deploy Azure Virtual Network with subnets",
+        "Configure Network Security Groups (NSGs)",
+        "Set up Azure Firewall or third-party NVA",
+        "Enable DDoS Protection Standard",
+        "Configure Azure Bastion for secure access",
+        "Document network topology and data flows",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Terraform modules for network infrastructure",
+        "Azure Firewall rule deployment via IaC",
+        "NSG flow logs analysis with Network Watcher",
+        "Automated network topology discovery",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Bastion",
+        "Azure Blob Storage",
+        "Azure Firewall",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Virtual Network",
+        "Log Analytics",
+        "Network Security Groups"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-CNA-04": {
     "id": "KSI-CNA-04",
@@ -989,7 +2198,65 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cna_04.py",
-    "class_name": "KSI_CNA_04_Analyzer"
+    "class_name": "KSI_CNA_04_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Network topology diagrams",
+        "NSG rule exports",
+        "Azure Firewall configuration",
+        "Virtual network configuration",
+        "DDoS protection settings"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Design network architecture with security zones",
+        "Deploy Azure Virtual Network with subnets",
+        "Configure Network Security Groups (NSGs)",
+        "Set up Azure Firewall or third-party NVA",
+        "Enable DDoS Protection Standard",
+        "Configure Azure Bastion for secure access",
+        "Document network topology and data flows",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Terraform modules for network infrastructure",
+        "Azure Firewall rule deployment via IaC",
+        "NSG flow logs analysis with Network Watcher",
+        "Automated network topology discovery",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Bastion",
+        "Azure Blob Storage",
+        "Azure Firewall",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Virtual Network",
+        "Log Analytics",
+        "Network Security Groups"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-CNA-05": {
     "id": "KSI-CNA-05",
@@ -1021,7 +2288,65 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cna_05.py",
-    "class_name": "KSI_CNA_05_Analyzer"
+    "class_name": "KSI_CNA_05_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Network topology diagrams",
+        "NSG rule exports",
+        "Azure Firewall configuration",
+        "Virtual network configuration",
+        "DDoS protection settings"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Design network architecture with security zones",
+        "Deploy Azure Virtual Network with subnets",
+        "Configure Network Security Groups (NSGs)",
+        "Set up Azure Firewall or third-party NVA",
+        "Enable DDoS Protection Standard",
+        "Configure Azure Bastion for secure access",
+        "Document network topology and data flows",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Terraform modules for network infrastructure",
+        "Azure Firewall rule deployment via IaC",
+        "NSG flow logs analysis with Network Watcher",
+        "Automated network topology discovery",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Bastion",
+        "Azure Blob Storage",
+        "Azure Firewall",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Virtual Network",
+        "Log Analytics",
+        "Network Security Groups"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-CNA-06": {
     "id": "KSI-CNA-06",
@@ -1040,7 +2365,65 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cna_06.py",
-    "class_name": "KSI_CNA_06_Analyzer"
+    "class_name": "KSI_CNA_06_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Network topology diagrams",
+        "NSG rule exports",
+        "Azure Firewall configuration",
+        "Virtual network configuration",
+        "DDoS protection settings",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Design network architecture with security zones",
+        "Deploy Azure Virtual Network with subnets",
+        "Configure Network Security Groups (NSGs)",
+        "Set up Azure Firewall or third-party NVA",
+        "Enable DDoS Protection Standard",
+        "Configure Azure Bastion for secure access",
+        "Document network topology and data flows",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Terraform modules for network infrastructure",
+        "Azure Firewall rule deployment via IaC",
+        "NSG flow logs analysis with Network Watcher",
+        "Automated network topology discovery"
+      ],
+      "azure_services": [
+        "Azure Bastion",
+        "Azure Blob Storage",
+        "Azure Firewall",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Virtual Network",
+        "Log Analytics",
+        "Network Security Groups"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-CNA-07": {
     "id": "KSI-CNA-07",
@@ -1072,7 +2455,65 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cna_07.py",
-    "class_name": "KSI_CNA_07_Analyzer"
+    "class_name": "KSI_CNA_07_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Network topology diagrams",
+        "NSG rule exports",
+        "Azure Firewall configuration",
+        "Virtual network configuration",
+        "DDoS protection settings",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Design network architecture with security zones",
+        "Deploy Azure Virtual Network with subnets",
+        "Configure Network Security Groups (NSGs)",
+        "Set up Azure Firewall or third-party NVA",
+        "Enable DDoS Protection Standard",
+        "Configure Azure Bastion for secure access",
+        "Document network topology and data flows",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Terraform modules for network infrastructure",
+        "Azure Firewall rule deployment via IaC",
+        "NSG flow logs analysis with Network Watcher",
+        "Automated network topology discovery"
+      ],
+      "azure_services": [
+        "Azure Bastion",
+        "Azure Blob Storage",
+        "Azure Firewall",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Virtual Network",
+        "Log Analytics",
+        "Network Security Groups"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-CNA-08": {
     "id": "KSI-CNA-08",
@@ -1099,7 +2540,65 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cna_08.py",
-    "class_name": "KSI_CNA_08_Analyzer"
+    "class_name": "KSI_CNA_08_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Network topology diagrams",
+        "NSG rule exports",
+        "Azure Firewall configuration",
+        "Virtual network configuration",
+        "DDoS protection settings"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Design network architecture with security zones",
+        "Deploy Azure Virtual Network with subnets",
+        "Configure Network Security Groups (NSGs)",
+        "Set up Azure Firewall or third-party NVA",
+        "Enable DDoS Protection Standard",
+        "Configure Azure Bastion for secure access",
+        "Document network topology and data flows",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Terraform modules for network infrastructure",
+        "Azure Firewall rule deployment via IaC",
+        "NSG flow logs analysis with Network Watcher",
+        "Automated network topology discovery",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Bastion",
+        "Azure Blob Storage",
+        "Azure Firewall",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Virtual Network",
+        "Log Analytics",
+        "Network Security Groups"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-IAM-01": {
     "id": "KSI-IAM-01",
@@ -1151,7 +2650,65 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_iam_01.py",
-    "class_name": "KSI_IAM_01_Analyzer"
+    "class_name": "KSI_IAM_01_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Microsoft Entra ID configuration exports",
+        "Conditional Access policy JSON exports",
+        "Sign-in logs with MFA events",
+        "Azure RBAC role assignments report",
+        "Privileged Identity Management (PIM) activation logs"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Enable Microsoft Entra ID Premium P2",
+        "Configure Conditional Access policies",
+        "Set up phishing-resistant MFA (FIDO2, certificate-based)",
+        "Configure Privileged Identity Management (PIM)",
+        "Enable Identity Protection",
+        "Set up Azure RBAC with least privilege",
+        "Test MFA enforcement for all user types",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Conditional Access policy deployment via Bicep/Terraform",
+        "PowerShell script to audit MFA methods",
+        "Automated user access reviews via PIM",
+        "Azure AD reporting API for authentication metrics",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure RBAC",
+        "Conditional Access",
+        "Log Analytics",
+        "Microsoft Entra ID",
+        "Privileged Identity Management"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-IAM-02": {
     "id": "KSI-IAM-02",
@@ -1204,7 +2761,67 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_iam_02.py",
-    "class_name": "KSI_IAM_02_Analyzer"
+    "class_name": "KSI_IAM_02_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Microsoft Entra ID configuration exports",
+        "Conditional Access policy JSON exports",
+        "Sign-in logs with MFA events",
+        "Azure RBAC role assignments report",
+        "Privileged Identity Management (PIM) activation logs"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Enable Microsoft Entra ID Premium P2",
+        "Configure Conditional Access policies",
+        "Set up phishing-resistant MFA (FIDO2, certificate-based)",
+        "Configure Privileged Identity Management (PIM)",
+        "Enable Identity Protection",
+        "Set up Azure RBAC with least privilege",
+        "Test MFA enforcement for all user types",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Conditional Access policy deployment via Bicep/Terraform",
+        "PowerShell script to audit MFA methods",
+        "Automated user access reviews via PIM",
+        "Azure AD reporting API for authentication metrics",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure AD",
+        "Azure AD configuration",
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure RBAC",
+        "Conditional Access",
+        "Log Analytics",
+        "Microsoft Entra ID",
+        "Privileged Identity Management"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-IAM-03": {
     "id": "KSI-IAM-03",
@@ -1252,7 +2869,65 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_iam_03.py",
-    "class_name": "KSI_IAM_03_Analyzer"
+    "class_name": "KSI_IAM_03_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Microsoft Entra ID configuration exports",
+        "Conditional Access policy JSON exports",
+        "Sign-in logs with MFA events",
+        "Azure RBAC role assignments report",
+        "Privileged Identity Management (PIM) activation logs"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Enable Microsoft Entra ID Premium P2",
+        "Configure Conditional Access policies",
+        "Set up phishing-resistant MFA (FIDO2, certificate-based)",
+        "Configure Privileged Identity Management (PIM)",
+        "Enable Identity Protection",
+        "Set up Azure RBAC with least privilege",
+        "Test MFA enforcement for all user types",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Conditional Access policy deployment via Bicep/Terraform",
+        "PowerShell script to audit MFA methods",
+        "Automated user access reviews via PIM",
+        "Azure AD reporting API for authentication metrics",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure RBAC",
+        "Conditional Access",
+        "Log Analytics",
+        "Microsoft Entra ID",
+        "Privileged Identity Management"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-IAM-04": {
     "id": "KSI-IAM-04",
@@ -1424,7 +3099,65 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_iam_04.py",
-    "class_name": "KSI_IAM_04_Analyzer"
+    "class_name": "KSI_IAM_04_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Microsoft Entra ID configuration exports",
+        "Conditional Access policy JSON exports",
+        "Sign-in logs with MFA events",
+        "Azure RBAC role assignments report",
+        "Privileged Identity Management (PIM) activation logs"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Enable Microsoft Entra ID Premium P2",
+        "Configure Conditional Access policies",
+        "Set up phishing-resistant MFA (FIDO2, certificate-based)",
+        "Configure Privileged Identity Management (PIM)",
+        "Enable Identity Protection",
+        "Set up Azure RBAC with least privilege",
+        "Test MFA enforcement for all user types",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Conditional Access policy deployment via Bicep/Terraform",
+        "PowerShell script to audit MFA methods",
+        "Automated user access reviews via PIM",
+        "Azure AD reporting API for authentication metrics",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure RBAC",
+        "Conditional Access",
+        "Log Analytics",
+        "Microsoft Entra ID",
+        "Privileged Identity Management"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-IAM-05": {
     "id": "KSI-IAM-05",
@@ -1580,7 +3313,65 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_iam_05.py",
-    "class_name": "KSI_IAM_05_Analyzer"
+    "class_name": "KSI_IAM_05_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Microsoft Entra ID configuration exports",
+        "Conditional Access policy JSON exports",
+        "Sign-in logs with MFA events",
+        "Azure RBAC role assignments report",
+        "Privileged Identity Management (PIM) activation logs"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Enable Microsoft Entra ID Premium P2",
+        "Configure Conditional Access policies",
+        "Set up phishing-resistant MFA (FIDO2, certificate-based)",
+        "Configure Privileged Identity Management (PIM)",
+        "Enable Identity Protection",
+        "Set up Azure RBAC with least privilege",
+        "Test MFA enforcement for all user types",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Conditional Access policy deployment via Bicep/Terraform",
+        "PowerShell script to audit MFA methods",
+        "Automated user access reviews via PIM",
+        "Azure AD reporting API for authentication metrics",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure RBAC",
+        "Conditional Access",
+        "Log Analytics",
+        "Microsoft Entra ID",
+        "Privileged Identity Management"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-IAM-06": {
     "id": "KSI-IAM-06",
@@ -1628,7 +3419,66 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_iam_06.py",
-    "class_name": "KSI_IAM_06_Analyzer"
+    "class_name": "KSI_IAM_06_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Microsoft Entra ID configuration exports",
+        "Conditional Access policy JSON exports",
+        "Sign-in logs with MFA events",
+        "Azure RBAC role assignments report",
+        "Privileged Identity Management (PIM) activation logs",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Enable Microsoft Entra ID Premium P2",
+        "Configure Conditional Access policies",
+        "Set up phishing-resistant MFA (FIDO2, certificate-based)",
+        "Configure Privileged Identity Management (PIM)",
+        "Enable Identity Protection",
+        "Set up Azure RBAC with least privilege",
+        "Test MFA enforcement for all user types",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Conditional Access policy deployment via Bicep/Terraform",
+        "PowerShell script to audit MFA methods",
+        "Automated user access reviews via PIM",
+        "Azure AD reporting API for authentication metrics"
+      ],
+      "azure_services": [
+        "Azure AD",
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure RBAC",
+        "Conditional Access",
+        "Entra ID lockout policies",
+        "Log Analytics",
+        "Microsoft Entra ID",
+        "Privileged Identity Management"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-IAM-07": {
     "id": "KSI-IAM-07",
@@ -1684,7 +3534,65 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_iam_07.py",
-    "class_name": "KSI_IAM_07_Analyzer"
+    "class_name": "KSI_IAM_07_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Microsoft Entra ID configuration exports",
+        "Conditional Access policy JSON exports",
+        "Sign-in logs with MFA events",
+        "Azure RBAC role assignments report",
+        "Privileged Identity Management (PIM) activation logs"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Enable Microsoft Entra ID Premium P2",
+        "Configure Conditional Access policies",
+        "Set up phishing-resistant MFA (FIDO2, certificate-based)",
+        "Configure Privileged Identity Management (PIM)",
+        "Enable Identity Protection",
+        "Set up Azure RBAC with least privilege",
+        "Test MFA enforcement for all user types",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Conditional Access policy deployment via Bicep/Terraform",
+        "PowerShell script to audit MFA methods",
+        "Automated user access reviews via PIM",
+        "Azure AD reporting API for authentication metrics",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure RBAC",
+        "Conditional Access",
+        "Log Analytics",
+        "Microsoft Entra ID",
+        "Privileged Identity Management"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-INR-01": {
     "id": "KSI-INR-01",
@@ -1744,7 +3652,58 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_inr_01.py",
-    "class_name": "KSI_INR_01_Analyzer"
+    "class_name": "KSI_INR_01_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Incident response plan",
+        "Incident logs and tickets",
+        "After-action reports",
+        "Communication procedures",
+        "Escalation matrix"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Develop incident response plan",
+        "Set up incident tracking system",
+        "Configure Azure Monitor alerts for security events",
+        "Enable Microsoft Sentinel for SIEM",
+        "Define escalation procedures",
+        "Conduct tabletop exercises",
+        "Document incident response procedures",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics",
+        "Microsoft Sentinel"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-INR-02": {
     "id": "KSI-INR-02",
@@ -1784,7 +3743,58 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_inr_02.py",
-    "class_name": "KSI_INR_02_Analyzer"
+    "class_name": "KSI_INR_02_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Incident response plan",
+        "Incident logs and tickets",
+        "After-action reports",
+        "Communication procedures",
+        "Escalation matrix"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Develop incident response plan",
+        "Set up incident tracking system",
+        "Configure Azure Monitor alerts for security events",
+        "Enable Microsoft Sentinel for SIEM",
+        "Define escalation procedures",
+        "Conduct tabletop exercises",
+        "Document incident response procedures",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics",
+        "Microsoft Sentinel"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-INR-03": {
     "id": "KSI-INR-03",
@@ -1820,7 +3830,58 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_inr_03.py",
-    "class_name": "KSI_INR_03_Analyzer"
+    "class_name": "KSI_INR_03_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Incident response plan",
+        "Incident logs and tickets",
+        "After-action reports",
+        "Communication procedures",
+        "Escalation matrix",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Develop incident response plan",
+        "Set up incident tracking system",
+        "Configure Azure Monitor alerts for security events",
+        "Enable Microsoft Sentinel for SIEM",
+        "Define escalation procedures",
+        "Conduct tabletop exercises",
+        "Document incident response procedures",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics",
+        "Microsoft Sentinel"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-MLA-01": {
     "id": "KSI-MLA-01",
@@ -1912,7 +3973,63 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_mla_01.py",
-    "class_name": "KSI_MLA_01_Analyzer"
+    "class_name": "KSI_MLA_01_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Log Analytics workspace configuration",
+        "Diagnostic settings for all resources",
+        "Alert rules and action groups",
+        "Log retention policy documentation",
+        "Sample logs demonstrating collection"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Deploy Log Analytics workspace",
+        "Enable diagnostic settings for all resources",
+        "Configure log retention (1 year minimum for FedRAMP)",
+        "Set up Azure Monitor alerts",
+        "Deploy Microsoft Sentinel (if required)",
+        "Create dashboards for compliance monitoring",
+        "Test log collection and alerting",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Azure Monitor workbooks for compliance dashboards",
+        "Automated log export to Azure Blob Storage",
+        "KQL queries for security event detection",
+        "Azure Logic Apps for alert orchestration",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Application Insights",
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics",
+        "Microsoft Sentinel"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-MLA-02": {
     "id": "KSI-MLA-02",
@@ -1957,7 +4074,62 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_mla_02.py",
-    "class_name": "KSI_MLA_02_Analyzer"
+    "class_name": "KSI_MLA_02_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Log Analytics workspace configuration",
+        "Diagnostic settings for all resources",
+        "Alert rules and action groups",
+        "Log retention policy documentation",
+        "Sample logs demonstrating collection"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Deploy Log Analytics workspace",
+        "Enable diagnostic settings for all resources",
+        "Configure log retention (1 year minimum for FedRAMP)",
+        "Set up Azure Monitor alerts",
+        "Deploy Microsoft Sentinel (if required)",
+        "Create dashboards for compliance monitoring",
+        "Test log collection and alerting",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Azure Monitor workbooks for compliance dashboards",
+        "Automated log export to Azure Blob Storage",
+        "KQL queries for security event detection",
+        "Azure Logic Apps for alert orchestration",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Application Insights",
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Log Analytics",
+        "Microsoft Sentinel"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-MLA-03": {
     "id": "KSI-MLA-03",
@@ -1973,7 +4145,63 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_mla_03.py",
-    "class_name": "KSI_MLA_03_Analyzer"
+    "class_name": "KSI_MLA_03_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Log Analytics workspace configuration",
+        "Diagnostic settings for all resources",
+        "Alert rules and action groups",
+        "Log retention policy documentation",
+        "Sample logs demonstrating collection",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Deploy Log Analytics workspace",
+        "Enable diagnostic settings for all resources",
+        "Configure log retention (1 year minimum for FedRAMP)",
+        "Set up Azure Monitor alerts",
+        "Deploy Microsoft Sentinel (if required)",
+        "Create dashboards for compliance monitoring",
+        "Test log collection and alerting",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Azure Monitor workbooks for compliance dashboards",
+        "Automated log export to Azure Blob Storage",
+        "KQL queries for security event detection",
+        "Azure Logic Apps for alert orchestration"
+      ],
+      "azure_services": [
+        "Application Insights",
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics",
+        "Microsoft Sentinel"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-MLA-04": {
     "id": "KSI-MLA-04",
@@ -1989,7 +4217,63 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_mla_04.py",
-    "class_name": "KSI_MLA_04_Analyzer"
+    "class_name": "KSI_MLA_04_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Log Analytics workspace configuration",
+        "Diagnostic settings for all resources",
+        "Alert rules and action groups",
+        "Log retention policy documentation",
+        "Sample logs demonstrating collection",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Deploy Log Analytics workspace",
+        "Enable diagnostic settings for all resources",
+        "Configure log retention (1 year minimum for FedRAMP)",
+        "Set up Azure Monitor alerts",
+        "Deploy Microsoft Sentinel (if required)",
+        "Create dashboards for compliance monitoring",
+        "Test log collection and alerting",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Azure Monitor workbooks for compliance dashboards",
+        "Automated log export to Azure Blob Storage",
+        "KQL queries for security event detection",
+        "Azure Logic Apps for alert orchestration"
+      ],
+      "azure_services": [
+        "Application Insights",
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics",
+        "Microsoft Sentinel"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-MLA-05": {
     "id": "KSI-MLA-05",
@@ -2025,7 +4309,63 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_mla_05.py",
-    "class_name": "KSI_MLA_05_Analyzer"
+    "class_name": "KSI_MLA_05_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Log Analytics workspace configuration",
+        "Diagnostic settings for all resources",
+        "Alert rules and action groups",
+        "Log retention policy documentation",
+        "Sample logs demonstrating collection",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Deploy Log Analytics workspace",
+        "Enable diagnostic settings for all resources",
+        "Configure log retention (1 year minimum for FedRAMP)",
+        "Set up Azure Monitor alerts",
+        "Deploy Microsoft Sentinel (if required)",
+        "Create dashboards for compliance monitoring",
+        "Test log collection and alerting",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Azure Monitor workbooks for compliance dashboards",
+        "Automated log export to Azure Blob Storage",
+        "KQL queries for security event detection",
+        "Azure Logic Apps for alert orchestration"
+      ],
+      "azure_services": [
+        "Application Insights",
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics",
+        "Microsoft Sentinel"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-MLA-06": {
     "id": "KSI-MLA-06",
@@ -2041,7 +4381,63 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_mla_06.py",
-    "class_name": "KSI_MLA_06_Analyzer"
+    "class_name": "KSI_MLA_06_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Log Analytics workspace configuration",
+        "Diagnostic settings for all resources",
+        "Alert rules and action groups",
+        "Log retention policy documentation",
+        "Sample logs demonstrating collection",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Deploy Log Analytics workspace",
+        "Enable diagnostic settings for all resources",
+        "Configure log retention (1 year minimum for FedRAMP)",
+        "Set up Azure Monitor alerts",
+        "Deploy Microsoft Sentinel (if required)",
+        "Create dashboards for compliance monitoring",
+        "Test log collection and alerting",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Azure Monitor workbooks for compliance dashboards",
+        "Automated log export to Azure Blob Storage",
+        "KQL queries for security event detection",
+        "Azure Logic Apps for alert orchestration"
+      ],
+      "azure_services": [
+        "Application Insights",
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics",
+        "Microsoft Sentinel"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-MLA-07": {
     "id": "KSI-MLA-07",
@@ -2101,7 +4497,62 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_mla_07.py",
-    "class_name": "KSI_MLA_07_Analyzer"
+    "class_name": "KSI_MLA_07_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Log Analytics workspace configuration",
+        "Diagnostic settings for all resources",
+        "Alert rules and action groups",
+        "Log retention policy documentation",
+        "Sample logs demonstrating collection"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Deploy Log Analytics workspace",
+        "Enable diagnostic settings for all resources",
+        "Configure log retention (1 year minimum for FedRAMP)",
+        "Set up Azure Monitor alerts",
+        "Deploy Microsoft Sentinel (if required)",
+        "Create dashboards for compliance monitoring",
+        "Test log collection and alerting",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Azure Monitor workbooks for compliance dashboards",
+        "Automated log export to Azure Blob Storage",
+        "KQL queries for security event detection",
+        "Azure Logic Apps for alert orchestration",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Application Insights",
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Log Analytics",
+        "Microsoft Sentinel"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-MLA-08": {
     "id": "KSI-MLA-08",
@@ -2125,7 +4576,62 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_mla_08.py",
-    "class_name": "KSI_MLA_08_Analyzer"
+    "class_name": "KSI_MLA_08_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Log Analytics workspace configuration",
+        "Diagnostic settings for all resources",
+        "Alert rules and action groups",
+        "Log retention policy documentation",
+        "Sample logs demonstrating collection"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Deploy Log Analytics workspace",
+        "Enable diagnostic settings for all resources",
+        "Configure log retention (1 year minimum for FedRAMP)",
+        "Set up Azure Monitor alerts",
+        "Deploy Microsoft Sentinel (if required)",
+        "Create dashboards for compliance monitoring",
+        "Test log collection and alerting",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Azure Monitor workbooks for compliance dashboards",
+        "Automated log export to Azure Blob Storage",
+        "KQL queries for security event detection",
+        "Azure Logic Apps for alert orchestration",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Application Insights",
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Log Analytics",
+        "Microsoft Sentinel"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-PIY-01": {
     "id": "KSI-PIY-01",
@@ -2173,7 +4679,53 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_piy_01.py",
-    "class_name": "KSI_PIY_01_Analyzer"
+    "class_name": "KSI_PIY_01_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Privacy policy documentation",
+        "Data classification records",
+        "Privacy impact assessments",
+        "Third-party risk assessments",
+        "Vendor security questionnaires"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Confidential Computing",
+        "Azure Monitor",
+        "Azure Private Link",
+        "Azure Resource Graph query validation",
+        "Azure SDK inventory queries",
+        "Log Analytics"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-PIY-02": {
     "id": "KSI-PIY-02",
@@ -2309,7 +4861,51 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_piy_02.py",
-    "class_name": "KSI_PIY_02_Analyzer"
+    "class_name": "KSI_PIY_02_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Privacy policy documentation",
+        "Data classification records",
+        "Privacy impact assessments",
+        "Third-party risk assessments",
+        "Vendor security questionnaires"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Confidential Computing",
+        "Azure Monitor",
+        "Azure Private Link",
+        "Log Analytics"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-PIY-03": {
     "id": "KSI-PIY-03",
@@ -2333,7 +4929,52 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_piy_03.py",
-    "class_name": "KSI_PIY_03_Analyzer"
+    "class_name": "KSI_PIY_03_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Privacy policy documentation",
+        "Data classification records",
+        "Privacy impact assessments",
+        "Third-party risk assessments",
+        "Vendor security questionnaires",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Confidential Computing",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Private Link",
+        "Log Analytics"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-PIY-04": {
     "id": "KSI-PIY-04",
@@ -2401,7 +5042,52 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_piy_04.py",
-    "class_name": "KSI_PIY_04_Analyzer"
+    "class_name": "KSI_PIY_04_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Privacy policy documentation",
+        "Data classification records",
+        "Privacy impact assessments",
+        "Third-party risk assessments",
+        "Vendor security questionnaires",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Confidential Computing",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Private Link",
+        "Log Analytics"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-PIY-05": {
     "id": "KSI-PIY-05",
@@ -2420,7 +5106,52 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_piy_05.py",
-    "class_name": "KSI_PIY_05_Analyzer"
+    "class_name": "KSI_PIY_05_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Privacy policy documentation",
+        "Data classification records",
+        "Privacy impact assessments",
+        "Third-party risk assessments",
+        "Vendor security questionnaires",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Confidential Computing",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Private Link",
+        "Log Analytics"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-PIY-06": {
     "id": "KSI-PIY-06",
@@ -2476,7 +5207,52 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_piy_06.py",
-    "class_name": "KSI_PIY_06_Analyzer"
+    "class_name": "KSI_PIY_06_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Privacy policy documentation",
+        "Data classification records",
+        "Privacy impact assessments",
+        "Third-party risk assessments",
+        "Vendor security questionnaires",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Confidential Computing",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Private Link",
+        "Log Analytics"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-PIY-07": {
     "id": "KSI-PIY-07",
@@ -2504,7 +5280,52 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_piy_07.py",
-    "class_name": "KSI_PIY_07_Analyzer"
+    "class_name": "KSI_PIY_07_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Privacy policy documentation",
+        "Data classification records",
+        "Privacy impact assessments",
+        "Third-party risk assessments",
+        "Vendor security questionnaires",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Confidential Computing",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Private Link",
+        "Log Analytics"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-PIY-08": {
     "id": "KSI-PIY-08",
@@ -2523,7 +5344,52 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_piy_08.py",
-    "class_name": "KSI_PIY_08_Analyzer"
+    "class_name": "KSI_PIY_08_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Privacy policy documentation",
+        "Data classification records",
+        "Privacy impact assessments",
+        "Third-party risk assessments",
+        "Vendor security questionnaires",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Confidential Computing",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Private Link",
+        "Log Analytics"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-RPL-01": {
     "id": "KSI-RPL-01",
@@ -2551,7 +5417,60 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_rpl_01.py",
-    "class_name": "KSI_RPL_01_Analyzer"
+    "class_name": "KSI_RPL_01_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Recovery objectives documentation (RTO/RPO)",
+        "Disaster recovery plan",
+        "Recovery test results",
+        "Backup configuration and schedules",
+        "Failover test reports",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Define Recovery Time Objective (RTO) and Recovery Point Objective (RPO)",
+        "Document disaster recovery procedures",
+        "Configure Azure Site Recovery or Azure Backup",
+        "Set up geo-redundant storage",
+        "Deploy across availability zones",
+        "Test disaster recovery procedures",
+        "Document test results and lessons learned",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing"
+      ],
+      "azure_services": [
+        "Availability Zones",
+        "Azure Backup",
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Site Recovery",
+        "Log Analytics"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-RPL-02": {
     "id": "KSI-RPL-02",
@@ -2635,7 +5554,60 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_rpl_02.py",
-    "class_name": "KSI_RPL_02_Analyzer"
+    "class_name": "KSI_RPL_02_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Recovery objectives documentation (RTO/RPO)",
+        "Disaster recovery plan",
+        "Recovery test results",
+        "Backup configuration and schedules",
+        "Failover test reports",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Define Recovery Time Objective (RTO) and Recovery Point Objective (RPO)",
+        "Document disaster recovery procedures",
+        "Configure Azure Site Recovery or Azure Backup",
+        "Set up geo-redundant storage",
+        "Deploy across availability zones",
+        "Test disaster recovery procedures",
+        "Document test results and lessons learned",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing"
+      ],
+      "azure_services": [
+        "Availability Zones",
+        "Azure Backup",
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Site Recovery",
+        "Log Analytics"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-RPL-03": {
     "id": "KSI-RPL-03",
@@ -2679,7 +5651,61 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_rpl_03.py",
-    "class_name": "KSI_RPL_03_Analyzer"
+    "class_name": "KSI_RPL_03_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Recovery objectives documentation (RTO/RPO)",
+        "Disaster recovery plan",
+        "Recovery test results",
+        "Backup configuration and schedules",
+        "Failover test reports"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Define Recovery Time Objective (RTO) and Recovery Point Objective (RPO)",
+        "Document disaster recovery procedures",
+        "Configure Azure Site Recovery or Azure Backup",
+        "Set up geo-redundant storage",
+        "Deploy across availability zones",
+        "Test disaster recovery procedures",
+        "Document test results and lessons learned",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Availability Zones",
+        "Azure Backup",
+        "Azure Backup SDK",
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Site Recovery",
+        "Azure WAF Reliability",
+        "Log Analytics"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-RPL-04": {
     "id": "KSI-RPL-04",
@@ -2739,7 +5765,60 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_rpl_04.py",
-    "class_name": "KSI_RPL_04_Analyzer"
+    "class_name": "KSI_RPL_04_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Recovery objectives documentation (RTO/RPO)",
+        "Disaster recovery plan",
+        "Recovery test results",
+        "Backup configuration and schedules",
+        "Failover test reports",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Define Recovery Time Objective (RTO) and Recovery Point Objective (RPO)",
+        "Document disaster recovery procedures",
+        "Configure Azure Site Recovery or Azure Backup",
+        "Set up geo-redundant storage",
+        "Deploy across availability zones",
+        "Test disaster recovery procedures",
+        "Document test results and lessons learned",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing"
+      ],
+      "azure_services": [
+        "Availability Zones",
+        "Azure Backup",
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Azure Site Recovery",
+        "Log Analytics"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-SVC-01": {
     "id": "KSI-SVC-01",
@@ -2795,7 +5874,64 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_01.py",
-    "class_name": "KSI_SVC_01_Analyzer"
+    "class_name": "KSI_SVC_01_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Azure Key Vault configuration",
+        "Secret rotation policies",
+        "Access policies or RBAC assignments",
+        "Audit logs for secret access",
+        "Managed Identity assignments"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Deploy Azure Key Vault with soft delete",
+        "Configure access policies or RBAC",
+        "Set up Managed Identities for applications",
+        "Implement secret rotation automation",
+        "Configure diagnostic logging for Key Vault",
+        "Test secret retrieval from applications",
+        "Document secret management procedures",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Azure Automation runbooks for secret rotation",
+        "Key Vault event grid notifications",
+        "Managed Identity automatic assignment",
+        "Terraform for Key Vault infrastructure",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Automation",
+        "Azure Blob Storage",
+        "Azure Key Vault",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics",
+        "Managed Identity"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-SVC-02": {
     "id": "KSI-SVC-02",
@@ -2855,7 +5991,64 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_02.py",
-    "class_name": "KSI_SVC_02_Analyzer"
+    "class_name": "KSI_SVC_02_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Azure Key Vault configuration",
+        "Secret rotation policies",
+        "Access policies or RBAC assignments",
+        "Audit logs for secret access",
+        "Managed Identity assignments"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Deploy Azure Key Vault with soft delete",
+        "Configure access policies or RBAC",
+        "Set up Managed Identities for applications",
+        "Implement secret rotation automation",
+        "Configure diagnostic logging for Key Vault",
+        "Test secret retrieval from applications",
+        "Document secret management procedures",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Azure Automation runbooks for secret rotation",
+        "Key Vault event grid notifications",
+        "Managed Identity automatic assignment",
+        "Terraform for Key Vault infrastructure",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Automation",
+        "Azure Blob Storage",
+        "Azure Key Vault",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics",
+        "Managed Identity"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-SVC-03": {
     "id": "KSI-SVC-03",
@@ -2871,7 +6064,64 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_03.py",
-    "class_name": "KSI_SVC_03_Analyzer"
+    "class_name": "KSI_SVC_03_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Azure Key Vault configuration",
+        "Secret rotation policies",
+        "Access policies or RBAC assignments",
+        "Audit logs for secret access",
+        "Managed Identity assignments",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Deploy Azure Key Vault with soft delete",
+        "Configure access policies or RBAC",
+        "Set up Managed Identities for applications",
+        "Implement secret rotation automation",
+        "Configure diagnostic logging for Key Vault",
+        "Test secret retrieval from applications",
+        "Document secret management procedures",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Azure Automation runbooks for secret rotation",
+        "Key Vault event grid notifications",
+        "Managed Identity automatic assignment",
+        "Terraform for Key Vault infrastructure"
+      ],
+      "azure_services": [
+        "Azure Automation",
+        "Azure Blob Storage",
+        "Azure Key Vault",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics",
+        "Managed Identity"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-SVC-04": {
     "id": "KSI-SVC-04",
@@ -2935,7 +6185,64 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_04.py",
-    "class_name": "KSI_SVC_04_Analyzer"
+    "class_name": "KSI_SVC_04_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Azure Key Vault configuration",
+        "Secret rotation policies",
+        "Access policies or RBAC assignments",
+        "Audit logs for secret access",
+        "Managed Identity assignments"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Deploy Azure Key Vault with soft delete",
+        "Configure access policies or RBAC",
+        "Set up Managed Identities for applications",
+        "Implement secret rotation automation",
+        "Configure diagnostic logging for Key Vault",
+        "Test secret retrieval from applications",
+        "Document secret management procedures",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Azure Automation runbooks for secret rotation",
+        "Key Vault event grid notifications",
+        "Managed Identity automatic assignment",
+        "Terraform for Key Vault infrastructure",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Automation",
+        "Azure Blob Storage",
+        "Azure Key Vault",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics",
+        "Managed Identity"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-SVC-05": {
     "id": "KSI-SVC-05",
@@ -2983,7 +6290,64 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_05.py",
-    "class_name": "KSI_SVC_05_Analyzer"
+    "class_name": "KSI_SVC_05_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Azure Key Vault configuration",
+        "Secret rotation policies",
+        "Access policies or RBAC assignments",
+        "Audit logs for secret access",
+        "Managed Identity assignments"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Deploy Azure Key Vault with soft delete",
+        "Configure access policies or RBAC",
+        "Set up Managed Identities for applications",
+        "Implement secret rotation automation",
+        "Configure diagnostic logging for Key Vault",
+        "Test secret retrieval from applications",
+        "Document secret management procedures",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Azure Automation runbooks for secret rotation",
+        "Key Vault event grid notifications",
+        "Managed Identity automatic assignment",
+        "Terraform for Key Vault infrastructure",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Automation",
+        "Azure Blob Storage",
+        "Azure Key Vault",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics",
+        "Managed Identity"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-SVC-06": {
     "id": "KSI-SVC-06",
@@ -3023,7 +6387,65 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_06.py",
-    "class_name": "KSI_SVC_06_Analyzer"
+    "class_name": "KSI_SVC_06_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Azure Key Vault configuration",
+        "Secret rotation policies",
+        "Access policies or RBAC assignments",
+        "Audit logs for secret access",
+        "Managed Identity assignments",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Deploy Azure Key Vault with soft delete",
+        "Configure access policies or RBAC",
+        "Set up Managed Identities for applications",
+        "Implement secret rotation automation",
+        "Configure diagnostic logging for Key Vault",
+        "Test secret retrieval from applications",
+        "Document secret management procedures",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Azure Automation runbooks for secret rotation",
+        "Key Vault event grid notifications",
+        "Managed Identity automatic assignment",
+        "Terraform for Key Vault infrastructure"
+      ],
+      "azure_services": [
+        "Azure Automation",
+        "Azure Blob Storage",
+        "Azure Key Vault",
+        "Azure Key Vault integration",
+        "Azure Key Vault usage",
+        "Azure Monitor",
+        "Log Analytics",
+        "Managed Identity"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-SVC-07": {
     "id": "KSI-SVC-07",
@@ -3055,7 +6477,64 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_07.py",
-    "class_name": "KSI_SVC_07_Analyzer"
+    "class_name": "KSI_SVC_07_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Azure Key Vault configuration",
+        "Secret rotation policies",
+        "Access policies or RBAC assignments",
+        "Audit logs for secret access",
+        "Managed Identity assignments",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Deploy Azure Key Vault with soft delete",
+        "Configure access policies or RBAC",
+        "Set up Managed Identities for applications",
+        "Implement secret rotation automation",
+        "Configure diagnostic logging for Key Vault",
+        "Test secret retrieval from applications",
+        "Document secret management procedures",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Azure Automation runbooks for secret rotation",
+        "Key Vault event grid notifications",
+        "Managed Identity automatic assignment",
+        "Terraform for Key Vault infrastructure"
+      ],
+      "azure_services": [
+        "Azure Automation",
+        "Azure Blob Storage",
+        "Azure Key Vault",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics",
+        "Managed Identity"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-SVC-08": {
     "id": "KSI-SVC-08",
@@ -3078,7 +6557,64 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_08.py",
-    "class_name": "KSI_SVC_08_Analyzer"
+    "class_name": "KSI_SVC_08_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Azure Key Vault configuration",
+        "Secret rotation policies",
+        "Access policies or RBAC assignments",
+        "Audit logs for secret access",
+        "Managed Identity assignments"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Deploy Azure Key Vault with soft delete",
+        "Configure access policies or RBAC",
+        "Set up Managed Identities for applications",
+        "Implement secret rotation automation",
+        "Configure diagnostic logging for Key Vault",
+        "Test secret retrieval from applications",
+        "Document secret management procedures",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Azure Automation runbooks for secret rotation",
+        "Key Vault event grid notifications",
+        "Managed Identity automatic assignment",
+        "Terraform for Key Vault infrastructure",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Automation",
+        "Azure Blob Storage",
+        "Azure Key Vault",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics",
+        "Managed Identity"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-SVC-09": {
     "id": "KSI-SVC-09",
@@ -3105,7 +6641,64 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_09.py",
-    "class_name": "KSI_SVC_09_Analyzer"
+    "class_name": "KSI_SVC_09_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Azure Key Vault configuration",
+        "Secret rotation policies",
+        "Access policies or RBAC assignments",
+        "Audit logs for secret access",
+        "Managed Identity assignments"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Deploy Azure Key Vault with soft delete",
+        "Configure access policies or RBAC",
+        "Set up Managed Identities for applications",
+        "Implement secret rotation automation",
+        "Configure diagnostic logging for Key Vault",
+        "Test secret retrieval from applications",
+        "Document secret management procedures",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Azure Automation runbooks for secret rotation",
+        "Key Vault event grid notifications",
+        "Managed Identity automatic assignment",
+        "Terraform for Key Vault infrastructure",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Automation",
+        "Azure Blob Storage",
+        "Azure Key Vault",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics",
+        "Managed Identity"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-SVC-10": {
     "id": "KSI-SVC-10",
@@ -3132,7 +6725,64 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_10.py",
-    "class_name": "KSI_SVC_10_Analyzer"
+    "class_name": "KSI_SVC_10_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Azure Key Vault configuration",
+        "Secret rotation policies",
+        "Access policies or RBAC assignments",
+        "Audit logs for secret access",
+        "Managed Identity assignments"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Deploy Azure Key Vault with soft delete",
+        "Configure access policies or RBAC",
+        "Set up Managed Identities for applications",
+        "Implement secret rotation automation",
+        "Configure diagnostic logging for Key Vault",
+        "Test secret retrieval from applications",
+        "Document secret management procedures",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "Azure Automation runbooks for secret rotation",
+        "Key Vault event grid notifications",
+        "Managed Identity automatic assignment",
+        "Terraform for Key Vault infrastructure",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Automation",
+        "Azure Blob Storage",
+        "Azure Key Vault",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics",
+        "Managed Identity"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-TPR-01": {
     "id": "KSI-TPR-01",
@@ -3148,7 +6798,45 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_tpr_01.py",
-    "class_name": "KSI_TPR_01_Analyzer"
+    "class_name": "KSI_TPR_01_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-TPR-02": {
     "id": "KSI-TPR-02",
@@ -3164,7 +6852,45 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_tpr_02.py",
-    "class_name": "KSI_TPR_02_Analyzer"
+    "class_name": "KSI_TPR_02_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status",
+        "Standard Operating Procedures (SOPs)",
+        "Policy documentation with approval signatures",
+        "Process flowcharts or diagrams",
+        "Training materials for procedures"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Create Standard Operating Procedures (SOPs)",
+        "Get policy documentation approved by stakeholders",
+        "Train staff on new procedures",
+        "Set up periodic compliance reviews",
+        "Document evidence collection process"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics"
+      ],
+      "process_based": true,
+      "requires_documentation": true
+    }
   },
   "KSI-TPR-03": {
     "id": "KSI-TPR-03",
@@ -3224,7 +6950,45 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_tpr_03.py",
-    "class_name": "KSI_TPR_03_Analyzer"
+    "class_name": "KSI_TPR_03_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   },
   "KSI-TPR-04": {
     "id": "KSI-TPR-04",
@@ -3281,6 +7045,45 @@
     "related_ksis": [],
     "related_frrs": [],
     "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_tpr_04.py",
-    "class_name": "KSI_TPR_04_Analyzer"
+    "class_name": "KSI_TPR_04_Analyzer",
+    "guidance": {
+      "evidence_collection": [
+        "Configuration export from Azure Portal (JSON format)",
+        "Azure Policy compliance reports",
+        "Azure Monitor logs showing compliance status"
+      ],
+      "implementation_checklist": [
+        "Review FedRAMP 20x requirement documentation",
+        "Identify systems and resources in scope",
+        "Create resource group for FedRAMP resources",
+        "Set up Azure Key Vault for secrets management",
+        "Configure Log Analytics workspace",
+        "Generate infrastructure-as-code templates (Bicep/Terraform)",
+        "Deploy infrastructure via CI/CD pipeline",
+        "Implement automated compliance checking",
+        "Set up automated evidence collection",
+        "Test detection logic against sample code"
+      ],
+      "automation_opportunities": [
+        "Azure Policy for compliance enforcement",
+        "Azure Monitor for continuous monitoring",
+        "Log Analytics queries for compliance validation",
+        "Azure Functions for automated evidence collection",
+        "PowerShell/Azure CLI scripts for configuration auditing",
+        "CI/CD pipeline integration for compliance scanning",
+        "Pre-commit hooks for security validation",
+        "Automated pull request checks",
+        "Policy-as-code enforcement in deployment pipelines"
+      ],
+      "azure_services": [
+        "Azure Blob Storage",
+        "Azure Defender",
+        "Azure Monitor",
+        "Azure Pipelines",
+        "Log Analytics"
+      ],
+      "process_based": false,
+      "requires_documentation": false
+    }
   }
 }
