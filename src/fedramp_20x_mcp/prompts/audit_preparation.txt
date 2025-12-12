@@ -21,6 +21,13 @@ I'll help you prepare for your FedRAMP 20x assessment and audit.
 - [ ] FRR-FSI: FedRAMP Security Inbox Procedures
 - [ ] FRR-RSC: Re-Authorization Service Continuity Plan
 
+**FRR Evidence Collection:**
+Use FRR analysis tools to collect and validate evidence:
+- `analyze_frr_code` - Analyze code against specific FRR requirement
+- `get_frr_evidence_automation` - Get evidence automation recommendations for FRR
+- `analyze_frr_family` - Analyze entire FRR family for compliance
+- `get_frr_implementation_status` - Get implementation status summary
+
 **KSI Implementation Documents (72 total):**
 - [ ] All 72 KSI implementation procedures
 - [ ] Evidence collection methods for each KSI

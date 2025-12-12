@@ -12,6 +12,11 @@ I'll guide you through the FedRAMP 20x quarterly review process.
 - [ ] Review POA&M status
 - [ ] Collect evidence from Authorization Data Sharing API
 
+**FRR Compliance Review Tools:**
+- [ ] Run `analyze_all_frrs` to check compliance across all 199 FRRs
+- [ ] Use `list_frrs_by_family` to review VDR, CCM, ADS family status
+- [ ] Use `get_frr_implementation_status` to generate summary for quarterly report
+
 **Team Coordination**
 - [ ] Schedule review meeting with stakeholders
 - [ ] Notify authorizing agencies

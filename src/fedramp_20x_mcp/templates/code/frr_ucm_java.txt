@@ -1,0 +1,441 @@
+/*
+ * FRR-UCM Cryptographic Module Implementation (Java)
+ * 
+ * This module implements FedRAMP 20x FRR-UCM (Using Cryptographic Modules)
+ * requirements for FIPS 140-validated encryption, key management, and
+ * secure cryptographic operations.
+ * 
+ * FRR-UCM Requirements Implemented:
+ * - FRR-UCM-01: FIPS 140-2/140-3 validated cryptographic modules
+ * - FRR-UCM-02: Strong encryption for data at rest and in transit
+ * - FRR-UCM-03: Secure key generation and storage
+ * - FRR-UCM-04: Certificate and key lifecycle management
+ * 
+ * Related KSIs:
+ * - KSI-IAM-01: Identity and access management
+ * - KSI-CNA-01: Network security controls
+ * - KSI-PIY-01: Encryption at rest
+ * - KSI-PIY-02: Encryption in transit
+ * 
+ * Usage:
+ *   CryptoService cryptoService = new CryptoService(keyVaultUri, managedIdentityClientId);
+ *   byte[] encrypted = cryptoService.encryptData(plaintext, keyName);
+ *   byte[] decrypted = cryptoService.decryptData(encrypted, keyName);
+ */
+
+package com.contoso.fedramp.crypto;
+
+import com.azure.identity.DefaultAzureCredentialBuilder;
+import com.azure.security.keyvault.keys.KeyClient;
+import com.azure.security.keyvault.keys.KeyClientBuilder;
+import com.azure.security.keyvault.keys.cryptography.CryptographyClient;
+import com.azure.security.keyvault.keys.cryptography.CryptographyClientBuilder;
+import com.azure.security.keyvault.keys.cryptography.models.EncryptionAlgorithm;
+import com.azure.security.keyvault.keys.cryptography.models.EncryptResult;
+import com.azure.security.keyvault.keys.cryptography.models.DecryptResult;
+import com.azure.security.keyvault.keys.models.KeyType;
+import com.azure.security.keyvault.keys.models.KeyVaultKey;
+import com.azure.security.keyvault.keys.models.KeyProperties;
+import com.azure.security.keyvault.secrets.SecretClient;
+import com.azure.security.keyvault.secrets.SecretClientBuilder;
+
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.GCMParameterSpec;
+import java.security.*;
+import java.security.cert.X509Certificate;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Base64;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
+/**
+ * FRR-UCM Cryptographic Service Implementation
+ * 
+ * Provides FIPS 140-validated cryptographic operations using Azure Key Vault
+ * with HSM-backed keys per FedRAMP 20x requirements.
+ * 
+ * CRITICAL: This implementation uses Azure Key Vault Premium (HSM-backed)
+ * to meet FRR-UCM-01 FIPS 140-2 Level 2 validation requirements.
+ */
+public class CryptoService {
+    
+    private static final Logger LOGGER = Logger.getLogger(CryptoService.class.getName());
+    
+    // FRR-UCM-01: FIPS 140-2 validated algorithms
+    private static final EncryptionAlgorithm ENCRYPTION_ALGORITHM = EncryptionAlgorithm.RSA_OAEP_256;
+    private static final String AES_ALGORITHM = "AES/GCM/NoPadding";
+    private static final int AES_KEY_SIZE = 256;  // FRR-UCM-02: 256-bit encryption
+    private static final int GCM_TAG_LENGTH = 128;
+    private static final int GCM_IV_LENGTH = 12;
+    
+    // FRR-UCM-04: Key rotation schedule
+    private static final int KEY_ROTATION_DAYS = 90;
+    
+    private final KeyClient keyClient;
+    private final SecretClient secretClient;
+    private final String keyVaultUri;
+    
+    /**
+     * Initialize Cryptographic Service with Azure Key Vault
+     * 
+     * @param keyVaultUri Azure Key Vault URI (e.g., https://myvault.vault.azure.net/)
+     * @param managedIdentityClientId Optional managed identity client ID
+     */
+    public CryptoService(String keyVaultUri, String managedIdentityClientId) {
+        this.keyVaultUri = keyVaultUri;
+        
+        // FRR-UCM-03: Use managed identity for authentication (no stored credentials)
+        var credentialBuilder = new DefaultAzureCredentialBuilder();
+        if (managedIdentityClientId != null && !managedIdentityClientId.isEmpty()) {
+            credentialBuilder.managedIdentityClientId(managedIdentityClientId);
+        }
+        var credential = credentialBuilder.build();
+        
+        // Initialize Azure Key Vault clients
+        this.keyClient = new KeyClientBuilder()
+            .vaultUrl(keyVaultUri)
+            .credential(credential)
+            .buildClient();
+        
+        this.secretClient = new SecretClientBuilder()
+            .vaultUrl(keyVaultUri)
+            .credential(credential)
+            .buildClient();
+        
+        LOGGER.info("FRR-UCM Crypto Service initialized with Key Vault: " + keyVaultUri);
+    }
+    
+    /**
+     * Create RSA key pair in Azure Key Vault HSM (FRR-UCM-01, FRR-UCM-03)
+     * 
+     * Creates FIPS 140-2 validated RSA key pair with HSM protection.
+     * 
+     * @param keyName Unique key name
+     * @param keySize Key size in bits (2048, 3072, or 4096)
+     * @return KeyVaultKey reference
+     */
+    public KeyVaultKey createRsaKey(String keyName, int keySize) {
+        LOGGER.info(String.format("Creating RSA key '%s' with %d-bit key size", keyName, keySize));
+        
+        if (keySize < 2048) {
+            throw new IllegalArgumentException("FRR-UCM-02: Minimum key size is 2048 bits");
+        }
+        
+        try {
+            // Create HSM-backed RSA key (FIPS 140-2 validated)
+            var createKeyOptions = new com.azure.security.keyvault.keys.models.CreateRsaKeyOptions(keyName)
+                .setKeySize(keySize)
+                .setHardwareProtected(true)  // MANDATORY: HSM protection for FRR-UCM-01
+                .setExpiresOn(Instant.now().plus(KEY_ROTATION_DAYS, ChronoUnit.DAYS).atOffset(java.time.ZoneOffset.UTC))
+                .setEnabled(true);
+            
+            KeyVaultKey key = keyClient.createRsaKey(createKeyOptions);
+            
+            LOGGER.info(String.format("RSA key created: %s (HSM-backed)", key.getId()));
+            return key;
+            
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Failed to create RSA key", e);
+            throw new RuntimeException("FRR-UCM-03: Key creation failed", e);
+        }
+    }
+    
+    /**
+     * Encrypt data using Azure Key Vault HSM-backed key (FRR-UCM-01, FRR-UCM-02)
+     * 
+     * Uses FIPS 140-2 validated RSA-OAEP-256 algorithm for encryption.
+     * 
+     * @param plaintext Data to encrypt
+     * @param keyName Key Vault key name
+     * @return Encrypted data (base64 encoded)
+     */
+    public String encryptData(byte[] plaintext, String keyName) {
+        LOGGER.info("Encrypting data with key: " + keyName);
+        
+        try {
+            // Create cryptography client for key
+            CryptographyClient cryptoClient = new CryptographyClientBuilder()
+                .credential(new DefaultAzureCredentialBuilder().build())
+                .keyIdentifier(keyClient.getKey(keyName).getId())
+                .buildClient();
+            
+            // FRR-UCM-02: Use RSA-OAEP-256 (FIPS 140-2 approved)
+            EncryptResult encryptResult = cryptoClient.encrypt(ENCRYPTION_ALGORITHM, plaintext);
+            
+            String encrypted = Base64.getEncoder().encodeToString(encryptResult.getCipherText());
+            LOGGER.info("Data encrypted successfully");
+            
+            return encrypted;
+            
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Encryption failed", e);
+            throw new RuntimeException("FRR-UCM-02: Encryption operation failed", e);
+        }
+    }
+    
+    /**
+     * Decrypt data using Azure Key Vault HSM-backed key (FRR-UCM-01, FRR-UCM-02)
+     * 
+     * Uses FIPS 140-2 validated RSA-OAEP-256 algorithm for decryption.
+     * 
+     * @param encryptedData Encrypted data (base64 encoded)
+     * @param keyName Key Vault key name
+     * @return Decrypted plaintext
+     */
+    public byte[] decryptData(String encryptedData, String keyName) {
+        LOGGER.info("Decrypting data with key: " + keyName);
+        
+        try {
+            byte[] ciphertext = Base64.getDecoder().decode(encryptedData);
+            
+            // Create cryptography client for key
+            CryptographyClient cryptoClient = new CryptographyClientBuilder()
+                .credential(new DefaultAzureCredentialBuilder().build())
+                .keyIdentifier(keyClient.getKey(keyName).getId())
+                .buildClient();
+            
+            // FRR-UCM-02: Use RSA-OAEP-256 (FIPS 140-2 approved)
+            DecryptResult decryptResult = cryptoClient.decrypt(ENCRYPTION_ALGORITHM, ciphertext);
+            
+            LOGGER.info("Data decrypted successfully");
+            return decryptResult.getPlainText();
+            
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Decryption failed", e);
+            throw new RuntimeException("FRR-UCM-02: Decryption operation failed", e);
+        }
+    }
+    
+    /**
+     * Generate AES-256 key for envelope encryption (FRR-UCM-02, FRR-UCM-03)
+     * 
+     * Generates FIPS 140-2 validated AES-256 key using secure random generator.
+     * Key is stored in Azure Key Vault for secure management.
+     * 
+     * @param keyName Secret name for AES key storage
+     * @return Base64-encoded AES key
+     */
+    public String generateAesKey(String keyName) {
+        LOGGER.info("Generating AES-256 key: " + keyName);
+        
+        try {
+            // FRR-UCM-02: Generate 256-bit AES key (FIPS 140-2 approved)
+            KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+            keyGen.init(AES_KEY_SIZE, SecureRandom.getInstanceStrong());
+            SecretKey aesKey = keyGen.generateKey();
+            
+            String encodedKey = Base64.getEncoder().encodeToString(aesKey.getEncoded());
+            
+            // FRR-UCM-03: Store AES key in Key Vault (encrypted with HSM-backed key)
+            secretClient.setSecret(keyName, encodedKey);
+            
+            LOGGER.info("AES-256 key generated and stored in Key Vault");
+            return encodedKey;
+            
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "AES key generation failed", e);
+            throw new RuntimeException("FRR-UCM-03: Key generation failed", e);
+        }
+    }
+    
+    /**
+     * Encrypt data with AES-256-GCM (FRR-UCM-02)
+     * 
+     * Uses FIPS 140-2 validated AES-256 in GCM mode for authenticated encryption.
+     * Provides confidentiality and integrity protection.
+     * 
+     * @param plaintext Data to encrypt
+     * @param aesKeyName Key Vault secret name containing AES key
+     * @return Encrypted data with IV (format: IV:CIPHERTEXT, base64 encoded)
+     */
+    public String encryptWithAes(byte[] plaintext, String aesKeyName) {
+        LOGGER.info("Encrypting data with AES-256-GCM");
+        
+        try {
+            // Retrieve AES key from Key Vault
+            String encodedKey = secretClient.getSecret(aesKeyName).getValue();
+            byte[] keyBytes = Base64.getDecoder().decode(encodedKey);
+            SecretKey aesKey = new javax.crypto.spec.SecretKeySpec(keyBytes, "AES");
+            
+            // Generate random IV (FRR-UCM-02: IV must be unique per encryption)
+            byte[] iv = new byte[GCM_IV_LENGTH];
+            SecureRandom.getInstanceStrong().nextBytes(iv);
+            
+            // FRR-UCM-02: AES-256-GCM (FIPS 140-2 approved)
+            Cipher cipher = Cipher.getInstance(AES_ALGORITHM);
+            GCMParameterSpec gcmSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
+            cipher.init(Cipher.ENCRYPT_MODE, aesKey, gcmSpec);
+            
+            byte[] ciphertext = cipher.doFinal(plaintext);
+            
+            // Combine IV and ciphertext for storage
+            String ivBase64 = Base64.getEncoder().encodeToString(iv);
+            String ciphertextBase64 = Base64.getEncoder().encodeToString(ciphertext);
+            
+            LOGGER.info("AES-256-GCM encryption successful");
+            return ivBase64 + ":" + ciphertextBase64;
+            
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "AES encryption failed", e);
+            throw new RuntimeException("FRR-UCM-02: AES encryption failed", e);
+        }
+    }
+    
+    /**
+     * Decrypt data with AES-256-GCM (FRR-UCM-02)
+     * 
+     * @param encryptedData Encrypted data with IV (format: IV:CIPHERTEXT, base64 encoded)
+     * @param aesKeyName Key Vault secret name containing AES key
+     * @return Decrypted plaintext
+     */
+    public byte[] decryptWithAes(String encryptedData, String aesKeyName) {
+        LOGGER.info("Decrypting data with AES-256-GCM");
+        
+        try {
+            // Parse IV and ciphertext
+            String[] parts = encryptedData.split(":");
+            if (parts.length != 2) {
+                throw new IllegalArgumentException("Invalid encrypted data format");
+            }
+            
+            byte[] iv = Base64.getDecoder().decode(parts[0]);
+            byte[] ciphertext = Base64.getDecoder().decode(parts[1]);
+            
+            // Retrieve AES key from Key Vault
+            String encodedKey = secretClient.getSecret(aesKeyName).getValue();
+            byte[] keyBytes = Base64.getDecoder().decode(encodedKey);
+            SecretKey aesKey = new javax.crypto.spec.SecretKeySpec(keyBytes, "AES");
+            
+            // FRR-UCM-02: AES-256-GCM (FIPS 140-2 approved)
+            Cipher cipher = Cipher.getInstance(AES_ALGORITHM);
+            GCMParameterSpec gcmSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
+            cipher.init(Cipher.DECRYPT_MODE, aesKey, gcmSpec);
+            
+            byte[] plaintext = cipher.doFinal(ciphertext);
+            
+            LOGGER.info("AES-256-GCM decryption successful");
+            return plaintext;
+            
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "AES decryption failed", e);
+            throw new RuntimeException("FRR-UCM-02: AES decryption failed", e);
+        }
+    }
+    
+    /**
+     * Check if key requires rotation (FRR-UCM-04)
+     * 
+     * FRR-UCM-04 requires periodic key rotation (recommended: 90 days).
+     * 
+     * @param keyName Key name to check
+     * @return true if key is approaching expiration or expired
+     */
+    public boolean requiresKeyRotation(String keyName) {
+        try {
+            KeyVaultKey key = keyClient.getKey(keyName);
+            KeyProperties properties = key.getProperties();
+            
+            if (properties.getExpiresOn() == null) {
+                LOGGER.warning("Key has no expiration date set");
+                return true;
+            }
+            
+            Instant expiryDate = properties.getExpiresOn().toInstant();
+            Instant now = Instant.now();
+            long daysUntilExpiry = ChronoUnit.DAYS.between(now, expiryDate);
+            
+            // Rotate if less than 7 days until expiration
+            boolean needsRotation = daysUntilExpiry < 7;
+            
+            if (needsRotation) {
+                LOGGER.warning(String.format("Key '%s' requires rotation (%d days until expiry)", 
+                    keyName, daysUntilExpiry));
+            }
+            
+            return needsRotation;
+            
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Failed to check key rotation status", e);
+            return true;  // Assume rotation needed on error
+        }
+    }
+    
+    /**
+     * Rotate encryption key (FRR-UCM-04)
+     * 
+     * Creates new key version and updates key expiration per FRR-UCM-04.
+     * 
+     * @param keyName Key name to rotate
+     * @return New key version
+     */
+    public KeyVaultKey rotateKey(String keyName) {
+        LOGGER.info("Rotating key: " + keyName);
+        
+        try {
+            // Create new key version with updated expiration
+            var rotateKeyOptions = new com.azure.security.keyvault.keys.models.CreateRsaKeyOptions(keyName)
+                .setKeySize(4096)
+                .setHardwareProtected(true)
+                .setExpiresOn(Instant.now().plus(KEY_ROTATION_DAYS, ChronoUnit.DAYS).atOffset(java.time.ZoneOffset.UTC))
+                .setEnabled(true);
+            
+            KeyVaultKey newKey = keyClient.createRsaKey(rotateKeyOptions);
+            
+            LOGGER.info(String.format("Key rotated successfully: %s (new version: %s)", 
+                keyName, newKey.getProperties().getVersion()));
+            
+            return newKey;
+            
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Key rotation failed", e);
+            throw new RuntimeException("FRR-UCM-04: Key rotation failed", e);
+        }
+    }
+    
+    /**
+     * Main method for testing and examples
+     */
+    public static void main(String[] args) {
+        // Configuration
+        String keyVaultUri = System.getenv("KEY_VAULT_URI");
+        String managedIdentityClientId = System.getenv("MANAGED_IDENTITY_CLIENT_ID");
+        
+        if (keyVaultUri == null || keyVaultUri.isEmpty()) {
+            LOGGER.severe("KEY_VAULT_URI environment variable not set");
+            return;
+        }
+        
+        // Initialize crypto service
+        CryptoService cryptoService = new CryptoService(keyVaultUri, managedIdentityClientId);
+        
+        // Example: Create RSA key pair (FRR-UCM-01, FRR-UCM-03)
+        String rsaKeyName = "fedramp-encryption-key";
+        KeyVaultKey rsaKey = cryptoService.createRsaKey(rsaKeyName, 4096);
+        LOGGER.info("RSA key created: " + rsaKey.getName());
+        
+        // Example: Encrypt/decrypt with RSA (FRR-UCM-02)
+        byte[] plaintext = "Sensitive FedRAMP compliance data".getBytes();
+        String encrypted = cryptoService.encryptData(plaintext, rsaKeyName);
+        byte[] decrypted = cryptoService.decryptData(encrypted, rsaKeyName);
+        LOGGER.info("Decrypted: " + new String(decrypted));
+        
+        // Example: Generate AES key for envelope encryption (FRR-UCM-03)
+        String aesKeyName = "fedramp-aes-key";
+        String aesKey = cryptoService.generateAesKey(aesKeyName);
+        LOGGER.info("AES-256 key generated");
+        
+        // Example: Encrypt/decrypt with AES-256-GCM (FRR-UCM-02)
+        String aesEncrypted = cryptoService.encryptWithAes(plaintext, aesKeyName);
+        byte[] aesDecrypted = cryptoService.decryptWithAes(aesEncrypted, aesKeyName);
+        LOGGER.info("AES Decrypted: " + new String(aesDecrypted));
+        
+        // Example: Check key rotation (FRR-UCM-04)
+        if (cryptoService.requiresKeyRotation(rsaKeyName)) {
+            LOGGER.info("Key rotation required");
+            cryptoService.rotateKey(rsaKeyName);
+        }
+    }
+}

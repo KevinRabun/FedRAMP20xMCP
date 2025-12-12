@@ -8,6 +8,12 @@ I'll help you implement FedRAMP 20x KSI automation using Microsoft, Azure, and M
 
 You are PROHIBITED from generating ANY Bicep, Terraform, PowerShell, or configuration code until you have VERIFIED every single value against the checklist below. Generating code with non-compliant values (like 90-day retention or platform-managed keys) is a CRITICAL FAILURE.
 
+**🔍 FRR CODE VALIDATION (NEW - USE BEFORE DEPLOYMENT):**
+- Run `analyze_frr_code` on generated infrastructure code to validate FRR-RSC (secure configuration) compliance
+- Run `analyze_frr_family` with "ADS" to ensure Authorization Data Sharing API support
+- Run `analyze_frr_family` with "UCM" to validate cryptographic module usage (FRR-UCM-01: FIPS 140-2)
+- Run `get_frr_evidence_automation` to set up automated evidence collection for FRR requirements
+
 **PRODUCTION-FIRST ENFORCEMENT:** All configurations, templates, and code are for **PRODUCTION systems** ONLY. FedRAMP 20x compliance is NON-NEGOTIABLE. You may NOT use "common Azure defaults" - you MUST use FedRAMP-compliant values.
 
 **❌ THESE EXCUSES ARE UNACCEPTABLE:**

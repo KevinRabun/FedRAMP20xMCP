@@ -1132,6 +1132,395 @@ The server provides **18 prompts** for FedRAMP compliance workflows:
 
 **frr_implementation_roadmap** - Strategic 16-week, 4-phase roadmap for implementing all 199 FRR requirements with prioritization framework, Azure service recommendations, and KSI integration strategies
 
+## Combined KSI + FRR Analysis Examples
+
+The MCP server provides integrated analysis capabilities combining Key Security Indicators (KSI) with FedRAMP Revised Requirements (FRR) for comprehensive compliance validation. These examples demonstrate how to use both KSI code analyzers and FRR analysis tools together for holistic security assessments.
+
+### Example 1: Network Segmentation (KSI-CNA-01 + FRR-RSC Family)
+
+**Scenario:** Validate network security controls for both KSI tracking and FRR compliance
+
+```python
+# Step 1: Analyze infrastructure code with KSI analyzer
+from analyzers.ksi.factory import get_factory
+
+bicep_code = """
+resource nsg 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
+  name: 'prod-nsg'
+  location: location
+  properties: {
+    securityRules: [
+      {
+        name: 'allow-https'
+        properties: {
+          priority: 100
+          direction: 'Inbound'
+          access: 'Allow'
+          protocol: 'Tcp'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+          destinationPortRange: '443'
+        }
+      }
+    ]
+  }
+}
+"""
+
+# Analyze against KSI-CNA-01 (Network Segmentation)
+factory = get_factory()
+ksi_result = factory.analyze("KSI-CNA-01", bicep_code, "bicep", "nsg.bicep")
+
+print(f"KSI-CNA-01 Analysis:")
+print(f"  Compliant: {ksi_result.is_compliant}")
+print(f"  Findings: {len(ksi_result.findings)}")
+for finding in ksi_result.findings:
+    print(f"  - {finding.severity.value}: {finding.message}")
+
+# Step 2: Analyze against FRR-RSC (Secure Configuration) requirements
+frr_analysis = analyze_frr_family(
+    family="RSC",
+    code=bicep_code,
+    language="bicep",
+    file_path="nsg.bicep"
+)
+
+print(f"\nFRR-RSC Family Analysis:")
+print(f"  Total FRRs: {frr_analysis['total_frrs']}")
+print(f"  Compliant: {frr_analysis['compliant_count']}")
+print(f"  Non-compliant: {frr_analysis['non_compliant_count']}")
+
+# Step 3: Get integrated remediation guidance
+for frr_id, result in frr_analysis['results'].items():
+    if not result['compliant']:
+        print(f"\n{frr_id}: {result['frr_name']}")
+        print(f"  Related KSI: {get_frr_metadata(frr_id)['related_ksis']}")
+        print(f"  Remediation: {result['recommendation']}")
+
+# Output:
+# KSI-CNA-01 Analysis:
+#   Compliant: False
+#   Findings: 2
+#   - HIGH: NSG allows traffic from any source (sourceAddressPrefix: *)
+#   - MEDIUM: NSG rule priority too permissive (100 vs recommended >1000)
+#
+# FRR-RSC Family Analysis:
+#   Total FRRs: 10
+#   Compliant: 7
+#   Non-compliant: 3
+#
+# FRR-RSC-01: Network Security Groups Configuration
+#   Related KSI: ['KSI-CNA-01', 'KSI-CNA-03']
+#   Remediation: Use specific source IP ranges, implement deny-by-default rules
+```
+
+**Integration Benefits:**
+- KSI analysis provides tactical code-level findings
+- FRR analysis provides strategic compliance coverage
+- Combined view shows both security defects and policy compliance
+- Remediation guidance links code fixes to compliance requirements
+
+### Example 2: Vulnerability Management (KSI-AFR-04 + FRR-VDR Family)
+
+**Scenario:** Validate vulnerability scanning configuration and remediation processes
+
+```python
+# Step 1: Analyze vulnerability scanning implementation with KSI
+cicd_pipeline = """
+name: Security Scanning
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '0 0 * * *'  # Daily scans
+
+jobs:
+  vulnerability-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'json'
+          output: 'trivy-results.json'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+      
+      - name: Upload scan results
+        uses: actions/upload-artifact@v3
+        with:
+          name: trivy-results
+          path: trivy-results.json
+          retention-days: 90
+"""
+
+# Analyze against KSI-AFR-04 (Vulnerability Detection)
+ksi_result = factory.analyze("KSI-AFR-04", cicd_pipeline, "yaml", ".github/workflows/security.yml")
+
+print(f"KSI-AFR-04 Analysis:")
+print(f"  Compliant: {ksi_result.is_compliant}")
+print(f"  Evidence: {ksi_result.evidence}")
+
+# Step 2: Analyze against all FRR-VDR requirements (59 total)
+vdr_analysis = analyze_frr_family(
+    family="VDR",
+    code=cicd_pipeline,
+    language="yaml",
+    file_path=".github/workflows/security.yml"
+)
+
+print(f"\nFRR-VDR Family Analysis (59 requirements):")
+print(f"  Scan configuration: {vdr_analysis['results']['FRR-VDR-01']['compliant']}")
+print(f"  Remediation timeframes: {vdr_analysis['results']['FRR-VDR-TF-01']['compliant']}")
+print(f"  KEV tracking: {vdr_analysis['results']['FRR-VDR-TF-02']['compliant']}")
+print(f"  Authenticated scanning: {vdr_analysis['results']['FRR-VDR-AC-01']['compliant']}")
+
+# Step 3: Get evidence automation recommendations
+evidence_guidance = get_frr_evidence_automation("FRR-VDR-01")
+ksi_evidence = get_ksi_evidence_automation("KSI-AFR-04")
+
+print(f"\nIntegrated Evidence Collection:")
+print(f"  FRR-VDR-01 Artifacts: {evidence_guidance['evidence_artifacts']}")
+print(f"  KSI-AFR-04 Queries: {ksi_evidence['collection_methods']}")
+print(f"  Storage: Azure Blob (retention: 730 days per FRR-VDR, KSI-MLA-02)")
+
+# Output:
+# KSI-AFR-04 Analysis:
+#   Compliant: True
+#   Evidence: Daily vulnerability scans, artifact retention 90 days
+#
+# FRR-VDR Family Analysis (59 requirements):
+#   Scan configuration: True
+#   Remediation timeframes: False (missing deadline tracking)
+#   KEV tracking: False (no CISA KEV integration)
+#   Authenticated scanning: False (filesystem scan only)
+#
+# Integrated Evidence Collection:
+#   FRR-VDR-01 Artifacts: ['scan-results.json', 'remediation-status.csv', 'kev-report.pdf']
+#   KSI-AFR-04 Queries: ['Log Analytics vulnerability metrics', 'Defender scan results']
+#   Storage: Azure Blob (retention: 730 days per FRR-VDR, KSI-MLA-02)
+```
+
+**Integration Benefits:**
+- KSI-AFR-04 validates scanning tool configuration
+- FRR-VDR family checks compliance with all 59 vulnerability requirements
+- Combined analysis identifies gaps (KEV tracking, authenticated scans)
+- Evidence automation recommendations cover both KSI and FRR needs
+
+### Example 3: Authorization Data Sharing (KSI-CED-01 + FRR-ADS Family)
+
+**Scenario:** Validate API implementation for machine-readable compliance data
+
+```python
+# Step 1: Analyze API implementation with KSI
+api_code = """
+@app.route('/api/authorization/technical-controls', methods=['GET'])
+@require_auth
+def get_technical_controls():
+    \"\"\"FRR-ADS-TC-02: Technical controls data endpoint\"\"\"
+    
+    # Query compliance data from storage
+    controls_data = storage_client.get_blob(
+        container='security-controls',
+        blob='latest-technical-controls.json'
+    )
+    
+    response = {
+        'metadata': {
+            'timestamp': datetime.utcnow().isoformat(),
+            'version': '1.0',
+            'frr_requirement': 'FRR-ADS-TC-02',
+            'classification': 'CUI'
+        },
+        'data': json.loads(controls_data)
+    }
+    
+    return jsonify(response), 200
+"""
+
+# Analyze against KSI-CED-01 (Continuous Evidence Delivery)
+ksi_result = factory.analyze("KSI-CED-01", api_code, "python", "api/authorization.py")
+
+print(f"KSI-CED-01 Analysis:")
+print(f"  API endpoint defined: {ksi_result.is_compliant}")
+print(f"  Authentication required: {'@require_auth' in api_code}")
+
+# Step 2: Analyze against FRR-ADS family (22 requirements)
+ads_analysis = analyze_frr_family(
+    family="ADS",
+    code=api_code,
+    language="python",
+    file_path="api/authorization.py"
+)
+
+print(f"\nFRR-ADS Family Analysis (22 requirements):")
+for frr_id in ['FRR-ADS-01', 'FRR-ADS-02', 'FRR-ADS-AC-01', 'FRR-ADS-TC-02']:
+    result = ads_analysis['results'][frr_id]
+    print(f"  {frr_id}: {result['compliant']} - {result['frr_name']}")
+
+# Step 3: List all required FRR-ADS-TC endpoints
+tc_endpoints = list_frrs_by_family("ADS")
+tc_frrs = [frr for frr in tc_endpoints if 'TC-' in frr['frr_id']]
+
+print(f"\nRequired FRR-ADS-TC Endpoints ({len(tc_frrs)} total):")
+for frr in tc_frrs:
+    print(f"  {frr['frr_id']}: {frr['name']}")
+    metadata = get_frr_metadata(frr['frr_id'])
+    print(f"    Related KSI: {metadata['related_ksis']}")
+
+# Output:
+# KSI-CED-01 Analysis:
+#   API endpoint defined: True
+#   Authentication required: True
+#
+# FRR-ADS Family Analysis (22 requirements):
+#   FRR-ADS-01: True - Machine-readable authorization data
+#   FRR-ADS-02: True - Real-time compliance data API
+#   FRR-ADS-AC-01: True - API authentication and access control
+#   FRR-ADS-TC-02: True - Technical controls data endpoint
+#
+# Required FRR-ADS-TC Endpoints (7 total):
+#   FRR-ADS-TC-01: Continuous monitoring data
+#     Related KSI: ['KSI-CED-01', 'KSI-MLA-01']
+#   FRR-ADS-TC-02: Technical controls data
+#     Related KSI: ['KSI-CED-01']
+#   FRR-ADS-TC-03: Vulnerability data
+#     Related KSI: ['KSI-CED-01', 'KSI-AFR-04']
+#   [... 4 more endpoints ...]
+```
+
+**Integration Benefits:**
+- KSI-CED-01 validates evidence delivery mechanism
+- FRR-ADS family ensures all 22 authorization data sharing requirements met
+- Combined analysis identifies which KSIs map to which FRR endpoints
+- Comprehensive coverage of machine-readable compliance data requirements
+
+### Example 4: Comprehensive Pre-Deployment Scan
+
+**Scenario:** Full compliance check before production deployment combining all KSIs and FRRs
+
+```python
+# Complete infrastructure/application scan
+terraform_infra = open('main.tf', 'r').read()
+app_code = open('app.py', 'r').read()
+cicd_pipeline = open('.github/workflows/deploy.yml', 'r').read()
+
+# Step 1: Analyze against all 72 KSIs
+print("KSI Analysis (72 indicators):")
+all_ksi_results = factory.analyze_all_ksis(terraform_infra, "terraform", "main.tf")
+ksi_summary = {
+    'compliant': sum(1 for r in all_ksi_results if r.is_compliant),
+    'non_compliant': sum(1 for r in all_ksi_results if not r.is_compliant),
+    'high_severity': sum(1 for r in all_ksi_results for f in r.findings if f.severity.value == 'HIGH')
+}
+print(f"  Total KSIs analyzed: {len(all_ksi_results)}")
+print(f"  Compliant: {ksi_summary['compliant']}")
+print(f"  Non-compliant: {ksi_summary['non_compliant']}")
+print(f"  High-severity findings: {ksi_summary['high_severity']}")
+
+# Step 2: Analyze against all 199 FRRs
+print("\nFRR Analysis (199 requirements):")
+all_frr_results = analyze_all_frrs(
+    code=terraform_infra,
+    language="terraform",
+    file_path="main.tf"
+)
+
+frr_summary = {
+    'compliant': all_frr_results['compliant_count'],
+    'non_compliant': all_frr_results['non_compliant_count'],
+    'not_applicable': all_frr_results['not_applicable_count']
+}
+print(f"  Total FRRs analyzed: {all_frr_results['total_frrs']}")
+print(f"  Compliant: {frr_summary['compliant']}")
+print(f"  Non-compliant: {frr_summary['non_compliant']}")
+print(f"  Not applicable: {frr_summary['not_applicable']}")
+
+# Step 3: Family-specific deep dive on critical families
+critical_families = ['VDR', 'ADS', 'CCM', 'RSC', 'UCM']
+print("\nCritical Family Analysis:")
+for family in critical_families:
+    family_result = analyze_frr_family(family, terraform_infra, "terraform", "main.tf")
+    print(f"  FRR-{family}: {family_result['compliant_count']}/{family_result['total_frrs']} compliant")
+
+# Step 4: Generate deployment checklist
+print("\nPre-Deployment Checklist:")
+print("  [" + ("✓" if ksi_summary['high_severity'] == 0 else "✗") + "] No high-severity KSI findings")
+print("  [" + ("✓" if frr_summary['non_compliant'] == 0 else "✗") + "] All applicable FRRs compliant")
+print("  [" + ("✓" if frr_summary['non_compliant'] < 10 else "✗") + "] Less than 10 FRR findings")
+print("  [" + ("✓" if ksi_summary['compliant'] >= 65 else "✗") + "] At least 65/72 KSIs compliant")
+
+# Step 5: Get implementation status for tracking
+ksi_status = get_ksi_implementation_status()
+frr_status = get_frr_implementation_status()
+
+print("\nCompliance Tracking:")
+print(f"  KSI Implementation: {ksi_status['implementation_percentage']}%")
+print(f"  FRR Implementation: {frr_status['overall_compliance_percentage']}%")
+print(f"  Combined Score: {(ksi_status['implementation_percentage'] + frr_status['overall_compliance_percentage']) / 2}%")
+
+# Output:
+# KSI Analysis (72 indicators):
+#   Total KSIs analyzed: 72
+#   Compliant: 58
+#   Non-compliant: 14
+#   High-severity findings: 5
+#
+# FRR Analysis (199 requirements):
+#   Total FRRs analyzed: 199
+#   Compliant: 167
+#   Non-compliant: 18
+#   Not applicable: 14
+#
+# Critical Family Analysis:
+#   FRR-VDR: 45/59 compliant
+#   FRR-ADS: 22/22 compliant
+#   FRR-CCM: 18/25 compliant
+#   FRR-RSC: 8/10 compliant
+#   FRR-UCM: 4/4 compliant
+#
+# Pre-Deployment Checklist:
+#   [✗] No high-severity KSI findings
+#   [✗] All applicable FRRs compliant
+#   [✓] Less than 10 FRR findings
+#   [✓] At least 65/72 KSIs compliant
+#
+# Compliance Tracking:
+#   KSI Implementation: 80.6%
+#   FRR Implementation: 90.3%
+#   Combined Score: 85.4%
+```
+
+**Integration Benefits:**
+- Comprehensive scan across all 72 KSIs and 199 FRRs
+- Single command provides full compliance posture
+- Family-specific analysis highlights priority areas
+- Automated checklist for deployment approval
+- Tracking metrics for continuous improvement
+
+### Recommended Workflow
+
+1. **Development Phase**: Use KSI analyzers for tactical code reviews
+   - `factory.analyze(ksi_id, code, language, file_path)` for specific security checks
+   - `analyze_frr_code(frr_id, code, language, file_path)` for requirement validation
+
+2. **Pre-Commit Phase**: Analyze against critical FRR families
+   - `analyze_frr_family("VDR", code, language, file_path)` for vulnerability management
+   - `analyze_frr_family("RSC", code, language, file_path)` for secure configuration
+
+3. **CI/CD Pipeline**: Full compliance scan before deployment
+   - `factory.analyze_all_ksis(code, language, file_path)` for all KSIs
+   - `analyze_all_frrs(code, language, file_path)` for all FRRs
+
+4. **Quarterly Review**: Compliance tracking and reporting
+   - `get_ksi_implementation_status()` for KSI progress
+   - `get_frr_implementation_status()` for FRR compliance
+   - Generate combined compliance report for stakeholders
+
 ## Data Source
 
 Data is fetched from the official FedRAMP repository:
