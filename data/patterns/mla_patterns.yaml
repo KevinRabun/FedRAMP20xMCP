@@ -1,0 +1,485 @@
+# MLA (Monitoring, Logging, and Alerting) Pattern Library
+
+# Centralized Logging Patterns (KSI-MLA-01)
+
+---
+pattern_id: "mla.logging.local_file"
+name: "Local File Logging"
+description: "Detects logging to local files instead of centralized SIEM"
+family: "MLA"
+severity: "HIGH"
+pattern_type: "function_call"
+
+languages:
+  python:
+    ast_queries:
+      - query_type: "function_call"
+        target: "FileHandler"
+        module: "logging"
+      - query_type: "function_call"
+        target: "basicConfig"
+        conditions:
+          - "has_keyword_arg:filename"
+      - query_type: "function_call"
+        target: "open"
+        conditions:
+          - "arg_contains:.log"
+    regex_fallback: "FileHandler\\(|basicConfig\\(.*filename|open\\(['\"][^'\"]*\\.log"
+    negative_indicators: ["FileHandler", "basicConfig(filename=", ".log"]
+    
+  csharp:
+    ast_queries:
+      - query_type: "object_creation"
+        target: "FileLoggerProvider"
+      - query_type: "method_call"
+        target: "AddFile"
+        context: "logging"
+    regex_fallback: "new\\s+FileLoggerProvider|AddFile\\("
+    
+  java:
+    ast_queries:
+      - query_type: "object_creation"
+        target: "FileAppender"
+      - query_type: "object_creation"
+        target: "RollingFileAppender"
+    regex_fallback: "FileAppender|RollingFileAppender"
+
+finding:
+  title_template: "Local file logging detected"
+  description_template: "Application logs to local files. KSI-MLA-01 requires centralized logging to SIEM (Azure Monitor, Sentinel, Splunk)."
+  remediation_template: |
+    Migrate to centralized logging:
+    
+    Python (Azure Monitor):
+    from opencensus.ext.azure.log_exporter import AzureLogHandler
+    logger.addHandler(AzureLogHandler(connection_string='InstrumentationKey=...'))
+    
+    C# (Application Insights):
+    services.AddApplicationInsightsTelemetry();
+    
+    Configuration:
+    - Send logs to Azure Log Analytics workspace
+    - Configure log retention (90+ days for FedRAMP)
+    - Set up alerts for security events
+  evidence_collection:
+    - "Azure Monitor workspace configuration"
+    - "Log retention policy documentation"
+    - "SIEM integration architecture diagram"
+  azure_services:
+    - "Azure Monitor"
+    - "Azure Log Analytics"
+    - "Microsoft Sentinel"
+
+requires_absence: ["mla.logging.azure_monitor", "mla.logging.siem_integration"]
+tags: ["logging", "siem", "critical-gap"]
+nist_controls: ["au-3", "au-6", "au-12"]
+related_ksis: ["KSI-MLA-01"]
+
+---
+pattern_id: "mla.logging.azure_monitor"
+name: "Azure Monitor Integration"
+description: "Detects Azure Monitor logging integration"
+family: "MLA"
+severity: "INFO"
+pattern_type: "import"
+
+languages:
+  python:
+    ast_queries:
+      - query_type: "import_statement"
+        target: "opencensus.ext.azure"
+      - query_type: "import_statement"
+        target: "azure.monitor"
+    regex_fallback: "from\\s+opencensus\\.ext\\.azure|from\\s+azure\\.monitor"
+    positive_indicators: ["opencensus.ext.azure", "azure.monitor"]
+    
+  csharp:
+    ast_queries:
+      - query_type: "using_directive"
+        target: "Microsoft.ApplicationInsights"
+      - query_type: "using_directive"
+        target: "Microsoft.Extensions.Logging.ApplicationInsights"
+    regex_fallback: "using\\s+Microsoft\\.ApplicationInsights"
+    positive_indicators: ["ApplicationInsights"]
+    
+  typescript:
+    ast_queries:
+      - query_type: "import_statement"
+        target: "@azure/monitor"
+      - query_type: "import_statement"
+        target: "applicationinsights"
+    regex_fallback: "import.*@azure/monitor|import.*applicationinsights"
+
+finding:
+  title_template: "Azure Monitor integration detected"
+  description_template: "Application uses Azure Monitor for centralized logging. Verify Log Analytics workspace configuration."
+  remediation_template: "N/A - Positive finding. Ensure logs are sent to long-term retention (90+ days)."
+
+tags: ["logging", "azure-monitor", "positive"]
+nist_controls: ["au-3", "au-6", "au-12"]
+related_ksis: ["KSI-MLA-01"]
+
+---
+pattern_id: "mla.logging.siem_integration"
+name: "SIEM Integration"
+description: "Detects SIEM integrations (Splunk, Sentinel, etc.)"
+family: "MLA"
+severity: "INFO"
+pattern_type: "import"
+
+languages:
+  python:
+    ast_queries:
+      - query_type: "import_statement"
+        target: "splunk"
+      - query_type: "import_statement"
+        target: "azure.mgmt.securityinsight"
+    regex_fallback: "import\\s+splunk|from\\s+azure\\.mgmt\\.securityinsight"
+    positive_indicators: ["splunk", "securityinsight", "sentinel"]
+    
+  csharp:
+    ast_queries:
+      - query_type: "using_directive"
+        target: "Microsoft.Azure.SecurityInsights"
+    regex_fallback: "using\\s+.*SecurityInsights"
+
+finding:
+  title_template: "SIEM integration detected"
+  description_template: "SIEM integration found. Centralized logging requirement satisfied."
+  remediation_template: "N/A - Positive finding"
+
+tags: ["logging", "siem", "positive"]
+nist_controls: ["au-6", "si-4"]
+related_ksis: ["KSI-MLA-01"]
+
+---
+# Log Retention Patterns (KSI-MLA-02)
+
+pattern_id: "mla.retention.log_analytics_workspace"
+name: "Log Analytics Workspace Retention"
+description: "Detects Log Analytics workspace retention configuration"
+family: "MLA"
+severity: "MEDIUM"
+pattern_type: "resource"
+
+languages:
+  bicep:
+    ast_queries:
+      - resource_type: "Microsoft.OperationalInsights/workspaces"
+        property_path: "properties.retentionInDays"
+        conditions:
+          - "value_less_than:90"
+    regex_fallback: "Microsoft\\.OperationalInsights/workspaces"
+    
+  terraform:
+    ast_queries:
+      - resource_type: "azurerm_log_analytics_workspace"
+        attribute: "retention_in_days"
+        conditions:
+          - "value_less_than:90"
+    regex_fallback: "azurerm_log_analytics_workspace"
+
+finding:
+  title_template: "Log retention less than 90 days"
+  description_template: "Log Analytics workspace retention is {value} days. FedRAMP 20x requires 90+ days retention (KSI-MLA-02)."
+  remediation_template: |
+    Update retention:
+    
+    Bicep:
+    properties: {
+      retentionInDays: 90  // Minimum for FedRAMP
+    }
+    
+    Terraform:
+    retention_in_days = 90
+
+tags: ["logging", "retention", "security-gap"]
+nist_controls: ["au-11"]
+related_ksis: ["KSI-MLA-02"]
+
+---
+# Security Event Monitoring (KSI-MLA-05)
+
+pattern_id: "mla.monitoring.failed_login_tracking"
+name: "Failed Login Monitoring"
+description: "Detects tracking of failed login attempts"
+family: "MLA"
+severity: "INFO"
+pattern_type: "function_call"
+
+languages:
+  python:
+    ast_queries:
+      - query_type: "function_call"
+        target: "log"
+        conditions:
+          - "in_except_block:true"
+          - "context_contains:login|authentication"
+          - "arg_contains:failed|invalid|unauthorized"
+    regex_fallback: "logger\\.(error|warning).*login.*fail"
+    positive_indicators: ["logger.error", "authentication failed"]
+    
+  csharp:
+    ast_queries:
+      - query_type: "method_call"
+        target: "LogWarning"
+        conditions:
+          - "in_catch_block:true"
+          - "arg_contains:authentication|login"
+    regex_fallback: "LogWarning.*[Aa]uthentication.*fail"
+
+finding:
+  title_template: "Failed login monitoring detected"
+  description_template: "Application logs failed login attempts. Verify alerts are configured for brute-force detection."
+  remediation_template: |
+    Configure alerting:
+    1. Create Azure Monitor alert rule for failed logins
+    2. Set threshold: 5 failures within 5 minutes
+    3. Action group: Email security team, trigger incident response
+    4. Query example:
+       AppTraces
+       | where Message contains "authentication failed"
+       | summarize FailCount=count() by UserId, bin(TimeGenerated, 5m)
+       | where FailCount >= 5
+
+tags: ["monitoring", "authentication", "positive"]
+nist_controls: ["au-6", "si-4"]
+related_ksis: ["KSI-MLA-05"]
+
+---
+pattern_id: "mla.monitoring.azure_sentinel_analytics"
+name: "Azure Sentinel Analytics Rule"
+description: "Detects Sentinel analytics rule configuration"
+family: "MLA"
+severity: "INFO"
+pattern_type: "resource"
+
+languages:
+  bicep:
+    ast_queries:
+      - resource_type: "Microsoft.SecurityInsights/alertRules"
+        property_path: "properties.query"
+    regex_fallback: "Microsoft\\.SecurityInsights/alertRules"
+    
+  terraform:
+    ast_queries:
+      - resource_type: "azurerm_sentinel_alert_rule"
+    regex_fallback: "azurerm_sentinel_alert_rule"
+
+finding:
+  title_template: "Sentinel analytics rule detected"
+  description_template: "Security analytics rule configured. Verify coverage for all FedRAMP required events."
+  remediation_template: |
+    Required analytics rules for FedRAMP:
+    - Failed login attempts (5+ within 5 minutes)
+    - Privileged account usage
+    - Security group changes
+    - Firewall rule modifications
+    - Data exfiltration indicators
+    - Malware detection
+    - Anomalous user behavior
+
+tags: ["monitoring", "sentinel", "positive"]
+nist_controls: ["si-4", "au-6", "ir-4"]
+related_ksis: ["KSI-MLA-05", "KSI-MLA-07"]
+
+---
+# Real-Time Alerting (KSI-MLA-07)
+
+pattern_id: "mla.alerting.action_group"
+name: "Azure Monitor Action Group"
+description: "Detects action group for alerting"
+family: "MLA"
+severity: "INFO"
+pattern_type: "resource"
+
+languages:
+  bicep:
+    ast_queries:
+      - resource_type: "Microsoft.Insights/actionGroups"
+        property_path: "properties.emailReceivers"
+    regex_fallback: "Microsoft\\.Insights/actionGroups"
+    
+  terraform:
+    ast_queries:
+      - resource_type: "azurerm_monitor_action_group"
+    regex_fallback: "azurerm_monitor_action_group"
+
+finding:
+  title_template: "Alert action group detected"
+  description_template: "Action group configured. Verify incident response team is notified."
+  remediation_template: "N/A - Positive finding. Ensure 24/7 coverage for critical alerts."
+
+tags: ["alerting", "incident-response", "positive"]
+nist_controls: ["ir-4", "ir-6"]
+related_ksis: ["KSI-MLA-07"]
+
+---
+pattern_id: "mla.alerting.metric_alert"
+name: "Azure Monitor Metric Alert"
+description: "Detects metric alert rules"
+family: "MLA"
+severity: "INFO"
+pattern_type: "resource"
+
+languages:
+  bicep:
+    ast_queries:
+      - resource_type: "Microsoft.Insights/metricAlerts"
+        property_path: "properties.criteria"
+    regex_fallback: "Microsoft\\.Insights/metricAlerts"
+    
+  terraform:
+    ast_queries:
+      - resource_type: "azurerm_monitor_metric_alert"
+    regex_fallback: "azurerm_monitor_metric_alert"
+
+finding:
+  title_template: "Metric alert detected"
+  description_template: "Metric alert configured. Verify thresholds align with FedRAMP requirements."
+  remediation_template: |
+    Required alerts for FedRAMP:
+    - CPU > 80% (availability)
+    - Memory > 85% (availability)
+    - Disk > 90% (capacity management)
+    - Failed requests > 10/min (security)
+    - Response time > 5s (performance)
+
+tags: ["alerting", "monitoring", "positive"]
+nist_controls: ["si-4", "cp-2"]
+related_ksis: ["KSI-MLA-07", "KSI-RPL-01"]
+
+---
+# Application Performance Monitoring (KSI-MLA-08)
+
+pattern_id: "mla.apm.application_insights"
+name: "Application Insights SDK"
+description: "Detects Application Insights integration"
+family: "MLA"
+severity: "INFO"
+pattern_type: "import"
+
+languages:
+  python:
+    ast_queries:
+      - query_type: "import_statement"
+        target: "applicationinsights"
+    regex_fallback: "from\\s+applicationinsights"
+    positive_indicators: ["applicationinsights"]
+    
+  csharp:
+    ast_queries:
+      - query_type: "using_directive"
+        target: "Microsoft.ApplicationInsights"
+    regex_fallback: "using\\s+Microsoft\\.ApplicationInsights"
+    
+  typescript:
+    ast_queries:
+      - query_type: "import_statement"
+        target: "applicationinsights"
+    regex_fallback: "import.*applicationinsights"
+
+finding:
+  title_template: "Application Insights APM detected"
+  description_template: "APM integration found. Verify distributed tracing and dependency tracking are enabled."
+  remediation_template: "N/A - Positive finding"
+
+tags: ["apm", "monitoring", "positive"]
+nist_controls: ["si-2", "si-4"]
+related_ksis: ["KSI-MLA-08"]
+
+---
+# Audit Logging (KSI-MLA-09)
+
+pattern_id: "mla.audit.activity_log"
+name: "Azure Activity Log Export"
+description: "Detects Activity Log diagnostic settings"
+family: "MLA"
+severity: "MEDIUM"
+pattern_type: "resource"
+
+languages:
+  bicep:
+    ast_queries:
+      - resource_type: "Microsoft.Insights/diagnosticSettings"
+        scope: "subscription"
+        property_path: "properties.logs"
+        conditions:
+          - "category:Administrative"
+          - "category:Security"
+          - "enabled:true"
+    regex_fallback: "Microsoft\\.Insights/diagnosticSettings"
+    
+  terraform:
+    ast_queries:
+      - resource_type: "azurerm_monitor_diagnostic_setting"
+        attribute: "log.category"
+        contains: "Administrative"
+    regex_fallback: "azurerm_monitor_diagnostic_setting"
+
+finding:
+  title_template: "Activity log export configured"
+  description_template: "Azure Activity Log is exported to Log Analytics. Verify all audit categories are enabled."
+  remediation_template: |
+    Required log categories for FedRAMP:
+    - Administrative (resource changes)
+    - Security (security events)
+    - ServiceHealth (outages)
+    - Alert (fired alerts)
+    - Recommendation (Azure Advisor)
+
+tags: ["audit", "compliance", "positive"]
+nist_controls: ["au-2", "au-3", "au-12"]
+related_ksis: ["KSI-MLA-09"]
+
+---
+pattern_id: "mla.audit.resource_logs_missing"
+name: "Missing Resource Diagnostic Logs"
+description: "Detects resources without diagnostic log export"
+family: "MLA"
+severity: "HIGH"
+pattern_type: "configuration"
+
+languages:
+  bicep:
+    ast_queries:
+      - resource_type: "Microsoft.Storage/storageAccounts|Microsoft.Sql/servers|Microsoft.KeyVault/vaults"
+        conditions:
+          - "not_has_child_resource:Microsoft.Insights/diagnosticSettings"
+    regex_fallback: "resource\\s+\\w+.*'Microsoft\\.(Storage|Sql|KeyVault)"
+    
+  terraform:
+    ast_queries:
+      - resource_type: "azurerm_storage_account|azurerm_sql_server|azurerm_key_vault"
+        conditions:
+          - "not_has_companion_resource:azurerm_monitor_diagnostic_setting"
+    regex_fallback: "resource\\s+\"azurerm_(storage_account|sql_server|key_vault)\""
+
+finding:
+  title_template: "Resource logs not exported to SIEM"
+  description_template: "{resource_type} does not have diagnostic settings configured. KSI-MLA-09 requires all audit logs to be exported."
+  remediation_template: |
+    Enable diagnostic settings:
+    
+    Bicep:
+    resource diagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+      scope: storageAccount
+      name: 'logs-to-workspace'
+      properties: {
+        workspaceId: logAnalyticsWorkspace.id
+        logs: [
+          {
+            category: 'StorageRead'
+            enabled: true
+          }
+          {
+            category: 'StorageWrite'
+            enabled: true
+          }
+        ]
+      }
+    }
+
+tags: ["audit", "logging", "critical-gap"]
+nist_controls: ["au-2", "au-12"]
+related_ksis: ["KSI-MLA-09"]

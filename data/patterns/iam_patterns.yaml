@@ -1,0 +1,411 @@
+# IAM (Identity and Access Management) Pattern Library
+
+# Phishing-Resistant MFA Patterns (KSI-IAM-01)
+
+---
+pattern_id: "iam.mfa.fido2_import"
+name: "FIDO2 Library Import"
+description: "Detects import of FIDO2 library for phishing-resistant MFA"
+family: "IAM"
+severity: "INFO"  # Positive finding
+pattern_type: "import"
+
+languages:
+  python:
+    ast_queries:
+      - query_type: "import_statement"
+        target: "fido2"
+        match_type: "contains"
+    regex_fallback: "import\\s+fido2|from\\s+fido2"
+    positive_indicators: ["fido2"]
+    
+  csharp:
+    ast_queries:
+      - query_type: "using_directive"
+        target: "Fido2NetLib"
+    regex_fallback: "using\\s+Fido2NetLib"
+    positive_indicators: ["Fido2NetLib"]
+    
+  java:
+    ast_queries:
+      - query_type: "import_declaration"
+        target: "com.yubico.webauthn"
+    regex_fallback: "import\\s+com\\.yubico\\.webauthn"
+    
+  typescript:
+    ast_queries:
+      - query_type: "import_statement"
+        target: "@simplewebauthn"
+    regex_fallback: "import.*@simplewebauthn"
+
+finding:
+  title_template: "Phishing-resistant MFA library detected (FIDO2)"
+  description_template: "FIDO2/WebAuthn library import found, indicating phishing-resistant MFA capability."
+  remediation_template: "N/A - Positive finding indicating compliance"
+  evidence_collection:
+    - "FIDO2 authentication flow implementation"
+    - "Registration and authentication code"
+  azure_services:
+    - "Microsoft Entra ID"
+
+tags: ["mfa", "fido2", "positive"]
+nist_controls: ["ia-2", "ia-2.1", "ia-2.2", "ia-2.8"]
+related_ksis: ["KSI-IAM-01"]
+
+---
+pattern_id: "iam.mfa.webauthn_import"
+name: "WebAuthn Library Import"
+description: "Detects import of WebAuthn library for phishing-resistant MFA"
+family: "IAM"
+severity: "INFO"
+pattern_type: "import"
+
+languages:
+  python:
+    ast_queries:
+      - query_type: "import_statement"
+        target: "webauthn"
+    regex_fallback: "import\\s+webauthn|from\\s+webauthn"
+    positive_indicators: ["webauthn", "py_webauthn"]
+    
+  typescript:
+    ast_queries:
+      - query_type: "import_statement"
+        target: "webauthn"
+    regex_fallback: "import.*['\"].*webauthn"
+
+finding:
+  title_template: "Phishing-resistant MFA library detected (WebAuthn)"
+  description_template: "WebAuthn library import found, indicating phishing-resistant MFA capability."
+  remediation_template: "N/A - Positive finding"
+
+tags: ["mfa", "webauthn", "positive"]
+nist_controls: ["ia-2", "ia-2.1", "ia-2.2", "ia-2.8"]
+related_ksis: ["KSI-IAM-01"]
+
+---
+pattern_id: "iam.mfa.azure_ad_import"
+name: "Azure AD/MSAL Import"
+description: "Detects Azure AD authentication libraries"
+family: "IAM"
+severity: "INFO"
+pattern_type: "import"
+
+languages:
+  python:
+    ast_queries:
+      - query_type: "import_statement"
+        target: "msal"
+      - query_type: "import_statement"
+        target: "azure.identity"
+    regex_fallback: "import\\s+msal|from\\s+msal|from\\s+azure\\.identity"
+    positive_indicators: ["msal", "azure.identity"]
+    
+  csharp:
+    ast_queries:
+      - query_type: "using_directive"
+        target: "Microsoft.Identity"
+      - query_type: "using_directive"
+        target: "Microsoft.Authentication"
+    regex_fallback: "using\\s+Microsoft\\.(Identity|Authentication)"
+    
+  java:
+    ast_queries:
+      - query_type: "import_declaration"
+        target: "com.microsoft.aad"
+    regex_fallback: "import\\s+com\\.microsoft\\.aad"
+    
+  typescript:
+    ast_queries:
+      - query_type: "import_statement"
+        target: "@azure/msal"
+    regex_fallback: "import.*@azure/msal"
+
+finding:
+  title_template: "Azure AD authentication detected"
+  description_template: "Azure AD/MSAL library found. Verify Conditional Access policies enforce phishing-resistant MFA."
+  remediation_template: "Ensure Conditional Access policy requires phishing-resistant MFA methods (certificate, FIDO2, Windows Hello)"
+
+tags: ["mfa", "azure-ad", "conditional-check"]
+nist_controls: ["ia-2"]
+related_ksis: ["KSI-IAM-01"]
+
+---
+pattern_id: "iam.mfa.totp_import"
+name: "TOTP Library Import (Not Phishing-Resistant)"
+description: "Detects TOTP-based MFA which is NOT phishing-resistant"
+family: "IAM"
+severity: "MEDIUM"
+pattern_type: "import"
+
+languages:
+  python:
+    ast_queries:
+      - query_type: "import_statement"
+        target: "pyotp"
+    regex_fallback: "import\\s+pyotp|from\\s+pyotp"
+    negative_indicators: ["pyotp", "totp", "otp"]
+    
+  csharp:
+    ast_queries:
+      - query_type: "using_directive"
+        target: "OtpNet"
+    regex_fallback: "using\\s+OtpNet"
+    
+  java:
+    ast_queries:
+      - query_type: "import_declaration"
+        target: "org.jboss.aerogear.security.otp"
+    regex_fallback: "import\\s+.*\\.otp"
+
+finding:
+  title_template: "TOTP-based MFA detected (not phishing-resistant)"
+  description_template: "TOTP library found. Time-based One-Time Passwords are vulnerable to phishing. FedRAMP 20x requires phishing-resistant MFA."
+  remediation_template: |
+    Migrate to phishing-resistant MFA:
+    - FIDO2 (use fido2 or @simplewebauthn libraries)
+    - WebAuthn (use py_webauthn or webauthn-json)
+    - Azure AD Conditional Access with certificate-based auth
+  evidence_collection:
+    - "MFA method migration plan"
+    - "User communication about MFA changes"
+
+requires_absence: ["iam.mfa.fido2_import", "iam.mfa.webauthn_import"]
+tags: ["mfa", "totp", "security-gap"]
+nist_controls: ["ia-2", "ia-2.8"]
+related_ksis: ["KSI-IAM-01"]
+
+---
+pattern_id: "iam.mfa.sms_mfa"
+name: "SMS-Based MFA (Not Phishing-Resistant)"
+description: "Detects SMS-based MFA which is NOT phishing-resistant"
+family: "IAM"
+severity: "HIGH"
+pattern_type: "import"
+
+languages:
+  python:
+    ast_queries:
+      - query_type: "import_statement"
+        target: "twilio"
+    regex_fallback: "import\\s+twilio|from\\s+twilio"
+    negative_indicators: ["twilio", "sms"]
+    
+  csharp:
+    ast_queries:
+      - query_type: "using_directive"
+        target: "Twilio"
+    regex_fallback: "using\\s+Twilio"
+    
+  typescript:
+    ast_queries:
+      - query_type: "import_statement"
+        target: "twilio"
+    regex_fallback: "import.*['\"]twilio"
+
+finding:
+  title_template: "SMS-based MFA detected (not phishing-resistant)"
+  description_template: "SMS MFA library found. SMS is vulnerable to SIM swapping and phishing attacks. FedRAMP 20x prohibits SMS-only MFA."
+  remediation_template: |
+    Replace SMS MFA with phishing-resistant methods:
+    - FIDO2 security keys
+    - WebAuthn (biometrics, platform authenticators)
+    - Certificate-based authentication via Azure AD
+
+requires_absence: ["iam.mfa.fido2_import"]
+tags: ["mfa", "sms", "critical-gap"]
+nist_controls: ["ia-2", "ia-2.8"]
+related_ksis: ["KSI-IAM-01"]
+
+---
+pattern_id: "iam.mfa.login_without_mfa"
+name: "Login Function Without MFA"
+description: "Detects login functions without MFA enforcement"
+family: "IAM"
+severity: "CRITICAL"
+pattern_type: "function_definition"
+
+languages:
+  python:
+    ast_queries:
+      - query_type: "function_definition"
+        target: "login"
+        conditions:
+          - "function_name_contains:login"
+          - "not_contains_in_body:mfa"
+          - "not_contains_in_body:two_factor"
+          - "not_contains_in_body:fido2"
+    regex_fallback: "def\\s+\\w*login\\w*\\([^)]*\\):"
+    negative_indicators: ["mfa", "two_factor", "fido2", "webauthn", "totp"]
+    
+  csharp:
+    ast_queries:
+      - query_type: "method_declaration"
+        target: "Login"
+        conditions:
+          - "method_name_contains:Login"
+          - "has_attribute:HttpPost"
+          - "not_contains_in_body:TwoFactor"
+    regex_fallback: "public\\s+.*\\s+Login\\s*\\("
+    negative_indicators: ["TwoFactor", "Mfa", "RequiresTwoFactor"]
+
+finding:
+  title_template: "Login without MFA enforcement"
+  description_template: "Login function detected without multi-factor authentication. KSI-IAM-01 requires phishing-resistant MFA for ALL user authentication."
+  remediation_template: |
+    Add MFA to login flow:
+    1. After password validation, initiate MFA challenge
+    2. Use FIDO2/WebAuthn for phishing resistance
+    3. Store MFA status in session
+    4. Require MFA re-authentication for sensitive operations
+
+requires_absence: ["iam.mfa.fido2_import", "iam.mfa.webauthn_import", "iam.mfa.azure_ad_import"]
+tags: ["mfa", "authentication", "critical-gap"]
+nist_controls: ["ia-2", "ia-2.1", "ia-2.2"]
+related_ksis: ["KSI-IAM-01"]
+
+---
+pattern_id: "iam.mfa.decorator_login_required"
+name: "Login Required Decorator Without MFA"
+description: "Detects @login_required without @mfa_required"
+family: "IAM"
+severity: "HIGH"
+pattern_type: "decorator"
+
+languages:
+  python:
+    ast_queries:
+      - query_type: "decorator"
+        target: "login_required"
+        conditions:
+          - "not_has_sibling_decorator:mfa_required"
+          - "not_has_sibling_decorator:two_factor_required"
+    regex_fallback: "@login_required"
+    negative_indicators: ["@mfa_required", "@two_factor_required"]
+    
+  csharp:
+    ast_queries:
+      - query_type: "attribute"
+        target: "Authorize"
+        conditions:
+          - "not_has_attribute:RequireTwoFactor"
+    regex_fallback: "\\[Authorize\\]"
+
+finding:
+  title_template: "Authentication decorator without MFA"
+  description_template: "@login_required used without MFA enforcement. Password-only auth does not meet KSI-IAM-01."
+  remediation_template: |
+    Add MFA decorator:
+    @login_required
+    @mfa_required  # Add this
+    def protected_view():
+        ...
+
+tags: ["mfa", "decorator", "security-gap"]
+nist_controls: ["ia-2"]
+related_ksis: ["KSI-IAM-01"]
+
+---
+# RBAC Patterns (KSI-IAM-02)
+
+pattern_id: "iam.rbac.azure_rbac_assignment"
+name: "Azure RBAC Assignment"
+description: "Detects Azure RBAC role assignments in IaC"
+family: "IAM"
+severity: "INFO"
+pattern_type: "resource"
+
+languages:
+  bicep:
+    ast_queries:
+      - resource_type: "Microsoft.Authorization/roleAssignments"
+        properties:
+          - "roleDefinitionId"
+          - "principalId"
+    regex_fallback: "resource.*Microsoft\\.Authorization/roleAssignments"
+    
+  terraform:
+    ast_queries:
+      - resource_type: "azurerm_role_assignment"
+    regex_fallback: "resource\\s+\"azurerm_role_assignment\""
+
+finding:
+  title_template: "Azure RBAC assignment detected"
+  description_template: "RBAC role assignment found. Verify least privilege principle is applied."
+  remediation_template: "Review role assignments to ensure minimal required permissions"
+
+tags: ["rbac", "least-privilege", "positive"]
+nist_controls: ["ac-2", "ac-6"]
+related_ksis: ["KSI-IAM-02"]
+
+---
+pattern_id: "iam.rbac.wildcard_permissions"
+name: "Wildcard Permission Assignment"
+description: "Detects overly broad wildcard permissions"
+family: "IAM"
+severity: "HIGH"
+pattern_type: "configuration"
+
+languages:
+  bicep:
+    ast_queries:
+      - resource_type: "Microsoft.Authorization/roleDefinitions"
+        property_path: "properties.permissions[*].actions"
+        contains: "*"
+    regex_fallback: "actions.*\\*"
+    
+  terraform:
+    ast_queries:
+      - resource_type: "azurerm_role_definition"
+        attribute_path: "permissions.actions"
+        contains: "*"
+    regex_fallback: "actions.*=.*\\[.*\\*"
+
+finding:
+  title_template: "Wildcard permission detected"
+  description_template: "Role definition uses wildcard (*) permissions, violating least privilege principle (KSI-IAM-02)."
+  remediation_template: "Replace wildcard with specific actions: ['Microsoft.Storage/storageAccounts/read', ...]"
+
+tags: ["rbac", "least-privilege", "security-gap"]
+nist_controls: ["ac-6", "ac-6.1"]
+related_ksis: ["KSI-IAM-02", "KSI-IAM-03"]
+
+---
+# Session Management Patterns (KSI-IAM-05)
+
+pattern_id: "iam.session.timeout_missing"
+name: "Missing Session Timeout"
+description: "Detects missing or excessive session timeout configuration"
+family: "IAM"
+severity: "MEDIUM"
+pattern_type: "configuration"
+
+languages:
+  python:
+    ast_queries:
+      - query_type: "assignment"
+        target: "PERMANENT_SESSION_LIFETIME"
+        conditions:
+          - "value_type:timedelta"
+          - "value_greater_than:minutes=30"
+    regex_fallback: "PERMANENT_SESSION_LIFETIME.*timedelta"
+    
+  csharp:
+    ast_queries:
+      - query_type: "property_assignment"
+        target: "ExpireTimeSpan"
+        conditions:
+          - "value_greater_than:minutes:30"
+    regex_fallback: "ExpireTimeSpan\\s*=\\s*TimeSpan"
+
+finding:
+  title_template: "Session timeout exceeds 30 minutes or not configured"
+  description_template: "Session timeout missing or exceeds FedRAMP guidance of 30 minutes for non-privileged users."
+  remediation_template: |
+    Configure session timeout:
+    Python (Flask): app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
+    C# (ASP.NET): options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+
+tags: ["session", "timeout", "security-gap"]
+nist_controls: ["sc-23", "ac-12"]
+related_ksis: ["KSI-IAM-05"]

@@ -1,0 +1,542 @@
+# SVC (Security Vulnerability and Configuration) Pattern Library
+
+# Security Improvements Patterns (KSI-SVC-01)
+
+---
+pattern_id: "svc.security.flask_security_headers"
+name: "Flask Security Headers"
+description: "Detects Flask security header configuration"
+family: "SVC"
+severity: "INFO"
+pattern_type: "import"
+
+languages:
+  python:
+    ast_queries:
+      - query_type: "import_statement"
+        target: "flask_talisman"
+      - query_type: "import_statement"
+        target: "flask_seasurf"
+    regex_fallback: "from\\s+flask_talisman|from\\s+flask_seasurf"
+    positive_indicators: ["flask_talisman", "flask_seasurf", "SecureCookieSessionInterface"]
+
+finding:
+  title_template: "Flask security middleware detected"
+  description_template: "Flask security library found (Talisman or SeaSurf). Verify HSTS, CSP, and CSRF protection."
+  remediation_template: "N/A - Positive finding. Ensure strict CSP and HSTS with preload."
+
+tags: ["security-headers", "flask", "positive"]
+nist_controls: ["sc-8", "sc-28"]
+related_ksis: ["KSI-SVC-01"]
+
+---
+pattern_id: "svc.security.aspnet_hsts"
+name: "ASP.NET Core HSTS"
+description: "Detects HSTS configuration in ASP.NET Core"
+family: "SVC"
+severity: "INFO"
+pattern_type: "function_call"
+
+languages:
+  csharp:
+    ast_queries:
+      - query_type: "method_call"
+        target: "UseHsts"
+        context: "IApplicationBuilder"
+      - query_type: "method_call"
+        target: "AddHsts"
+        context: "IServiceCollection"
+    regex_fallback: "\\.UseHsts\\(\\)|\\.AddHsts\\("
+    positive_indicators: ["UseHsts", "AddHsts"]
+
+finding:
+  title_template: "HSTS enabled in ASP.NET Core"
+  description_template: "HTTP Strict Transport Security detected. Verify max-age >= 31536000 (1 year)."
+  remediation_template: |
+    Verify HSTS configuration:
+    services.AddHsts(options => {
+        options.MaxAge = TimeSpan.FromDays(365);
+        options.IncludeSubDomains = true;
+        options.Preload = true;
+    });
+
+tags: ["hsts", "security-headers", "positive"]
+nist_controls: ["sc-8", "sc-13"]
+related_ksis: ["KSI-SVC-01"]
+
+---
+pattern_id: "svc.security.missing_hsts"
+name: "Missing HSTS Configuration"
+description: "Detects web applications without HSTS"
+family: "SVC"
+severity: "HIGH"
+pattern_type: "configuration"
+
+languages:
+  python:
+    ast_queries:
+      - query_type: "class_definition"
+        target: "Flask|FastAPI|Django"
+        conditions:
+          - "not_contains_in_body:Talisman"
+          - "not_contains_in_body:SECURE_HSTS"
+    regex_fallback: "Flask\\(|FastAPI\\(|class.*Config"
+    negative_indicators: ["Talisman", "SECURE_HSTS_SECONDS", "secure_headers"]
+    
+  csharp:
+    ast_queries:
+      - query_type: "method_definition"
+        target: "ConfigureServices|Configure"
+        conditions:
+          - "not_contains_in_body:UseHsts"
+          - "not_contains_in_body:AddHsts"
+    regex_fallback: "public void Configure"
+
+finding:
+  title_template: "HSTS not configured"
+  description_template: "Web application does not enforce HTTPS via HSTS. KSI-SVC-01 requires HSTS with preload."
+  remediation_template: |
+    Enable HSTS:
+    
+    Python (Flask):
+    from flask_talisman import Talisman
+    Talisman(app, force_https=True, 
+             strict_transport_security=True,
+             strict_transport_security_max_age=31536000,
+             strict_transport_security_include_subdomains=True)
+    
+    C# (ASP.NET Core):
+    app.UseHsts();
+    services.AddHsts(options => {
+        options.MaxAge = TimeSpan.FromDays(365);
+        options.IncludeSubDomains = true;
+        options.Preload = true;
+    });
+
+requires_absence: ["svc.security.flask_security_headers", "svc.security.aspnet_hsts"]
+tags: ["hsts", "security-gap", "critical"]
+nist_controls: ["sc-8", "sc-13"]
+related_ksis: ["KSI-SVC-01"]
+
+---
+pattern_id: "svc.security.csp_header"
+name: "Content Security Policy"
+description: "Detects CSP header configuration"
+family: "SVC"
+severity: "INFO"
+pattern_type: "configuration"
+
+languages:
+  python:
+    ast_queries:
+      - query_type: "assignment"
+        target: "content_security_policy"
+      - query_type: "function_call"
+        target: "SecureHeaders"
+    regex_fallback: "content_security_policy|Content-Security-Policy"
+    positive_indicators: ["content_security_policy", "CSP"]
+
+finding:
+  title_template: "Content Security Policy detected"
+  description_template: "CSP header configuration found. Verify no 'unsafe-inline' or 'unsafe-eval' in production."
+  remediation_template: |
+    Recommended CSP for FedRAMP:
+    Content-Security-Policy: 
+      default-src 'self'; 
+      script-src 'self'; 
+      style-src 'self'; 
+      img-src 'self' data: https:; 
+      font-src 'self'; 
+      connect-src 'self' https://api.yourdomain.com;
+
+tags: ["csp", "security-headers", "positive"]
+nist_controls: ["si-10", "si-15"]
+related_ksis: ["KSI-SVC-01"]
+
+---
+# Key Management Patterns (KSI-SVC-02)
+
+pattern_id: "svc.secrets.keyvault_reference"
+name: "Azure Key Vault Reference"
+description: "Detects Key Vault secret references"
+family: "SVC"
+severity: "INFO"
+pattern_type: "configuration"
+
+languages:
+  bicep:
+    ast_queries:
+      - resource_type: "Microsoft.KeyVault/vaults"
+      - property_path: "properties.secretUri"
+        contains: "vault.azure.net"
+    regex_fallback: "Microsoft\\.KeyVault/vaults|vault\\.azure\\.net"
+    positive_indicators: ["KeyVault", "vault.azure.net"]
+    
+  terraform:
+    ast_queries:
+      - resource_type: "azurerm_key_vault"
+      - data_type: "azurerm_key_vault_secret"
+    regex_fallback: "azurerm_key_vault"
+
+finding:
+  title_template: "Key Vault integration detected"
+  description_template: "Azure Key Vault used for secret management. Verify soft-delete and purge protection enabled."
+  remediation_template: "N/A - Positive finding"
+
+tags: ["secrets", "key-vault", "positive"]
+nist_controls: ["sc-12", "sc-13"]
+related_ksis: ["KSI-SVC-02"]
+
+---
+pattern_id: "svc.secrets.keyvault_soft_delete"
+name: "Key Vault Soft Delete"
+description: "Detects Key Vault soft-delete configuration"
+family: "SVC"
+severity: "HIGH"
+pattern_type: "resource"
+
+languages:
+  bicep:
+    ast_queries:
+      - resource_type: "Microsoft.KeyVault/vaults"
+        property_path: "properties.enableSoftDelete"
+        value: false
+      - resource_type: "Microsoft.KeyVault/vaults"
+        property_path: "properties.enablePurgeProtection"
+        value: false
+    regex_fallback: "enableSoftDelete.*false|enablePurgeProtection.*false"
+    
+  terraform:
+    ast_queries:
+      - resource_type: "azurerm_key_vault"
+        attribute: "soft_delete_enabled"
+        value: false
+      - resource_type: "azurerm_key_vault"
+        attribute: "purge_protection_enabled"
+        value: false
+    regex_fallback: "soft_delete_enabled.*=.*false|purge_protection_enabled.*=.*false"
+
+finding:
+  title_template: "Key Vault soft-delete or purge protection disabled"
+  description_template: "Key Vault does not have soft-delete and purge protection enabled. KSI-SVC-02 requires both for FedRAMP."
+  remediation_template: |
+    Enable protections:
+    
+    Bicep:
+    properties: {
+      enableSoftDelete: true
+      enablePurgeProtection: true
+      softDeleteRetentionInDays: 90
+    }
+    
+    Terraform:
+    soft_delete_enabled = true
+    purge_protection_enabled = true
+    soft_delete_retention_days = 90
+
+tags: ["secrets", "key-vault", "security-gap"]
+nist_controls: ["sc-12", "au-11"]
+related_ksis: ["KSI-SVC-02"]
+
+---
+pattern_id: "svc.secrets.hardcoded_secret"
+name: "Hardcoded Secret"
+description: "Detects potential hardcoded secrets in code"
+family: "SVC"
+severity: "CRITICAL"
+pattern_type: "configuration"
+
+languages:
+  python:
+    ast_queries:
+      - query_type: "assignment"
+        target: "password|secret|api_key|token"
+        conditions:
+          - "value_type:string_literal"
+          - "value_not_empty"
+          - "not_contains:os.environ|getenv|KeyVault"
+    regex_fallback: "(password|secret|api_key|token)\\s*=\\s*['\"][^'\"]+['\"]"
+    negative_indicators: ["password =", "secret =", "api_key ="]
+    
+  csharp:
+    ast_queries:
+      - query_type: "variable_declaration"
+        target: "password|secret|apiKey|token"
+        conditions:
+          - "initializer_type:string_literal"
+    regex_fallback: "(password|secret|apiKey|token)\\s*=\\s*\"[^\"]+\""
+    
+  java:
+    ast_queries:
+      - query_type: "variable_declarator"
+        target: "password|secret|apiKey|token"
+    regex_fallback: "String\\s+(password|secret|apiKey|token)\\s*=\\s*\"[^\"]+\""
+
+finding:
+  title_template: "Hardcoded secret detected"
+  description_template: "Secrets are hardcoded in source code. KSI-SVC-02 requires all secrets in Key Vault or managed identity."
+  remediation_template: |
+    Use Key Vault:
+    
+    Python:
+    from azure.identity import DefaultAzureCredential
+    from azure.keyvault.secrets import SecretClient
+    credential = DefaultAzureCredential()
+    client = SecretClient(vault_url="https://myvault.vault.azure.net/", credential=credential)
+    secret = client.get_secret("api-key")
+    
+    C#:
+    var client = new SecretClient(new Uri("https://myvault.vault.azure.net/"), new DefaultAzureCredential());
+    var secret = await client.GetSecretAsync("api-key");
+
+tags: ["secrets", "critical-gap", "hardcoded"]
+nist_controls: ["ia-5", "sc-12"]
+related_ksis: ["KSI-SVC-02"]
+
+---
+# Encryption Patterns (KSI-SVC-04)
+
+pattern_id: "svc.encryption.storage_encryption"
+name: "Storage Account Encryption"
+description: "Detects Azure Storage encryption configuration"
+family: "SVC"
+severity: "CRITICAL"
+pattern_type: "resource"
+
+languages:
+  bicep:
+    ast_queries:
+      - resource_type: "Microsoft.Storage/storageAccounts"
+        property_path: "properties.encryption.services.blob.enabled"
+        value: false
+      - resource_type: "Microsoft.Storage/storageAccounts"
+        property_path: "properties.encryption.keySource"
+        value: "Microsoft.Storage"  # Should be Microsoft.KeyVault for CMK
+    regex_fallback: "Microsoft\\.Storage/storageAccounts"
+    
+  terraform:
+    ast_queries:
+      - resource_type: "azurerm_storage_account"
+        conditions:
+          - "not_has_block:customer_managed_key"
+    regex_fallback: "azurerm_storage_account"
+
+finding:
+  title_template: "Storage encryption not using customer-managed keys"
+  description_template: "Storage account uses Microsoft-managed keys. KSI-SVC-04 recommends customer-managed keys (CMK) for FedRAMP High."
+  remediation_template: |
+    Enable CMK:
+    
+    Bicep:
+    properties: {
+      encryption: {
+        keySource: 'Microsoft.KeyVault'
+        keyvaultproperties: {
+          keyname: 'storage-key'
+          keyvaulturi: 'https://myvault.vault.azure.net'
+        }
+      }
+    }
+
+tags: ["encryption", "storage", "cmk"]
+nist_controls: ["sc-13", "sc-28"]
+related_ksis: ["KSI-SVC-04"]
+
+---
+pattern_id: "svc.encryption.sql_tde"
+name: "SQL Transparent Data Encryption"
+description: "Detects SQL TDE configuration"
+family: "SVC"
+severity: "CRITICAL"
+pattern_type: "resource"
+
+languages:
+  bicep:
+    ast_queries:
+      - resource_type: "Microsoft.Sql/servers/databases/transparentDataEncryption"
+        property_path: "properties.state"
+        value: "Disabled"
+    regex_fallback: "transparentDataEncryption"
+    
+  terraform:
+    ast_queries:
+      - resource_type: "azurerm_mssql_database"
+        conditions:
+          - "not_has_companion_resource:azurerm_mssql_database_transparent_data_encryption"
+    regex_fallback: "azurerm_mssql_database"
+
+finding:
+  title_template: "SQL Transparent Data Encryption disabled"
+  description_template: "SQL database does not have TDE enabled. KSI-SVC-04 requires encryption at rest for all databases."
+  remediation_template: |
+    Enable TDE:
+    
+    Bicep:
+    resource tde 'Microsoft.Sql/servers/databases/transparentDataEncryption@2021-11-01' = {
+      parent: database
+      name: 'current'
+      properties: {
+        state: 'Enabled'
+      }
+    }
+
+tags: ["encryption", "sql", "critical-gap"]
+nist_controls: ["sc-13", "sc-28"]
+related_ksis: ["KSI-SVC-04"]
+
+---
+# Network Security Patterns (KSI-SVC-06)
+
+pattern_id: "svc.network.nsg_allow_all"
+name: "Network Security Group Allow All"
+description: "Detects overly permissive NSG rules"
+family: "SVC"
+severity: "CRITICAL"
+pattern_type: "resource"
+
+languages:
+  bicep:
+    ast_queries:
+      - resource_type: "Microsoft.Network/networkSecurityGroups/securityRules"
+        property_path: "properties.sourceAddressPrefix"
+        value: "*"
+        conditions:
+          - "properties.access:Allow"
+          - "properties.direction:Inbound"
+    regex_fallback: "sourceAddressPrefix.*\\*.*Allow.*Inbound"
+    
+  terraform:
+    ast_queries:
+      - resource_type: "azurerm_network_security_rule"
+        conditions:
+          - "source_address_prefix:*"
+          - "access:Allow"
+          - "direction:Inbound"
+    regex_fallback: "source_address_prefix.*=.*\"\\*\""
+
+finding:
+  title_template: "NSG rule allows traffic from any source"
+  description_template: "Network Security Group allows inbound traffic from 0.0.0.0/0 (Internet). KSI-SVC-06 requires least privilege network access."
+  remediation_template: |
+    Restrict source:
+    - Use specific IP ranges or service tags
+    - Example: sourceAddressPrefix: 'VirtualNetwork'
+    - Example: sourceAddressPrefix: '10.0.0.0/16'
+    - Never use '*' for production resources
+
+tags: ["network", "nsg", "critical-gap"]
+nist_controls: ["ac-4", "sc-7"]
+related_ksis: ["KSI-SVC-06"]
+
+---
+pattern_id: "svc.network.private_endpoint"
+name: "Private Endpoint"
+description: "Detects private endpoint configuration"
+family: "SVC"
+severity: "INFO"
+pattern_type: "resource"
+
+languages:
+  bicep:
+    ast_queries:
+      - resource_type: "Microsoft.Network/privateEndpoints"
+    regex_fallback: "Microsoft\\.Network/privateEndpoints"
+    positive_indicators: ["privateEndpoints"]
+    
+  terraform:
+    ast_queries:
+      - resource_type: "azurerm_private_endpoint"
+    regex_fallback: "azurerm_private_endpoint"
+
+finding:
+  title_template: "Private endpoint detected"
+  description_template: "Resource uses private endpoint for network isolation. Verify public access is disabled."
+  remediation_template: "N/A - Positive finding"
+
+tags: ["network", "private-endpoint", "positive"]
+nist_controls: ["sc-7", "ac-4"]
+related_ksis: ["KSI-SVC-06"]
+
+---
+# Secure Communication Patterns (KSI-SVC-07)
+
+pattern_id: "svc.tls.minimum_version"
+name: "TLS Minimum Version"
+description: "Detects TLS version configuration"
+family: "SVC"
+severity: "HIGH"
+pattern_type: "configuration"
+
+languages:
+  bicep:
+    ast_queries:
+      - resource_type: "Microsoft.Storage/storageAccounts|Microsoft.Web/sites|Microsoft.Sql/servers"
+        property_path: "properties.minimumTlsVersion"
+        conditions:
+          - "value_not_equals:TLS1_2"
+    regex_fallback: "minimumTlsVersion"
+    
+  terraform:
+    ast_queries:
+      - resource_type: "azurerm_storage_account|azurerm_app_service|azurerm_sql_server"
+        attribute: "min_tls_version"
+        conditions:
+          - "value_not_equals:1.2"
+    regex_fallback: "min_tls_version"
+
+finding:
+  title_template: "TLS version less than 1.2"
+  description_template: "Resource allows TLS {version}. KSI-SVC-07 requires TLS 1.2 minimum (TLS 1.3 recommended)."
+  remediation_template: |
+    Set minimum TLS version:
+    
+    Bicep:
+    properties: {
+      minimumTlsVersion: 'TLS1_2'  // Use TLS1_3 when available
+    }
+    
+    Terraform:
+    min_tls_version = "1.2"
+
+tags: ["tls", "encryption", "security-gap"]
+nist_controls: ["sc-8", "sc-13"]
+related_ksis: ["KSI-SVC-07"]
+
+---
+# Web Application Firewall (KSI-SVC-09)
+
+pattern_id: "svc.waf.application_gateway"
+name: "Application Gateway with WAF"
+description: "Detects Application Gateway with WAF enabled"
+family: "SVC"
+severity: "INFO"
+pattern_type: "resource"
+
+languages:
+  bicep:
+    ast_queries:
+      - resource_type: "Microsoft.Network/applicationGateways"
+        property_path: "properties.webApplicationFirewallConfiguration.enabled"
+        value: true
+    regex_fallback: "Microsoft\\.Network/applicationGateways"
+    
+  terraform:
+    ast_queries:
+      - resource_type: "azurerm_application_gateway"
+        attribute: "waf_configuration.enabled"
+        value: true
+    regex_fallback: "azurerm_application_gateway"
+
+finding:
+  title_template: "Web Application Firewall detected"
+  description_template: "Application Gateway with WAF enabled. Verify OWASP ruleset is active and in prevention mode."
+  remediation_template: |
+    WAF best practices:
+    - Use OWASP Core Rule Set 3.2+
+    - Set firewall_mode: 'Prevention'
+    - Enable request/response logging
+    - Configure custom rules for application-specific threats
+
+tags: ["waf", "application-gateway", "positive"]
+nist_controls: ["si-3", "si-4"]
+related_ksis: ["KSI-SVC-09"]
