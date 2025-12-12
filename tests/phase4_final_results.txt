@@ -1,0 +1,496 @@
+
+[94m============================================================[0m
+[94mFedRAMP 20x MCP Server - Complete Test Suite[0m
+[94m============================================================[0m
+
+
+[94m============================================================[0m
+[94mRunning: test_loader.py[0m
+[94mCategory: Core Functionality[0m
+[94m============================================================[0m
+
+2025-12-12 11:23:10,402 - fedramp_20x_mcp.tools - INFO - Registered 36 tools across 12 modules
+Testing FedRAMP Data Loader...
+Loading FedRAMP data from GitHub...
+2025-12-12 11:23:10,435 - fedramp_20x_mcp.data_loader - INFO - Loaded data from cache
+Loaded 329 requirements
+From 12 documents
+Metadata: {'last_updated': '2025-12-08T10:26:45.451483', 'source': 'FedRAMP/docs/data'}
+
+Testing requirement lookup for FRR-ADS-01...
+Found requirement: FRR-ADS-01
+  Term: N/A
+  Document: Authorization Data Sharing
+
+Testing family lookup for FRD...
+Found 50 FRD requirements
+
+Testing search for 'vulnerability'...
+Found 83 matching requirements
+
+All tests completed!
+
+
+[92m[PASS] test_loader.py PASSED (2.3s)[0m
+
+[94m============================================================[0m
+[94mRunning: test_definitions.py[0m
+[94mCategory: Core Functionality[0m
+[94m============================================================[0m
+
+Testing FedRAMP Definitions and KSI...
+
+=== Testing Definitions ===
+Total definitions: 50
+
+First definition: Federal Customer Data
+  ID: FRD-ALL-01
+
+Looking up definition for 'Federal Customer Data'...
+  Found: All electronic information, content, and materials that an _agency_ or its authorized users upload, ...
+
+=== Testing Key Security Indicators ===
+Total KSI: 72
+
+First KSI: KSI-AFR-01
+
+Looking up KSI KSI-AFR-01...
+  Found KSI with 11 fields
+
+=== Testing Definition Search ===
+Found 26 definitions matching 'cloud'
+
+All tests completed!
+
+2025-12-12 11:23:12,142 - fedramp_20x_mcp.tools - INFO - Registered 36 tools across 12 modules
+2025-12-12 11:23:12,162 - fedramp_20x_mcp.data_loader - INFO - Loaded data from cache
+
+
+[92m[PASS] test_definitions.py PASSED (1.7s)[0m
+
+[94m============================================================[0m
+[94mRunning: test_docs_integration.py[0m
+[94mCategory: Core Functionality[0m
+[94m============================================================[0m
+
+Testing documentation loading...
+--------------------------------------------------
+
+[PASS] Loaded 15 documentation files
+
+Available files:
+  - authorization-data-sharing.md (13,458 bytes)
+  - collaborative-continuous-monitoring.md (13,853 bytes)
+  - fedramp-definitions.md (27,874 bytes)
+  - fedramp-security-inbox.md (11,007 bytes)
+  - guidelines.md (2,950 bytes)
+  - incident-communications-procedures.md (4,463 bytes)
+  - index.md (1,686 bytes)
+  - key-security-indicators.md (31,997 bytes)
+  - minimum-assessment-scope.md (8,567 bytes)
+  - overview.md (1,122 bytes)
+  - persistent-validation-and-assessment.md (13,048 bytes)
+  - recommended-secure-configuration.md (5,680 bytes)
+  - significant-change-notifications.md (17,332 bytes)
+  - using-cryptographic-modules.md (4,153 bytes)
+  - vulnerability-detection-and-response.md (32,584 bytes)
+
+--------------------------------------------------
+Testing search for 'Key Security Indicator'...
+[PASS] Found 30 matches
+
+First match in fedramp-definitions.md:
+Line 309: Follow-on assessments of a _cloud service offering_ focused on Key Security Indicators, coordinated ...
+
+--------------------------------------------------
+Testing get_documentation_file('overview.md')...
+[PASS] Retrieved file with 21 lines
+
+First 5 lines:
+  ---
+  icon: lucide/rocket
+  ---
+  
+  # Overview
+
+--------------------------------------------------
+[PASS] All tests passed!
+
+2025-12-12 11:23:13,794 - fedramp_20x_mcp.tools - INFO - Registered 36 tools across 12 modules
+2025-12-12 11:23:13,825 - fedramp_20x_mcp.data_loader - INFO - Loaded documentation from cache
+
+
+[92m[PASS] test_docs_integration.py PASSED (1.6s)[0m
+
+[94m============================================================[0m
+[94mRunning: test_implementation_questions.py[0m
+[94mCategory: Core Functionality[0m
+[94m============================================================[0m
+
+============================================================
+Testing generate_implementation_questions tool
+============================================================
+
+=== Test 1: Generate questions for FRR-CCM-01 ===
+[PASS] Tool found
+[PASS] Generated questions for requirement FRR-CCM-01
+[PASS] Output length: 7722 characters
+[PASS] Contains PM questions
+[PASS] Contains engineer questions
+[PASS] Contains Azure-specific questions
+[PASS] Contains decision framework
+
+=== Test 2: Generate questions for KSI-IAM-01 ===
+[PASS] Generated questions for KSI-IAM-01
+[PASS] Output length: 7578 characters
+
+=== Test 3: Handle invalid requirement ID ===
+[PASS] Correctly handles invalid ID
+
+============================================================
+RESULTS: 3/3 tests passed
+============================================================
+[OK] All tests passed!
+
+2025-12-12 11:23:15,425 - fedramp_20x_mcp.tools - INFO - Registered 36 tools across 12 modules
+2025-12-12 11:23:15,445 - fedramp_20x_mcp.data_loader - INFO - Loaded data from cache
+2025-12-12 11:23:15,446 - fedramp_20x_mcp.data_loader - INFO - Using in-memory cache
+2025-12-12 11:23:15,446 - fedramp_20x_mcp.data_loader - INFO - Using in-memory cache
+2025-12-12 11:23:15,446 - fedramp_20x_mcp.data_loader - INFO - Using in-memory cache
+
+
+[92m[PASS] test_implementation_questions.py PASSED (1.6s)[0m
+
+[94m============================================================[0m
+[94mRunning: test_tool_registration.py[0m
+[94mCategory: Core Functionality[0m
+[94m============================================================[0m
+
+Testing tool registration system...
+================================================================================
+[PASS] Tool registration completed without errors
+  (Note: Could not verify tool count due to FastMCP internal structure)
+[PASS] All tool modules imported successfully
+[PASS] All tool implementation functions exist
+
+================================================================================
+[PASS] All tool registration tests passed!
+
+2025-12-12 11:23:17,062 - fedramp_20x_mcp.tools - INFO - Registered 36 tools across 12 modules
+2025-12-12 11:23:17,123 - fedramp_20x_mcp.tools - INFO - Registered 36 tools across 12 modules
+
+
+[92m[PASS] test_tool_registration.py PASSED (1.7s)[0m
+
+[94m============================================================[0m
+[94mRunning: test_ast_utils.py[0m
+[94mCategory: Core Functionality[0m
+[94m============================================================[0m
+
+============================================================
+AST UTILITIES TEST SUITE
+============================================================
+
+TEST: Python AST Parsing
+  [PASS] Found 2 functions
+  [PASS] Found 2 function calls
+
+TEST: C# AST Parsing
+  [PASS] Found 2 methods
+  [PASS] Found 1 fields
+
+TEST: Java AST Parsing
+  [PASS] Found 2 methods
+  [PASS] Found 1 fields
+
+TEST: JavaScript AST Parsing
+  [PASS] Found 2 functions
+  [PASS] Found 2 variable declarations
+
+TEST: Symbol Table
+  [PASS] Symbol table operations work
+  [PASS] Found 1 sensitive symbols
+
+TEST: Data Flow Analysis
+  [PASS] Taint tracking works
+  [PASS] Taint propagation through assignments works
+
+TEST: Pattern Matching
+  [PASS] Pattern matching works
+  [PASS] Found structural patterns in AST
+
+============================================================
+ALL TESTS PASSED [PASS]
+============================================================
+
+2025-12-12 11:23:18,728 - fedramp_20x_mcp.tools - INFO - Registered 36 tools across 12 modules
+
+
+[92m[PASS] test_ast_utils.py PASSED (1.6s)[0m
+
+[94m============================================================[0m
+[94mRunning: test_code_analyzer.py[0m
+[94mCategory: Core Functionality[0m
+[94m============================================================[0m
+
+======================================================================
+RUNNING KSI-CENTRIC CODE ANALYZER TESTS
+======================================================================
+
+=== Testing Factory: Get Analyzer ===
+[OK] Found analyzer for KSI-MLA-05: Infrastructure as Code
+[OK] Found analyzer for KSI-SVC-06: Secret Management
+[OK] Found analyzer for KSI-CNA-01: Restrict Network Traffic
+[OK] Found analyzer for KSI-IAM-03: Non-User Accounts
+
+=== Testing Factory: List KSIs ===
+[OK] Found 72 registered KSI analyzers
+   Sample KSIs: KSI-AFR-01, KSI-AFR-02, KSI-AFR-03, KSI-AFR-04, KSI-AFR-05, KSI-AFR-06, KSI-AFR-07, KSI-AFR-08, KSI-AFR-09, KSI-AFR-10
+
+=== Testing Factory: Analyze All KSIs ===
+[OK] Analysis returned 19 KSI result(s) with findings
+   Total findings across all KSIs: 25
+
+=== Testing Factory: Get KSI Metadata ===
+[OK] KSI-MLA-05: Unknown
+     Family: MLA
+     Status: NOT_IMPLEMENTED
+[OK] KSI-SVC-06: Unknown
+     Family: SVC
+     Status: NOT_IMPLEMENTED
+[OK] KSI-IAM-03: Unknown
+     Family: IAM
+     Status: IMPLEMENTED
+
+=== Testing KSI-MLA-05 (Bicep): Missing Diagnostic Settings ===
+[SKIP] KSI-MLA-05 Bicep analyzer not yet implemented
+
+=== Testing KSI-MLA-05 (Bicep): With Diagnostic Settings ===
+[OK] No issues found (or 0 issues)
+
+=== Testing KSI-SVC-06 (Bicep): Hardcoded Password ===
+[OK] Detected hardcoded secret: No Key Vault Resource Defined
+
+=== Testing KSI-CNA-01 (Bicep): Missing Network Security Group ===
+[OK] Detected network security issue: Virtual Network Without Network Security Group
+
+=== Testing KSI-IAM-03 (Python): Missing Authentication ===
+[SKIP] KSI-IAM-03 Python analyzer not yet implemented
+
+=== Testing KSI-SVC-03 (Python): Unsafe pickle Usage ===
+[SKIP] KSI-SVC-03 Python analyzer not yet implemented
+
+=== Testing KSI-CMT-01 (GitHub Actions): Missing PR Triggers ===
+[SKIP] KSI-CMT-01 GitHub Actions analyzer not yet implemented
+
+=== Testing KSI-CMT-01 (GitHub Actions): With PR Triggers ===
+[OK] Found 0 good practice(s), 0 issue(s)
+======================================================================
+TEST RESULTS: 12 passed, 0 failed
+======================================================================
+
+[SUCCESS] All tests passed!
+
+2025-12-12 11:23:20,435 - fedramp_20x_mcp.tools - INFO - Registered 36 tools across 12 modules
+2025-12-12 11:23:20,573 - fedramp_20x_mcp.analyzers.ksi.factory - INFO - Registered 72 KSI analyzers out of 72 files
+
+
+[92m[PASS] test_code_analyzer.py PASSED (1.9s)[0m
+
+[94m============================================================[0m
+[94mRunning: test_interprocedural.py[0m
+[94mCategory: Core Functionality[0m
+[94m============================================================[0m
+
+Running inter-procedural analysis tests...
+
+[PASS] Call graph construction working
+[PASS] Parameter extraction working
+[PASS] Return value tracking working
+[PASS] Taint propagation through parameters working
+[PASS] Taint propagation through returns working
+  DEBUG: Found 1 vulnerabilities
+  DEBUG: {'type': 'sensitive_data_leak', 'severity': 'CRITICAL', 'function': 'log_sensitive', 'sink': 'print', 'variable': 'pwd', 'line': 7, 'description': "Sensitive data 'pwd' passed to print()"}
+[PASS] Inter-procedural vulnerability detection working
+  DEBUG: Found 1 taint flows
+  DEBUG: get_token.<return> -> main.t (return)
+[PASS] Transitive call analysis working
+[PASS] Convenience function working
+
+============================================================
+Inter-Procedural Analysis Tests: 8/8 passed
+ALL TESTS PASSED [PASS]
+
+2025-12-12 11:23:22,299 - fedramp_20x_mcp.tools - INFO - Registered 36 tools across 12 modules
+
+
+[92m[PASS] test_interprocedural.py PASSED (1.7s)[0m
+
+[94m============================================================[0m
+[94mRunning: test_semantic_analysis.py[0m
+[94mCategory: Core Functionality[0m
+[94m============================================================[0m
+
+======================================================================
+SEMANTIC ANALYSIS TEST SUITE
+======================================================================
+
+TEST 1: Type Inference
+  Inferred types for 3 variables
+  [PASS] Password correctly identified as SECRET
+  [PASS] Integer type inferred
+  [PASS] Float type inferred
+
+TEST 2: Function Extraction
+  Extracted 3 functions
+  [PASS] Function 'authenticate' has 2 parameters
+
+TEST 3: Sensitive Data Flow Tracking
+  Found 1 sensitive data flows
+  [PASS] Flow: api_key -> backup_key (secret)
+
+TEST 4: Sensitive Sink Detection
+  Found 0 sensitive sinks
+  Note: Sink detection needs more work
+
+TEST 5: Framework Detection
+  [PASS] Detected Flask
+  [PASS] Detected Django
+  [PASS] Detected FastAPI
+  [PASS] Detected ASP.NET Core
+  [PASS] Detected Spring Boot
+  [PASS] Detected Express
+
+TEST 6: Flask Security Analysis
+  Bad code findings: 2
+  Good code findings: 0
+  [WARN] flask_debug_enabled: Flask debug mode enabled - exposes sensitive debugging information
+  [WARN] flask_hardcoded_secret_key: Flask secret_key is hardcoded
+  [PASS] Flask-specific security checks working
+
+TEST 7: Django Security Analysis
+  Findings: 2
+  [WARN] django_debug_enabled: Django DEBUG=True in settings - should be False in production
+  [WARN] django_empty_allowed_hosts: Django ALLOWED_HOSTS is empty - allows any host
+  [PASS] Django-specific security checks working
+
+TEST 8: Security Context Inference
+  [PASS] Variable context: secret
+  [PASS] Variable context: pii
+  [PASS] Variable context: pii
+  [PASS] Variable context: secret
+  [PASS] Variable context: pii
+  [PASS] Variable context: public
+
+======================================================================
+ALL TESTS PASSED [PASS]
+======================================================================
+
+Semantic Analysis Capabilities:
+  ò Type inference from assignments
+  ò Security context classification
+  ò Sensitive data flow tracking
+  ò Dangerous sink detection
+  ò Framework-specific pattern recognition
+  ò Function metadata extraction
+
+2025-12-12 11:23:24,018 - fedramp_20x_mcp.tools - INFO - Registered 36 tools across 12 modules
+
+
+[92m[PASS] test_semantic_analysis.py PASSED (1.7s)[0m
+
+[94m============================================================[0m
+[94mRunning: test_symbol_resolution.py[0m
+[94mCategory: Core Functionality[0m
+[94m============================================================[0m
+
+Running symbol resolution tests...
+
+[PASS] Import extraction working
+[PASS] Class extraction working
+[PASS] Class hierarchy construction working
+[PASS] Method override detection working
+[PASS] Symbol resolution working
+[PASS] Cross-file resolution working
+[PASS] Dependency graph construction working
+[PASS] Convenience function working
+
+============================================================
+Symbol Resolution Tests: 8/8 passed
+ALL TESTS PASSED [PASS]
+
+2025-12-12 11:23:26,019 - fedramp_20x_mcp.tools - INFO - Registered 36 tools across 12 modules
+
+
+[92m[PASS] test_symbol_resolution.py PASSED (2.1s)[0m
+
+[94m============================================================[0m
+[94mRunning: test_evidence_automation.py[0m
+[94mCategory: Core Functionality[0m
+[94m============================================================[0m
+
+================================================================================
+Testing Infrastructure Code Generation (Bicep & Terraform)
+================================================================================
+
+[1/6] Testing Bicep template generation for KSI-IAM-01...
+[PASS] Generated Bicep template (7641 characters)
+  Contains: resource definitions, parameters, deployment instructions
+
+[2/6] Testing Terraform template generation for KSI-MLA-01...
+[PASS] Generated Terraform template (2512 characters)
+  Contains: resource blocks, variables, provider configuration
+
+[3/6] Testing Python code generation for KSI-IAM-01...
+[PASS] Generated Python code (8876 characters)
+  Contains: imports, authentication, evidence collection logic
+
+[4/6] Testing C# code generation for KSI-MLA-01...
+[PASS] Generated C# code (3105 characters)
+  Contains: using statements, classes, async methods
+
+[5/6] Testing PowerShell code generation for KSI-IAM-01...
+[PASS] Generated PowerShell code (5789 characters)
+  Contains: cmdlets, parameters, Azure modules
+
+[6/6] Testing architecture guidance generation...
+[PASS] Generated architecture guidance (9627 characters)
+  Contains: components, data flow, security, scaling
+
+================================================================================
+RESULTS
+================================================================================
+[PASS] Bicep template generation works
+[PASS] Terraform template generation works
+[PASS] Python code generation works
+[PASS] C# code generation works
+[PASS] PowerShell code generation works
+[PASS] Architecture guidance generation works
+
+[OK] All evidence automation tools passed!
+
+================================================================================
+Testing Template Variations for Different KSI Families
+================================================================================
+
+[IAM] Generating Bicep for KSI-IAM-01...
+[PASS] Generated 7641 characters
+
+[MLA] Generating Bicep for KSI-MLA-01...
+[PASS] Generated 3694 characters
+
+[AFR] Generating Bicep for KSI-AFR-01...
+[PASS] Generated 2480 characters
+
+================================================================================
+Verifying template customization...
+================================================================================
+[PASS] IAM template contains identity-specific resources
+[PASS] MLA template contains monitoring-specific resources
+[PASS] AFR template contains audit-specific resources
+
+[OK] Template variations test passed!
+
+================================================================================
+[OK] ALL EVIDENCE AUTOMATION TESTS PASSED!
+================================================================================
