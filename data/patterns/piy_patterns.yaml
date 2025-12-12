@@ -343,3 +343,1723 @@ finding:
 tags: ["data-retention", "privacy", "compliance", "security-gap"]
 nist_controls: ["si-12", "au-11", "mp-6"]
 related_ksis: ["KSI-PIY-02"]
+
+---
+# KSI-PIY-03: Vulnerability Disclosure Program
+pattern_id: "piy.vdp.missing_program"
+name: "Missing Vulnerability Disclosure Program"
+description: "Detects absence of vulnerability disclosure mechanisms (KSI-PIY-03)"
+family: "PIY"
+severity: "HIGH"
+ksi_id: "KSI-PIY-03"
+nist_controls: ["si-2", "pm-15"]
+category: "vulnerability_management"
+pattern_type: "documentation_pattern"
+
+languages:
+  markdown:
+    regex_fallback: "(?i)(SECURITY\\.md|vulnerability.*disclosure|responsible.*disclosure|bug.*bounty|security.*txt)"
+    positive_indicators:
+      - "security.md"
+      - "SECURITY.md"
+      - ".well-known/security.txt"
+      - "vulnerability disclosure"
+      - "responsible disclosure"
+      - "bug bounty"
+      - "security@"
+    negative_indicators:
+      - "email:"
+      - "contact:"
+      - "report:"
+      - "disclosure timeline"
+      
+  github_actions:
+    regex_fallback: "(?i)(codeql|snyk|trivy|dependabot)"
+    positive_indicators:
+      - "github/codeql-action"
+      - "snyk/actions"
+      - "aquasecurity/trivy-action"
+      - ".github/dependabot.yml"
+      
+finding:
+  title_template: "Missing Vulnerability Disclosure Program"
+  description_template: "Repository or application lacks vulnerability disclosure program. KSI-PIY-03 requires published VDP with contact information and disclosure timeline."
+  remediation_template: |
+    Create Vulnerability Disclosure Program (VDP):
+    
+    **SECURITY.md (GitHub/Root Directory):**
+    ```markdown
+    # Security Policy
+    
+    ## Supported Versions
+    
+    | Version | Supported          |
+    | ------- | ------------------ |
+    | 1.0.x   | :white_check_mark: |
+    | < 1.0   | :x:                |
+    
+    ## Reporting a Vulnerability
+    
+    **DO NOT create public GitHub issues for security vulnerabilities!**
+    
+    ### Reporting Process
+    
+    1. **Email:** security@yourcompany.com
+    2. **Subject:** [SECURITY] Brief description
+    3. **Include:**
+       - Vulnerability description
+       - Steps to reproduce
+       - Potential impact
+       - Suggested remediation (optional)
+    
+    ### Response Timeline
+    
+    - **Initial Response:** Within 24 hours
+    - **Triage:** Within 72 hours
+    - **Status Updates:** Weekly
+    - **Resolution Target:** 30-90 days (severity-dependent)
+    
+    ### Disclosure Timeline
+    
+    - **Critical:** 15 days coordinated disclosure
+    - **High:** 30 days coordinated disclosure
+    - **Medium:** 60 days coordinated disclosure
+    - **Low:** 90 days coordinated disclosure
+    
+    ### Scope
+    
+    **In Scope:**
+    - yourapp.com and *.yourapp.com
+    - API endpoints (api.yourapp.com)
+    - Mobile applications (iOS, Android)
+    
+    **Out of Scope:**
+    - Social engineering attacks
+    - Physical attacks
+    - Denial of Service (DoS)
+    - SPF/DMARC misconfigurations
+    
+    ### Recognition
+    
+    We maintain a Security Researchers Hall of Fame and may offer:
+    - Public recognition (with permission)
+    - Swag/merchandise
+    - Monetary rewards (for qualifying vulnerabilities)
+    
+    ### Legal Safe Harbor
+    
+    We will not pursue legal action against security researchers who:
+    - Report vulnerabilities in good faith
+    - Avoid violating privacy, destroying data, or disrupting services
+    - Follow responsible disclosure guidelines
+    - Give us reasonable time to remediate before public disclosure
+    
+    ## Security Best Practices
+    
+    - Enable MFA on all accounts
+    - Use strong, unique passwords
+    - Keep software up to date
+    - Report suspicious activity to security@yourcompany.com
+    ```
+    
+    **.well-known/security.txt (RFC 9116 Compliant):**
+    ```
+    Contact: mailto:security@yourcompany.com
+    Contact: https://yourcompany.com/security/report
+    Expires: 2026-12-31T23:59:59.000Z
+    Encryption: https://yourcompany.com/security/pgp-key.txt
+    Acknowledgments: https://yourcompany.com/security/hall-of-fame
+    Preferred-Languages: en
+    Canonical: https://yourcompany.com/.well-known/security.txt
+    Policy: https://yourcompany.com/security/disclosure-policy
+    Hiring: https://yourcompany.com/careers/security-jobs
+    ```
+    
+    **Internal VDP Process Document:**
+    ```yaml
+    vulnerability_disclosure_program:
+      contacts:
+        primary_email: security@yourcompany.com
+        backup_email: security-backup@yourcompany.com
+        pgp_key_url: https://yourcompany.com/security/pgp-key.txt
+        
+      response_sla:
+        initial_acknowledgment: 24h
+        triage_completion: 72h
+        status_updates: weekly
+        critical_fix: 15d
+        high_fix: 30d
+        medium_fix: 60d
+        low_fix: 90d
+        
+      disclosure_timeline:
+        critical: 15d
+        high: 30d
+        medium: 60d
+        low: 90d
+        
+      severity_criteria:
+        critical:
+          - Remote code execution
+          - Authentication bypass
+          - SQL injection with data access
+          - Privilege escalation (user to admin)
+        high:
+          - Cross-site scripting (XSS) with auth bypass
+          - CSRF on sensitive operations
+          - Information disclosure (PII, credentials)
+        medium:
+          - XSS (reflected, non-auth)
+          - CSRF on non-critical operations
+          - Open redirects
+        low:
+          - Informational findings
+          - Best practice violations
+          
+      rewards:
+        critical: $5000-$10000
+        high: $1000-$5000
+        medium: $500-$1000
+        low: $100-$500
+        
+      legal_safe_harbor:
+        - Good faith security research
+        - Responsible disclosure
+        - No data destruction
+        - No service disruption
+        - Reasonable disclosure timeline
+    ```
+    
+    **GitHub Security Advisories:**
+    Enable Private Vulnerability Reporting in repository settings:
+    Settings → Code security and analysis → Private vulnerability reporting → Enable
+    
+    **Bug Bounty Platforms (Optional):**
+    - HackerOne: https://hackerone.com
+    - Bugcrowd: https://bugcrowd.com
+    - Synack: https://synack.com
+    - YesWeHack: https://yeswehack.com
+    
+    **Required VDP Components (FedRAMP):**
+    1. Published security policy (SECURITY.md or website)
+    2. Security contact email
+    3. Disclosure timeline by severity
+    4. Scope definition (in-scope/out-of-scope assets)
+    5. Legal safe harbor statement
+    6. Response SLA commitments
+    7. Recognition/reward program (recommended)
+    
+  evidence_collection:
+    - "SECURITY.md or published VDP"
+    - ".well-known/security.txt"
+    - "VDP process documentation"
+    - "Vulnerability intake tracking"
+    - "Disclosure timeline compliance"
+  azure_services:
+    - "Azure Defender for Cloud"
+    - "Microsoft Security Response Center (MSRC) process"
+
+tags: ["vulnerability-disclosure", "vdp", "security-program", "critical-gap"]
+nist_controls: ["si-2", "pm-15", "ra-5"]
+related_ksis: ["KSI-PIY-03"]
+
+---
+# KSI-PIY-04: CISA Secure By Design
+pattern_id: "piy.secure_by_design.missing_practices"
+name: "Missing CISA Secure By Design Practices"
+description: "Detects absence of CISA Secure By Design principles (KSI-PIY-04)"
+family: "PIY"
+severity: "HIGH"
+ksi_id: "KSI-PIY-04"
+nist_controls: ["sa-8", "sa-11", "sa-15"]
+category: "secure_development"
+pattern_type: "code_pattern"
+
+languages:
+  python:
+    regex_fallback: "(?i)(hardcoded.*password|secret.*=|api.*key.*=|exec\\(|eval\\(|pickle\\.loads|yaml\\.load\\((?!.*safe_load))"
+    positive_indicators:
+      - "exec("
+      - "eval("
+      - "pickle.loads"
+      - "yaml.load("
+      - "password ="
+      - "api_key ="
+      - "secret ="
+    negative_indicators:
+      - "os.environ"
+      - "getenv"
+      - "yaml.safe_load"
+      - "# nosec"
+      
+  csharp:
+    regex_fallback: "(?i)(hardcoded.*password|SecretKey\\s*=|Password\\s*=\\s*[\"']|Process\\.Start|SqlCommand.*\\+)"
+    
+  typescript:
+    regex_fallback: "(?i)(hardcoded.*password|apiKey:\\s*[\"']|eval\\(|innerHTML\\s*=|dangerouslySetInnerHTML)"
+    
+  bicep:
+    regex_fallback: "(?i)(password\\s*:\\s*[\"']|adminPassword\\s*:|@secure\\(\\)\\s*param.*=)"
+    positive_indicators:
+      - "password: '"
+      - "adminPassword:"
+      - "secureString"
+    negative_indicators:
+      - "@secure()"
+      - "keyVault"
+      - "secretReference"
+      
+finding:
+  title_template: "CISA Secure By Design principle violation"
+  description_template: "Code violates CISA Secure By Design principles. KSI-PIY-04 requires security built-in from design phase."
+  remediation_template: |
+    Implement CISA Secure By Design Principles:
+    
+    **1. Default Security (Secure Out-of-the-Box):**
+    
+    Python - Environment Variables for Secrets:
+    ```python
+    import os
+    from azure.keyvault.secrets import SecretClient
+    from azure.identity import DefaultAzureCredential
+    
+    # BAD: Hardcoded secrets
+    # api_key = "sk-1234567890abcdef"  # NEVER DO THIS
+    
+    # GOOD: Environment variables
+    api_key = os.environ.get('API_KEY')
+    if not api_key:
+        raise ValueError("API_KEY environment variable not set")
+    
+    # BETTER: Azure Key Vault
+    credential = DefaultAzureCredential()
+    client = SecretClient(vault_url="https://myvault.vault.azure.net/", credential=credential)
+    api_key = client.get_secret("api-key").value
+    ```
+    
+    Bicep - Secrets Management:
+    ```bicep
+    @description('Admin password from Key Vault')
+    @secure()
+    param adminPassword string
+    
+    // Reference existing Key Vault
+    resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
+      name: keyVaultName
+      scope: resourceGroup(keyVaultResourceGroup)
+    }
+    
+    // Retrieve secret
+    module vm './vm.bicep' = {
+      name: 'vmDeployment'
+      params: {
+        adminPassword: keyVault.getSecret('adminPassword')
+      }
+    }
+    ```
+    
+    **2. Radical Transparency (Security Visibility):**
+    
+    Python - Comprehensive Logging:
+    ```python
+    import logging
+    import structlog
+    from azure.monitor.opentelemetry import configure_azure_monitor
+    
+    # Configure structured logging
+    structlog.configure(
+        processors=[
+            structlog.contextvars.merge_contextvars,
+            structlog.processors.add_log_level,
+            structlog.processors.TimeStamper(fmt="iso"),
+            structlog.processors.JSONRenderer()
+        ]
+    )
+    log = structlog.get_logger()
+    
+    # Security-focused logging
+    def authenticate_user(username, password):
+        try:
+            user = User.authenticate(username, password)
+            log.info("authentication_success", 
+                    username=username,
+                    ip=request.remote_addr,
+                    user_agent=request.headers.get('User-Agent'))
+            return user
+        except AuthenticationError as e:
+            log.warning("authentication_failure",
+                       username=username,
+                       ip=request.remote_addr,
+                       reason=str(e))
+            raise
+    ```
+    
+    **3. Vulnerability Disclosure (Proactive):**
+    See KSI-PIY-03 remediation for VDP implementation.
+    
+    **4. Automated Secure Development:**
+    
+    GitHub Actions - Security Automation:
+    ```yaml
+    name: Security Checks
+    
+    on: [push, pull_request]
+    
+    jobs:
+      security-scan:
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v4
+          
+          # SAST (Static Analysis)
+          - name: Run CodeQL
+            uses: github/codeql-action/init@v3
+            with:
+              languages: python, javascript
+              
+          - name: Perform CodeQL Analysis
+            uses: github/codeql-action/analyze@v3
+            
+          # Dependency Scanning
+          - name: Run Snyk
+            uses: snyk/actions/python@master
+            with:
+              command: test
+              args: --severity-threshold=high
+              
+          # Secret Scanning
+          - name: Run TruffleHog
+            uses: trufflesecurity/trufflehog@main
+            with:
+              path: ./
+              base: ${{ github.event.repository.default_branch }}
+              head: HEAD
+              
+          # Container Scanning
+          - name: Run Trivy
+            uses: aquasecurity/trivy-action@master
+            with:
+              scan-type: 'fs'
+              scan-ref: '.'
+              severity: 'CRITICAL,HIGH'
+    ```
+    
+    **5. Memory Safety:**
+    
+    Python - Input Validation:
+    ```python
+    from pydantic import BaseModel, Field, EmailStr, validator
+    from typing import Optional
+    import re
+    
+    class UserInput(BaseModel):
+        username: str = Field(..., min_length=3, max_length=32, regex="^[a-zA-Z0-9_-]+$")
+        email: EmailStr
+        age: Optional[int] = Field(None, ge=13, le=120)
+        
+        @validator('username')
+        def validate_username(cls, v):
+            if v.lower() in ['admin', 'root', 'system']:
+                raise ValueError('Reserved username')
+            return v
+    
+    # Usage
+    try:
+        user = UserInput(username="john_doe", email="john@example.com", age=25)
+    except ValueError as e:
+        log.error("invalid_input", error=str(e))
+        raise
+    ```
+    
+    **CISA Secure By Design Pledge Commitments:**
+    
+    1. **Multi-Factor Authentication (MFA):**
+       - Mandatory for all users
+       - Phishing-resistant MFA for admins
+       - No SMS-based MFA
+    
+    2. **Default Passwords:**
+       - No default passwords
+       - Force password change on first login
+       - Generate unique passwords per installation
+    
+    3. **Reducing Classes of Vulnerabilities:**
+       - Eliminate SQL injection (use parameterized queries)
+       - Eliminate XSS (use templating with auto-escaping)
+       - Eliminate command injection (avoid shell execution)
+    
+    4. **Security Patches:**
+       - Critical vulnerabilities patched within 14 days
+       - High vulnerabilities within 30 days
+       - Automated update mechanism
+    
+    5. **CVE Assignment:**
+       - Obtain CVEs for all security issues
+       - Public vulnerability disclosure
+    
+    6. **Vulnerability Disclosure Policy:**
+       - Published VDP (see KSI-PIY-03)
+       - Clear reporting process
+       - Legal safe harbor
+    
+    7. **Artifact Signing:**
+       - Code signing for all releases
+       - SBOM generation
+       - Supply chain security (Sigstore, SLSA)
+    
+  evidence_collection:
+    - "Secure By Design commitment documentation"
+    - "Security-first architecture diagrams"
+    - "Automated security testing results"
+    - "Default secure configuration"
+    - "MFA implementation evidence"
+  azure_services:
+    - "Azure Active Directory (Entra ID) MFA"
+    - "Azure Key Vault"
+    - "Microsoft Defender for Cloud"
+    - "Azure DevOps Security"
+
+tags: ["secure-by-design", "cisa", "secure-development", "security-gap"]
+nist_controls: ["sa-8", "sa-11", "sa-15", "si-7"]
+related_ksis: ["KSI-PIY-04", "KSI-PIY-03"]
+
+---
+# KSI-PIY-05: Evaluate Implementations
+pattern_id: "piy.evaluation.missing_validation"
+name: "Missing Implementation Validation"
+description: "Detects absence of security control validation (KSI-PIY-05)"
+family: "PIY"
+severity: "MEDIUM"
+ksi_id: "KSI-PIY-05"
+nist_controls: ["ca-2", "ca-7", "sa-11"]
+category: "testing_validation"
+pattern_type: "ci_cd_pattern"
+
+languages:
+  github_actions:
+    regex_fallback: "(?i)(pytest|unittest|jest|mocha|selenium|cypress)"
+    positive_indicators:
+      - "pytest"
+      - "unittest"
+      - "jest"
+      - "mocha"
+      - "selenium"
+      - "cypress"
+      - "test"
+    negative_indicators:
+      - "security"
+      - "penetration"
+      - "zap"
+      - "burp"
+      
+finding:
+  title_template: "Missing security control validation testing"
+  description_template: "CI/CD pipeline lacks security control validation tests. KSI-PIY-05 requires automated testing of security implementations."
+  remediation_template: |
+    Implement Security Control Validation Testing:
+    
+    **1. Unit Tests for Security Controls:**
+    
+    Python - pytest Security Tests:
+    ```python
+    import pytest
+    from app.auth import AuthService
+    from app.crypto import EncryptionService
+    
+    class TestAuthenticationControls:
+        """Test suite for authentication security controls"""
+        
+        def test_password_complexity_enforced(self):
+            """Verify password complexity requirements"""
+            auth = AuthService()
+            
+            # Weak passwords should be rejected
+            weak_passwords = [
+                "password",
+                "12345678",
+                "abcdefgh",
+                "Password"  # No numbers/symbols
+            ]
+            
+            for pwd in weak_passwords:
+                with pytest.raises(ValueError, match="password complexity"):
+                    auth.create_user("user", pwd)
+        
+        def test_account_lockout_after_failed_attempts(self):
+            """Verify account lockout mechanism"""
+            auth = AuthService()
+            auth.create_user("test_user", "SecureP@ss123")
+            
+            # 5 failed attempts should lock account
+            for i in range(5):
+                assert not auth.authenticate("test_user", "wrong_password")
+            
+            # Account should be locked
+            assert auth.is_locked("test_user")
+            
+            # Even correct password should fail
+            assert not auth.authenticate("test_user", "SecureP@ss123")
+        
+        def test_session_timeout_enforced(self):
+            """Verify session timeout"""
+            auth = AuthService()
+            session = auth.create_session("user")
+            
+            # Wait for session timeout (30 minutes)
+            import time
+            time.sleep(1800)
+            
+            assert not auth.validate_session(session.id)
+        
+        def test_mfa_required_for_privileged_users(self):
+            """Verify MFA enforcement"""
+            auth = AuthService()
+            admin_user = auth.create_user("admin", "SecureP@ss123", roles=["admin"])
+            
+            # First-factor authentication
+            session = auth.authenticate("admin", "SecureP@ss123")
+            assert session.requires_mfa
+            
+            # Second-factor required
+            with pytest.raises(ValueError, match="MFA required"):
+                session.access_resource()
+    
+    class TestEncryptionControls:
+        """Test suite for encryption security controls"""
+        
+        def test_data_encrypted_at_rest(self):
+            """Verify data encryption"""
+            crypto = EncryptionService()
+            plaintext = "sensitive data"
+            
+            encrypted = crypto.encrypt(plaintext)
+            assert encrypted != plaintext
+            assert len(encrypted) > len(plaintext)  # Includes IV/metadata
+            
+            decrypted = crypto.decrypt(encrypted)
+            assert decrypted == plaintext
+        
+        def test_encryption_uses_approved_algorithms(self):
+            """Verify FIPS 140-2 approved algorithms"""
+            crypto = EncryptionService()
+            
+            assert crypto.algorithm == "AES-256-GCM"
+            assert crypto.key_length == 256
+        
+        def test_keys_rotated_regularly(self):
+            """Verify key rotation"""
+            crypto = EncryptionService()
+            
+            # Keys should have creation timestamp
+            assert crypto.current_key.created_at is not None
+            
+            # Keys older than 90 days should trigger rotation
+            import datetime
+            if (datetime.datetime.now() - crypto.current_key.created_at).days > 90:
+                pytest.fail("Encryption key not rotated in 90 days")
+    ```
+    
+    **2. Integration Tests for Security Workflows:**
+    
+    Python - pytest Integration Tests:
+    ```python
+    import pytest
+    import requests
+    from azure.identity import DefaultAzureCredential
+    from azure.keyvault.secrets import SecretClient
+    
+    @pytest.fixture
+    def app_url():
+        return os.environ.get('APP_URL', 'https://staging.example.com')
+    
+    class TestSecurityWorkflows:
+        """Integration tests for security workflows"""
+        
+        def test_unauthorized_access_blocked(self, app_url):
+            """Verify unauthorized access is denied"""
+            response = requests.get(f"{app_url}/api/admin")
+            assert response.status_code == 401
+        
+        def test_https_enforced(self, app_url):
+            """Verify HTTP redirects to HTTPS"""
+            http_url = app_url.replace('https://', 'http://')
+            response = requests.get(http_url, allow_redirects=False)
+            assert response.status_code == 301
+            assert response.headers['Location'].startswith('https://')
+        
+        def test_security_headers_present(self, app_url):
+            """Verify security headers"""
+            response = requests.get(app_url)
+            
+            required_headers = {
+                'Strict-Transport-Security': 'max-age=31536000',
+                'X-Content-Type-Options': 'nosniff',
+                'X-Frame-Options': 'DENY',
+                'Content-Security-Policy': "default-src 'self'"
+            }
+            
+            for header, expected_value in required_headers.items():
+                assert header in response.headers
+                assert expected_value in response.headers[header]
+        
+        def test_rate_limiting_enforced(self, app_url):
+            """Verify rate limiting"""
+            for i in range(100):
+                response = requests.get(f"{app_url}/api/search")
+                if response.status_code == 429:
+                    break
+            else:
+                pytest.fail("Rate limiting not enforced after 100 requests")
+    ```
+    
+    **3. Penetration Testing Automation:**
+    
+    GitHub Actions - DAST with OWASP ZAP:
+    ```yaml
+    name: Security Validation
+    
+    on:
+      schedule:
+        - cron: '0 2 * * *'  # Daily at 2 AM
+      workflow_dispatch:
+    
+    jobs:
+      dast-scan:
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v4
+          
+          - name: Deploy to staging
+            run: |
+              # Deploy application to staging environment
+              az webapp deploy --name staging-app --resource-group staging-rg
+          
+          - name: OWASP ZAP Baseline Scan
+            uses: zaproxy/action-baseline@v0.10.0
+            with:
+              target: 'https://staging.example.com'
+              rules_file_name: '.zap/rules.tsv'
+              cmd_options: '-a'
+          
+          - name: OWASP ZAP Full Scan
+            uses: zaproxy/action-full-scan@v0.8.0
+            with:
+              target: 'https://staging.example.com'
+              rules_file_name: '.zap/rules.tsv'
+              cmd_options: '-j'
+          
+          - name: Upload ZAP Results
+            uses: actions/upload-artifact@v4
+            with:
+              name: zap-results
+              path: |
+                report_html.html
+                report_json.json
+    ```
+    
+    **4. Compliance Testing:**
+    
+    Python - Compliance Validation:
+    ```python
+    import pytest
+    from azure.mgmt.security import SecurityCenter
+    from azure.identity import DefaultAzureCredential
+    
+    class TestFedRAMPCompliance:
+        """Test FedRAMP compliance controls"""
+        
+        @pytest.fixture
+        def security_client(self):
+            credential = DefaultAzureCredential()
+            return SecurityCenter(credential, subscription_id=os.environ['SUBSCRIPTION_ID'])
+        
+        def test_encryption_enabled_for_all_storage(self, security_client):
+            """Verify all storage accounts use encryption"""
+            assessments = security_client.assessments.list()
+            
+            for assessment in assessments:
+                if 'storage' in assessment.resource_details.id.lower():
+                    assert assessment.status.code == 'Healthy', f"Storage encryption failed: {assessment.display_name}"
+        
+        def test_network_security_groups_configured(self, security_client):
+            """Verify NSGs properly configured"""
+            assessments = security_client.assessments.list()
+            
+            for assessment in assessments:
+                if 'network' in assessment.resource_details.id.lower():
+                    assert assessment.status.code == 'Healthy', f"NSG misconfigured: {assessment.display_name}"
+        
+        def test_vulnerability_scanning_enabled(self, security_client):
+            """Verify vulnerability assessment enabled"""
+            auto_provisioning = security_client.auto_provisioning_settings.list()
+            
+            vulnerability_assessment_enabled = any(
+                setting.auto_provision == 'On' 
+                for setting in auto_provisioning 
+                if 'vulnerability' in setting.name.lower()
+            )
+            
+            assert vulnerability_assessment_enabled, "Vulnerability assessment not enabled"
+    ```
+    
+    **Required Testing Types:**
+    1. Unit tests for security functions
+    2. Integration tests for security workflows
+    3. Penetration testing (DAST)
+    4. Static analysis (SAST)
+    5. Compliance validation
+    6. Performance/load testing under security constraints
+    
+  evidence_collection:
+    - "Security test results"
+    - "Penetration testing reports"
+    - "Compliance validation results"
+    - "Test coverage reports (>80% for security controls)"
+    - "Automated testing pipeline configuration"
+  azure_services:
+    - "Azure DevTest Labs"
+    - "Microsoft Defender for Cloud"
+    - "Azure Security Center assessments"
+
+tags: ["validation", "testing", "penetration-testing", "security-gap"]
+nist_controls: ["ca-2", "ca-7", "sa-11", "sa-15.7"]
+related_ksis: ["KSI-PIY-05"]
+
+---
+# KSI-PIY-06: Security Investment Effectiveness
+pattern_id: "piy.investment.missing_metrics"
+name: "Missing Security Investment Metrics"
+description: "Detects absence of security effectiveness measurement (KSI-PIY-06)"
+family: "PIY"
+severity: "MEDIUM"
+ksi_id: "KSI-PIY-06"
+nist_controls: ["pm-9", "pm-14"]
+category: "security_metrics"
+pattern_type: "documentation_pattern"
+
+languages:
+  markdown:
+    regex_fallback: "(?i)(security.*metric|roi|return.*investment|effectiveness|kpi|key.*performance)"
+    positive_indicators:
+      - "security metrics"
+      - "ROI"
+      - "KPI"
+      - "effectiveness"
+      - "measurement"
+    negative_indicators:
+      - "MTTR"
+      - "MTTD"
+      - "vulnerability count"
+      - "patch compliance"
+      
+finding:
+  title_template: "Missing security investment effectiveness metrics"
+  description_template: "Organization lacks documented security investment effectiveness metrics. KSI-PIY-06 requires measurement of security program ROI."
+  remediation_template: |
+    Implement Security Investment Effectiveness Metrics:
+    
+    **1. Key Performance Indicators (KPIs):**
+    
+    ```yaml
+    security_kpis:
+      detection_response:
+        mttr:  # Mean Time To Respond
+          target: 4h
+          current: 6h
+          trend: improving
+          
+        mttd:  # Mean Time To Detect
+          target: 1h
+          current: 2h
+          trend: improving
+          
+        mttr_critical:  # Critical incident response time
+          target: 15m
+          current: 30m
+          trend: stable
+          
+      vulnerability_management:
+        critical_patching:
+          target: 14d
+          current: 10d
+          trend: excellent
+          
+        high_patching:
+          target: 30d
+          current: 25d
+          trend: good
+          
+        vulnerability_scan_coverage:
+          target: 100%
+          current: 98%
+          trend: stable
+          
+        false_positive_rate:
+          target: <5%
+          current: 8%
+          trend: needs_improvement
+          
+      security_awareness:
+        training_completion:
+          target: 100%
+          current: 95%
+          trend: improving
+          
+        phishing_click_rate:
+          target: <5%
+          current: 12%
+          trend: needs_improvement
+          
+        security_incidents_reported:
+          target: +20% YoY  # More reporting is good
+          current: +15% YoY
+          trend: improving
+          
+      access_management:
+        mfa_adoption:
+          target: 100%
+          current: 92%
+          trend: improving
+          
+        privileged_account_review:
+          target: quarterly
+          current: quarterly
+          trend: on_track
+          
+        dormant_account_removal:
+          target: 30d
+          current: 45d
+          trend: needs_improvement
+    ```
+    
+    **2. ROI Calculation Framework:**
+    
+    Python - Security ROI Calculator:
+    ```python
+    from dataclasses import dataclass
+    from typing import List, Dict
+    import pandas as pd
+    
+    @dataclass
+    class SecurityInvestment:
+        name: str
+        annual_cost: float
+        implementation_cost: float
+        
+    @dataclass
+    class RiskReduction:
+        threat: str
+        likelihood_before: float  # 0-1
+        likelihood_after: float   # 0-1
+        impact: float             # Dollar value
+        
+    class SecurityROICalculator:
+        """Calculate ROI for security investments"""
+        
+        def __init__(self, time_horizon_years: int = 3):
+            self.time_horizon = time_horizon_years
+            
+        def calculate_risk_reduction_value(self, reductions: List[RiskReduction]) -> float:
+            """Calculate annual value of risk reduction"""
+            total_value = 0
+            
+            for reduction in reductions:
+                # Annual Loss Expectancy (ALE) before = Likelihood × Impact
+                ale_before = reduction.likelihood_before * reduction.impact
+                
+                # ALE after investment
+                ale_after = reduction.likelihood_after * reduction.impact
+                
+                # Value = Reduction in ALE
+                value = ale_before - ale_after
+                total_value += value
+                
+            return total_value
+        
+        def calculate_roi(self, 
+                         investment: SecurityInvestment,
+                         risk_reductions: List[RiskReduction],
+                         operational_savings: float = 0) -> Dict:
+            """
+            Calculate ROI for security investment
+            
+            ROI = (Gain - Cost) / Cost
+            """
+            # Annual benefit
+            risk_value = self.calculate_risk_reduction_value(risk_reductions)
+            annual_benefit = risk_value + operational_savings
+            
+            # Total cost over time horizon
+            total_cost = (
+                investment.implementation_cost + 
+                (investment.annual_cost * self.time_horizon)
+            )
+            
+            # Total benefit over time horizon
+            total_benefit = annual_benefit * self.time_horizon
+            
+            # ROI calculation
+            roi = (total_benefit - total_cost) / total_cost if total_cost > 0 else 0
+            
+            # Payback period (years)
+            payback_period = total_cost / annual_benefit if annual_benefit > 0 else float('inf')
+            
+            return {
+                'investment_name': investment.name,
+                'total_cost': total_cost,
+                'annual_cost': investment.annual_cost,
+                'implementation_cost': investment.implementation_cost,
+                'annual_benefit': annual_benefit,
+                'total_benefit': total_benefit,
+                'roi_percentage': roi * 100,
+                'payback_period_years': payback_period,
+                'npv': total_benefit - total_cost  # Net Present Value (simplified)
+            }
+    
+    # Example: Calculate ROI for SIEM investment
+    siem_investment = SecurityInvestment(
+        name="SIEM Platform",
+        annual_cost=100000,  # Licensing + operational
+        implementation_cost=50000
+    )
+    
+    risk_reductions = [
+        RiskReduction(
+            threat="Data breach",
+            likelihood_before=0.15,  # 15% annual probability
+            likelihood_after=0.05,   # 5% after SIEM
+            impact=5000000           # $5M average breach cost
+        ),
+        RiskReduction(
+            threat="Ransomware",
+            likelihood_before=0.10,
+            likelihood_after=0.03,
+            impact=2000000
+        ),
+        RiskReduction(
+            threat="Insider threat",
+            likelihood_before=0.08,
+            likelihood_after=0.02,
+            impact=1000000
+        )
+    ]
+    
+    calculator = SecurityROICalculator(time_horizon_years=3)
+    results = calculator.calculate_roi(
+        siem_investment, 
+        risk_reductions,
+        operational_savings=50000  # Reduced analyst time
+    )
+    
+    print(f"SIEM Investment ROI: {results['roi_percentage']:.1f}%")
+    print(f"Payback Period: {results['payback_period_years']:.1f} years")
+    print(f"Net Present Value: ${results['npv']:,.0f}")
+    ```
+    
+    **3. Security Metrics Dashboard:**
+    
+    Python - Azure Monitor Integration:
+    ```python
+    from azure.monitor.query import LogsQueryClient, MetricsQueryClient
+    from azure.identity import DefaultAzureCredential
+    from datetime import datetime, timedelta
+    
+    class SecurityMetricsDashboard:
+        """Collect and analyze security metrics"""
+        
+        def __init__(self, workspace_id: str):
+            credential = DefaultAzureCredential()
+            self.logs_client = LogsQueryClient(credential)
+            self.metrics_client = MetricsQueryClient(credential)
+            self.workspace_id = workspace_id
+            
+        def get_security_incidents_count(self, days: int = 30) -> int:
+            """Count security incidents"""
+            query = """
+            SecurityIncident
+            | where TimeGenerated > ago({}d)
+            | summarize count()
+            """.format(days)
+            
+            response = self.logs_client.query_workspace(
+                self.workspace_id,
+                query,
+                timespan=timedelta(days=days)
+            )
+            
+            return response.tables[0].rows[0][0]
+        
+        def get_mttr(self, days: int = 30) -> float:
+            """Calculate Mean Time To Respond"""
+            query = """
+            SecurityIncident
+            | where TimeGenerated > ago({}d)
+            | where Status == "Closed"
+            | extend ResolutionTime = datetime_diff('hour', ClosedTime, CreatedTime)
+            | summarize MTTR = avg(ResolutionTime)
+            """.format(days)
+            
+            response = self.logs_client.query_workspace(
+                self.workspace_id,
+                query,
+                timespan=timedelta(days=days)
+            )
+            
+            return response.tables[0].rows[0][0]
+        
+        def get_vulnerability_metrics(self) -> Dict:
+            """Get vulnerability management metrics"""
+            query = """
+            SecurityVulnerability
+            | where TimeGenerated > ago(30d)
+            | summarize 
+                Total = count(),
+                Critical = countif(Severity == "Critical"),
+                High = countif(Severity == "High"),
+                Medium = countif(Severity == "Medium"),
+                Low = countif(Severity == "Low"),
+                AvgTimeToRemediate = avg(TimeToRemediate)
+            """
+            
+            response = self.logs_client.query_workspace(
+                self.workspace_id,
+                query,
+                timespan=timedelta(days=30)
+            )
+            
+            row = response.tables[0].rows[0]
+            return {
+                'total': row[0],
+                'critical': row[1],
+                'high': row[2],
+                'medium': row[3],
+                'low': row[4],
+                'avg_time_to_remediate_hours': row[5]
+            }
+        
+        def generate_executive_report(self) -> Dict:
+            """Generate executive security metrics report"""
+            return {
+                'period': '30 days',
+                'incidents': self.get_security_incidents_count(),
+                'mttr_hours': self.get_mttr(),
+                'vulnerabilities': self.get_vulnerability_metrics(),
+                'generated_at': datetime.utcnow().isoformat()
+            }
+    ```
+    
+    **4. FedRAMP Required Metrics:**
+    
+    - **Security Assessment Metrics:**
+      - Number of security controls assessed
+      - Pass/fail rate by control family
+      - Remediation timeline for findings
+      
+    - **Continuous Monitoring Metrics:**
+      - Configuration change frequency
+      - Unauthorized change detection rate
+      - Asset inventory accuracy
+      
+    - **Incident Response Metrics:**
+      - Incident count by severity
+      - Mean Time To Detect (MTTD)
+      - Mean Time To Respond (MTTR)
+      - Mean Time To Recover (MTTR)
+      
+    - **Vulnerability Management Metrics:**
+      - Vulnerability scan coverage
+      - Critical vulnerability patching timeline
+      - False positive rate
+      
+  evidence_collection:
+    - "Security metrics dashboard"
+    - "ROI calculation documentation"
+    - "Executive security reports"
+    - "Trend analysis"
+    - "Investment justification"
+  azure_services:
+    - "Azure Monitor"
+    - "Microsoft Sentinel"
+    - "Power BI"
+    - "Azure Log Analytics"
+
+tags: ["metrics", "roi", "effectiveness", "security-gap"]
+nist_controls: ["pm-9", "pm-14", "ca-7"]
+related_ksis: ["KSI-PIY-06"]
+
+---
+# KSI-PIY-07: Supply Chain Risk Management
+pattern_id: "piy.supply_chain.unvetted_dependencies"
+name: "Unvetted Supply Chain Dependencies"
+description: "Detects dependencies without supply chain security validation (KSI-PIY-07)"
+family: "PIY"
+severity: "HIGH"
+ksi_id: "KSI-PIY-07"
+nist_controls: ["sa-9", "sa-12", "sr-2"]
+category: "supply_chain_security"
+pattern_type: "dependency_pattern"
+
+languages:
+  python:
+    regex_fallback: "(?i)(requirements\\.txt|pyproject\\.toml|setup\\.py|pipfile)"
+    positive_indicators:
+      - "requirements.txt"
+      - "pyproject.toml"
+    negative_indicators:
+      - "# vetted"
+      - "# approved"
+      - "# sbom"
+      
+  typescript:
+    regex_fallback: "(package\\.json|package-lock\\.json|yarn\\.lock)"
+    
+  csharp:
+    regex_fallback: "(\\.csproj|packages\\.config|paket\\.dependencies)"
+    
+finding:
+  title_template: "Unvetted supply chain dependencies detected"
+  description_template: "Dependencies lack supply chain security vetting. KSI-PIY-07 requires vendor/dependency risk assessment."
+  remediation_template: |
+    Implement Supply Chain Security for Dependencies:
+    
+    **1. Dependency Vetting Process:**
+    
+    Dependency Approval Checklist:
+    ```yaml
+    dependency_approval_criteria:
+      licensing:
+        - Approved licenses: [MIT, Apache-2.0, BSD-3-Clause]
+        - Prohibited licenses: [GPL, AGPL, Commercial-Unknown]
+        - License compatibility verified
+        
+      security:
+        - No known critical vulnerabilities
+        - Active security response team
+        - CVE response time < 30 days
+        - Security advisories published
+        
+      maintenance:
+        - Active development (commits in last 90 days)
+        - Responsive maintainers
+        - Version release cadence
+        - Long-term support commitment
+        
+      provenance:
+        - Official package repository only (PyPI, npm, NuGet)
+        - Package signing verified
+        - Maintainer identity verified
+        - No typosquatting risk
+        
+      alternatives:
+        - Evaluated 3+ alternatives
+        - Justification documented
+        - Cost-benefit analysis
+    ```
+    
+    **2. Automated Supply Chain Scanning:**
+    
+    GitHub Actions - Comprehensive Supply Chain Security:
+    ```yaml
+    name: Supply Chain Security
+    
+    on:
+      push:
+        paths:
+          - 'requirements.txt'
+          - 'package.json'
+          - '*.csproj'
+      schedule:
+        - cron: '0 0 * * *'  # Daily
+    
+    jobs:
+      supply-chain-scan:
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v4
+          
+          # Dependency Review (GitHub native)
+          - name: Dependency Review
+            uses: actions/dependency-review-action@v4
+            with:
+              fail-on-severity: high
+              
+          # SBOM Generation
+          - name: Generate SBOM
+            uses: anchore/sbom-action@v0
+            with:
+              format: cyclonedx-json
+              output-file: sbom.json
+              
+          - name: Upload SBOM
+            uses: actions/upload-artifact@v4
+            with:
+              name: sbom
+              path: sbom.json
+              
+          # Vulnerability Scanning
+          - name: Scan dependencies (Snyk)
+            uses: snyk/actions/python@master
+            env:
+              SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+            with:
+              command: test
+              args: --severity-threshold=high --file=requirements.txt
+              
+          # Supply Chain Levels for Software Artifacts (SLSA)
+          - name: SLSA Provenance
+            uses: slsa-framework/slsa-github-generator@v1.9.0
+            with:
+              provenance-name: provenance.intoto.jsonl
+              
+          # License Compliance
+          - name: Check Licenses
+            uses: fossas/fossa-action@main
+            with:
+              api-key: ${{ secrets.FOSSA_API_KEY }}
+          
+          # Dependency Confusion Protection
+          - name: Check for Dependency Confusion
+            run: |
+              pip install pip-audit
+              pip-audit --desc --fix
+    ```
+    
+    **3. Approved Dependency Registry:**
+    
+    Python - Vetted Dependencies List:
+    ```yaml
+    # approved_dependencies.yaml
+    # All production dependencies must be on this list
+    
+    python:
+      frameworks:
+        - name: fastapi
+          versions: [">=0.100.0,<1.0.0"]
+          vetted_date: "2024-01-15"
+          vetted_by: "security-team"
+          justification: "Modern async framework, active security team"
+          alternatives_considered: ["flask", "django"]
+          
+        - name: django
+          versions: [">=4.2.0,<5.0.0"]
+          vetted_date: "2024-01-15"
+          vetted_by: "security-team"
+          justification: "Mature framework, excellent security record"
+          
+      security:
+        - name: cryptography
+          versions: [">=41.0.0"]
+          vetted_date: "2024-01-15"
+          vetted_by: "security-team"
+          justification: "FIPS 140-2 validated, industry standard"
+          
+      azure_sdk:
+        - name: azure-identity
+          versions: [">=1.15.0"]
+          vetted_date: "2024-01-15"
+          vetted_by: "security-team"
+          justification: "Official Microsoft SDK"
+          
+    prohibited_packages:
+      - name: pickle
+        reason: "Insecure deserialization risk"
+        alternatives: ["json", "msgpack"]
+        
+      - name: eval/exec
+        reason: "Code injection risk"
+        alternatives: ["ast.literal_eval for data", "custom parsers"]
+    ```
+    
+    **4. Continuous Monitoring:**
+    
+    Python - Dependency Monitoring Service:
+    ```python
+    import requests
+    from typing import List, Dict
+    from dataclasses import dataclass
+    
+    @dataclass
+    class Vulnerability:
+        cve_id: str
+        severity: str
+        package: str
+        affected_versions: str
+        fixed_version: str
+        
+    class SupplyChainMonitor:
+        """Monitor dependencies for new vulnerabilities"""
+        
+        def __init__(self, github_token: str):
+            self.github_token = github_token
+            self.headers = {
+                'Authorization': f'token {github_token}',
+                'Accept': 'application/vnd.github.v3+json'
+            }
+            
+        def check_github_advisories(self, package: str) -> List[Vulnerability]:
+            """Check GitHub Security Advisories"""
+            url = f"https://api.github.com/advisories?affects={package}"
+            response = requests.get(url, headers=self.headers)
+            
+            vulnerabilities = []
+            for advisory in response.json():
+                vulnerabilities.append(Vulnerability(
+                    cve_id=advisory['cve_id'],
+                    severity=advisory['severity'],
+                    package=package,
+                    affected_versions=advisory['vulnerable_versions'],
+                    fixed_version=advisory['patched_versions']
+                ))
+            
+            return vulnerabilities
+        
+        def monitor_dependencies(self, requirements_file: str) -> Dict:
+            """Monitor all dependencies for vulnerabilities"""
+            with open(requirements_file) as f:
+                packages = [
+                    line.strip().split('==')[0] 
+                    for line in f 
+                    if line.strip() and not line.startswith('#')
+                ]
+            
+            all_vulnerabilities = {}
+            for package in packages:
+                vulns = self.check_github_advisories(package)
+                if vulns:
+                    all_vulnerabilities[package] = vulns
+            
+            return {
+                'total_packages': len(packages),
+                'vulnerable_packages': len(all_vulnerabilities),
+                'vulnerabilities': all_vulnerabilities,
+                'critical_count': sum(
+                    1 for vulns in all_vulnerabilities.values() 
+                    for v in vulns 
+                    if v.severity == 'critical'
+                )
+            }
+    ```
+    
+    **5. FedRAMP Supply Chain Requirements:**
+    
+    - **Vendor Risk Assessment:**
+      - Security posture evaluation
+      - Financial stability check
+      - Compliance certifications
+      - Incident response capability
+      
+    - **Software Bill of Materials (SBOM):**
+      - CycloneDX or SPDX format
+      - Component name, version, supplier
+      - License information
+      - Known vulnerabilities
+      
+    - **Continuous Monitoring:**
+      - Daily vulnerability scanning
+      - License compliance checks
+      - Dependency update tracking
+      - Security advisory monitoring
+      
+    - **Incident Response:**
+      - Supply chain incident plan
+      - Vendor breach notification process
+      - Rapid patching capability
+      
+  evidence_collection:
+    - "Approved dependencies list"
+    - "Dependency vetting documentation"
+    - "SBOM (CycloneDX or SPDX)"
+    - "Vulnerability scan results"
+    - "Vendor risk assessments"
+  azure_services:
+    - "Azure Artifacts (private package registry)"
+    - "Microsoft Defender for Cloud (dependency scanning)"
+    - "Azure DevOps (SBOM generation)"
+
+tags: ["supply-chain", "dependencies", "sbom", "security-gap"]
+nist_controls: ["sa-9", "sa-12", "sr-2", "sr-3", "sr-4", "sr-5"]
+related_ksis: ["KSI-PIY-07", "KSI-TPR-03", "KSI-TPR-04"]
+
+---
+# KSI-PIY-08: Executive Support
+pattern_id: "piy.executive.missing_governance"
+name: "Missing Executive Security Governance"
+description: "Detects absence of executive security oversight (KSI-PIY-08)"
+family: "PIY"
+severity: "MEDIUM"
+ksi_id: "KSI-PIY-08"
+nist_controls: ["pm-1", "pm-2"]
+category: "governance"
+pattern_type: "documentation_pattern"
+
+languages:
+  markdown:
+    regex_fallback: "(?i)(executive|ciso|board|governance|oversight|charter)"
+    positive_indicators:
+      - "CISO"
+      - "board"
+      - "executive"
+      - "governance"
+      - "charter"
+    negative_indicators:
+      - "meeting schedule"
+      - "reporting structure"
+      - "escalation"
+      
+finding:
+  title_template: "Missing executive security governance documentation"
+  description_template: "Organization lacks documented executive security oversight. KSI-PIY-08 requires executive-level security governance."
+  remediation_template: |
+    Implement Executive Security Governance:
+    
+    **1. Security Governance Structure:**
+    
+    ```yaml
+    security_governance:
+      ciso:
+        title: "Chief Information Security Officer"
+        reports_to: "CEO"  # Or CTO/CIO
+        direct_reports:
+          - "Director of Security Operations"
+          - "Director of Security Architecture"
+          - "Director of Compliance & Risk"
+          - "Director of Identity & Access Management"
+        responsibilities:
+          - "Overall security strategy"
+          - "Risk management"
+          - "Compliance oversight"
+          - "Incident response leadership"
+          - "Security budget management"
+          
+      security_steering_committee:
+        chair: "CISO"
+        members:
+          - "CEO"
+          - "CTO"
+          - "CFO"
+          - "General Counsel"
+          - "VP Engineering"
+          - "VP Operations"
+        meeting_frequency: "Monthly"
+        responsibilities:
+          - "Approve security policies"
+          - "Review risk assessments"
+          - "Allocate security budget"
+          - "Oversee major security initiatives"
+          
+      board_security_committee:
+        chair: "Board Member with Security Expertise"
+        members:
+          - "3+ Board Members"
+          - "CISO (ex-officio)"
+        meeting_frequency: "Quarterly"
+        responsibilities:
+          - "Review enterprise security posture"
+          - "Approve security strategy"
+          - "Oversee cyber insurance"
+          - "Review major incidents"
+          - "Ensure regulatory compliance"
+    ```
+    
+    **2. Executive Reporting Framework:**
+    
+    PowerPoint/Markdown - Executive Security Dashboard:
+    ```markdown
+    # Monthly Executive Security Report
+    **Period:** December 2024  
+    **Prepared by:** CISO Office  
+    **Classification:** Confidential  
+    
+    ## Executive Summary
+    
+    - **Overall Posture:** 🟢 GREEN
+    - **Trend:** ↗️ Improving
+    - **Critical Risks:** 0
+    - **Major Incidents:** 0
+    
+    ## Key Metrics
+    
+    | Metric | Target | Actual | Trend |
+    |--------|--------|--------|-------|
+    | Mean Time To Detect | 1h | 45m | 🟢 ↗️ |
+    | Mean Time To Respond | 4h | 3.5h | 🟢 ↗️ |
+    | Critical Vulns Patched | 100% in 14d | 100% | 🟢 → |
+    | Security Training | 100% | 98% | 🟡 ↗️ |
+    | MFA Adoption | 100% | 95% | 🟡 ↗️ |
+    
+    ## Risk Landscape
+    
+    ### Top 3 Risks
+    1. **Supply Chain Attack** (Likelihood: Medium, Impact: High)
+       - Mitigation: Enhanced vendor vetting, SBOM generation
+       - Target completion: Q1 2025
+    
+    2. **Ransomware** (Likelihood: Medium, Impact: Critical)
+       - Mitigation: Immutable backups, EDR deployment
+       - Status: 85% complete
+    
+    3. **Insider Threat** (Likelihood: Low, Impact: High)
+       - Mitigation: DLP, privileged access management
+       - Status: Ongoing monitoring
+    
+    ## Security Initiatives
+    
+    ### In Progress
+    - **Zero Trust Architecture** (60% complete)
+      - Budget: $500K
+      - Expected completion: Q2 2025
+      - ROI: Reduce breach risk by 40%
+    
+    - **SIEM Upgrade** (80% complete)
+      - Budget: $200K
+      - Expected completion: Q1 2025
+      - ROI: Improve detection by 50%
+    
+    ### Proposed
+    - **Security Awareness Platform**
+      - Budget: $100K
+      - Expected start: Q1 2025
+      - ROI: Reduce phishing success by 60%
+    
+    ## Compliance Status
+    
+    | Framework | Status | Next Audit |
+    |-----------|--------|------------|
+    | FedRAMP | 🟢 Authorized | June 2025 |
+    | SOC 2 Type II | 🟢 Compliant | March 2025 |
+    | ISO 27001 | 🟢 Certified | September 2025 |
+    
+    ## Incidents & Threats
+    
+    - **Incidents This Month:** 3 (all resolved)
+    - **Phishing Attempts Blocked:** 1,247
+    - **Malware Blocked:** 89 attempts
+    - **DDoS Attacks:** 2 (mitigated)
+    
+    ## Budget Status
+    
+    - **Annual Budget:** $2.5M
+    - **Spent YTD:** $1.8M (72%)
+    - **Forecast:** On track
+    - **Proposed Increases:** +$500K for Q1 2025 initiatives
+    
+    ## Recommendations
+    
+    1. **Approve Zero Trust acceleration** (+$100K budget)
+    2. **Expand security team** (+2 FTEs for SOC)
+    3. **Enhance third-party risk program** (+$50K tools)
+    
+    ---
+    
+    **Next Report:** January 15, 2025  
+    **Questions:** ciso@company.com  
+    ```
+    
+    **3. Security Policy Framework:**
+    
+    ```yaml
+    security_policies:
+      information_security_policy:
+        owner: "CISO"
+        approved_by: "CEO"
+        approved_date: "2024-01-15"
+        review_frequency: "Annual"
+        scope: "Enterprise-wide"
+        status: "Active"
+        
+      acceptable_use_policy:
+        owner: "CISO"
+        approved_by: "Security Steering Committee"
+        approved_date: "2024-01-15"
+        review_frequency: "Annual"
+        
+      incident_response_policy:
+        owner: "Director of Security Operations"
+        approved_by: "CISO"
+        approved_date: "2024-01-15"
+        review_frequency: "Semi-annual"
+        
+      data_classification_policy:
+        owner: "Director of Compliance"
+        approved_by: "CISO"
+        approved_date: "2024-01-15"
+        review_frequency: "Annual"
+    ```
+    
+    **4. Escalation Matrix:**
+    
+    ```yaml
+    incident_escalation:
+      severity_1_critical:
+        initial_response: "Security Operations Center (24/7)"
+        escalation_timeline:
+          - time: "Immediate"
+            notify: ["CISO", "Director of Security Operations"]
+          - time: "15 minutes"
+            notify: ["CTO", "CEO"]
+          - time: "30 minutes"
+            notify: ["Board Security Committee Chair"]
+        communication_channels:
+          - "PagerDuty"
+          - "SMS/Phone"
+          - "Encrypted messaging (Signal)"
+          
+      severity_2_high:
+        initial_response: "Security Operations Center"
+        escalation_timeline:
+          - time: "Immediate"
+            notify: ["Director of Security Operations"]
+          - time: "1 hour"
+            notify: ["CISO"]
+          - time: "4 hours"
+            notify: ["CTO"]
+            
+      severity_3_medium:
+        initial_response: "Security Operations Center"
+        escalation_timeline:
+          - time: "Immediate"
+            notify: ["Security Operations Manager"]
+          - time: "4 hours"
+            notify: ["Director of Security Operations"]
+          - time: "24 hours"
+            notify: ["CISO"]
+    ```
+    
+    **5. FedRAMP Executive Requirements:**
+    
+    - **Designated Senior Security Official:**
+      - Executive-level (C-suite or direct report)
+      - Authority over security budget
+      - Direct access to CEO/board
+      
+    - **Security Steering Committee:**
+      - Quarterly meetings minimum
+      - Cross-functional representation
+      - Policy approval authority
+      
+    - **Board Oversight:**
+      - Quarterly security briefings
+      - Annual strategy review
+      - Risk appetite setting
+      - Cyber insurance review
+      
+    - **Documented Responsibilities:**
+      - Security governance charter
+      - Roles and responsibilities matrix
+      - Escalation procedures
+      - Reporting structure
+      
+  evidence_collection:
+    - "Security governance charter"
+    - "Executive reporting examples"
+    - "Security Steering Committee meeting minutes"
+    - "Board security briefing materials"
+    - "Escalation matrix documentation"
+  azure_services:
+    - "Azure Boards (governance tracking)"
+    - "Power BI (executive dashboards)"
+    - "Microsoft Teams (executive communication)"
+
+tags: ["governance", "executive", "oversight", "security-gap"]
+nist_controls: ["pm-1", "pm-2", "pm-9"]
+related_ksis: ["KSI-PIY-08"]

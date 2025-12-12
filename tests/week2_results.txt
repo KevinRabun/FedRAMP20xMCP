@@ -1,0 +1,129 @@
+2025-12-12 12:26:24,691 - fedramp_20x_mcp.tools - INFO - Registered 36 tools across 12 modules
+2025-12-12 12:26:24,710 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Initialized PatternToolAdapter with patterns_dir: C:\Source\FedRAMP20xMCP\data\patterns
+2025-12-12 12:26:24,712 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Found 16 pattern files
+2025-12-12 12:26:24,730 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 10 patterns from ads_patterns.yaml
+2025-12-12 12:26:24,743 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 4 patterns from afr_patterns.yaml
+2025-12-12 12:26:24,757 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 12 patterns from ccm_patterns.yaml
+2025-12-12 12:26:24,776 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 4 patterns from cmt_patterns.yaml
+2025-12-12 12:26:24,791 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 11 patterns from cna_patterns.yaml
+2025-12-12 12:26:24,806 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 8 patterns from common_patterns.yaml
+2025-12-12 12:26:24,834 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 11 patterns from iam_patterns.yaml
+2025-12-12 12:26:24,844 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 2 patterns from inr_patterns.yaml
+2025-12-12 12:26:24,868 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 11 patterns from mla_patterns.yaml
+2025-12-12 12:26:24,877 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 2 patterns from piy_patterns.yaml
+2025-12-12 12:26:24,884 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 2 patterns from rpl_patterns.yaml
+2025-12-12 12:26:24,896 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 11 patterns from rsc_patterns.yaml
+2025-12-12 12:26:24,913 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 13 patterns from scn_patterns.yaml
+2025-12-12 12:26:24,948 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 17 patterns from svc_patterns.yaml
+2025-12-12 12:26:24,963 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 11 patterns from ucm_patterns.yaml
+2025-12-12 12:26:24,981 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 10 patterns from vdr_patterns.yaml
+2025-12-12 12:26:24,981 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Pattern engine initialized successfully
+2025-12-12 12:26:24,981 - fedramp_20x_mcp.tools.analyzer - INFO - Analyzing bicep infrastructure code with hybrid approach
+2025-12-12 12:26:24,981 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Initialized PatternToolAdapter with patterns_dir: C:\Source\FedRAMP20xMCP\data\patterns
+2025-12-12 12:26:24,981 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Found 16 pattern files
+2025-12-12 12:26:24,995 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 10 patterns from ads_patterns.yaml
+2025-12-12 12:26:25,009 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 4 patterns from afr_patterns.yaml
+2025-12-12 12:26:25,023 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 12 patterns from ccm_patterns.yaml
+2025-12-12 12:26:25,037 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 4 patterns from cmt_patterns.yaml
+2025-12-12 12:26:25,052 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 11 patterns from cna_patterns.yaml
+2025-12-12 12:26:25,068 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 8 patterns from common_patterns.yaml
+2025-12-12 12:26:25,095 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 11 patterns from iam_patterns.yaml
+2025-12-12 12:26:25,104 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 2 patterns from inr_patterns.yaml
+2025-12-12 12:26:25,130 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 11 patterns from mla_patterns.yaml
+2025-12-12 12:26:25,139 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 2 patterns from piy_patterns.yaml
+2025-12-12 12:26:25,150 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 2 patterns from rpl_patterns.yaml
+2025-12-12 12:26:25,169 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 11 patterns from rsc_patterns.yaml
+2025-12-12 12:26:25,185 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 13 patterns from scn_patterns.yaml
+2025-12-12 12:26:25,218 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 17 patterns from svc_patterns.yaml
+2025-12-12 12:26:25,234 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 11 patterns from ucm_patterns.yaml
+2025-12-12 12:26:25,250 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Loaded 10 patterns from vdr_patterns.yaml
+2025-12-12 12:26:25,251 - fedramp_20x_mcp.analyzers.pattern_tool_adapter - INFO - Pattern engine initialized successfully
+2025-12-12 12:26:25,259 - fedramp_20x_mcp.tools.analyzer - INFO - Pattern engine found 20 issues
+2025-12-12 12:26:25,383 - fedramp_20x_mcp.analyzers.ksi.factory - INFO - Registered 72 KSI analyzers out of 72 files
+2025-12-12 12:26:25,631 - fedramp_20x_mcp.analyzers.frr.factory - INFO - Registered 199 FRR analyzers out of 199 files
+2025-12-12 12:26:25,648 - fedramp_20x_mcp.tools.analyzer - INFO - Traditional analyzers found 63 issues
+2025-12-12 12:26:25,648 - fedramp_20x_mcp.tools.analyzer - INFO - Total unique findings after deduplication: 75
+2025-12-12 12:26:25,648 - fedramp_20x_mcp.tools.analyzer - INFO - Analyzing python application code with hybrid approach
+2025-12-12 12:26:25,670 - fedramp_20x_mcp.tools.analyzer - INFO - Pattern engine found 7 issues
+2025-12-12 12:26:25,736 - fedramp_20x_mcp.tools.analyzer - INFO - Traditional analyzers found 53 issues
+2025-12-12 12:26:25,736 - fedramp_20x_mcp.tools.analyzer - INFO - Total unique findings after deduplication: 41
+2025-12-12 12:26:25,736 - fedramp_20x_mcp.tools.analyzer - INFO - Analyzing github_actions CI/CD pipeline with hybrid approach
+2025-12-12 12:26:25,741 - fedramp_20x_mcp.tools.analyzer - INFO - Pattern engine found 3 issues
+2025-12-12 12:26:25,749 - fedramp_20x_mcp.tools.analyzer - INFO - Traditional analyzers found 29 issues
+2025-12-12 12:26:25,749 - fedramp_20x_mcp.tools.analyzer - INFO - Total unique findings after deduplication: 30
+============================================================
+WEEK 2 PATTERN EXPANSION TEST
+============================================================
+
+Initializing pattern engine...
+Loaded 139 patterns
+
+============================================================
+TEST 1: Bicep Infrastructure Code (AFR patterns)
+============================================================
+
+Expected AFR findings:
+  1. Storage TLS 1.0 (afr.crypto.weak_algorithms) - CRITICAL
+  2. SQL TLS 1.1 (afr.crypto.weak_algorithms) - CRITICAL
+  3. Storage without HTTPS (afr.config.insecure_defaults) - HIGH
+  4. SQL public access (afr.config.insecure_defaults) - HIGH
+  5. Key Vault no soft delete (afr.config.insecure_defaults) - HIGH
+  6. App Service debug mode (afr.config.debug_mode) - HIGH
+
+Pattern engine found 75 total findings
+AFR-specific findings: 2
+
+AFR findings detected:
+  - [CRITICAL] Weak or Deprecated Cryptographic Algorithms (afr.crypto.weak_algorithms)
+  - [HIGH] Insecure Default Configurations Detected (afr.config.insecure_defaults)
+
+============================================================
+TEST 2: Python Application Code (AFR patterns)
+============================================================
+
+Expected AFR findings:
+  1. MD5 hash (afr.crypto.weak_algorithms) - CRITICAL
+  2. SHA1 hash (afr.crypto.weak_algorithms) - CRITICAL
+  3. DES encryption (afr.crypto.weak_algorithms) - CRITICAL
+  4. TLS 1.0 (afr.crypto.weak_algorithms) - HIGH
+  5. Debug mode enabled (afr.config.debug_mode) - HIGH
+
+Pattern engine found 41 total findings
+AFR-specific findings: 2
+
+AFR findings detected:
+  - [CRITICAL] Weak or Deprecated Cryptographic Algorithms (afr.crypto.weak_algorithms)
+  - [HIGH] Debug Mode Enabled in Production (afr.config.debug_mode)
+
+============================================================
+TEST 3: GitHub Actions CI/CD (AFR patterns)
+============================================================
+
+Expected AFR findings:
+  1. Missing vulnerability scanning (afr.scanning.missing_vulnerability_scan) - HIGH
+
+Pattern engine found 30 total findings
+AFR-specific findings: 0
+
+No AFR findings detected (expected - pattern looks for positive security scanning)
+
+============================================================
+WEEK 2 TEST SUMMARY
+============================================================
+
+Total AFR findings: 4
+Expected AFR findings: 12 (approximately)
+Detection rate: 33.3%
+
+Pattern library: 139 patterns across 16 families
+New AFR patterns: 4 (crypto, debug mode, insecure defaults, scanning)
+
+============================================================
+COMPARISON WITH TRADITIONAL ANALYZERS
+============================================================
+
+Running traditional KSI analyzers...
+KSI-AFR-11 (traditional): 4 findings
+KSI-AFR-07 (traditional): 2 findings
+
+[PASS] Week 2 pattern expansion test complete

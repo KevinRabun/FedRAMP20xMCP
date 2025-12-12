@@ -335,9 +335,10 @@ class PatternEngine:
             )
             if ast_findings:
                 findings.extend(ast_findings)
-                return findings  # AST succeeded, no need for regex
+                # AST found issues, use them and skip regex fallback
+                return findings
         
-        # Fallback to regex
+        # Fallback to regex (if AST unavailable or found nothing)
         if 'regex_fallback' in lang_config:
             regex_findings = self._execute_regex(
                 pattern, lang_config, code, file_path
