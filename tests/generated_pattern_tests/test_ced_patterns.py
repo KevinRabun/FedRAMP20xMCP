@@ -1,0 +1,139 @@
+"""
+Auto-generated tests for pattern detection.
+Tests both positive cases (pattern should detect) and negative cases (should not detect).
+"""
+import pytest
+import sys
+import os
+from pathlib import Path
+
+# Add src to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from fedramp_20x_mcp.analyzers.generic_analyzer import GenericPatternAnalyzer
+from fedramp_20x_mcp.analyzers.base import Severity
+
+class TestCedPatterns:
+    """Test CED pattern detection"""
+    
+    @pytest.fixture
+    def analyzer(self):
+        """Create analyzer with loaded patterns"""
+        analyzer = GenericPatternAnalyzer()
+        assert len(analyzer.pattern_loader._patterns) > 0
+        return analyzer
+
+    def test_ced_training_missing_documentation_positive(self, analyzer):
+        """Test ced.training.missing_documentation: Missing Security Training Documentation - Should detect"""
+        code = """# Code that triggers ced.training.missing_documentation
+trigger_pattern = True"""
+        
+        result = analyzer.analyze(code, "python")
+        
+        # Should detect the pattern
+        findings = [f for f in result.findings if "ced.training.missing_documentation" in f.requirement_id]
+        assert len(findings) > 0, f"Pattern ced.training.missing_documentation should detect this code"
+    
+    def test_ced_training_missing_documentation_negative(self, analyzer):
+        """Test ced.training.missing_documentation: Missing Security Training Documentation - Should NOT detect"""
+        code = """def compliant_function():
+    # This is compliant code
+    return True
+
+if __name__ == "__main__":
+    compliant_function()
+"""
+        
+        result = analyzer.analyze(code, "python")
+        
+        # Should NOT detect the pattern
+        findings = [f for f in result.findings if "ced.training.missing_documentation" in f.requirement_id]
+        assert len(findings) == 0, f"Pattern ced.training.missing_documentation should NOT detect compliant code"
+
+
+    def test_ced_training_role_based_missing_positive(self, analyzer):
+        """Test ced.training.role_based_missing: Insufficient Role-Based Security Training - Should detect"""
+        code = """# Code that triggers ced.training.role_based_missing
+trigger_pattern = True"""
+        
+        result = analyzer.analyze(code, "python")
+        
+        # Should detect the pattern
+        findings = [f for f in result.findings if "ced.training.role_based_missing" in f.requirement_id]
+        assert len(findings) > 0, f"Pattern ced.training.role_based_missing should detect this code"
+    
+    def test_ced_training_role_based_missing_negative(self, analyzer):
+        """Test ced.training.role_based_missing: Insufficient Role-Based Security Training - Should NOT detect"""
+        code = """def compliant_function():
+    # This is compliant code
+    return True
+
+if __name__ == "__main__":
+    compliant_function()
+"""
+        
+        result = analyzer.analyze(code, "python")
+        
+        # Should NOT detect the pattern
+        findings = [f for f in result.findings if "ced.training.role_based_missing" in f.requirement_id]
+        assert len(findings) == 0, f"Pattern ced.training.role_based_missing should NOT detect compliant code"
+
+
+    def test_ced_training_developer_gaps_positive(self, analyzer):
+        """Test ced.training.developer_gaps: Inadequate Developer Security Training - Should detect"""
+        code = """# Code that triggers ced.training.developer_gaps
+trigger_pattern = True"""
+        
+        result = analyzer.analyze(code, "python")
+        
+        # Should detect the pattern
+        findings = [f for f in result.findings if "ced.training.developer_gaps" in f.requirement_id]
+        assert len(findings) > 0, f"Pattern ced.training.developer_gaps should detect this code"
+    
+    def test_ced_training_developer_gaps_negative(self, analyzer):
+        """Test ced.training.developer_gaps: Inadequate Developer Security Training - Should NOT detect"""
+        code = """def compliant_function():
+    # This is compliant code
+    return True
+
+if __name__ == "__main__":
+    compliant_function()
+"""
+        
+        result = analyzer.analyze(code, "python")
+        
+        # Should NOT detect the pattern
+        findings = [f for f in result.findings if "ced.training.developer_gaps" in f.requirement_id]
+        assert len(findings) == 0, f"Pattern ced.training.developer_gaps should NOT detect compliant code"
+
+
+    def test_ced_training_incident_response_missing_positive(self, analyzer):
+        """Test ced.training.incident_response_missing: Missing Incident Response Training - Should detect"""
+        code = """# Code that triggers ced.training.incident_response_missing
+trigger_pattern = True"""
+        
+        result = analyzer.analyze(code, "python")
+        
+        # Should detect the pattern
+        findings = [f for f in result.findings if "ced.training.incident_response_missing" in f.requirement_id]
+        assert len(findings) > 0, f"Pattern ced.training.incident_response_missing should detect this code"
+    
+    def test_ced_training_incident_response_missing_negative(self, analyzer):
+        """Test ced.training.incident_response_missing: Missing Incident Response Training - Should NOT detect"""
+        code = """def compliant_function():
+    # This is compliant code
+    return True
+
+if __name__ == "__main__":
+    compliant_function()
+"""
+        
+        result = analyzer.analyze(code, "python")
+        
+        # Should NOT detect the pattern
+        findings = [f for f in result.findings if "ced.training.incident_response_missing" in f.requirement_id]
+        assert len(findings) == 0, f"Pattern ced.training.incident_response_missing should NOT detect compliant code"
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

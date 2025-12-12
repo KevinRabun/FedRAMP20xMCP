@@ -1,0 +1,504 @@
+"""
+Auto-generated tests for pattern detection.
+Tests both positive cases (pattern should detect) and negative cases (should not detect).
+"""
+import pytest
+import sys
+import os
+from pathlib import Path
+
+# Add src to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from fedramp_20x_mcp.analyzers.generic_analyzer import GenericPatternAnalyzer
+from fedramp_20x_mcp.analyzers.base import Severity
+
+class TestSvcPatterns:
+    """Test SVC pattern detection"""
+    
+    @pytest.fixture
+    def analyzer(self):
+        """Create analyzer with loaded patterns"""
+        analyzer = GenericPatternAnalyzer()
+        assert len(analyzer.pattern_loader._patterns) > 0
+        return analyzer
+
+    def test_svc_security_flask_security_headers_positive(self, analyzer):
+        """Test svc.security.flask_security_headers: Flask Security Headers - Should detect"""
+        code = """import flask_talisman
+
+def main():
+    pass"""
+        
+        result = analyzer.analyze(code, "python")
+        
+        # Should detect the pattern
+        findings = [f for f in result.findings if "svc.security.flask_security_headers" in f.requirement_id]
+        assert len(findings) > 0, f"Pattern svc.security.flask_security_headers should detect this code"
+    
+    def test_svc_security_flask_security_headers_negative(self, analyzer):
+        """Test svc.security.flask_security_headers: Flask Security Headers - Should NOT detect"""
+        code = """def compliant_function():
+    # This is compliant code
+    return True
+
+if __name__ == "__main__":
+    compliant_function()
+"""
+        
+        result = analyzer.analyze(code, "python")
+        
+        # Should NOT detect the pattern
+        findings = [f for f in result.findings if "svc.security.flask_security_headers" in f.requirement_id]
+        assert len(findings) == 0, f"Pattern svc.security.flask_security_headers should NOT detect compliant code"
+
+
+    def test_svc_security_aspnet_hsts_positive(self, analyzer):
+        """Test svc.security.aspnet_hsts: ASP.NET Core HSTS - Should detect"""
+        code = """result = Talisman(data)
+print(result)"""
+        
+        result = analyzer.analyze(code, "python")
+        
+        # Should detect the pattern
+        findings = [f for f in result.findings if "svc.security.aspnet_hsts" in f.requirement_id]
+        assert len(findings) > 0, f"Pattern svc.security.aspnet_hsts should detect this code"
+    
+    def test_svc_security_aspnet_hsts_negative(self, analyzer):
+        """Test svc.security.aspnet_hsts: ASP.NET Core HSTS - Should NOT detect"""
+        code = """def compliant_function():
+    # This is compliant code
+    return True
+
+if __name__ == "__main__":
+    compliant_function()
+"""
+        
+        result = analyzer.analyze(code, "python")
+        
+        # Should NOT detect the pattern
+        findings = [f for f in result.findings if "svc.security.aspnet_hsts" in f.requirement_id]
+        assert len(findings) == 0, f"Pattern svc.security.aspnet_hsts should NOT detect compliant code"
+
+
+    def test_svc_security_missing_hsts_positive(self, analyzer):
+        """Test svc.security.missing_hsts: Missing HSTS Configuration - Should detect"""
+        code = """# Code that triggers svc.security.missing_hsts
+trigger_pattern = True"""
+        
+        result = analyzer.analyze(code, "python")
+        
+        # Should detect the pattern
+        findings = [f for f in result.findings if "svc.security.missing_hsts" in f.requirement_id]
+        assert len(findings) > 0, f"Pattern svc.security.missing_hsts should detect this code"
+    
+    def test_svc_security_missing_hsts_negative(self, analyzer):
+        """Test svc.security.missing_hsts: Missing HSTS Configuration - Should NOT detect"""
+        code = """def compliant_function():
+    # This is compliant code
+    return True
+
+if __name__ == "__main__":
+    compliant_function()
+"""
+        
+        result = analyzer.analyze(code, "python")
+        
+        # Should NOT detect the pattern
+        findings = [f for f in result.findings if "svc.security.missing_hsts" in f.requirement_id]
+        assert len(findings) == 0, f"Pattern svc.security.missing_hsts should NOT detect compliant code"
+
+
+    def test_svc_security_csp_header_positive(self, analyzer):
+        """Test svc.security.csp_header: Content Security Policy - Should detect"""
+        code = """# Code that triggers svc.security.csp_header
+trigger_pattern = True"""
+        
+        result = analyzer.analyze(code, "python")
+        
+        # Should detect the pattern
+        findings = [f for f in result.findings if "svc.security.csp_header" in f.requirement_id]
+        assert len(findings) > 0, f"Pattern svc.security.csp_header should detect this code"
+    
+    def test_svc_security_csp_header_negative(self, analyzer):
+        """Test svc.security.csp_header: Content Security Policy - Should NOT detect"""
+        code = """def compliant_function():
+    # This is compliant code
+    return True
+
+if __name__ == "__main__":
+    compliant_function()
+"""
+        
+        result = analyzer.analyze(code, "python")
+        
+        # Should NOT detect the pattern
+        findings = [f for f in result.findings if "svc.security.csp_header" in f.requirement_id]
+        assert len(findings) == 0, f"Pattern svc.security.csp_header should NOT detect compliant code"
+
+
+    def test_svc_secrets_keyvault_reference_positive(self, analyzer):
+        """Test svc.secrets.keyvault_reference: Azure Key Vault Reference - Should detect"""
+        code = """resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
+  name: 'myKeyVault'
+  location: location
+  properties: {
+    sku: { name: 'standard' }
+    tenantId: tenant().tenantId
+  }
+}"""
+        
+        result = analyzer.analyze(code, "bicep")
+        
+        # Should detect the pattern
+        findings = [f for f in result.findings if "svc.secrets.keyvault_reference" in f.requirement_id]
+        assert len(findings) > 0, f"Pattern svc.secrets.keyvault_reference should detect this code"
+    
+    def test_svc_secrets_keyvault_reference_negative(self, analyzer):
+        """Test svc.secrets.keyvault_reference: Azure Key Vault Reference - Should NOT detect"""
+        code = """param location string = resourceGroup().location
+
+output resourceLocation string = location
+"""
+        
+        result = analyzer.analyze(code, "bicep")
+        
+        # Should NOT detect the pattern
+        findings = [f for f in result.findings if "svc.secrets.keyvault_reference" in f.requirement_id]
+        assert len(findings) == 0, f"Pattern svc.secrets.keyvault_reference should NOT detect compliant code"
+
+
+    def test_svc_secrets_keyvault_soft_delete_positive(self, analyzer):
+        """Test svc.secrets.keyvault_soft_delete: Key Vault Soft Delete - Should detect"""
+        code = """resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
+  name: 'myKeyVault'
+  location: location
+  properties: {
+    sku: { name: 'standard' }
+    tenantId: tenant().tenantId
+  }
+}"""
+        
+        result = analyzer.analyze(code, "bicep")
+        
+        # Should detect the pattern
+        findings = [f for f in result.findings if "svc.secrets.keyvault_soft_delete" in f.requirement_id]
+        assert len(findings) > 0, f"Pattern svc.secrets.keyvault_soft_delete should detect this code"
+    
+    def test_svc_secrets_keyvault_soft_delete_negative(self, analyzer):
+        """Test svc.secrets.keyvault_soft_delete: Key Vault Soft Delete - Should NOT detect"""
+        code = """param location string = resourceGroup().location
+
+output resourceLocation string = location
+"""
+        
+        result = analyzer.analyze(code, "bicep")
+        
+        # Should NOT detect the pattern
+        findings = [f for f in result.findings if "svc.secrets.keyvault_soft_delete" in f.requirement_id]
+        assert len(findings) == 0, f"Pattern svc.secrets.keyvault_soft_delete should NOT detect compliant code"
+
+
+    def test_svc_secrets_hardcoded_secret_positive(self, analyzer):
+        """Test svc.secrets.hardcoded_secret: Hardcoded Secret - Should detect"""
+        code = """# Code that triggers svc.secrets.hardcoded_secret
+trigger_pattern = True"""
+        
+        result = analyzer.analyze(code, "python")
+        
+        # Should detect the pattern
+        findings = [f for f in result.findings if "svc.secrets.hardcoded_secret" in f.requirement_id]
+        assert len(findings) > 0, f"Pattern svc.secrets.hardcoded_secret should detect this code"
+    
+    def test_svc_secrets_hardcoded_secret_negative(self, analyzer):
+        """Test svc.secrets.hardcoded_secret: Hardcoded Secret - Should NOT detect"""
+        code = """def compliant_function():
+    # This is compliant code
+    return True
+
+if __name__ == "__main__":
+    compliant_function()
+"""
+        
+        result = analyzer.analyze(code, "python")
+        
+        # Should NOT detect the pattern
+        findings = [f for f in result.findings if "svc.secrets.hardcoded_secret" in f.requirement_id]
+        assert len(findings) == 0, f"Pattern svc.secrets.hardcoded_secret should NOT detect compliant code"
+
+
+    def test_svc_encryption_storage_encryption_positive(self, analyzer):
+        """Test svc.encryption.storage_encryption: Storage Account Encryption - Should detect"""
+        code = """resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: 'mystorageaccount'
+  location: location
+  sku: { name: 'Standard_LRS' }
+  kind: 'StorageV2'
+}"""
+        
+        result = analyzer.analyze(code, "bicep")
+        
+        # Should detect the pattern
+        findings = [f for f in result.findings if "svc.encryption.storage_encryption" in f.requirement_id]
+        assert len(findings) > 0, f"Pattern svc.encryption.storage_encryption should detect this code"
+    
+    def test_svc_encryption_storage_encryption_negative(self, analyzer):
+        """Test svc.encryption.storage_encryption: Storage Account Encryption - Should NOT detect"""
+        code = """param location string = resourceGroup().location
+
+output resourceLocation string = location
+"""
+        
+        result = analyzer.analyze(code, "bicep")
+        
+        # Should NOT detect the pattern
+        findings = [f for f in result.findings if "svc.encryption.storage_encryption" in f.requirement_id]
+        assert len(findings) == 0, f"Pattern svc.encryption.storage_encryption should NOT detect compliant code"
+
+
+    def test_svc_encryption_sql_tde_positive(self, analyzer):
+        """Test svc.encryption.sql_tde: SQL Transparent Data Encryption - Should detect"""
+        code = """// Bicep code for svc.encryption.sql_tde
+resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        
+        result = analyzer.analyze(code, "bicep")
+        
+        # Should detect the pattern
+        findings = [f for f in result.findings if "svc.encryption.sql_tde" in f.requirement_id]
+        assert len(findings) > 0, f"Pattern svc.encryption.sql_tde should detect this code"
+    
+    def test_svc_encryption_sql_tde_negative(self, analyzer):
+        """Test svc.encryption.sql_tde: SQL Transparent Data Encryption - Should NOT detect"""
+        code = """param location string = resourceGroup().location
+
+output resourceLocation string = location
+"""
+        
+        result = analyzer.analyze(code, "bicep")
+        
+        # Should NOT detect the pattern
+        findings = [f for f in result.findings if "svc.encryption.sql_tde" in f.requirement_id]
+        assert len(findings) == 0, f"Pattern svc.encryption.sql_tde should NOT detect compliant code"
+
+
+    def test_svc_network_nsg_allow_all_positive(self, analyzer):
+        """Test svc.network.nsg_allow_all: Network Security Group Allow All - Should detect"""
+        code = """resource nsg 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
+  name: 'myNSG'
+  location: location
+  properties: {
+    securityRules: []
+  }
+}"""
+        
+        result = analyzer.analyze(code, "bicep")
+        
+        # Should detect the pattern
+        findings = [f for f in result.findings if "svc.network.nsg_allow_all" in f.requirement_id]
+        assert len(findings) > 0, f"Pattern svc.network.nsg_allow_all should detect this code"
+    
+    def test_svc_network_nsg_allow_all_negative(self, analyzer):
+        """Test svc.network.nsg_allow_all: Network Security Group Allow All - Should NOT detect"""
+        code = """param location string = resourceGroup().location
+
+output resourceLocation string = location
+"""
+        
+        result = analyzer.analyze(code, "bicep")
+        
+        # Should NOT detect the pattern
+        findings = [f for f in result.findings if "svc.network.nsg_allow_all" in f.requirement_id]
+        assert len(findings) == 0, f"Pattern svc.network.nsg_allow_all should NOT detect compliant code"
+
+
+    def test_svc_network_private_endpoint_positive(self, analyzer):
+        """Test svc.network.private_endpoint: Private Endpoint - Should detect"""
+        code = """// Bicep code for svc.network.private_endpoint
+resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        
+        result = analyzer.analyze(code, "bicep")
+        
+        # Should detect the pattern
+        findings = [f for f in result.findings if "svc.network.private_endpoint" in f.requirement_id]
+        assert len(findings) > 0, f"Pattern svc.network.private_endpoint should detect this code"
+    
+    def test_svc_network_private_endpoint_negative(self, analyzer):
+        """Test svc.network.private_endpoint: Private Endpoint - Should NOT detect"""
+        code = """param location string = resourceGroup().location
+
+output resourceLocation string = location
+"""
+        
+        result = analyzer.analyze(code, "bicep")
+        
+        # Should NOT detect the pattern
+        findings = [f for f in result.findings if "svc.network.private_endpoint" in f.requirement_id]
+        assert len(findings) == 0, f"Pattern svc.network.private_endpoint should NOT detect compliant code"
+
+
+    def test_svc_tls_minimum_version_positive(self, analyzer):
+        """Test svc.tls.minimum_version: TLS Minimum Version - Should detect"""
+        code = """// Bicep code for svc.tls.minimum_version
+resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        
+        result = analyzer.analyze(code, "bicep")
+        
+        # Should detect the pattern
+        findings = [f for f in result.findings if "svc.tls.minimum_version" in f.requirement_id]
+        assert len(findings) > 0, f"Pattern svc.tls.minimum_version should detect this code"
+    
+    def test_svc_tls_minimum_version_negative(self, analyzer):
+        """Test svc.tls.minimum_version: TLS Minimum Version - Should NOT detect"""
+        code = """param location string = resourceGroup().location
+
+output resourceLocation string = location
+"""
+        
+        result = analyzer.analyze(code, "bicep")
+        
+        # Should NOT detect the pattern
+        findings = [f for f in result.findings if "svc.tls.minimum_version" in f.requirement_id]
+        assert len(findings) == 0, f"Pattern svc.tls.minimum_version should NOT detect compliant code"
+
+
+    def test_svc_waf_application_gateway_positive(self, analyzer):
+        """Test svc.waf.application_gateway: Application Gateway with WAF - Should detect"""
+        code = """// Bicep code for svc.waf.application_gateway
+resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        
+        result = analyzer.analyze(code, "bicep")
+        
+        # Should detect the pattern
+        findings = [f for f in result.findings if "svc.waf.application_gateway" in f.requirement_id]
+        assert len(findings) > 0, f"Pattern svc.waf.application_gateway should detect this code"
+    
+    def test_svc_waf_application_gateway_negative(self, analyzer):
+        """Test svc.waf.application_gateway: Application Gateway with WAF - Should NOT detect"""
+        code = """param location string = resourceGroup().location
+
+output resourceLocation string = location
+"""
+        
+        result = analyzer.analyze(code, "bicep")
+        
+        # Should NOT detect the pattern
+        findings = [f for f in result.findings if "svc.waf.application_gateway" in f.requirement_id]
+        assert len(findings) == 0, f"Pattern svc.waf.application_gateway should NOT detect compliant code"
+
+
+    def test_svc_secrets_key_vault_missing_positive(self, analyzer):
+        """Test svc.secrets.key_vault_missing: Missing Key Vault for Secret Management - Should detect"""
+        code = """# Code that triggers svc.secrets.key_vault_missing
+trigger_pattern = True"""
+        
+        result = analyzer.analyze(code, "python")
+        
+        # Should detect the pattern
+        findings = [f for f in result.findings if "svc.secrets.key_vault_missing" in f.requirement_id]
+        assert len(findings) > 0, f"Pattern svc.secrets.key_vault_missing should detect this code"
+    
+    def test_svc_secrets_key_vault_missing_negative(self, analyzer):
+        """Test svc.secrets.key_vault_missing: Missing Key Vault for Secret Management - Should NOT detect"""
+        code = """def compliant_function():
+    # This is compliant code
+    return True
+
+if __name__ == "__main__":
+    compliant_function()
+"""
+        
+        result = analyzer.analyze(code, "python")
+        
+        # Should NOT detect the pattern
+        findings = [f for f in result.findings if "svc.secrets.key_vault_missing" in f.requirement_id]
+        assert len(findings) == 0, f"Pattern svc.secrets.key_vault_missing should NOT detect compliant code"
+
+
+    def test_svc_encryption_storage_https_only_positive(self, analyzer):
+        """Test svc.encryption.storage_https_only: Storage Account HTTPS Enforcement - Should detect"""
+        code = """resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: 'mystorageaccount'
+  location: location
+  sku: { name: 'Standard_LRS' }
+  kind: 'StorageV2'
+}"""
+        
+        result = analyzer.analyze(code, "bicep")
+        
+        # Should detect the pattern
+        findings = [f for f in result.findings if "svc.encryption.storage_https_only" in f.requirement_id]
+        assert len(findings) > 0, f"Pattern svc.encryption.storage_https_only should detect this code"
+    
+    def test_svc_encryption_storage_https_only_negative(self, analyzer):
+        """Test svc.encryption.storage_https_only: Storage Account HTTPS Enforcement - Should NOT detect"""
+        code = """param location string = resourceGroup().location
+
+output resourceLocation string = location
+"""
+        
+        result = analyzer.analyze(code, "bicep")
+        
+        # Should NOT detect the pattern
+        findings = [f for f in result.findings if "svc.encryption.storage_https_only" in f.requirement_id]
+        assert len(findings) == 0, f"Pattern svc.encryption.storage_https_only should NOT detect compliant code"
+
+
+    def test_svc_encryption_sql_tls_version_positive(self, analyzer):
+        """Test svc.encryption.sql_tls_version: SQL Database Minimum TLS Version - Should detect"""
+        code = """# Code that triggers svc.encryption.sql_tls_version
+trigger_pattern = True"""
+        
+        result = analyzer.analyze(code, "python")
+        
+        # Should detect the pattern
+        findings = [f for f in result.findings if "svc.encryption.sql_tls_version" in f.requirement_id]
+        assert len(findings) > 0, f"Pattern svc.encryption.sql_tls_version should detect this code"
+    
+    def test_svc_encryption_sql_tls_version_negative(self, analyzer):
+        """Test svc.encryption.sql_tls_version: SQL Database Minimum TLS Version - Should NOT detect"""
+        code = """def compliant_function():
+    # This is compliant code
+    return True
+
+if __name__ == "__main__":
+    compliant_function()
+"""
+        
+        result = analyzer.analyze(code, "python")
+        
+        # Should NOT detect the pattern
+        findings = [f for f in result.findings if "svc.encryption.sql_tls_version" in f.requirement_id]
+        assert len(findings) == 0, f"Pattern svc.encryption.sql_tls_version should NOT detect compliant code"
+
+
+    def test_svc_network_storage_public_access_positive(self, analyzer):
+        """Test svc.network.storage_public_access: Storage Account Public Network Access - Should detect"""
+        code = """resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: 'mystorageaccount'
+  location: location
+  sku: { name: 'Standard_LRS' }
+  kind: 'StorageV2'
+}"""
+        
+        result = analyzer.analyze(code, "bicep")
+        
+        # Should detect the pattern
+        findings = [f for f in result.findings if "svc.network.storage_public_access" in f.requirement_id]
+        assert len(findings) > 0, f"Pattern svc.network.storage_public_access should detect this code"
+    
+    def test_svc_network_storage_public_access_negative(self, analyzer):
+        """Test svc.network.storage_public_access: Storage Account Public Network Access - Should NOT detect"""
+        code = """param location string = resourceGroup().location
+
+output resourceLocation string = location
+"""
+        
+        result = analyzer.analyze(code, "bicep")
+        
+        # Should NOT detect the pattern
+        findings = [f for f in result.findings if "svc.network.storage_public_access" in f.requirement_id]
+        assert len(findings) == 0, f"Pattern svc.network.storage_public_access should NOT detect compliant code"
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

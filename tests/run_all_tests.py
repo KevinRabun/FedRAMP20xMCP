@@ -16,7 +16,13 @@ TEST_FILES = [
     "test_pattern_engine.py",
     "test_ksi_analyzers.py",
     "test_frr_analyzers.py",
-    "test_mcp_tools.py"
+    "test_mcp_tools.py",
+    "test_code_enrichment.py"
+]
+
+# Pattern test directories (run separately for better reporting)
+PATTERN_TEST_DIRS = [
+    "generated_pattern_tests"
 ]
 
 
@@ -108,6 +114,58 @@ def run_test_file(test_file):
         return False
 
 
+def run_pattern_tests():
+    """Run all generated pattern tests"""
+    print_header("Running Pattern Tests")
+    
+    for test_dir in PATTERN_TEST_DIRS:
+        test_path = Path(__file__).parent / test_dir
+        
+        if not test_path.exists():
+            print(f"[SKIP] {test_dir} - directory not found")
+            continue
+        
+        print(f"\nRunning tests in {test_dir}/...")
+        
+        try:
+            cmd = [
+                sys.executable, "-m", "pytest",
+                str(test_path),
+                "-v",
+                "--tb=short",
+                "-x"  # Stop on first failure for faster feedback
+            ]
+            
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=600  # 10 minutes for pattern tests
+            )
+            
+            # Print output
+            if result.stdout:
+                print(result.stdout)
+            if result.stderr:
+                print(result.stderr)
+            
+            if result.returncode == 0:
+                print(f"\n[OK] All tests in {test_dir} passed")
+                return True
+            else:
+                print(f"\n[FAIL] Some tests in {test_dir} failed")
+                return False
+                
+        except subprocess.TimeoutExpired:
+            print(f"[TIMEOUT] Pattern tests exceeded 10 minute timeout")
+            return False
+        except Exception as e:
+            print(f"[ERROR] Failed to run pattern tests: {e}")
+            return False
+    
+    return True
+
+
 def run_all_tests():
     """Run all test files and report results"""
     print_header("FedRAMP 20x MCP Test Suite")
@@ -119,12 +177,18 @@ def run_all_tests():
         return False
     
     # Run each test file
-    print_header("Running Tests")
+    print_header("Running Core Tests")
     
     results = {}
     for test_file in TEST_FILES:
         success = run_test_file(test_file)
         results[test_file] = success
+    
+    # Run pattern tests separately
+    pattern_success = run_pattern_tests()
+    
+    # Print summary
+    print_header("Test Summary")
     
     # Print summary
     print_header("Test Summary")
@@ -134,10 +198,11 @@ def run_all_tests():
     skipped = sum(1 for r in results.values() if r is None)
     total = len(results)
     
-    print(f"Total test files: {total}")
-    print(f"Passed: {passed}")
-    print(f"Failed: {failed}")
-    print(f"Skipped: {skipped}")
+    print("Core Tests:")
+    print(f"  Total test files: {total}")
+    print(f"  Passed: {passed}")
+    print(f"  Failed: {failed}")
+    print(f"  Skipped: {skipped}")
     print()
     
     # Detailed results
@@ -150,16 +215,24 @@ def run_all_tests():
             print(f"  [SKIP] {test_file}")
     
     print()
+    print("Pattern Tests:")
+    if pattern_success:
+        print("  [PASS] All pattern tests passed")
+    else:
+        print("  [FAIL] Some pattern tests failed")
+    print()
     
     # Overall result
-    if failed == 0 and passed > 0:
+    all_passed = (failed == 0 and passed > 0 and pattern_success)
+    
+    if all_passed:
         print("[SUCCESS] ALL TESTS PASSED")
         print_header("Next Steps")
         print("Tests passed! You can now:")
         print("  1. Commit changes: git add . && git commit -m 'Your message'")
         print("  2. Push to repository: git push")
         return True
-    elif failed > 0:
+    elif failed > 0 or not pattern_success:
         print("[FAILURE] SOME TESTS FAILED")
         print("\nDo NOT commit until all tests pass!")
         print("Review the output above to fix failing tests.")
