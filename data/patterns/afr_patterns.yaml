@@ -1,0 +1,594 @@
+# AFR (Authorization by FedRAMP) Patterns
+# Patterns for automated FedRAMP compliance checks
+
+---
+# Pattern 1: Weak Cryptographic Algorithms (KSI-AFR-11)
+pattern_id: "afr.crypto.weak_algorithms"
+name: "Weak or Deprecated Cryptographic Algorithms"
+description: "Detects use of weak cryptographic algorithms (MD5, SHA1, DES, RC4, TLS 1.0/1.1) that do not meet FedRAMP requirements. KSI-AFR-11 mandates FIPS 140-2/3 approved algorithms only."
+severity: "CRITICAL"
+family: "AFR"
+ksi_id: "KSI-AFR-11"
+nist_controls: ["sc-13", "sc-17"]
+category: "cryptography"
+
+languages:
+  python:
+    ast_queries:
+      # Detect hashlib weak algorithms (md5, sha1)
+      - node_type: "attribute"
+        pattern: "hashlib\\.(md5|sha1|md4)"
+        message: "Weak hash algorithm detected - use SHA-256 or stronger"
+    regex_fallback: "(hashlib\\.(md5|sha1|md4)|Crypto\\.Cipher\\.(DES|RC4|ARC4)|ssl\\.PROTOCOL_(TLSv1|SSLv[23]))"
+
+  csharp:
+    regex_fallback: "(MD5\\.(Create|ComputeHash)|SHA1\\.(Create|ComputeHash)|DESCryptoServiceProvider|RC2CryptoServiceProvider|TripleDESCryptoServiceProvider)"
+
+  java:
+    regex_fallback: "(MessageDigest\\.getInstance\\([\"'](MD5|SHA-1|MD4)[\"']\\)|Cipher\\.getInstance\\([\"'](DES|DESede|RC4)[\"']\\))"
+
+  typescript:
+    regex_fallback: "(crypto\\.createHash\\([\"'](md5|sha1)[\"']\\)|crypto\\.createCipher\\([\"'](des|rc4)[\"']\\))"
+
+  bicep:
+    ast_queries:
+      # Detect TLS 1.0/1.1 in storage accounts, SQL servers
+      - resource_type: "Microsoft.Storage/storageAccounts"
+        property_path: "properties.minimumTlsVersion"
+        conditions:
+          - "value_in:['TLS1_0', 'TLS1_1']"
+      - resource_type: "Microsoft.Sql/servers"
+        property_path: "properties.minimalTlsVersion"
+        conditions:
+          - "value_in:['1.0', '1.1']"
+    regex_fallback: "(minimumTlsVersion['\"]?\\s*[:=]\\s*['\"]?(TLS1_0|TLS1_1)|minimalTlsVersion['\"]?\\s*[:=]\\s*['\"]?(1\\.0|1\\.1))"
+
+  terraform:
+    regex_fallback: "(min_tls_version\\s*=\\s*[\"'](1\\.0|1\\.1)[\"']|tls_version\\s*=\\s*[\"'](TLSv1|TLSv1_0|TLSv1_1)[\"'])"
+
+  github_actions:
+    regex_fallback: "(uses:.*sslscan.*|uses:.*testssl.*)"  # Positive: security scanning
+
+remediation: |
+  Replace weak cryptographic algorithms with FIPS 140-2/3 approved alternatives:
+
+  **Python:**
+  ```python
+  import hashlib
+  from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+  from cryptography.hazmat.backends import default_backend
+
+  # Replace MD5/SHA1 with SHA-256 or stronger
+  hash_obj = hashlib.sha256(data.encode())
+  digest = hash_obj.hexdigest()
+
+  # For password hashing, use bcrypt or Argon2
+  from bcrypt import hashpw, gensalt
+  hashed_password = hashpw(password.encode(), gensalt())
+
+  # Replace DES/RC4 with AES-256-GCM
+  cipher = Cipher(
+      algorithms.AES(key),
+      modes.GCM(iv),
+      backend=default_backend()
+  )
+
+  # Configure TLS 1.2+ only
+  import ssl
+  context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+  context.minimum_version = ssl.TLSVersion.TLSv1_2
+  ```
+
+  **C#:**
+  ```csharp
+  using System.Security.Cryptography;
+
+  // Replace MD5/SHA1 with SHA-256 or stronger
+  using (var sha256 = SHA256.Create())
+  {
+      byte[] hash = sha256.ComputeHash(data);
+  }
+
+  // Replace DES with AES-256
+  using (var aes = Aes.Create())
+  {
+      aes.KeySize = 256;
+      aes.Mode = CipherMode.GCM;
+      // ... encryption logic
+  }
+
+  // Configure TLS 1.2+ in .NET
+  ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
+  ```
+
+  **Bicep (Azure Storage):**
+  ```bicep
+  resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+    name: storageAccountName
+    properties: {
+      minimumTlsVersion: 'TLS1_2'  // Require TLS 1.2 minimum
+      supportsHttpsTrafficOnly: true
+      encryption: {
+        keySource: 'Microsoft.Storage'
+        services: {
+          blob: {
+            enabled: true
+            keyType: 'Account'
+          }
+        }
+      }
+    }
+  }
+  ```
+
+  **Terraform (Azure SQL):**
+  ```hcl
+  resource "azurerm_mssql_server" "example" {
+    name                         = "example-sqlserver"
+    minimal_tls_version          = "1.2"  # Enforce TLS 1.2+
+    public_network_access_enabled = false
+  }
+  ```
+
+  **References:**
+  - NIST FIPS 140-3: https://csrc.nist.gov/publications/detail/fips/140/3/final
+  - NIST SP 800-52 Rev 2 (TLS): https://csrc.nist.gov/publications/detail/sp/800-52/rev-2/final
+  - NIST SP 800-57 Part 1 (Key Management): https://csrc.nist.gov/publications/detail/sp/800-57-part-1/rev-5/final
+  - FedRAMP UCM Guidance: https://www.fedramp.gov/using-cryptographic-modules/
+
+---
+# Pattern 2: Debug Mode Enabled in Production (KSI-AFR-07)
+pattern_id: "afr.config.debug_mode"
+name: "Debug Mode Enabled in Production"
+description: "Detects debug mode enabled in production environments. KSI-AFR-07 requires secure default configurations - debug mode exposes sensitive information and stack traces."
+severity: "HIGH"
+family: "AFR"
+ksi_id: "KSI-AFR-07"
+nist_controls: ["cm-6", "si-11"]
+category: "configuration"
+
+languages:
+  python:
+    regex_fallback: "(debug\\s*=\\s*True|DEBUG\\s*=\\s*True|app\\.debug\\s*=\\s*True)"
+
+  csharp:
+    regex_fallback: "(UseDeveloperExceptionPage|DetailedErrors\\s*=\\s*true)"
+
+  java:
+    regex_fallback: "(spring\\.devtools\\.enabled=true|logging\\.level\\.root\\s*=\\s*DEBUG)"
+
+  typescript:
+    regex_fallback: "(NODE_ENV\\s*===?\\s*[\"']development[\"']|process\\.env\\.DEBUG)"
+
+  bicep:
+    ast_queries:
+      # Detect App Service with ASPNETCORE_ENVIRONMENT=Development
+      - resource_type: "Microsoft.Web/sites"
+        property_path: "properties.siteConfig.appSettings"
+        conditions:
+          - "array_contains:name=ASPNETCORE_ENVIRONMENT,value=Development"
+    regex_fallback: "(name['\"]?\\s*[:=]\\s*['\"]ASPNETCORE_ENVIRONMENT['\"].*?value['\"]?\\s*[:=]\\s*['\"]Development['\"]|ASPNETCORE_ENVIRONMENT.*?Development)"
+
+  azure_pipelines:
+    regex_fallback: "(BuildConfiguration.*Debug|dotnet.*--configuration\\s+Debug)"
+
+remediation: |
+  Disable debug mode in production environments:
+
+  **Python (Flask):**
+  ```python
+  import os
+
+  app = Flask(__name__)
+  
+  # Use environment variable, default to False
+  app.config['DEBUG'] = os.getenv('DEBUG', 'False') == 'True'
+  
+  # Or explicitly set based on environment
+  if os.getenv('ENVIRONMENT') == 'production':
+      app.config['DEBUG'] = False
+  ```
+
+  **Python (Django settings.py):**
+  ```python
+  import os
+
+  DEBUG = os.getenv('DEBUG', 'False') == 'True'
+  
+  # Only allow debug in development
+  if os.getenv('ENVIRONMENT') == 'production':
+      DEBUG = False
+      ALLOWED_HOSTS = ['yourdomain.com']
+  ```
+
+  **C# (ASP.NET Core Startup.cs):**
+  ```csharp
+  public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+  {
+      if (env.IsDevelopment())
+      {
+          app.UseDeveloperExceptionPage();
+      }
+      else
+      {
+          app.UseExceptionHandler("/Error");
+          app.UseHsts();
+      }
+  }
+  ```
+
+  **Bicep (App Service):**
+  ```bicep
+  resource appService 'Microsoft.Web/sites@2023-01-01' = {
+    name: appServiceName
+    properties: {
+      siteConfig: {
+        appSettings: [
+          {
+            name: 'ASPNETCORE_ENVIRONMENT'
+            value: 'Production'  // Use Production, not Development
+          }
+          {
+            name: 'DEBUG'
+            value: 'false'
+          }
+        ]
+      }
+    }
+  }
+  ```
+
+  **Azure Pipelines:**
+  ```yaml
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'build'
+      arguments: '--configuration Release'  # Use Release, not Debug
+  ```
+
+  **References:**
+  - OWASP: https://owasp.org/www-community/vulnerabilities/Information_exposure_through_debug_information
+  - FRR-AFR-07: Recommended Secure Configuration
+
+---
+# Pattern 3: Vulnerability Scanning Missing (KSI-AFR-04)
+pattern_id: "afr.scanning.missing_vulnerability_scan"
+name: "Missing Vulnerability Scanning Configuration"
+description: "Detects missing vulnerability scanning (SAST, dependency scanning, container scanning) in CI/CD pipelines. KSI-AFR-04 requires comprehensive vulnerability detection per FedRAMP VDR process."
+severity: "HIGH"
+family: "AFR"
+ksi_id: "KSI-AFR-04"
+nist_controls: ["ra-5", "sa-11"]
+category: "vulnerability_detection"
+
+languages:
+  github_actions:
+    regex_fallback: "(uses:.*security-scan|uses:.*trivy|uses:.*codeql|uses:.*dependency-review)"  # Positive patterns
+
+  azure_pipelines:
+    regex_fallback: "(task:\\s*WhiteSource|task:\\s*CredScan|task:\\s*Trivy|task:\\s*SecurityCodeScan)"  # Positive patterns
+
+  gitlab_ci:
+    regex_fallback: "(include:.*Security/SAST|include:.*Security/Dependency-Scanning|include:.*Security/Container-Scanning)"  # Positive patterns
+
+  bicep:
+    ast_queries:
+      # Check for Microsoft Defender for Cloud enablement
+      - resource_type: "Microsoft.Security/pricings"
+        property_path: "properties.pricingTier"
+        conditions:
+          - "value_equals:'Standard'"
+    regex_fallback: "(Microsoft\\.Security/pricings.*?pricingTier['\"]?\\s*[:=]\\s*['\"]?Standard)"
+
+  terraform:
+    regex_fallback: "(resource\\s+\"azurerm_security_center_subscription_pricing\")"  # Positive pattern
+
+remediation: |
+  Implement comprehensive vulnerability scanning in CI/CD pipelines:
+
+  **GitHub Actions (.github/workflows/security.yml):**
+  ```yaml
+  name: Security Scanning
+
+  on: [push, pull_request]
+
+  jobs:
+    sast:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+        
+        # SAST: CodeQL for static analysis
+        - uses: github/codeql-action/init@v3
+          with:
+            languages: 'python, javascript'
+        - uses: github/codeql-action/analyze@v3
+        
+        # Dependency scanning
+        - uses: actions/dependency-review-action@v4
+        
+        # Container scanning with Trivy
+        - uses: aquasecurity/trivy-action@master
+          with:
+            scan-type: 'fs'
+            scan-ref: '.'
+            format: 'sarif'
+            output: 'trivy-results.sarif'
+        
+        # Upload results to Security tab
+        - uses: github/codeql-action/upload-sarif@v3
+          with:
+            sarif_file: 'trivy-results.sarif'
+  ```
+
+  **Azure Pipelines (azure-pipelines.yml):**
+  ```yaml
+  trigger:
+    - main
+
+  jobs:
+  - job: SecurityScanning
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      # SAST with Security Code Scan
+      - task: SecurityCodeScan@1
+        inputs:
+          targetDirectory: '$(Build.SourcesDirectory)'
+      
+      # Dependency scanning with WhiteSource Bolt
+      - task: WhiteSource@21
+        inputs:
+          cwd: '$(Build.SourcesDirectory)'
+      
+      # Container scanning with Trivy
+      - task: CmdLine@2
+        inputs:
+          script: |
+            wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+            echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+            sudo apt-get update
+            sudo apt-get install trivy
+            trivy fs --severity HIGH,CRITICAL .
+  ```
+
+  **Bicep (Enable Microsoft Defender for Cloud):**
+  ```bicep
+  // Enable Defender for Servers
+  resource defenderServers 'Microsoft.Security/pricings@2024-01-01' = {
+    name: 'VirtualMachines'
+    properties: {
+      pricingTier: 'Standard'  // Enable advanced threat protection
+    }
+  }
+
+  // Enable Defender for Containers
+  resource defenderContainers 'Microsoft.Security/pricings@2024-01-01' = {
+    name: 'Containers'
+    properties: {
+      pricingTier: 'Standard'
+    }
+  }
+
+  // Enable Defender for App Service
+  resource defenderAppService 'Microsoft.Security/pricings@2024-01-01' = {
+    name: 'AppServices'
+    properties: {
+      pricingTier: 'Standard'
+    }
+  }
+  ```
+
+  **Terraform (Enable Defender for Cloud):**
+  ```hcl
+  # Enable Defender for Servers
+  resource "azurerm_security_center_subscription_pricing" "servers" {
+    tier          = "Standard"
+    resource_type = "VirtualMachines"
+  }
+
+  # Enable Defender for Containers
+  resource "azurerm_security_center_subscription_pricing" "containers" {
+    tier          = "Standard"
+    resource_type = "Containers"
+  }
+
+  # Enable Defender for App Service
+  resource "azurerm_security_center_subscription_pricing" "app_service" {
+    tier          = "Standard"
+    resource_type = "AppServices"
+  }
+  ```
+
+  **Scanning Frequency:**
+  - Daily automated scans (CI/CD integration)
+  - Weekly scheduled full scans (GitHub security tab, Azure Security Center)
+  - Monthly compliance reports
+
+  **References:**
+  - FedRAMP VDR Process: https://www.fedramp.gov/vulnerability-detection-and-response/
+  - NIST SP 800-53 RA-5: https://csrc.nist.gov/publications/detail/sp/800-53/rev-5/final
+  - Microsoft Defender for Cloud: https://learn.microsoft.com/en-us/azure/defender-for-cloud/
+
+---
+# Pattern 4: Insecure Default Configurations (KSI-AFR-07)
+pattern_id: "afr.config.insecure_defaults"
+name: "Insecure Default Configurations Detected"
+description: "Detects insecure default configurations such as public network access enabled, HTTPS not required, or missing encryption. KSI-AFR-07 requires secure-by-default configurations."
+severity: "HIGH"
+family: "AFR"
+ksi_id: "KSI-AFR-07"
+nist_controls: ["cm-6", "sc-8"]
+category: "configuration"
+
+languages:
+  bicep:
+    ast_queries:
+      # Storage account without HTTPS enforcement
+      - resource_type: "Microsoft.Storage/storageAccounts"
+        property_path: "properties.supportsHttpsTrafficOnly"
+        conditions:
+          - "value_equals:false"
+          - "property_missing"
+      
+      # SQL Server with public network access
+      - resource_type: "Microsoft.Sql/servers"
+        property_path: "properties.publicNetworkAccess"
+        conditions:
+          - "value_equals:'Enabled'"
+      
+      # Key Vault without soft delete
+      - resource_type: "Microsoft.KeyVault/vaults"
+        property_path: "properties.enableSoftDelete"
+        conditions:
+          - "value_equals:false"
+          - "property_missing"
+    regex_fallback: "(supportsHttpsTrafficOnly['\"]?\\s*[:=]\\s*false|publicNetworkAccess['\"]?\\s*[:=]\\s*['\"]?Enabled|enableSoftDelete['\"]?\\s*[:=]\\s*false)"
+
+  terraform:
+    ast_queries:
+      # Storage account without HTTPS enforcement
+      - resource_type: "azurerm_storage_account"
+        property_path: "enable_https_traffic_only"
+        conditions:
+          - "value_equals:false"
+          - "property_missing"
+      
+      # SQL Server with public network access
+      - resource_type: "azurerm_mssql_server"
+        property_path: "public_network_access_enabled"
+        conditions:
+          - "value_equals:true"
+    regex_fallback: "(enable_https_traffic_only\\s*=\\s*false|public_network_access_enabled\\s*=\\s*true)"
+
+remediation: |
+  Configure secure defaults for all Azure resources:
+
+  **Bicep (Storage Account - Secure Defaults):**
+  ```bicep
+  resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+    name: storageAccountName
+    location: location
+    sku: {
+      name: 'Standard_GRS'  // Geo-redundant for DR
+    }
+    kind: 'StorageV2'
+    properties: {
+      // CRITICAL: Enforce HTTPS only
+      supportsHttpsTrafficOnly: true
+      
+      // Enforce TLS 1.2 minimum
+      minimumTlsVersion: 'TLS1_2'
+      
+      // Disable public blob access
+      allowBlobPublicAccess: false
+      
+      // Enable infrastructure encryption
+      encryption: {
+        keySource: 'Microsoft.Storage'
+        requireInfrastructureEncryption: true
+        services: {
+          blob: {
+            enabled: true
+            keyType: 'Account'
+          }
+          file: {
+            enabled: true
+            keyType: 'Account'
+          }
+        }
+      }
+      
+      // Network restrictions
+      networkAcls: {
+        defaultAction: 'Deny'
+        bypass: 'AzureServices'
+      }
+    }
+  }
+  ```
+
+  **Bicep (SQL Server - Secure Defaults):**
+  ```bicep
+  resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
+    name: sqlServerName
+    location: location
+    properties: {
+      // Disable public network access
+      publicNetworkAccess: 'Disabled'
+      
+      // Enforce TLS 1.2+
+      minimalTlsVersion: '1.2'
+      
+      // Use Azure AD authentication
+      administrators: {
+        azureADOnlyAuthentication: true
+        principalType: 'Group'
+        login: 'SQL Administrators'
+        sid: sqlAdminGroupObjectId
+      }
+    }
+  }
+  ```
+
+  **Bicep (Key Vault - Secure Defaults):**
+  ```bicep
+  resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
+    name: keyVaultName
+    location: location
+    properties: {
+      // Enable soft delete (required for production)
+      enableSoftDelete: true
+      softDeleteRetentionInDays: 90
+      
+      // Enable purge protection
+      enablePurgeProtection: true
+      
+      // Disable public network access
+      publicNetworkAccess: 'Disabled'
+      
+      // Enable RBAC
+      enableRbacAuthorization: true
+      
+      // Network restrictions
+      networkAcls: {
+        defaultAction: 'Deny'
+        bypass: 'AzureServices'
+      }
+    }
+  }
+  ```
+
+  **Terraform (Storage Account - Secure Defaults):**
+  ```hcl
+  resource "azurerm_storage_account" "example" {
+    name                      = "examplestorageacct"
+    resource_group_name       = azurerm_resource_group.example.name
+    location                  = azurerm_resource_group.example.location
+    account_tier              = "Standard"
+    account_replication_type  = "GRS"  # Geo-redundant
+    
+    # CRITICAL: Enforce HTTPS only
+    enable_https_traffic_only = true
+    
+    # Enforce TLS 1.2 minimum
+    min_tls_version = "TLS1_2"
+    
+    # Disable public blob access
+    allow_nested_items_to_be_public = false
+    
+    # Enable infrastructure encryption
+    infrastructure_encryption_enabled = true
+    
+    # Network restrictions
+    network_rules {
+      default_action = "Deny"
+      bypass         = ["AzureServices"]
+    }
+  }
+  ```
+
+  **References:**
+  - Azure Security Baseline: https://learn.microsoft.com/en-us/security/benchmark/azure/
+  - CIS Azure Foundations Benchmark: https://www.cisecurity.org/benchmark/azure
+  - FRR-AFR-07: Recommended Secure Configuration

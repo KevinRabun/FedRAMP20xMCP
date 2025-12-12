@@ -1,0 +1,718 @@
+# TPR (Third-Party Risk) Patterns
+# Patterns for supply chain security and third-party risk management
+
+---
+# Pattern 1: Unverified Dependencies (KSI-TPR-03)
+pattern_id: "tpr.dependencies.unverified"
+name: "Unverified Third-Party Dependencies"
+description: "Detects usage of third-party dependencies without verification, integrity checks, or security scanning. KSI-TPR-03 requires supply chain risk management for all external components."
+severity: "HIGH"
+family: "TPR"
+ksi_id: "KSI-TPR-03"
+nist_controls: ["sa-12", "sr-3", "sr-4"]
+category: "supply_chain_security"
+
+languages:
+  python:
+    regex_fallback: "(pip install|requirements\\.txt|poetry add|pipenv install)"
+    positive_indicators:
+      - "install"
+      - "dependency"
+      - "package"
+    negative_indicators:
+      - "hash"
+      - "verify"
+      - "checksum"
+      - "--require-hashes"
+
+  typescript:
+    regex_fallback: "(npm install|yarn add|package\\.json)"
+    positive_indicators:
+      - "dependencies"
+      - "install"
+    negative_indicators:
+      - "integrity"
+      - "lockfile"
+      - "audit"
+
+  github_actions:
+    regex_fallback: "(uses:\\s*[^@]+@(?!sha256)[^\\s]+|uses:\\s*[^@]+$)"
+    
+remediation: |
+  Implement secure dependency management with verification:
+
+  **Python (Requirements with Hash Verification):**
+  ```txt
+  # requirements.txt with hash verification (CRITICAL for supply chain security)
+  # Use: pip install --require-hashes -r requirements.txt
+  
+  # Generate hashes: pip hash <package>==<version>
+  flask==3.0.0 \
+      --hash=sha256:93e803cdbe326a61ebd5c5d353959397c85f829bec7b03239a7705b9c5f7e15a \
+      --hash=sha256:7ce7a7c09fc3cf89c8d3eb15e643c4cb0c9c7c99f1cf7f3d0c94d99e8dfb35d0
+  
+  cryptography==41.0.7 \
+      --hash=sha256:3c78451b78313fa81607fa1b3f0a9a1c1e8a0b1e5c0f6f5d0c4e7d5c7f9e3f3a \
+      --hash=sha256:2c4e3f0d7c8f0c3e2f6f7f9f8f9f8f9f8f9f8f9f8f9f8f9f8f9f8f9f8f9f8f9
+  
+  requests==2.31.0 \
+      --hash=sha256:942c5a758f98d0e1c0a5d6e7e8c6c6d8e9f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3 \
+      --hash=sha256:64299f4909223da73bc5c2f69e02a8e4f4d0e4e4e4e4e4e4e4e4e4e4e4e4e4e4
+  ```
+
+  **Python (Dependency Scanning in Code):**
+  ```python
+  import hashlib
+  import subprocess
+  import json
+  from typing import Dict, List
+
+  class DependencySecurityScanner:
+      """Scan and verify third-party dependencies"""
+      
+      def verify_package_integrity(self, package_name: str, expected_hash: str) -> bool:
+          """Verify package integrity against expected hash"""
+          try:
+              # Download package and compute hash
+              result = subprocess.run(
+                  ["pip", "download", "--no-deps", package_name],
+                  capture_output=True,
+                  text=True
+              )
+              
+              if result.returncode != 0:
+                  return False
+              
+              # Extract filename from output
+              filename = result.stdout.strip().split()[-1]
+              
+              # Compute hash
+              with open(filename, 'rb') as f:
+                  computed_hash = hashlib.sha256(f.read()).hexdigest()
+              
+              return computed_hash == expected_hash
+          except Exception as e:
+              print(f"Integrity check failed: {e}")
+              return False
+      
+      def scan_for_vulnerabilities(self) -> Dict[str, List[str]]:
+          """Scan dependencies for known vulnerabilities using pip-audit"""
+          try:
+              result = subprocess.run(
+                  ["pip-audit", "--format=json"],
+                  capture_output=True,
+                  text=True
+              )
+              
+              if result.returncode == 0:
+                  return json.loads(result.stdout)
+              
+              return {"error": "Scan failed"}
+          except Exception as e:
+              return {"error": str(e)}
+      
+      def verify_sbom(self, sbom_file: str) -> bool:
+          """Verify Software Bill of Materials (SBOM) for compliance"""
+          # Load and verify SBOM in CycloneDX or SPDX format
+          try:
+              with open(sbom_file, 'r') as f:
+                  sbom = json.load(f)
+              
+              # Verify all components have:
+              # 1. Name and version
+              # 2. License information
+              # 3. Supplier/author
+              # 4. Hash values
+              
+              required_fields = ['name', 'version', 'licenses', 'hashes']
+              for component in sbom.get('components', []):
+                  if not all(field in component for field in required_fields):
+                      return False
+              
+              return True
+          except Exception as e:
+              print(f"SBOM verification failed: {e}")
+              return False
+
+  scanner = DependencySecurityScanner()
+  
+  # Verify package integrity before use
+  if not scanner.verify_package_integrity("flask==3.0.0", "expected_sha256_hash"):
+      raise SecurityError("Package integrity verification failed")
+  
+  # Scan for vulnerabilities
+  vulns = scanner.scan_for_vulnerabilities()
+  if vulns and 'dependencies' in vulns:
+      for vuln in vulns['dependencies']:
+          print(f"VULNERABILITY: {vuln}")
+  ```
+
+  **GitHub Actions (Dependency Security):**
+  ```yaml
+  name: Dependency Security
+
+  on: [push, pull_request]
+
+  jobs:
+    dependency-review:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+        
+        # CRITICAL: Pin actions to SHA256 (not tags)
+        - uses: actions/dependency-review-action@4901385134134e04cec5fbe5ddfe3b2c5bd5d976  # v4.0.0
+          with:
+            fail-on-severity: moderate
+        
+        # Scan Python dependencies
+        - uses: pypa/gh-action-pip-audit@v1.0.8
+          with:
+            inputs: requirements.txt
+        
+        # Generate SBOM
+        - uses: anchore/sbom-action@v0.15.0
+          with:
+            format: cyclonedx-json
+            output-file: sbom.json
+        
+        # Verify dependency hashes
+        - run: |
+            pip install --require-hashes -r requirements.txt
+  ```
+
+  **NPM (Package Lock with Integrity):**
+  ```json
+  {
+    "name": "secure-app",
+    "version": "1.0.0",
+    "dependencies": {
+      "express": "^4.18.2"
+    },
+    "devDependencies": {
+      "npm-audit-resolver": "^3.0.0"
+    },
+    "scripts": {
+      "audit": "npm audit --production",
+      "audit-fix": "npm audit fix",
+      "verify": "npm ci --prefer-offline --no-audit"
+    }
+  }
+  ```
+
+  **Terraform (Verified Module Sources):**
+  ```hcl
+  # SECURE: Use verified module registry with version pinning
+  module "network" {
+    source  = "Azure/network/azurerm"
+    version = "5.3.0"  # Pin to specific version
+    
+    # Verify module hash (optional but recommended)
+    # Use: terraform init -upgrade
+  }
+
+  # INSECURE: Avoid Git sources without commit hash
+  # module "insecure" {
+  #   source = "github.com/someuser/somerepo"  # DON'T DO THIS
+  # }
+
+  # SECURE: Git source with commit hash
+  module "secure_git" {
+    source = "git::https://github.com/organization/terraform-modules.git//network?ref=abc123def456"
+  }
+  ```
+
+  **Compliance Requirements:**
+  - Verify all dependencies with hashes (SA-12)
+  - Maintain SBOM for all components (SR-4.2)
+  - Scan for vulnerabilities weekly (RA-5)
+  - Track dependency licenses (SA-12)
+  - Monitor supply chain alerts (SR-11)
+
+---
+# Pattern 2: Missing Supply Chain Monitoring (KSI-TPR-04)
+pattern_id: "tpr.monitoring.supply_chain_missing"
+name: "Missing Supply Chain Security Monitoring"
+description: "Detects absence of supply chain monitoring, vulnerability alerts, or dependency update tracking. KSI-TPR-04 requires continuous supply chain risk monitoring."
+severity: "HIGH"
+family: "TPR"
+ksi_id: "KSI-TPR-04"
+nist_controls: ["sr-11", "ra-5"]
+category: "supply_chain_monitoring"
+
+languages:
+  github_actions:
+    regex_fallback: "(dependabot|renovate|snyk|whitesource)"
+    positive_indicators:
+      - "dependabot"
+      - "dependency-review"
+      - "security-scan"
+    negative_indicators:
+      - "enabled"
+      - "configured"
+
+  python:
+    regex_fallback: "(safety check|pip-audit|bandit|snyk)"
+    
+remediation: |
+  Implement continuous supply chain security monitoring:
+
+  **1. Dependabot Configuration (.github/dependabot.yml):**
+  ```yaml
+  version: 2
+  updates:
+    # Python dependencies
+    - package-ecosystem: "pip"
+      directory: "/"
+      schedule:
+        interval: "weekly"
+        day: "monday"
+      open-pull-requests-limit: 10
+      reviewers:
+        - "security-team"
+      labels:
+        - "dependencies"
+        - "security"
+      # Security updates only (high priority)
+      versioning-strategy: increase-if-necessary
+      
+    # GitHub Actions
+    - package-ecosystem: "github-actions"
+      directory: "/"
+      schedule:
+        interval: "weekly"
+      reviewers:
+        - "devops-team"
+      
+    # NPM dependencies
+    - package-ecosystem: "npm"
+      directory: "/"
+      schedule:
+        interval: "weekly"
+      versioning-strategy: increase-if-necessary
+      
+    # Docker images
+    - package-ecosystem: "docker"
+      directory: "/"
+      schedule:
+        interval: "weekly"
+  ```
+
+  **2. Continuous Vulnerability Scanning (GitHub Actions):**
+  ```yaml
+  name: Supply Chain Security Monitoring
+
+  on:
+    schedule:
+      # Run daily at 2 AM UTC
+      - cron: '0 2 * * *'
+    push:
+      branches: [main]
+    pull_request:
+
+  jobs:
+    dependency-audit:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+        
+        # Python vulnerability scanning
+        - name: Scan Python Dependencies
+          uses: pypa/gh-action-pip-audit@v1.0.8
+          with:
+            inputs: requirements.txt
+            
+        # NPM vulnerability scanning
+        - name: NPM Audit
+          run: npm audit --production --audit-level=moderate
+          
+        # Container image scanning
+        - name: Scan Container Images
+          uses: aquasecurity/trivy-action@master
+          with:
+            scan-type: 'fs'
+            scan-ref: '.'
+            format: 'sarif'
+            output: 'trivy-results.sarif'
+            
+        # Upload results to GitHub Security
+        - name: Upload Trivy Results
+          uses: github/codeql-action/upload-sarif@v3
+          with:
+            sarif_file: 'trivy-results.sarif'
+            
+        # License compliance check
+        - name: License Compliance
+          uses: fossas/fossa-action@main
+          with:
+            api-key: ${{ secrets.FOSSA_API_KEY }}
+
+    sbom-generation:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+        
+        # Generate SBOM (Software Bill of Materials)
+        - name: Generate SBOM
+          uses: anchore/sbom-action@v0.15.0
+          with:
+            format: cyclonedx-json
+            output-file: sbom.json
+            
+        # Upload SBOM as artifact
+        - name: Upload SBOM
+          uses: actions/upload-artifact@v4
+          with:
+            name: sbom
+            path: sbom.json
+            retention-days: 90
+
+    supply-chain-alerts:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+        
+        # Check for security advisories
+        - name: Security Advisory Check
+          run: |
+            # Query GitHub Advisory Database
+            curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              https://api.github.com/advisories?severity=high,critical
+  ```
+
+  **3. Python Monitoring Script:**
+  ```python
+  import subprocess
+  import json
+  from datetime import datetime
+  from typing import Dict, List
+
+  class SupplyChainMonitor:
+      """Monitor supply chain security continuously"""
+      
+      def check_outdated_dependencies(self) -> List[Dict]:
+          """Identify outdated packages"""
+          result = subprocess.run(
+              ["pip", "list", "--outdated", "--format=json"],
+              capture_output=True,
+              text=True
+          )
+          
+          if result.returncode == 0:
+              return json.loads(result.stdout)
+          return []
+      
+      def scan_vulnerabilities(self) -> Dict:
+          """Scan for known vulnerabilities"""
+          result = subprocess.run(
+              ["pip-audit", "--format=json"],
+              capture_output=True,
+              text=True
+          )
+          
+          if result.returncode == 0:
+              return json.loads(result.stdout)
+          return {}
+      
+      def generate_security_report(self) -> Dict:
+          """Generate comprehensive security report"""
+          outdated = self.check_outdated_dependencies()
+          vulnerabilities = self.scan_vulnerabilities()
+          
+          report = {
+              'timestamp': datetime.now().isoformat(),
+              'outdated_count': len(outdated),
+              'vulnerability_count': len(vulnerabilities.get('dependencies', [])),
+              'critical_count': sum(
+                  1 for v in vulnerabilities.get('dependencies', [])
+                  if v.get('severity') == 'CRITICAL'
+              ),
+              'high_count': sum(
+                  1 for v in vulnerabilities.get('dependencies', [])
+                  if v.get('severity') == 'HIGH'
+              ),
+              'outdated_packages': outdated,
+              'vulnerabilities': vulnerabilities
+          }
+          
+          return report
+      
+      def alert_if_critical(self, report: Dict):
+          """Alert security team if critical issues found"""
+          if report['critical_count'] > 0 or report['high_count'] >= 5:
+              # Send alert to security team
+              print(f"CRITICAL: {report['critical_count']} critical vulnerabilities found")
+              print(f"HIGH: {report['high_count']} high-severity vulnerabilities found")
+              # Integrate with alerting system (PagerDuty, Slack, email, etc.)
+
+  monitor = SupplyChainMonitor()
+  report = monitor.generate_security_report()
+  monitor.alert_if_critical(report)
+  ```
+
+  **4. Azure DevOps Pipeline:**
+  ```yaml
+  trigger:
+    - main
+
+  schedules:
+    - cron: "0 2 * * *"  # Daily at 2 AM
+      displayName: Daily Supply Chain Scan
+      branches:
+        include:
+          - main
+
+  jobs:
+    - job: SupplyChainSecurity
+      displayName: 'Supply Chain Security Monitoring'
+      pool:
+        vmImage: 'ubuntu-latest'
+      
+      steps:
+        - task: UsePythonVersion@0
+          inputs:
+            versionSpec: '3.11'
+        
+        - script: |
+            pip install pip-audit safety
+            pip-audit --format json > vulnerability-report.json
+            safety check --json > safety-report.json
+          displayName: 'Vulnerability Scanning'
+        
+        - task: WhiteSource@21
+          inputs:
+            cwd: '$(System.DefaultWorkingDirectory)'
+            projectName: '$(Build.Repository.Name)'
+          displayName: 'WhiteSource Scan'
+        
+        - task: PublishBuildArtifacts@1
+          inputs:
+            PathtoPublish: 'vulnerability-report.json'
+            ArtifactName: 'security-reports'
+  ```
+
+  **Monitoring Requirements:**
+  - Daily vulnerability scans (RA-5)
+  - Weekly dependency updates review (SA-12)
+  - Monthly SBOM generation (SR-4.2)
+  - Real-time security alerts (SR-11)
+  - Quarterly supply chain audit (SA-12)
+
+---
+# Pattern 3: Insecure Package Sources (KSI-TPR-03)
+pattern_id: "tpr.sources.insecure"
+name: "Insecure Third-Party Package Sources"
+description: "Detects usage of untrusted or insecure package sources (HTTP instead of HTTPS, unofficial repositories). KSI-TPR-03 requires verified sources for all dependencies."
+severity: "CRITICAL"
+family: "TPR"
+ksi_id: "KSI-TPR-03"
+nist_controls: ["sa-12", "sc-8"]
+category: "package_source_security"
+
+languages:
+  python:
+    regex_fallback: "(--index-url\\s+http:|--extra-index-url\\s+http:|pip install.*--trusted-host)"
+    
+  typescript:
+    regex_fallback: "(registry.*http:|\"http://)"
+    
+  docker:
+    regex_fallback: "(FROM\\s+[^:]+(?!:sha256))"
+
+remediation: |
+  Use only trusted, verified package sources with HTTPS:
+
+  **Python (Secure Package Sources):**
+  ```ini
+  # pip.conf or .pypirc - Use HTTPS only
+  [global]
+  index-url = https://pypi.org/simple
+  trusted-host =   # NEVER trust HTTP hosts
+
+  # For private repository (Azure Artifacts example)
+  [global]
+  extra-index-url = https://pkgs.dev.azure.com/organization/project/_packaging/feed/pypi/simple/
+
+  [distutils]
+  index-servers =
+      pypi
+      private
+
+  [pypi]
+  repository = https://upload.pypi.org/legacy/
+
+  [private]
+  repository = https://pkgs.dev.azure.com/organization/project/_packaging/feed/pypi/upload/
+  ```
+
+  **NPM (Secure Registry):**
+  ```ini
+  # .npmrc - Use HTTPS registry only
+  registry=https://registry.npmjs.org/
+  
+  # For private registry (Azure Artifacts)
+  @organization:registry=https://pkgs.dev.azure.com/organization/project/_packaging/feed/npm/registry/
+  
+  # Always authenticate
+  always-auth=true
+  ```
+
+  **Docker (Verified Base Images):**
+  ```dockerfile
+  # INSECURE: No hash verification
+  # FROM python:3.11-slim
+
+  # SECURE: Pin to SHA256 hash
+  FROM python:3.11-slim@sha256:abc123def456...
+
+  # Use official, verified images only
+  # Scan with: docker scan <image>
+  ```
+
+  **NuGet (C# - Secure Sources):**
+  ```xml
+  <!-- nuget.config -->
+  <?xml version="1.0" encoding="utf-8"?>
+  <configuration>
+    <packageSources>
+      <clear />
+      <!-- Only HTTPS sources -->
+      <add key="nuget.org" value="https://api.nuget.org/v3/index.json" protocolVersion="3" />
+      <add key="private" value="https://pkgs.dev.azure.com/org/project/_packaging/feed/nuget/v3/index.json" />
+    </packageSources>
+    <packageSourceCredentials>
+      <private>
+        <add key="Username" value="token" />
+        <add key="ClearTextPassword" value="%AZURE_ARTIFACTS_TOKEN%" />
+      </private>
+    </packageSourceCredentials>
+  </configuration>
+  ```
+
+---
+# Pattern 4: Missing SBOM (KSI-TPR-03)
+pattern_id: "tpr.sbom.missing"
+name: "Missing Software Bill of Materials (SBOM)"
+description: "Detects absence of SBOM generation or maintenance. KSI-TPR-03 requires documented inventory of all third-party components."
+severity: "MEDIUM"
+family: "TPR"
+ksi_id: "KSI-TPR-03"
+nist_controls: ["sa-12", "cm-8", "sr-4"]
+category: "sbom"
+
+languages:
+  github_actions:
+    regex_fallback: "(sbom|cyclonedx|spdx|syft)"
+    positive_indicators:
+      - "sbom"
+      - "bill-of-materials"
+    negative_indicators:
+      - "generate"
+      - "create"
+      - "upload"
+
+remediation: |
+  Implement automated SBOM generation and maintenance:
+
+  **1. GitHub Actions SBOM Workflow:**
+  ```yaml
+  name: Generate SBOM
+
+  on:
+    push:
+      branches: [main]
+    release:
+      types: [published]
+    schedule:
+      - cron: '0 0 1 * *'  # Monthly
+
+  jobs:
+    sbom:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+        
+        # Generate SBOM with Syft
+        - name: Generate SBOM (CycloneDX)
+          uses: anchore/sbom-action@v0.15.0
+          with:
+            format: cyclonedx-json
+            output-file: sbom-cyclonedx.json
+            
+        - name: Generate SBOM (SPDX)
+          uses: anchore/sbom-action@v0.15.0
+          with:
+            format: spdx-json
+            output-file: sbom-spdx.json
+        
+        # Validate SBOM
+        - name: Validate SBOM
+          run: |
+            # Verify SBOM has required fields
+            jq -e '.components | length > 0' sbom-cyclonedx.json
+            jq -e '.metadata.component.name' sbom-cyclonedx.json
+        
+        # Upload SBOM to release
+        - name: Upload SBOM to Release
+          if: github.event_name == 'release'
+          uses: actions/upload-release-asset@v1
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          with:
+            upload_url: ${{ github.event.release.upload_url }}
+            asset_path: sbom-cyclonedx.json
+            asset_name: sbom.json
+            asset_content_type: application/json
+        
+        # Store SBOM as artifact
+        - name: Upload SBOM Artifact
+          uses: actions/upload-artifact@v4
+          with:
+            name: sbom
+            path: |
+              sbom-cyclonedx.json
+              sbom-spdx.json
+            retention-days: 365  # Keep for 1 year
+  ```
+
+  **2. Python SBOM Generation:**
+  ```python
+  import subprocess
+  import json
+  from datetime import datetime
+
+  def generate_python_sbom():
+      """Generate SBOM for Python project"""
+      # Use CycloneDX for Python
+      subprocess.run([
+          "cyclonedx-py",
+          "--format", "json",
+          "--output", "sbom.json"
+      ])
+      
+      # Enhance with metadata
+      with open('sbom.json', 'r') as f:
+          sbom = json.load(f)
+      
+      sbom['metadata']['timestamp'] = datetime.now().isoformat()
+      sbom['metadata']['supplier'] = {
+          'name': 'Organization Name',
+          'url': ['https://organization.com']
+      }
+      
+      with open('sbom.json', 'w') as f:
+          json.dump(sbom, f, indent=2)
+  ```
+
+  **Required SBOM Content (FedRAMP):**
+  - Component name and version
+  - Supplier/author information
+  - License information (SPDX identifiers)
+  - Hash values (SHA-256 minimum)
+  - Dependencies and relationships
+  - Known vulnerabilities (CVEs)
+  - Timestamps and tooling metadata
+
+  **SBOM Formats:**
+  - CycloneDX (recommended for FedRAMP)
+  - SPDX (ISO/IEC 5962:2021)
+  - SWID Tags (ISO/IEC 19770-2:2015)
