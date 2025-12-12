@@ -1,0 +1,2838 @@
+# FRR RSC Patterns - FedRAMP 20x Requirements
+# Family: RSC
+# Pattern Type: Process-Based Requirements
+# Schema: V2
+#
+# These patterns represent FedRAMP Requirements (FRR) which are
+# primarily process-based and require documentation, policies,
+# and procedures rather than code-level detection.
+#
+# NOTE: Manual completion required for:
+# - Automation implementation code
+# - Organization-specific policy details
+# - Evidence collection procedures
+
+pattern_id: frr.rsc.01
+name: Top-Level Administrative Accounts Guidance
+description: Providers MUST create and maintain guidance that includes instructions
+  on how to securely access, configure, operate, and decommission _top-level administrative
+  accounts_ that control enterprise access to the entire _cloud service offering_.
+family: RSC
+severity: HIGH
+pattern_type: process_based
+languages:
+  markdown:
+    file_patterns:
+    - '*.md'
+    - README.md
+    - SECURITY.md
+    keywords: []
+  yaml:
+    file_patterns:
+    - '*.yaml'
+    - '*.yml'
+    - .github/**/*.yml
+    keywords:
+    - fedramp
+    - compliance
+    - security
+finding:
+  title_template: Top-Level Administrative Accounts Guidance - FRR-RSC-01
+  description_template: Providers MUST create and maintain guidance that includes
+    instructions on how to securely access, configure, operate, and decommission _top-level
+    administrative accounts_ that control enterprise access to the entire _cloud service
+    offering_.
+  remediation_template: 'To comply with FRR-RSC-01 (Top-Level Administrative Accounts
+    Guidance), you MUST implement the following mandatory requirements:
+
+
+    1. Review FedRAMP 20x requirement documentation
+
+    2. Identify systems and resources in scope
+
+    3. Create resource group for FedRAMP resources
+
+    4. Set up Azure Key Vault for secrets management
+
+    5. Configure Log Analytics workspace
+
+
+    (See full implementation checklist for 10 total steps)'
+  evidence_collection:
+  - Configuration export from Azure Portal (JSON format)
+  - Azure Policy compliance reports
+  - Azure Monitor logs showing compliance status
+  azure_services: &id001
+  - Azure Blob Storage
+  - Azure Monitor
+  - Log Analytics
+tags:
+- rsc
+- must
+- process_based
+- impact_low
+- impact_moderate
+- impact_high
+- documentation_required
+nist_controls:
+- AC-2
+- IA-2
+- IA-4
+related_ksis:
+- KSI-IAM-01
+- KSI-IAM-02
+related_frrs: []
+evidence_collection:
+  azure_monitor_kql: []
+  azure_cli:
+  - command: '# TODO: Add Azure CLI command for FRR-RSC-01'
+    description: Collect evidence for Top-Level Administrative Accounts Guidance
+    output_format: json
+    frequency: monthly
+  powershell: []
+  rest_api: []
+  manual_procedures:
+  - procedure: Configuration export from Azure Portal (JSON format)
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Policy compliance reports
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Monitor logs showing compliance status
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+evidence_artifacts:
+- artifact_type: documentation
+  name: FRR-RSC-01 - Top-Level Administrative Accounts Guidance Policy
+  source: Organization security documentation
+  frequency: annual_review
+  retention_months: 36
+  format: PDF/Markdown
+- artifact_type: configuration
+  name: FRR-RSC-01 - Azure Service Configuration
+  source: Azure Portal export
+  frequency: quarterly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: FRR-RSC-01 - Compliance Status Report
+  source: Compliance tracking system
+  frequency: monthly
+  retention_months: 36
+  format: PDF/Excel
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation for Azure Policy for compliance enforcement'
+    azure_services: *id001
+    effort_hours: 8
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation for Azure Monitor for continuous monitoring'
+    azure_services: *id001
+    effort_hours: 8
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation for Log Analytics queries for compliance
+      validation'
+    azure_services: *id001
+    effort_hours: 8
+implementation:
+  prerequisites:
+  - FedRAMP authorization package template
+  - Organization security policies
+  - Azure subscription (if applicable)
+  - Security team approval process
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 6
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 7
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 8
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 9
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 10
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  total_effort_hours: 20
+ssp_mapping:
+  control_family: AC - Account Management
+  control_numbers:
+  - AC-2
+  - IA-2
+  - IA-4
+  ssp_sections:
+  - section: 'AC-2: Account Management'
+    description_template: 'Implementation of FRR-RSC-01 - Top-Level Administrative
+      Accounts Guidance:
+
+
+      Providers MUST create and maintain guidance that includes instructions on how
+      to securely access, configure, operate, and decommission _top-level administrative
+      accounts_ that control enterprise access to the entire _cloud service offering_.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-RSC-01 Policy Documentation
+    - FRR-RSC-01 Compliance Report
+  - section: 'IA-2: Identification and Authentication'
+    description_template: 'Implementation of FRR-RSC-01 - Top-Level Administrative
+      Accounts Guidance:
+
+
+      Providers MUST create and maintain guidance that includes instructions on how
+      to securely access, configure, operate, and decommission _top-level administrative
+      accounts_ that control enterprise access to the entire _cloud service offering_.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-RSC-01 Policy Documentation
+    - FRR-RSC-01 Compliance Report
+  - section: 'IA-4: Identifier Management'
+    description_template: 'Implementation of FRR-RSC-01 - Top-Level Administrative
+      Accounts Guidance:
+
+
+      Providers MUST create and maintain guidance that includes instructions on how
+      to securely access, configure, operate, and decommission _top-level administrative
+      accounts_ that control enterprise access to the entire _cloud service offering_.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-RSC-01 Policy Documentation
+    - FRR-RSC-01 Compliance Report
+  required_for_fedramp: true
+  authorization_package_section: Section 12 - System and Communications Protection
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Top-Level Administrative Accounts Guidance compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Top-Level Administrative Accounts Guidance compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Top-Level Administrative Accounts Guidance compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Resource Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Govern
+    guidance: Implement Top-Level Administrative Accounts Guidance as part of governance
+      baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/govern/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-RSC-01
+    requirement_name: Top-Level Administrative Accounts Guidance
+    requirement_type: FRR
+    primary_keyword: MUST
+    impact_levels:
+    - Low
+    - Moderate
+    - High
+  nist_800_53_rev5:
+    controls:
+    - control_id: AC-2
+      control_name: Account Management
+    - control_id: IA-2
+      control_name: Identification and Authentication
+    - control_id: IA-4
+      control_name: Identifier Management
+testing:
+  validation_procedures:
+  - procedure: Review policy documentation
+    expected_outcome: Policy exists and is current (within 1 year)
+    frequency: annual
+  - procedure: Verify implementation evidence
+    expected_outcome: Evidence artifacts collected and retained
+    frequency: quarterly
+  - procedure: Test automated controls (if applicable)
+    expected_outcome: Automated controls functioning as designed
+    frequency: monthly
+  acceptance_criteria:
+  - Policy documented for FRR-RSC-01
+  - Implementation evidence collected and retained for 3 years
+  - Annual review completed and documented
+  - NIST controls AC-2, IA-2, IA-4 satisfied
+
+---
+pattern_id: frr.rsc.02
+name: Top-Level Administrative Accounts Security Settings Guidance
+description: Providers MUST create and maintain guidance that explains security-related
+  settings that can be operated only by _top-level administrative accounts_ and their
+  security implications.
+family: RSC
+severity: HIGH
+pattern_type: process_based
+languages:
+  markdown:
+    file_patterns:
+    - '*.md'
+    - README.md
+    - SECURITY.md
+    keywords:
+    - security
+  yaml:
+    file_patterns:
+    - '*.yaml'
+    - '*.yml'
+    - .github/**/*.yml
+    keywords:
+    - fedramp
+    - compliance
+    - security
+finding:
+  title_template: Top-Level Administrative Accounts Security Settings Guidance - FRR-RSC-02
+  description_template: Providers MUST create and maintain guidance that explains
+    security-related settings that can be operated only by _top-level administrative
+    accounts_ and their security implications.
+  remediation_template: 'To comply with FRR-RSC-02 (Top-Level Administrative Accounts
+    Security Settings Guidance), you MUST implement the following mandatory requirements:
+
+
+    1. Review FedRAMP 20x requirement documentation
+
+    2. Identify systems and resources in scope
+
+    3. Create resource group for FedRAMP resources
+
+    4. Set up Azure Key Vault for secrets management
+
+    5. Configure Log Analytics workspace
+
+
+    (See full implementation checklist for 10 total steps)'
+  evidence_collection:
+  - Configuration export from Azure Portal (JSON format)
+  - Azure Policy compliance reports
+  - Azure Monitor logs showing compliance status
+  azure_services: &id001
+  - Azure Blob Storage
+  - Azure Monitor
+  - Log Analytics
+tags:
+- rsc
+- must
+- process_based
+- impact_low
+- impact_moderate
+- impact_high
+- documentation_required
+nist_controls:
+- AC-2
+- CM-6
+- AC-6
+related_ksis:
+- KSI-IAM-01
+- KSI-IAM-02
+related_frrs: []
+evidence_collection:
+  azure_monitor_kql: []
+  azure_cli:
+  - command: '# TODO: Add Azure CLI command for FRR-RSC-02'
+    description: Collect evidence for Top-Level Administrative Accounts Security Settings
+      Guidance
+    output_format: json
+    frequency: monthly
+  powershell: []
+  rest_api: []
+  manual_procedures:
+  - procedure: Configuration export from Azure Portal (JSON format)
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Policy compliance reports
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Monitor logs showing compliance status
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+evidence_artifacts:
+- artifact_type: documentation
+  name: FRR-RSC-02 - Top-Level Administrative Accounts Security Settings Guidance
+    Policy
+  source: Organization security documentation
+  frequency: annual_review
+  retention_months: 36
+  format: PDF/Markdown
+- artifact_type: configuration
+  name: FRR-RSC-02 - Azure Service Configuration
+  source: Azure Portal export
+  frequency: quarterly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: FRR-RSC-02 - Compliance Status Report
+  source: Compliance tracking system
+  frequency: monthly
+  retention_months: 36
+  format: PDF/Excel
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation for Azure Policy for compliance enforcement'
+    azure_services: *id001
+    effort_hours: 8
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation for Azure Monitor for continuous monitoring'
+    azure_services: *id001
+    effort_hours: 8
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation for Log Analytics queries for compliance
+      validation'
+    azure_services: *id001
+    effort_hours: 8
+implementation:
+  prerequisites:
+  - FedRAMP authorization package template
+  - Organization security policies
+  - Azure subscription (if applicable)
+  - Security team approval process
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 6
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 7
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 8
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 9
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 10
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  total_effort_hours: 20
+ssp_mapping:
+  control_family: AC - Account Management
+  control_numbers:
+  - AC-2
+  - CM-6
+  - AC-6
+  ssp_sections:
+  - section: 'AC-2: Account Management'
+    description_template: 'Implementation of FRR-RSC-02 - Top-Level Administrative
+      Accounts Security Settings Guidance:
+
+
+      Providers MUST create and maintain guidance that explains security-related settings
+      that can be operated only by _top-level administrative accounts_ and their security
+      implications.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-RSC-02 Policy Documentation
+    - FRR-RSC-02 Compliance Report
+  - section: 'CM-6: Configuration Settings'
+    description_template: 'Implementation of FRR-RSC-02 - Top-Level Administrative
+      Accounts Security Settings Guidance:
+
+
+      Providers MUST create and maintain guidance that explains security-related settings
+      that can be operated only by _top-level administrative accounts_ and their security
+      implications.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-RSC-02 Policy Documentation
+    - FRR-RSC-02 Compliance Report
+  - section: 'AC-6: Least Privilege'
+    description_template: 'Implementation of FRR-RSC-02 - Top-Level Administrative
+      Accounts Security Settings Guidance:
+
+
+      Providers MUST create and maintain guidance that explains security-related settings
+      that can be operated only by _top-level administrative accounts_ and their security
+      implications.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-RSC-02 Policy Documentation
+    - FRR-RSC-02 Compliance Report
+  required_for_fedramp: true
+  authorization_package_section: Section 12 - System and Communications Protection
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Top-Level Administrative Accounts Security Settings Guidance
+      compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Top-Level Administrative Accounts Security Settings Guidance
+      compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Top-Level Administrative Accounts Security Settings Guidance
+      compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Resource Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Govern
+    guidance: Implement Top-Level Administrative Accounts Security Settings Guidance
+      as part of governance baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/govern/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-RSC-02
+    requirement_name: Top-Level Administrative Accounts Security Settings Guidance
+    requirement_type: FRR
+    primary_keyword: MUST
+    impact_levels:
+    - Low
+    - Moderate
+    - High
+  nist_800_53_rev5:
+    controls:
+    - control_id: AC-2
+      control_name: Account Management
+    - control_id: CM-6
+      control_name: Configuration Settings
+    - control_id: AC-6
+      control_name: Least Privilege
+testing:
+  validation_procedures:
+  - procedure: Review policy documentation
+    expected_outcome: Policy exists and is current (within 1 year)
+    frequency: annual
+  - procedure: Verify implementation evidence
+    expected_outcome: Evidence artifacts collected and retained
+    frequency: quarterly
+  - procedure: Test automated controls (if applicable)
+    expected_outcome: Automated controls functioning as designed
+    frequency: monthly
+  acceptance_criteria:
+  - Policy documented for FRR-RSC-02
+  - Implementation evidence collected and retained for 3 years
+  - Annual review completed and documented
+  - NIST controls AC-2, CM-6, AC-6 satisfied
+
+---
+pattern_id: frr.rsc.03
+name: Privileged Accounts Security Settings Guidance
+description: Providers SHOULD create and maintain guidance that explains security-related
+  settings that can be operated only by _privileged accounts_ and their security implications.
+family: RSC
+severity: MEDIUM
+pattern_type: process_based
+languages:
+  markdown:
+    file_patterns:
+    - '*.md'
+    - README.md
+    - SECURITY.md
+    keywords:
+    - security
+  yaml:
+    file_patterns:
+    - '*.yaml'
+    - '*.yml'
+    - .github/**/*.yml
+    keywords:
+    - fedramp
+    - compliance
+    - security
+finding:
+  title_template: Privileged Accounts Security Settings Guidance - FRR-RSC-03
+  description_template: Providers SHOULD create and maintain guidance that explains
+    security-related settings that can be operated only by _privileged accounts_ and
+    their security implications.
+  remediation_template: 'To comply with FRR-RSC-03 (Privileged Accounts Security Settings
+    Guidance), you SHOULD consider implementing the following recommended practices:
+
+
+    1. Review FedRAMP 20x requirement documentation
+
+    2. Identify systems and resources in scope
+
+    3. Create resource group for FedRAMP resources
+
+    4. Set up Azure Key Vault for secrets management
+
+    5. Configure Log Analytics workspace
+
+
+    (See full implementation checklist for 10 total steps)'
+  evidence_collection:
+  - Configuration export from Azure Portal (JSON format)
+  - Azure Policy compliance reports
+  - Azure Monitor logs showing compliance status
+  azure_services: &id001
+  - Azure Blob Storage
+  - Azure Monitor
+  - Log Analytics
+tags:
+- rsc
+- should
+- process_based
+- impact_low
+- impact_moderate
+- impact_high
+- documentation_required
+nist_controls:
+- AC-2
+- AC-6
+- CM-6
+related_ksis:
+- KSI-IAM-01
+related_frrs: []
+evidence_collection:
+  azure_monitor_kql: []
+  azure_cli:
+  - command: '# TODO: Add Azure CLI command for FRR-RSC-03'
+    description: Collect evidence for Privileged Accounts Security Settings Guidance
+    output_format: json
+    frequency: monthly
+  powershell: []
+  rest_api: []
+  manual_procedures:
+  - procedure: Configuration export from Azure Portal (JSON format)
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Policy compliance reports
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Monitor logs showing compliance status
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+evidence_artifacts:
+- artifact_type: documentation
+  name: FRR-RSC-03 - Privileged Accounts Security Settings Guidance Policy
+  source: Organization security documentation
+  frequency: annual_review
+  retention_months: 36
+  format: PDF/Markdown
+- artifact_type: configuration
+  name: FRR-RSC-03 - Azure Service Configuration
+  source: Azure Portal export
+  frequency: quarterly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: FRR-RSC-03 - Compliance Status Report
+  source: Compliance tracking system
+  frequency: monthly
+  retention_months: 36
+  format: PDF/Excel
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation for Azure Policy for compliance enforcement'
+    azure_services: *id001
+    effort_hours: 8
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation for Azure Monitor for continuous monitoring'
+    azure_services: *id001
+    effort_hours: 8
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation for Log Analytics queries for compliance
+      validation'
+    azure_services: *id001
+    effort_hours: 8
+implementation:
+  prerequisites:
+  - FedRAMP authorization package template
+  - Organization security policies
+  - Azure subscription (if applicable)
+  - Security team approval process
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 6
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 7
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 8
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 9
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 10
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  total_effort_hours: 20
+ssp_mapping:
+  control_family: AC - Account Management
+  control_numbers:
+  - AC-2
+  - AC-6
+  - CM-6
+  ssp_sections:
+  - section: 'AC-2: Account Management'
+    description_template: 'Implementation of FRR-RSC-03 - Privileged Accounts Security
+      Settings Guidance:
+
+
+      Providers SHOULD create and maintain guidance that explains security-related
+      settings that can be operated only by _privileged accounts_ and their security
+      implications.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-RSC-03 Policy Documentation
+    - FRR-RSC-03 Compliance Report
+  - section: 'AC-6: Least Privilege'
+    description_template: 'Implementation of FRR-RSC-03 - Privileged Accounts Security
+      Settings Guidance:
+
+
+      Providers SHOULD create and maintain guidance that explains security-related
+      settings that can be operated only by _privileged accounts_ and their security
+      implications.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-RSC-03 Policy Documentation
+    - FRR-RSC-03 Compliance Report
+  - section: 'CM-6: Configuration Settings'
+    description_template: 'Implementation of FRR-RSC-03 - Privileged Accounts Security
+      Settings Guidance:
+
+
+      Providers SHOULD create and maintain guidance that explains security-related
+      settings that can be operated only by _privileged accounts_ and their security
+      implications.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-RSC-03 Policy Documentation
+    - FRR-RSC-03 Compliance Report
+  required_for_fedramp: true
+  authorization_package_section: Section 12 - System and Communications Protection
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Privileged Accounts Security Settings Guidance compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Privileged Accounts Security Settings Guidance compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Privileged Accounts Security Settings Guidance compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Resource Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Govern
+    guidance: Implement Privileged Accounts Security Settings Guidance as part of
+      governance baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/govern/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-RSC-03
+    requirement_name: Privileged Accounts Security Settings Guidance
+    requirement_type: FRR
+    primary_keyword: SHOULD
+    impact_levels:
+    - Low
+    - Moderate
+    - High
+  nist_800_53_rev5:
+    controls:
+    - control_id: AC-2
+      control_name: Account Management
+    - control_id: AC-6
+      control_name: Least Privilege
+    - control_id: CM-6
+      control_name: Configuration Settings
+testing:
+  validation_procedures:
+  - procedure: Review policy documentation
+    expected_outcome: Policy exists and is current (within 1 year)
+    frequency: annual
+  - procedure: Verify implementation evidence
+    expected_outcome: Evidence artifacts collected and retained
+    frequency: quarterly
+  - procedure: Test automated controls (if applicable)
+    expected_outcome: Automated controls functioning as designed
+    frequency: monthly
+  acceptance_criteria:
+  - Policy documented for FRR-RSC-03
+  - Implementation evidence collected and retained for 3 years
+  - Annual review completed and documented
+  - NIST controls AC-2, AC-6, CM-6 satisfied
+
+---
+pattern_id: frr.rsc.04
+name: Secure Defaults on Provisioning
+description: Providers SHOULD set all settings to their recommended secure defaults
+  for _top-level administrative accounts_ and _privileged accounts_ when initially
+  provisioned.
+family: RSC
+severity: MEDIUM
+pattern_type: process_based
+languages:
+  markdown:
+    file_patterns:
+    - '*.md'
+    - README.md
+    - SECURITY.md
+    keywords: []
+  yaml:
+    file_patterns:
+    - '*.yaml'
+    - '*.yml'
+    - .github/**/*.yml
+    keywords:
+    - fedramp
+    - compliance
+    - security
+finding:
+  title_template: Secure Defaults on Provisioning - FRR-RSC-04
+  description_template: Providers SHOULD set all settings to their recommended secure
+    defaults for _top-level administrative accounts_ and _privileged accounts_ when
+    initially provisioned.
+  remediation_template: 'To comply with FRR-RSC-04 (Secure Defaults on Provisioning),
+    you SHOULD consider implementing the following recommended practices:
+
+
+    1. Review FedRAMP 20x requirement documentation
+
+    2. Identify systems and resources in scope
+
+    3. Create resource group for FedRAMP resources
+
+    4. Set up Azure Key Vault for secrets management
+
+    5. Configure Log Analytics workspace
+
+
+    (See full implementation checklist for 10 total steps)'
+  evidence_collection:
+  - Configuration export from Azure Portal (JSON format)
+  - Azure Policy compliance reports
+  - Azure Monitor logs showing compliance status
+  azure_services: &id001
+  - Azure Blob Storage
+  - Azure Monitor
+  - Azure Pipelines
+  - Log Analytics
+tags:
+- rsc
+- should
+- process_based
+- impact_low
+- impact_moderate
+- impact_high
+- documentation_required
+nist_controls:
+- AC-2
+- IA-5
+- CM-6
+related_ksis:
+- KSI-IAM-01
+- KSI-IAM-05
+related_frrs: []
+evidence_collection:
+  azure_monitor_kql: []
+  azure_cli:
+  - command: '# TODO: Add Azure CLI command for FRR-RSC-04'
+    description: Collect evidence for Secure Defaults on Provisioning
+    output_format: json
+    frequency: monthly
+  powershell: []
+  rest_api: []
+  manual_procedures:
+  - procedure: Configuration export from Azure Portal (JSON format)
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Policy compliance reports
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Monitor logs showing compliance status
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+evidence_artifacts:
+- artifact_type: documentation
+  name: FRR-RSC-04 - Secure Defaults on Provisioning Policy
+  source: Organization security documentation
+  frequency: annual_review
+  retention_months: 36
+  format: PDF/Markdown
+- artifact_type: configuration
+  name: FRR-RSC-04 - Azure Service Configuration
+  source: Azure Portal export
+  frequency: quarterly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: FRR-RSC-04 - Compliance Status Report
+  source: Compliance tracking system
+  frequency: monthly
+  retention_months: 36
+  format: PDF/Excel
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation for Azure Policy for compliance enforcement'
+    azure_services: *id001
+    effort_hours: 8
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation for Azure Monitor for continuous monitoring'
+    azure_services: *id001
+    effort_hours: 8
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation for Log Analytics queries for compliance
+      validation'
+    azure_services: *id001
+    effort_hours: 8
+implementation:
+  prerequisites:
+  - FedRAMP authorization package template
+  - Organization security policies
+  - Azure subscription (if applicable)
+  - Security team approval process
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 6
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 7
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 8
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 9
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 10
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  total_effort_hours: 20
+ssp_mapping:
+  control_family: AC - Account Management
+  control_numbers:
+  - AC-2
+  - IA-5
+  - CM-6
+  ssp_sections:
+  - section: 'AC-2: Account Management'
+    description_template: 'Implementation of FRR-RSC-04 - Secure Defaults on Provisioning:
+
+
+      Providers SHOULD set all settings to their recommended secure defaults for _top-level
+      administrative accounts_ and _privileged accounts_ when initially provisioned.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-RSC-04 Policy Documentation
+    - FRR-RSC-04 Compliance Report
+  - section: 'IA-5: Authenticator Management'
+    description_template: 'Implementation of FRR-RSC-04 - Secure Defaults on Provisioning:
+
+
+      Providers SHOULD set all settings to their recommended secure defaults for _top-level
+      administrative accounts_ and _privileged accounts_ when initially provisioned.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-RSC-04 Policy Documentation
+    - FRR-RSC-04 Compliance Report
+  - section: 'CM-6: Configuration Settings'
+    description_template: 'Implementation of FRR-RSC-04 - Secure Defaults on Provisioning:
+
+
+      Providers SHOULD set all settings to their recommended secure defaults for _top-level
+      administrative accounts_ and _privileged accounts_ when initially provisioned.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-RSC-04 Policy Documentation
+    - FRR-RSC-04 Compliance Report
+  required_for_fedramp: true
+  authorization_package_section: Section 12 - System and Communications Protection
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Secure Defaults on Provisioning compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Secure Defaults on Provisioning compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Secure Defaults on Provisioning compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Secure Defaults on Provisioning compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Resource Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Govern
+    guidance: Implement Secure Defaults on Provisioning as part of governance baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/govern/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-RSC-04
+    requirement_name: Secure Defaults on Provisioning
+    requirement_type: FRR
+    primary_keyword: SHOULD
+    impact_levels:
+    - Low
+    - Moderate
+    - High
+  nist_800_53_rev5:
+    controls:
+    - control_id: AC-2
+      control_name: Account Management
+    - control_id: IA-5
+      control_name: Authenticator Management
+    - control_id: CM-6
+      control_name: Configuration Settings
+testing:
+  validation_procedures:
+  - procedure: Review policy documentation
+    expected_outcome: Policy exists and is current (within 1 year)
+    frequency: annual
+  - procedure: Verify implementation evidence
+    expected_outcome: Evidence artifacts collected and retained
+    frequency: quarterly
+  - procedure: Test automated controls (if applicable)
+    expected_outcome: Automated controls functioning as designed
+    frequency: monthly
+  acceptance_criteria:
+  - Policy documented for FRR-RSC-04
+  - Implementation evidence collected and retained for 3 years
+  - Annual review completed and documented
+  - NIST controls AC-2, IA-5, CM-6 satisfied
+
+---
+pattern_id: frr.rsc.05
+name: Comparison Capability
+description: Providers SHOULD offer the capability to compare all current settings
+  for _top-level administrative accounts_ and _privileged accounts_ to the recommended
+  secure defaults.
+family: RSC
+severity: MEDIUM
+pattern_type: process_based
+languages:
+  markdown:
+    file_patterns:
+    - '*.md'
+    - README.md
+    - SECURITY.md
+    keywords: []
+  yaml:
+    file_patterns:
+    - '*.yaml'
+    - '*.yml'
+    - .github/**/*.yml
+    keywords:
+    - fedramp
+    - compliance
+    - security
+finding:
+  title_template: Comparison Capability - FRR-RSC-05
+  description_template: Providers SHOULD offer the capability to compare all current
+    settings for _top-level administrative accounts_ and _privileged accounts_ to
+    the recommended secure defaults.
+  remediation_template: 'To comply with FRR-RSC-05 (Comparison Capability), you SHOULD
+    consider implementing the following recommended practices:
+
+
+    1. Review FedRAMP 20x requirement documentation
+
+    2. Identify systems and resources in scope
+
+    3. Create resource group for FedRAMP resources
+
+    4. Set up Azure Key Vault for secrets management
+
+    5. Configure Log Analytics workspace
+
+
+    (See full implementation checklist for 10 total steps)'
+  evidence_collection:
+  - Configuration export from Azure Portal (JSON format)
+  - Azure Policy compliance reports
+  - Azure Monitor logs showing compliance status
+  azure_services: &id001
+  - Azure Blob Storage
+  - Azure Monitor
+  - Azure Pipelines
+  - Log Analytics
+tags:
+- rsc
+- should
+- process_based
+- impact_low
+- impact_moderate
+- impact_high
+- documentation_required
+nist_controls:
+- CM-6
+- CM-7
+related_ksis: []
+related_frrs: []
+evidence_collection:
+  azure_monitor_kql: []
+  azure_cli:
+  - command: '# TODO: Add Azure CLI command for FRR-RSC-05'
+    description: Collect evidence for Comparison Capability
+    output_format: json
+    frequency: monthly
+  powershell: []
+  rest_api: []
+  manual_procedures:
+  - procedure: Configuration export from Azure Portal (JSON format)
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Policy compliance reports
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Monitor logs showing compliance status
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+evidence_artifacts:
+- artifact_type: documentation
+  name: FRR-RSC-05 - Comparison Capability Policy
+  source: Organization security documentation
+  frequency: annual_review
+  retention_months: 36
+  format: PDF/Markdown
+- artifact_type: configuration
+  name: FRR-RSC-05 - Azure Service Configuration
+  source: Azure Portal export
+  frequency: quarterly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: FRR-RSC-05 - Compliance Status Report
+  source: Compliance tracking system
+  frequency: monthly
+  retention_months: 36
+  format: PDF/Excel
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation for Azure Policy for compliance enforcement'
+    azure_services: *id001
+    effort_hours: 8
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation for Azure Monitor for continuous monitoring'
+    azure_services: *id001
+    effort_hours: 8
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation for Log Analytics queries for compliance
+      validation'
+    azure_services: *id001
+    effort_hours: 8
+implementation:
+  prerequisites:
+  - FedRAMP authorization package template
+  - Organization security policies
+  - Azure subscription (if applicable)
+  - Security team approval process
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 6
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 7
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 8
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 9
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 10
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  total_effort_hours: 20
+ssp_mapping:
+  control_family: CM - Configuration Settings
+  control_numbers:
+  - CM-6
+  - CM-7
+  ssp_sections:
+  - section: 'CM-6: Configuration Settings'
+    description_template: 'Implementation of FRR-RSC-05 - Comparison Capability:
+
+
+      Providers SHOULD offer the capability to compare all current settings for _top-level
+      administrative accounts_ and _privileged accounts_ to the recommended secure
+      defaults.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-RSC-05 Policy Documentation
+    - FRR-RSC-05 Compliance Report
+  - section: 'CM-7: Least Functionality'
+    description_template: 'Implementation of FRR-RSC-05 - Comparison Capability:
+
+
+      Providers SHOULD offer the capability to compare all current settings for _top-level
+      administrative accounts_ and _privileged accounts_ to the recommended secure
+      defaults.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-RSC-05 Policy Documentation
+    - FRR-RSC-05 Compliance Report
+  required_for_fedramp: true
+  authorization_package_section: Section 12 - System and Communications Protection
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Comparison Capability compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Comparison Capability compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Comparison Capability compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Comparison Capability compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Resource Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Govern
+    guidance: Implement Comparison Capability as part of governance baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/govern/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-RSC-05
+    requirement_name: Comparison Capability
+    requirement_type: FRR
+    primary_keyword: SHOULD
+    impact_levels:
+    - Low
+    - Moderate
+    - High
+  nist_800_53_rev5:
+    controls:
+    - control_id: CM-6
+      control_name: Configuration Settings
+    - control_id: CM-7
+      control_name: Least Functionality
+testing:
+  validation_procedures:
+  - procedure: Review policy documentation
+    expected_outcome: Policy exists and is current (within 1 year)
+    frequency: annual
+  - procedure: Verify implementation evidence
+    expected_outcome: Evidence artifacts collected and retained
+    frequency: quarterly
+  - procedure: Test automated controls (if applicable)
+    expected_outcome: Automated controls functioning as designed
+    frequency: monthly
+  acceptance_criteria:
+  - Policy documented for FRR-RSC-05
+  - Implementation evidence collected and retained for 3 years
+  - Annual review completed and documented
+  - NIST controls CM-6, CM-7 satisfied
+
+---
+pattern_id: frr.rsc.06
+name: Export Capability
+description: Providers SHOULD offer the capability to export all security settings
+  in a _machine-readable_ format.
+family: RSC
+severity: MEDIUM
+pattern_type: process_based
+languages:
+  markdown:
+    file_patterns:
+    - '*.md'
+    - README.md
+    - SECURITY.md
+    keywords:
+    - security
+  yaml:
+    file_patterns:
+    - '*.yaml'
+    - '*.yml'
+    - .github/**/*.yml
+    keywords:
+    - fedramp
+    - compliance
+    - security
+finding:
+  title_template: Export Capability - FRR-RSC-06
+  description_template: Providers SHOULD offer the capability to export all security
+    settings in a _machine-readable_ format.
+  remediation_template: 'To comply with FRR-RSC-06 (Export Capability), you SHOULD
+    consider implementing the following recommended practices:
+
+
+    1. Review FedRAMP 20x requirement documentation
+
+    2. Identify systems and resources in scope
+
+    3. Create resource group for FedRAMP resources
+
+    4. Set up Azure Key Vault for secrets management
+
+    5. Configure Log Analytics workspace
+
+
+    (See full implementation checklist for 10 total steps)'
+  evidence_collection:
+  - Configuration export from Azure Portal (JSON format)
+  - Azure Policy compliance reports
+  - Azure Monitor logs showing compliance status
+  azure_services: &id001
+  - Azure Blob Storage
+  - Azure Monitor
+  - Azure Pipelines
+  - Log Analytics
+tags:
+- rsc
+- should
+- process_based
+- impact_low
+- impact_moderate
+- impact_high
+- documentation_required
+nist_controls:
+- CM-6
+- CM-2
+related_ksis: []
+related_frrs: []
+evidence_collection:
+  azure_monitor_kql: []
+  azure_cli:
+  - command: '# TODO: Add Azure CLI command for FRR-RSC-06'
+    description: Collect evidence for Export Capability
+    output_format: json
+    frequency: monthly
+  powershell: []
+  rest_api: []
+  manual_procedures:
+  - procedure: Configuration export from Azure Portal (JSON format)
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Policy compliance reports
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Monitor logs showing compliance status
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+evidence_artifacts:
+- artifact_type: documentation
+  name: FRR-RSC-06 - Export Capability Policy
+  source: Organization security documentation
+  frequency: annual_review
+  retention_months: 36
+  format: PDF/Markdown
+- artifact_type: configuration
+  name: FRR-RSC-06 - Azure Service Configuration
+  source: Azure Portal export
+  frequency: quarterly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: FRR-RSC-06 - Compliance Status Report
+  source: Compliance tracking system
+  frequency: monthly
+  retention_months: 36
+  format: PDF/Excel
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation for Azure Policy for compliance enforcement'
+    azure_services: *id001
+    effort_hours: 8
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation for Azure Monitor for continuous monitoring'
+    azure_services: *id001
+    effort_hours: 8
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation for Log Analytics queries for compliance
+      validation'
+    azure_services: *id001
+    effort_hours: 8
+implementation:
+  prerequisites:
+  - FedRAMP authorization package template
+  - Organization security policies
+  - Azure subscription (if applicable)
+  - Security team approval process
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 6
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 7
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 8
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 9
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 10
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  total_effort_hours: 20
+ssp_mapping:
+  control_family: CM - Configuration Settings
+  control_numbers:
+  - CM-6
+  - CM-2
+  ssp_sections:
+  - section: 'CM-6: Configuration Settings'
+    description_template: 'Implementation of FRR-RSC-06 - Export Capability:
+
+
+      Providers SHOULD offer the capability to export all security settings in a _machine-readable_
+      format.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-RSC-06 Policy Documentation
+    - FRR-RSC-06 Compliance Report
+  - section: 'CM-2: Baseline Configuration'
+    description_template: 'Implementation of FRR-RSC-06 - Export Capability:
+
+
+      Providers SHOULD offer the capability to export all security settings in a _machine-readable_
+      format.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-RSC-06 Policy Documentation
+    - FRR-RSC-06 Compliance Report
+  required_for_fedramp: true
+  authorization_package_section: Section 12 - System and Communications Protection
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Export Capability compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Export Capability compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Export Capability compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Export Capability compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Resource Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Govern
+    guidance: Implement Export Capability as part of governance baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/govern/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-RSC-06
+    requirement_name: Export Capability
+    requirement_type: FRR
+    primary_keyword: SHOULD
+    impact_levels:
+    - Low
+    - Moderate
+    - High
+  nist_800_53_rev5:
+    controls:
+    - control_id: CM-6
+      control_name: Configuration Settings
+    - control_id: CM-2
+      control_name: Baseline Configuration
+testing:
+  validation_procedures:
+  - procedure: Review policy documentation
+    expected_outcome: Policy exists and is current (within 1 year)
+    frequency: annual
+  - procedure: Verify implementation evidence
+    expected_outcome: Evidence artifacts collected and retained
+    frequency: quarterly
+  - procedure: Test automated controls (if applicable)
+    expected_outcome: Automated controls functioning as designed
+    frequency: monthly
+  acceptance_criteria:
+  - Policy documented for FRR-RSC-06
+  - Implementation evidence collected and retained for 3 years
+  - Annual review completed and documented
+  - NIST controls CM-6, CM-2 satisfied
+
+---
+pattern_id: frr.rsc.07
+name: API Capability
+description: Providers SHOULD offer the capability to view and adjust security settings
+  via an API or similar capability.
+family: RSC
+severity: MEDIUM
+pattern_type: process_based
+languages:
+  markdown:
+    file_patterns:
+    - '*.md'
+    - README.md
+    - SECURITY.md
+    keywords:
+    - security
+  yaml:
+    file_patterns:
+    - '*.yaml'
+    - '*.yml'
+    - .github/**/*.yml
+    keywords:
+    - fedramp
+    - compliance
+    - security
+finding:
+  title_template: API Capability - FRR-RSC-07
+  description_template: Providers SHOULD offer the capability to view and adjust security
+    settings via an API or similar capability.
+  remediation_template: 'To comply with FRR-RSC-07 (API Capability), you SHOULD consider
+    implementing the following recommended practices:
+
+
+    1. Review FedRAMP 20x requirement documentation
+
+    2. Identify systems and resources in scope
+
+    3. Create resource group for FedRAMP resources
+
+    4. Set up Azure Key Vault for secrets management
+
+    5. Configure Log Analytics workspace
+
+
+    (See full implementation checklist for 10 total steps)'
+  evidence_collection:
+  - Configuration export from Azure Portal (JSON format)
+  - Azure Policy compliance reports
+  - Azure Monitor logs showing compliance status
+  azure_services: &id001
+  - Azure Blob Storage
+  - Azure Monitor
+  - Azure Pipelines
+  - Log Analytics
+tags:
+- rsc
+- should
+- process_based
+- impact_low
+- impact_moderate
+- impact_high
+- documentation_required
+nist_controls:
+- CM-6
+- AC-3
+related_ksis: []
+related_frrs: []
+evidence_collection:
+  azure_monitor_kql: []
+  azure_cli:
+  - command: '# TODO: Add Azure CLI command for FRR-RSC-07'
+    description: Collect evidence for API Capability
+    output_format: json
+    frequency: monthly
+  powershell: []
+  rest_api: []
+  manual_procedures:
+  - procedure: Configuration export from Azure Portal (JSON format)
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Policy compliance reports
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Monitor logs showing compliance status
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+evidence_artifacts:
+- artifact_type: documentation
+  name: FRR-RSC-07 - API Capability Policy
+  source: Organization security documentation
+  frequency: annual_review
+  retention_months: 36
+  format: PDF/Markdown
+- artifact_type: configuration
+  name: FRR-RSC-07 - Azure Service Configuration
+  source: Azure Portal export
+  frequency: quarterly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: FRR-RSC-07 - Compliance Status Report
+  source: Compliance tracking system
+  frequency: monthly
+  retention_months: 36
+  format: PDF/Excel
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation for Azure Policy for compliance enforcement'
+    azure_services: *id001
+    effort_hours: 8
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation for Azure Monitor for continuous monitoring'
+    azure_services: *id001
+    effort_hours: 8
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation for Log Analytics queries for compliance
+      validation'
+    azure_services: *id001
+    effort_hours: 8
+implementation:
+  prerequisites:
+  - FedRAMP authorization package template
+  - Organization security policies
+  - Azure subscription (if applicable)
+  - Security team approval process
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 6
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 7
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 8
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 9
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 10
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  total_effort_hours: 20
+ssp_mapping:
+  control_family: CM - Configuration Settings
+  control_numbers:
+  - CM-6
+  - AC-3
+  ssp_sections:
+  - section: 'CM-6: Configuration Settings'
+    description_template: 'Implementation of FRR-RSC-07 - API Capability:
+
+
+      Providers SHOULD offer the capability to view and adjust security settings via
+      an API or similar capability.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-RSC-07 Policy Documentation
+    - FRR-RSC-07 Compliance Report
+  - section: 'AC-3: Access Enforcement'
+    description_template: 'Implementation of FRR-RSC-07 - API Capability:
+
+
+      Providers SHOULD offer the capability to view and adjust security settings via
+      an API or similar capability.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-RSC-07 Policy Documentation
+    - FRR-RSC-07 Compliance Report
+  required_for_fedramp: true
+  authorization_package_section: Section 12 - System and Communications Protection
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for API Capability compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for API Capability compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for API Capability compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for API Capability compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Resource Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Govern
+    guidance: Implement API Capability as part of governance baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/govern/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-RSC-07
+    requirement_name: API Capability
+    requirement_type: FRR
+    primary_keyword: SHOULD
+    impact_levels:
+    - Low
+    - Moderate
+    - High
+  nist_800_53_rev5:
+    controls:
+    - control_id: CM-6
+      control_name: Configuration Settings
+    - control_id: AC-3
+      control_name: Access Enforcement
+testing:
+  validation_procedures:
+  - procedure: Review policy documentation
+    expected_outcome: Policy exists and is current (within 1 year)
+    frequency: annual
+  - procedure: Verify implementation evidence
+    expected_outcome: Evidence artifacts collected and retained
+    frequency: quarterly
+  - procedure: Test automated controls (if applicable)
+    expected_outcome: Automated controls functioning as designed
+    frequency: monthly
+  acceptance_criteria:
+  - Policy documented for FRR-RSC-07
+  - Implementation evidence collected and retained for 3 years
+  - Annual review completed and documented
+  - NIST controls CM-6, AC-3 satisfied
+
+---
+pattern_id: frr.rsc.08
+name: Machine-Readable Guidance
+description: Providers SHOULD provide recommended secure configuration guidance in
+  a _machine-readable_ format that can be used by customers or third-party tools to
+  compare against current settings.
+family: RSC
+severity: MEDIUM
+pattern_type: process_based
+languages:
+  markdown:
+    file_patterns:
+    - '*.md'
+    - README.md
+    - SECURITY.md
+    keywords: []
+  yaml:
+    file_patterns:
+    - '*.yaml'
+    - '*.yml'
+    - .github/**/*.yml
+    keywords:
+    - fedramp
+    - compliance
+    - security
+finding:
+  title_template: Machine-Readable Guidance - FRR-RSC-08
+  description_template: Providers SHOULD provide recommended secure configuration
+    guidance in a _machine-readable_ format that can be used by customers or third-party
+    tools to compare against current settings.
+  remediation_template: 'To comply with FRR-RSC-08 (Machine-Readable Guidance), you
+    SHOULD consider implementing the following recommended practices:
+
+
+    1. Review FedRAMP 20x requirement documentation
+
+    2. Identify systems and resources in scope
+
+    3. Create resource group for FedRAMP resources
+
+    4. Set up Azure Key Vault for secrets management
+
+    5. Configure Log Analytics workspace
+
+
+    (See full implementation checklist for 10 total steps)'
+  evidence_collection:
+  - Configuration export from Azure Portal (JSON format)
+  - Azure Policy compliance reports
+  - Azure Monitor logs showing compliance status
+  azure_services: &id001
+  - Azure Blob Storage
+  - Azure Monitor
+  - Log Analytics
+tags:
+- rsc
+- should
+- process_based
+- impact_low
+- impact_moderate
+- impact_high
+- documentation_required
+nist_controls:
+- CM-6
+- CM-2
+related_ksis: []
+related_frrs: []
+evidence_collection:
+  azure_monitor_kql: []
+  azure_cli:
+  - command: '# TODO: Add Azure CLI command for FRR-RSC-08'
+    description: Collect evidence for Machine-Readable Guidance
+    output_format: json
+    frequency: monthly
+  powershell: []
+  rest_api: []
+  manual_procedures:
+  - procedure: Configuration export from Azure Portal (JSON format)
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Policy compliance reports
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Monitor logs showing compliance status
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+evidence_artifacts:
+- artifact_type: documentation
+  name: FRR-RSC-08 - Machine-Readable Guidance Policy
+  source: Organization security documentation
+  frequency: annual_review
+  retention_months: 36
+  format: PDF/Markdown
+- artifact_type: configuration
+  name: FRR-RSC-08 - Azure Service Configuration
+  source: Azure Portal export
+  frequency: quarterly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: FRR-RSC-08 - Compliance Status Report
+  source: Compliance tracking system
+  frequency: monthly
+  retention_months: 36
+  format: PDF/Excel
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation for Azure Policy for compliance enforcement'
+    azure_services: *id001
+    effort_hours: 8
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation for Azure Monitor for continuous monitoring'
+    azure_services: *id001
+    effort_hours: 8
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation for Log Analytics queries for compliance
+      validation'
+    azure_services: *id001
+    effort_hours: 8
+implementation:
+  prerequisites:
+  - FedRAMP authorization package template
+  - Organization security policies
+  - Azure subscription (if applicable)
+  - Security team approval process
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 6
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 7
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 8
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 9
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 10
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  total_effort_hours: 20
+ssp_mapping:
+  control_family: CM - Configuration Settings
+  control_numbers:
+  - CM-6
+  - CM-2
+  ssp_sections:
+  - section: 'CM-6: Configuration Settings'
+    description_template: 'Implementation of FRR-RSC-08 - Machine-Readable Guidance:
+
+
+      Providers SHOULD provide recommended secure configuration guidance in a _machine-readable_
+      format that can be used by customers or third-party tools to compare against
+      current settings.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-RSC-08 Policy Documentation
+    - FRR-RSC-08 Compliance Report
+  - section: 'CM-2: Baseline Configuration'
+    description_template: 'Implementation of FRR-RSC-08 - Machine-Readable Guidance:
+
+
+      Providers SHOULD provide recommended secure configuration guidance in a _machine-readable_
+      format that can be used by customers or third-party tools to compare against
+      current settings.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-RSC-08 Policy Documentation
+    - FRR-RSC-08 Compliance Report
+  required_for_fedramp: true
+  authorization_package_section: Section 12 - System and Communications Protection
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Machine-Readable Guidance compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Machine-Readable Guidance compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Machine-Readable Guidance compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Resource Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Govern
+    guidance: Implement Machine-Readable Guidance as part of governance baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/govern/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-RSC-08
+    requirement_name: Machine-Readable Guidance
+    requirement_type: FRR
+    primary_keyword: SHOULD
+    impact_levels:
+    - Low
+    - Moderate
+    - High
+  nist_800_53_rev5:
+    controls:
+    - control_id: CM-6
+      control_name: Configuration Settings
+    - control_id: CM-2
+      control_name: Baseline Configuration
+testing:
+  validation_procedures:
+  - procedure: Review policy documentation
+    expected_outcome: Policy exists and is current (within 1 year)
+    frequency: annual
+  - procedure: Verify implementation evidence
+    expected_outcome: Evidence artifacts collected and retained
+    frequency: quarterly
+  - procedure: Test automated controls (if applicable)
+    expected_outcome: Automated controls functioning as designed
+    frequency: monthly
+  acceptance_criteria:
+  - Policy documented for FRR-RSC-08
+  - Implementation evidence collected and retained for 3 years
+  - Annual review completed and documented
+  - NIST controls CM-6, CM-2 satisfied
+
+---
+pattern_id: frr.rsc.09
+name: Publish Guidance
+description: Providers SHOULD make recommended secure configuration guidance available
+  publicly.
+family: RSC
+severity: MEDIUM
+pattern_type: process_based
+languages:
+  markdown:
+    file_patterns:
+    - '*.md'
+    - README.md
+    - SECURITY.md
+    keywords: []
+  yaml:
+    file_patterns:
+    - '*.yaml'
+    - '*.yml'
+    - .github/**/*.yml
+    keywords:
+    - fedramp
+    - compliance
+    - security
+finding:
+  title_template: Publish Guidance - FRR-RSC-09
+  description_template: Providers SHOULD make recommended secure configuration guidance
+    available publicly.
+  remediation_template: 'To comply with FRR-RSC-09 (Publish Guidance), you SHOULD
+    consider implementing the following recommended practices:
+
+
+    1. Review FedRAMP 20x requirement documentation
+
+    2. Identify systems and resources in scope
+
+    3. Create resource group for FedRAMP resources
+
+    4. Set up Azure Key Vault for secrets management
+
+    5. Configure Log Analytics workspace
+
+
+    (See full implementation checklist for 10 total steps)'
+  evidence_collection:
+  - Configuration export from Azure Portal (JSON format)
+  - Azure Policy compliance reports
+  - Azure Monitor logs showing compliance status
+  azure_services: &id001
+  - Azure Blob Storage
+  - Azure Monitor
+  - Log Analytics
+tags:
+- rsc
+- should
+- process_based
+- impact_low
+- impact_moderate
+- impact_high
+- documentation_required
+nist_controls:
+- CM-6
+- SA-5
+related_ksis: []
+related_frrs: []
+evidence_collection:
+  azure_monitor_kql: []
+  azure_cli:
+  - command: '# TODO: Add Azure CLI command for FRR-RSC-09'
+    description: Collect evidence for Publish Guidance
+    output_format: json
+    frequency: monthly
+  powershell: []
+  rest_api: []
+  manual_procedures:
+  - procedure: Configuration export from Azure Portal (JSON format)
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Policy compliance reports
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Monitor logs showing compliance status
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+evidence_artifacts:
+- artifact_type: documentation
+  name: FRR-RSC-09 - Publish Guidance Policy
+  source: Organization security documentation
+  frequency: annual_review
+  retention_months: 36
+  format: PDF/Markdown
+- artifact_type: configuration
+  name: FRR-RSC-09 - Azure Service Configuration
+  source: Azure Portal export
+  frequency: quarterly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: FRR-RSC-09 - Compliance Status Report
+  source: Compliance tracking system
+  frequency: monthly
+  retention_months: 36
+  format: PDF/Excel
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation for Azure Policy for compliance enforcement'
+    azure_services: *id001
+    effort_hours: 8
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation for Azure Monitor for continuous monitoring'
+    azure_services: *id001
+    effort_hours: 8
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation for Log Analytics queries for compliance
+      validation'
+    azure_services: *id001
+    effort_hours: 8
+implementation:
+  prerequisites:
+  - FedRAMP authorization package template
+  - Organization security policies
+  - Azure subscription (if applicable)
+  - Security team approval process
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 6
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 7
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 8
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 9
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 10
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  total_effort_hours: 20
+ssp_mapping:
+  control_family: CM - Configuration Settings
+  control_numbers:
+  - CM-6
+  - SA-5
+  ssp_sections:
+  - section: 'CM-6: Configuration Settings'
+    description_template: 'Implementation of FRR-RSC-09 - Publish Guidance:
+
+
+      Providers SHOULD make recommended secure configuration guidance available publicly.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-RSC-09 Policy Documentation
+    - FRR-RSC-09 Compliance Report
+  - section: 'SA-5: Information System Documentation'
+    description_template: 'Implementation of FRR-RSC-09 - Publish Guidance:
+
+
+      Providers SHOULD make recommended secure configuration guidance available publicly.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-RSC-09 Policy Documentation
+    - FRR-RSC-09 Compliance Report
+  required_for_fedramp: true
+  authorization_package_section: Section 12 - System and Communications Protection
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Publish Guidance compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Publish Guidance compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Publish Guidance compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Resource Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Govern
+    guidance: Implement Publish Guidance as part of governance baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/govern/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-RSC-09
+    requirement_name: Publish Guidance
+    requirement_type: FRR
+    primary_keyword: SHOULD
+    impact_levels:
+    - Low
+    - Moderate
+    - High
+  nist_800_53_rev5:
+    controls:
+    - control_id: CM-6
+      control_name: Configuration Settings
+    - control_id: SA-5
+      control_name: Information System Documentation
+testing:
+  validation_procedures:
+  - procedure: Review policy documentation
+    expected_outcome: Policy exists and is current (within 1 year)
+    frequency: annual
+  - procedure: Verify implementation evidence
+    expected_outcome: Evidence artifacts collected and retained
+    frequency: quarterly
+  - procedure: Test automated controls (if applicable)
+    expected_outcome: Automated controls functioning as designed
+    frequency: monthly
+  acceptance_criteria:
+  - Policy documented for FRR-RSC-09
+  - Implementation evidence collected and retained for 3 years
+  - Annual review completed and documented
+  - NIST controls CM-6, SA-5 satisfied
+
+---
+pattern_id: frr.rsc.10
+name: Versioning and Release History
+description: Providers SHOULD provide versioning and a release history for recommended
+  secure default settings for _top-level administrative accounts_ and _privileged
+  accounts_ as they are adjusted over time.
+family: RSC
+severity: MEDIUM
+pattern_type: process_based
+languages:
+  markdown:
+    file_patterns:
+    - '*.md'
+    - README.md
+    - SECURITY.md
+    keywords: []
+  yaml:
+    file_patterns:
+    - '*.yaml'
+    - '*.yml'
+    - .github/**/*.yml
+    keywords:
+    - fedramp
+    - compliance
+    - security
+finding:
+  title_template: Versioning and Release History - FRR-RSC-10
+  description_template: Providers SHOULD provide versioning and a release history
+    for recommended secure default settings for _top-level administrative accounts_
+    and _privileged accounts_ as they are adjusted over time.
+  remediation_template: 'To comply with FRR-RSC-10 (Versioning and Release History),
+    you SHOULD consider implementing the following recommended practices:
+
+
+    1. Review FedRAMP 20x requirement documentation
+
+    2. Identify systems and resources in scope
+
+    3. Create resource group for FedRAMP resources
+
+    4. Set up Azure Key Vault for secrets management
+
+    5. Configure Log Analytics workspace
+
+
+    (See full implementation checklist for 10 total steps)'
+  evidence_collection:
+  - Configuration export from Azure Portal (JSON format)
+  - Azure Policy compliance reports
+  - Azure Monitor logs showing compliance status
+  azure_services: &id001
+  - Azure Blob Storage
+  - Azure Monitor
+  - Azure Pipelines
+  - Log Analytics
+tags:
+- rsc
+- should
+- process_based
+- impact_low
+- impact_moderate
+- impact_high
+- documentation_required
+nist_controls:
+- CM-3
+- CM-6
+- SA-5
+related_ksis: []
+related_frrs: []
+evidence_collection:
+  azure_monitor_kql: []
+  azure_cli:
+  - command: '# TODO: Add Azure CLI command for FRR-RSC-10'
+    description: Collect evidence for Versioning and Release History
+    output_format: json
+    frequency: monthly
+  powershell: []
+  rest_api: []
+  manual_procedures:
+  - procedure: Configuration export from Azure Portal (JSON format)
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Policy compliance reports
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Monitor logs showing compliance status
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+evidence_artifacts:
+- artifact_type: documentation
+  name: FRR-RSC-10 - Versioning and Release History Policy
+  source: Organization security documentation
+  frequency: annual_review
+  retention_months: 36
+  format: PDF/Markdown
+- artifact_type: configuration
+  name: FRR-RSC-10 - Azure Service Configuration
+  source: Azure Portal export
+  frequency: quarterly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: FRR-RSC-10 - Compliance Status Report
+  source: Compliance tracking system
+  frequency: monthly
+  retention_months: 36
+  format: PDF/Excel
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation for Azure Policy for compliance enforcement'
+    azure_services: *id001
+    effort_hours: 8
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation for Azure Monitor for continuous monitoring'
+    azure_services: *id001
+    effort_hours: 8
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation for Log Analytics queries for compliance
+      validation'
+    azure_services: *id001
+    effort_hours: 8
+implementation:
+  prerequisites:
+  - FedRAMP authorization package template
+  - Organization security policies
+  - Azure subscription (if applicable)
+  - Security team approval process
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 6
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 7
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 8
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 9
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 10
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  total_effort_hours: 20
+ssp_mapping:
+  control_family: CM - Configuration Change Control
+  control_numbers:
+  - CM-3
+  - CM-6
+  - SA-5
+  ssp_sections:
+  - section: 'CM-3: Configuration Change Control'
+    description_template: 'Implementation of FRR-RSC-10 - Versioning and Release History:
+
+
+      Providers SHOULD provide versioning and a release history for recommended secure
+      default settings for _top-level administrative accounts_ and _privileged accounts_
+      as they are adjusted over time.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-RSC-10 Policy Documentation
+    - FRR-RSC-10 Compliance Report
+  - section: 'CM-6: Configuration Settings'
+    description_template: 'Implementation of FRR-RSC-10 - Versioning and Release History:
+
+
+      Providers SHOULD provide versioning and a release history for recommended secure
+      default settings for _top-level administrative accounts_ and _privileged accounts_
+      as they are adjusted over time.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-RSC-10 Policy Documentation
+    - FRR-RSC-10 Compliance Report
+  - section: 'SA-5: Information System Documentation'
+    description_template: 'Implementation of FRR-RSC-10 - Versioning and Release History:
+
+
+      Providers SHOULD provide versioning and a release history for recommended secure
+      default settings for _top-level administrative accounts_ and _privileged accounts_
+      as they are adjusted over time.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-RSC-10 Policy Documentation
+    - FRR-RSC-10 Compliance Report
+  required_for_fedramp: true
+  authorization_package_section: Section 12 - System and Communications Protection
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Versioning and Release History compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Versioning and Release History compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Versioning and Release History compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Versioning and Release History compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Resource Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Govern
+    guidance: Implement Versioning and Release History as part of governance baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/govern/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-RSC-10
+    requirement_name: Versioning and Release History
+    requirement_type: FRR
+    primary_keyword: SHOULD
+    impact_levels:
+    - Low
+    - Moderate
+    - High
+  nist_800_53_rev5:
+    controls:
+    - control_id: CM-3
+      control_name: Configuration Change Control
+    - control_id: CM-6
+      control_name: Configuration Settings
+    - control_id: SA-5
+      control_name: Information System Documentation
+testing:
+  validation_procedures:
+  - procedure: Review policy documentation
+    expected_outcome: Policy exists and is current (within 1 year)
+    frequency: annual
+  - procedure: Verify implementation evidence
+    expected_outcome: Evidence artifacts collected and retained
+    frequency: quarterly
+  - procedure: Test automated controls (if applicable)
+    expected_outcome: Automated controls functioning as designed
+    frequency: monthly
+  acceptance_criteria:
+  - Policy documented for FRR-RSC-10
+  - Implementation evidence collected and retained for 3 years
+  - Annual review completed and documented
+  - NIST controls CM-3, CM-6, SA-5 satisfied

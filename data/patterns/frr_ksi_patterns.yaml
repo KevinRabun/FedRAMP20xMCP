@@ -1,0 +1,582 @@
+# FRR KSI Patterns - FedRAMP 20x Requirements
+# Family: KSI
+# Pattern Type: Process-Based Requirements
+# Schema: V2
+#
+# These patterns represent FedRAMP Requirements (FRR) which are
+# primarily process-based and require documentation, policies,
+# and procedures rather than code-level detection.
+#
+# NOTE: Manual completion required for:
+# - Automation implementation code
+# - Organization-specific policy details
+# - Evidence collection procedures
+
+pattern_id: frr.ksi.01
+name: Application of Key Security Indicators
+description: Cloud service providers SHOULD apply ALL Key Security Indicators to ALL
+  aspects of their _cloud service offering_ that are within the FedRAMP Minimum Assessment
+  Scope.
+family: KSI
+severity: MEDIUM
+pattern_type: process_based
+languages:
+  markdown:
+    file_patterns:
+    - '*.md'
+    - README.md
+    - SECURITY.md
+    keywords:
+    - security
+    - fedramp
+  yaml:
+    file_patterns:
+    - '*.yaml'
+    - '*.yml'
+    - .github/**/*.yml
+    keywords:
+    - fedramp
+    - compliance
+    - security
+finding:
+  title_template: Application of Key Security Indicators - FRR-KSI-01
+  description_template: Cloud service providers SHOULD apply ALL Key Security Indicators
+    to ALL aspects of their _cloud service offering_ that are within the FedRAMP Minimum
+    Assessment Scope.
+  remediation_template: 'To comply with FRR-KSI-01 (Application of Key Security Indicators),
+    you SHOULD consider implementing the following recommended practices:
+
+
+    1. Review FedRAMP 20x requirement documentation
+
+    2. Identify systems and resources in scope
+
+    3. Create resource group for FedRAMP resources
+
+    4. Set up Azure Key Vault for secrets management
+
+    5. Configure Log Analytics workspace
+
+
+    (See full implementation checklist for 10 total steps)'
+  evidence_collection:
+  - Configuration export from Azure Portal (JSON format)
+  - Azure Policy compliance reports
+  - Azure Monitor logs showing compliance status
+  azure_services: &id001
+  - Azure Blob Storage
+  - Azure Monitor
+  - Azure Pipelines
+  - Log Analytics
+tags:
+- ksi
+- should
+- process_based
+- impact_low
+- impact_moderate
+- documentation_required
+nist_controls:
+- CA-2
+- CA-7
+- SI-4
+related_ksis:
+- KSI-AFR-01
+related_frrs: []
+evidence_collection:
+  azure_monitor_kql: []
+  azure_cli:
+  - command: '# TODO: Add Azure CLI command for FRR-KSI-01'
+    description: Collect evidence for Application of Key Security Indicators
+    output_format: json
+    frequency: monthly
+  powershell: []
+  rest_api: []
+  manual_procedures:
+  - procedure: Configuration export from Azure Portal (JSON format)
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Policy compliance reports
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Monitor logs showing compliance status
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+evidence_artifacts:
+- artifact_type: documentation
+  name: FRR-KSI-01 - Application of Key Security Indicators Policy
+  source: Organization security documentation
+  frequency: annual_review
+  retention_months: 36
+  format: PDF/Markdown
+- artifact_type: configuration
+  name: FRR-KSI-01 - Azure Service Configuration
+  source: Azure Portal export
+  frequency: quarterly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: FRR-KSI-01 - Compliance Status Report
+  source: Compliance tracking system
+  frequency: monthly
+  retention_months: 36
+  format: PDF/Excel
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation for Azure Policy for compliance enforcement'
+    azure_services: *id001
+    effort_hours: 8
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation for Azure Monitor for continuous monitoring'
+    azure_services: *id001
+    effort_hours: 8
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation for Log Analytics queries for compliance
+      validation'
+    azure_services: *id001
+    effort_hours: 8
+implementation:
+  prerequisites:
+  - FedRAMP authorization package template
+  - Organization security policies
+  - Azure subscription (if applicable)
+  - Security team approval process
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 6
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 7
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 8
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 9
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 10
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  total_effort_hours: 20
+ssp_mapping:
+  control_family: CA - Control Assessments
+  control_numbers:
+  - CA-2
+  - CA-7
+  - SI-4
+  ssp_sections:
+  - section: 'CA-2: Control Assessments'
+    description_template: 'Implementation of FRR-KSI-01 - Application of Key Security
+      Indicators:
+
+
+      Cloud service providers SHOULD apply ALL Key Security Indicators to ALL aspects
+      of their _cloud service offering_ that are within the FedRAMP Minimum Assessment
+      Scope.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-KSI-01 Policy Documentation
+    - FRR-KSI-01 Compliance Report
+  - section: 'CA-7: Continuous Monitoring'
+    description_template: 'Implementation of FRR-KSI-01 - Application of Key Security
+      Indicators:
+
+
+      Cloud service providers SHOULD apply ALL Key Security Indicators to ALL aspects
+      of their _cloud service offering_ that are within the FedRAMP Minimum Assessment
+      Scope.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-KSI-01 Policy Documentation
+    - FRR-KSI-01 Compliance Report
+  - section: 'SI-4: System Monitoring'
+    description_template: 'Implementation of FRR-KSI-01 - Application of Key Security
+      Indicators:
+
+
+      Cloud service providers SHOULD apply ALL Key Security Indicators to ALL aspects
+      of their _cloud service offering_ that are within the FedRAMP Minimum Assessment
+      Scope.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-KSI-01 Policy Documentation
+    - FRR-KSI-01 Compliance Report
+  required_for_fedramp: true
+  authorization_package_section: System Security Plan
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Application of Key Security Indicators compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Application of Key Security Indicators compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Application of Key Security Indicators compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Application of Key Security Indicators compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: General Security
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Govern
+    guidance: Implement Application of Key Security Indicators as part of governance
+      baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/govern/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-KSI-01
+    requirement_name: Application of Key Security Indicators
+    requirement_type: FRR
+    primary_keyword: SHOULD
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - control_id: CA-2
+      control_name: Control Assessments
+    - control_id: CA-7
+      control_name: Continuous Monitoring
+    - control_id: SI-4
+      control_name: System Monitoring
+testing:
+  validation_procedures:
+  - procedure: Review policy documentation
+    expected_outcome: Policy exists and is current (within 1 year)
+    frequency: annual
+  - procedure: Verify implementation evidence
+    expected_outcome: Evidence artifacts collected and retained
+    frequency: quarterly
+  - procedure: Test automated controls (if applicable)
+    expected_outcome: Automated controls functioning as designed
+    frequency: monthly
+  acceptance_criteria:
+  - Policy documented for FRR-KSI-01
+  - Implementation evidence collected and retained for 3 years
+  - Annual review completed and documented
+  - NIST controls CA-2, CA-7, SI-4 satisfied
+
+---
+pattern_id: frr.ksi.02
+name: Implementation Summaries
+description: 'Providers MUST maintain simple high-level summaries of at least the
+  following for each Key Security Indicator:'
+family: KSI
+severity: HIGH
+pattern_type: process_based
+languages:
+  markdown:
+    file_patterns:
+    - '*.md'
+    - README.md
+    - SECURITY.md
+    keywords:
+    - security
+  yaml:
+    file_patterns:
+    - '*.yaml'
+    - '*.yml'
+    - .github/**/*.yml
+    keywords:
+    - fedramp
+    - compliance
+    - security
+finding:
+  title_template: Implementation Summaries - FRR-KSI-02
+  description_template: 'Providers MUST maintain simple high-level summaries of at
+    least the following for each Key Security Indicator:'
+  remediation_template: 'To comply with FRR-KSI-02 (Implementation Summaries), you
+    MUST implement the following mandatory requirements:
+
+
+    1. Review FedRAMP 20x requirement documentation
+
+    2. Identify systems and resources in scope
+
+    3. Create resource group for FedRAMP resources
+
+    4. Set up Azure Key Vault for secrets management
+
+    5. Configure Log Analytics workspace
+
+
+    (See full implementation checklist for 10 total steps)'
+  evidence_collection:
+  - Configuration export from Azure Portal (JSON format)
+  - Azure Policy compliance reports
+  - Azure Monitor logs showing compliance status
+  azure_services: &id001
+  - Azure Blob Storage
+  - Azure Monitor
+  - Azure Pipelines
+  - Log Analytics
+tags:
+- ksi
+- must
+- process_based
+- impact_low
+- impact_moderate
+- documentation_required
+nist_controls:
+- PL-2
+- SI-12
+related_ksis:
+- KSI-AFR-01
+related_frrs: []
+evidence_collection:
+  azure_monitor_kql: []
+  azure_cli:
+  - command: '# TODO: Add Azure CLI command for FRR-KSI-02'
+    description: Collect evidence for Implementation Summaries
+    output_format: json
+    frequency: monthly
+  powershell: []
+  rest_api: []
+  manual_procedures:
+  - procedure: Configuration export from Azure Portal (JSON format)
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Policy compliance reports
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Monitor logs showing compliance status
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+evidence_artifacts:
+- artifact_type: documentation
+  name: FRR-KSI-02 - Implementation Summaries Policy
+  source: Organization security documentation
+  frequency: annual_review
+  retention_months: 36
+  format: PDF/Markdown
+- artifact_type: configuration
+  name: FRR-KSI-02 - Azure Service Configuration
+  source: Azure Portal export
+  frequency: quarterly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: FRR-KSI-02 - Compliance Status Report
+  source: Compliance tracking system
+  frequency: monthly
+  retention_months: 36
+  format: PDF/Excel
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation for Azure Policy for compliance enforcement'
+    azure_services: *id001
+    effort_hours: 8
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation for Azure Monitor for continuous monitoring'
+    azure_services: *id001
+    effort_hours: 8
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation for Log Analytics queries for compliance
+      validation'
+    azure_services: *id001
+    effort_hours: 8
+implementation:
+  prerequisites:
+  - FedRAMP authorization package template
+  - Organization security policies
+  - Azure subscription (if applicable)
+  - Security team approval process
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 6
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 7
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 8
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 9
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 10
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  total_effort_hours: 20
+ssp_mapping:
+  control_family: PL - System Security Plan
+  control_numbers:
+  - PL-2
+  - SI-12
+  ssp_sections:
+  - section: 'PL-2: System Security Plan'
+    description_template: 'Implementation of FRR-KSI-02 - Implementation Summaries:
+
+
+      Providers MUST maintain simple high-level summaries of at least the following
+      for each Key Security Indicator:'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-KSI-02 Policy Documentation
+    - FRR-KSI-02 Compliance Report
+  - section: 'SI-12: Information Management and Retention'
+    description_template: 'Implementation of FRR-KSI-02 - Implementation Summaries:
+
+
+      Providers MUST maintain simple high-level summaries of at least the following
+      for each Key Security Indicator:'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-KSI-02 Policy Documentation
+    - FRR-KSI-02 Compliance Report
+  required_for_fedramp: true
+  authorization_package_section: System Security Plan
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Implementation Summaries compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Implementation Summaries compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Implementation Summaries compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Implementation Summaries compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: General Security
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Govern
+    guidance: Implement Implementation Summaries as part of governance baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/govern/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-KSI-02
+    requirement_name: Implementation Summaries
+    requirement_type: FRR
+    primary_keyword: MUST
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - control_id: PL-2
+      control_name: System Security Plan
+    - control_id: SI-12
+      control_name: Information Management and Retention
+testing:
+  validation_procedures:
+  - procedure: Review policy documentation
+    expected_outcome: Policy exists and is current (within 1 year)
+    frequency: annual
+  - procedure: Verify implementation evidence
+    expected_outcome: Evidence artifacts collected and retained
+    frequency: quarterly
+  - procedure: Test automated controls (if applicable)
+    expected_outcome: Automated controls functioning as designed
+    frequency: monthly
+  acceptance_criteria:
+  - Policy documented for FRR-KSI-02
+  - Implementation evidence collected and retained for 3 years
+  - Annual review completed and documented
+  - NIST controls PL-2, SI-12 satisfied

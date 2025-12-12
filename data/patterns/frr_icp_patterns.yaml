@@ -1,0 +1,2648 @@
+# FRR ICP Patterns - FedRAMP 20x Requirements
+# Family: ICP
+# Pattern Type: Process-Based Requirements
+# Schema: V2
+#
+# These patterns represent FedRAMP Requirements (FRR) which are
+# primarily process-based and require documentation, policies,
+# and procedures rather than code-level detection.
+#
+# NOTE: Manual completion required for:
+# - Automation implementation code
+# - Organization-specific policy details
+# - Evidence collection procedures
+
+pattern_id: frr.icp.01
+name: Incident Reporting to FedRAMP
+description: Providers MUST responsibly report _incidents_ to FedRAMP within 1 hour
+  of identification by sending an email to fedramp_security@fedramp.gov or fedramp_security@gsa.gov.
+family: ICP
+severity: HIGH
+pattern_type: process_based
+languages:
+  markdown:
+    file_patterns:
+    - '*.md'
+    - README.md
+    - SECURITY.md
+    keywords:
+    - security
+    - fedramp
+    - incident
+  yaml:
+    file_patterns:
+    - '*.yaml'
+    - '*.yml'
+    - .github/**/*.yml
+    keywords:
+    - fedramp
+    - compliance
+    - security
+finding:
+  title_template: Incident Reporting to FedRAMP - FRR-ICP-01
+  description_template: Providers MUST responsibly report _incidents_ to FedRAMP within
+    1 hour of identification by sending an email to fedramp_security@fedramp.gov or
+    fedramp_security@gsa.gov.
+  remediation_template: 'To comply with FRR-ICP-01 (Incident Reporting to FedRAMP),
+    you MUST implement the following mandatory requirements:
+
+
+    1. Review FedRAMP 20x requirement documentation
+
+    2. Identify systems and resources in scope
+
+    3. Create resource group for FedRAMP resources
+
+    4. Set up Azure Key Vault for secrets management
+
+    5. Configure Log Analytics workspace
+
+
+    (See full implementation checklist for 10 total steps)'
+  evidence_collection:
+  - Configuration export from Azure Portal (JSON format)
+  - Azure Policy compliance reports
+  - Azure Monitor logs showing compliance status
+  azure_services: &id001
+  - Azure Blob Storage
+  - Azure Monitor
+  - Azure Monitor alerts
+  - Log Analytics
+tags:
+- icp
+- must
+- process_based
+- impact_low
+- impact_moderate
+- impact_high
+- documentation_required
+nist_controls:
+- IR-4
+- IR-6
+- IR-5
+- IR-8
+related_ksis: []
+related_frrs: []
+evidence_collection:
+  azure_monitor_kql: []
+  azure_cli:
+  - command: '# TODO: Add Azure CLI command for FRR-ICP-01'
+    description: Collect evidence for Incident Reporting to FedRAMP
+    output_format: json
+    frequency: monthly
+  powershell: []
+  rest_api: []
+  manual_procedures:
+  - procedure: Configuration export from Azure Portal (JSON format)
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Policy compliance reports
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Monitor logs showing compliance status
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+evidence_artifacts:
+- artifact_type: documentation
+  name: FRR-ICP-01 - Incident Reporting to FedRAMP Policy
+  source: Organization security documentation
+  frequency: annual_review
+  retention_months: 36
+  format: PDF/Markdown
+- artifact_type: configuration
+  name: FRR-ICP-01 - Azure Service Configuration
+  source: Azure Portal export
+  frequency: quarterly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: FRR-ICP-01 - Compliance Status Report
+  source: Compliance tracking system
+  frequency: monthly
+  retention_months: 36
+  format: PDF/Excel
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation for Azure Policy for compliance enforcement'
+    azure_services: *id001
+    effort_hours: 8
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation for Azure Monitor for continuous monitoring'
+    azure_services: *id001
+    effort_hours: 8
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation for Log Analytics queries for compliance
+      validation'
+    azure_services: *id001
+    effort_hours: 8
+implementation:
+  prerequisites:
+  - FedRAMP authorization package template
+  - Organization security policies
+  - Azure subscription (if applicable)
+  - Security team approval process
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 6
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 7
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 8
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 9
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 10
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  total_effort_hours: 20
+ssp_mapping:
+  control_family: IR - Incident Handling
+  control_numbers:
+  - IR-4
+  - IR-6
+  - IR-5
+  - IR-8
+  ssp_sections:
+  - section: 'IR-4: Incident Handling'
+    description_template: 'Implementation of FRR-ICP-01 - Incident Reporting to FedRAMP:
+
+
+      Providers MUST responsibly report _incidents_ to FedRAMP within 1 hour of identification
+      by sending an email to fedramp_security@fedramp.gov or fedramp_security@gsa.gov.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-01 Policy Documentation
+    - FRR-ICP-01 Compliance Report
+  - section: 'IR-6: Incident Reporting'
+    description_template: 'Implementation of FRR-ICP-01 - Incident Reporting to FedRAMP:
+
+
+      Providers MUST responsibly report _incidents_ to FedRAMP within 1 hour of identification
+      by sending an email to fedramp_security@fedramp.gov or fedramp_security@gsa.gov.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-01 Policy Documentation
+    - FRR-ICP-01 Compliance Report
+  - section: 'IR-5: Incident Monitoring'
+    description_template: 'Implementation of FRR-ICP-01 - Incident Reporting to FedRAMP:
+
+
+      Providers MUST responsibly report _incidents_ to FedRAMP within 1 hour of identification
+      by sending an email to fedramp_security@fedramp.gov or fedramp_security@gsa.gov.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-01 Policy Documentation
+    - FRR-ICP-01 Compliance Report
+  required_for_fedramp: true
+  authorization_package_section: Section 9 - Incident Response
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Incident Reporting to FedRAMP compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Incident Reporting to FedRAMP compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor alerts
+    tier: Standard
+    purpose: Required for Incident Reporting to FedRAMP compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Incident Reporting to FedRAMP compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Incident Response
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Govern
+    guidance: Implement Incident Reporting to FedRAMP as part of governance baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/govern/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-ICP-01
+    requirement_name: Incident Reporting to FedRAMP
+    requirement_type: FRR
+    primary_keyword: MUST
+    impact_levels:
+    - Low
+    - Moderate
+    - High
+  nist_800_53_rev5:
+    controls:
+    - control_id: IR-4
+      control_name: Incident Handling
+    - control_id: IR-6
+      control_name: Incident Reporting
+    - control_id: IR-5
+      control_name: Incident Monitoring
+    - control_id: IR-8
+      control_name: Incident Response Plan
+testing:
+  validation_procedures:
+  - procedure: Review policy documentation
+    expected_outcome: Policy exists and is current (within 1 year)
+    frequency: annual
+  - procedure: Verify implementation evidence
+    expected_outcome: Evidence artifacts collected and retained
+    frequency: quarterly
+  - procedure: Test automated controls (if applicable)
+    expected_outcome: Automated controls functioning as designed
+    frequency: monthly
+  acceptance_criteria:
+  - Policy documented for FRR-ICP-01
+  - Implementation evidence collected and retained for 3 years
+  - Annual review completed and documented
+  - NIST controls IR-4, IR-6, IR-5 satisfied
+
+---
+pattern_id: frr.icp.02
+name: Incident Reporting to Agencies
+description: Providers MUST responsibly report _incidents_ to all _agency_ customers
+  within 1 hour of identification using the _incident_ communications points of contact
+  provided by each _agency_ customer.
+family: ICP
+severity: HIGH
+pattern_type: process_based
+languages:
+  markdown:
+    file_patterns:
+    - '*.md'
+    - README.md
+    - SECURITY.md
+    keywords:
+    - incident
+  yaml:
+    file_patterns:
+    - '*.yaml'
+    - '*.yml'
+    - .github/**/*.yml
+    keywords:
+    - fedramp
+    - compliance
+    - security
+finding:
+  title_template: Incident Reporting to Agencies - FRR-ICP-02
+  description_template: Providers MUST responsibly report _incidents_ to all _agency_
+    customers within 1 hour of identification using the _incident_ communications
+    points of contact provided by each _agency_ customer.
+  remediation_template: 'To comply with FRR-ICP-02 (Incident Reporting to Agencies),
+    you MUST implement the following mandatory requirements:
+
+
+    1. Review FedRAMP 20x requirement documentation
+
+    2. Identify systems and resources in scope
+
+    3. Create resource group for FedRAMP resources
+
+    4. Set up Azure Key Vault for secrets management
+
+    5. Configure Log Analytics workspace
+
+
+    (See full implementation checklist for 10 total steps)'
+  evidence_collection:
+  - Configuration export from Azure Portal (JSON format)
+  - Azure Policy compliance reports
+  - Azure Monitor logs showing compliance status
+  azure_services: &id001
+  - Azure Blob Storage
+  - Azure Monitor
+  - Log Analytics
+tags:
+- icp
+- must
+- process_based
+- impact_low
+- impact_moderate
+- impact_high
+- documentation_required
+nist_controls:
+- IR-4
+- IR-6
+- IR-5
+- IR-8
+related_ksis: []
+related_frrs: []
+evidence_collection:
+  azure_monitor_kql: []
+  azure_cli:
+  - command: '# TODO: Add Azure CLI command for FRR-ICP-02'
+    description: Collect evidence for Incident Reporting to Agencies
+    output_format: json
+    frequency: monthly
+  powershell: []
+  rest_api: []
+  manual_procedures:
+  - procedure: Configuration export from Azure Portal (JSON format)
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Policy compliance reports
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Monitor logs showing compliance status
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+evidence_artifacts:
+- artifact_type: documentation
+  name: FRR-ICP-02 - Incident Reporting to Agencies Policy
+  source: Organization security documentation
+  frequency: annual_review
+  retention_months: 36
+  format: PDF/Markdown
+- artifact_type: configuration
+  name: FRR-ICP-02 - Azure Service Configuration
+  source: Azure Portal export
+  frequency: quarterly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: FRR-ICP-02 - Compliance Status Report
+  source: Compliance tracking system
+  frequency: monthly
+  retention_months: 36
+  format: PDF/Excel
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation for Azure Policy for compliance enforcement'
+    azure_services: *id001
+    effort_hours: 8
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation for Azure Monitor for continuous monitoring'
+    azure_services: *id001
+    effort_hours: 8
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation for Log Analytics queries for compliance
+      validation'
+    azure_services: *id001
+    effort_hours: 8
+implementation:
+  prerequisites:
+  - FedRAMP authorization package template
+  - Organization security policies
+  - Azure subscription (if applicable)
+  - Security team approval process
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 6
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 7
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 8
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 9
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 10
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  total_effort_hours: 20
+ssp_mapping:
+  control_family: IR - Incident Handling
+  control_numbers:
+  - IR-4
+  - IR-6
+  - IR-5
+  - IR-8
+  ssp_sections:
+  - section: 'IR-4: Incident Handling'
+    description_template: 'Implementation of FRR-ICP-02 - Incident Reporting to Agencies:
+
+
+      Providers MUST responsibly report _incidents_ to all _agency_ customers within
+      1 hour of identification using the _incident_ communications points of contact
+      provided by each _agency_ customer.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-02 Policy Documentation
+    - FRR-ICP-02 Compliance Report
+  - section: 'IR-6: Incident Reporting'
+    description_template: 'Implementation of FRR-ICP-02 - Incident Reporting to Agencies:
+
+
+      Providers MUST responsibly report _incidents_ to all _agency_ customers within
+      1 hour of identification using the _incident_ communications points of contact
+      provided by each _agency_ customer.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-02 Policy Documentation
+    - FRR-ICP-02 Compliance Report
+  - section: 'IR-5: Incident Monitoring'
+    description_template: 'Implementation of FRR-ICP-02 - Incident Reporting to Agencies:
+
+
+      Providers MUST responsibly report _incidents_ to all _agency_ customers within
+      1 hour of identification using the _incident_ communications points of contact
+      provided by each _agency_ customer.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-02 Policy Documentation
+    - FRR-ICP-02 Compliance Report
+  required_for_fedramp: true
+  authorization_package_section: Section 9 - Incident Response
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Incident Reporting to Agencies compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Incident Reporting to Agencies compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Incident Reporting to Agencies compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Incident Response
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Govern
+    guidance: Implement Incident Reporting to Agencies as part of governance baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/govern/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-ICP-02
+    requirement_name: Incident Reporting to Agencies
+    requirement_type: FRR
+    primary_keyword: MUST
+    impact_levels:
+    - Low
+    - Moderate
+    - High
+  nist_800_53_rev5:
+    controls:
+    - control_id: IR-4
+      control_name: Incident Handling
+    - control_id: IR-6
+      control_name: Incident Reporting
+    - control_id: IR-5
+      control_name: Incident Monitoring
+    - control_id: IR-8
+      control_name: Incident Response Plan
+testing:
+  validation_procedures:
+  - procedure: Review policy documentation
+    expected_outcome: Policy exists and is current (within 1 year)
+    frequency: annual
+  - procedure: Verify implementation evidence
+    expected_outcome: Evidence artifacts collected and retained
+    frequency: quarterly
+  - procedure: Test automated controls (if applicable)
+    expected_outcome: Automated controls functioning as designed
+    frequency: monthly
+  acceptance_criteria:
+  - Policy documented for FRR-ICP-02
+  - Implementation evidence collected and retained for 3 years
+  - Annual review completed and documented
+  - NIST controls IR-4, IR-6, IR-5 satisfied
+
+---
+pattern_id: frr.icp.03
+name: Incident Reporting to CISA
+description: 'Providers MUST responsibly report _incidents_ to CISA within 1 hour
+  of identification if the incident is confirmed or suspected to be the result of
+  an attack vector listed at https://www.cisa.gov/federal-incident-notification-guidelines#attack-vectors-taxonomy,
+  following the CISA Federal Incident Notification Guidelines at https://www.cisa.gov/federal-incident-notification-guidelines,
+  by using the CISA Incident Reporting System at https://myservices.cisa.gov/irf. '
+family: ICP
+severity: HIGH
+pattern_type: process_based
+languages:
+  markdown:
+    file_patterns:
+    - '*.md'
+    - README.md
+    - SECURITY.md
+    keywords:
+    - incident
+  yaml:
+    file_patterns:
+    - '*.yaml'
+    - '*.yml'
+    - .github/**/*.yml
+    keywords:
+    - fedramp
+    - compliance
+    - security
+finding:
+  title_template: Incident Reporting to CISA - FRR-ICP-03
+  description_template: 'Providers MUST responsibly report _incidents_ to CISA within
+    1 hour of identification if the incident is confirmed or suspected to be the result
+    of an attack vector listed at https://www.cisa.gov/federal-incident-notification-guidelines#attack-vectors-taxonomy,
+    following the CISA Federal Incident Notification Guidelines at https://www.cisa.gov/federal-incident-notification-guidelines,
+    by using the CISA Incident Reporting System at https://myservices.cisa.gov/irf. '
+  remediation_template: 'To comply with FRR-ICP-03 (Incident Reporting to CISA), you
+    MUST implement the following mandatory requirements:
+
+
+    1. Review FedRAMP 20x requirement documentation
+
+    2. Identify systems and resources in scope
+
+    3. Create resource group for FedRAMP resources
+
+    4. Set up Azure Key Vault for secrets management
+
+    5. Configure Log Analytics workspace
+
+
+    (See full implementation checklist for 10 total steps)'
+  evidence_collection:
+  - Configuration export from Azure Portal (JSON format)
+  - Azure Policy compliance reports
+  - Azure Monitor logs showing compliance status
+  azure_services: &id001
+  - Azure Blob Storage
+  - Azure Monitor
+  - Log Analytics
+tags:
+- icp
+- must
+- process_based
+- impact_low
+- impact_moderate
+- impact_high
+- documentation_required
+nist_controls:
+- IR-4
+- IR-6
+- IR-5
+- IR-8
+related_ksis: []
+related_frrs: []
+evidence_collection:
+  azure_monitor_kql: []
+  azure_cli:
+  - command: '# TODO: Add Azure CLI command for FRR-ICP-03'
+    description: Collect evidence for Incident Reporting to CISA
+    output_format: json
+    frequency: monthly
+  powershell: []
+  rest_api: []
+  manual_procedures:
+  - procedure: Configuration export from Azure Portal (JSON format)
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Policy compliance reports
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Monitor logs showing compliance status
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+evidence_artifacts:
+- artifact_type: documentation
+  name: FRR-ICP-03 - Incident Reporting to CISA Policy
+  source: Organization security documentation
+  frequency: annual_review
+  retention_months: 36
+  format: PDF/Markdown
+- artifact_type: configuration
+  name: FRR-ICP-03 - Azure Service Configuration
+  source: Azure Portal export
+  frequency: quarterly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: FRR-ICP-03 - Compliance Status Report
+  source: Compliance tracking system
+  frequency: monthly
+  retention_months: 36
+  format: PDF/Excel
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation for Azure Policy for compliance enforcement'
+    azure_services: *id001
+    effort_hours: 8
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation for Azure Monitor for continuous monitoring'
+    azure_services: *id001
+    effort_hours: 8
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation for Log Analytics queries for compliance
+      validation'
+    azure_services: *id001
+    effort_hours: 8
+implementation:
+  prerequisites:
+  - FedRAMP authorization package template
+  - Organization security policies
+  - Azure subscription (if applicable)
+  - Security team approval process
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 6
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 7
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 8
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 9
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 10
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  total_effort_hours: 20
+ssp_mapping:
+  control_family: IR - Incident Handling
+  control_numbers:
+  - IR-4
+  - IR-6
+  - IR-5
+  - IR-8
+  ssp_sections:
+  - section: 'IR-4: Incident Handling'
+    description_template: 'Implementation of FRR-ICP-03 - Incident Reporting to CISA:
+
+
+      Providers MUST responsibly report _incidents_ to CISA within 1 hour of identification
+      if the incident is confirmed or suspected to be the result of an attack vector
+      listed at https://www.cisa.gov/federal-incident-notification-guidelines#attack-vectors-taxonomy,
+      following the CISA Federal Incident Notification Guidelines at https://www.cisa.gov/federal-incident-notification-guidelines,
+      by using the CISA Incident Reporting System at https://myservices.cisa.gov/irf. '
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-03 Policy Documentation
+    - FRR-ICP-03 Compliance Report
+  - section: 'IR-6: Incident Reporting'
+    description_template: 'Implementation of FRR-ICP-03 - Incident Reporting to CISA:
+
+
+      Providers MUST responsibly report _incidents_ to CISA within 1 hour of identification
+      if the incident is confirmed or suspected to be the result of an attack vector
+      listed at https://www.cisa.gov/federal-incident-notification-guidelines#attack-vectors-taxonomy,
+      following the CISA Federal Incident Notification Guidelines at https://www.cisa.gov/federal-incident-notification-guidelines,
+      by using the CISA Incident Reporting System at https://myservices.cisa.gov/irf. '
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-03 Policy Documentation
+    - FRR-ICP-03 Compliance Report
+  - section: 'IR-5: Incident Monitoring'
+    description_template: 'Implementation of FRR-ICP-03 - Incident Reporting to CISA:
+
+
+      Providers MUST responsibly report _incidents_ to CISA within 1 hour of identification
+      if the incident is confirmed or suspected to be the result of an attack vector
+      listed at https://www.cisa.gov/federal-incident-notification-guidelines#attack-vectors-taxonomy,
+      following the CISA Federal Incident Notification Guidelines at https://www.cisa.gov/federal-incident-notification-guidelines,
+      by using the CISA Incident Reporting System at https://myservices.cisa.gov/irf. '
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-03 Policy Documentation
+    - FRR-ICP-03 Compliance Report
+  required_for_fedramp: true
+  authorization_package_section: Section 9 - Incident Response
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Incident Reporting to CISA compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Incident Reporting to CISA compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Incident Reporting to CISA compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Incident Response
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Govern
+    guidance: Implement Incident Reporting to CISA as part of governance baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/govern/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-ICP-03
+    requirement_name: Incident Reporting to CISA
+    requirement_type: FRR
+    primary_keyword: MUST
+    impact_levels:
+    - Low
+    - Moderate
+    - High
+  nist_800_53_rev5:
+    controls:
+    - control_id: IR-4
+      control_name: Incident Handling
+    - control_id: IR-6
+      control_name: Incident Reporting
+    - control_id: IR-5
+      control_name: Incident Monitoring
+    - control_id: IR-8
+      control_name: Incident Response Plan
+testing:
+  validation_procedures:
+  - procedure: Review policy documentation
+    expected_outcome: Policy exists and is current (within 1 year)
+    frequency: annual
+  - procedure: Verify implementation evidence
+    expected_outcome: Evidence artifacts collected and retained
+    frequency: quarterly
+  - procedure: Test automated controls (if applicable)
+    expected_outcome: Automated controls functioning as designed
+    frequency: monthly
+  acceptance_criteria:
+  - Policy documented for FRR-ICP-03
+  - Implementation evidence collected and retained for 3 years
+  - Annual review completed and documented
+  - NIST controls IR-4, IR-6, IR-5 satisfied
+
+---
+pattern_id: frr.icp.04
+name: Incident Updates
+description: Providers MUST update _all necessary parties_, including at least FedRAMP,
+  CISA (if applicable), and all _agency_ customers, at least once per calendar day
+  until the _incident_ is resolved and recovery is complete.
+family: ICP
+severity: HIGH
+pattern_type: process_based
+languages:
+  markdown:
+    file_patterns:
+    - '*.md'
+    - README.md
+    - SECURITY.md
+    keywords:
+    - fedramp
+    - incident
+  yaml:
+    file_patterns:
+    - '*.yaml'
+    - '*.yml'
+    - .github/**/*.yml
+    keywords:
+    - fedramp
+    - compliance
+    - security
+finding:
+  title_template: Incident Updates - FRR-ICP-04
+  description_template: Providers MUST update _all necessary parties_, including at
+    least FedRAMP, CISA (if applicable), and all _agency_ customers, at least once
+    per calendar day until the _incident_ is resolved and recovery is complete.
+  remediation_template: 'To comply with FRR-ICP-04 (Incident Updates), you MUST implement
+    the following mandatory requirements:
+
+
+    1. Review FedRAMP 20x requirement documentation
+
+    2. Identify systems and resources in scope
+
+    3. Create resource group for FedRAMP resources
+
+    4. Set up Azure Key Vault for secrets management
+
+    5. Configure Log Analytics workspace
+
+
+    (See full implementation checklist for 10 total steps)'
+  evidence_collection:
+  - Configuration export from Azure Portal (JSON format)
+  - Azure Policy compliance reports
+  - Azure Monitor logs showing compliance status
+  azure_services: &id001
+  - Azure Blob Storage
+  - Azure Monitor
+  - Azure Pipelines
+  - Log Analytics
+tags:
+- icp
+- must
+- process_based
+- impact_low
+- impact_moderate
+- impact_high
+- documentation_required
+nist_controls:
+- IR-4
+- IR-6
+- IR-5
+- IR-8
+related_ksis: []
+related_frrs: []
+evidence_collection:
+  azure_monitor_kql: []
+  azure_cli:
+  - command: '# TODO: Add Azure CLI command for FRR-ICP-04'
+    description: Collect evidence for Incident Updates
+    output_format: json
+    frequency: monthly
+  powershell: []
+  rest_api: []
+  manual_procedures:
+  - procedure: Configuration export from Azure Portal (JSON format)
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Policy compliance reports
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Monitor logs showing compliance status
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+evidence_artifacts:
+- artifact_type: documentation
+  name: FRR-ICP-04 - Incident Updates Policy
+  source: Organization security documentation
+  frequency: annual_review
+  retention_months: 36
+  format: PDF/Markdown
+- artifact_type: configuration
+  name: FRR-ICP-04 - Azure Service Configuration
+  source: Azure Portal export
+  frequency: quarterly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: FRR-ICP-04 - Compliance Status Report
+  source: Compliance tracking system
+  frequency: monthly
+  retention_months: 36
+  format: PDF/Excel
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation for Azure Policy for compliance enforcement'
+    azure_services: *id001
+    effort_hours: 8
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation for Azure Monitor for continuous monitoring'
+    azure_services: *id001
+    effort_hours: 8
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation for Log Analytics queries for compliance
+      validation'
+    azure_services: *id001
+    effort_hours: 8
+implementation:
+  prerequisites:
+  - FedRAMP authorization package template
+  - Organization security policies
+  - Azure subscription (if applicable)
+  - Security team approval process
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 6
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 7
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 8
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 9
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 10
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  total_effort_hours: 20
+ssp_mapping:
+  control_family: IR - Incident Handling
+  control_numbers:
+  - IR-4
+  - IR-6
+  - IR-5
+  - IR-8
+  ssp_sections:
+  - section: 'IR-4: Incident Handling'
+    description_template: 'Implementation of FRR-ICP-04 - Incident Updates:
+
+
+      Providers MUST update _all necessary parties_, including at least FedRAMP, CISA
+      (if applicable), and all _agency_ customers, at least once per calendar day
+      until the _incident_ is resolved and recovery is complete.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-04 Policy Documentation
+    - FRR-ICP-04 Compliance Report
+  - section: 'IR-6: Incident Reporting'
+    description_template: 'Implementation of FRR-ICP-04 - Incident Updates:
+
+
+      Providers MUST update _all necessary parties_, including at least FedRAMP, CISA
+      (if applicable), and all _agency_ customers, at least once per calendar day
+      until the _incident_ is resolved and recovery is complete.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-04 Policy Documentation
+    - FRR-ICP-04 Compliance Report
+  - section: 'IR-5: Incident Monitoring'
+    description_template: 'Implementation of FRR-ICP-04 - Incident Updates:
+
+
+      Providers MUST update _all necessary parties_, including at least FedRAMP, CISA
+      (if applicable), and all _agency_ customers, at least once per calendar day
+      until the _incident_ is resolved and recovery is complete.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-04 Policy Documentation
+    - FRR-ICP-04 Compliance Report
+  required_for_fedramp: true
+  authorization_package_section: Section 9 - Incident Response
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Incident Updates compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Incident Updates compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Incident Updates compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Incident Updates compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Incident Response
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Govern
+    guidance: Implement Incident Updates as part of governance baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/govern/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-ICP-04
+    requirement_name: Incident Updates
+    requirement_type: FRR
+    primary_keyword: MUST
+    impact_levels:
+    - Low
+    - Moderate
+    - High
+  nist_800_53_rev5:
+    controls:
+    - control_id: IR-4
+      control_name: Incident Handling
+    - control_id: IR-6
+      control_name: Incident Reporting
+    - control_id: IR-5
+      control_name: Incident Monitoring
+    - control_id: IR-8
+      control_name: Incident Response Plan
+testing:
+  validation_procedures:
+  - procedure: Review policy documentation
+    expected_outcome: Policy exists and is current (within 1 year)
+    frequency: annual
+  - procedure: Verify implementation evidence
+    expected_outcome: Evidence artifacts collected and retained
+    frequency: quarterly
+  - procedure: Test automated controls (if applicable)
+    expected_outcome: Automated controls functioning as designed
+    frequency: monthly
+  acceptance_criteria:
+  - Policy documented for FRR-ICP-04
+  - Implementation evidence collected and retained for 3 years
+  - Annual review completed and documented
+  - NIST controls IR-4, IR-6, IR-5 satisfied
+
+---
+pattern_id: frr.icp.05
+name: Incident Report Availability
+description: Providers MUST make _incident_ report information available in their
+  secure FedRAMP repository (such as USDA Connect) or _trust center_.
+family: ICP
+severity: HIGH
+pattern_type: process_based
+languages:
+  markdown:
+    file_patterns:
+    - '*.md'
+    - README.md
+    - SECURITY.md
+    keywords:
+    - fedramp
+    - incident
+  yaml:
+    file_patterns:
+    - '*.yaml'
+    - '*.yml'
+    - .github/**/*.yml
+    keywords:
+    - fedramp
+    - compliance
+    - security
+finding:
+  title_template: Incident Report Availability - FRR-ICP-05
+  description_template: Providers MUST make _incident_ report information available
+    in their secure FedRAMP repository (such as USDA Connect) or _trust center_.
+  remediation_template: 'To comply with FRR-ICP-05 (Incident Report Availability),
+    you MUST implement the following mandatory requirements:
+
+
+    1. Review FedRAMP 20x requirement documentation
+
+    2. Identify systems and resources in scope
+
+    3. Create resource group for FedRAMP resources
+
+    4. Set up Azure Key Vault for secrets management
+
+    5. Configure Log Analytics workspace
+
+
+    (See full implementation checklist for 10 total steps)'
+  evidence_collection:
+  - Configuration export from Azure Portal (JSON format)
+  - Azure Policy compliance reports
+  - Azure Monitor logs showing compliance status
+  azure_services: &id001
+  - Azure Blob Storage
+  - Azure Monitor
+  - Log Analytics
+tags:
+- icp
+- must
+- process_based
+- impact_low
+- impact_moderate
+- impact_high
+- documentation_required
+nist_controls:
+- IR-4
+- IR-6
+- IR-5
+- IR-8
+related_ksis: []
+related_frrs: []
+evidence_collection:
+  azure_monitor_kql: []
+  azure_cli:
+  - command: '# TODO: Add Azure CLI command for FRR-ICP-05'
+    description: Collect evidence for Incident Report Availability
+    output_format: json
+    frequency: monthly
+  powershell: []
+  rest_api: []
+  manual_procedures:
+  - procedure: Configuration export from Azure Portal (JSON format)
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Policy compliance reports
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Monitor logs showing compliance status
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+evidence_artifacts:
+- artifact_type: documentation
+  name: FRR-ICP-05 - Incident Report Availability Policy
+  source: Organization security documentation
+  frequency: annual_review
+  retention_months: 36
+  format: PDF/Markdown
+- artifact_type: configuration
+  name: FRR-ICP-05 - Azure Service Configuration
+  source: Azure Portal export
+  frequency: quarterly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: FRR-ICP-05 - Compliance Status Report
+  source: Compliance tracking system
+  frequency: monthly
+  retention_months: 36
+  format: PDF/Excel
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation for Azure Policy for compliance enforcement'
+    azure_services: *id001
+    effort_hours: 8
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation for Azure Monitor for continuous monitoring'
+    azure_services: *id001
+    effort_hours: 8
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation for Log Analytics queries for compliance
+      validation'
+    azure_services: *id001
+    effort_hours: 8
+implementation:
+  prerequisites:
+  - FedRAMP authorization package template
+  - Organization security policies
+  - Azure subscription (if applicable)
+  - Security team approval process
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 6
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 7
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 8
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 9
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 10
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  total_effort_hours: 20
+ssp_mapping:
+  control_family: IR - Incident Handling
+  control_numbers:
+  - IR-4
+  - IR-6
+  - IR-5
+  - IR-8
+  ssp_sections:
+  - section: 'IR-4: Incident Handling'
+    description_template: 'Implementation of FRR-ICP-05 - Incident Report Availability:
+
+
+      Providers MUST make _incident_ report information available in their secure
+      FedRAMP repository (such as USDA Connect) or _trust center_.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-05 Policy Documentation
+    - FRR-ICP-05 Compliance Report
+  - section: 'IR-6: Incident Reporting'
+    description_template: 'Implementation of FRR-ICP-05 - Incident Report Availability:
+
+
+      Providers MUST make _incident_ report information available in their secure
+      FedRAMP repository (such as USDA Connect) or _trust center_.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-05 Policy Documentation
+    - FRR-ICP-05 Compliance Report
+  - section: 'IR-5: Incident Monitoring'
+    description_template: 'Implementation of FRR-ICP-05 - Incident Report Availability:
+
+
+      Providers MUST make _incident_ report information available in their secure
+      FedRAMP repository (such as USDA Connect) or _trust center_.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-05 Policy Documentation
+    - FRR-ICP-05 Compliance Report
+  required_for_fedramp: true
+  authorization_package_section: Section 9 - Incident Response
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Incident Report Availability compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Incident Report Availability compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Incident Report Availability compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Incident Response
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Govern
+    guidance: Implement Incident Report Availability as part of governance baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/govern/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-ICP-05
+    requirement_name: Incident Report Availability
+    requirement_type: FRR
+    primary_keyword: MUST
+    impact_levels:
+    - Low
+    - Moderate
+    - High
+  nist_800_53_rev5:
+    controls:
+    - control_id: IR-4
+      control_name: Incident Handling
+    - control_id: IR-6
+      control_name: Incident Reporting
+    - control_id: IR-5
+      control_name: Incident Monitoring
+    - control_id: IR-8
+      control_name: Incident Response Plan
+testing:
+  validation_procedures:
+  - procedure: Review policy documentation
+    expected_outcome: Policy exists and is current (within 1 year)
+    frequency: annual
+  - procedure: Verify implementation evidence
+    expected_outcome: Evidence artifacts collected and retained
+    frequency: quarterly
+  - procedure: Test automated controls (if applicable)
+    expected_outcome: Automated controls functioning as designed
+    frequency: monthly
+  acceptance_criteria:
+  - Policy documented for FRR-ICP-05
+  - Implementation evidence collected and retained for 3 years
+  - Annual review completed and documented
+  - NIST controls IR-4, IR-6, IR-5 satisfied
+
+---
+pattern_id: frr.icp.06
+name: Responsible Disclosure
+description: Providers MUST NOT irresponsibly disclose specific sensitive information
+  about _incidents_ that would _likely_ increase the impact of the _incident_, but
+  MUST disclose sufficient information for informed risk-based decision-making to
+  _all necessary parties_.
+family: ICP
+severity: HIGH
+pattern_type: process_based
+languages:
+  markdown:
+    file_patterns:
+    - '*.md'
+    - README.md
+    - SECURITY.md
+    keywords:
+    - incident
+  yaml:
+    file_patterns:
+    - '*.yaml'
+    - '*.yml'
+    - .github/**/*.yml
+    keywords:
+    - fedramp
+    - compliance
+    - security
+finding:
+  title_template: Responsible Disclosure - FRR-ICP-06
+  description_template: Providers MUST NOT irresponsibly disclose specific sensitive
+    information about _incidents_ that would _likely_ increase the impact of the _incident_,
+    but MUST disclose sufficient information for informed risk-based decision-making
+    to _all necessary parties_.
+  remediation_template: 'To comply with FRR-ICP-06 (Responsible Disclosure), you MUST
+    implement the following mandatory requirements:
+
+
+    1. Review FedRAMP 20x requirement documentation
+
+    2. Identify systems and resources in scope
+
+    3. Create resource group for FedRAMP resources
+
+    4. Set up Azure Key Vault for secrets management
+
+    5. Configure Log Analytics workspace
+
+
+    (See full implementation checklist for 10 total steps)'
+  evidence_collection:
+  - Configuration export from Azure Portal (JSON format)
+  - Azure Policy compliance reports
+  - Azure Monitor logs showing compliance status
+  azure_services: &id001
+  - Azure Blob Storage
+  - Azure Monitor
+  - Azure Pipelines
+  - Log Analytics
+tags:
+- icp
+- must
+- process_based
+- impact_low
+- impact_moderate
+- impact_high
+- documentation_required
+nist_controls:
+- IR-4
+- IR-6
+- IR-5
+- IR-8
+related_ksis: []
+related_frrs: []
+evidence_collection:
+  azure_monitor_kql: []
+  azure_cli:
+  - command: '# TODO: Add Azure CLI command for FRR-ICP-06'
+    description: Collect evidence for Responsible Disclosure
+    output_format: json
+    frequency: monthly
+  powershell: []
+  rest_api: []
+  manual_procedures:
+  - procedure: Configuration export from Azure Portal (JSON format)
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Policy compliance reports
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Monitor logs showing compliance status
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+evidence_artifacts:
+- artifact_type: documentation
+  name: FRR-ICP-06 - Responsible Disclosure Policy
+  source: Organization security documentation
+  frequency: annual_review
+  retention_months: 36
+  format: PDF/Markdown
+- artifact_type: configuration
+  name: FRR-ICP-06 - Azure Service Configuration
+  source: Azure Portal export
+  frequency: quarterly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: FRR-ICP-06 - Compliance Status Report
+  source: Compliance tracking system
+  frequency: monthly
+  retention_months: 36
+  format: PDF/Excel
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation for Azure Policy for compliance enforcement'
+    azure_services: *id001
+    effort_hours: 8
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation for Azure Monitor for continuous monitoring'
+    azure_services: *id001
+    effort_hours: 8
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation for Log Analytics queries for compliance
+      validation'
+    azure_services: *id001
+    effort_hours: 8
+implementation:
+  prerequisites:
+  - FedRAMP authorization package template
+  - Organization security policies
+  - Azure subscription (if applicable)
+  - Security team approval process
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 6
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 7
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 8
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 9
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 10
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  total_effort_hours: 20
+ssp_mapping:
+  control_family: IR - Incident Handling
+  control_numbers:
+  - IR-4
+  - IR-6
+  - IR-5
+  - IR-8
+  ssp_sections:
+  - section: 'IR-4: Incident Handling'
+    description_template: 'Implementation of FRR-ICP-06 - Responsible Disclosure:
+
+
+      Providers MUST NOT irresponsibly disclose specific sensitive information about
+      _incidents_ that would _likely_ increase the impact of the _incident_, but MUST
+      disclose sufficient information for informed risk-based decision-making to _all
+      necessary parties_.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-06 Policy Documentation
+    - FRR-ICP-06 Compliance Report
+  - section: 'IR-6: Incident Reporting'
+    description_template: 'Implementation of FRR-ICP-06 - Responsible Disclosure:
+
+
+      Providers MUST NOT irresponsibly disclose specific sensitive information about
+      _incidents_ that would _likely_ increase the impact of the _incident_, but MUST
+      disclose sufficient information for informed risk-based decision-making to _all
+      necessary parties_.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-06 Policy Documentation
+    - FRR-ICP-06 Compliance Report
+  - section: 'IR-5: Incident Monitoring'
+    description_template: 'Implementation of FRR-ICP-06 - Responsible Disclosure:
+
+
+      Providers MUST NOT irresponsibly disclose specific sensitive information about
+      _incidents_ that would _likely_ increase the impact of the _incident_, but MUST
+      disclose sufficient information for informed risk-based decision-making to _all
+      necessary parties_.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-06 Policy Documentation
+    - FRR-ICP-06 Compliance Report
+  required_for_fedramp: true
+  authorization_package_section: Section 9 - Incident Response
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Responsible Disclosure compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Responsible Disclosure compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Responsible Disclosure compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Responsible Disclosure compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Incident Response
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Govern
+    guidance: Implement Responsible Disclosure as part of governance baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/govern/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-ICP-06
+    requirement_name: Responsible Disclosure
+    requirement_type: FRR
+    primary_keyword: MUST
+    impact_levels:
+    - Low
+    - Moderate
+    - High
+  nist_800_53_rev5:
+    controls:
+    - control_id: IR-4
+      control_name: Incident Handling
+    - control_id: IR-6
+      control_name: Incident Reporting
+    - control_id: IR-5
+      control_name: Incident Monitoring
+    - control_id: IR-8
+      control_name: Incident Response Plan
+testing:
+  validation_procedures:
+  - procedure: Review policy documentation
+    expected_outcome: Policy exists and is current (within 1 year)
+    frequency: annual
+  - procedure: Verify implementation evidence
+    expected_outcome: Evidence artifacts collected and retained
+    frequency: quarterly
+  - procedure: Test automated controls (if applicable)
+    expected_outcome: Automated controls functioning as designed
+    frequency: monthly
+  acceptance_criteria:
+  - Policy documented for FRR-ICP-06
+  - Implementation evidence collected and retained for 3 years
+  - Annual review completed and documented
+  - NIST controls IR-4, IR-6, IR-5 satisfied
+
+---
+pattern_id: frr.icp.07
+name: Final Incident Report
+description: 'Providers MUST provide a final report once the _incident_ is resolved
+  and recovery is complete that describes at least:'
+family: ICP
+severity: HIGH
+pattern_type: process_based
+languages:
+  markdown:
+    file_patterns:
+    - '*.md'
+    - README.md
+    - SECURITY.md
+    keywords:
+    - incident
+  yaml:
+    file_patterns:
+    - '*.yaml'
+    - '*.yml'
+    - .github/**/*.yml
+    keywords:
+    - fedramp
+    - compliance
+    - security
+finding:
+  title_template: Final Incident Report - FRR-ICP-07
+  description_template: 'Providers MUST provide a final report once the _incident_
+    is resolved and recovery is complete that describes at least:'
+  remediation_template: 'To comply with FRR-ICP-07 (Final Incident Report), you MUST
+    implement the following mandatory requirements:
+
+
+    1. Review FedRAMP 20x requirement documentation
+
+    2. Identify systems and resources in scope
+
+    3. Create resource group for FedRAMP resources
+
+    4. Set up Azure Key Vault for secrets management
+
+    5. Configure Log Analytics workspace
+
+
+    (See full implementation checklist for 10 total steps)'
+  evidence_collection:
+  - Configuration export from Azure Portal (JSON format)
+  - Azure Policy compliance reports
+  - Azure Monitor logs showing compliance status
+  azure_services: &id001
+  - Azure Blob Storage
+  - Azure Monitor
+  - Log Analytics
+tags:
+- icp
+- must
+- process_based
+- impact_low
+- impact_moderate
+- impact_high
+- documentation_required
+nist_controls:
+- IR-4
+- IR-6
+- IR-5
+- IR-8
+related_ksis: []
+related_frrs: []
+evidence_collection:
+  azure_monitor_kql: []
+  azure_cli:
+  - command: '# TODO: Add Azure CLI command for FRR-ICP-07'
+    description: Collect evidence for Final Incident Report
+    output_format: json
+    frequency: monthly
+  powershell: []
+  rest_api: []
+  manual_procedures:
+  - procedure: Configuration export from Azure Portal (JSON format)
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Policy compliance reports
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Monitor logs showing compliance status
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+evidence_artifacts:
+- artifact_type: documentation
+  name: FRR-ICP-07 - Final Incident Report Policy
+  source: Organization security documentation
+  frequency: annual_review
+  retention_months: 36
+  format: PDF/Markdown
+- artifact_type: configuration
+  name: FRR-ICP-07 - Azure Service Configuration
+  source: Azure Portal export
+  frequency: quarterly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: FRR-ICP-07 - Compliance Status Report
+  source: Compliance tracking system
+  frequency: monthly
+  retention_months: 36
+  format: PDF/Excel
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation for Azure Policy for compliance enforcement'
+    azure_services: *id001
+    effort_hours: 8
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation for Azure Monitor for continuous monitoring'
+    azure_services: *id001
+    effort_hours: 8
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation for Log Analytics queries for compliance
+      validation'
+    azure_services: *id001
+    effort_hours: 8
+implementation:
+  prerequisites:
+  - FedRAMP authorization package template
+  - Organization security policies
+  - Azure subscription (if applicable)
+  - Security team approval process
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 6
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 7
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 8
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 9
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 10
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  total_effort_hours: 20
+ssp_mapping:
+  control_family: IR - Incident Handling
+  control_numbers:
+  - IR-4
+  - IR-6
+  - IR-5
+  - IR-8
+  ssp_sections:
+  - section: 'IR-4: Incident Handling'
+    description_template: 'Implementation of FRR-ICP-07 - Final Incident Report:
+
+
+      Providers MUST provide a final report once the _incident_ is resolved and recovery
+      is complete that describes at least:'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-07 Policy Documentation
+    - FRR-ICP-07 Compliance Report
+  - section: 'IR-6: Incident Reporting'
+    description_template: 'Implementation of FRR-ICP-07 - Final Incident Report:
+
+
+      Providers MUST provide a final report once the _incident_ is resolved and recovery
+      is complete that describes at least:'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-07 Policy Documentation
+    - FRR-ICP-07 Compliance Report
+  - section: 'IR-5: Incident Monitoring'
+    description_template: 'Implementation of FRR-ICP-07 - Final Incident Report:
+
+
+      Providers MUST provide a final report once the _incident_ is resolved and recovery
+      is complete that describes at least:'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-07 Policy Documentation
+    - FRR-ICP-07 Compliance Report
+  required_for_fedramp: true
+  authorization_package_section: Section 9 - Incident Response
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Final Incident Report compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Final Incident Report compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Final Incident Report compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Incident Response
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Govern
+    guidance: Implement Final Incident Report as part of governance baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/govern/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-ICP-07
+    requirement_name: Final Incident Report
+    requirement_type: FRR
+    primary_keyword: MUST
+    impact_levels:
+    - Low
+    - Moderate
+    - High
+  nist_800_53_rev5:
+    controls:
+    - control_id: IR-4
+      control_name: Incident Handling
+    - control_id: IR-6
+      control_name: Incident Reporting
+    - control_id: IR-5
+      control_name: Incident Monitoring
+    - control_id: IR-8
+      control_name: Incident Response Plan
+testing:
+  validation_procedures:
+  - procedure: Review policy documentation
+    expected_outcome: Policy exists and is current (within 1 year)
+    frequency: annual
+  - procedure: Verify implementation evidence
+    expected_outcome: Evidence artifacts collected and retained
+    frequency: quarterly
+  - procedure: Test automated controls (if applicable)
+    expected_outcome: Automated controls functioning as designed
+    frequency: monthly
+  acceptance_criteria:
+  - Policy documented for FRR-ICP-07
+  - Implementation evidence collected and retained for 3 years
+  - Annual review completed and documented
+  - NIST controls IR-4, IR-6, IR-5 satisfied
+
+---
+pattern_id: frr.icp.08
+name: Automated Reporting
+description: Providers SHOULD use automated mechanisms for reporting incidents and
+  providing updates to all necessary parties (including CISA).
+family: ICP
+severity: MEDIUM
+pattern_type: process_based
+languages:
+  markdown:
+    file_patterns:
+    - '*.md'
+    - README.md
+    - SECURITY.md
+    keywords:
+    - incident
+  yaml:
+    file_patterns:
+    - '*.yaml'
+    - '*.yml'
+    - .github/**/*.yml
+    keywords:
+    - fedramp
+    - compliance
+    - security
+finding:
+  title_template: Automated Reporting - FRR-ICP-08
+  description_template: Providers SHOULD use automated mechanisms for reporting incidents
+    and providing updates to all necessary parties (including CISA).
+  remediation_template: 'To comply with FRR-ICP-08 (Automated Reporting), you SHOULD
+    consider implementing the following recommended practices:
+
+
+    1. Review FedRAMP 20x requirement documentation
+
+    2. Identify systems and resources in scope
+
+    3. Create resource group for FedRAMP resources
+
+    4. Set up Azure Key Vault for secrets management
+
+    5. Configure Log Analytics workspace
+
+
+    (See full implementation checklist for 10 total steps)'
+  evidence_collection:
+  - Configuration export from Azure Portal (JSON format)
+  - Azure Policy compliance reports
+  - Azure Monitor logs showing compliance status
+  azure_services: &id001
+  - Azure Blob Storage
+  - Azure Monitor
+  - Log Analytics
+tags:
+- icp
+- should
+- process_based
+- impact_low
+- impact_moderate
+- impact_high
+- documentation_required
+nist_controls:
+- IR-4
+- IR-6
+- IR-5
+- IR-8
+related_ksis: []
+related_frrs: []
+evidence_collection:
+  azure_monitor_kql: []
+  azure_cli:
+  - command: '# TODO: Add Azure CLI command for FRR-ICP-08'
+    description: Collect evidence for Automated Reporting
+    output_format: json
+    frequency: monthly
+  powershell: []
+  rest_api: []
+  manual_procedures:
+  - procedure: Configuration export from Azure Portal (JSON format)
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Policy compliance reports
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Monitor logs showing compliance status
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+evidence_artifacts:
+- artifact_type: documentation
+  name: FRR-ICP-08 - Automated Reporting Policy
+  source: Organization security documentation
+  frequency: annual_review
+  retention_months: 36
+  format: PDF/Markdown
+- artifact_type: configuration
+  name: FRR-ICP-08 - Azure Service Configuration
+  source: Azure Portal export
+  frequency: quarterly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: FRR-ICP-08 - Compliance Status Report
+  source: Compliance tracking system
+  frequency: monthly
+  retention_months: 36
+  format: PDF/Excel
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation for Azure Policy for compliance enforcement'
+    azure_services: *id001
+    effort_hours: 8
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation for Azure Monitor for continuous monitoring'
+    azure_services: *id001
+    effort_hours: 8
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation for Log Analytics queries for compliance
+      validation'
+    azure_services: *id001
+    effort_hours: 8
+implementation:
+  prerequisites:
+  - FedRAMP authorization package template
+  - Organization security policies
+  - Azure subscription (if applicable)
+  - Security team approval process
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 6
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 7
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 8
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 9
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 10
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  total_effort_hours: 20
+ssp_mapping:
+  control_family: IR - Incident Handling
+  control_numbers:
+  - IR-4
+  - IR-6
+  - IR-5
+  - IR-8
+  ssp_sections:
+  - section: 'IR-4: Incident Handling'
+    description_template: 'Implementation of FRR-ICP-08 - Automated Reporting:
+
+
+      Providers SHOULD use automated mechanisms for reporting incidents and providing
+      updates to all necessary parties (including CISA).'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-08 Policy Documentation
+    - FRR-ICP-08 Compliance Report
+  - section: 'IR-6: Incident Reporting'
+    description_template: 'Implementation of FRR-ICP-08 - Automated Reporting:
+
+
+      Providers SHOULD use automated mechanisms for reporting incidents and providing
+      updates to all necessary parties (including CISA).'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-08 Policy Documentation
+    - FRR-ICP-08 Compliance Report
+  - section: 'IR-5: Incident Monitoring'
+    description_template: 'Implementation of FRR-ICP-08 - Automated Reporting:
+
+
+      Providers SHOULD use automated mechanisms for reporting incidents and providing
+      updates to all necessary parties (including CISA).'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-08 Policy Documentation
+    - FRR-ICP-08 Compliance Report
+  required_for_fedramp: true
+  authorization_package_section: Section 9 - Incident Response
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Automated Reporting compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Automated Reporting compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Automated Reporting compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Incident Response
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Govern
+    guidance: Implement Automated Reporting as part of governance baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/govern/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-ICP-08
+    requirement_name: Automated Reporting
+    requirement_type: FRR
+    primary_keyword: SHOULD
+    impact_levels:
+    - Low
+    - Moderate
+    - High
+  nist_800_53_rev5:
+    controls:
+    - control_id: IR-4
+      control_name: Incident Handling
+    - control_id: IR-6
+      control_name: Incident Reporting
+    - control_id: IR-5
+      control_name: Incident Monitoring
+    - control_id: IR-8
+      control_name: Incident Response Plan
+testing:
+  validation_procedures:
+  - procedure: Review policy documentation
+    expected_outcome: Policy exists and is current (within 1 year)
+    frequency: annual
+  - procedure: Verify implementation evidence
+    expected_outcome: Evidence artifacts collected and retained
+    frequency: quarterly
+  - procedure: Test automated controls (if applicable)
+    expected_outcome: Automated controls functioning as designed
+    frequency: monthly
+  acceptance_criteria:
+  - Policy documented for FRR-ICP-08
+  - Implementation evidence collected and retained for 3 years
+  - Annual review completed and documented
+  - NIST controls IR-4, IR-6, IR-5 satisfied
+
+---
+pattern_id: frr.icp.09
+name: Human-Readable and Machine-Readable Formats
+description: Providers SHOULD make _incident_ report information available in consistent
+  human-readable and _machine-readable_ formats.
+family: ICP
+severity: MEDIUM
+pattern_type: process_based
+languages:
+  markdown:
+    file_patterns:
+    - '*.md'
+    - README.md
+    - SECURITY.md
+    keywords:
+    - incident
+  yaml:
+    file_patterns:
+    - '*.yaml'
+    - '*.yml'
+    - .github/**/*.yml
+    keywords:
+    - fedramp
+    - compliance
+    - security
+finding:
+  title_template: Human-Readable and Machine-Readable Formats - FRR-ICP-09
+  description_template: Providers SHOULD make _incident_ report information available
+    in consistent human-readable and _machine-readable_ formats.
+  remediation_template: 'To comply with FRR-ICP-09 (Human-Readable and Machine-Readable
+    Formats), you SHOULD consider implementing the following recommended practices:
+
+
+    1. Review FedRAMP 20x requirement documentation
+
+    2. Identify systems and resources in scope
+
+    3. Create resource group for FedRAMP resources
+
+    4. Set up Azure Key Vault for secrets management
+
+    5. Configure Log Analytics workspace
+
+
+    (See full implementation checklist for 10 total steps)'
+  evidence_collection:
+  - Configuration export from Azure Portal (JSON format)
+  - Azure Policy compliance reports
+  - Azure Monitor logs showing compliance status
+  azure_services: &id001
+  - Azure Blob Storage
+  - Azure Monitor
+  - Log Analytics
+tags:
+- icp
+- should
+- process_based
+- impact_low
+- impact_moderate
+- impact_high
+- documentation_required
+nist_controls:
+- IR-4
+- IR-6
+- IR-5
+- IR-8
+related_ksis: []
+related_frrs: []
+evidence_collection:
+  azure_monitor_kql: []
+  azure_cli:
+  - command: '# TODO: Add Azure CLI command for FRR-ICP-09'
+    description: Collect evidence for Human-Readable and Machine-Readable Formats
+    output_format: json
+    frequency: monthly
+  powershell: []
+  rest_api: []
+  manual_procedures:
+  - procedure: Configuration export from Azure Portal (JSON format)
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Policy compliance reports
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+  - procedure: Azure Monitor logs showing compliance status
+    frequency: quarterly
+    responsible_party: Security team
+    documentation: Required for FedRAMP authorization package
+evidence_artifacts:
+- artifact_type: documentation
+  name: FRR-ICP-09 - Human-Readable and Machine-Readable Formats Policy
+  source: Organization security documentation
+  frequency: annual_review
+  retention_months: 36
+  format: PDF/Markdown
+- artifact_type: configuration
+  name: FRR-ICP-09 - Azure Service Configuration
+  source: Azure Portal export
+  frequency: quarterly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: FRR-ICP-09 - Compliance Status Report
+  source: Compliance tracking system
+  frequency: monthly
+  retention_months: 36
+  format: PDF/Excel
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation for Azure Policy for compliance enforcement'
+    azure_services: *id001
+    effort_hours: 8
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation for Azure Monitor for continuous monitoring'
+    azure_services: *id001
+    effort_hours: 8
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation for Log Analytics queries for compliance
+      validation'
+    azure_services: *id001
+    effort_hours: 8
+implementation:
+  prerequisites:
+  - FedRAMP authorization package template
+  - Organization security policies
+  - Azure subscription (if applicable)
+  - Security team approval process
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 6
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 7
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 8
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 9
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  - step: 10
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 2
+    validation: Document completion and obtain approval
+  total_effort_hours: 20
+ssp_mapping:
+  control_family: IR - Incident Handling
+  control_numbers:
+  - IR-4
+  - IR-6
+  - IR-5
+  - IR-8
+  ssp_sections:
+  - section: 'IR-4: Incident Handling'
+    description_template: 'Implementation of FRR-ICP-09 - Human-Readable and Machine-Readable
+      Formats:
+
+
+      Providers SHOULD make _incident_ report information available in consistent
+      human-readable and _machine-readable_ formats.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-09 Policy Documentation
+    - FRR-ICP-09 Compliance Report
+  - section: 'IR-6: Incident Reporting'
+    description_template: 'Implementation of FRR-ICP-09 - Human-Readable and Machine-Readable
+      Formats:
+
+
+      Providers SHOULD make _incident_ report information available in consistent
+      human-readable and _machine-readable_ formats.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-09 Policy Documentation
+    - FRR-ICP-09 Compliance Report
+  - section: 'IR-5: Incident Monitoring'
+    description_template: 'Implementation of FRR-ICP-09 - Human-Readable and Machine-Readable
+      Formats:
+
+
+      Providers SHOULD make _incident_ report information available in consistent
+      human-readable and _machine-readable_ formats.'
+    implementation_details: '# TODO: Add specific implementation details'
+    evidence_references:
+    - FRR-ICP-09 Policy Documentation
+    - FRR-ICP-09 Compliance Report
+  required_for_fedramp: true
+  authorization_package_section: Section 9 - Incident Response
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Human-Readable and Machine-Readable Formats compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Human-Readable and Machine-Readable Formats compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Human-Readable and Machine-Readable Formats compliance
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Incident Response
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Govern
+    guidance: Implement Human-Readable and Machine-Readable Formats as part of governance
+      baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/govern/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-ICP-09
+    requirement_name: Human-Readable and Machine-Readable Formats
+    requirement_type: FRR
+    primary_keyword: SHOULD
+    impact_levels:
+    - Low
+    - Moderate
+    - High
+  nist_800_53_rev5:
+    controls:
+    - control_id: IR-4
+      control_name: Incident Handling
+    - control_id: IR-6
+      control_name: Incident Reporting
+    - control_id: IR-5
+      control_name: Incident Monitoring
+    - control_id: IR-8
+      control_name: Incident Response Plan
+testing:
+  validation_procedures:
+  - procedure: Review policy documentation
+    expected_outcome: Policy exists and is current (within 1 year)
+    frequency: annual
+  - procedure: Verify implementation evidence
+    expected_outcome: Evidence artifacts collected and retained
+    frequency: quarterly
+  - procedure: Test automated controls (if applicable)
+    expected_outcome: Automated controls functioning as designed
+    frequency: monthly
+  acceptance_criteria:
+  - Policy documented for FRR-ICP-09
+  - Implementation evidence collected and retained for 3 years
+  - Annual review completed and documented
+  - NIST controls IR-4, IR-6, IR-5 satisfied
