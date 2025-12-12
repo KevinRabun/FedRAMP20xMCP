@@ -5,7 +5,7 @@ Providers MAY responsibly share some or all of the information an _Ongoing Autho
 
 Official FedRAMP 20x Requirement
 Source: FRR-CCM (Collaborative Continuous Monitoring) family
-Primary Keyword: MUST
+Primary Keyword: MAY
 Impact Levels: Low, Moderate, High
 """
 
