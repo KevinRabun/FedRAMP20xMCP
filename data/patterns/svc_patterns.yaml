@@ -19,6 +19,24 @@ languages:
         target: "flask_seasurf"
     regex_fallback: "from\\s+flask_talisman|from\\s+flask_seasurf"
     positive_indicators: ["flask_talisman", "flask_seasurf", "SecureCookieSessionInterface"]
+    
+  csharp:
+    ast_queries:
+      - query_type: "using_directive"
+        target: "Microsoft.AspNetCore.Mvc.Filters"
+    regex_fallback: "using.*AspNetCore.*Filters"
+    
+  java:
+    ast_queries:
+      - query_type: "import_declaration"
+        target: "org.springframework.security"
+    regex_fallback: "import.*springframework\\.security"
+    
+  typescript:
+    ast_queries:
+      - query_type: "import_statement"
+        target: "helmet"
+    regex_fallback: "import.*helmet"
 
 finding:
   title_template: "Flask security middleware detected"
@@ -38,6 +56,12 @@ severity: "INFO"
 pattern_type: "function_call"
 
 languages:
+  python:
+    ast_queries:
+      - query_type: "function_call"
+        target: "Talisman"
+    regex_fallback: "Talisman\\(.*force_https"
+    
   csharp:
     ast_queries:
       - query_type: "method_call"
@@ -48,6 +72,18 @@ languages:
         context: "IServiceCollection"
     regex_fallback: "\\.UseHsts\\(\\)|\\.AddHsts\\("
     positive_indicators: ["UseHsts", "AddHsts"]
+    
+  java:
+    ast_queries:
+      - query_type: "annotation"
+        target: "EnableWebSecurity"
+    regex_fallback: "@EnableWebSecurity"
+    
+  typescript:
+    ast_queries:
+      - query_type: "function_call"
+        target: "helmet.hsts"
+    regex_fallback: "helmet\\.hsts"
 
 finding:
   title_template: "HSTS enabled in ASP.NET Core"
@@ -91,6 +127,22 @@ languages:
           - "not_contains_in_body:UseHsts"
           - "not_contains_in_body:AddHsts"
     regex_fallback: "public void Configure"
+    
+  java:
+    ast_queries:
+      - query_type: "class_definition"
+        target: "SecurityConfig"
+        conditions:
+          - "not_contains:requiresSecure"
+    regex_fallback: "class.*SecurityConfig"
+    
+  typescript:
+    ast_queries:
+      - query_type: "function_call"
+        target: "express"
+        conditions:
+          - "not_contains_in_body:helmet"
+    regex_fallback: "express\\("
 
 finding:
   title_template: "HSTS not configured"
@@ -135,6 +187,24 @@ languages:
         target: "SecureHeaders"
     regex_fallback: "content_security_policy|Content-Security-Policy"
     positive_indicators: ["content_security_policy", "CSP"]
+    
+  csharp:
+    ast_queries:
+      - query_type: "method_call"
+        target: "AddContentSecurityPolicy"
+    regex_fallback: "AddContentSecurityPolicy"
+    
+  java:
+    ast_queries:
+      - query_type: "method_call"
+        target: "contentSecurityPolicy"
+    regex_fallback: "contentSecurityPolicy"
+    
+  typescript:
+    ast_queries:
+      - query_type: "function_call"
+        target: "helmet.contentSecurityPolicy"
+    regex_fallback: "helmet\\.contentSecurityPolicy"
 
 finding:
   title_template: "Content Security Policy detected"
@@ -271,6 +341,14 @@ languages:
       - query_type: "variable_declarator"
         target: "password|secret|apiKey|token"
     regex_fallback: "String\\s+(password|secret|apiKey|token)\\s*=\\s*\"[^\"]+\""
+    
+  typescript:
+    ast_queries:
+      - query_type: "variable_declaration"
+        target: "password|secret|apiKey|token"
+        conditions:
+          - "initializer_type:string_literal"
+    regex_fallback: "(password|secret|apiKey|token)\\s*[=:]\\s*['\"][^'\"]+['\"]"
 
 finding:
   title_template: "Hardcoded secret detected"

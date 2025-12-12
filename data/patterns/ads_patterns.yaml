@@ -51,6 +51,7 @@ languages:
   - python
   - csharp
   - java
+  - typescript
 ast_queries:
   - query_type: function_call
     target: xml.etree.ElementTree
@@ -58,10 +59,14 @@ ast_queries:
     target: XmlSerializer
   - query_type: function_call
     target: DocumentBuilder
+  - query_type: function_call
+    target: XMLParser
 regex_patterns:
   - pattern: xml\.etree\.ElementTree
     flags: IGNORECASE
   - pattern: XmlSerializer
+    flags: IGNORECASE
+  - pattern: xml2js|fast-xml-parser|DOMParser
     flags: IGNORECASE
 finding_template:
   title: XML export detected for audit data

@@ -43,6 +43,14 @@ languages:
       - query_type: "object_creation"
         target: "RollingFileAppender"
     regex_fallback: "FileAppender|RollingFileAppender"
+    
+  typescript:
+    ast_queries:
+      - query_type: "function_call"
+        target: "createWriteStream"
+      - query_type: "import_statement"
+        target: "winston-daily-rotate-file"
+    regex_fallback: "createWriteStream\\(|winston-daily-rotate-file"
 
 finding:
   title_template: "Local file logging detected"
@@ -102,6 +110,12 @@ languages:
     regex_fallback: "using\\s+Microsoft\\.ApplicationInsights"
     positive_indicators: ["ApplicationInsights"]
     
+  java:
+    ast_queries:
+      - query_type: "import_declaration"
+        target: "com.microsoft.applicationinsights"
+    regex_fallback: "import\\s+com\\.microsoft\\.applicationinsights"
+    
   typescript:
     ast_queries:
       - query_type: "import_statement"
@@ -142,6 +156,18 @@ languages:
       - query_type: "using_directive"
         target: "Microsoft.Azure.SecurityInsights"
     regex_fallback: "using\\s+.*SecurityInsights"
+    
+  java:
+    ast_queries:
+      - query_type: "import_declaration"
+        target: "com.splunk"
+    regex_fallback: "import\\s+com\\.splunk"
+    
+  typescript:
+    ast_queries:
+      - query_type: "import_statement"
+        target: "splunk-logging"
+    regex_fallback: "import.*splunk-logging"
 
 finding:
   title_template: "SIEM integration detected"
@@ -227,6 +253,24 @@ languages:
           - "in_catch_block:true"
           - "arg_contains:authentication|login"
     regex_fallback: "LogWarning.*[Aa]uthentication.*fail"
+    
+  java:
+    ast_queries:
+      - query_type: "method_call"
+        target: "error"
+        conditions:
+          - "in_catch_block:true"
+          - "arg_contains:authentication|login"
+    regex_fallback: "log\\.error.*authentication.*fail"
+    
+  typescript:
+    ast_queries:
+      - query_type: "function_call"
+        target: "error"
+        conditions:
+          - "in_catch_block:true"
+          - "arg_contains:authentication|login"
+    regex_fallback: "logger\\.error.*authentication.*fail"
 
 finding:
   title_template: "Failed login monitoring detected"
@@ -372,6 +416,12 @@ languages:
       - query_type: "using_directive"
         target: "Microsoft.ApplicationInsights"
     regex_fallback: "using\\s+Microsoft\\.ApplicationInsights"
+    
+  java:
+    ast_queries:
+      - query_type: "import_declaration"
+        target: "com.microsoft.applicationinsights"
+    regex_fallback: "import\\s+com\\.microsoft\\.applicationinsights"
     
   typescript:
     ast_queries:

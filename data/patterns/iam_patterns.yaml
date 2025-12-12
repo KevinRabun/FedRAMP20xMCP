@@ -68,6 +68,18 @@ languages:
     regex_fallback: "import\\s+webauthn|from\\s+webauthn"
     positive_indicators: ["webauthn", "py_webauthn"]
     
+  csharp:
+    ast_queries:
+      - query_type: "using_directive"
+        target: "Fido2NetLib"
+    regex_fallback: "using\\s+Fido2NetLib"
+    
+  java:
+    ast_queries:
+      - query_type: "import_declaration"
+        target: "com.yubico.webauthn"
+    regex_fallback: "import\\s+com\\.yubico\\.webauthn"
+    
   typescript:
     ast_queries:
       - query_type: "import_statement"
@@ -157,6 +169,12 @@ languages:
       - query_type: "import_declaration"
         target: "org.jboss.aerogear.security.otp"
     regex_fallback: "import\\s+.*\\.otp"
+    
+  typescript:
+    ast_queries:
+      - query_type: "import_statement"
+        target: "otplib"
+    regex_fallback: "import.*['\"]otplib"
 
 finding:
   title_template: "TOTP-based MFA detected (not phishing-resistant)"
@@ -196,6 +214,12 @@ languages:
       - query_type: "using_directive"
         target: "Twilio"
     regex_fallback: "using\\s+Twilio"
+    
+  java:
+    ast_queries:
+      - query_type: "import_declaration"
+        target: "com.twilio"
+    regex_fallback: "import\\s+com\\.twilio"
     
   typescript:
     ast_queries:
@@ -248,6 +272,26 @@ languages:
           - "not_contains_in_body:TwoFactor"
     regex_fallback: "public\\s+.*\\s+Login\\s*\\("
     negative_indicators: ["TwoFactor", "Mfa", "RequiresTwoFactor"]
+    
+  java:
+    ast_queries:
+      - query_type: "method_declaration"
+        target: "login"
+        conditions:
+          - "method_name_contains:login"
+          - "not_contains_in_body:mfa"
+    regex_fallback: "public\\s+.*\\s+login\\s*\\("
+    negative_indicators: ["mfa", "twoFactor"]
+    
+  typescript:
+    ast_queries:
+      - query_type: "function_declaration"
+        target: "login"
+        conditions:
+          - "function_name_contains:login"
+          - "not_contains_in_body:mfa"
+    regex_fallback: "function\\s+\\w*login\\w*\\("
+    negative_indicators: ["mfa", "twoFactor", "fido2"]
 
 finding:
   title_template: "Login without MFA enforcement"
@@ -290,6 +334,22 @@ languages:
         conditions:
           - "not_has_attribute:RequireTwoFactor"
     regex_fallback: "\\[Authorize\\]"
+    
+  java:
+    ast_queries:
+      - query_type: "annotation"
+        target: "PreAuthorize"
+        conditions:
+          - "not_contains:mfa"
+    regex_fallback: "@PreAuthorize"
+    
+  typescript:
+    ast_queries:
+      - query_type: "decorator"
+        target: "RequireAuth"
+        conditions:
+          - "not_has_decorator:RequireMfa"
+    regex_fallback: "@RequireAuth"
 
 finding:
   title_template: "Authentication decorator without MFA"
@@ -397,6 +457,18 @@ languages:
         conditions:
           - "value_greater_than:minutes:30"
     regex_fallback: "ExpireTimeSpan\\s*=\\s*TimeSpan"
+    
+  java:
+    ast_queries:
+      - query_type: "method_call"
+        target: "setMaxInactiveInterval"
+    regex_fallback: "setMaxInactiveInterval\\s*\\("
+    
+  typescript:
+    ast_queries:
+      - query_type: "property_assignment"
+        target: "maxAge"
+    regex_fallback: "maxAge\\s*:\\s*"
 
 finding:
   title_template: "Session timeout exceeds 30 minutes or not configured"

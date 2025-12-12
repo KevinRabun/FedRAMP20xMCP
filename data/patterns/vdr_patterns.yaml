@@ -307,6 +307,14 @@ languages:
         conditions:
           - "has_known_cve"
     regex_fallback: "<PackageReference"
+    
+  java:
+    file_path: "pom.xml|build.gradle"
+    ast_queries:
+      - xml_path: "dependencies/dependency"
+        conditions:
+          - "has_known_cve"
+    regex_fallback: "<dependency>|dependencies \\{"
 
 finding:
   title_template: "Dependency with known vulnerabilities: {package_name} {version}"

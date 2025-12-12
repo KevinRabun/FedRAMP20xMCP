@@ -16,6 +16,7 @@ languages:
   - python
   - csharp
   - java
+  - typescript
 regex_patterns:
   - pattern: 'resources:.*limits:|resources:.*requests:'
     flags: IGNORECASE | DOTALL
