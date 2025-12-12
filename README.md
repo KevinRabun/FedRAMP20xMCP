@@ -20,19 +20,35 @@ This server loads FedRAMP 20x data from the official [FedRAMP documentation repo
 
 ### Complete Data Coverage
 
-The server provides access to **329 requirements** across all 12 FedRAMP 20x documents:
-- **ADS** - Authorization Data Sharing (22 requirements)
+The server provides access to **271 requirements** across FedRAMP 20x documents:
+
+**FedRAMP Requirements (FRR) - 199 requirements across 10 families:**
+- **ADS** - Authorization Data Sharing (20 requirements)
 - **CCM** - Collaborative Continuous Monitoring (25 requirements)
-- **FRD** - FedRAMP Definitions (50 definitions)
 - **FSI** - FedRAMP Security Inbox (16 requirements)
 - **ICP** - Incident Communications Procedures (9 requirements)
-- **KSI** - Key Security Indicators (72 indicators)
 - **MAS** - Minimum Assessment Scope (12 requirements)
 - **PVA** - Persistent Validation and Assessment (22 requirements)
 - **RSC** - Recommended Secure Configuration (10 requirements)
-- **SCN** - Significant Change Notifications (26 requirements)
+- **SCN** - Significant Change Notifications (22 requirements)
 - **UCM** - Using Cryptographic Modules (4 requirements)
-- **VDR** - Vulnerability Detection and Response (59 requirements)
+- **VDR** - Vulnerability Detection and Response (57 requirements)
+- **KSI** - Key Security Indicators (2 requirements)
+
+**Key Security Indicators (KSI) - 72 indicators across 11 families:**
+- **AFR** - Architecture, Features, and Resources (11 indicators)
+- **CED** - Continuous Evidence Delivery (4 indicators)
+- **CMT** - Continuous Monitoring and Testing (5 indicators)
+- **CNA** - Cloud Native Architecture (8 indicators)
+- **IAM** - Identity and Access Management (7 indicators)
+- **INR** - Incident and Near-Miss Reporting (3 indicators)
+- **MLA** - Monitoring, Logging, and Alerting (8 indicators)
+- **PIY** - Privacy and Transparency (8 indicators)
+- **RPL** - Resilience and Recovery Planning (4 indicators)
+- **SVC** - Secure Coding and Vulnerability Management (10 indicators)
+- **TPR** - Third-Party Risk Management (4 indicators)
+
+**FedRAMP Definitions (FRD) - 50 official term definitions**
 
 ## Features
 
@@ -237,7 +253,7 @@ For CI/CD integration, multi-server setup with Azure and GitHub, or detailed tro
 
 ## Available Tools
 
-The server provides **45 tools** organized into the following categories:
+The server provides **48 tools** organized into the following categories:
 
 **Core Tools (11):** Query requirements, definitions, KSIs, and KSI evidence automation
 **FRR Analysis Tools (7):** Analyze code against FedRAMP Requirements (FRR) with comprehensive compliance checking across all 199 requirements

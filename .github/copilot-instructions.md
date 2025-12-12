@@ -1,16 +1,16 @@
 # Copilot Instructions for FedRAMP 20x MCP Server
 
 ## Project Overview
-MCP server that loads FedRAMP 20x requirements from JSON files and official documentation markdown files, provides 35 MCP tools for querying requirements, and includes KSI-centric code analyzers for compliance checking across multiple languages.
+MCP server that loads FedRAMP 20x requirements from JSON files and official documentation markdown files, provides 48 MCP tools for querying requirements, and includes KSI-centric code analyzers for compliance checking across multiple languages.
 
 ## Critical: OSCAL Format Requirements
 FedRAMP 20x requires **machine-readable** formats (JSON/XML/structured data) for FRR-ADS. **OSCAL is NOT mentioned in FedRAMP 20x requirements** - it's one optional NIST-based implementation approach. Source: FRR-ADS-01 specifies "machine-readable" only.
 
 ## Data & Capabilities
-- **329 requirements** from 12 FedRAMP 20x families (ADS, AFR, CCM, CNA, CMT, FSI, IAM, ICP, MAS, MLA, PIY, PVA, RPL, RSC, SCN, SVC, TPR, UCM, VDR)
+- **199 FedRAMP Requirements (FRRs)** from 10 families (ADS, CCM, FSI, ICP, MAS, PVA, RSC, SCN, UCM, VDR)
 - **50 FedRAMP Definitions** (FRD family)
-- **72 Key Security Indicators** (KSI family)
-- **35 MCP tools** organized in 11 modules
+- **72 Key Security Indicators (KSIs)** from 11 families (AFR, CED, CMT, CNA, IAM, INR, MLA, PIY, RPL, SVC, TPR)
+- **48 MCP tools** organized in 13 modules
 - **Multi-language code analyzers**: Python, C#/.NET, Java, TypeScript/JavaScript, Bicep, Terraform, CI/CD pipelines
 - **1-hour caching** with automatic refresh
 
@@ -42,7 +42,7 @@ FedRAMP 20x requires **machine-readable** formats (JSON/XML/structured data) for
 - Infrastructure templates in `templates/bicep/` and `templates/terraform/`
 - Code templates in `templates/code/` (Python, C#, PowerShell, Java, TypeScript)
 - Prompt templates in `prompts/` directory (15 files)
-- Tool modules in `tools/` directory (11 modules, 35 tools)
+- Tool modules in `tools/` directory (13 modules, 48 tools)
 - Code analyzers in `analyzers/ksi/` directory (72 KSI analyzer files + factory + base)
 - CVE fetcher module: `cve_fetcher.py` - Live vulnerability data from GitHub Advisory Database / NVD
 
@@ -203,9 +203,10 @@ FedRAMP 20x requires **machine-readable** formats (JSON/XML/structured data) for
 - Infrastructure templates: `templates/{bicep,terraform}/`
 - Code templates: `templates/code/`
 - Prompt templates: `prompts/` (15 prompts)
-- Tool modules: `tools/` (11 modules, 35 tools)
+- Tool modules: `tools/` (13 modules, 48 tools)
 - Tests: `tests/` (70+ test files)
 - Analyzers: `analyzers/ksi/` (72 KSI analyzer files + factory + base)
+- FRR Analyzers: `analyzers/frr/` (199 FRR analyzer files + factory + base)
 
 ### Template & Prompt Management
 - Use `get_infrastructure_template(family, type)` to load infrastructure templates
