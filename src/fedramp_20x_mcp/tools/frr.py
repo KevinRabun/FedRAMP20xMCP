@@ -389,11 +389,20 @@ async def get_frr_evidence_automation_impl(frr_id: str, data_loader: Any = None)
         # Format the output
         output = f"# Evidence Automation: {frr_id} - {analyzer.FRR_NAME}\n\n"
         
-        output += f"**Evidence Type:** {recommendations.get('evidence_type', 'N/A')}\n"
-        output += f"**Automation Feasibility:** {recommendations.get('automation_feasibility', 'N/A').upper()}\n\n"
+        # Handle both structured dict and simple dict formats
+        if isinstance(recommendations, dict):
+            output += f"**Evidence Type:** {recommendations.get('evidence_type', 'N/A')}\n"
+            automation_feasibility = recommendations.get('automation_feasibility', 'N/A')
+            if automation_feasibility != 'N/A':
+                output += f"**Automation Feasibility:** {automation_feasibility.upper()}\n\n"
+            else:
+                output += f"**Automation Feasibility:** N/A\n\n"
+        else:
+            output += "**Evidence Type:** N/A\n"
+            output += "**Automation Feasibility:** N/A\n\n"
         
         # Azure Services
-        if recommendations.get('azure_services'):
+        if isinstance(recommendations, dict) and recommendations.get('azure_services'):
             output += "## Azure Services\n\n"
             output += "*Note: Microsoft Defender for Cloud is recommended (not mandatory) for FedRAMP 20x compliance. Alternative tools like Qualys, Tenable, or Azure Policy can also be used.*\n\n"
             for svc in recommendations['azure_services']:
@@ -401,43 +410,70 @@ async def get_frr_evidence_automation_impl(frr_id: str, data_loader: Any = None)
             output += "\n"
         
         # Collection Methods
-        if recommendations.get('collection_methods'):
+        if isinstance(recommendations, dict) and recommendations.get('collection_methods'):
             output += "## Collection Methods\n\n"
             for method in recommendations['collection_methods']:
                 output += f"- {method}\n"
             output += "\n"
         
         # Implementation Steps
-        if recommendations.get('implementation_steps'):
+        if isinstance(recommendations, dict) and recommendations.get('implementation_steps'):
             output += "## Implementation Steps\n\n"
             for i, step in enumerate(recommendations['implementation_steps'], 1):
                 output += f"{i}. {step}\n"
             output += "\n"
         
-        # Evidence Collection Queries
+        # Handle legacy simple dict format (for backwards compatibility)
+        if isinstance(recommendations, dict) and not recommendations.get('azure_services'):
+            output += "## Automation Recommendations\n\n"
+            for key, value in recommendations.items():
+                if key not in ['frr_id', 'frr_name', 'evidence_type', 'automation_feasibility', 'update_frequency', 'responsible_party']:
+                    output += f"**{key.replace('_', ' ').title()}:** {value}\n"
+            output += "\n"
+        
+        # Evidence Collection Queries - handle both list of dicts and dict of lists
         if queries:
             output += "## Evidence Collection Queries\n\n"
-            for query in queries:
-                output += f"### {query['query_name']}\n"
-                output += f"**Type:** {query['query_type']}\n\n"
-                output += f"**Purpose:** {query['purpose']}\n\n"
-                output += f"```\n{query['query']}\n```\n\n"
+            if isinstance(queries, list):
+                # New format: list of dicts
+                for query in queries:
+                    if isinstance(query, dict):
+                        output += f"### {query.get('query_name', 'Query')}\n"
+                        output += f"**Type:** {query.get('query_type', 'N/A')}\n\n"
+                        output += f"**Purpose:** {query.get('purpose', 'N/A')}\n\n"
+                        output += f"```\n{query.get('query', '')}\n```\n\n"
+            elif isinstance(queries, dict):
+                # Legacy format: dict of lists
+                for query_type, query_list in queries.items():
+                    output += f"### {query_type.replace('_', ' ').title()}\n"
+                    if isinstance(query_list, list):
+                        for query_str in query_list:
+                            output += f"```\n{query_str}\n```\n\n"
         
-        # Evidence Artifacts
+        # Evidence Artifacts - handle both list of dicts and simple list
         if artifacts:
             output += "## Evidence Artifacts\n\n"
-            for artifact in artifacts:
-                output += f"### {artifact['artifact_name']}\n"
-                output += f"- **Type:** {artifact['artifact_type']}\n"
-                output += f"- **Description:** {artifact['description']}\n"
-                output += f"- **Collection:** {artifact['collection_method']}\n"
-                output += f"- **Storage:** {artifact['storage_location']}\n\n"
+            if isinstance(artifacts, list) and len(artifacts) > 0:
+                if isinstance(artifacts[0], dict):
+                    # New format: list of dicts
+                    for artifact in artifacts:
+                        output += f"### {artifact.get('artifact_name', 'Artifact')}\n"
+                        output += f"- **Type:** {artifact.get('artifact_type', 'N/A')}\n"
+                        output += f"- **Description:** {artifact.get('description', 'N/A')}\n"
+                        output += f"- **Collection:** {artifact.get('collection_method', 'N/A')}\n"
+                        output += f"- **Storage:** {artifact.get('storage_location', 'N/A')}\n\n"
+                else:
+                    # Legacy format: simple list of strings
+                    for artifact in artifacts:
+                        output += f"- {artifact}\n"
+                    output += "\n"
         
         # Update Frequency
-        if recommendations.get('update_frequency'):
-            output += f"**Update Frequency:** {recommendations['update_frequency']}\n"
-        if recommendations.get('responsible_party'):
-            output += f"**Responsible Party:** {recommendations['responsible_party']}\n"
+        if isinstance(recommendations, dict):
+            if recommendations.get('update_frequency'):
+                output += f"**Update Frequency:** {recommendations['update_frequency']}\n"
+            if recommendations.get('responsible_party'):
+                output += f"**Responsible Party:** {recommendations['responsible_party']}\n"
         
         return output
         
