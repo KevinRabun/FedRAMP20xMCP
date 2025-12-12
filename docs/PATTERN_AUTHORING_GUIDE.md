@@ -2,10 +2,13 @@
 
 Complete guide for creating and maintaining YAML-based detection patterns for the FedRAMP 20x MCP Server.
 
+> **Note**: This guide covers basic pattern authoring. For complete V2 schema documentation including evidence collection, automation, and SSP mapping, see [PATTERN_SCHEMA_V2.md](PATTERN_SCHEMA_V2.md).
+
 ## Table of Contents
 
 - [Overview](#overview)
 - [Pattern Format](#pattern-format)
+- [V2 Schema Extensions](#v2-schema-extensions)
 - [Writing Your First Pattern](#writing-your-first-pattern)
 - [AST Query Patterns](#ast-query-patterns)
 - [Regex Fallback Patterns](#regex-fallback-patterns)
@@ -23,6 +26,7 @@ Patterns are YAML-defined detection rules that identify FedRAMP compliance issue
 - **Regex fallback**: For languages/platforms without tree-sitter support
 - **14 languages**: Python, C#, Java, TypeScript, JavaScript, Bicep, Terraform, GitHub Actions, Azure Pipelines, GitLab CI, YAML, JSON, Dockerfile, GitHub
 - **Pattern composition**: Combine patterns with boolean logic (requires_all, requires_any, requires_absence)
+- **V2 Schema**: Extended fields for evidence collection, automation, SSP mapping, and more
 
 **Design Philosophy**: AST over regex whenever possible. Regex should only be used for languages without tree-sitter support (e.g., GitLab CI YAML, Azure Pipelines YAML).
 
@@ -69,6 +73,8 @@ conflicts_with: [conflicting.pattern]  # Optional: Cannot coexist with these
 
 ### Field Descriptions
 
+#### Core Fields (V1 Schema)
+
 | Field | Required | Description |
 |-------|----------|-------------|
 | `pattern_id` | Yes | Unique identifier: `family.category.name` |
@@ -86,6 +92,112 @@ conflicts_with: [conflicting.pattern]  # Optional: Cannot coexist with these
 | `requires_any` | No | Boolean OR composition |
 | `requires_absence` | No | Negative detection |
 | `conflicts_with` | No | Mutual exclusion |
+
+#### V2 Schema Extensions
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `evidence_artifacts` | No | Artifacts to collect for compliance evidence |
+| `automation` | No | Automation recommendations and implementation |
+| `implementation` | No | Step-by-step implementation guidance |
+| `ssp_mapping` | No | System Security Plan control mapping |
+| `azure_guidance` | No | Azure-specific service recommendations |
+| `compliance_frameworks` | No | Cross-framework compliance mapping |
+| `testing` | No | Positive/negative test cases |
+
+> **Note**: See [PATTERN_SCHEMA_V2.md](PATTERN_SCHEMA_V2.md) for complete field definitions and examples.
+
+## V2 Schema Extensions
+
+V2 schema adds fields for comprehensive compliance guidance beyond code detection:
+
+### Evidence Artifacts
+
+Define what evidence to collect for auditors:
+
+```yaml
+evidence_artifacts:
+  - artifact_type: logs
+    name: Authentication logs with MFA details
+    source: Azure Monitor - SigninLogs
+    frequency: daily
+    retention_months: 36
+    format: JSON
+  - artifact_type: configuration
+    name: Conditional Access policies export
+    source: Microsoft Graph API
+    frequency: weekly
+    retention_months: 36
+    format: JSON
+```
+
+### Automation Recommendations
+
+Provide implementation code and effort estimates:
+
+```yaml
+automation:
+  policy_enforcement:
+    description: Azure Policy for compliance enforcement
+    implementation: |
+      # Bicep
+      resource policy 'Microsoft.Authorization/policyAssignments@2023-04-01' = {
+        name: 'enforce-mfa'
+        properties: {
+          policyDefinitionId: '/providers/Microsoft.Authorization/policyDefinitions/...'
+        }
+      }
+    azure_services:
+      - Azure Policy
+      - Microsoft Entra ID
+    effort_hours: 4
+```
+
+### SSP Mapping
+
+Map to System Security Plan sections:
+
+```yaml
+ssp_mapping:
+  control_family: IA - Identification and Authentication
+  control_numbers:
+    - IA-2
+    - IA-2(1)
+  ssp_sections:
+    - section: IA-2 Identification and Authentication
+      description_template: |
+        The system enforces phishing-resistant MFA using FIDO2/WebAuthn.
+      implementation_details: |
+        Microsoft Entra ID Conditional Access policies require FIDO2 security keys.
+      evidence_references:
+        - Conditional Access policy configuration (JSON export)
+        - Sign-in logs showing MFA method usage
+```
+
+### Implementation Steps
+
+Provide step-by-step guidance:
+
+```yaml
+implementation:
+  prerequisites:
+    - Azure subscription with required permissions
+    - Microsoft Entra ID tenant configured
+  steps:
+    - step: 1
+      action: Enable Microsoft Entra ID Premium P2
+      azure_service: Microsoft Entra ID
+      estimated_hours: 0.5
+      validation: Verify license assignment in Azure Portal
+    - step: 2
+      action: Configure Conditional Access policies
+      azure_service: Conditional Access
+      estimated_hours: 2
+      validation: Test policy enforcement with test user
+  total_effort_hours: 8
+```
+
+See [PATTERN_SCHEMA_V2.md](PATTERN_SCHEMA_V2.md) for complete V2 schema documentation.
 
 ## Writing Your First Pattern
 
@@ -590,22 +702,31 @@ data/patterns/
 
 ## Pattern Coverage
 
-Current coverage (as of Phase 3 completion):
+Current pattern library status:
 
-| Family | Patterns | Languages | Code-Detectable |
-|--------|----------|-----------|-----------------|
-| ADS | 10 | 6 | 100% |
-| CCM | 12 | 8 | 100% |
-| CNA | 11 | 9 | 100% |
-| COMMON | 8 | 14 | 100% |
-| IAM | 10 | 8 | 100% |
-| MLA | 11 | 10 | 100% |
-| RSC | 11 | 9 | 100% |
-| SCN | 13 | 8 | 100% |
-| SVC | 13 | 9 | 100% |
-| UCM | 11 | 8 | 100% |
-| VDR | 10 | 7 | 100% |
-| **Total** | **120** | **14 unique** | **100%** |
+| Family | Patterns | V2 Fields | Status |
+|--------|----------|-----------|--------|
+| ADS | 11 | Partial | ✅ Active |
+| AFR | 4 | Partial | ✅ Active |
+| CCM | 13 | Partial | ✅ Active |
+| CED | 4 | Partial | ✅ Active |
+| CMT | 4 | Partial | ✅ Active |
+| CNA | 11 | Partial | ✅ Active |
+| COMMON | 8 | Partial | ✅ Active |
+| IAM | 12 | Partial | ✅ Active |
+| INR | 2 | Partial | ✅ Active |
+| MLA | 11 | Partial | ✅ Active |
+| PIY | 8 | Partial | ✅ Active |
+| RPL | 2 | Partial | ✅ Active |
+| RSC | 11 | Partial | ✅ Active |
+| SCN | 13 | Partial | ✅ Active |
+| SVC | 18 | Partial | ✅ Active |
+| TPR | 4 | Partial | ✅ Active |
+| UCM | 11 | Partial | ✅ Active |
+| VDR | 10 | Partial | ✅ Active |
+| **Total** | **153** | **In Progress** | **18 Families** |
+
+**V2 Migration Status**: V2 fields (`evidence_artifacts`, `automation`, `implementation`, `ssp_mapping`) are being added to existing patterns. See [PATTERN_SCHEMA_V2.md](PATTERN_SCHEMA_V2.md) for migration roadmap.
 
 ## Contributing Patterns
 
@@ -630,11 +751,12 @@ When contributing new patterns:
 
 ## Resources
 
+- **V2 Schema Documentation**: `docs/PATTERN_SCHEMA_V2.md` - Complete field reference
 - **Pattern Engine**: `src/fedramp_20x_mcp/analyzers/pattern_engine.py`
 - **AST Utils**: `src/fedramp_20x_mcp/analyzers/ast_utils.py`
 - **Tool Adapter**: `src/fedramp_20x_mcp/analyzers/pattern_tool_adapter.py`
 - **Integration Tests**: `tests/test_pattern_integration.py`
-- **Example Patterns**: `data/patterns/*.yaml`
+- **Example Patterns**: `data/patterns/*.yaml` (153 patterns across 18 families)
 
 ## Support
 
