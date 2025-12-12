@@ -69,9 +69,6 @@ class FRR_ADS_TC_05_Analyzer(BaseFRRAnalyzer):
         "KSI-AFR-01",
         "KSI-MLA-01",
     ]
-    RELATED_KSIS = [
-        # TODO: Add related KSI IDs (e.g., "KSI-VDR-01")
-    ]
     
     def __init__(self):
         """Initialize FRR-ADS-TC-05 analyzer."""
