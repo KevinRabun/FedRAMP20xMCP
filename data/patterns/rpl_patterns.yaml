@@ -1,0 +1,273 @@
+# RPL (Replication and Backup) Pattern Library
+
+# Geo-Redundant Storage (KSI-RPL-02)
+
+---
+pattern_id: "rpl.storage.geo_redundancy"
+name: "Geo-Redundant Storage Configuration"
+description: "Detects geo-redundant storage configuration for disaster recovery (KSI-RPL-02)"
+family: "RPL"
+severity: "HIGH"
+pattern_type: "resource_configuration"
+
+languages:
+  bicep:
+    ast_queries:
+      - resource_type: "Microsoft.Storage/storageAccounts"
+        property_path: "sku.name"
+        conditions:
+          - "value_not_in:['Standard_GRS', 'Standard_RAGRS', 'Standard_GZRS', 'Standard_RAGZRS']"
+      - resource_type: "Microsoft.Storage/storageAccounts"
+        conditions:
+          - "not_has_property:sku.name"
+    regex_fallback: "(Microsoft\\.Storage/storageAccounts)(?!.*sku.*name.*('Standard_GRS'|'Standard_RAGRS'|'Standard_GZRS'|'Standard_RAGZRS'))"
+    
+  terraform:
+    ast_queries:
+      - resource_type: "azurerm_storage_account"
+        property_path: "account_replication_type"
+        conditions:
+          - "value_not_in:['GRS', 'RAGRS', 'GZRS', 'RAGZRS']"
+    regex_fallback: "resource\\s+\"azurerm_storage_account\"(?!.*account_replication_type\\s*=\\s*(\"GRS\"|\"RAGRS\"|\"GZRS\"|\"RAGZRS\"))"
+
+finding:
+  title_template: "Storage account lacks geo-redundant replication"
+  description_template: "{resource_type} uses locally-redundant storage. KSI-RPL-02 requires geo-redundant replication for disaster recovery."
+  remediation_template: |
+    Enable geo-redundant storage:
+    
+    Bicep:
+    resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+      name: storageAccountName
+      location: location
+      sku: {
+        name: 'Standard_GRS'  // Geo-redundant storage
+        // OR
+        // name: 'Standard_RAGRS'  // Read-access geo-redundant
+        // name: 'Standard_GZRS'   // Geo-zone-redundant
+        // name: 'Standard_RAGZRS' // Read-access geo-zone-redundant
+      }
+      kind: 'StorageV2'
+      properties: {
+        // ... other properties
+      }
+    }
+    
+    Terraform:
+    resource "azurerm_storage_account" "main" {
+      name                     = "mystorageaccount"
+      resource_group_name      = azurerm_resource_group.main.name
+      location                 = azurerm_resource_group.main.location
+      account_tier             = "Standard"
+      account_replication_type = "GRS"  # Geo-redundant storage
+      # OR
+      # account_replication_type = "RAGRS"  # Read-access geo-redundant
+      # account_replication_type = "GZRS"   # Geo-zone-redundant
+      # account_replication_type = "RAGZRS" # Read-access geo-zone-redundant
+    }
+    
+    Replication Options:
+    - **GRS** (Geo-Redundant Storage): Replicates data to secondary region (3 copies in primary + 3 in secondary)
+    - **RAGRS** (Read-Access GRS): Same as GRS + read access to secondary region
+    - **GZRS** (Geo-Zone-Redundant): Zone-redundant in primary + geo-redundant to secondary
+    - **RAGZRS** (Read-Access GZRS): Same as GZRS + read access to secondary
+    
+    FedRAMP Guidance:
+    - Use GRS/RAGRS for standard disaster recovery (RPO ~15 minutes)
+    - Use GZRS/RAGZRS for zone + geo redundancy (higher availability)
+    - Verify secondary region is in different geographic area
+  evidence_collection:
+    - "Storage account SKU configuration showing GRS/RAGRS/GZRS/RAGZRS"
+    - "Disaster recovery plan documenting replication"
+    - "Recovery Point Objective (RPO) and Recovery Time Objective (RTO) documentation"
+    - "Failover testing results"
+  azure_services:
+    - "Azure Storage"
+    - "Azure Site Recovery"
+
+tags: ["replication", "disaster-recovery", "geo-redundancy", "security-gap"]
+nist_controls: ["cp-6", "cp-7", "cp-9"]
+related_ksis: ["KSI-RPL-02"]
+
+---
+pattern_id: "rpl.backup.missing_policy"
+name: "Missing Backup Policy"
+description: "Detects resources without backup configuration (KSI-RPL-03)"
+family: "RPL"
+severity: "CRITICAL"
+pattern_type: "resource_configuration"
+
+languages:
+  bicep:
+    ast_queries:
+      - resource_type: "Microsoft.Compute/virtualMachines|Microsoft.Sql/servers|Microsoft.DBforPostgreSQL/servers|Microsoft.DBforMySQL/servers"
+        conditions:
+          - "not_has_companion_resource:Microsoft.RecoveryServices/vaults/backupFabrics/protectionContainers/protectedItems"
+          - "not_has_companion_resource:Microsoft.DataProtection/backupVaults/backupInstances"
+    regex_fallback: "(Microsoft\\.Compute/virtualMachines|Microsoft\\.Sql/servers|Microsoft\\.DBforPostgreSQL/servers)(?!.*Microsoft\\.RecoveryServices/vaults|.*Microsoft\\.DataProtection/backupVaults)"
+    
+  terraform:
+    ast_queries:
+      - resource_type: "azurerm_virtual_machine|azurerm_linux_virtual_machine|azurerm_windows_virtual_machine|azurerm_sql_server|azurerm_postgresql_server|azurerm_mysql_server"
+        conditions:
+          - "not_has_companion_resource:azurerm_backup_protected_vm|azurerm_backup_policy_vm"
+    regex_fallback: "resource\\s+\"azurerm_(virtual_machine|sql_server|postgresql_server|mysql_server)\"(?!.*azurerm_backup_)"
+
+finding:
+  title_template: "Resource lacks backup configuration"
+  description_template: "{resource_type} does not have backup policy configured. KSI-RPL-03 requires automated backups for data protection."
+  remediation_template: |
+    Configure backup policy:
+    
+    Bicep (VM Backup):
+    // Recovery Services Vault
+    resource recoveryVault 'Microsoft.RecoveryServices/vaults@2023-01-01' = {
+      name: 'myRecoveryVault'
+      location: location
+      sku: {
+        name: 'RS0'
+        tier: 'Standard'
+      }
+      properties: {}
+    }
+    
+    // Backup Policy
+    resource backupPolicy 'Microsoft.RecoveryServices/vaults/backupPolicies@2023-01-01' = {
+      parent: recoveryVault
+      name: 'DefaultPolicy'
+      properties: {
+        backupManagementType: 'AzureIaasVM'
+        schedulePolicy: {
+          schedulePolicyType: 'SimpleSchedulePolicy'
+          scheduleRunFrequency: 'Daily'
+          scheduleRunTimes: [
+            '2023-01-01T02:00:00Z'
+          ]
+        }
+        retentionPolicy: {
+          retentionPolicyType: 'LongTermRetentionPolicy'
+          dailySchedule: {
+            retentionTimes: [
+              '2023-01-01T02:00:00Z'
+            ]
+            retentionDuration: {
+              count: 30  // 30 days retention (FedRAMP minimum)
+              durationType: 'Days'
+            }
+          }
+          weeklySchedule: {
+            daysOfTheWeek: ['Sunday']
+            retentionTimes: ['2023-01-01T02:00:00Z']
+            retentionDuration: {
+              count: 12  // 12 weeks
+              durationType: 'Weeks'
+            }
+          }
+          monthlySchedule: {
+            retentionScheduleFormatType: 'Weekly'
+            retentionScheduleWeekly: {
+              daysOfTheWeek: ['Sunday']
+              weeksOfTheMonth: ['First']
+            }
+            retentionTimes: ['2023-01-01T02:00:00Z']
+            retentionDuration: {
+              count: 12  // 12 months
+              durationType: 'Months'
+            }
+          }
+          yearlySchedule: {
+            retentionScheduleFormatType: 'Weekly'
+            monthsOfYear: ['January']
+            retentionScheduleWeekly: {
+              daysOfTheWeek: ['Sunday']
+              weeksOfTheMonth: ['First']
+            }
+            retentionTimes: ['2023-01-01T02:00:00Z']
+            retentionDuration: {
+              count: 7  // 7 years (FedRAMP requirement)
+              durationType: 'Years'
+            }
+          }
+        }
+      }
+    }
+    
+    // Protected VM
+    resource backupProtectedItem 'Microsoft.RecoveryServices/vaults/backupFabrics/protectionContainers/protectedItems@2023-01-01' = {
+      name: '${recoveryVault.name}/Azure/iaasvmcontainer;iaasvmcontainerv2;${resourceGroup().name};${vmName}/vm;iaasvmcontainerv2;${resourceGroup().name};${vmName}'
+      properties: {
+        protectedItemType: 'Microsoft.Compute/virtualMachines'
+        policyId: backupPolicy.id
+        sourceResourceId: vm.id
+      }
+    }
+    
+    Terraform:
+    resource "azurerm_recovery_services_vault" "main" {
+      name                = "myrecoveryvault"
+      location            = azurerm_resource_group.main.location
+      resource_group_name = azurerm_resource_group.main.name
+      sku                 = "Standard"
+    }
+    
+    resource "azurerm_backup_policy_vm" "main" {
+      name                = "vm-backup-policy"
+      resource_group_name = azurerm_resource_group.main.name
+      recovery_vault_name = azurerm_recovery_services_vault.main.name
+      
+      backup {
+        frequency = "Daily"
+        time      = "02:00"
+      }
+      
+      retention_daily {
+        count = 30  # 30 days (FedRAMP minimum)
+      }
+      
+      retention_weekly {
+        count    = 12  # 12 weeks
+        weekdays = ["Sunday"]
+      }
+      
+      retention_monthly {
+        count    = 12  # 12 months
+        weekdays = ["Sunday"]
+        weeks    = ["First"]
+      }
+      
+      retention_yearly {
+        count    = 7   # 7 years (FedRAMP requirement)
+        weekdays = ["Sunday"]
+        weeks    = ["First"]
+        months   = ["January"]
+      }
+    }
+    
+    resource "azurerm_backup_protected_vm" "main" {
+      resource_group_name = azurerm_resource_group.main.name
+      recovery_vault_name = azurerm_recovery_services_vault.main.name
+      source_vm_id        = azurerm_virtual_machine.main.id
+      backup_policy_id    = azurerm_backup_policy_vm.main.id
+    }
+    
+    FedRAMP Backup Requirements:
+    - **Daily backups**: Minimum requirement
+    - **30-day retention**: Short-term recovery
+    - **Weekly backups**: 12 weeks retention
+    - **Monthly backups**: 12 months retention
+    - **Yearly backups**: 7 years retention (audit/compliance)
+    - **Encryption**: All backups must be encrypted
+    - **Testing**: Regular restore testing required
+  evidence_collection:
+    - "Backup policy configuration with retention settings"
+    - "Backup job logs showing successful backups"
+    - "Restore testing documentation"
+    - "Encryption configuration for backups"
+  azure_services:
+    - "Azure Backup"
+    - "Azure Recovery Services"
+    - "Azure Site Recovery"
+
+tags: ["backup", "disaster-recovery", "data-protection", "critical-gap"]
+nist_controls: ["cp-9", "cp-9.1", "cp-9.2", "cp-10"]
+related_ksis: ["KSI-RPL-03"]

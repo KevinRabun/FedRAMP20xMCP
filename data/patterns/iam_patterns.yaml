@@ -481,3 +481,147 @@ finding:
 tags: ["session", "timeout", "security-gap"]
 nist_controls: ["sc-23", "ac-12"]
 related_ksis: ["KSI-IAM-05"]
+
+---
+pattern_id: "iam.identity.missing_managed_identity"
+name: "Missing Managed Identity"
+description: "Detects Azure resources without managed identity configured (KSI-IAM-06: Service Account Security)"
+family: "IAM"
+severity: "CRITICAL"
+pattern_type: "resource_configuration"
+
+languages:
+  bicep:
+    ast_queries:
+      - resource_type: "Microsoft.Compute/virtualMachines|Microsoft.Web/sites|Microsoft.ContainerInstance/containerGroups|Microsoft.Kubernetes/connectedClusters"
+        conditions:
+          - "not_has_property:identity"
+      - resource_type: "Microsoft.Compute/virtualMachines|Microsoft.Web/sites"
+        property_path: "identity.type"
+        conditions:
+          - "value_not_in:['SystemAssigned', 'UserAssigned', 'SystemAssigned,UserAssigned']"
+    regex_fallback: "(Microsoft\\.Compute/virtualMachines|Microsoft\\.Web/sites|Microsoft\\.ContainerInstance/containerGroups)(?!.*identity\\s*:)"
+    
+  terraform:
+    ast_queries:
+      - resource_type: "azurerm_virtual_machine|azurerm_linux_virtual_machine|azurerm_windows_virtual_machine|azurerm_app_service|azurerm_function_app|azurerm_kubernetes_cluster"
+        conditions:
+          - "not_has_block:identity"
+      - resource_type: "azurerm_virtual_machine|azurerm_app_service"
+        property_path: "identity.type"
+        conditions:
+          - "value_not_in:['SystemAssigned', 'UserAssigned']"
+    regex_fallback: "resource\\s+\"azurerm_(virtual_machine|app_service|function_app|kubernetes_cluster)\"(?!.*identity\\s*\\{)"
+    
+  python:
+    ast_queries:
+      - query_type: "variable_assignment"
+        pattern: "connection_string|password|access_key|account_key"
+        conditions:
+          - "not_has_nearby:DefaultAzureCredential|ManagedIdentityCredential"
+    regex_fallback: "(connection_string|password|access_key|account_key)\\s*=\\s*['\"][^'\"]+['\"](?!.*DefaultAzureCredential|.*ManagedIdentityCredential)"
+    
+  csharp:
+    ast_queries:
+      - query_type: "variable_declaration"
+        pattern: "ConnectionString|Password|AccessKey|AccountKey"
+        conditions:
+          - "not_has_nearby:DefaultAzureCredential|ManagedIdentityCredential"
+    regex_fallback: "(ConnectionString|Password|AccessKey|AccountKey)\\s*=\\s*\"[^\"]+\"(?!.*DefaultAzureCredential|.*ManagedIdentityCredential)"
+    
+  java:
+    ast_queries:
+      - query_type: "variable_declaration"
+        pattern: "connectionString|password|accessKey|accountKey"
+        conditions:
+          - "not_has_nearby:DefaultAzureCredential|ManagedIdentityCredential"
+    regex_fallback: "(connectionString|password|accessKey|accountKey)\\s*=\\s*\"[^\"]+\"(?!.*DefaultAzureCredential|.*ManagedIdentityCredential)"
+    
+  typescript:
+    ast_queries:
+      - query_type: "variable_declaration"
+        pattern: "connectionString|password|accessKey|accountKey"
+        conditions:
+          - "not_has_nearby:DefaultAzureCredential|ManagedIdentityCredential"
+    regex_fallback: "(connectionString|password|accessKey|accountKey)\\s*=\\s*['\"][^'\"]+['\"](?!.*DefaultAzureCredential|.*ManagedIdentityCredential)"
+
+finding:
+  title_template: "Resource missing managed identity configuration"
+  description_template: "{resource_type} does not have managed identity enabled. KSI-IAM-06 requires service accounts to use managed identities instead of embedded credentials."
+  remediation_template: |
+    Enable managed identity:
+    
+    Bicep (System-Assigned):
+    resource vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {
+      name: vmName
+      location: location
+      identity: {
+        type: 'SystemAssigned'
+      }
+      // ... other properties
+    }
+    
+    Bicep (User-Assigned):
+    resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+      name: 'myIdentity'
+      location: location
+    }
+    
+    resource vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {
+      name: vmName
+      location: location
+      identity: {
+        type: 'UserAssigned'
+        userAssignedIdentities: {
+          '${managedIdentity.id}': {}
+        }
+      }
+    }
+    
+    Terraform:
+    resource "azurerm_virtual_machine" "example" {
+      # ... other config
+      identity {
+        type = "SystemAssigned"
+      }
+    }
+    
+    Python (Azure SDK):
+    from azure.identity import DefaultAzureCredential, ManagedIdentityCredential
+    
+    # Use DefaultAzureCredential (works with managed identity)
+    credential = DefaultAzureCredential()
+    
+    # Or explicitly use managed identity
+    credential = ManagedIdentityCredential()
+    
+    # Use with Azure SDK clients
+    from azure.storage.blob import BlobServiceClient
+    blob_service = BlobServiceClient(
+        account_url="https://mystorageaccount.blob.core.windows.net",
+        credential=credential
+    )
+    
+    C# (Azure SDK):
+    using Azure.Identity;
+    using Azure.Storage.Blobs;
+    
+    var credential = new DefaultAzureCredential();
+    var blobService = new BlobServiceClient(
+        new Uri("https://mystorageaccount.blob.core.windows.net"),
+        credential
+    );
+  evidence_collection:
+    - "Managed identity configuration for each resource"
+    - "RBAC role assignments for managed identities"
+    - "Application code using DefaultAzureCredential"
+    - "Documentation showing service accounts use managed identities"
+  azure_services:
+    - "Azure Managed Identity"
+    - "Azure RBAC"
+    - "Azure Key Vault"
+
+requires_absence: ["svc.secrets.key_vault_missing"]
+tags: ["identity", "managed-identity", "service-accounts", "critical-gap"]
+nist_controls: ["ia-5", "ia-5.2", "sc-12", "sc-13"]
+related_ksis: ["KSI-IAM-06"]

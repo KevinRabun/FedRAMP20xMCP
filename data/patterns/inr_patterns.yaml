@@ -1,0 +1,303 @@
+# INR (Incident Response) Pattern Library
+
+# Alert Configuration Patterns (KSI-INR-01)
+
+---
+pattern_id: "inr.alerts.missing_configuration"
+name: "Missing Alert Rules"
+description: "Detects missing alert configuration for security events (KSI-INR-01: Incident Detection)"
+family: "INR"
+severity: "CRITICAL"
+pattern_type: "resource_configuration"
+
+languages:
+  bicep:
+    ast_queries:
+      - resource_type: "Microsoft.OperationalInsights/workspaces"
+        conditions:
+          - "not_has_companion_resource:Microsoft.Insights/scheduledQueryRules"
+          - "not_has_companion_resource:Microsoft.SecurityInsights/alertRules"
+      - resource_type: "Microsoft.Storage/storageAccounts|Microsoft.Sql/servers|Microsoft.KeyVault/vaults"
+        conditions:
+          - "not_has_companion_resource:Microsoft.Insights/metricAlerts"
+    regex_fallback: "(Microsoft\\.OperationalInsights/workspaces|Microsoft\\.Storage/storageAccounts|Microsoft\\.Sql/servers)(?!.*Microsoft\\.Insights/(scheduledQueryRules|metricAlerts))"
+    
+  terraform:
+    ast_queries:
+      - resource_type: "azurerm_log_analytics_workspace"
+        conditions:
+          - "not_has_companion_resource:azurerm_monitor_scheduled_query_rules_alert|azurerm_sentinel_alert_rule"
+      - resource_type: "azurerm_storage_account|azurerm_sql_server|azurerm_key_vault"
+        conditions:
+          - "not_has_companion_resource:azurerm_monitor_metric_alert"
+    regex_fallback: "resource\\s+\"azurerm_(log_analytics_workspace|storage_account|sql_server|key_vault)\"(?!.*azurerm_monitor_(scheduled_query_rules_alert|metric_alert))"
+    
+  github_actions:
+    ast_queries:
+      - query_type: "workflow_job"
+        conditions:
+          - "not_has_step:azure/login"
+          - "not_has_step:monitoring"
+    regex_fallback: "on:\\s*(push|workflow_dispatch)(?!.*azure/login|.*monitoring)"
+    
+  azure_pipelines:
+    ast_queries:
+      - query_type: "pipeline_stage"
+        conditions:
+          - "not_has_task:AzureMonitor|AzureCLI"
+    regex_fallback: "stages:(?!.*AzureMonitor|.*monitoring)"
+
+finding:
+  title_template: "Missing alert rules for security events"
+  description_template: "{resource_type} does not have alert rules configured. KSI-INR-01 requires real-time alerting for security incidents."
+  remediation_template: |
+    Configure alert rules:
+    
+    Bicep (Log Analytics Alert):
+    resource alertRule 'Microsoft.Insights/scheduledQueryRules@2021-08-01' = {
+      name: 'security-events-alert'
+      location: location
+      properties: {
+        displayName: 'Security Events Alert'
+        severity: 1  // Critical
+        enabled: true
+        evaluationFrequency: 'PT5M'  // Every 5 minutes
+        windowSize: 'PT15M'
+        criteria: {
+          allOf: [
+            {
+              query: '''
+                SecurityEvent
+                | where EventID in (4625, 4648, 4740)  // Failed logons, explicit credentials, account lockout
+                | summarize Count = count() by Computer, Account
+                | where Count > 5
+              '''
+              timeAggregation: 'Count'
+              operator: 'GreaterThan'
+              threshold: 0
+            }
+          ]
+        }
+        actions: {
+          actionGroups: [
+            actionGroup.id
+          ]
+        }
+        scopes: [
+          logAnalyticsWorkspace.id
+        ]
+      }
+    }
+    
+    Bicep (Metric Alert):
+    resource metricAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
+      name: 'storage-unauthorized-access'
+      location: 'global'
+      properties: {
+        severity: 1
+        enabled: true
+        evaluationFrequency: 'PT1M'
+        windowSize: 'PT5M'
+        criteria: {
+          'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
+          allOf: [
+            {
+              name: 'UnauthorizedAccess'
+              metricName: 'Transactions'
+              dimensions: [
+                {
+                  name: 'ResponseType'
+                  operator: 'Include'
+                  values: ['ClientOtherError', 'AuthorizationError']
+                }
+              ]
+              operator: 'GreaterThan'
+              threshold: 10
+              timeAggregation: 'Total'
+            }
+          ]
+        }
+        actions: [
+          {
+            actionGroupId: actionGroup.id
+          }
+        ]
+        scopes: [
+          storageAccount.id
+        ]
+      }
+    }
+    
+    Terraform:
+    resource "azurerm_monitor_scheduled_query_rules_alert" "security_events" {
+      name                = "security-events-alert"
+      location            = azurerm_resource_group.main.location
+      resource_group_name = azurerm_resource_group.main.name
+      
+      data_source_id = azurerm_log_analytics_workspace.main.id
+      query          = <<-QUERY
+        SecurityEvent
+        | where EventID in (4625, 4648, 4740)
+        | summarize Count = count() by Computer, Account
+        | where Count > 5
+      QUERY
+      
+      frequency   = 5
+      time_window = 15
+      severity    = 1
+      
+      action {
+        action_group = [azurerm_monitor_action_group.main.id]
+      }
+      
+      trigger {
+        operator  = "GreaterThan"
+        threshold = 0
+      }
+    }
+    
+    Required Alert Categories:
+    1. Authentication failures (EventID 4625, 4648)
+    2. Privilege escalation (EventID 4672, 4673)
+    3. Resource access violations (401, 403 errors)
+    4. Configuration changes (audit logs)
+    5. Data exfiltration indicators (large downloads, unusual access patterns)
+  evidence_collection:
+    - "Alert rule configurations with query/metric definitions"
+    - "Action group configuration (email, SMS, webhook)"
+    - "Alert history showing triggered incidents"
+    - "Response time metrics (detection to acknowledgment)"
+  azure_services:
+    - "Azure Monitor"
+    - "Azure Sentinel"
+    - "Azure Log Analytics"
+    - "Azure Action Groups"
+
+tags: ["alerts", "incident-detection", "critical-gap"]
+nist_controls: ["ir-4", "ir-5", "si-4", "au-5"]
+related_ksis: ["KSI-INR-01"]
+
+---
+pattern_id: "inr.logging.incident_tracking"
+name: "Missing Incident Logging"
+description: "Detects missing incident tracking/logging integration (KSI-INR-02: Incident Response)"
+family: "INR"
+severity: "HIGH"
+pattern_type: "integration_check"
+
+languages:
+  python:
+    ast_queries:
+      - query_type: "import_statement"
+        conditions:
+          - "not_has_any_import:opencensus|applicationinsights|azure.monitor|azure.security.keyvault"
+      - query_type: "exception_handler"
+        conditions:
+          - "not_has_logging_call"
+          - "not_has_telemetry_call"
+    regex_fallback: "except\\s+.*:\\s*(?!.*logger\\.|.*logging\\.|.*telemetry)"
+    
+  csharp:
+    ast_queries:
+      - query_type: "catch_clause"
+        conditions:
+          - "not_has_logging_call"
+      - query_type: "using_directive"
+        conditions:
+          - "not_has_any:Microsoft.ApplicationInsights|Microsoft.Extensions.Logging"
+    regex_fallback: "catch\\s*\\([^)]+\\)\\s*\\{(?!.*\\.Log|.*logger\\.|.*telemetry)"
+    
+  java:
+    ast_queries:
+      - query_type: "catch_clause"
+        conditions:
+          - "not_has_logging_call"
+      - query_type: "import_declaration"
+        conditions:
+          - "not_has_any:org.slf4j|java.util.logging|com.microsoft.applicationinsights"
+    regex_fallback: "catch\\s*\\([^)]+\\)\\s*\\{(?!.*log\\.|.*logger\\.|.*LOGGER\\.)"
+    
+  typescript:
+    ast_queries:
+      - query_type: "catch_clause"
+        conditions:
+          - "not_has_logging_call"
+      - query_type: "import_statement"
+        conditions:
+          - "not_has_any:applicationinsights|@azure/monitor"
+    regex_fallback: "catch\\s*\\([^)]+\\)\\s*\\{(?!.*console\\.(error|warn)|.*logger\\.|.*telemetry)"
+
+finding:
+  title_template: "Exception handling without incident logging"
+  description_template: "Exception handler found without proper incident logging. KSI-INR-02 requires all incidents to be logged and tracked."
+  remediation_template: |
+    Add incident logging:
+    
+    Python (Application Insights):
+    from opencensus.ext.azure.log_exporter import AzureLogHandler
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    logger.addHandler(AzureLogHandler(connection_string='InstrumentationKey=...'))
+    
+    try:
+        # ... application code
+    except Exception as e:
+        logger.error(
+            f"Incident: {type(e).__name__}",
+            extra={
+                'custom_dimensions': {
+                    'error_type': type(e).__name__,
+                    'error_message': str(e),
+                    'severity': 'high',
+                    'incident_id': str(uuid.uuid4()),
+                    'timestamp': datetime.utcnow().isoformat()
+                }
+            }
+        )
+        raise
+    
+    C# (Application Insights):
+    using Microsoft.ApplicationInsights;
+    using Microsoft.ApplicationInsights.DataContracts;
+    
+    var telemetryClient = new TelemetryClient();
+    
+    try
+    {
+        // ... application code
+    }
+    catch (Exception ex)
+    {
+        telemetryClient.TrackException(ex, new Dictionary<string, string>
+        {
+            { "IncidentId", Guid.NewGuid().ToString() },
+            { "Severity", "High" },
+            { "Timestamp", DateTime.UtcNow.ToString("o") }
+        });
+        throw;
+    }
+    
+    Required Incident Data:
+    - Incident ID (unique identifier)
+    - Timestamp (UTC)
+    - Severity level
+    - Error type and message
+    - Stack trace
+    - User context (if applicable)
+    - Resource affected
+    - Remediation steps taken
+  evidence_collection:
+    - "Exception handling code with logging"
+    - "Application Insights/Log Analytics configuration"
+    - "Incident tracking dashboard"
+    - "Sample incident logs with required fields"
+  azure_services:
+    - "Application Insights"
+    - "Azure Monitor"
+    - "Azure Log Analytics"
+
+requires_presence: ["mla.logging.azure_monitor"]
+tags: ["incident-logging", "exception-handling", "security-gap"]
+nist_controls: ["ir-6", "ir-8", "au-6"]
+related_ksis: ["KSI-INR-02"]

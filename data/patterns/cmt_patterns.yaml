@@ -1,0 +1,494 @@
+# CMT (Configuration Management and Change Control) Pattern Library
+
+# Version Control Integration (KSI-CMT-01)
+
+---
+pattern_id: "cmt.vcs.repository_integration"
+name: "Version Control Integration"
+description: "Detects version control integration in CI/CD pipelines (KSI-CMT-01)"
+family: "CMT"
+severity: "HIGH"
+pattern_type: "pipeline_check"
+
+languages:
+  github_actions:
+    ast_queries:
+      - query_type: "workflow_trigger"
+        conditions:
+          - "has_trigger:push|pull_request"
+      - query_type: "workflow_checkout"
+        conditions:
+          - "has_step:actions/checkout"
+    regex_fallback: "on:\\s*(push|pull_request)|uses:\\s*actions/checkout"
+    positive_indicators: ["actions/checkout", "on: push", "on: pull_request"]
+    
+  azure_pipelines:
+    ast_queries:
+      - query_type: "pipeline_trigger"
+        conditions:
+          - "has_trigger:trigger|pr"
+      - query_type: "pipeline_checkout"
+        conditions:
+          - "has_checkout:self"
+    regex_fallback: "trigger:|pr:|checkout:\\s*self"
+    positive_indicators: ["trigger:", "pr:", "checkout: self"]
+    
+  gitlab_ci:
+    ast_queries:
+      - query_type: "job_rules"
+        conditions:
+          - "has_rules:if|changes"
+    regex_fallback: "rules:.*\\$CI_COMMIT|GIT_STRATEGY"
+    positive_indicators: ["$CI_COMMIT_BRANCH", "GIT_STRATEGY"]
+
+finding:
+  title_template: "Version control integration detected (positive finding)"
+  description_template: "Pipeline has proper version control integration. KSI-CMT-01 requires all changes to be tracked in VCS."
+  remediation_template: "N/A - Positive finding indicating compliance"
+  evidence_collection:
+    - "Git repository configuration"
+    - "Branch protection rules"
+    - "Commit history showing tracked changes"
+    - "Pull request approval workflows"
+  azure_services:
+    - "Azure Repos"
+    - "Azure Pipelines"
+    - "GitHub"
+
+tags: ["version-control", "git", "positive"]
+nist_controls: ["cm-3", "cm-3.1", "cm-5"]
+related_ksis: ["KSI-CMT-01"]
+
+---
+pattern_id: "cmt.vcs.missing_integration"
+name: "Missing Version Control"
+description: "Detects deployment without version control tracking (KSI-CMT-01)"
+family: "CMT"
+severity: "CRITICAL"
+pattern_type: "pipeline_check"
+
+languages:
+  github_actions:
+    ast_queries:
+      - query_type: "workflow_job"
+        conditions:
+          - "has_step_type:azure/webapps-deploy|azure/functions-action"
+          - "not_has_step:actions/checkout"
+    regex_fallback: "uses:\\s*azure/(webapps-deploy|functions-action)(?!.*actions/checkout)"
+    
+  azure_pipelines:
+    ast_queries:
+      - query_type: "pipeline_deployment"
+        conditions:
+          - "has_task:AzureWebApp|AzureFunctionApp"
+          - "not_has_checkout"
+    regex_fallback: "(AzureWebApp|AzureFunctionApp)(?!.*checkout:)"
+    
+  powershell:
+    ast_queries:
+      - query_type: "function_call"
+        target: "Publish-AzWebApp|Publish-AzFunctionApp"
+        conditions:
+          - "not_has_nearby:git"
+    regex_fallback: "Publish-Az(WebApp|FunctionApp)(?!.*git)"
+
+finding:
+  title_template: "Deployment without version control tracking"
+  description_template: "Deployment pipeline does not verify source is from version control. KSI-CMT-01 requires all changes to be tracked in VCS before deployment."
+  remediation_template: |
+    Add version control verification:
+    
+    GitHub Actions:
+    jobs:
+      deploy:
+        runs-on: ubuntu-latest
+        steps:
+          # REQUIRED: Checkout source from VCS
+          - uses: actions/checkout@v4
+            with:
+              fetch-depth: 0  # Full history for audit trail
+          
+          # Verify clean working directory
+          - name: Check for uncommitted changes
+            run: |
+              if [ -n "$(git status --porcelain)" ]; then
+                echo "ERROR: Uncommitted changes detected"
+                exit 1
+              fi
+          
+          # Record deployment metadata
+          - name: Record deployment metadata
+            run: |
+              git log -1 --format="%H|%an|%ae|%ad|%s" > deployment-metadata.txt
+              echo "COMMIT_SHA=${GITHUB_SHA}" >> $GITHUB_ENV
+          
+          # Deploy
+          - uses: azure/webapps-deploy@v2
+            with:
+              app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
+              package: .
+    
+    Azure Pipelines:
+    stages:
+      - stage: Deploy
+        jobs:
+          - job: DeployWebApp
+            steps:
+              # REQUIRED: Checkout with full history
+              - checkout: self
+                fetchDepth: 0
+                clean: true
+              
+              # Verify source integrity
+              - script: |
+                  git status
+                  if [ -n "$(git status --porcelain)" ]; then
+                    echo "##vso[task.logissue type=error]Uncommitted changes detected"
+                    exit 1
+                  fi
+                displayName: 'Verify clean working directory'
+              
+              # Record deployment metadata
+              - script: |
+                  echo "$(Build.SourceVersion)|$(Build.RequestedFor)|$(Build.RequestedForEmail)|$(Build.SourceVersionMessage)" > deployment-metadata.txt
+                displayName: 'Record deployment metadata'
+              
+              # Deploy
+              - task: AzureWebApp@1
+                inputs:
+                  appName: $(webAppName)
+    
+    Required Version Control Evidence:
+    - Git commit SHA
+    - Committer name and email
+    - Commit timestamp
+    - Commit message
+    - Branch name
+    - Pull request ID (if applicable)
+  evidence_collection:
+    - "Git commit history for all deployments"
+    - "Pipeline logs showing checkout step"
+    - "Deployment metadata files with commit info"
+    - "Branch protection rules requiring PR approval"
+  azure_services:
+    - "Azure Repos"
+    - "Azure Pipelines"
+    - "GitHub"
+
+tags: ["version-control", "deployment", "critical-gap"]
+nist_controls: ["cm-3", "cm-3.1", "cm-5"]
+related_ksis: ["KSI-CMT-01"]
+
+---
+pattern_id: "cmt.testing.pre_deploy_gates"
+name: "Pre-Deployment Testing Gates"
+description: "Detects pre-deployment testing gates in CI/CD (KSI-CMT-03)"
+family: "CMT"
+severity: "CRITICAL"
+pattern_type: "pipeline_check"
+
+languages:
+  github_actions:
+    ast_queries:
+      - query_type: "workflow_job_dependency"
+        conditions:
+          - "deploy_job_needs:test|build"
+    regex_fallback: "deploy:.*needs:\\s*\\[(test|build)"
+    
+  azure_pipelines:
+    ast_queries:
+      - query_type: "stage_dependency"
+        conditions:
+          - "deploy_stage_depends_on:Test|Build"
+    regex_fallback: "stage:\\s*Deploy.*dependsOn:\\s*(Test|Build)"
+    
+  gitlab_ci:
+    ast_queries:
+      - query_type: "job_needs"
+        conditions:
+          - "deploy_job_needs:test"
+    regex_fallback: "deploy:.*needs:.*test"
+
+finding:
+  title_template: "Deployment without pre-deployment testing gates"
+  description_template: "Deployment job does not depend on testing stages. KSI-CMT-03 requires testing gates before production deployment."
+  remediation_template: |
+    Add pre-deployment testing gates:
+    
+    GitHub Actions:
+    jobs:
+      test:
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v4
+          - name: Run unit tests
+            run: npm test
+          - name: Run security tests
+            run: npm run security-scan
+          - name: Run integration tests
+            run: npm run integration-test
+      
+      staging_deploy:
+        needs: test  # REQUIRED: Deploy only if tests pass
+        runs-on: ubuntu-latest
+        environment: staging
+        steps:
+          - uses: azure/webapps-deploy@v2
+            with:
+              app-name: myapp-staging
+      
+      production_deploy:
+        needs: staging_deploy  # REQUIRED: Deploy only if staging succeeds
+        runs-on: ubuntu-latest
+        environment:
+          name: production
+          url: https://myapp.com
+        steps:
+          - uses: azure/webapps-deploy@v2
+            with:
+              app-name: myapp-production
+    
+    Azure Pipelines:
+    stages:
+      - stage: Test
+        jobs:
+          - job: RunTests
+            steps:
+              - script: dotnet test --collect:"XPlat Code Coverage"
+                displayName: 'Run unit tests'
+              - script: dotnet run --project SecurityScanner
+                displayName: 'Run security tests'
+      
+      - stage: DeployStaging
+        dependsOn: Test  # REQUIRED: Deploy only if tests pass
+        condition: succeeded()
+        jobs:
+          - deployment: DeployWebApp
+            environment: staging
+            strategy:
+              runOnce:
+                deploy:
+                  steps:
+                    - task: AzureWebApp@1
+      
+      - stage: DeployProduction
+        dependsOn: DeployStaging  # REQUIRED: Deploy only if staging succeeds
+        condition: succeeded()
+        jobs:
+          - deployment: DeployWebApp
+            environment: production
+            strategy:
+              runOnce:
+                deploy:
+                  steps:
+                    - task: AzureWebApp@1
+    
+    Required Testing Gates:
+    1. Unit tests (code coverage >= 80%)
+    2. Integration tests
+    3. Security scans (SAST, dependency checks)
+    4. Configuration validation
+    5. Staging environment verification
+    6. Manual approval for production (optional but recommended)
+  evidence_collection:
+    - "Pipeline configuration showing job dependencies"
+    - "Test results for each deployment"
+    - "Gate approval logs"
+    - "Failed deployment logs showing gates blocked deployment"
+  azure_services:
+    - "Azure Pipelines"
+    - "Azure Test Plans"
+    - "GitHub Actions"
+
+tags: ["testing", "deployment-gates", "critical-gap"]
+nist_controls: ["cm-3", "cm-4", "sa-11"]
+related_ksis: ["KSI-CMT-03"]
+
+---
+pattern_id: "cmt.rollback.deployment_strategy"
+name: "Rollback Capability"
+description: "Detects rollback/blue-green deployment strategy (KSI-CMT-04)"
+family: "CMT"
+severity: "HIGH"
+pattern_type: "deployment_strategy"
+
+languages:
+  bicep:
+    ast_queries:
+      - resource_type: "Microsoft.Web/sites/slots"
+        conditions:
+          - "has_property:name"
+      - resource_type: "Microsoft.Web/sites"
+        conditions:
+          - "has_companion_resource:Microsoft.Web/sites/slots"
+    regex_fallback: "Microsoft\\.Web/sites/slots|deployment.*slot"
+    positive_indicators: ["slots", "staging", "blue-green"]
+    
+  terraform:
+    ast_queries:
+      - resource_type: "azurerm_app_service_slot|azurerm_function_app_slot"
+    regex_fallback: "azurerm_(app_service|function_app)_slot"
+    positive_indicators: ["app_service_slot", "function_app_slot"]
+    
+  github_actions:
+    ast_queries:
+      - query_type: "workflow_step"
+        conditions:
+          - "has_action:azure/appservice-settings|azure/webapps-deploy"
+          - "has_parameter:slot-name"
+    regex_fallback: "slot-name:|deployment.*slot"
+    
+  azure_pipelines:
+    ast_queries:
+      - query_type: "deployment_strategy"
+        conditions:
+          - "has_strategy:canary|rolling|runOnce"
+      - query_type: "task"
+        target: "AzureAppServiceManage"
+        conditions:
+          - "has_input:Action=Swap Slots"
+    regex_fallback: "strategy:\\s*(canary|rolling)|Action:\\s*Swap\\s*Slots"
+
+finding:
+  title_template: "Deployment without rollback capability"
+  description_template: "{resource_type} does not have rollback mechanism. KSI-CMT-04 requires ability to rollback failed deployments."
+  remediation_template: |
+    Implement rollback capability:
+    
+    Bicep (Deployment Slots):
+    resource webApp 'Microsoft.Web/sites@2022-09-01' = {
+      name: appName
+      location: location
+      properties: {
+        // ... config
+      }
+    }
+    
+    // Create staging slot for blue-green deployments
+    resource stagingSlot 'Microsoft.Web/sites/slots@2022-09-01' = {
+      name: '${webApp.name}/staging'
+      location: location
+      properties: {
+        // Same config as production
+      }
+    }
+    
+    Terraform:
+    resource "azurerm_app_service" "main" {
+      name                = "myapp"
+      location            = azurerm_resource_group.main.location
+      resource_group_name = azurerm_resource_group.main.name
+      app_service_plan_id = azurerm_app_service_plan.main.id
+    }
+    
+    resource "azurerm_app_service_slot" "staging" {
+      name                = "staging"
+      app_service_name    = azurerm_app_service.main.name
+      location            = azurerm_resource_group.main.location
+      resource_group_name = azurerm_resource_group.main.name
+      app_service_plan_id = azurerm_app_service_plan.main.id
+    }
+    
+    GitHub Actions (Deployment with Rollback):
+    jobs:
+      deploy:
+        runs-on: ubuntu-latest
+        steps:
+          # Deploy to staging slot
+          - uses: azure/webapps-deploy@v2
+            id: deploy_staging
+            with:
+              app-name: myapp
+              slot-name: staging
+              package: .
+          
+          # Smoke test staging slot
+          - name: Smoke test
+            id: smoke_test
+            run: |
+              curl -f https://myapp-staging.azurewebsites.net/health || exit 1
+          
+          # Swap slots (production ← staging)
+          - uses: azure/appservice-settings@v1
+            id: swap_slots
+            with:
+              app-name: myapp
+              slot-name: staging
+              action: swap
+          
+          # Monitor production
+          - name: Monitor production
+            id: monitor
+            run: sleep 60 && curl -f https://myapp.azurewebsites.net/health
+          
+          # ROLLBACK: Swap back if monitoring fails
+          - name: Rollback on failure
+            if: failure() && steps.swap_slots.outcome == 'success'
+            uses: azure/appservice-settings@v1
+            with:
+              app-name: myapp
+              slot-name: staging
+              action: swap  # Swap back to original state
+    
+    Azure Pipelines (Deployment with Rollback):
+    stages:
+      - stage: Deploy
+        jobs:
+          - deployment: DeployWebApp
+            environment: production
+            strategy:
+              runOnce:
+                deploy:
+                  steps:
+                    # Deploy to staging slot
+                    - task: AzureWebApp@1
+                      name: DeployStaging
+                      inputs:
+                        appName: myapp
+                        slotName: staging
+                        package: $(Pipeline.Workspace)/drop
+                    
+                    # Smoke test
+                    - script: curl -f https://myapp-staging.azurewebsites.net/health
+                      name: SmokeTest
+                    
+                    # Swap slots
+                    - task: AzureAppServiceManage@0
+                      name: SwapSlots
+                      inputs:
+                        Action: 'Swap Slots'
+                        WebAppName: myapp
+                        SourceSlot: staging
+                        SwapWithProduction: true
+                
+                on:
+                  failure:
+                    steps:
+                      # ROLLBACK: Swap back to previous version
+                      - task: AzureAppServiceManage@0
+                        condition: eq(variables['SwapSlots.status'], 'Succeeded')
+                        inputs:
+                          Action: 'Swap Slots'
+                          WebAppName: myapp
+                          SourceSlot: staging
+                          SwapWithProduction: true
+    
+    Rollback Strategies:
+    1. **Deployment Slots** (Azure App Service, Functions): Zero-downtime swap, instant rollback
+    2. **Container Versions** (AKS, ACI): Keep previous images, redeploy on failure
+    3. **Blue-Green Deployment**: Maintain parallel environments, switch traffic routing
+    4. **Canary Deployment**: Gradual rollout, quick rollback if metrics degrade
+  evidence_collection:
+    - "Deployment slot configuration"
+    - "Rollback procedure documentation"
+    - "Deployment history showing successful rollbacks"
+    - "Post-deployment monitoring and alerting"
+  azure_services:
+    - "Azure App Service"
+    - "Azure Functions"
+    - "Azure Container Registry"
+    - "Azure Traffic Manager"
+
+tags: ["rollback", "deployment-slots", "blue-green", "security-gap"]
+nist_controls: ["cm-3", "cm-5", "si-12"]
+related_ksis: ["KSI-CMT-04"]

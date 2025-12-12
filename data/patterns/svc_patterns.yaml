@@ -618,3 +618,197 @@ finding:
 tags: ["waf", "application-gateway", "positive"]
 nist_controls: ["si-3", "si-4"]
 related_ksis: ["KSI-SVC-09"]
+
+---
+# KSI-SVC-01: Secret Management in Key Vault (HIGH PRIORITY)
+
+pattern_id: "svc.secrets.key_vault_missing"
+name: "Missing Key Vault for Secret Management"
+description: "Detects resources that should use Key Vault for secret management but don't reference it"
+family: "SVC"
+severity: "CRITICAL"
+pattern_type: "configuration"
+
+languages:
+  bicep:
+    regex_fallback: "(Microsoft\\.Storage|Microsoft\\.Web|Microsoft\\.Sql|Microsoft\\.DBforPostgreSQL|Microsoft\\.DBforMySQL|Microsoft\\.Cache).*(?!.*keyVaultProperties)(?!.*@Microsoft\\.KeyVault)"
+    
+  terraform:
+    regex_fallback: "(azurerm_storage_account|azurerm_app_service|azurerm_sql_server|azurerm_postgresql_server|azurerm_mysql_server|azurerm_redis_cache).*(?!.*key_vault)"
+    
+  python:
+    regex_fallback: "(password|secret|api_key|connection_string)\\s*=\\s*['\"][^'\"]+['\"]"
+    
+  csharp:
+    regex_fallback: "(Password|Secret|ApiKey|ConnectionString)\\s*=\\s*\"[^\"]+\""
+    
+  java:
+    regex_fallback: "(password|secret|apiKey|connectionString)\\s*=\\s*\"[^\"]+\""
+    
+  typescript:
+    regex_fallback: "(password|secret|apiKey|connectionString)\\s*=\\s*['\"][^'\"]+['\"]"
+
+finding:
+  title_template: "Secrets not managed via Key Vault"
+  description_template: "Resource or code contains secrets that should be managed via Azure Key Vault. KSI-SVC-01 requires secure secret management with rotation capabilities."
+  remediation_template: |
+    Use Azure Key Vault for secret management:
+    
+    Bicep:
+    resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
+      name: 'myKeyVault'
+    }
+    secret: keyVault.getSecret('secretName')
+    
+    Python:
+    from azure.identity import DefaultAzureCredential
+    from azure.keyvault.secrets import SecretClient
+    credential = DefaultAzureCredential()
+    client = SecretClient(vault_url='https://myvault.vault.azure.net/', credential=credential)
+    secret = client.get_secret('secretName').value
+
+tags: ["secrets", "key-vault", "ksi"]
+nist_controls: ["cm-7.1", "sc-12", "sc-13"]
+related_ksis: ["KSI-SVC-01"]
+
+---
+# KSI-SVC-02: Network Encryption - Storage Account (HIGH PRIORITY)
+
+pattern_id: "svc.encryption.storage_https_only"
+name: "Storage Account HTTPS Enforcement"
+description: "Detects storage accounts without HTTPS-only enforcement"
+family: "SVC"
+severity: "CRITICAL"
+pattern_type: "resource"
+
+languages:
+  bicep:
+    ast_queries:
+      - resource_type: "Microsoft.Storage/storageAccounts"
+        property_path: "properties.supportsHttpsTrafficOnly"
+        value: false
+    regex_fallback: "(Microsoft\\.Storage/storageAccounts)(?!.*supportsHttpsTrafficOnly.*true)"
+    
+  terraform:
+    ast_queries:
+      - resource_type: "azurerm_storage_account"
+        attribute: "enable_https_traffic_only"
+        value: false
+    regex_fallback: "(azurerm_storage_account)(?!.*enable_https_traffic_only.*=.*true)"
+
+finding:
+  title_template: "Storage account allows unencrypted HTTP traffic"
+  description_template: "Storage account does not enforce HTTPS-only traffic. KSI-SVC-02 requires all network traffic to be encrypted."
+  remediation_template: |
+    Enable HTTPS-only traffic:
+    
+    Bicep:
+    properties: {
+      supportsHttpsTrafficOnly: true
+      minimumTlsVersion: 'TLS1_2'
+    }
+    
+    Terraform:
+    enable_https_traffic_only = true
+    min_tls_version          = "TLS1_2"
+
+tags: ["encryption", "https", "ksi"]
+nist_controls: ["sc-8", "sc-8.1", "sc-13"]
+related_ksis: ["KSI-SVC-02"]
+
+---
+# KSI-SVC-02: Network Encryption - SQL Database TLS (HIGH PRIORITY)
+
+pattern_id: "svc.encryption.sql_tls_version"
+name: "SQL Database Minimum TLS Version"
+description: "Detects SQL databases without minimum TLS 1.2 enforcement"
+family: "SVC"
+severity: "HIGH"
+pattern_type: "resource"
+
+languages:
+  bicep:
+    regex_fallback: "(Microsoft\\.Sql/servers)(?!.*minimalTlsVersion.*1\\.2)"
+    
+  terraform:
+    regex_fallback: "(azurerm_mssql_server|azurerm_mysql_server|azurerm_postgresql_server)(?!.*minimum_tls_version.*1\\.2)"
+    
+  python:
+    regex_fallback: "(ssl_version|tls_version).*=.*(TLSv1_0|TLSv1_1|SSLv)"
+    
+  csharp:
+    regex_fallback: "(SslProtocols\\.(Ssl2|Ssl3|Tls10|Tls11))"
+
+finding:
+  title_template: "Database server does not enforce minimum TLS 1.2"
+  description_template: "Database server allows older TLS versions. KSI-SVC-02 requires TLS 1.2 or higher for all network encryption."
+  remediation_template: |
+    Set minimum TLS version to 1.2:
+    
+    Bicep:
+    properties: {
+      minimalTlsVersion: '1.2'
+    }
+    
+    Terraform:
+    minimum_tls_version = "1.2"
+
+tags: ["encryption", "tls", "database", "ksi"]
+nist_controls: ["sc-8", "sc-8.1", "sc-13"]
+related_ksis: ["KSI-SVC-02"]
+
+---
+# KSI-SVC-10: Network Isolation - Missing Network ACLs (HIGH PRIORITY)
+
+pattern_id: "svc.network.storage_public_access"
+name: "Storage Account Public Network Access"
+description: "Detects storage accounts without network ACLs restricting public access"
+family: "SVC"
+severity: "CRITICAL"
+pattern_type: "resource"
+
+languages:
+  bicep:
+    ast_queries:
+      - resource_type: "Microsoft.Storage/storageAccounts"
+        property_path: "properties.networkAcls.defaultAction"
+        value: "Allow"
+    regex_fallback: "(Microsoft\\.Storage/storageAccounts)(?!.*networkAcls)|(networkAcls.*defaultAction.*Allow)"
+    
+  terraform:
+    ast_queries:
+      - resource_type: "azurerm_storage_account"
+        attribute: "network_rules.default_action"
+        value: "Allow"
+    regex_fallback: "(azurerm_storage_account)(?!.*network_rules)|(network_rules.*default_action.*Allow)"
+
+finding:
+  title_template: "Storage account allows public network access"
+  description_template: "Storage account does not restrict network access via ACLs. KSI-SVC-10 requires network isolation for sensitive resources."
+  remediation_template: |
+    Configure network ACLs with default deny:
+    
+    Bicep:
+    properties: {
+      networkAcls: {
+        defaultAction: 'Deny'
+        virtualNetworkRules: [
+          {
+            id: subnet.id
+            action: 'Allow'
+          }
+        ]
+        ipRules: []
+      }
+    }
+    
+    Terraform:
+    network_rules {
+      default_action             = "Deny"
+      virtual_network_subnet_ids = [azurerm_subnet.example.id]
+      ip_rules                   = []
+    }
+
+tags: ["network", "isolation", "acl", "ksi"]
+nist_controls: ["sc-7", "sc-7.5"]
+related_ksis: ["KSI-SVC-10"]
