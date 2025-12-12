@@ -12,41 +12,100 @@ Pattern libraries enable data-driven code analysis by separating detection logic
 
 ## Pattern Libraries
 
-### Core Families
+### Phase 1: Core Families (52 patterns)
 
-1. **iam_patterns.yaml** - Identity and Access Management
+1. **iam_patterns.yaml** - Identity and Access Management (10 patterns)
    - Phishing-resistant MFA detection (KSI-IAM-01)
    - FIDO2, WebAuthn, Azure AD integrations
    - RBAC and least privilege (KSI-IAM-02)
    - Session management (KSI-IAM-05)
-   - 12 patterns covering authentication, authorization, session security
 
-2. **mla_patterns.yaml** - Monitoring, Logging, and Alerting
+2. **mla_patterns.yaml** - Monitoring, Logging, and Alerting (11 patterns)
    - Centralized logging to SIEM (KSI-MLA-01)
    - Azure Monitor, Sentinel integration
    - Log retention policies (KSI-MLA-02)
    - Security event monitoring (KSI-MLA-05)
    - Real-time alerting (KSI-MLA-07)
-   - Application performance monitoring (KSI-MLA-08)
-   - Audit logging (KSI-MLA-09)
-   - 15 patterns for logging, monitoring, alerting
 
-3. **svc_patterns.yaml** - Security Vulnerability and Configuration
+3. **svc_patterns.yaml** - Security Vulnerability and Configuration (13 patterns)
    - Security headers (HSTS, CSP) (KSI-SVC-01)
    - Key Vault secret management (KSI-SVC-02)
    - Encryption at rest (KSI-SVC-04)
    - Network security (NSG, private endpoints) (KSI-SVC-06)
    - TLS configuration (KSI-SVC-07)
-   - Web Application Firewall (KSI-SVC-09)
-   - 18 patterns for application security, secrets, encryption, networking
 
-4. **vdr_patterns.yaml** - Vulnerability Detection and Remediation
+4. **vdr_patterns.yaml** - Vulnerability Detection and Remediation (10 patterns)
    - Microsoft Defender for Cloud (KSI-VDR-01)
    - CI/CD security scanning (SAST, container scanning) (KSI-VDR-01, KSI-VDR-02)
    - Patch management (KSI-VDR-03)
    - Dependency vulnerability tracking (KSI-VDR-04)
-   - Secure development practices (KSI-VDR-05)
-   - 12 patterns for vulnerability management and secure SDLC
+
+5. **common_patterns.yaml** - Cross-Cutting Concerns (8 patterns)
+   - Environment configuration
+   - Error handling
+   - Input validation
+   - Documentation
+
+### Phase 2: Extended Families (68 patterns)
+
+6. **ads_patterns.yaml** - Audit Data System (10 patterns)
+   - Machine-readable formats (JSON/XML export)
+   - REST API for audit data access
+   - Structured logging with required fields
+   - Azure Monitor data export
+   - Log Analytics workspace configuration
+
+7. **ucm_patterns.yaml** - User Capability Management (11 patterns)
+   - RBAC role definitions and enforcement
+   - Authorization decorators/attributes
+   - Explicit capability checks
+   - Session timeout configuration
+   - Azure Managed Identity and RBAC assignments
+   - Key Vault access policies
+
+8. **cna_patterns.yaml** - Cloud Native Architecture (11 patterns)
+   - Network Security Groups (NSGs)
+   - Azure Firewall configuration
+   - Container images and AKS clusters
+   - Azure Container Registry
+   - Service mesh and API Gateway
+   - Container build and IaC validation
+
+9. **ccm_patterns.yaml** - Configuration Change Management (12 patterns)
+   - Git version control usage
+   - Change audit logging
+   - Pull request approval workflows
+   - Automated testing before deployment
+   - Rollback capabilities
+   - ARM/Bicep/Terraform validation
+   - Deployment gates and configuration backup
+
+10. **rsc_patterns.yaml** - Resource Management (11 patterns)
+    - Resource limits configuration (CPU, memory)
+    - Resource metrics monitoring
+    - Autoscaling configuration
+    - Namespace resource quotas
+    - Cost budget alerts
+    - App Service Plans and VM sizing
+    - Reserved instance usage
+
+11. **scn_patterns.yaml** - Security Scanning (13 patterns)
+    - SAST tool integration (CodeQL, SonarQube, Snyk)
+    - Software Composition Analysis (SCA)
+    - Container image scanning (Trivy, Aqua, Clair)
+    - IaC security scanning (Checkov, TFSec, Terrascan)
+    - Secrets scanning (GitLeaks, TruffleHog)
+    - DAST integration
+    - Microsoft Defender for Cloud
+    - Azure Policy assignments
+    - Security scan gates
+
+### Total Coverage
+- **120 patterns** across **11 families**
+- **100% FedRAMP 20x family coverage**
+- Multi-language support: Python, C#, Java, TypeScript/JavaScript
+- IaC support: Bicep, Terraform
+- CI/CD support: GitHub Actions, Azure Pipelines, GitLab CI
 
 5. **common_patterns.yaml** - Cross-Cutting Patterns
    - Azure resource tagging
