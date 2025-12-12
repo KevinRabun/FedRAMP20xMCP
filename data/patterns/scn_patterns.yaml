@@ -1,34 +1,30 @@
-# SCN (Scanning) Patterns for FedRAMP 20x Compliance
-# Family: SCN - Security Scanning Requirements
-# These patterns detect compliance with FRR-SCN requirements for vulnerability and security scanning
+# SCN_PATTERNS Pattern Library
+# Auto-converted to dict format for consistency
 
----
 pattern_id: scn.sast.tool_integration
 name: SAST Tool Integration
 family: SCN
 severity: critical
-description: |
-  Detects Static Application Security Testing (SAST) tool integration.
+description: 'Detects Static Application Security Testing (SAST) tool integration.
+
   FRR-SCN requires regular security scanning including SAST.
+
+  '
 pattern_type: pipeline
 languages:
-  - github_actions
-  - azure_pipelines
-  - gitlab_ci
-regex_patterns:
-  - pattern: 'codeql|sonarqube|snyk.*code|checkmarx'
-    flags: IGNORECASE
-  - pattern: 'semgrep|bandit|brakeman|spotbugs'
-    flags: IGNORECASE
-  - pattern: 'security.*code.*analysis'
-    flags: IGNORECASE
-finding_template:
+  github_actions:
+    regex_fallback: (codeql|sonarqube|snyk.*code|checkmarx)|(semgrep|bandit|brakeman|spotbugs)|(security.*code.*analysis)
+  azure_pipelines:
+    regex_fallback: (codeql|sonarqube|snyk.*code|checkmarx)|(semgrep|bandit|brakeman|spotbugs)|(security.*code.*analysis)
+  gitlab_ci:
+    regex_fallback: (codeql|sonarqube|snyk.*code|checkmarx)|(semgrep|bandit|brakeman|spotbugs)|(security.*code.*analysis)
+finding:
   title: SAST tool integration detected
   description: CI/CD pipeline includes SAST scanning
   recommendation: Configure SAST to run on every commit per FRR-SCN-01
   references:
-    - FRR-SCN-01
-    - KSI-VDR-01
+  - FRR-SCN-01
+  - KSI-VDR-01
 
 ---
 pattern_id: scn.sca.dependency_scanning
@@ -38,23 +34,19 @@ severity: critical
 description: Detects dependency/vulnerability scanning for third-party libraries
 pattern_type: pipeline
 languages:
-  - github_actions
-  - azure_pipelines
-  - gitlab_ci
-regex_patterns:
-  - pattern: 'dependabot|snyk.*test|owasp.*dependency.*check'
-    flags: IGNORECASE
-  - pattern: 'npm audit|pip.*safety|dotnet.*list.*vulnerable'
-    flags: IGNORECASE
-  - pattern: 'trivy.*fs|grype'
-    flags: IGNORECASE
-finding_template:
+  github_actions:
+    regex_fallback: (dependabot|snyk.*test|owasp.*dependency.*check)|(npm audit|pip.*safety|dotnet.*list.*vulnerable)|(trivy.*fs|grype)
+  azure_pipelines:
+    regex_fallback: (dependabot|snyk.*test|owasp.*dependency.*check)|(npm audit|pip.*safety|dotnet.*list.*vulnerable)|(trivy.*fs|grype)
+  gitlab_ci:
+    regex_fallback: (dependabot|snyk.*test|owasp.*dependency.*check)|(npm audit|pip.*safety|dotnet.*list.*vulnerable)|(trivy.*fs|grype)
+finding:
   title: Dependency scanning detected
   description: CI/CD scans dependencies for known vulnerabilities
   recommendation: Block builds with high/critical vulnerabilities per FRR-SCN-02
   references:
-    - FRR-SCN-02
-    - KSI-VDR-02
+  - FRR-SCN-02
+  - KSI-VDR-02
 
 ---
 pattern_id: scn.container.image_scanning
@@ -64,23 +56,22 @@ severity: critical
 description: Detects container image vulnerability scanning
 pattern_type: pipeline
 languages:
-  - github_actions
-  - azure_pipelines
-  - gitlab_ci
-regex_patterns:
-  - pattern: 'trivy.*image|aqua.*scan|clair|anchore'
-    flags: IGNORECASE
-  - pattern: 'docker.*scan|snyk.*container'
-    flags: IGNORECASE
-  - pattern: 'az acr.*check-health|defender.*for.*containers'
-    flags: IGNORECASE
-finding_template:
+  github_actions:
+    regex_fallback: (trivy.*image|aqua.*scan|clair|anchore)|(docker.*scan|snyk.*container)|(az
+      acr.*check-health|defender.*for.*containers)
+  azure_pipelines:
+    regex_fallback: (trivy.*image|aqua.*scan|clair|anchore)|(docker.*scan|snyk.*container)|(az
+      acr.*check-health|defender.*for.*containers)
+  gitlab_ci:
+    regex_fallback: (trivy.*image|aqua.*scan|clair|anchore)|(docker.*scan|snyk.*container)|(az
+      acr.*check-health|defender.*for.*containers)
+finding:
   title: Container image scanning detected
   description: Pipeline scans container images for vulnerabilities
   recommendation: Scan images before pushing to registry per FRR-SCN-03
   references:
-    - FRR-SCN-03
-    - KSI-VDR-01
+  - FRR-SCN-03
+  - KSI-VDR-01
 
 ---
 pattern_id: scn.iac.security_scanning
@@ -90,21 +81,19 @@ severity: high
 description: Detects Infrastructure as Code security scanning
 pattern_type: pipeline
 languages:
-  - github_actions
-  - azure_pipelines
-  - gitlab_ci
-regex_patterns:
-  - pattern: 'checkov|tfsec|terrascan|kics'
-    flags: IGNORECASE
-  - pattern: 'az.*policy.*compliance|bicep.*lint'
-    flags: IGNORECASE
-finding_template:
+  github_actions:
+    regex_fallback: (checkov|tfsec|terrascan|kics)|(az.*policy.*compliance|bicep.*lint)
+  azure_pipelines:
+    regex_fallback: (checkov|tfsec|terrascan|kics)|(az.*policy.*compliance|bicep.*lint)
+  gitlab_ci:
+    regex_fallback: (checkov|tfsec|terrascan|kics)|(az.*policy.*compliance|bicep.*lint)
+finding:
   title: IaC security scanning detected
   description: Pipeline scans IaC for security misconfigurations
   recommendation: Enforce Azure Policy or equivalent per KSI-CNA-07
   references:
-    - FRR-SCN-04
-    - KSI-CNA-07
+  - FRR-SCN-04
+  - KSI-CNA-07
 
 ---
 pattern_id: scn.secrets.scanning
@@ -114,21 +103,18 @@ severity: critical
 description: Detects secrets scanning to prevent credential leaks
 pattern_type: pipeline
 languages:
-  - github_actions
-  - azure_pipelines
-  - gitlab_ci
-regex_patterns:
-  - pattern: 'gitleaks|trufflehog|detect-secrets|secret.*scan'
-    flags: IGNORECASE
-  - pattern: 'credential.*scan|token.*scan'
-    flags: IGNORECASE
-finding_template:
+  github_actions:
+    regex_fallback: (gitleaks|trufflehog|detect-secrets|secret.*scan)|(credential.*scan|token.*scan)
+  azure_pipelines:
+    regex_fallback: (gitleaks|trufflehog|detect-secrets|secret.*scan)|(credential.*scan|token.*scan)
+  gitlab_ci:
+    regex_fallback: (gitleaks|trufflehog|detect-secrets|secret.*scan)|(credential.*scan|token.*scan)
+finding:
   title: Secrets scanning detected
   description: Pipeline scans for hardcoded secrets and credentials
   recommendation: Block commits containing secrets per KSI-SVC-01
   references:
-  - FRR-SCN-05
-    - KSI-SVC-01
+  - FRR-SCN-05 - KSI-SVC-01
 
 ---
 pattern_id: scn.dast.dynamic_testing
@@ -138,20 +124,18 @@ severity: high
 description: Detects Dynamic Application Security Testing (DAST) integration
 pattern_type: pipeline
 languages:
-  - github_actions
-  - azure_pipelines
-  - gitlab_ci
-regex_patterns:
-  - pattern: 'owasp.*zap|burp.*suite|w3af|arachni'
-    flags: IGNORECASE
-  - pattern: 'dast|dynamic.*security.*test'
-    flags: IGNORECASE
-finding_template:
+  github_actions:
+    regex_fallback: (owasp.*zap|burp.*suite|w3af|arachni)|(dast|dynamic.*security.*test)
+  azure_pipelines:
+    regex_fallback: (owasp.*zap|burp.*suite|w3af|arachni)|(dast|dynamic.*security.*test)
+  gitlab_ci:
+    regex_fallback: (owasp.*zap|burp.*suite|w3af|arachni)|(dast|dynamic.*security.*test)
+finding:
   title: DAST tool integration detected
   description: CI/CD includes dynamic security testing
   recommendation: Run DAST against staging environment per FRR-SCN-06
   references:
-    - FRR-SCN-06
+  - FRR-SCN-06
 
 ---
 pattern_id: scn.code.security_library
@@ -161,28 +145,30 @@ severity: medium
 description: Detects use of security analysis libraries in code
 pattern_type: import
 languages:
-  - python
-  - csharp
-  - java
-  - typescript
-ast_queries:
-  - query_type: import_statement
-    target: bandit
-  - query_type: import_statement
-    target: safety
-  - query_type: import_statement
-    target: SecurityCodeScan
-regex_patterns:
-  - pattern: 'import bandit|from bandit'
-    flags: IGNORECASE
-  - pattern: 'import.*security|from.*security'
-    flags: IGNORECASE
-finding_template:
+  python:
+    ast_queries: &id001
+    - query_type: import_statement
+      target: bandit
+    - query_type: import_statement
+      target: safety
+    - query_type: import_statement
+      target: SecurityCodeScan
+    regex_fallback: (import bandit|from bandit)|(import.*security|from.*security)
+  csharp:
+    ast_queries: *id001
+    regex_fallback: (import bandit|from bandit)|(import.*security|from.*security)
+  java:
+    ast_queries: *id001
+    regex_fallback: (import bandit|from bandit)|(import.*security|from.*security)
+  typescript:
+    ast_queries: *id001
+    regex_fallback: (import bandit|from bandit)|(import.*security|from.*security)
+finding:
   title: Security analysis library detected
   description: Code imports security analysis library
   recommendation: Integrate with CI/CD for automated scanning per FRR-SCN-01
   references:
-    - FRR-SCN-01
+  - FRR-SCN-01
 
 ---
 pattern_id: scn.policy.enforcement
@@ -192,19 +178,15 @@ severity: high
 description: Detects security policy enforcement in deployments
 pattern_type: configuration
 languages:
-  - yaml
-regex_patterns:
-  - pattern: 'PodSecurityPolicy|SecurityContext|securityContext'
-    flags: IGNORECASE
-  - pattern: 'runAsNonRoot|allowPrivilegeEscalation.*false'
-    flags: IGNORECASE
-finding_template:
+  yaml:
+    regex_fallback: (PodSecurityPolicy|SecurityContext|securityContext)|(runAsNonRoot|allowPrivilegeEscalation.*false)
+finding:
   title: Security policy enforcement detected
   description: Configuration enforces security policies
   recommendation: Use Pod Security Standards (restricted profile) per KSI-CNA-02
   references:
-    - FRR-SCN-07
-    - KSI-CNA-02
+  - FRR-SCN-07
+  - KSI-CNA-02
 
 ---
 pattern_id: scn.iac.defender_for_cloud
@@ -214,21 +196,17 @@ severity: high
 description: Detects Microsoft Defender for Cloud configuration for continuous scanning
 pattern_type: resource
 languages:
-  - bicep
-  - terraform
-regex_patterns:
-  - pattern: 'Microsoft\.Security/pricings'
-    flags: IGNORECASE
-  - pattern: 'azurerm_security_center_subscription_pricing'
-    flags: IGNORECASE
-  - pattern: 'defender.*plan|security.*center.*plan'
-    flags: IGNORECASE
-finding_template:
+  bicep:
+    regex_fallback: (Microsoft\.Security/pricings)|(azurerm_security_center_subscription_pricing)|(defender.*plan|security.*center.*plan)
+  terraform:
+    regex_fallback: (Microsoft\.Security/pricings)|(azurerm_security_center_subscription_pricing)|(defender.*plan|security.*center.*plan)
+finding:
   title: Microsoft Defender for Cloud configured
   description: IaC enables Defender for Cloud for continuous security monitoring
-  recommendation: Enable all Defender plans (Servers, Containers, Storage, etc.) per FRR-SCN-08
+  recommendation: Enable all Defender plans (Servers, Containers, Storage, etc.) per
+    FRR-SCN-08
   references:
-    - FRR-SCN-08
+  - FRR-SCN-08
 
 ---
 pattern_id: scn.iac.policy_assignment
@@ -238,25 +216,24 @@ severity: high
 description: Detects Azure Policy assignment for compliance scanning
 pattern_type: resource
 languages:
-  - bicep
-  - terraform
-ast_queries:
-  - query_type: resource_type
-    target: Microsoft.Authorization/policyAssignments
-  - query_type: resource_type
-    target: azurerm_policy_assignment
-regex_patterns:
-  - pattern: 'Microsoft\.Authorization/policyAssignments'
-    flags: IGNORECASE
-  - pattern: 'resource.*azurerm_policy_assignment'
-    flags: IGNORECASE
-finding_template:
+  bicep:
+    ast_queries: &id001
+    - query_type: resource_type
+      target: Microsoft.Authorization/policyAssignments
+    - query_type: resource_type
+      target: azurerm_policy_assignment
+    regex_fallback: (Microsoft\.Authorization/policyAssignments)|(resource.*azurerm_policy_assignment)
+  terraform:
+    ast_queries: *id001
+    regex_fallback: (Microsoft\.Authorization/policyAssignments)|(resource.*azurerm_policy_assignment)
+finding:
   title: Azure Policy assignment configured
   description: IaC assigns Azure Policy for compliance enforcement
-  recommendation: Assign built-in FedRAMP policies or Azure Security Benchmark per FRR-SCN-09
+  recommendation: Assign built-in FedRAMP policies or Azure Security Benchmark per
+    FRR-SCN-09
   references:
-    - FRR-SCN-09
-    - KSI-CNA-07
+  - FRR-SCN-09
+  - KSI-CNA-07
 
 ---
 pattern_id: scn.cicd.scan_gate
@@ -266,20 +243,18 @@ severity: critical
 description: Detects security scan gate that blocks deployments on findings
 pattern_type: pipeline
 languages:
-  - github_actions
-  - azure_pipelines
-  - gitlab_ci
-regex_patterns:
-  - pattern: 'break.*build|fail.*on.*high|severity.*threshold'
-    flags: IGNORECASE
-  - pattern: 'if.*vulnerabilities.*exit|continue-on-error.*false'
-    flags: IGNORECASE
-finding_template:
+  github_actions:
+    regex_fallback: (break.*build|fail.*on.*high|severity.*threshold)|(if.*vulnerabilities.*exit|continue-on-error.*false)
+  azure_pipelines:
+    regex_fallback: (break.*build|fail.*on.*high|severity.*threshold)|(if.*vulnerabilities.*exit|continue-on-error.*false)
+  gitlab_ci:
+    regex_fallback: (break.*build|fail.*on.*high|severity.*threshold)|(if.*vulnerabilities.*exit|continue-on-error.*false)
+finding:
   title: Security scan gate configured
   description: Pipeline blocks deployment when security issues found
   recommendation: Set threshold to block on high/critical findings per FRR-SCN-10
   references:
-    - FRR-SCN-10
+  - FRR-SCN-10
 
 ---
 pattern_id: scn.missing_sast
@@ -289,19 +264,19 @@ severity: critical
 description: Detects absence of SAST scanning in pipeline
 pattern_type: pipeline
 languages:
-  - github_actions
-  - azure_pipelines
-  - gitlab_ci
+  github_actions: {}
+  azure_pipelines: {}
+  gitlab_ci: {}
 requires_absence:
-  - scn.sast.tool_integration
-finding_template:
+- scn.sast.tool_integration
+finding:
   title: No SAST scanning detected in pipeline
   description: CI/CD pipeline lacks SAST security scanning
   severity: critical
   recommendation: Add CodeQL, SonarQube, or equivalent SAST tool per FRR-SCN-01
   references:
-    - FRR-SCN-01
-    - KSI-VDR-01
+  - FRR-SCN-01
+  - KSI-VDR-01
 
 ---
 pattern_id: scn.missing_dependency_scan
@@ -311,16 +286,16 @@ severity: critical
 description: Detects absence of dependency/vulnerability scanning
 pattern_type: pipeline
 languages:
-  - github_actions
-  - azure_pipelines
-  - gitlab_ci
+  github_actions: {}
+  azure_pipelines: {}
+  gitlab_ci: {}
 requires_absence:
-  - scn.sca.dependency_scanning
-finding_template:
+- scn.sca.dependency_scanning
+finding:
   title: No dependency scanning detected
   description: Pipeline lacks SCA/dependency vulnerability scanning
   severity: critical
   recommendation: Add Dependabot, Snyk, or OWASP Dependency Check per FRR-SCN-02
   references:
-    - FRR-SCN-02
-    - KSI-VDR-02
+  - FRR-SCN-02
+  - KSI-VDR-02

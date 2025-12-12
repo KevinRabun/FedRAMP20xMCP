@@ -181,10 +181,10 @@ async def main():
         print("\n" + "="*70)
         print("ALL INTEGRATION TESTS PASSED!")
         print("="*70)
-        print("\n✓ analyzer.py correctly uses BOTH KSI and FRR factories")
-        print("✓ Infrastructure code analysis: KSI + FRR")
-        print("✓ Application code analysis: KSI + FRR")
-        print("✓ CI/CD pipeline analysis: KSI + FRR")
+        print("\n[PASS] analyzer.py correctly uses BOTH KSI and FRR factories")
+        print("[PASS] Infrastructure code analysis: KSI + FRR")
+        print("[PASS] Application code analysis: KSI + FRR")
+        print("[PASS] CI/CD pipeline analysis: KSI + FRR")
         
     except AssertionError as e:
         print(f"\n[FAIL] Test failed: {e}")

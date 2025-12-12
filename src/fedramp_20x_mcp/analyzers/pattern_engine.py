@@ -30,7 +30,12 @@ class PatternType(Enum):
 
 @dataclass
 class Pattern:
-    """Represents a single detection pattern"""
+    """
+    Represents a single detection pattern.
+    
+    Uses dict format: languages is Dict[str, Dict] with per-language configs.
+    Each language has its own ast_queries and regex_fallback.
+    """
     pattern_id: str
     name: str
     description: str
@@ -471,7 +476,8 @@ class PatternEngine:
             line_number=self._extract_line_number(matches, code),
             code_snippet=self._extract_code_snippet(matches, code),
             remediation=remediation,
-            file_path=file_path
+            file_path=file_path,
+            requirement_id=pattern.pattern_id
         )
     
     def _extract_line_number(self, matches: Any, code: str) -> int:

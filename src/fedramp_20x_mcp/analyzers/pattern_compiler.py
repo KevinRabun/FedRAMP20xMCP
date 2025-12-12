@@ -12,12 +12,15 @@ The compiler pre-processes patterns to:
 """
 
 import re
-from typing import Dict, Any, List, Callable, Optional, Set
+from typing import Dict, Any, List, Callable, Optional, Set, TYPE_CHECKING
 from dataclasses import dataclass, field
 from functools import lru_cache
 
 from .pattern_engine import Pattern, PatternType
 from .ast_utils import create_parser, CodeLanguage
+
+if TYPE_CHECKING:
+    from .pattern_engine import PatternEngine
 
 
 @dataclass
@@ -56,31 +59,25 @@ class PatternCompiler:
         """
         compiled = CompiledPattern(pattern=pattern)
         
-        # Handle both old (dict) and new (list) language formats
-        if isinstance(pattern.languages, dict):
-            # Old format: languages as dict with per-language configs
-            for language, lang_config in pattern.languages.items():
-                if 'regex_fallback' in lang_config:
-                    try:
-                        regex = re.compile(
-                            lang_config['regex_fallback'],
-                            re.MULTILINE | re.IGNORECASE
-                        )
-                        compiled.compiled_regexes[language] = regex
-                    except re.error as e:
-                        print(f"Warning: Failed to compile regex for {pattern.pattern_id} ({language}): {e}",
-                              file=__import__('sys').stderr)
-            
-            # Build AST query cache
-            for language, lang_config in pattern.languages.items():
-                if 'ast_queries' in lang_config:
-                    compiled.ast_query_cache[language] = self._optimize_ast_queries(
-                        lang_config['ast_queries']
+        # Compile regex patterns for each language
+        for language, lang_config in pattern.languages.items():
+            if 'regex_fallback' in lang_config:
+                try:
+                    regex = re.compile(
+                        lang_config['regex_fallback'],
+                        re.MULTILINE | re.IGNORECASE
                     )
-        elif isinstance(pattern.languages, list):
-            # New format: languages as list (shared ast_queries/regex_patterns handled at pattern level)
-            # No per-language compilation needed, handled by pattern engine
-            pass
+                    compiled.compiled_regexes[language] = regex
+                except re.error as e:
+                    print(f"Warning: Failed to compile regex for {pattern.pattern_id} ({language}): {e}",
+                          file=__import__('sys').stderr)
+        
+        # Build AST query cache
+        for language, lang_config in pattern.languages.items():
+            if 'ast_queries' in lang_config:
+                compiled.ast_query_cache[language] = self._optimize_ast_queries(
+                    lang_config['ast_queries']
+                )
         
         # Build dependency sets
         if pattern.requires_all:

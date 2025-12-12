@@ -1,35 +1,33 @@
-# RSC (Resource) Patterns for FedRAMP 20x Compliance
-# Family: RSC - Resource Management Requirements
-# These patterns detect compliance with FRR-RSC requirements for resource allocation and management
+# RSC_PATTERNS Pattern Library
+# Auto-converted to dict format for consistency
 
----
 pattern_id: rsc.allocation.resource_limits
 name: Resource Limits Configuration
 family: RSC
 severity: high
-description: |
-  Detects resource limit configuration (CPU, memory) for workloads.
+description: 'Detects resource limit configuration (CPU, memory) for workloads.
+
   FRR-RSC requires proper resource allocation and limits.
+
+  '
 pattern_type: configuration
 languages:
-  - yaml
-  - python
-  - csharp
-  - java
-  - typescript
-regex_patterns:
-  - pattern: 'resources:.*limits:|resources:.*requests:'
-    flags: IGNORECASE | DOTALL
-  - pattern: 'cpu:.*memory:|limits.*cpu|limits.*memory'
-    flags: IGNORECASE
-  - pattern: 'MAX_MEMORY|MAX_CPU|RESOURCE_LIMIT'
-    flags: IGNORECASE
-finding_template:
+  yaml:
+    regex_fallback: (resources:.*limits:|resources:.*requests:)|(cpu:.*memory:|limits.*cpu|limits.*memory)|(MAX_MEMORY|MAX_CPU|RESOURCE_LIMIT)
+  python:
+    regex_fallback: (resources:.*limits:|resources:.*requests:)|(cpu:.*memory:|limits.*cpu|limits.*memory)|(MAX_MEMORY|MAX_CPU|RESOURCE_LIMIT)
+  csharp:
+    regex_fallback: (resources:.*limits:|resources:.*requests:)|(cpu:.*memory:|limits.*cpu|limits.*memory)|(MAX_MEMORY|MAX_CPU|RESOURCE_LIMIT)
+  java:
+    regex_fallback: (resources:.*limits:|resources:.*requests:)|(cpu:.*memory:|limits.*cpu|limits.*memory)|(MAX_MEMORY|MAX_CPU|RESOURCE_LIMIT)
+  typescript:
+    regex_fallback: (resources:.*limits:|resources:.*requests:)|(cpu:.*memory:|limits.*cpu|limits.*memory)|(MAX_MEMORY|MAX_CPU|RESOURCE_LIMIT)
+finding:
   title: Resource limits configured
   description: Configuration specifies resource limits for workloads
   recommendation: Ensure limits prevent resource exhaustion per FRR-RSC-01
   references:
-    - FRR-RSC-01
+  - FRR-RSC-01
 
 ---
 pattern_id: rsc.monitoring.resource_metrics
@@ -39,24 +37,21 @@ severity: high
 description: Detects resource metrics collection and monitoring
 pattern_type: function_call
 languages:
-  - python
-  - csharp
-  - java
-  - typescript
-regex_patterns:
-  - pattern: 'cpu.*usage|memory.*usage|disk.*usage'
-    flags: IGNORECASE
-  - pattern: 'metrics.*cpu|metrics.*memory|resource.*monitor'
-    flags: IGNORECASE
-  - pattern: 'psutil|performance.*counter'
-    flags: IGNORECASE
-finding_template:
+  python:
+    regex_fallback: (cpu.*usage|memory.*usage|disk.*usage)|(metrics.*cpu|metrics.*memory|resource.*monitor)|(psutil|performance.*counter)
+  csharp:
+    regex_fallback: (cpu.*usage|memory.*usage|disk.*usage)|(metrics.*cpu|metrics.*memory|resource.*monitor)|(psutil|performance.*counter)
+  java:
+    regex_fallback: (cpu.*usage|memory.*usage|disk.*usage)|(metrics.*cpu|metrics.*memory|resource.*monitor)|(psutil|performance.*counter)
+  typescript:
+    regex_fallback: (cpu.*usage|memory.*usage|disk.*usage)|(metrics.*cpu|metrics.*memory|resource.*monitor)|(psutil|performance.*counter)
+finding:
   title: Resource metrics monitoring detected
   description: Code monitors CPU, memory, or disk usage
   recommendation: Export metrics to centralized monitoring per KSI-MLA-01
   references:
-    - FRR-RSC-02
-    - KSI-MLA-01
+  - FRR-RSC-02
+  - KSI-MLA-01
 
 ---
 pattern_id: rsc.scaling.autoscaling
@@ -66,20 +61,14 @@ severity: medium
 description: Detects autoscaling configuration for dynamic resource allocation
 pattern_type: configuration
 languages:
-  - yaml
-regex_patterns:
-  - pattern: 'kind:.*HorizontalPodAutoscaler|apiVersion:.*autoscaling'
-    flags: IGNORECASE
-  - pattern: 'minReplicas|maxReplicas|targetCPUUtilizationPercentage'
-    flags: IGNORECASE
-  - pattern: 'autoscale|auto_scale|autoScaling'
-    flags: IGNORECASE
-finding_template:
+  yaml:
+    regex_fallback: (kind:.*HorizontalPodAutoscaler|apiVersion:.*autoscaling)|(minReplicas|maxReplicas|targetCPUUtilizationPercentage)|(autoscale|auto_scale|autoScaling)
+finding:
   title: Autoscaling configured
   description: Configuration includes autoscaling for dynamic resource allocation
   recommendation: Set appropriate min/max replicas and thresholds per FRR-RSC-03
   references:
-    - FRR-RSC-03
+  - FRR-RSC-03
 
 ---
 pattern_id: rsc.quota.namespace_quota
@@ -89,18 +78,14 @@ severity: high
 description: Detects resource quota configuration at namespace level
 pattern_type: configuration
 languages:
-  - yaml
-regex_patterns:
-  - pattern: 'kind:.*ResourceQuota'
-    flags: IGNORECASE
-  - pattern: 'hard:.*requests\.cpu|hard:.*limits\.memory'
-    flags: IGNORECASE
-finding_template:
+  yaml:
+    regex_fallback: (kind:.*ResourceQuota)|(hard:.*requests\.cpu|hard:.*limits\.memory)
+finding:
   title: Namespace resource quota configured
   description: Configuration sets resource quotas for namespace
   recommendation: Enforce quotas per team/project per FRR-RSC-01
   references:
-    - FRR-RSC-01
+  - FRR-RSC-01
 
 ---
 pattern_id: rsc.allocation.priority_class
@@ -110,18 +95,14 @@ severity: medium
 description: Detects priority class usage for workload prioritization
 pattern_type: configuration
 languages:
-  - yaml
-regex_patterns:
-  - pattern: 'priorityClassName|priority_class_name'
-    flags: IGNORECASE
-  - pattern: 'kind:.*PriorityClass'
-    flags: IGNORECASE
-finding_template:
+  yaml:
+    regex_fallback: (priorityClassName|priority_class_name)|(kind:.*PriorityClass)
+finding:
   title: Priority class for resource allocation
   description: Configuration uses priority classes for workload scheduling
   recommendation: Define priority classes for critical vs non-critical workloads
   references:
-    - FRR-RSC-03
+  - FRR-RSC-03
 
 ---
 pattern_id: rsc.cost.budget_alert
@@ -131,21 +112,16 @@ severity: medium
 description: Detects cost budget alert configuration for resource management
 pattern_type: resource
 languages:
-  - bicep
-  - terraform
-regex_patterns:
-  - pattern: 'Microsoft\.Consumption/budgets'
-    flags: IGNORECASE
-  - pattern: 'azurerm_consumption_budget'
-    flags: IGNORECASE
-  - pattern: 'budget.*alert|cost.*threshold'
-    flags: IGNORECASE
-finding_template:
+  bicep:
+    regex_fallback: (Microsoft\.Consumption/budgets)|(azurerm_consumption_budget)|(budget.*alert|cost.*threshold)
+  terraform:
+    regex_fallback: (Microsoft\.Consumption/budgets)|(azurerm_consumption_budget)|(budget.*alert|cost.*threshold)
+finding:
   title: Cost budget alerts configured
   description: IaC configures budget alerts for resource cost management
   recommendation: Set alerts at 50%, 80%, 100% of budget per FRR-RSC-04
   references:
-    - FRR-RSC-04
+  - FRR-RSC-04
 
 ---
 pattern_id: rsc.iac.app_service_plan
@@ -155,26 +131,22 @@ severity: high
 description: Detects App Service Plan configuration for resource allocation
 pattern_type: resource
 languages:
-  - bicep
-  - terraform
-ast_queries:
-  - query_type: resource_type
-    target: Microsoft.Web/serverfarms
-  - query_type: resource_type
-    target: azurerm_app_service_plan
-regex_patterns:
-  - pattern: 'Microsoft\.Web/serverfarms'
-    flags: IGNORECASE
-  - pattern: 'resource.*azurerm_app_service_plan|resource.*azurerm_service_plan'
-    flags: IGNORECASE
-  - pattern: 'sku.*name.*P1V3|tier.*PremiumV3'
-    flags: IGNORECASE
-finding_template:
+  bicep:
+    ast_queries: &id001
+    - query_type: resource_type
+      target: Microsoft.Web/serverfarms
+    - query_type: resource_type
+      target: azurerm_app_service_plan
+    regex_fallback: (Microsoft\.Web/serverfarms)|(resource.*azurerm_app_service_plan|resource.*azurerm_service_plan)|(sku.*name.*P1V3|tier.*PremiumV3)
+  terraform:
+    ast_queries: *id001
+    regex_fallback: (Microsoft\.Web/serverfarms)|(resource.*azurerm_app_service_plan|resource.*azurerm_service_plan)|(sku.*name.*P1V3|tier.*PremiumV3)
+finding:
   title: App Service Plan configured
   description: IaC provisions App Service Plan with defined SKU
   recommendation: Choose appropriate SKU based on workload requirements per FRR-RSC-01
   references:
-    - FRR-RSC-01
+  - FRR-RSC-01
 
 ---
 pattern_id: rsc.iac.vm_size
@@ -184,19 +156,16 @@ severity: high
 description: Detects VM size configuration for resource allocation
 pattern_type: resource
 languages:
-  - bicep
-  - terraform
-regex_patterns:
-  - pattern: 'vmSize|vm_size'
-    flags: IGNORECASE
-  - pattern: 'Standard_D|Standard_E|Standard_F'
-    flags: IGNORECASE
-finding_template:
+  bicep:
+    regex_fallback: (vmSize|vm_size)|(Standard_D|Standard_E|Standard_F)
+  terraform:
+    regex_fallback: (vmSize|vm_size)|(Standard_D|Standard_E|Standard_F)
+finding:
   title: VM size configured
   description: IaC specifies VM size for resource allocation
   recommendation: Right-size VMs based on actual usage metrics per FRR-RSC-03
   references:
-    - FRR-RSC-01
+  - FRR-RSC-01
 
 ---
 pattern_id: rsc.iac.reserved_instances
@@ -206,17 +175,16 @@ severity: low
 description: Detects reserved instance or savings plan configuration
 pattern_type: configuration
 languages:
-  - bicep
-  - terraform
-regex_patterns:
-  - pattern: 'reserved.*instance|reservation|savings.*plan'
-    flags: IGNORECASE
-finding_template:
+  bicep:
+    regex_fallback: (reserved.*instance|reservation|savings.*plan)
+  terraform:
+    regex_fallback: (reserved.*instance|reservation|savings.*plan)
+finding:
   title: Reserved instance or savings plan detected
   description: Configuration uses reserved instances for cost optimization
   recommendation: Analyze usage patterns and purchase reservations per FRR-RSC-04
   references:
-    - FRR-RSC-04
+  - FRR-RSC-04
 
 ---
 pattern_id: rsc.cicd.resource_validation
@@ -226,20 +194,18 @@ severity: high
 description: Detects resource configuration validation in CI/CD
 pattern_type: pipeline
 languages:
-  - github_actions
-  - azure_pipelines
-  - gitlab_ci
-regex_patterns:
-  - pattern: 'validate.*resources|check.*limits|verify.*quotas'
-    flags: IGNORECASE
-  - pattern: 'kubectl.*dry-run|terraform.*plan'
-    flags: IGNORECASE
-finding_template:
+  github_actions:
+    regex_fallback: (validate.*resources|check.*limits|verify.*quotas)|(kubectl.*dry-run|terraform.*plan)
+  azure_pipelines:
+    regex_fallback: (validate.*resources|check.*limits|verify.*quotas)|(kubectl.*dry-run|terraform.*plan)
+  gitlab_ci:
+    regex_fallback: (validate.*resources|check.*limits|verify.*quotas)|(kubectl.*dry-run|terraform.*plan)
+finding:
   title: Resource configuration validation in CI/CD
   description: Pipeline validates resource configurations before deployment
   recommendation: Include checks for resource limits and quotas per FRR-RSC-01
   references:
-    - FRR-RSC-01
+  - FRR-RSC-01
 
 ---
 pattern_id: rsc.missing_resource_limits
@@ -249,13 +215,13 @@ severity: critical
 description: Detects absence of resource limit configuration
 pattern_type: configuration
 languages:
-  - yaml
+  yaml: {}
 requires_absence:
-  - rsc.allocation.resource_limits
-finding_template:
+- rsc.allocation.resource_limits
+finding:
   title: No resource limits configured
   description: Configuration lacks resource limits (CPU, memory)
   severity: critical
   recommendation: Add resource limits to prevent resource exhaustion per FRR-RSC-01
   references:
-    - FRR-RSC-01
+  - FRR-RSC-01
