@@ -12,41 +12,54 @@ See [REFACTORING_PLAN.md](REFACTORING_PLAN.md) for complete details.
 
 ## Phase Progress
 
-### ✅ Phase 1: Data Extraction (Complete)
+### ✅ Phase 1: Data Extraction with Guidance (Complete)
 **Duration:** 1 day  
 **Status:** Complete 2024-12-12
 
-Successfully extracted all metadata from 271 analyzer files into centralized JSON:
+Successfully extracted all metadata AND implementation guidance from 271 analyzer files:
 
 #### Files Created
-- ✅ `data/requirements/ksi_metadata.json` (89.58 KB, 3,286 lines)
-  - 72 KSI requirements
-  - 38 implemented, 7 retired
+- ✅ `data/requirements/ksi_metadata.json` (249.49 KB, 7,089 lines)
+  - 72 KSI requirements with guidance
+  - 38 code-detectable, 34 process-based
+  - 7 retired
   - 11 families (AFR, CED, CMT, CNA, IAM, INR, MLA, PIY, RPL, SVC, TPR)
 
-- ✅ `data/requirements/frr_metadata.json` (210.50 KB, 8,756 lines)
-  - 199 FRR requirements
+- ✅ `data/requirements/frr_metadata.json` (574.85 KB, 15,445 lines)
+  - 199 FRR requirements with guidance
+  - All code-detectable
   - All implemented
   - 11 families (ADS, CCM, FSI, ICP, KSI, MAS, PVA, RSC, SCN, UCM, VDR)
 
-- ✅ `data/requirements/extraction_summary.json` (0.54 KB)
+- ✅ `data/requirements/extraction_summary.json` (0.65 KB)
   - Statistical summary
   - Family breakdown
   - Implementation status
+  - Process-based counts
 
-- ✅ `scripts/extract_metadata.py`
-  - AST-based metadata extraction
-  - Validates against current analyzers
-  - Generates normalized JSON schema
+- ✅ `scripts/extract_metadata.py` - Basic extraction
+- ✅ `scripts/extract_guidance.py` - Enhanced extraction with guidance
+
+#### Guidance Fields (NEW)
+Each requirement now includes:
+- 📋 **evidence_collection**: Audit artifacts needed for compliance
+- ✅ **implementation_checklist**: Step-by-step implementation tasks
+- 🤖 **automation_opportunities**: What can be automated
+- ☁️ **azure_services**: Recommended Azure services
+- 🔧 **process_based**: Boolean flag for process requirements
+- 📄 **requires_documentation**: Boolean for policy/procedure needs
 
 #### Validation
-- ✅ All 72 KSI files parsed successfully
-- ✅ All 199 FRR files parsed successfully
-- ✅ Metadata schema validated
-- ✅ 300KB total (98% reduction from 6MB source)
+- ✅ All 72 KSI files parsed with guidance
+- ✅ All 199 FRR files parsed with guidance
+- ✅ Dual-purpose design validated:
+  - Code-detectable: Detection patterns + guidance
+  - Process-based: Guidance only (no code detection)
+- ✅ 824KB total (93% reduction from 6MB source)
 
 #### Commits
-- `1359da0` - Phase 1: Extract metadata to JSON for data-driven architecture
+- `1359da0` - Basic metadata extraction
+- `da14f51` - Enhanced extraction with guidance (Phase 1 complete)
 
 ---
 
