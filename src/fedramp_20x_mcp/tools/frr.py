@@ -491,7 +491,7 @@ async def get_frr_implementation_status_impl(data_loader: Any = None) -> str:
     """
     try:
         factory = get_factory()
-        status = factory.get_implementation_status_summary()
+        status = await factory.get_implementation_status_summary()
         
         # Format the output
         output = "# FRR Implementation Status\n\n"

@@ -112,13 +112,13 @@ async def analyze_infrastructure_code_impl(
     
     # Run KSI analyzers
     for ksi_id in ksi_factory.list_ksis():
-        result = ksi_factory.analyze(ksi_id, code, file_type_lower, file_path)
+        result = await ksi_factory.analyze(ksi_id, code, file_type_lower, file_path)
         if result and result.findings:
             traditional_findings.extend(result.findings)
     
     # Run FRR analyzers
     for frr_id in frr_factory.list_frrs():
-        result = frr_factory.analyze(frr_id, code, file_type_lower, file_path)
+        result = await frr_factory.analyze(frr_id, code, file_type_lower, file_path)
         if result and result.findings:
             traditional_findings.extend(result.findings)
     
@@ -213,13 +213,13 @@ async def analyze_application_code_impl(
     
     # Run KSI analyzers
     for ksi_id in ksi_factory.list_ksis():
-        result = ksi_factory.analyze(ksi_id, code, language_normalized, file_path)
+        result = await ksi_factory.analyze(ksi_id, code, language_normalized, file_path)
         if result and result.findings:
             traditional_findings.extend(result.findings)
     
     # Run FRR analyzers
     for frr_id in frr_factory.list_frrs():
-        result = frr_factory.analyze(frr_id, code, language_normalized, file_path)
+        result = await frr_factory.analyze(frr_id, code, language_normalized, file_path)
         if result and result.findings:
             traditional_findings.extend(result.findings)
     
@@ -310,13 +310,13 @@ async def analyze_cicd_pipeline_impl(
     
     # Run KSI analyzers
     for ksi_id in ksi_factory.list_ksis():
-        result = ksi_factory.analyze(ksi_id, code, language_normalized, file_path)
+        result = await ksi_factory.analyze(ksi_id, code, language_normalized, file_path)
         if result and result.findings:
             traditional_findings.extend(result.findings)
     
     # Run FRR analyzers
     for frr_id in frr_factory.list_frrs():
-        result = frr_factory.analyze(frr_id, code, language_normalized, file_path)
+        result = await frr_factory.analyze(frr_id, code, language_normalized, file_path)
         if result and result.findings:
             traditional_findings.extend(result.findings)
     

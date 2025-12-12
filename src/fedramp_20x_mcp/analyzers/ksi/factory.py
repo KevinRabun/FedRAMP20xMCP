@@ -1,149 +1,107 @@
 """
-KSI Analyzer Factory and Registration System
+KSI Analyzer Factory - Pattern-Based Architecture
 
-Automatically discovers and registers all KSI analyzers in the ksi/ directory.
-Each KSI analyzer is self-contained with complete language support.
+Uses GenericPatternAnalyzer for all KSI analysis (replaces 72 individual analyzer files).
+Provides backward-compatible API while delegating to pattern-driven engine.
 """
 
-import os
-import re
 import logging
-from pathlib import Path
-from importlib import import_module
 from typing import Dict, Optional, List, Any
-from .base import BaseKSIAnalyzer
 from ..base import AnalysisResult
+from ..generic_adapter import (
+    get_generic_analyzer,
+    analyze_with_generic_analyzer,
+    get_pattern_statistics,
+    get_patterns_for_requirement
+)
 
 logger = logging.getLogger(__name__)
 
 
 class KSIAnalyzerFactory:
     """
-    Factory for creating and managing KSI analyzers.
+    Factory for KSI analysis using GenericPatternAnalyzer.
     
-    Automatically discovers all KSI analyzer classes and provides
-    unified interface for analysis across all KSIs.
+    Provides backward-compatible interface while using pattern-driven architecture.
+    All analysis delegated to GenericPatternAnalyzer with 248 loaded patterns.
     """
     
     def __init__(self):
-        self._analyzers: Dict[str, BaseKSIAnalyzer] = {}
-        self._register_all_analyzers()
+        """Initialize factory with GenericPatternAnalyzer."""
+        self._generic_analyzer = None
+        logger.info("KSI Factory initialized with pattern-based architecture")
     
-    def _register_all_analyzers(self):
-        """
-        Automatically discover and register all KSI analyzers.
-        
-        Scans the ksi/ directory for files matching ksi_*.py pattern,
-        dynamically imports them, and registers the analyzer classes.
-        """
-        # Get directory containing this factory.py file
-        ksi_dir = Path(__file__).parent
-        
-        # Find all ksi_*.py files (excluding special files)
-        ksi_files = sorted([
-            f.stem for f in ksi_dir.glob('ksi_*.py')
-            if f.stem not in ('ksi_base', '__init__')
-        ])
-        
-        failed_imports = []
-        
-        # Dynamically import and register each analyzer
-        for module_name in ksi_files:
-            try:
-                # Convert module name to class name (ksi_iam_06 -> KSI_IAM_06_Analyzer)
-                class_name = module_name.upper() + '_Analyzer'
-                
-                # Import module
-                module = import_module(f'.{module_name}', package='fedramp_20x_mcp.analyzers.ksi')
-                
-                # Get analyzer class and instantiate
-                analyzer_class = getattr(module, class_name)
-                self.register(analyzer_class())
-                
-            except (ImportError, AttributeError) as e:
-                # Log which analyzers failed to load
-                failed_imports.append((module_name, str(e)))
-                logger.warning(f"Failed to load KSI analyzer {module_name}: {e}")
-        
-        # Log summary
-        logger.info(f"Registered {len(self._analyzers)} KSI analyzers out of {len(ksi_files)} files")
-        if failed_imports:
-            logger.warning(f"Failed to load {len(failed_imports)} KSI analyzers:")
-            for module_name, error in failed_imports:
-                logger.warning(f"  - {module_name}: {error}")
+    def _ensure_analyzer(self):
+        """Lazy-load GenericPatternAnalyzer."""
+        if self._generic_analyzer is None:
+            self._generic_analyzer = get_generic_analyzer()
     
-    def register(self, analyzer: BaseKSIAnalyzer):
+    def register(self, analyzer):
         """
-        Register a KSI analyzer.
+        Register analyzer (legacy compatibility - no-op).
         
         Args:
-            analyzer: Instance of BaseKSIAnalyzer subclass
+            analyzer: Unused (kept for backward compatibility)
         """
-        self._analyzers[analyzer.ksi_id] = analyzer
+        pass  # Pattern-based architecture doesn't need registration
     
     async def sync_with_authoritative_data(self, data_loader) -> Dict[str, Any]:
         """
-        Sync analyzer metadata with authoritative FedRAMP JSON data.
-        
-        This ensures RETIRED status and other metadata stays accurate
-        when the authoritative source is updated.
+        Sync with authoritative data (pattern-based - uses pattern metadata).
         
         Args:
-            data_loader: DataLoader instance with loaded KSI data
+            data_loader: DataLoader instance (unused in pattern-based architecture)
             
         Returns:
-            Dictionary with sync results
+            Dictionary with sync status
         """
-        await data_loader.load_data()
-        
-        synced = 0
-        mismatches = []
-        
-        for ksi_id, analyzer in self._analyzers.items():
-            ksi_data = data_loader.get_ksi(ksi_id)
-            if ksi_data:
-                # Check if retired status matches
-                retired_in_data = ksi_data.get("retired", False)
-                if analyzer.RETIRED != retired_in_data:
-                    mismatches.append({
-                        "ksi_id": ksi_id,
-                        "analyzer_retired": analyzer.RETIRED,
-                        "data_retired": retired_in_data
-                    })
-                    # Update the analyzer's RETIRED status dynamically
-                    analyzer.RETIRED = retired_in_data
-                    synced += 1
+        self._ensure_analyzer()
+        stats = await get_pattern_statistics()
         
         return {
-            "synced_count": synced,
-            "mismatches": mismatches,
-            "total_analyzers": len(self._analyzers)
+            "synced_count": 0,
+            "mismatches": [],
+            "total_analyzers": stats.get("total_patterns", 0),
+            "note": "Pattern-based architecture syncs via pattern files"
         }
     
-    def get_analyzer(self, ksi_id: str) -> Optional[BaseKSIAnalyzer]:
+    def get_analyzer(self, ksi_id: str) -> Optional['PatternBasedAnalyzer']:
         """
-        Get analyzer for specific KSI.
+        Get analyzer for specific KSI (returns adapter, not traditional analyzer).
         
         Args:
-            ksi_id: KSI identifier (e.g., "KSI-IAM-06")
+            ksi_id: KSI identifier (e.g., "KSI-IAM-01")
             
         Returns:
-            KSI analyzer instance or None if not found
+            Pattern-based analyzer adapter
         """
-        return self._analyzers.get(ksi_id)
+        self._ensure_analyzer()
+        return PatternBasedAnalyzer(ksi_id, self._generic_analyzer)
     
     def list_ksis(self) -> List[str]:
         """
-        List all registered KSI IDs.
+        List all KSI IDs with available patterns.
         
         Returns:
             List of KSI identifiers
         """
-        return sorted(self._analyzers.keys())
+        self._ensure_analyzer()
+        # Extract KSI IDs from loaded patterns
+        ksi_ids = set()
+        for pattern in self._generic_analyzer.pattern_loader._patterns.values():
+            # Check ksi_id field
+            if hasattr(pattern, 'ksi_id') and pattern.ksi_id and isinstance(pattern.ksi_id, str) and pattern.ksi_id.startswith("KSI-"):
+                ksi_ids.add(pattern.ksi_id)
+            # Also check related_ksis list
+            if hasattr(pattern, 'related_ksis') and pattern.related_ksis:
+                for ksi_id in pattern.related_ksis:
+                    if isinstance(ksi_id, str) and ksi_id.startswith("KSI-"):
+                        ksi_ids.add(ksi_id)
+        return sorted(ksi_ids)
     
-    def analyze(self, ksi_id: str, code: str, language: str, file_path: str = "") -> Optional[AnalysisResult]:
+    async def analyze(self, ksi_id: str, code: str, language: str, file_path: str = "") -> Optional[AnalysisResult]:
         """
-        Analyze code for specific KSI.
+        Analyze code for specific KSI using pattern engine.
         
         Args:
             ksi_id: KSI identifier
@@ -152,16 +110,21 @@ class KSIAnalyzerFactory:
             file_path: Optional file path
             
         Returns:
-            AnalysisResult or None if KSI not found
+            AnalysisResult from pattern matching
         """
-        analyzer = self.get_analyzer(ksi_id)
-        if analyzer:
-            return analyzer.analyze(code, language, file_path)
-        return None
+        self._ensure_analyzer()
+        
+        return await analyze_with_generic_analyzer(
+            code=code,
+            language=language,
+            file_path=file_path,
+            families=None,
+            ksi_ids=[ksi_id]
+        )
     
-    def analyze_all_ksis(self, code: str, language: str, file_path: str = "") -> List[AnalysisResult]:
+    async def analyze_all_ksis(self, code: str, language: str, file_path: str = "") -> List[AnalysisResult]:
         """
-        Analyze code against all registered KSIs.
+        Analyze code against all KSI patterns.
         
         Args:
             code: Source code or configuration
@@ -169,18 +132,25 @@ class KSIAnalyzerFactory:
             file_path: Optional file path
             
         Returns:
-            List of AnalysisResults, one per KSI
+            List of AnalysisResults with findings
         """
-        results = []
-        for analyzer in self._analyzers.values():
-            result = analyzer.analyze(code, language, file_path)
-            if result.findings:  # Only include KSIs with findings
-                results.append(result)
-        return results
+        self._ensure_analyzer()
+        
+        # Analyze with all KSI patterns
+        result = await analyze_with_generic_analyzer(
+            code=code,
+            language=language,
+            file_path=file_path,
+            families=None,
+            ksi_ids=None  # All KSIs
+        )
+        
+        # Return as list for compatibility
+        return [result] if result.findings else []
     
     def get_ksi_metadata(self, ksi_id: str) -> Optional[dict]:
         """
-        Get metadata for specific KSI.
+        Get metadata for specific KSI from patterns.
         
         Args:
             ksi_id: KSI identifier
@@ -188,19 +158,97 @@ class KSIAnalyzerFactory:
         Returns:
             KSI metadata dictionary or None
         """
-        analyzer = self.get_analyzer(ksi_id)
-        if analyzer:
-            return analyzer.get_metadata()
+        self._ensure_analyzer()
+        import asyncio
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
+        patterns = loop.run_until_complete(get_patterns_for_requirement(ksi_id))
+        if patterns:
+            return {
+                "ksi_id": ksi_id,
+                "pattern_count": len(patterns),
+                "patterns": patterns
+            }
         return None
     
     def get_all_metadata(self) -> List[dict]:
         """
-        Get metadata for all registered KSIs.
+        Get metadata for all KSIs from pattern statistics.
         
         Returns:
             List of metadata dictionaries
         """
-        return [analyzer.get_metadata() for analyzer in self._analyzers.values()]
+        self._ensure_analyzer()
+        import asyncio
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
+        stats = loop.run_until_complete(get_pattern_statistics())
+        
+        # Convert pattern statistics to metadata format
+        metadata = []
+        for family, count in stats.get("by_family", {}).items():
+            metadata.append({
+                "family": family,
+                "pattern_count": count
+            })
+        
+        return metadata
+
+
+class PatternBasedAnalyzer:
+    """
+    Adapter class to provide analyzer-like interface for pattern-based analysis.
+    
+    Used for backward compatibility with code expecting traditional analyzer objects.
+    """
+    
+    def __init__(self, ksi_id: str, generic_analyzer):
+        self.ksi_id = ksi_id
+        self._generic_analyzer = generic_analyzer
+        self.RETIRED = False  # Default, patterns handle retired status
+    
+    def analyze(self, code: str, language: str, file_path: str = "") -> AnalysisResult:
+        """Analyze using pattern engine."""
+        import asyncio
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
+        return loop.run_until_complete(
+            analyze_with_generic_analyzer(
+                code=code,
+                language=language,
+                file_path=file_path,
+                families=None,
+                ksi_ids=[self.ksi_id]
+            )
+        )
+    
+    def get_metadata(self) -> dict:
+        """Get metadata from patterns."""
+        import asyncio
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
+        patterns = loop.run_until_complete(get_patterns_for_requirement(self.ksi_id))
+        return {
+            "ksi_id": self.ksi_id,
+            "pattern_count": len(patterns),
+            "retired": self.RETIRED
+        }
 
 
 # Global factory instance

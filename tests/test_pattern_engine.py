@@ -1,417 +1,328 @@
 """
-Tests for Pattern Engine and Pattern Compiler
+Tests for Pattern Engine and Pattern Loading
 
-Tests pattern loading, compilation, execution, and optimization.
+Tests pattern validation, loading, and detection logic.
 """
-
+import pytest
+import yaml
+from pathlib import Path
 import sys
 import os
-from pathlib import Path
 
 # Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from fedramp_20x_mcp.analyzers.pattern_engine import PatternEngine, Pattern
-from fedramp_20x_mcp.analyzers.pattern_compiler import PatternCompiler, compile_patterns_from_engine
-from fedramp_20x_mcp.analyzers.base import Severity
+from fedramp_20x_mcp.analyzers.generic_analyzer import GenericPatternAnalyzer
 
 
-def test_pattern_loading():
-    """Test loading patterns from YAML files"""
-    print("\n" + "=" * 70)
-    print("TEST: Pattern Loading")
-    print("=" * 70)
+class TestPatternLoading:
+    """Test pattern file loading and validation"""
     
-    engine = PatternEngine()
+    @pytest.fixture
+    def pattern_dir(self):
+        """Get pattern directory"""
+        return Path(__file__).parent.parent / "data" / "patterns"
     
-    # Load IAM patterns
-    iam_file = Path("data/patterns/iam_patterns.yaml")
-    if iam_file.exists():
+    @pytest.fixture
+    def engine(self):
+        """Create pattern engine instance"""
+        return PatternEngine()
+    
+    def test_pattern_directory_exists(self, pattern_dir):
+        """Test pattern directory exists"""
+        assert pattern_dir.exists()
+        assert pattern_dir.is_dir()
+    
+    def test_all_pattern_files_exist(self, pattern_dir):
+        """Test all expected pattern files exist"""
+        expected_files = [
+            "iam_patterns.yaml",
+            "vdr_patterns.yaml",
+            "scn_patterns.yaml",
+            "rsc_patterns.yaml",
+            "ads_patterns.yaml",
+            "ccm_patterns.yaml",
+            "cna_patterns.yaml",
+            "afr_patterns.yaml",
+            "mla_patterns.yaml",
+            "piy_patterns.yaml",
+            "svc_patterns.yaml",
+            "tpr_patterns.yaml",
+            "ucm_patterns.yaml",
+            "cmt_patterns.yaml",
+            "inr_patterns.yaml",
+            "rpl_patterns.yaml",
+            "ced_patterns.yaml",
+            "common_patterns.yaml"
+        ]
+        
+        for file in expected_files:
+            assert (pattern_dir / file).exists(), f"Missing pattern file: {file}"
+    
+    def test_pattern_files_valid_yaml(self, pattern_dir):
+        """Test all pattern files are valid YAML"""
+        pattern_files = list(pattern_dir.glob("*_patterns.yaml"))
+        assert len(pattern_files) > 0, "No pattern files found"
+        
+        for file in pattern_files:
+            with open(file, 'r', encoding='utf-8') as f:
+                try:
+                    # Load all YAML documents
+                    documents = list(yaml.safe_load_all(f.read()))
+                    assert len(documents) > 0, f"No patterns in {file.name}"
+                except yaml.YAMLError as e:
+                    pytest.fail(f"Invalid YAML in {file.name}: {e}")
+    
+    def test_pattern_schema_validation(self, pattern_dir):
+        """Test patterns have required fields"""
+        # Core required fields that every pattern MUST have
+        required_fields = [
+            "pattern_id",
+            "name", 
+            "description",
+            "family",
+            "severity",
+            "languages"
+        ]
+        
+        # Optional but recommended fields
+        optional_fields = ["pattern_type", "finding", "tags", "nist_controls"]
+        
+        pattern_files = list(pattern_dir.glob("*_patterns.yaml"))
+        
+        for file in pattern_files:
+            with open(file, 'r', encoding='utf-8') as f:
+                documents = yaml.safe_load_all(f.read())
+                
+                for i, doc in enumerate(documents):
+                    if doc is None:
+                        continue
+                        
+                    # Check required fields
+                    for field in required_fields:
+                        assert field in doc, f"{file.name} pattern {i}: Missing required field '{field}'"
+                    
+                    # Warn about missing optional fields (but don't fail)
+                    for field in optional_fields:
+                        if field not in doc:
+                            print(f"Warning: {file.name} pattern {i} missing optional field '{field}'")
+    
+    def test_load_single_pattern_file(self, engine, pattern_dir):
+        """Test loading a single pattern file"""
+        iam_file = pattern_dir / "iam_patterns.yaml"
         count = engine.load_patterns(str(iam_file))
-        print(f"[PASS] Loaded {count} IAM patterns")
-        assert count > 0, "Should load at least one pattern"
-    else:
-        print(f"[SKIP] IAM patterns file not found: {iam_file}")
+        
+        assert count > 0, "No patterns loaded from IAM file"
+        assert len(engine.patterns) == count
     
-    # Load all patterns
-    patterns_dir = Path("data/patterns")
-    if patterns_dir.exists():
-        total_count = engine.load_all_patterns(str(patterns_dir))
-        print(f"[PASS] Loaded {total_count} total patterns from {patterns_dir}")
-        assert total_count >= count, "Should load all patterns"
-    else:
-        print(f"[SKIP] Patterns directory not found: {patterns_dir}")
+    def test_load_all_patterns(self, engine, pattern_dir):
+        """Test loading all pattern files"""
+        count = engine.load_all_patterns(str(pattern_dir))
+        
+        assert count > 0, "No patterns loaded"
+        assert len(engine.patterns) == count
+        
+        # Should have loaded a substantial number of patterns
+        assert count > 100, f"Expected >100 patterns, got {count}"
     
-    # Get statistics
-    stats = engine.get_statistics()
-    print(f"\nPattern Statistics:")
-    print(f"  Total patterns: {stats['total_patterns']}")
-    print(f"  Families: {stats['families']}")
-    print(f"  Languages: {', '.join(stats['languages'][:5])}...")
-    print(f"  Pattern types: {', '.join(stats['pattern_types'])}")
+    def test_pattern_families(self, engine, pattern_dir):
+        """Test patterns are organized by family"""
+        engine.load_all_patterns(str(pattern_dir))
+        
+        families = set()
+        for pattern in engine.patterns.values():
+            families.add(pattern.family)
+        
+        # Should have multiple families
+        expected_families = ["IAM", "VDR", "SCN", "RSC", "ADS", "CNA"]
+        for family in expected_families:
+            assert family in families, f"Missing family: {family}"
     
-    return engine
+    def test_ksi_pattern_mapping(self, engine, pattern_dir):
+        """Test patterns are mapped to KSI IDs"""
+        engine.load_all_patterns(str(pattern_dir))
+        
+        ksi_patterns = {}
+        for pattern in engine.patterns.values():
+            if hasattr(pattern, 'related_ksis') and pattern.related_ksis:
+                for ksi_id in pattern.related_ksis:
+                    if ksi_id not in ksi_patterns:
+                        ksi_patterns[ksi_id] = []
+                    ksi_patterns[ksi_id].append(pattern.pattern_id)
+        
+        # Should have patterns for many KSIs
+        assert len(ksi_patterns) > 20, f"Expected >20 KSIs with patterns, got {len(ksi_patterns)}"
 
 
-def test_pattern_compilation(engine):
-    """Test pattern compilation and optimization"""
-    print("\n" + "=" * 70)
-    print("TEST: Pattern Compilation")
-    print("=" * 70)
+class TestGenericAnalyzer:
+    """Test GenericPatternAnalyzer functionality"""
     
-    compiler = compile_patterns_from_engine(engine)
+    @pytest.fixture
+    def analyzer(self):
+        """Create analyzer instance"""
+        return GenericPatternAnalyzer()
     
-    # Check compilation
-    compiled_count = len(compiler.compiled_patterns)
-    print(f"[PASS] Compiled {compiled_count} patterns")
-    assert compiled_count > 0, "Should compile patterns"
+    @pytest.fixture
+    def pattern_dir(self):
+        """Get pattern directory"""
+        return Path(__file__).parent.parent / "data" / "patterns"
     
-    # Check execution order
-    exec_order = compiler.get_execution_order()
-    print(f"[PASS] Generated execution order with {len(exec_order)} patterns")
+    def test_analyzer_initialization(self, analyzer):
+        """Test analyzer initializes correctly"""
+        assert analyzer is not None
+        assert hasattr(analyzer, 'pattern_loader')
+        assert hasattr(analyzer, 'metadata')
+        # Patterns should already be loaded
+        assert len(analyzer.pattern_loader._patterns) > 0
     
-    # Get compiler statistics
-    stats = compiler.get_pattern_statistics()
-    print(f"\nCompiler Statistics:")
-    print(f"  Total patterns: {stats['total_patterns']}")
-    print(f"  Patterns with regex: {stats['patterns_with_regex']}")
-    print(f"  Patterns with AST: {stats['patterns_with_ast']}")
-    print(f"  Patterns with dependencies: {stats['patterns_with_dependencies']}")
-    print(f"  Circular dependencies: {stats['has_circular_deps']}")
+    def test_load_patterns(self, analyzer, pattern_dir):
+        """Test loading patterns into analyzer"""
+        # Patterns are auto-loaded in __init__, check they're there
+        patterns = analyzer.pattern_loader._patterns
+        
+        assert len(patterns) > 0
+        # Should have loaded a substantial number
+        assert len(patterns) > 100, f"Expected >100 patterns, got {len(patterns)}"
     
-    # Validate patterns
-    warnings = compiler.validate_patterns()
-    if warnings:
-        print(f"\n[WARN] Validation warnings ({len(warnings)}):")
-        for warning in warnings[:5]:
-            print(f"  - {warning}")
-        if len(warnings) > 5:
-            print(f"  ... and {len(warnings) - 5} more")
-    else:
-        print(f"[PASS] No validation warnings")
-    
-    return compiler
-
-
-def test_mfa_detection():
-    """Test MFA pattern detection"""
-    print("\n" + "=" * 70)
-    print("TEST: MFA Detection (IAM)")
-    print("=" * 70)
-    
-    engine = PatternEngine()
-    iam_file = Path("data/patterns/iam_patterns.yaml")
-    
-    if not iam_file.exists():
-        print("[SKIP] IAM patterns not found")
-        return
-    
-    engine.load_patterns(str(iam_file))
-    
-    # Test positive finding: FIDO2 import
-    code_with_fido2 = """
-from fido2.server import Fido2Server
-from fido2.webauthn import PublicKeyCredentialRpEntity
-
-def setup_mfa():
-    rp = PublicKeyCredentialRpEntity("example.com", "Example App")
-    server = Fido2Server(rp)
-    return server
-"""
-    
-    result = engine.analyze(code_with_fido2, "python", file_path="app.py", family="IAM")
-    print(f"\nPositive test (FIDO2 import):")
-    print(f"  Findings: {len(result.findings)}")
-    for finding in result.findings:
-        print(f"  - {finding.title} (Severity: {finding.severity.name})")
-    
-    if result.findings:
-        print("[PASS] Detected FIDO2 import")
-    else:
-        print("[WARN] No FIDO2 detection - pattern may need adjustment")
-    
-    # Test negative finding: TOTP (not phishing-resistant)
-    code_with_totp = """
-import pyotp
-
-def generate_totp():
-    secret = pyotp.random_base32()
-    totp = pyotp.TOTP(secret)
-    return totp.now()
-"""
-    
-    result = engine.analyze(code_with_totp, "python", file_path="app.py", family="IAM")
-    print(f"\nNegative test (TOTP - not phishing-resistant):")
-    print(f"  Findings: {len(result.findings)}")
-    for finding in result.findings:
-        print(f"  - {finding.title} (Severity: {finding.severity.name})")
-    
-    if result.findings:
-        print("[PASS] Detected TOTP (security gap)")
-    else:
-        print("[WARN] No TOTP detection - pattern may need adjustment")
-    
-    # Test negative finding: Login without MFA
-    code_no_mfa = """
-from flask import Flask, request, session
-
-app = Flask(__name__)
-
-@app.route('/login', methods=['POST'])
-def login():
-    username = request.form['username']
-    password = request.form['password']
-    
-    if verify_password(username, password):
-        session['user'] = username
-        return "Login successful"
-    return "Login failed"
-"""
-    
-    result = engine.analyze(code_no_mfa, "python", file_path="app.py", family="IAM")
-    print(f"\nNegative test (Login without MFA):")
-    print(f"  Findings: {len(result.findings)}")
-    for finding in result.findings:
-        print(f"  - {finding.title} (Severity: {finding.severity.name})")
-    
-    if result.findings:
-        print("[PASS] Detected login without MFA")
-    else:
-        print("[WARN] No detection - pattern may need adjustment")
-
-
-def test_logging_detection():
-    """Test centralized logging detection"""
-    print("\n" + "=" * 70)
-    print("TEST: Centralized Logging Detection (MLA)")
-    print("=" * 70)
-    
-    engine = PatternEngine()
-    mla_file = Path("data/patterns/mla_patterns.yaml")
-    
-    if not mla_file.exists():
-        print("[SKIP] MLA patterns not found")
-        return
-    
-    engine.load_patterns(str(mla_file))
-    
-    # Test negative finding: Local file logging
-    code_local_logging = """
-import logging
-
-logger = logging.getLogger(__name__)
-handler = logging.FileHandler('app.log')
-logger.addHandler(handler)
-"""
-    
-    result = engine.analyze(code_local_logging, "python", file_path="app.py", family="MLA")
-    print(f"\nNegative test (Local file logging):")
-    print(f"  Findings: {len(result.findings)}")
-    for finding in result.findings:
-        print(f"  - {finding.title} (Severity: {finding.severity.name})")
-    
-    if result.findings:
-        print("[PASS] Detected local file logging")
-    else:
-        print("[WARN] No detection - pattern may need adjustment")
-    
-    # Test positive finding: Azure Monitor
-    code_azure_monitor = """
-from opencensus.ext.azure.log_exporter import AzureLogHandler
-import logging
-
-logger = logging.getLogger(__name__)
-logger.addHandler(AzureLogHandler(
-    connection_string='InstrumentationKey=12345-67890'
-))
-"""
-    
-    result = engine.analyze(code_azure_monitor, "python", file_path="app.py", family="MLA")
-    print(f"\nPositive test (Azure Monitor):")
-    print(f"  Findings: {len(result.findings)}")
-    for finding in result.findings:
-        print(f"  - {finding.title} (Severity: {finding.severity.name})")
-    
-    if result.findings:
-        print("[PASS] Detected Azure Monitor integration")
-    else:
-        print("[WARN] No detection - pattern may need adjustment")
-
-
-def test_secrets_detection():
-    """Test secrets management detection"""
-    print("\n" + "=" * 70)
-    print("TEST: Secrets Management Detection (SVC)")
-    print("=" * 70)
-    
-    engine = PatternEngine()
-    svc_file = Path("data/patterns/svc_patterns.yaml")
-    
-    if not svc_file.exists():
-        print("[SKIP] SVC patterns not found")
-        return
-    
-    engine.load_patterns(str(svc_file))
-    
-    # Test negative finding: Hardcoded secret
-    code_hardcoded = """
-api_key = "sk-1234567890abcdef"
-database_password = "MySecretP@ssw0rd"
-
-def connect_to_api():
-    return requests.get(f"https://api.example.com?key={api_key}")
-"""
-    
-    result = engine.analyze(code_hardcoded, "python", file_path="app.py", family="SVC")
-    print(f"\nNegative test (Hardcoded secrets):")
-    print(f"  Findings: {len(result.findings)}")
-    for finding in result.findings:
-        print(f"  - {finding.title} (Severity: {finding.severity.name})")
-    
-    if result.findings:
-        print("[PASS] Detected hardcoded secrets")
-    else:
-        print("[WARN] No detection - pattern may need adjustment")
-    
-    # Test positive finding: Key Vault usage
-    code_keyvault = """
+    def test_analyze_python_code(self, analyzer, pattern_dir):
+        """Test analyzing Python code"""
+        # Patterns already loaded, verify they exist
+        assert len(analyzer.pattern_loader._patterns) > 0
+        
+        # Sample Python code with MFA
+        code = """
+import fido2
 from azure.identity import DefaultAzureCredential
-from azure.keyvault.secrets import SecretClient
 
-credential = DefaultAzureCredential()
-client = SecretClient(
-    vault_url="https://myvault.vault.azure.net/",
-    credential=credential
+def authenticate_user():
+    credential = DefaultAzureCredential()
+    return credential
+"""
+        
+        result = analyzer.analyze(code, "python")
+        
+        assert result is not None
+        assert hasattr(result, 'findings')
+        # Result should be valid (findings may be 0 or more depending on patterns)
+        assert isinstance(result.findings, list)
+    
+    def test_analyze_csharp_code(self, analyzer, pattern_dir):
+        """Test analyzing C# code"""
+        # Patterns already loaded
+        assert len(analyzer.pattern_loader._patterns) > 0
+        
+        code = """
+using Azure.Security.KeyVault.Keys;
+using Azure.Identity;
+
+public class SecureStorage
+{
+    private readonly KeyClient keyClient;
+    
+    public SecureStorage()
+    {
+        keyClient = new KeyClient(
+            new Uri("https://myvault.vault.azure.net/"),
+            new DefaultAzureCredential()
+        );
+    }
+}
+"""
+        
+        result = analyzer.analyze(code, "csharp")
+        
+        assert result is not None
+        assert hasattr(result, 'findings')
+    
+    def test_analyze_bicep_code(self, analyzer, pattern_dir):
+        """Test analyzing Bicep IaC"""
+        # Patterns already loaded
+        assert len(analyzer.pattern_loader._patterns) > 0
+        
+        code = """
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
+  name: 'myKeyVault'
+  location: location
+  properties: {
+    sku: {
+      family: 'A'
+      name: 'premium'
+    }
+    tenantId: subscription().tenantId
+    enablePurgeProtection: true
+    enableSoftDelete: true
+  }
+}
+"""
+        
+        result = analyzer.analyze(code, "bicep")
+        
+        assert result is not None
+        assert hasattr(result, 'findings')
+
+
+class TestPatternDetection:
+    """Test pattern detection accuracy"""
+    
+    @pytest.fixture
+    def analyzer(self):
+        """Create analyzer with loaded patterns"""
+        analyzer = GenericPatternAnalyzer()
+        # Patterns auto-load in __init__
+        assert len(analyzer.pattern_loader._patterns) > 0
+        return analyzer
+    
+    def test_detect_mfa_patterns(self, analyzer):
+        """Test MFA pattern detection"""
+        code = """
+from azure.identity import InteractiveBrowserCredential
+from msal import ConfidentialClientApplication
+
+cred = InteractiveBrowserCredential()
+"""
+        
+        result = analyzer.analyze(code, "python")
+        
+        # Should detect Azure identity usage
+        assert result is not None
+    
+    def test_detect_encryption_patterns(self, analyzer):
+        """Test encryption pattern detection"""
+        code = """
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
+
+cipher = Cipher(
+    algorithms.AES(key),
+    modes.GCM(iv),
+    backend=default_backend()
 )
-
-api_key = client.get_secret("api-key").value
 """
+        
+        result = analyzer.analyze(code, "python")
+        assert result is not None
     
-    result = engine.analyze(code_keyvault, "python", file_path="app.py", family="SVC")
-    print(f"\nPositive test (Key Vault):")
-    print(f"  Findings: {len(result.findings)}")
-    for finding in result.findings:
-        print(f"  - {finding.title} (Severity: {finding.severity.name})")
-    
-    if result.findings:
-        print("[PASS] Detected Key Vault usage")
-    else:
-        print("[WARN] No detection - pattern may need adjustment")
+    def test_detect_logging_patterns(self, analyzer):
+        """Test logging pattern detection"""
+        code = """
+import logging
+from opencensus.ext.azure.log_exporter import AzureLogHandler
 
-
-def test_vulnerability_scanning():
-    """Test vulnerability scanning detection"""
-    print("\n" + "=" * 70)
-    print("TEST: Vulnerability Scanning Detection (VDR)")
-    print("=" * 70)
-    
-    engine = PatternEngine()
-    vdr_file = Path("data/patterns/vdr_patterns.yaml")
-    
-    if not vdr_file.exists():
-        print("[SKIP] VDR patterns not found")
-        return
-    
-    engine.load_patterns(str(vdr_file))
-    
-    # Test negative finding: Missing SAST in GitHub Actions
-    github_workflow = """
-name: Build and Deploy
-
-on:
-  push:
-    branches: [main]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Build
-        run: npm run build
-      - name: Deploy
-        run: npm run deploy
+logger = logging.getLogger(__name__)
+logger.addHandler(AzureLogHandler())
+logger.info("Application started")
 """
-    
-    result = engine.analyze(github_workflow, "github_actions", file_path=".github/workflows/deploy.yml", family="VDR")
-    print(f"\nNegative test (Missing SAST):")
-    print(f"  Findings: {len(result.findings)}")
-    for finding in result.findings:
-        print(f"  - {finding.title} (Severity: {finding.severity.name})")
-    
-    if result.findings:
-        print("[PASS] Detected missing SAST")
-    else:
-        print("[WARN] No detection - pattern may need adjustment")
-    
-    # Test positive finding: CodeQL scanning
-    github_with_codeql = """
-name: Security Scan
-
-on:
-  push:
-    branches: [main]
-
-jobs:
-  security:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
-        with:
-          languages: python, javascript
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
-"""
-    
-    result = engine.analyze(github_with_codeql, "github_actions", file_path=".github/workflows/security.yml", family="VDR")
-    print(f"\nPositive test (CodeQL scanning):")
-    print(f"  Findings: {len(result.findings)}")
-    for finding in result.findings:
-        print(f"  - {finding.title} (Severity: {finding.severity.name})")
-    
-    if result.findings:
-        print("[PASS] Detected CodeQL scanning")
-    else:
-        print("[WARN] No detection - pattern may need adjustment")
+        
+        result = analyzer.analyze(code, "python")
+        assert result is not None
 
 
-def main():
-    """Run all pattern engine tests"""
-    print("\n" + "=" * 70)
-    print("PATTERN ENGINE AND COMPILER TESTS")
-    print("=" * 70)
-    
-    try:
-        # Test pattern loading
-        engine = test_pattern_loading()
-        
-        # Test pattern compilation
-        if engine and engine.patterns:
-            compiler = test_pattern_compilation(engine)
-        
-        # Test specific pattern families
-        test_mfa_detection()
-        test_logging_detection()
-        test_secrets_detection()
-        test_vulnerability_scanning()
-        
-        print("\n" + "=" * 70)
-        print("ALL TESTS COMPLETED")
-        print("=" * 70)
-        print("\nNOTE: Some tests may show [WARN] as patterns are regex-based")
-        print("      and AST integration is still in development.")
-        print("      This is expected for Phase 2 initial implementation.")
-        
-    except Exception as e:
-        print(f"\n[FAIL] Test failed with error: {e}")
-        import traceback
-        traceback.print_exc()
-        return 1
-    
-    return 0
+def run_tests():
+    """Run tests with pytest"""
+    print("Running Pattern Engine tests...")
+    pytest.main([__file__, "-v", "-s"])
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    run_tests()

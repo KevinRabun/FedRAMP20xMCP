@@ -1,613 +1,319 @@
-# CED (Cybersecurity Education) Patterns
-# Patterns for security training, awareness, and education requirements
+# CED PATTERNS V2 - V2 Schema
+# Migrated from V1 schema with enhanced evidence collection
+# 
+# NOTE: This is an automated migration. Manual review required for:
+# - Evidence collection queries (marked with TODO)
+# - Automation implementation code
+# - SSP mapping descriptions
+# - Test cases
 
----
-# Pattern 1: Missing Security Training Documentation (KSI-CED-01)
-pattern_id: "ced.training.missing_documentation"
-name: "Missing Security Training Documentation"
-description: "Detects absence of security training documentation, tracking, or verification systems. KSI-CED-01 requires documented training programs for all employees."
-severity: "HIGH"
-family: "CED"
-ksi_id: "KSI-CED-01"
-nist_controls: ["at-2", "at-3", "at-4"]
-category: "security_training"
-
+pattern_id: ced.training.missing_documentation
+name: Missing Security Training Documentation
+description: Detects absence of security training documentation, tracking, or verification
+  systems. KSI-CED-01 requires documented training programs for all employees.
+severity: HIGH
+family: CED
+ksi_id: KSI-CED-01
+nist_controls:
+- at-2
+- at-3
+- at-4
+category: security_training
 languages:
   python:
-    regex_fallback: "(class.*Training|def.*training|LMS|learning_management)"
+    regex_fallback: (class.*Training|def.*training|LMS|learning_management)
     positive_indicators:
-      - "training"
-      - "certification"
-      - "course"
-      - "module"
+    - training
+    - certification
+    - course
+    - module
     negative_indicators:
-      - "completed"
-      - "verified"
-      - "tracked"
-      - "documented"
-
+    - completed
+    - verified
+    - tracked
+    - documented
   csharp:
-    regex_fallback: "(class.*Training|interface.*ITraining|TrainingModule)"
+    regex_fallback: (class.*Training|interface.*ITraining|TrainingModule)
     positive_indicators:
-      - "Training"
-      - "Certification"
-      - "Course"
+    - Training
+    - Certification
+    - Course
     negative_indicators:
-      - "Completed"
-      - "Verified"
-      - "Tracked"
-
+    - Completed
+    - Verified
+    - Tracked
   bicep:
-    regex_fallback: "(Microsoft\\.OperationalInsights.*training|Microsoft\\.Insights.*training)"
+    regex_fallback: (Microsoft\.OperationalInsights.*training|Microsoft\.Insights.*training)
     positive_indicators:
-      - "training"
-      - "awareness"
+    - training
+    - awareness
     negative_indicators:
-      - "enabled"
-      - "configured"
-
-remediation: |
-  Implement documented security training programs with verification:
-
-  **Python (Training Tracking System):**
-  ```python
-  from datetime import datetime, timedelta
-  from typing import List, Dict
-  import logging
-
-  class SecurityTrainingTracker:
-      """Track and verify security training completion"""
-      
-      def __init__(self):
-          self.logger = logging.getLogger(__name__)
-          self.training_records = {}  # employee_id -> training records
-      
-      def record_training_completion(
-          self,
-          employee_id: str,
-          training_module: str,
-          completion_date: datetime,
-          score: float,
-          certificate_id: str
-      ):
-          """Record completed security training with verification"""
-          if employee_id not in self.training_records:
-              self.training_records[employee_id] = []
-          
-          record = {
-              'module': training_module,
-              'completion_date': completion_date,
-              'score': score,
-              'certificate_id': certificate_id,
-              'verified': True,
-              'expiration_date': completion_date + timedelta(days=365)  # Annual renewal
-          }
-          
-          self.training_records[employee_id].append(record)
-          self.logger.info(f"Training recorded: {employee_id} - {training_module}")
-      
-      def verify_training_current(self, employee_id: str, module: str) -> bool:
-          """Verify employee has current training for module"""
-          if employee_id not in self.training_records:
-              return False
-          
-          records = [r for r in self.training_records[employee_id] if r['module'] == module]
-          if not records:
-              return False
-          
-          # Check most recent training is not expired
-          latest = max(records, key=lambda x: x['completion_date'])
-          return latest['expiration_date'] > datetime.now()
-      
-      def get_expired_training(self) -> Dict[str, List[str]]:
-          """Identify employees with expired training"""
-          expired = {}
-          for emp_id, records in self.training_records.items():
-              expired_modules = [
-                  r['module'] for r in records 
-                  if r['expiration_date'] <= datetime.now()
-              ]
-              if expired_modules:
-                  expired[emp_id] = expired_modules
-          return expired
-
-  # Required training modules per KSI-CED-01
-  REQUIRED_TRAINING_MODULES = [
-      "Security Awareness Fundamentals",
-      "Phishing Recognition and Prevention",
-      "Password Security and MFA",
-      "Data Classification and Handling",
-      "Incident Reporting Procedures",
-      "Acceptable Use Policy"
-  ]
-
-  tracker = SecurityTrainingTracker()
-  
-  # Record training completion
-  tracker.record_training_completion(
-      employee_id="EMP001",
-      training_module="Security Awareness Fundamentals",
-      completion_date=datetime.now(),
-      score=95.0,
-      certificate_id="CERT-2024-001"
-  )
-  ```
-
-  **C# (Training Management Service):**
-  ```csharp
-  using System;
-  using System.Collections.Generic;
-  using System.Linq;
-
-  public class SecurityTrainingService
-  {
-      private readonly ILogger<SecurityTrainingService> _logger;
-      private readonly Dictionary<string, List<TrainingRecord>> _trainingRecords;
-
-      public SecurityTrainingService(ILogger<SecurityTrainingService> logger)
-      {
-          _logger = logger;
-          _trainingRecords = new Dictionary<string, List<TrainingRecord>>();
-      }
-
-      public void RecordTrainingCompletion(TrainingCompletion completion)
-      {
-          if (!_trainingRecords.ContainsKey(completion.EmployeeId))
-          {
-              _trainingRecords[completion.EmployeeId] = new List<TrainingRecord>();
-          }
-
-          var record = new TrainingRecord
-          {
-              Module = completion.Module,
-              CompletionDate = completion.CompletionDate,
-              Score = completion.Score,
-              CertificateId = completion.CertificateId,
-              Verified = true,
-              ExpirationDate = completion.CompletionDate.AddYears(1)
-          };
-
-          _trainingRecords[completion.EmployeeId].Add(record);
-          _logger.LogInformation($"Training recorded: {completion.EmployeeId} - {completion.Module}");
-      }
-
-      public bool VerifyTrainingCurrent(string employeeId, string module)
-      {
-          if (!_trainingRecords.ContainsKey(employeeId))
-              return false;
-
-          var records = _trainingRecords[employeeId]
-              .Where(r => r.Module == module)
-              .ToList();
-
-          if (!records.Any())
-              return false;
-
-          var latest = records.OrderByDescending(r => r.CompletionDate).First();
-          return latest.ExpirationDate > DateTime.Now;
-      }
-
-      public Dictionary<string, List<string>> GetExpiredTraining()
-      {
-          var expired = new Dictionary<string, List<string>>();
-          
-          foreach (var (empId, records) in _trainingRecords)
-          {
-              var expiredModules = records
-                  .Where(r => r.ExpirationDate <= DateTime.Now)
-                  .Select(r => r.Module)
-                  .ToList();
-
-              if (expiredModules.Any())
-              {
-                  expired[empId] = expiredModules;
-              }
-          }
-
-          return expired;
-      }
-  }
-
-  public class TrainingRecord
-  {
-      public string Module { get; set; }
-      public DateTime CompletionDate { get; set; }
-      public double Score { get; set; }
-      public string CertificateId { get; set; }
-      public bool Verified { get; set; }
-      public DateTime ExpirationDate { get; set; }
-  }
-  ```
-
-  **Azure Monitor Logging (Bicep):**
-  ```bicep
-  resource trainingWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
-    name: 'security-training-logs'
-    location: location
-    properties: {
-      retentionInDays: 730  // 2 years retention for compliance
-      sku: {
-        name: 'PerGB2018'
-      }
-      features: {
-        enableLogAccessUsingOnlyResourcePermissions: true
-      }
-    }
-  }
-
-  resource trainingDataCollection 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
-    name: 'training-data-collection'
-    location: location
-    properties: {
-      destinations: {
-        logAnalytics: [
-          {
-            workspaceResourceId: trainingWorkspace.id
-            name: 'trainingWorkspace'
-          }
-        ]
-      }
-      dataFlows: [
-        {
-          streams: [
-            'Microsoft-SecurityTraining'
-          ]
-          destinations: [
-            'trainingWorkspace'
-          ]
-        }
-      ]
-    }
-  }
-  ```
-
-  **Compliance Requirements:**
-  - Document all required training modules (KSI-CED-01)
-  - Track completion dates and scores (AT-2)
-  - Verify training effectiveness (AT-3)
-  - Maintain training records for audit (AT-4)
-  - Annual training renewal (FedRAMP baseline)
-  - Executive/management training (AT-3.5)
+    - enabled
+    - configured
+remediation: "Implement documented security training programs with verification:\n\
+  \n**Python (Training Tracking System):**\n```python\nfrom datetime import datetime,\
+  \ timedelta\nfrom typing import List, Dict\nimport logging\n\nclass SecurityTrainingTracker:\n\
+  \    \"\"\"Track and verify security training completion\"\"\"\n    \n    def __init__(self):\n\
+  \        self.logger = logging.getLogger(__name__)\n        self.training_records\
+  \ = {}  # employee_id -> training records\n    \n    def record_training_completion(\n\
+  \        self,\n        employee_id: str,\n        training_module: str,\n     \
+  \   completion_date: datetime,\n        score: float,\n        certificate_id: str\n\
+  \    ):\n        \"\"\"Record completed security training with verification\"\"\"\
+  \n        if employee_id not in self.training_records:\n            self.training_records[employee_id]\
+  \ = []\n        \n        record = {\n            'module': training_module,\n \
+  \           'completion_date': completion_date,\n            'score': score,\n \
+  \           'certificate_id': certificate_id,\n            'verified': True,\n \
+  \           'expiration_date': completion_date + timedelta(days=365)  # Annual renewal\n\
+  \        }\n        \n        self.training_records[employee_id].append(record)\n\
+  \        self.logger.info(f\"Training recorded: {employee_id} - {training_module}\"\
+  )\n    \n    def verify_training_current(self, employee_id: str, module: str) ->\
+  \ bool:\n        \"\"\"Verify employee has current training for module\"\"\"\n \
+  \       if employee_id not in self.training_records:\n            return False\n\
+  \        \n        records = [r for r in self.training_records[employee_id] if r['module']\
+  \ == module]\n        if not records:\n            return False\n        \n    \
+  \    # Check most recent training is not expired\n        latest = max(records,\
+  \ key=lambda x: x['completion_date'])\n        return latest['expiration_date']\
+  \ > datetime.now()\n    \n    def get_expired_training(self) -> Dict[str, List[str]]:\n\
+  \        \"\"\"Identify employees with expired training\"\"\"\n        expired =\
+  \ {}\n        for emp_id, records in self.training_records.items():\n          \
+  \  expired_modules = [\n                r['module'] for r in records \n        \
+  \        if r['expiration_date'] <= datetime.now()\n            ]\n            if\
+  \ expired_modules:\n                expired[emp_id] = expired_modules\n        return\
+  \ expired\n\n# Required training modules per KSI-CED-01\nREQUIRED_TRAINING_MODULES\
+  \ = [\n    \"Security Awareness Fundamentals\",\n    \"Phishing Recognition and\
+  \ Prevention\",\n    \"Password Security and MFA\",\n    \"Data Classification and\
+  \ Handling\",\n    \"Incident Reporting Procedures\",\n    \"Acceptable Use Policy\"\
+  \n]\n\ntracker = SecurityTrainingTracker()\n\n# Record training completion\ntracker.record_training_completion(\n\
+  \    employee_id=\"EMP001\",\n    training_module=\"Security Awareness Fundamentals\"\
+  ,\n    completion_date=datetime.now(),\n    score=95.0,\n    certificate_id=\"CERT-2024-001\"\
+  \n)\n```\n\n**C# (Training Management Service):**\n```csharp\nusing System;\nusing\
+  \ System.Collections.Generic;\nusing System.Linq;\n\npublic class SecurityTrainingService\n\
+  {\n    private readonly ILogger<SecurityTrainingService> _logger;\n    private readonly\
+  \ Dictionary<string, List<TrainingRecord>> _trainingRecords;\n\n    public SecurityTrainingService(ILogger<SecurityTrainingService>\
+  \ logger)\n    {\n        _logger = logger;\n        _trainingRecords = new Dictionary<string,\
+  \ List<TrainingRecord>>();\n    }\n\n    public void RecordTrainingCompletion(TrainingCompletion\
+  \ completion)\n    {\n        if (!_trainingRecords.ContainsKey(completion.EmployeeId))\n\
+  \        {\n            _trainingRecords[completion.EmployeeId] = new List<TrainingRecord>();\n\
+  \        }\n\n        var record = new TrainingRecord\n        {\n            Module\
+  \ = completion.Module,\n            CompletionDate = completion.CompletionDate,\n\
+  \            Score = completion.Score,\n            CertificateId = completion.CertificateId,\n\
+  \            Verified = true,\n            ExpirationDate = completion.CompletionDate.AddYears(1)\n\
+  \        };\n\n        _trainingRecords[completion.EmployeeId].Add(record);\n  \
+  \      _logger.LogInformation($\"Training recorded: {completion.EmployeeId} - {completion.Module}\"\
+  );\n    }\n\n    public bool VerifyTrainingCurrent(string employeeId, string module)\n\
+  \    {\n        if (!_trainingRecords.ContainsKey(employeeId))\n            return\
+  \ false;\n\n        var records = _trainingRecords[employeeId]\n            .Where(r\
+  \ => r.Module == module)\n            .ToList();\n\n        if (!records.Any())\n\
+  \            return false;\n\n        var latest = records.OrderByDescending(r =>\
+  \ r.CompletionDate).First();\n        return latest.ExpirationDate > DateTime.Now;\n\
+  \    }\n\n    public Dictionary<string, List<string>> GetExpiredTraining()\n   \
+  \ {\n        var expired = new Dictionary<string, List<string>>();\n        \n \
+  \       foreach (var (empId, records) in _trainingRecords)\n        {\n        \
+  \    var expiredModules = records\n                .Where(r => r.ExpirationDate\
+  \ <= DateTime.Now)\n                .Select(r => r.Module)\n                .ToList();\n\
+  \n            if (expiredModules.Any())\n            {\n                expired[empId]\
+  \ = expiredModules;\n            }\n        }\n\n        return expired;\n    }\n\
+  }\n\npublic class TrainingRecord\n{\n    public string Module { get; set; }\n  \
+  \  public DateTime CompletionDate { get; set; }\n    public double Score { get;\
+  \ set; }\n    public string CertificateId { get; set; }\n    public bool Verified\
+  \ { get; set; }\n    public DateTime ExpirationDate { get; set; }\n}\n```\n\n**Azure\
+  \ Monitor Logging (Bicep):**\n```bicep\nresource trainingWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01'\
+  \ = {\n  name: 'security-training-logs'\n  location: location\n  properties: {\n\
+  \    retentionInDays: 730  // 2 years retention for compliance\n    sku: {\n   \
+  \   name: 'PerGB2018'\n    }\n    features: {\n      enableLogAccessUsingOnlyResourcePermissions:\
+  \ true\n    }\n  }\n}\n\nresource trainingDataCollection 'Microsoft.Insights/dataCollectionRules@2023-03-11'\
+  \ = {\n  name: 'training-data-collection'\n  location: location\n  properties: {\n\
+  \    destinations: {\n      logAnalytics: [\n        {\n          workspaceResourceId:\
+  \ trainingWorkspace.id\n          name: 'trainingWorkspace'\n        }\n      ]\n\
+  \    }\n    dataFlows: [\n      {\n        streams: [\n          'Microsoft-SecurityTraining'\n\
+  \        ]\n        destinations: [\n          'trainingWorkspace'\n        ]\n\
+  \      }\n    ]\n  }\n}\n```\n\n**Compliance Requirements:**\n- Document all required\
+  \ training modules (KSI-CED-01)\n- Track completion dates and scores (AT-2)\n- Verify\
+  \ training effectiveness (AT-3)\n- Maintain training records for audit (AT-4)\n\
+  - Annual training renewal (FedRAMP baseline)\n- Executive/management training (AT-3.5)\n"
 
 ---
-# Pattern 2: Insufficient Role-Based Training (KSI-CED-02)
-pattern_id: "ced.training.role_based_missing"
-name: "Insufficient Role-Based Security Training"
-description: "Detects missing role-specific security training for privileged users, administrators, or developers. KSI-CED-02 requires tailored training based on job responsibilities."
-severity: "HIGH"
-family: "CED"
-ksi_id: "KSI-CED-02"
-nist_controls: ["at-3", "ps-2"]
-category: "role_based_training"
-
+pattern_id: ced.training.role_based_missing
+name: Insufficient Role-Based Security Training
+description: Detects missing role-specific security training for privileged users,
+  administrators, or developers. KSI-CED-02 requires tailored training based on job
+  responsibilities.
+severity: HIGH
+family: CED
+ksi_id: KSI-CED-02
+nist_controls:
+- at-3
+- ps-2
+category: role_based_training
 languages:
   python:
-    regex_fallback: "(role.*admin|privilege.*user|developer.*access|RBAC)"
+    regex_fallback: (role.*admin|privilege.*user|developer.*access|RBAC)
     positive_indicators:
-      - "role"
-      - "permission"
-      - "privilege"
-      - "admin"
+    - role
+    - permission
+    - privilege
+    - admin
     negative_indicators:
-      - "training"
-      - "certified"
-      - "authorized"
-
+    - training
+    - certified
+    - authorized
   bicep:
-    regex_fallback: "(Microsoft\\.Authorization/roleAssignments|Microsoft\\.Authorization/roleDefinitions)"
+    regex_fallback: (Microsoft\.Authorization/roleAssignments|Microsoft\.Authorization/roleDefinitions)
     ast_queries:
-      - resource_type: "Microsoft.Authorization/roleAssignments"
-        property_path: "properties.principalType"
-        conditions:
-          - "value_in:['User', 'ServicePrincipal']"
-
-remediation: |
-  Implement role-based security training programs:
-
-  **Required Training by Role:**
-  
-  **1. System Administrators:**
-  - Advanced access control management
-  - Privileged account security
-  - Audit log review and analysis
-  - Incident response procedures
-  - Secure configuration management
-  - Backup and recovery operations
-
-  **2. Developers/Engineers:**
-  - Secure coding practices (OWASP Top 10)
-  - Code review and static analysis
-  - Secrets management and API security
-  - CI/CD pipeline security
-  - Container and cloud security
-  - Dependency management
-
-  **3. Security Personnel:**
-  - Advanced threat detection
-  - Penetration testing methodologies
-  - Security architecture and design
-  - Compliance and audit procedures
-  - Incident response and forensics
-  - Risk assessment and management
-
-  **4. Database Administrators:**
-  - Database encryption and access control
-  - SQL injection prevention
-  - Backup security and integrity
-  - Audit logging and monitoring
-  - Data classification and handling
-
-  **Python (Role-Based Training Assignment):**
-  ```python
-  from enum import Enum
-  from typing import List, Set
-
-  class UserRole(Enum):
-      ADMIN = "system_administrator"
-      DEVELOPER = "developer"
-      SECURITY = "security_personnel"
-      DBA = "database_administrator"
-      USER = "standard_user"
-
-  ROLE_TRAINING_REQUIREMENTS = {
-      UserRole.ADMIN: {
-          "Advanced Access Control Management",
-          "Privileged Account Security",
-          "Audit Log Review",
-          "Incident Response - Admin",
-          "Secure Configuration Management",
-          "Backup and Recovery Security"
-      },
-      UserRole.DEVELOPER: {
-          "Secure Coding Practices",
-          "OWASP Top 10",
-          "Code Review Security",
-          "Secrets Management",
-          "CI/CD Pipeline Security",
-          "Container Security",
-          "Dependency Management"
-      },
-      UserRole.SECURITY: {
-          "Advanced Threat Detection",
-          "Penetration Testing",
-          "Security Architecture",
-          "Compliance and Audit",
-          "Incident Response and Forensics",
-          "Risk Assessment"
-      },
-      UserRole.DBA: {
-          "Database Encryption",
-          "SQL Injection Prevention",
-          "Backup Security",
-          "Database Audit Logging",
-          "Data Classification"
-      },
-      UserRole.USER: {
-          "Security Awareness Fundamentals",
-          "Phishing Recognition",
-          "Password Security"
-      }
-  }
-
-  def get_required_training(role: UserRole) -> Set[str]:
-      """Get required training modules for specific role"""
-      base_training = ROLE_TRAINING_REQUIREMENTS[UserRole.USER]
-      role_training = ROLE_TRAINING_REQUIREMENTS.get(role, set())
-      return base_training.union(role_training)
-
-  def verify_role_training_complete(
-      employee_id: str,
-      role: UserRole,
-      completed_modules: Set[str]
-  ) -> tuple[bool, Set[str]]:
-      """Verify all required training is completed for role"""
-      required = get_required_training(role)
-      missing = required - completed_modules
-      return (len(missing) == 0, missing)
-  ```
+    - resource_type: Microsoft.Authorization/roleAssignments
+      property_path: properties.principalType
+      conditions:
+      - value_in:['User', 'ServicePrincipal']
+remediation: "Implement role-based security training programs:\n\n**Required Training\
+  \ by Role:**\n\n**1. System Administrators:**\n- Advanced access control management\n\
+  - Privileged account security\n- Audit log review and analysis\n- Incident response\
+  \ procedures\n- Secure configuration management\n- Backup and recovery operations\n\
+  \n**2. Developers/Engineers:**\n- Secure coding practices (OWASP Top 10)\n- Code\
+  \ review and static analysis\n- Secrets management and API security\n- CI/CD pipeline\
+  \ security\n- Container and cloud security\n- Dependency management\n\n**3. Security\
+  \ Personnel:**\n- Advanced threat detection\n- Penetration testing methodologies\n\
+  - Security architecture and design\n- Compliance and audit procedures\n- Incident\
+  \ response and forensics\n- Risk assessment and management\n\n**4. Database Administrators:**\n\
+  - Database encryption and access control\n- SQL injection prevention\n- Backup security\
+  \ and integrity\n- Audit logging and monitoring\n- Data classification and handling\n\
+  \n**Python (Role-Based Training Assignment):**\n```python\nfrom enum import Enum\n\
+  from typing import List, Set\n\nclass UserRole(Enum):\n    ADMIN = \"system_administrator\"\
+  \n    DEVELOPER = \"developer\"\n    SECURITY = \"security_personnel\"\n    DBA\
+  \ = \"database_administrator\"\n    USER = \"standard_user\"\n\nROLE_TRAINING_REQUIREMENTS\
+  \ = {\n    UserRole.ADMIN: {\n        \"Advanced Access Control Management\",\n\
+  \        \"Privileged Account Security\",\n        \"Audit Log Review\",\n     \
+  \   \"Incident Response - Admin\",\n        \"Secure Configuration Management\"\
+  ,\n        \"Backup and Recovery Security\"\n    },\n    UserRole.DEVELOPER: {\n\
+  \        \"Secure Coding Practices\",\n        \"OWASP Top 10\",\n        \"Code\
+  \ Review Security\",\n        \"Secrets Management\",\n        \"CI/CD Pipeline\
+  \ Security\",\n        \"Container Security\",\n        \"Dependency Management\"\
+  \n    },\n    UserRole.SECURITY: {\n        \"Advanced Threat Detection\",\n   \
+  \     \"Penetration Testing\",\n        \"Security Architecture\",\n        \"Compliance\
+  \ and Audit\",\n        \"Incident Response and Forensics\",\n        \"Risk Assessment\"\
+  \n    },\n    UserRole.DBA: {\n        \"Database Encryption\",\n        \"SQL Injection\
+  \ Prevention\",\n        \"Backup Security\",\n        \"Database Audit Logging\"\
+  ,\n        \"Data Classification\"\n    },\n    UserRole.USER: {\n        \"Security\
+  \ Awareness Fundamentals\",\n        \"Phishing Recognition\",\n        \"Password\
+  \ Security\"\n    }\n}\n\ndef get_required_training(role: UserRole) -> Set[str]:\n\
+  \    \"\"\"Get required training modules for specific role\"\"\"\n    base_training\
+  \ = ROLE_TRAINING_REQUIREMENTS[UserRole.USER]\n    role_training = ROLE_TRAINING_REQUIREMENTS.get(role,\
+  \ set())\n    return base_training.union(role_training)\n\ndef verify_role_training_complete(\n\
+  \    employee_id: str,\n    role: UserRole,\n    completed_modules: Set[str]\n)\
+  \ -> tuple[bool, Set[str]]:\n    \"\"\"Verify all required training is completed\
+  \ for role\"\"\"\n    required = get_required_training(role)\n    missing = required\
+  \ - completed_modules\n    return (len(missing) == 0, missing)\n```\n"
 
 ---
-# Pattern 3: Weak Developer Security Training (KSI-CED-03)
-pattern_id: "ced.training.developer_gaps"
-name: "Inadequate Developer Security Training"
-description: "Detects security gaps in development practices indicating insufficient secure coding training. KSI-CED-03 requires comprehensive development and engineering security education."
-severity: "MEDIUM"
-family: "CED"
-ksi_id: "KSI-CED-03"
-nist_controls: ["sa-15", "sa-11"]
-category: "developer_training"
-
+pattern_id: ced.training.developer_gaps
+name: Inadequate Developer Security Training
+description: Detects security gaps in development practices indicating insufficient
+  secure coding training. KSI-CED-03 requires comprehensive development and engineering
+  security education.
+severity: MEDIUM
+family: CED
+ksi_id: KSI-CED-03
+nist_controls:
+- sa-15
+- sa-11
+category: developer_training
 languages:
   python:
-    regex_fallback: "(eval\\(|exec\\(|__import__|pickle\\.loads|yaml\\.load\\(|input\\()"
-    
+    regex_fallback: (eval\(|exec\(|__import__|pickle\.loads|yaml\.load\(|input\()
   typescript:
-    regex_fallback: "(eval\\(|Function\\(|setTimeout\\([^,]+\\)|setInterval\\([^,]+\\)|innerHTML\\s*=|outerHTML\\s*=)"
-
+    regex_fallback: (eval\(|Function\(|setTimeout\([^,]+\)|setInterval\([^,]+\)|innerHTML\s*=|outerHTML\s*=)
   csharp:
-    regex_fallback: "(Process\\.Start\\(|SqlCommand\\(.*\\+|Response\\.Write\\(.*\\+|Eval\\()"
-
-remediation: |
-  Implement comprehensive secure development training:
-
-  **Core Secure Coding Training Modules:**
-  1. Input Validation and Sanitization
-  2. Output Encoding and XSS Prevention
-  3. SQL Injection and ORM Security
-  4. Authentication and Session Management
-  5. Cryptography and Key Management
-  6. API Security and Rate Limiting
-  7. Dependency and Supply Chain Security
-  8. Container and Cloud Security
-  9. CI/CD Pipeline Security
-  10. Code Review and SAST Integration
-
-  **Dangerous patterns to avoid (training required):**
-  ```python
-  # INSECURE: Direct eval() of user input
-  user_input = request.get_json()['expression']
-  result = eval(user_input)  # CRITICAL: Code injection vulnerability
-
-  # SECURE: Parse and validate input safely
-  import ast
-  def safe_eval(expression: str):
-      try:
-          tree = ast.parse(expression, mode='eval')
-          # Validate only safe operations allowed
-          if not all(isinstance(node, (ast.Expression, ast.Num, ast.BinOp, ast.operator))
-                    for node in ast.walk(tree)):
-              raise ValueError("Unsafe expression")
-          return eval(compile(tree, '<string>', 'eval'))
-      except:
-          raise ValueError("Invalid expression")
-  ```
+    regex_fallback: (Process\.Start\(|SqlCommand\(.*\+|Response\.Write\(.*\+|Eval\()
+remediation: "Implement comprehensive secure development training:\n\n**Core Secure\
+  \ Coding Training Modules:**\n1. Input Validation and Sanitization\n2. Output Encoding\
+  \ and XSS Prevention\n3. SQL Injection and ORM Security\n4. Authentication and Session\
+  \ Management\n5. Cryptography and Key Management\n6. API Security and Rate Limiting\n\
+  7. Dependency and Supply Chain Security\n8. Container and Cloud Security\n9. CI/CD\
+  \ Pipeline Security\n10. Code Review and SAST Integration\n\n**Dangerous patterns\
+  \ to avoid (training required):**\n```python\n# INSECURE: Direct eval() of user\
+  \ input\nuser_input = request.get_json()['expression']\nresult = eval(user_input)\
+  \  # CRITICAL: Code injection vulnerability\n\n# SECURE: Parse and validate input\
+  \ safely\nimport ast\ndef safe_eval(expression: str):\n    try:\n        tree =\
+  \ ast.parse(expression, mode='eval')\n        # Validate only safe operations allowed\n\
+  \        if not all(isinstance(node, (ast.Expression, ast.Num, ast.BinOp, ast.operator))\n\
+  \                  for node in ast.walk(tree)):\n            raise ValueError(\"\
+  Unsafe expression\")\n        return eval(compile(tree, '<string>', 'eval'))\n \
+  \   except:\n        raise ValueError(\"Invalid expression\")\n```\n"
 
 ---
-# Pattern 4: Missing Incident Response Training (KSI-CED-04)
-pattern_id: "ced.training.incident_response_missing"
-name: "Missing Incident Response Training"
-description: "Detects absence of incident response and disaster recovery training documentation. KSI-CED-04 requires IR/DR education for all personnel."
-severity: "HIGH"
-family: "CED"
-ksi_id: "KSI-CED-04"
-nist_controls: ["ir-2", "cp-3", "at-3"]
-category: "incident_response_training"
-
+pattern_id: ced.training.incident_response_missing
+name: Missing Incident Response Training
+description: Detects absence of incident response and disaster recovery training documentation.
+  KSI-CED-04 requires IR/DR education for all personnel.
+severity: HIGH
+family: CED
+ksi_id: KSI-CED-04
+nist_controls:
+- ir-2
+- cp-3
+- at-3
+category: incident_response_training
 languages:
   python:
-    regex_fallback: "(incident|alert|exception|error|failure)"
+    regex_fallback: (incident|alert|exception|error|failure)
     positive_indicators:
-      - "incident"
-      - "response"
-      - "recovery"
-      - "disaster"
+    - incident
+    - response
+    - recovery
+    - disaster
     negative_indicators:
-      - "plan"
-      - "training"
-      - "drilled"
-      - "tested"
-
+    - plan
+    - training
+    - drilled
+    - tested
   bicep:
-    regex_fallback: "(Microsoft\\.Insights/activityLogAlerts|Microsoft\\.Insights/metricAlerts|Microsoft\\.Security/automations)"
-    
+    regex_fallback: (Microsoft\.Insights/activityLogAlerts|Microsoft\.Insights/metricAlerts|Microsoft\.Security/automations)
   github_actions:
-    regex_fallback: "(on:\\s*workflow_dispatch|on:\\s*schedule|disaster.*recovery|incident.*response)"
-
-remediation: |
-  Implement incident response and disaster recovery training:
-
-  **Required IR/DR Training Components:**
-
-  **1. Incident Response Training:**
-  - Incident identification and classification
-  - Reporting procedures and escalation
-  - Containment and eradication steps
-  - Evidence preservation and forensics
-  - Communication protocols (internal/external)
-  - Post-incident review and lessons learned
-
-  **2. Disaster Recovery Training:**
-  - Business continuity procedures
-  - Backup restoration and validation
-  - Failover and failback operations
-  - Recovery time objectives (RTO)
-  - Recovery point objectives (RPO)
-  - Regular DR drills and testing
-
-  **3. Role-Specific IR Training:**
-  - Incident Commander: Overall coordination
-  - Technical Lead: Technical remediation
-  - Communications Lead: Stakeholder updates
-  - Legal/Compliance: Regulatory notification
-  - Security Team: Forensics and analysis
-
-  **Python (Incident Response Training Verification):**
-  ```python
-  from datetime import datetime, timedelta
-  from typing import Dict, List
-
-  class IncidentResponseTraining:
-      """Track IR/DR training and drill completion"""
-      
-      REQUIRED_IR_MODULES = [
-          "Incident Identification and Classification",
-          "Reporting and Escalation Procedures",
-          "Containment and Eradication",
-          "Evidence Preservation",
-          "Communication Protocols",
-          "Post-Incident Review"
-      ]
-      
-      REQUIRED_DR_MODULES = [
-          "Business Continuity Procedures",
-          "Backup Restoration",
-          "Failover Operations",
-          "DR Drill Participation",
-          "RTO/RPO Understanding"
-      ]
-      
-      def __init__(self):
-          self.training_records = {}
-          self.drill_records = {}
-      
-      def schedule_ir_drill(
-          self,
-          drill_type: str,
-          participants: List[str],
-          scheduled_date: datetime
-      ):
-          """Schedule incident response drill"""
-          drill_id = f"IR-DRILL-{scheduled_date.strftime('%Y%m%d')}"
-          self.drill_records[drill_id] = {
-              'type': drill_type,
-              'participants': participants,
-              'scheduled': scheduled_date,
-              'completed': False,
-              'results': None
-          }
-      
-      def complete_ir_drill(
-          self,
-          drill_id: str,
-          completion_date: datetime,
-          findings: List[str],
-          lessons_learned: List[str]
-      ):
-          """Record completion of IR drill with findings"""
-          if drill_id in self.drill_records:
-              self.drill_records[drill_id].update({
-                  'completed': True,
-                  'completion_date': completion_date,
-                  'findings': findings,
-                  'lessons_learned': lessons_learned
-              })
-      
-      def verify_annual_drill_requirement(self) -> Dict[str, bool]:
-          """Verify annual IR drill requirement met (FedRAMP)"""
-          now = datetime.now()
-          one_year_ago = now - timedelta(days=365)
-          
-          recent_drills = [
-              d for d in self.drill_records.values()
-              if d.get('completed') and d.get('completion_date', datetime.min) > one_year_ago
-          ]
-          
-          return {
-              'requirement_met': len(recent_drills) >= 1,
-              'drills_completed': len(recent_drills),
-              'next_drill_due': max([d['completion_date'] for d in recent_drills], default=now) + timedelta(days=365)
-          }
-
-  # Schedule quarterly IR drills (FedRAMP recommended)
-  trainer = IncidentResponseTraining()
-  
-  trainer.schedule_ir_drill(
-      drill_type="Ransomware Response",
-      participants=["security_team", "it_ops", "management"],
-      scheduled_date=datetime.now() + timedelta(days=90)
-  )
-  ```
-
-  **References:**
-  - NIST IR-2: https://csrc.nist.gov/publications/detail/sp/800-61/rev-2/final
-  - FedRAMP IR Requirements: https://www.fedramp.gov/incident-communications-procedures/
+    regex_fallback: (on:\s*workflow_dispatch|on:\s*schedule|disaster.*recovery|incident.*response)
+remediation: "Implement incident response and disaster recovery training:\n\n**Required\
+  \ IR/DR Training Components:**\n\n**1. Incident Response Training:**\n- Incident\
+  \ identification and classification\n- Reporting procedures and escalation\n- Containment\
+  \ and eradication steps\n- Evidence preservation and forensics\n- Communication\
+  \ protocols (internal/external)\n- Post-incident review and lessons learned\n\n\
+  **2. Disaster Recovery Training:**\n- Business continuity procedures\n- Backup restoration\
+  \ and validation\n- Failover and failback operations\n- Recovery time objectives\
+  \ (RTO)\n- Recovery point objectives (RPO)\n- Regular DR drills and testing\n\n\
+  **3. Role-Specific IR Training:**\n- Incident Commander: Overall coordination\n\
+  - Technical Lead: Technical remediation\n- Communications Lead: Stakeholder updates\n\
+  - Legal/Compliance: Regulatory notification\n- Security Team: Forensics and analysis\n\
+  \n**Python (Incident Response Training Verification):**\n```python\nfrom datetime\
+  \ import datetime, timedelta\nfrom typing import Dict, List\n\nclass IncidentResponseTraining:\n\
+  \    \"\"\"Track IR/DR training and drill completion\"\"\"\n    \n    REQUIRED_IR_MODULES\
+  \ = [\n        \"Incident Identification and Classification\",\n        \"Reporting\
+  \ and Escalation Procedures\",\n        \"Containment and Eradication\",\n     \
+  \   \"Evidence Preservation\",\n        \"Communication Protocols\",\n        \"\
+  Post-Incident Review\"\n    ]\n    \n    REQUIRED_DR_MODULES = [\n        \"Business\
+  \ Continuity Procedures\",\n        \"Backup Restoration\",\n        \"Failover\
+  \ Operations\",\n        \"DR Drill Participation\",\n        \"RTO/RPO Understanding\"\
+  \n    ]\n    \n    def __init__(self):\n        self.training_records = {}\n   \
+  \     self.drill_records = {}\n    \n    def schedule_ir_drill(\n        self,\n\
+  \        drill_type: str,\n        participants: List[str],\n        scheduled_date:\
+  \ datetime\n    ):\n        \"\"\"Schedule incident response drill\"\"\"\n     \
+  \   drill_id = f\"IR-DRILL-{scheduled_date.strftime('%Y%m%d')}\"\n        self.drill_records[drill_id]\
+  \ = {\n            'type': drill_type,\n            'participants': participants,\n\
+  \            'scheduled': scheduled_date,\n            'completed': False,\n   \
+  \         'results': None\n        }\n    \n    def complete_ir_drill(\n       \
+  \ self,\n        drill_id: str,\n        completion_date: datetime,\n        findings:\
+  \ List[str],\n        lessons_learned: List[str]\n    ):\n        \"\"\"Record completion\
+  \ of IR drill with findings\"\"\"\n        if drill_id in self.drill_records:\n\
+  \            self.drill_records[drill_id].update({\n                'completed':\
+  \ True,\n                'completion_date': completion_date,\n                'findings':\
+  \ findings,\n                'lessons_learned': lessons_learned\n            })\n\
+  \    \n    def verify_annual_drill_requirement(self) -> Dict[str, bool]:\n     \
+  \   \"\"\"Verify annual IR drill requirement met (FedRAMP)\"\"\"\n        now =\
+  \ datetime.now()\n        one_year_ago = now - timedelta(days=365)\n        \n \
+  \       recent_drills = [\n            d for d in self.drill_records.values()\n\
+  \            if d.get('completed') and d.get('completion_date', datetime.min) >\
+  \ one_year_ago\n        ]\n        \n        return {\n            'requirement_met':\
+  \ len(recent_drills) >= 1,\n            'drills_completed': len(recent_drills),\n\
+  \            'next_drill_due': max([d['completion_date'] for d in recent_drills],\
+  \ default=now) + timedelta(days=365)\n        }\n\n# Schedule quarterly IR drills\
+  \ (FedRAMP recommended)\ntrainer = IncidentResponseTraining()\n\ntrainer.schedule_ir_drill(\n\
+  \    drill_type=\"Ransomware Response\",\n    participants=[\"security_team\", \"\
+  it_ops\", \"management\"],\n    scheduled_date=datetime.now() + timedelta(days=90)\n\
+  )\n```\n\n**References:**\n- NIST IR-2: https://csrc.nist.gov/publications/detail/sp/800-61/rev-2/final\n\
+  - FedRAMP IR Requirements: https://www.fedramp.gov/incident-communications-procedures/\n"

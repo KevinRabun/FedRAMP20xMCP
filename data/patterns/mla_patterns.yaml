@@ -1,535 +1,2427 @@
-# MLA (Monitoring, Logging, and Alerting) Pattern Library
+# MLA PATTERNS V2 - V2 Schema
+# Migrated from V1 schema with enhanced evidence collection
+# 
+# NOTE: This is an automated migration. Manual review required for:
+# - Evidence collection queries (marked with TODO)
+# - Automation implementation code
+# - SSP mapping descriptions
+# - Test cases
 
-# Centralized Logging Patterns (KSI-MLA-01)
-
----
-pattern_id: "mla.logging.local_file"
-name: "Local File Logging"
-description: "Detects logging to local files instead of centralized SIEM"
-family: "MLA"
-severity: "HIGH"
-pattern_type: "function_call"
-
+pattern_id: mla.logging.local_file
+name: Local File Logging
+description: Detects logging to local files instead of centralized SIEM
+family: MLA
+severity: HIGH
+pattern_type: function_call
 languages:
   python:
     ast_queries:
-      - query_type: "function_call"
-        target: "FileHandler"
-        module: "logging"
-      - query_type: "function_call"
-        target: "basicConfig"
-        conditions:
-          - "has_keyword_arg:filename"
-      - query_type: "function_call"
-        target: "open"
-        conditions:
-          - "arg_contains:.log"
-    regex_fallback: "FileHandler\\(|basicConfig\\(.*filename|open\\(['\"][^'\"]*\\.log"
-    negative_indicators: ["FileHandler", "basicConfig(filename=", ".log"]
-    
+    - query_type: function_call
+      target: FileHandler
+      module: logging
+    - query_type: function_call
+      target: basicConfig
+      conditions:
+      - has_keyword_arg:filename
+    - query_type: function_call
+      target: open
+      conditions:
+      - arg_contains:.log
+    regex_fallback: FileHandler\(|basicConfig\(.*filename|open\(['"][^'"]*\.log
+    negative_indicators:
+    - FileHandler
+    - basicConfig(filename=
+    - .log
   csharp:
     ast_queries:
-      - query_type: "object_creation"
-        target: "FileLoggerProvider"
-      - query_type: "method_call"
-        target: "AddFile"
-        context: "logging"
-    regex_fallback: "new\\s+FileLoggerProvider|AddFile\\("
-    
+    - query_type: object_creation
+      target: FileLoggerProvider
+    - query_type: method_call
+      target: AddFile
+      context: logging
+    regex_fallback: new\s+FileLoggerProvider|AddFile\(
   java:
     ast_queries:
-      - query_type: "object_creation"
-        target: "FileAppender"
-      - query_type: "object_creation"
-        target: "RollingFileAppender"
-    regex_fallback: "FileAppender|RollingFileAppender"
-    
+    - query_type: object_creation
+      target: FileAppender
+    - query_type: object_creation
+      target: RollingFileAppender
+    regex_fallback: FileAppender|RollingFileAppender
   typescript:
     ast_queries:
-      - query_type: "function_call"
-        target: "createWriteStream"
-      - query_type: "import_statement"
-        target: "winston-daily-rotate-file"
-    regex_fallback: "createWriteStream\\(|winston-daily-rotate-file"
-
+    - query_type: function_call
+      target: createWriteStream
+    - query_type: import_statement
+      target: winston-daily-rotate-file
+    regex_fallback: createWriteStream\(|winston-daily-rotate-file
 finding:
-  title_template: "Local file logging detected"
-  description_template: "Application logs to local files. KSI-MLA-01 requires centralized logging to SIEM (Azure Monitor, Sentinel, Splunk)."
-  remediation_template: |
-    Migrate to centralized logging:
-    
+  title_template: Local file logging detected
+  description_template: Application logs to local files. KSI-MLA-01 requires centralized
+    logging to SIEM (Azure Monitor, Sentinel, Splunk).
+  remediation_template: 'Migrate to centralized logging:
+
+
     Python (Azure Monitor):
+
     from opencensus.ext.azure.log_exporter import AzureLogHandler
-    logger.addHandler(AzureLogHandler(connection_string='InstrumentationKey=...'))
-    
+
+    logger.addHandler(AzureLogHandler(connection_string=''InstrumentationKey=...''))
+
+
     C# (Application Insights):
+
     services.AddApplicationInsightsTelemetry();
-    
+
+
     Configuration:
+
     - Send logs to Azure Log Analytics workspace
+
     - Configure log retention (90+ days for FedRAMP)
+
     - Set up alerts for security events
+
+    '
   evidence_collection:
-    - "Azure Monitor workspace configuration"
-    - "Log retention policy documentation"
-    - "SIEM integration architecture diagram"
+  - Azure Monitor workspace configuration
+  - Log retention policy documentation
+  - SIEM integration architecture diagram
   azure_services:
-    - "Azure Monitor"
-    - "Azure Log Analytics"
-    - "Microsoft Sentinel"
-
-requires_absence: ["mla.logging.azure_monitor", "mla.logging.siem_integration"]
-tags: ["logging", "siem", "critical-gap"]
-nist_controls: ["au-3", "au-6", "au-12"]
-related_ksis: ["KSI-MLA-01"]
+  - Azure Monitor
+  - Azure Log Analytics
+  - Microsoft Sentinel
+requires_absence:
+- mla.logging.azure_monitor
+- mla.logging.siem_integration
+tags:
+- logging
+- siem
+- critical-gap
+nist_controls:
+- au-3
+- au-6
+- au-12
+related_ksis:
+- KSI-MLA-01
+evidence_artifacts:
+- artifact_type: logs
+  name: Authentication logs with MFA details
+  source: Azure Monitor - SigninLogs
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: Conditional Access policies export
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Authentication methods compliance report
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: CSV
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation code'
+    azure_services: &id001
+    - Application Insights
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Microsoft Sentinel
+    effort_hours: 4
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Log Analytics workspace
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 7
+    action: Enable diagnostic settings for all resources
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 8
+    action: Configure log retention (1 year minimum for FedRAMP)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 9
+    action: Set up Azure Monitor alerts
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 10
+    action: Deploy Microsoft Sentinel (if required)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 11
+    action: Create dashboards for compliance monitoring
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 12
+    action: Test log collection and alerting
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  total_effort_hours: 17
+ssp_mapping:
+  control_family: AU - Audit and Accountability
+  control_numbers:
+  - AU-3
+  - AU-6
+  - AU-12
+  ssp_sections:
+  - section: 'AU-3: Security Information and Event Management (SIEM)'
+    description_template: '# TODO: Add SSP description for KSI-MLA-01'
+    implementation_details: '# TODO: Add implementation details'
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Application Insights
+    tier: Standard
+    purpose: Required for Application Insights functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Log Analytics functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-01
+    requirement_name: Security Information and Event Management (SIEM)
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - control_id: AC-17.1
+      control_name: Monitoring and Control
+    - control_id: AC-20.1
+      control_name: Limits on Authorized Use
+    - control_id: AU-2
+      control_name: Event Logging
+    - control_id: AU-3
+      control_name: Content of Audit Records
+    - control_id: AU-3.1
+      control_name: Additional Audit Information
+testing:
+  positive_test_cases:
+  - description: 'TODO: Add positive test case'
+    code_sample: '# TODO: Add compliant code sample'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: 'TODO: Add negative test case'
+    code_sample: '# TODO: Add non-compliant code sample'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
 
 ---
-pattern_id: "mla.logging.azure_monitor"
-name: "Azure Monitor Integration"
-description: "Detects Azure Monitor logging integration"
-family: "MLA"
-severity: "INFO"
-pattern_type: "import"
-
+pattern_id: mla.logging.azure_monitor
+name: Azure Monitor Integration
+description: Detects Azure Monitor logging integration
+family: MLA
+severity: INFO
+pattern_type: import
 languages:
   python:
     ast_queries:
-      - query_type: "import_statement"
-        target: "opencensus.ext.azure"
-      - query_type: "import_statement"
-        target: "azure.monitor"
-    regex_fallback: "from\\s+opencensus\\.ext\\.azure|from\\s+azure\\.monitor"
-    positive_indicators: ["opencensus.ext.azure", "azure.monitor"]
-    
+    - query_type: import_statement
+      target: opencensus.ext.azure
+    - query_type: import_statement
+      target: azure.monitor
+    regex_fallback: from\s+opencensus\.ext\.azure|from\s+azure\.monitor
+    positive_indicators:
+    - opencensus.ext.azure
+    - azure.monitor
   csharp:
     ast_queries:
-      - query_type: "using_directive"
-        target: "Microsoft.ApplicationInsights"
-      - query_type: "using_directive"
-        target: "Microsoft.Extensions.Logging.ApplicationInsights"
-    regex_fallback: "using\\s+Microsoft\\.ApplicationInsights"
-    positive_indicators: ["ApplicationInsights"]
-    
+    - query_type: using_directive
+      target: Microsoft.ApplicationInsights
+    - query_type: using_directive
+      target: Microsoft.Extensions.Logging.ApplicationInsights
+    regex_fallback: using\s+Microsoft\.ApplicationInsights
+    positive_indicators:
+    - ApplicationInsights
   java:
     ast_queries:
-      - query_type: "import_declaration"
-        target: "com.microsoft.applicationinsights"
-    regex_fallback: "import\\s+com\\.microsoft\\.applicationinsights"
-    
+    - query_type: import_declaration
+      target: com.microsoft.applicationinsights
+    regex_fallback: import\s+com\.microsoft\.applicationinsights
   typescript:
     ast_queries:
-      - query_type: "import_statement"
-        target: "@azure/monitor"
-      - query_type: "import_statement"
-        target: "applicationinsights"
-    regex_fallback: "import.*@azure/monitor|import.*applicationinsights"
-
+    - query_type: import_statement
+      target: '@azure/monitor'
+    - query_type: import_statement
+      target: applicationinsights
+    regex_fallback: import.*@azure/monitor|import.*applicationinsights
 finding:
-  title_template: "Azure Monitor integration detected"
-  description_template: "Application uses Azure Monitor for centralized logging. Verify Log Analytics workspace configuration."
-  remediation_template: "N/A - Positive finding. Ensure logs are sent to long-term retention (90+ days)."
-
-tags: ["logging", "azure-monitor", "positive"]
-nist_controls: ["au-3", "au-6", "au-12"]
-related_ksis: ["KSI-MLA-01"]
+  title_template: Azure Monitor integration detected
+  description_template: Application uses Azure Monitor for centralized logging. Verify
+    Log Analytics workspace configuration.
+  remediation_template: N/A - Positive finding. Ensure logs are sent to long-term
+    retention (90+ days).
+tags:
+- logging
+- azure-monitor
+- positive
+nist_controls:
+- au-3
+- au-6
+- au-12
+related_ksis:
+- KSI-MLA-01
+evidence_artifacts:
+- artifact_type: logs
+  name: Authentication logs with MFA details
+  source: Azure Monitor - SigninLogs
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: Conditional Access policies export
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Authentication methods compliance report
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: CSV
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation code'
+    azure_services: &id001
+    - Application Insights
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Microsoft Sentinel
+    effort_hours: 4
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Log Analytics workspace
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 7
+    action: Enable diagnostic settings for all resources
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 8
+    action: Configure log retention (1 year minimum for FedRAMP)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 9
+    action: Set up Azure Monitor alerts
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 10
+    action: Deploy Microsoft Sentinel (if required)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 11
+    action: Create dashboards for compliance monitoring
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 12
+    action: Test log collection and alerting
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  total_effort_hours: 17
+ssp_mapping:
+  control_family: AU - Audit and Accountability
+  control_numbers:
+  - AU-3
+  - AU-6
+  - AU-12
+  ssp_sections:
+  - section: 'AU-3: Security Information and Event Management (SIEM)'
+    description_template: '# TODO: Add SSP description for KSI-MLA-01'
+    implementation_details: '# TODO: Add implementation details'
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Application Insights
+    tier: Standard
+    purpose: Required for Application Insights functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Log Analytics functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-01
+    requirement_name: Security Information and Event Management (SIEM)
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - control_id: AC-17.1
+      control_name: Monitoring and Control
+    - control_id: AC-20.1
+      control_name: Limits on Authorized Use
+    - control_id: AU-2
+      control_name: Event Logging
+    - control_id: AU-3
+      control_name: Content of Audit Records
+    - control_id: AU-3.1
+      control_name: Additional Audit Information
+testing:
+  positive_test_cases:
+  - description: 'TODO: Add positive test case'
+    code_sample: '# TODO: Add compliant code sample'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: 'TODO: Add negative test case'
+    code_sample: '# TODO: Add non-compliant code sample'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
 
 ---
-pattern_id: "mla.logging.siem_integration"
-name: "SIEM Integration"
-description: "Detects SIEM integrations (Splunk, Sentinel, etc.)"
-family: "MLA"
-severity: "INFO"
-pattern_type: "import"
-
+pattern_id: mla.logging.siem_integration
+name: SIEM Integration
+description: Detects SIEM integrations (Splunk, Sentinel, etc.)
+family: MLA
+severity: INFO
+pattern_type: import
 languages:
   python:
     ast_queries:
-      - query_type: "import_statement"
-        target: "splunk"
-      - query_type: "import_statement"
-        target: "azure.mgmt.securityinsight"
-    regex_fallback: "import\\s+splunk|from\\s+azure\\.mgmt\\.securityinsight"
-    positive_indicators: ["splunk", "securityinsight", "sentinel"]
-    
+    - query_type: import_statement
+      target: splunk
+    - query_type: import_statement
+      target: azure.mgmt.securityinsight
+    regex_fallback: import\s+splunk|from\s+azure\.mgmt\.securityinsight
+    positive_indicators:
+    - splunk
+    - securityinsight
+    - sentinel
   csharp:
     ast_queries:
-      - query_type: "using_directive"
-        target: "Microsoft.Azure.SecurityInsights"
-    regex_fallback: "using\\s+.*SecurityInsights"
-    
+    - query_type: using_directive
+      target: Microsoft.Azure.SecurityInsights
+    regex_fallback: using\s+.*SecurityInsights
   java:
     ast_queries:
-      - query_type: "import_declaration"
-        target: "com.splunk"
-    regex_fallback: "import\\s+com\\.splunk"
-    
+    - query_type: import_declaration
+      target: com.splunk
+    regex_fallback: import\s+com\.splunk
   typescript:
     ast_queries:
-      - query_type: "import_statement"
-        target: "splunk-logging"
-    regex_fallback: "import.*splunk-logging"
-
+    - query_type: import_statement
+      target: splunk-logging
+    regex_fallback: import.*splunk-logging
 finding:
-  title_template: "SIEM integration detected"
-  description_template: "SIEM integration found. Centralized logging requirement satisfied."
-  remediation_template: "N/A - Positive finding"
-
-tags: ["logging", "siem", "positive"]
-nist_controls: ["au-6", "si-4"]
-related_ksis: ["KSI-MLA-01"]
+  title_template: SIEM integration detected
+  description_template: SIEM integration found. Centralized logging requirement satisfied.
+  remediation_template: N/A - Positive finding
+tags:
+- logging
+- siem
+- positive
+nist_controls:
+- au-6
+- si-4
+related_ksis:
+- KSI-MLA-01
+evidence_artifacts:
+- artifact_type: logs
+  name: Authentication logs with MFA details
+  source: Azure Monitor - SigninLogs
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: Conditional Access policies export
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Authentication methods compliance report
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: CSV
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation code'
+    azure_services: &id001
+    - Application Insights
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Microsoft Sentinel
+    effort_hours: 4
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Log Analytics workspace
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 7
+    action: Enable diagnostic settings for all resources
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 8
+    action: Configure log retention (1 year minimum for FedRAMP)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 9
+    action: Set up Azure Monitor alerts
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 10
+    action: Deploy Microsoft Sentinel (if required)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 11
+    action: Create dashboards for compliance monitoring
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 12
+    action: Test log collection and alerting
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  total_effort_hours: 17
+ssp_mapping:
+  control_family: AU - Audit and Accountability
+  control_numbers:
+  - AU-6
+  - SI-4
+  ssp_sections:
+  - section: 'AU-6: Security Information and Event Management (SIEM)'
+    description_template: '# TODO: Add SSP description for KSI-MLA-01'
+    implementation_details: '# TODO: Add implementation details'
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Application Insights
+    tier: Standard
+    purpose: Required for Application Insights functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Log Analytics functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-01
+    requirement_name: Security Information and Event Management (SIEM)
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - control_id: AC-17.1
+      control_name: Monitoring and Control
+    - control_id: AC-20.1
+      control_name: Limits on Authorized Use
+    - control_id: AU-2
+      control_name: Event Logging
+    - control_id: AU-3
+      control_name: Content of Audit Records
+    - control_id: AU-3.1
+      control_name: Additional Audit Information
+testing:
+  positive_test_cases:
+  - description: 'TODO: Add positive test case'
+    code_sample: '# TODO: Add compliant code sample'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: 'TODO: Add negative test case'
+    code_sample: '# TODO: Add non-compliant code sample'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
 
 ---
-# Log Retention Patterns (KSI-MLA-02)
-
-pattern_id: "mla.retention.log_analytics_workspace"
-name: "Log Analytics Workspace Retention"
-description: "Detects Log Analytics workspace retention configuration"
-family: "MLA"
-severity: "MEDIUM"
-pattern_type: "resource"
-
+pattern_id: mla.retention.log_analytics_workspace
+name: Log Analytics Workspace Retention
+description: Detects Log Analytics workspace retention configuration
+family: MLA
+severity: MEDIUM
+pattern_type: resource
 languages:
   bicep:
     ast_queries:
-      - resource_type: "Microsoft.OperationalInsights/workspaces"
-        property_path: "properties.retentionInDays"
-        conditions:
-          - "value_less_than:90"
-    regex_fallback: "Microsoft\\.OperationalInsights/workspaces"
-    
+    - resource_type: Microsoft.OperationalInsights/workspaces
+      property_path: properties.retentionInDays
+      conditions:
+      - value_less_than:90
+    regex_fallback: Microsoft\.OperationalInsights/workspaces
   terraform:
     ast_queries:
-      - resource_type: "azurerm_log_analytics_workspace"
-        attribute: "retention_in_days"
-        conditions:
-          - "value_less_than:90"
-    regex_fallback: "azurerm_log_analytics_workspace"
-
+    - resource_type: azurerm_log_analytics_workspace
+      attribute: retention_in_days
+      conditions:
+      - value_less_than:90
+    regex_fallback: azurerm_log_analytics_workspace
 finding:
-  title_template: "Log retention less than 90 days"
-  description_template: "Log Analytics workspace retention is {value} days. FedRAMP 20x requires 90+ days retention (KSI-MLA-02)."
-  remediation_template: |
-    Update retention:
-    
-    Bicep:
-    properties: {
-      retentionInDays: 90  // Minimum for FedRAMP
-    }
-    
-    Terraform:
-    retention_in_days = 90
-
-tags: ["logging", "retention", "security-gap"]
-nist_controls: ["au-11"]
-related_ksis: ["KSI-MLA-02"]
+  title_template: Log retention less than 90 days
+  description_template: Log Analytics workspace retention is {value} days. FedRAMP
+    20x requires 90+ days retention (KSI-MLA-02).
+  remediation_template: "Update retention:\n\nBicep:\nproperties: {\n  retentionInDays:\
+    \ 90  // Minimum for FedRAMP\n}\n\nTerraform:\nretention_in_days = 90\n"
+tags:
+- logging
+- retention
+- security-gap
+nist_controls:
+- au-11
+related_ksis:
+- KSI-MLA-02
+evidence_collection:
+  azure_monitor_kql:
+  - query: '# TODO: Extract from analyzer'
+    description: Evidence collection query
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: '# TODO: Extract from analyzer'
+    description: Azure CLI evidence collection
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation code'
+    azure_services: &id001
+    - Application Insights
+    - Azure Blob Storage
+    - Azure Monitor
+    - Log Analytics
+    - Microsoft Sentinel
+    effort_hours: 4
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Log Analytics workspace
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 7
+    action: Enable diagnostic settings for all resources
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 8
+    action: Configure log retention (1 year minimum for FedRAMP)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 9
+    action: Set up Azure Monitor alerts
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 10
+    action: Deploy Microsoft Sentinel (if required)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 11
+    action: Create dashboards for compliance monitoring
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 12
+    action: Test log collection and alerting
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  total_effort_hours: 17
+ssp_mapping:
+  control_family: AU - Audit and Accountability
+  control_numbers:
+  - AU-11
+  ssp_sections:
+  - section: 'AU-11: Audit Logging'
+    description_template: '# TODO: Add SSP description for KSI-MLA-02'
+    implementation_details: '# TODO: Add implementation details'
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Application Insights
+    tier: Standard
+    purpose: Required for Application Insights functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Log Analytics functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Microsoft Sentinel
+    tier: Standard
+    purpose: Required for Microsoft Sentinel functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-02
+    requirement_name: Audit Logging
+    impact_levels: []
+  nist_800_53_rev5:
+    controls:
+    - control_id: AC-2.4
+      control_name: ''
+    - control_id: AC-6.9
+      control_name: ''
+    - control_id: AU-2
+      control_name: ''
+    - control_id: AU-6
+      control_name: ''
+    - control_id: AU-6.1
+      control_name: ''
+testing:
+  positive_test_cases:
+  - description: 'TODO: Add positive test case'
+    code_sample: '# TODO: Add compliant code sample'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: 'TODO: Add negative test case'
+    code_sample: '# TODO: Add non-compliant code sample'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
 
 ---
-# Security Event Monitoring (KSI-MLA-05)
-
-pattern_id: "mla.monitoring.failed_login_tracking"
-name: "Failed Login Monitoring"
-description: "Detects tracking of failed login attempts"
-family: "MLA"
-severity: "INFO"
-pattern_type: "function_call"
-
+pattern_id: mla.monitoring.failed_login_tracking
+name: Failed Login Monitoring
+description: Detects tracking of failed login attempts
+family: MLA
+severity: INFO
+pattern_type: function_call
 languages:
   python:
     ast_queries:
-      - query_type: "function_call"
-        target: "log"
-        conditions:
-          - "in_except_block:true"
-          - "context_contains:login|authentication"
-          - "arg_contains:failed|invalid|unauthorized"
-    regex_fallback: "logger\\.(error|warning).*login.*fail"
-    positive_indicators: ["logger.error", "authentication failed"]
-    
+    - query_type: function_call
+      target: log
+      conditions:
+      - in_except_block:true
+      - context_contains:login|authentication
+      - arg_contains:failed|invalid|unauthorized
+    regex_fallback: logger\.(error|warning).*login.*fail
+    positive_indicators:
+    - logger.error
+    - authentication failed
   csharp:
     ast_queries:
-      - query_type: "method_call"
-        target: "LogWarning"
-        conditions:
-          - "in_catch_block:true"
-          - "arg_contains:authentication|login"
-    regex_fallback: "LogWarning.*[Aa]uthentication.*fail"
-    
+    - query_type: method_call
+      target: LogWarning
+      conditions:
+      - in_catch_block:true
+      - arg_contains:authentication|login
+    regex_fallback: LogWarning.*[Aa]uthentication.*fail
   java:
     ast_queries:
-      - query_type: "method_call"
-        target: "error"
-        conditions:
-          - "in_catch_block:true"
-          - "arg_contains:authentication|login"
-    regex_fallback: "log\\.error.*authentication.*fail"
-    
+    - query_type: method_call
+      target: error
+      conditions:
+      - in_catch_block:true
+      - arg_contains:authentication|login
+    regex_fallback: log\.error.*authentication.*fail
   typescript:
     ast_queries:
-      - query_type: "function_call"
-        target: "error"
-        conditions:
-          - "in_catch_block:true"
-          - "arg_contains:authentication|login"
-    regex_fallback: "logger\\.error.*authentication.*fail"
-
+    - query_type: function_call
+      target: error
+      conditions:
+      - in_catch_block:true
+      - arg_contains:authentication|login
+    regex_fallback: logger\.error.*authentication.*fail
 finding:
-  title_template: "Failed login monitoring detected"
-  description_template: "Application logs failed login attempts. Verify alerts are configured for brute-force detection."
-  remediation_template: |
-    Configure alerting:
-    1. Create Azure Monitor alert rule for failed logins
-    2. Set threshold: 5 failures within 5 minutes
-    3. Action group: Email security team, trigger incident response
-    4. Query example:
-       AppTraces
-       | where Message contains "authentication failed"
-       | summarize FailCount=count() by UserId, bin(TimeGenerated, 5m)
-       | where FailCount >= 5
-
-tags: ["monitoring", "authentication", "positive"]
-nist_controls: ["au-6", "si-4"]
-related_ksis: ["KSI-MLA-05"]
+  title_template: Failed login monitoring detected
+  description_template: Application logs failed login attempts. Verify alerts are
+    configured for brute-force detection.
+  remediation_template: "Configure alerting:\n1. Create Azure Monitor alert rule for\
+    \ failed logins\n2. Set threshold: 5 failures within 5 minutes\n3. Action group:\
+    \ Email security team, trigger incident response\n4. Query example:\n   AppTraces\n\
+    \   | where Message contains \"authentication failed\"\n   | summarize FailCount=count()\
+    \ by UserId, bin(TimeGenerated, 5m)\n   | where FailCount >= 5\n"
+tags:
+- monitoring
+- authentication
+- positive
+nist_controls:
+- au-6
+- si-4
+related_ksis:
+- KSI-MLA-05
+evidence_collection:
+  azure_monitor_kql:
+  - query: '# TODO: Extract from analyzer'
+    description: Evidence collection query
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: '# TODO: Extract from analyzer'
+    description: Azure CLI evidence collection
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation code'
+    azure_services: &id001
+    - Application Insights
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Microsoft Sentinel
+    effort_hours: 4
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Log Analytics workspace
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 7
+    action: Enable diagnostic settings for all resources
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 8
+    action: Configure log retention (1 year minimum for FedRAMP)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 9
+    action: Set up Azure Monitor alerts
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 10
+    action: Deploy Microsoft Sentinel (if required)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 11
+    action: Create dashboards for compliance monitoring
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 12
+    action: Test log collection and alerting
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 13
+    action: Create Standard Operating Procedures (SOPs)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 14
+    action: Get policy documentation approved by stakeholders
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 15
+    action: Train staff on new procedures
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 16
+    action: Set up periodic compliance reviews
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 17
+    action: Document evidence collection process
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  total_effort_hours: 17
+ssp_mapping:
+  control_family: AU - Audit and Accountability
+  control_numbers:
+  - AU-6
+  - SI-4
+  ssp_sections:
+  - section: 'AU-6: Infrastructure as Code'
+    description_template: '# TODO: Add SSP description for KSI-MLA-05'
+    implementation_details: '# TODO: Add implementation details'
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Application Insights
+    tier: Standard
+    purpose: Required for Application Insights functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Log Analytics functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-05
+    requirement_name: Infrastructure as Code
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - control_id: CA-7
+      control_name: Continuous Monitoring
+    - control_id: CM-2
+      control_name: Baseline Configuration
+    - control_id: CM-6
+      control_name: Configuration Settings
+    - control_id: SI-7.7
+      control_name: Integration of Detection and Response
+testing:
+  positive_test_cases:
+  - description: 'TODO: Add positive test case'
+    code_sample: '# TODO: Add compliant code sample'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: 'TODO: Add negative test case'
+    code_sample: '# TODO: Add non-compliant code sample'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
 
 ---
-pattern_id: "mla.monitoring.azure_sentinel_analytics"
-name: "Azure Sentinel Analytics Rule"
-description: "Detects Sentinel analytics rule configuration"
-family: "MLA"
-severity: "INFO"
-pattern_type: "resource"
-
+pattern_id: mla.monitoring.azure_sentinel_analytics
+name: Azure Sentinel Analytics Rule
+description: Detects Sentinel analytics rule configuration
+family: MLA
+severity: INFO
+pattern_type: resource
 languages:
   bicep:
     ast_queries:
-      - resource_type: "Microsoft.SecurityInsights/alertRules"
-        property_path: "properties.query"
-    regex_fallback: "Microsoft\\.SecurityInsights/alertRules"
-    
+    - resource_type: Microsoft.SecurityInsights/alertRules
+      property_path: properties.query
+    regex_fallback: Microsoft\.SecurityInsights/alertRules
   terraform:
     ast_queries:
-      - resource_type: "azurerm_sentinel_alert_rule"
-    regex_fallback: "azurerm_sentinel_alert_rule"
-
+    - resource_type: azurerm_sentinel_alert_rule
+    regex_fallback: azurerm_sentinel_alert_rule
 finding:
-  title_template: "Sentinel analytics rule detected"
-  description_template: "Security analytics rule configured. Verify coverage for all FedRAMP required events."
-  remediation_template: |
-    Required analytics rules for FedRAMP:
+  title_template: Sentinel analytics rule detected
+  description_template: Security analytics rule configured. Verify coverage for all
+    FedRAMP required events.
+  remediation_template: 'Required analytics rules for FedRAMP:
+
     - Failed login attempts (5+ within 5 minutes)
+
     - Privileged account usage
+
     - Security group changes
+
     - Firewall rule modifications
+
     - Data exfiltration indicators
+
     - Malware detection
+
     - Anomalous user behavior
 
-tags: ["monitoring", "sentinel", "positive"]
-nist_controls: ["si-4", "au-6", "ir-4"]
-related_ksis: ["KSI-MLA-05", "KSI-MLA-07"]
+    '
+tags:
+- monitoring
+- sentinel
+- positive
+nist_controls:
+- si-4
+- au-6
+- ir-4
+related_ksis:
+- KSI-MLA-05
+- KSI-MLA-07
+evidence_collection:
+  azure_monitor_kql:
+  - query: '# TODO: Extract from analyzer'
+    description: Evidence collection query
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: '# TODO: Extract from analyzer'
+    description: Azure CLI evidence collection
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation code'
+    azure_services: &id001
+    - Application Insights
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Microsoft Sentinel
+    effort_hours: 4
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Log Analytics workspace
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 7
+    action: Enable diagnostic settings for all resources
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 8
+    action: Configure log retention (1 year minimum for FedRAMP)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 9
+    action: Set up Azure Monitor alerts
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 10
+    action: Deploy Microsoft Sentinel (if required)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 11
+    action: Create dashboards for compliance monitoring
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 12
+    action: Test log collection and alerting
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 13
+    action: Create Standard Operating Procedures (SOPs)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 14
+    action: Get policy documentation approved by stakeholders
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 15
+    action: Train staff on new procedures
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 16
+    action: Set up periodic compliance reviews
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 17
+    action: Document evidence collection process
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  total_effort_hours: 17
+ssp_mapping:
+  control_family: SI - System and Information Integrity
+  control_numbers:
+  - SI-4
+  - AU-6
+  - IR-4
+  ssp_sections:
+  - section: 'SI-4: Infrastructure as Code'
+    description_template: '# TODO: Add SSP description for KSI-MLA-05'
+    implementation_details: '# TODO: Add implementation details'
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Application Insights
+    tier: Standard
+    purpose: Required for Application Insights functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Log Analytics functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-05
+    requirement_name: Infrastructure as Code
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - control_id: CA-7
+      control_name: Continuous Monitoring
+    - control_id: CM-2
+      control_name: Baseline Configuration
+    - control_id: CM-6
+      control_name: Configuration Settings
+    - control_id: SI-7.7
+      control_name: Integration of Detection and Response
+testing:
+  positive_test_cases:
+  - description: 'TODO: Add positive test case'
+    code_sample: '# TODO: Add compliant code sample'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: 'TODO: Add negative test case'
+    code_sample: '# TODO: Add non-compliant code sample'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
 
 ---
-# Real-Time Alerting (KSI-MLA-07)
-
-pattern_id: "mla.alerting.action_group"
-name: "Azure Monitor Action Group"
-description: "Detects action group for alerting"
-family: "MLA"
-severity: "INFO"
-pattern_type: "resource"
-
+pattern_id: mla.alerting.action_group
+name: Azure Monitor Action Group
+description: Detects action group for alerting
+family: MLA
+severity: INFO
+pattern_type: resource
 languages:
   bicep:
     ast_queries:
-      - resource_type: "Microsoft.Insights/actionGroups"
-        property_path: "properties.emailReceivers"
-    regex_fallback: "Microsoft\\.Insights/actionGroups"
-    
+    - resource_type: Microsoft.Insights/actionGroups
+      property_path: properties.emailReceivers
+    regex_fallback: Microsoft\.Insights/actionGroups
   terraform:
     ast_queries:
-      - resource_type: "azurerm_monitor_action_group"
-    regex_fallback: "azurerm_monitor_action_group"
-
+    - resource_type: azurerm_monitor_action_group
+    regex_fallback: azurerm_monitor_action_group
 finding:
-  title_template: "Alert action group detected"
-  description_template: "Action group configured. Verify incident response team is notified."
-  remediation_template: "N/A - Positive finding. Ensure 24/7 coverage for critical alerts."
-
-tags: ["alerting", "incident-response", "positive"]
-nist_controls: ["ir-4", "ir-6"]
-related_ksis: ["KSI-MLA-07"]
+  title_template: Alert action group detected
+  description_template: Action group configured. Verify incident response team is
+    notified.
+  remediation_template: N/A - Positive finding. Ensure 24/7 coverage for critical
+    alerts.
+tags:
+- alerting
+- incident-response
+- positive
+nist_controls:
+- ir-4
+- ir-6
+related_ksis:
+- KSI-MLA-07
+evidence_collection:
+  azure_monitor_kql:
+  - query: '# TODO: Extract from analyzer'
+    description: Evidence collection query
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: '# TODO: Extract from analyzer'
+    description: Azure CLI evidence collection
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation code'
+    azure_services: &id001
+    - Application Insights
+    - Azure Blob Storage
+    - Azure Monitor
+    - Log Analytics
+    - Microsoft Sentinel
+    effort_hours: 4
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Log Analytics workspace
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 7
+    action: Enable diagnostic settings for all resources
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 8
+    action: Configure log retention (1 year minimum for FedRAMP)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 9
+    action: Set up Azure Monitor alerts
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 10
+    action: Deploy Microsoft Sentinel (if required)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 11
+    action: Create dashboards for compliance monitoring
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 12
+    action: Test log collection and alerting
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  total_effort_hours: 17
+ssp_mapping:
+  control_family: IR - Incident Response
+  control_numbers:
+  - IR-4
+  - IR-6
+  ssp_sections:
+  - section: 'IR-4: Event Types'
+    description_template: '# TODO: Add SSP description for KSI-MLA-07'
+    implementation_details: '# TODO: Add implementation details'
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Application Insights
+    tier: Standard
+    purpose: Required for Application Insights functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Log Analytics functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Microsoft Sentinel
+    tier: Standard
+    purpose: Required for Microsoft Sentinel functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-07
+    requirement_name: Event Types
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - control_id: AC-2.4
+      control_name: Automated Audit Actions
+    - control_id: AC-6.9
+      control_name: Log Use of Privileged Functions
+    - control_id: AC-17.1
+      control_name: Monitoring and Control
+    - control_id: AC-20.1
+      control_name: Limits on Authorized Use
+    - control_id: AU-2
+      control_name: Event Logging
+testing:
+  positive_test_cases:
+  - description: 'TODO: Add positive test case'
+    code_sample: '# TODO: Add compliant code sample'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: 'TODO: Add negative test case'
+    code_sample: '# TODO: Add non-compliant code sample'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
 
 ---
-pattern_id: "mla.alerting.metric_alert"
-name: "Azure Monitor Metric Alert"
-description: "Detects metric alert rules"
-family: "MLA"
-severity: "INFO"
-pattern_type: "resource"
-
+pattern_id: mla.alerting.metric_alert
+name: Azure Monitor Metric Alert
+description: Detects metric alert rules
+family: MLA
+severity: INFO
+pattern_type: resource
 languages:
   bicep:
     ast_queries:
-      - resource_type: "Microsoft.Insights/metricAlerts"
-        property_path: "properties.criteria"
-    regex_fallback: "Microsoft\\.Insights/metricAlerts"
-    
+    - resource_type: Microsoft.Insights/metricAlerts
+      property_path: properties.criteria
+    regex_fallback: Microsoft\.Insights/metricAlerts
   terraform:
     ast_queries:
-      - resource_type: "azurerm_monitor_metric_alert"
-    regex_fallback: "azurerm_monitor_metric_alert"
-
+    - resource_type: azurerm_monitor_metric_alert
+    regex_fallback: azurerm_monitor_metric_alert
 finding:
-  title_template: "Metric alert detected"
-  description_template: "Metric alert configured. Verify thresholds align with FedRAMP requirements."
-  remediation_template: |
-    Required alerts for FedRAMP:
+  title_template: Metric alert detected
+  description_template: Metric alert configured. Verify thresholds align with FedRAMP
+    requirements.
+  remediation_template: 'Required alerts for FedRAMP:
+
     - CPU > 80% (availability)
+
     - Memory > 85% (availability)
+
     - Disk > 90% (capacity management)
+
     - Failed requests > 10/min (security)
+
     - Response time > 5s (performance)
 
-tags: ["alerting", "monitoring", "positive"]
-nist_controls: ["si-4", "cp-2"]
-related_ksis: ["KSI-MLA-07", "KSI-RPL-01"]
+    '
+tags:
+- alerting
+- monitoring
+- positive
+nist_controls:
+- si-4
+- cp-2
+related_ksis:
+- KSI-MLA-07
+- KSI-RPL-01
+evidence_collection:
+  azure_monitor_kql:
+  - query: '# TODO: Extract from analyzer'
+    description: Evidence collection query
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: '# TODO: Extract from analyzer'
+    description: Azure CLI evidence collection
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation code'
+    azure_services: &id001
+    - Application Insights
+    - Azure Blob Storage
+    - Azure Monitor
+    - Log Analytics
+    - Microsoft Sentinel
+    effort_hours: 4
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Log Analytics workspace
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 7
+    action: Enable diagnostic settings for all resources
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 8
+    action: Configure log retention (1 year minimum for FedRAMP)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 9
+    action: Set up Azure Monitor alerts
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 10
+    action: Deploy Microsoft Sentinel (if required)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 11
+    action: Create dashboards for compliance monitoring
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 12
+    action: Test log collection and alerting
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  total_effort_hours: 17
+ssp_mapping:
+  control_family: SI - System and Information Integrity
+  control_numbers:
+  - SI-4
+  - CP-2
+  ssp_sections:
+  - section: 'SI-4: Event Types'
+    description_template: '# TODO: Add SSP description for KSI-MLA-07'
+    implementation_details: '# TODO: Add implementation details'
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Application Insights
+    tier: Standard
+    purpose: Required for Application Insights functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Log Analytics functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Microsoft Sentinel
+    tier: Standard
+    purpose: Required for Microsoft Sentinel functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-07
+    requirement_name: Event Types
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - control_id: AC-2.4
+      control_name: Automated Audit Actions
+    - control_id: AC-6.9
+      control_name: Log Use of Privileged Functions
+    - control_id: AC-17.1
+      control_name: Monitoring and Control
+    - control_id: AC-20.1
+      control_name: Limits on Authorized Use
+    - control_id: AU-2
+      control_name: Event Logging
+testing:
+  positive_test_cases:
+  - description: 'TODO: Add positive test case'
+    code_sample: '# TODO: Add compliant code sample'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: 'TODO: Add negative test case'
+    code_sample: '# TODO: Add non-compliant code sample'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
 
 ---
-# Application Performance Monitoring (KSI-MLA-08)
-
-pattern_id: "mla.apm.application_insights"
-name: "Application Insights SDK"
-description: "Detects Application Insights integration"
-family: "MLA"
-severity: "INFO"
-pattern_type: "import"
-
+pattern_id: mla.apm.application_insights
+name: Application Insights SDK
+description: Detects Application Insights integration
+family: MLA
+severity: INFO
+pattern_type: import
 languages:
   python:
     ast_queries:
-      - query_type: "import_statement"
-        target: "applicationinsights"
-    regex_fallback: "from\\s+applicationinsights"
-    positive_indicators: ["applicationinsights"]
-    
+    - query_type: import_statement
+      target: applicationinsights
+    regex_fallback: from\s+applicationinsights
+    positive_indicators:
+    - applicationinsights
   csharp:
     ast_queries:
-      - query_type: "using_directive"
-        target: "Microsoft.ApplicationInsights"
-    regex_fallback: "using\\s+Microsoft\\.ApplicationInsights"
-    
+    - query_type: using_directive
+      target: Microsoft.ApplicationInsights
+    regex_fallback: using\s+Microsoft\.ApplicationInsights
   java:
     ast_queries:
-      - query_type: "import_declaration"
-        target: "com.microsoft.applicationinsights"
-    regex_fallback: "import\\s+com\\.microsoft\\.applicationinsights"
-    
+    - query_type: import_declaration
+      target: com.microsoft.applicationinsights
+    regex_fallback: import\s+com\.microsoft\.applicationinsights
   typescript:
     ast_queries:
-      - query_type: "import_statement"
-        target: "applicationinsights"
-    regex_fallback: "import.*applicationinsights"
-
+    - query_type: import_statement
+      target: applicationinsights
+    regex_fallback: import.*applicationinsights
 finding:
-  title_template: "Application Insights APM detected"
-  description_template: "APM integration found. Verify distributed tracing and dependency tracking are enabled."
-  remediation_template: "N/A - Positive finding"
-
-tags: ["apm", "monitoring", "positive"]
-nist_controls: ["si-2", "si-4"]
-related_ksis: ["KSI-MLA-08"]
+  title_template: Application Insights APM detected
+  description_template: APM integration found. Verify distributed tracing and dependency
+    tracking are enabled.
+  remediation_template: N/A - Positive finding
+tags:
+- apm
+- monitoring
+- positive
+nist_controls:
+- si-2
+- si-4
+related_ksis:
+- KSI-MLA-08
+evidence_collection:
+  azure_monitor_kql:
+  - query: '# TODO: Extract from analyzer'
+    description: Evidence collection query
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: '# TODO: Extract from analyzer'
+    description: Azure CLI evidence collection
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation code'
+    azure_services: &id001
+    - Application Insights
+    - Azure Blob Storage
+    - Azure Monitor
+    - Log Analytics
+    - Microsoft Sentinel
+    effort_hours: 4
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Log Analytics workspace
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 7
+    action: Enable diagnostic settings for all resources
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 8
+    action: Configure log retention (1 year minimum for FedRAMP)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 9
+    action: Set up Azure Monitor alerts
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 10
+    action: Deploy Microsoft Sentinel (if required)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 11
+    action: Create dashboards for compliance monitoring
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 12
+    action: Test log collection and alerting
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  total_effort_hours: 17
+ssp_mapping:
+  control_family: SI - System and Information Integrity
+  control_numbers:
+  - SI-2
+  - SI-4
+  ssp_sections:
+  - section: 'SI-2: Log Data Access'
+    description_template: '# TODO: Add SSP description for KSI-MLA-08'
+    implementation_details: '# TODO: Add implementation details'
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Application Insights
+    tier: Standard
+    purpose: Required for Application Insights functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Log Analytics functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Microsoft Sentinel
+    tier: Standard
+    purpose: Required for Microsoft Sentinel functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-08
+    requirement_name: Log Data Access
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - control_id: SI-11
+      control_name: Error Handling
+testing:
+  positive_test_cases:
+  - description: 'TODO: Add positive test case'
+    code_sample: '# TODO: Add compliant code sample'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: 'TODO: Add negative test case'
+    code_sample: '# TODO: Add non-compliant code sample'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
 
 ---
-# Audit Logging (KSI-MLA-09)
-
-pattern_id: "mla.audit.activity_log"
-name: "Azure Activity Log Export"
-description: "Detects Activity Log diagnostic settings"
-family: "MLA"
-severity: "MEDIUM"
-pattern_type: "resource"
-
+pattern_id: mla.audit.activity_log
+name: Azure Activity Log Export
+description: Detects Activity Log diagnostic settings
+family: MLA
+severity: MEDIUM
+pattern_type: resource
 languages:
   bicep:
     ast_queries:
-      - resource_type: "Microsoft.Insights/diagnosticSettings"
-        scope: "subscription"
-        property_path: "properties.logs"
-        conditions:
-          - "category:Administrative"
-          - "category:Security"
-          - "enabled:true"
-    regex_fallback: "Microsoft\\.Insights/diagnosticSettings"
-    
+    - resource_type: Microsoft.Insights/diagnosticSettings
+      scope: subscription
+      property_path: properties.logs
+      conditions:
+      - category:Administrative
+      - category:Security
+      - enabled:true
+    regex_fallback: Microsoft\.Insights/diagnosticSettings
   terraform:
     ast_queries:
-      - resource_type: "azurerm_monitor_diagnostic_setting"
-        attribute: "log.category"
-        contains: "Administrative"
-    regex_fallback: "azurerm_monitor_diagnostic_setting"
-
+    - resource_type: azurerm_monitor_diagnostic_setting
+      attribute: log.category
+      contains: Administrative
+    regex_fallback: azurerm_monitor_diagnostic_setting
 finding:
-  title_template: "Activity log export configured"
-  description_template: "Azure Activity Log is exported to Log Analytics. Verify all audit categories are enabled."
-  remediation_template: |
-    Required log categories for FedRAMP:
+  title_template: Activity log export configured
+  description_template: Azure Activity Log is exported to Log Analytics. Verify all
+    audit categories are enabled.
+  remediation_template: 'Required log categories for FedRAMP:
+
     - Administrative (resource changes)
+
     - Security (security events)
+
     - ServiceHealth (outages)
+
     - Alert (fired alerts)
+
     - Recommendation (Azure Advisor)
 
-tags: ["audit", "compliance", "positive"]
-nist_controls: ["au-2", "au-3", "au-12"]
-related_ksis: ["KSI-MLA-09"]
+    '
+tags:
+- audit
+- compliance
+- positive
+nist_controls:
+- au-2
+- au-3
+- au-12
+related_ksis:
+- KSI-MLA-09
+ssp_mapping:
+  control_family: AU - Audit and Accountability
+  control_numbers:
+  - AU-2
+  - AU-3
+  - AU-12
+  ssp_sections:
+  - section: 'AU-2: Unknown'
+    description_template: '# TODO: Add SSP description for KSI-MLA-09'
+    implementation_details: '# TODO: Add implementation details'
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-09
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: 'TODO: Add positive test case'
+    code_sample: '# TODO: Add compliant code sample'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: 'TODO: Add negative test case'
+    code_sample: '# TODO: Add non-compliant code sample'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
 
 ---
-pattern_id: "mla.audit.resource_logs_missing"
-name: "Missing Resource Diagnostic Logs"
-description: "Detects resources without diagnostic log export"
-family: "MLA"
-severity: "HIGH"
-pattern_type: "configuration"
-
+pattern_id: mla.audit.resource_logs_missing
+name: Missing Resource Diagnostic Logs
+description: Detects resources without diagnostic log export
+family: MLA
+severity: HIGH
+pattern_type: configuration
 languages:
   bicep:
     ast_queries:
-      - resource_type: "Microsoft.Storage/storageAccounts|Microsoft.Sql/servers|Microsoft.KeyVault/vaults"
-        conditions:
-          - "not_has_child_resource:Microsoft.Insights/diagnosticSettings"
-    regex_fallback: "resource\\s+\\w+.*'Microsoft\\.(Storage|Sql|KeyVault)"
-    
+    - resource_type: Microsoft.Storage/storageAccounts|Microsoft.Sql/servers|Microsoft.KeyVault/vaults
+      conditions:
+      - not_has_child_resource:Microsoft.Insights/diagnosticSettings
+    regex_fallback: resource\s+\w+.*'Microsoft\.(Storage|Sql|KeyVault)
   terraform:
     ast_queries:
-      - resource_type: "azurerm_storage_account|azurerm_sql_server|azurerm_key_vault"
-        conditions:
-          - "not_has_companion_resource:azurerm_monitor_diagnostic_setting"
-    regex_fallback: "resource\\s+\"azurerm_(storage_account|sql_server|key_vault)\""
-
+    - resource_type: azurerm_storage_account|azurerm_sql_server|azurerm_key_vault
+      conditions:
+      - not_has_companion_resource:azurerm_monitor_diagnostic_setting
+    regex_fallback: resource\s+"azurerm_(storage_account|sql_server|key_vault)"
 finding:
-  title_template: "Resource logs not exported to SIEM"
-  description_template: "{resource_type} does not have diagnostic settings configured. KSI-MLA-09 requires all audit logs to be exported."
-  remediation_template: |
-    Enable diagnostic settings:
-    
-    Bicep:
-    resource diagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-      scope: storageAccount
-      name: 'logs-to-workspace'
-      properties: {
-        workspaceId: logAnalyticsWorkspace.id
-        logs: [
-          {
-            category: 'StorageRead'
-            enabled: true
-          }
-          {
-            category: 'StorageWrite'
-            enabled: true
-          }
-        ]
-      }
-    }
-
-tags: ["audit", "logging", "critical-gap"]
-nist_controls: ["au-2", "au-12"]
-related_ksis: ["KSI-MLA-09"]
+  title_template: Resource logs not exported to SIEM
+  description_template: '{resource_type} does not have diagnostic settings configured.
+    KSI-MLA-09 requires all audit logs to be exported.'
+  remediation_template: "Enable diagnostic settings:\n\nBicep:\nresource diagnostics\
+    \ 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {\n  scope: storageAccount\n\
+    \  name: 'logs-to-workspace'\n  properties: {\n    workspaceId: logAnalyticsWorkspace.id\n\
+    \    logs: [\n      {\n        category: 'StorageRead'\n        enabled: true\n\
+    \      }\n      {\n        category: 'StorageWrite'\n        enabled: true\n \
+    \     }\n    ]\n  }\n}\n"
+tags:
+- audit
+- logging
+- critical-gap
+nist_controls:
+- au-2
+- au-12
+related_ksis:
+- KSI-MLA-09
+ssp_mapping:
+  control_family: AU - Audit and Accountability
+  control_numbers:
+  - AU-2
+  - AU-12
+  ssp_sections:
+  - section: 'AU-2: Unknown'
+    description_template: '# TODO: Add SSP description for KSI-MLA-09'
+    implementation_details: '# TODO: Add implementation details'
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-09
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: 'TODO: Add positive test case'
+    code_sample: '# TODO: Add compliant code sample'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: 'TODO: Add negative test case'
+    code_sample: '# TODO: Add non-compliant code sample'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []

@@ -1,5 +1,11 @@
-# SCN_PATTERNS Pattern Library
-# Auto-converted to dict format for consistency
+# SCN PATTERNS V2 - V2 Schema
+# Migrated from V1 schema with enhanced evidence collection
+# 
+# NOTE: This is an automated migration. Manual review required for:
+# - Evidence collection queries (marked with TODO)
+# - Automation implementation code
+# - SSP mapping descriptions
+# - Test cases
 
 pattern_id: scn.sast.tool_integration
 name: SAST Tool Integration
