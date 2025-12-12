@@ -43,6 +43,12 @@ I'll help you evaluate vendors and tools for FedRAMP 20x compatibility.
 - [ ] Supports continuous monitoring (FRR-CCM)?
 - [ ] Can generate quarterly review reports?
 
+**FRR Compliance Validation:**
+Use FRR analysis tools to validate vendor claims:
+- `analyze_frr_family` - Check vendor solution against FRR requirements (VDR, ADS, CCM)
+- `get_frr_metadata` - Get detailed FRR requirements for vendor evaluation
+- `list_frrs_by_family` - Review all FRRs the vendor must support
+
 **Questions to Ask:**
 - What's your typical log ingestion rate capability?
 - Do you offer government regions/dedicated instances?

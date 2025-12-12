@@ -341,10 +341,10 @@ async def run_all_tests():
     print("="*70)
     
     if tests_failed == 0:
-        print("\nALL TESTS PASSED ✓")
+        print("\nALL TESTS PASSED [PASS]")
         return 0
     else:
-        print(f"\n{tests_failed} TEST(S) FAILED ✗")
+        print(f"\n{tests_failed} TEST(S) FAILED [FAIL]")
         return 1
 
 

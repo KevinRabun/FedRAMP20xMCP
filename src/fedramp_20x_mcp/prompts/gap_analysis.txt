@@ -24,4 +24,11 @@ Based on your answers, I'll help you:
 - Check Vulnerability Detection and Response (VDR) obligations
 - Review Significant Change Notification (SCN) requirements
 
+**FRR Analysis Tools Available:**
+Use these tools to analyze FedRAMP Revised Requirements (FRR) compliance:
+- `analyze_frr_family` - Analyze entire FRR family (VDR, ADS, CCM, etc.)
+- `analyze_all_frrs` - Comprehensive analysis across all 199 FRRs
+- `get_frr_metadata` - Get NIST controls, KSIs, detection strategy for specific FRR
+- `list_frrs_by_family` - List all FRRs in family with implementation status
+
 **Next Steps**: Please share your authorization level and service type, and I'll provide tailored guidance.

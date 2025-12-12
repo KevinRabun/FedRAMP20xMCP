@@ -1,0 +1,442 @@
+````plaintext
+## Bicep Template for FRR-ADS (Authorization Data Sharing)
+
+```bicep
+// frr_ads.bicep - Authorization Data Sharing API Infrastructure
+// Implements FRR-ADS family requirements for machine-readable data sharing,
+// API endpoints, authentication, and automated evidence collection
+//
+// FRR-ADS Requirements Supported:
+// - FRR-ADS-01 to ADS-10: Core authorization data sharing requirements
+// - FRR-ADS-AC-01 to AC-02: Access control for API consumers
+// - FRR-ADS-EX-01: Exception documentation via API
+// - FRR-ADS-TC-01 to TC-07: Technical compliance data endpoints
+//
+// Related KSIs:
+// - KSI-CED-01: Continuous evidence collection and delivery
+// - KSI-IAM-01: Identity and access management
+// - KSI-CNA-01: Network security controls
+
+targetScope = 'resourceGroup'
+
+param location string = resourceGroup().location
+param apiManagementName string = 'apim-ads-${uniqueString(resourceGroup().id)}'
+param functionAppName string = 'func-ads-${uniqueString(resourceGroup().id)}'
+param storageAccountName string = 'adsevidence${uniqueString(resourceGroup().id)}'
+param keyVaultName string = 'kv-ads-${uniqueString(resourceGroup().id)}'
+
+// Key Vault for API keys and secrets
+// Supports: FRR-ADS-AC-01 (access control), FRR-UCM (cryptographic modules)
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
+  name: keyVaultName
+  location: location
+  properties: {
+    sku: {
+      family: 'A'
+      name: 'premium'  // MANDATORY: FedRAMP 20x requires HSM-backed Premium SKU
+    }
+    tenantId: subscription().tenantId
+    enableRbacAuthorization: true
+    enablePurgeProtection: true
+    enableSoftDelete: true
+    softDeleteRetentionInDays: 90
+    networkAcls: {
+      defaultAction: 'Deny'
+      bypass: 'AzureServices'
+      ipRules: []
+      virtualNetworkRules: []
+    }
+    publicNetworkAccess: 'Disabled'  // MANDATORY: FedRAMP 20x requires private access
+  }
+}
+
+// Storage Account for authorization data and evidence
+// Supports: FRR-ADS-01 (machine-readable data), FRR-ADS-TC (technical compliance)
+resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: storageAccountName
+  location: location
+  sku: {
+    name: 'Standard_GRS'  // Geo-redundant for compliance evidence
+  }
+  kind: 'StorageV2'
+  properties: {
+    minimumTlsVersion: 'TLS1_2'
+    supportsHttpsTrafficOnly: true
+    allowBlobPublicAccess: false
+    networkAcls: {
+      defaultAction: 'Deny'
+      bypass: 'AzureServices'
+      virtualNetworkRules: []
+      ipRules: []
+    }
+    encryption: {
+      requireInfrastructureEncryption: true
+      services: {
+        blob: {
+          enabled: true
+          keyType: 'Account'
+        }
+        file: {
+          enabled: true
+          keyType: 'Account'
+        }
+      }
+      keySource: 'Microsoft.Keyvault'  // MANDATORY: Use Customer-Managed Keys
+      keyvaultproperties: {
+        keyname: 'storage-encryption-key'
+        keyvaulturi: keyVault.properties.vaultUri
+      }
+    }
+  }
+}
+
+// Blob containers for authorization data categories
+// Supports: FRR-ADS-TC-01 to TC-07 (categorized compliance data)
+resource authorizationContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
+  name: '${storageAccount.name}/default/authorization-packages'
+  properties: {
+    publicAccess: 'None'
+    metadata: {
+      purpose: 'FRR-ADS authorization packages (FedRAMP 20x requirements)'
+      retention: '7 years'
+    }
+  }
+}
+
+resource continuousMonitoringContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
+  name: '${storageAccount.name}/default/continuous-monitoring'
+  properties: {
+    publicAccess: 'None'
+    metadata: {
+      purpose: 'FRR-ADS-TC-01 continuous monitoring data'
+      retention: '3 years'
+    }
+  }
+}
+
+resource securityControlsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
+  name: '${storageAccount.name}/default/security-controls'
+  properties: {
+    publicAccess: 'None'
+    metadata: {
+      purpose: 'FRR-ADS-TC-02 security control implementation evidence'
+      retention: '7 years'
+    }
+  }
+}
+
+resource vulnerabilityDataContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
+  name: '${storageAccount.name}/default/vulnerability-data'
+  properties: {
+    publicAccess: 'None'
+    metadata: {
+      purpose: 'FRR-ADS-TC-03 vulnerability scan results'
+      retention: '3 years'
+    }
+  }
+}
+
+// App Service Plan for Azure Functions (API endpoints)
+// Supports: FRR-ADS-01 to ADS-10 (API hosting)
+resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
+  name: 'plan-ads-${uniqueString(resourceGroup().id)}'
+  location: location
+  sku: {
+    name: 'P1v3'
+    tier: 'PremiumV3'
+    capacity: 2  // High availability for compliance APIs
+  }
+  properties: {
+    reserved: true  // Linux
+  }
+}
+
+// Azure Functions for authorization data API
+// Supports: FRR-ADS-01 (machine-readable endpoints), FRR-ADS-AC-01 (authentication)
+resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
+  name: functionAppName
+  location: location
+  kind: 'functionapp,linux'
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    serverFarmId: appServicePlan.id
+    httpsOnly: true
+    clientAffinityEnabled: false
+    publicNetworkAccess: 'Disabled'  // MANDATORY: Use private endpoints
+    siteConfig: {
+      linuxFxVersion: 'PYTHON|3.11'
+      minTlsVersion: '1.2'
+      ftpsState: 'Disabled'
+      alwaysOn: true
+      http20Enabled: true
+      functionAppScaleLimit: 10
+      appSettings: [
+        {
+          name: 'AzureWebJobsStorage'
+          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value}'
+        }
+        {
+          name: 'FUNCTIONS_EXTENSION_VERSION'
+          value: '~4'
+        }
+        {
+          name: 'FUNCTIONS_WORKER_RUNTIME'
+          value: 'python'
+        }
+        {
+          name: 'KEY_VAULT_URI'
+          value: keyVault.properties.vaultUri
+        }
+        {
+          name: 'EVIDENCE_STORAGE_ACCOUNT'
+          value: storageAccount.name
+        }
+      ]
+    }
+  }
+}
+
+// API Management for authorization data API
+// Supports: FRR-ADS-01 (API gateway), FRR-ADS-AC-01 (authentication/authorization)
+resource apiManagement 'Microsoft.ApiManagement/service@2023-05-01-preview' = {
+  name: apiManagementName
+  location: location
+  sku: {
+    name: 'Premium'  // Required for VNet integration and SLA
+    capacity: 1
+  }
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    publisherEmail: 'compliance@contoso.com'
+    publisherName: 'FedRAMP Compliance Team'
+    virtualNetworkType: 'Internal'  // MANDATORY: FedRAMP 20x requires private APIs
+    customProperties: {
+      'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10': 'False'
+      'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls11': 'False'
+      'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Ssl30': 'False'
+      'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls10': 'False'
+      'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls11': 'False'
+      'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Ssl30': 'False'
+    }
+  }
+}
+
+// API for Authorization Package Data (FRR-ADS-01)
+resource authorizationApi 'Microsoft.ApiManagement/service/apis@2023-05-01-preview' = {
+  parent: apiManagement
+  name: 'authorization-data-api'
+  properties: {
+    displayName: 'Authorization Data API'
+    description: 'FRR-ADS machine-readable authorization package data endpoints'
+    path: 'authorization'
+    protocols: ['https']
+    subscriptionRequired: true
+    authenticationSettings: {
+      oAuth2AuthenticationSettings: []
+    }
+    subscriptionKeyParameterNames: {
+      header: 'Ocp-Apim-Subscription-Key'
+      query: 'subscription-key'
+    }
+  }
+}
+
+// API Operations for FRR-ADS-TC technical compliance endpoints
+resource getTechnicalControls 'Microsoft.ApiManagement/service/apis/operations@2023-05-01-preview' = {
+  parent: authorizationApi
+  name: 'get-technical-controls'
+  properties: {
+    displayName: 'Get Technical Controls'
+    method: 'GET'
+    urlTemplate: '/technical-controls'
+    description: 'FRR-ADS-TC-02: Retrieve technical security control implementation status'
+    responses: [
+      {
+        statusCode: 200
+        description: 'Technical controls data (JSON)'
+        representations: [
+          {
+            contentType: 'application/json'
+          }
+        ]
+      }
+    ]
+  }
+}
+
+resource getVulnerabilityData 'Microsoft.ApiManagement/service/apis/operations@2023-05-01-preview' = {
+  parent: authorizationApi
+  name: 'get-vulnerability-data'
+  properties: {
+    displayName: 'Get Vulnerability Data'
+    method: 'GET'
+    urlTemplate: '/vulnerabilities'
+    description: 'FRR-ADS-TC-03: Retrieve vulnerability scan results and remediation status'
+    responses: [
+      {
+        statusCode: 200
+        description: 'Vulnerability data (JSON)'
+        representations: [
+          {
+            contentType: 'application/json'
+          }
+        ]
+      }
+    ]
+  }
+}
+
+resource getContinuousMonitoring 'Microsoft.ApiManagement/service/apis/operations@2023-05-01-preview' = {
+  parent: authorizationApi
+  name: 'get-continuous-monitoring'
+  properties: {
+    displayName: 'Get Continuous Monitoring Data'
+    method: 'GET'
+    urlTemplate: '/continuous-monitoring'
+    description: 'FRR-ADS-TC-01: Retrieve continuous monitoring metrics and alerts'
+    responses: [
+      {
+        statusCode: 200
+        description: 'Continuous monitoring data (JSON)'
+        representations: [
+          {
+            contentType: 'application/json'
+          }
+        ]
+      }
+    ]
+  }
+}
+
+// Log Analytics Workspace for API audit logs
+// Retention: 730 days (FedRAMP 20x requirement)
+resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
+  name: 'law-ads-${uniqueString(resourceGroup().id)}'
+  location: location
+  properties: {
+    sku: {
+      name: 'PerGB2018'
+    }
+    retentionInDays: 730  // MANDATORY: FedRAMP 20x requires 2-year retention
+    features: {
+      enableLogAccessUsingOnlyResourcePermissions: true
+    }
+  }
+}
+
+// Diagnostic Settings for API Management (FRR-ADS-AC-01 audit logs)
+resource apiDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  scope: apiManagement
+  name: 'api-audit-logs'
+  properties: {
+    workspaceId: logAnalytics.id
+    logs: [
+      {
+        category: 'GatewayLogs'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: 730
+        }
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: 730
+        }
+      }
+    ]
+  }
+}
+
+// Outputs for integration
+output apiManagementUrl string = apiManagement.properties.gatewayUrl
+output functionAppName string = functionApp.name
+output storageAccountName string = storageAccount.name
+output keyVaultUri string = keyVault.properties.vaultUri
+output authorizationContainerUrl string = '${storageAccount.properties.primaryEndpoints.blob}authorization-packages'
+output logAnalyticsWorkspaceId string = logAnalytics.id
+```
+
+## Deployment Instructions
+
+1. **Create Resource Group:**
+   ```bash
+   az group create --name rg-ads-compliance --location eastus
+   ```
+
+2. **Deploy Template:**
+   ```bash
+   az deployment group create \
+     --resource-group rg-ads-compliance \
+     --template-file frr_ads.bicep
+   ```
+
+3. **Deploy Azure Functions Code:**
+   ```bash
+   cd azure-functions/ads-api
+   func azure functionapp publish func-ads-<unique-id>
+   ```
+
+4. **Configure API Management Policies:**
+   - Add OAuth2 authentication (Entra ID)
+   - Configure rate limiting (100 requests/min)
+   - Enable response caching for static data
+   - Set up subscription key management
+
+5. **Test API Endpoints:**
+   ```bash
+   curl -H "Ocp-Apim-Subscription-Key: YOUR_KEY" \
+     https://apim-ads-<unique-id>.azure-api.net/authorization/technical-controls
+   ```
+
+## API Endpoints (FRR-ADS-TC)
+
+| Endpoint | FRR Requirement | Description |
+|----------|-----------------|-------------|
+| `/continuous-monitoring` | FRR-ADS-TC-01 | Continuous monitoring metrics and alerts |
+| `/technical-controls` | FRR-ADS-TC-02 | Security control implementation status |
+| `/vulnerabilities` | FRR-ADS-TC-03 | Vulnerability scan results and remediation |
+| `/incidents` | FRR-ADS-TC-04 | Security incident reports and resolution |
+| `/configuration-changes` | FRR-ADS-TC-05 | Configuration management audit trail |
+| `/access-reviews` | FRR-ADS-TC-06 | Access control review results |
+| `/compliance-posture` | FRR-ADS-TC-07 | Overall compliance posture summary |
+
+## Machine-Readable Formats (FRR-ADS-01)
+
+All endpoints return JSON with the following structure:
+```json
+{
+  "metadata": {
+    "timestamp": "2024-03-15T10:30:00Z",
+    "version": "1.0",
+    "classification": "Controlled Unclassified Information"
+  },
+  "data": {
+    // Compliance data specific to endpoint
+  }
+}
+```
+
+## Authentication (FRR-ADS-AC-01)
+
+- **Method**: OAuth 2.0 (Microsoft Entra ID)
+- **Scopes**: `api://ads-api/read`, `api://ads-api/write`
+- **Subscription Keys**: Required for all API calls
+- **IP Allowlist**: Configure in API Management policies
+
+## Evidence Collection Schedule
+
+- **Continuous monitoring**: Real-time collection, hourly aggregation
+- **Vulnerability data**: Daily updates
+- **Security controls**: Weekly snapshots
+- **Compliance posture**: Monthly reports
+````

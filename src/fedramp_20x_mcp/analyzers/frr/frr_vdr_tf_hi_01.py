@@ -1,0 +1,283 @@
+"""
+FRR-VDR-TF-HI-01: 7-Day History
+
+Providers SHOULD make all recent historical _vulnerability detection_ and _response_ activity available in a _machine-readable_ format for automated retrieval by all necessary parties (e.g. using an API service or similar); this information SHOULD be updated _persistently_, at least once every 7 days.
+
+Official FedRAMP 20x Requirement
+Source: FRR-VDR (Vulnerability Detection and Response) family
+Primary Keyword: SHOULD
+Impact Levels: High
+"""
+
+import re
+from typing import List, Dict, Any
+from ..base import Finding, Severity
+from .base import BaseFRRAnalyzer
+from ..ast_utils import ASTParser, CodeLanguage
+
+
+class FRR_VDR_TF_HI_01_Analyzer(BaseFRRAnalyzer):
+    """
+    Analyzer for FRR-VDR-TF-HI-01: 7-Day History
+    
+    **Official Statement:**
+    Providers SHOULD make all recent historical _vulnerability detection_ and _response_ activity available in a _machine-readable_ format for automated retrieval by all necessary parties (e.g. using an API service or similar); this information SHOULD be updated _persistently_, at least once every 7 days.
+    
+    **Family:** VDR - Vulnerability Detection and Response
+    
+    **Primary Keyword:** SHOULD
+    
+    **Impact Levels:**
+    - Low: No
+    - Moderate: No
+    - High: Yes
+    
+    **NIST Controls:**
+    - TODO: Add relevant NIST controls
+    
+    **Related KSIs:**
+    - TODO: Add related KSI IDs
+    
+    **Detectability:** Unknown
+    
+    **Detection Strategy:**
+    TODO: Describe what this analyzer detects and how:
+        1. Application code patterns (Python, C#, Java, TypeScript) - Use AST
+        2. Infrastructure patterns (Bicep, Terraform) - Use regex
+        3. CI/CD patterns (GitHub Actions, Azure Pipelines, GitLab CI) - Use regex
+    
+    """
+    
+    FRR_ID = "FRR-VDR-TF-HI-01"
+    FRR_NAME = "7-Day History"
+    FRR_STATEMENT = """Providers SHOULD make all recent historical _vulnerability detection_ and _response_ activity available in a _machine-readable_ format for automated retrieval by all necessary parties (e.g. using an API service or similar); this information SHOULD be updated _persistently_, at least once every 7 days."""
+    FAMILY = "VDR"
+    FAMILY_NAME = "Vulnerability Detection and Response"
+    PRIMARY_KEYWORD = "SHOULD"
+    IMPACT_LOW = False
+    IMPACT_MODERATE = False
+    IMPACT_HIGH = True
+    NIST_CONTROLS = [
+        ("RA-5", "Vulnerability Monitoring and Scanning"),
+        ("SI-2", "Flaw Remediation"),
+        ("CA-7", "Continuous Monitoring"),
+    ]
+    CODE_DETECTABLE = "No"
+    IMPLEMENTATION_STATUS = "IMPLEMENTED"
+    RELATED_KSIS = [
+        "KSI-AFR-04"  # Vulnerability Detection and Response
+    ]
+    
+    def __init__(self):
+        """Initialize FRR-VDR-TF-HI-01 analyzer."""
+        super().__init__(
+            frr_id=self.FRR_ID,
+            frr_name=self.FRR_NAME,
+            frr_statement=self.FRR_STATEMENT
+        )
+    
+    # ============================================================================
+    # APPLICATION CODE ANALYZERS (AST-first for supported languages)
+    # ============================================================================
+    
+    def analyze_python(self, code: str, file_path: str = "") -> List[Finding]:
+        """
+        Analyze Python code for FRR-VDR-TF-HI-01 compliance using AST.
+        
+        TODO: Implement Python analysis
+        - Use ASTParser(CodeLanguage.PYTHON)
+        - Use tree.root_node and code_bytes
+        - Use find_nodes_by_type() for AST nodes
+        - Fallback to regex if AST fails
+        
+        Detection targets:
+        - TODO: List what patterns to detect
+        """
+        findings = []
+        lines = code.split('\n')
+        
+        # TODO: Implement AST-based analysis
+        # Example from FRR-VDR-08:
+        # try:
+        #     parser = ASTParser(CodeLanguage.PYTHON)
+        #     tree = parser.parse(code)
+        #     code_bytes = code.encode('utf8')
+        #     
+        #     if tree and tree.root_node:
+        #         # Find relevant nodes
+        #         nodes = parser.find_nodes_by_type(tree.root_node, 'node_type')
+        #         for node in nodes:
+        #             node_text = parser.get_node_text(node, code_bytes)
+        #             # Check for violations
+        #         
+        #         return findings
+        # except Exception:
+        #     pass
+        
+        # TODO: Implement regex fallback
+        return findings
+    
+    def analyze_csharp(self, code: str, file_path: str = "") -> List[Finding]:
+        """
+        Analyze C# code for FRR-VDR-TF-HI-01 compliance using AST.
+        
+        TODO: Implement C# analysis
+        """
+        findings = []
+        lines = code.split('\n')
+        
+        # TODO: Implement AST analysis for C#
+        return findings
+    
+    def analyze_java(self, code: str, file_path: str = "") -> List[Finding]:
+        """
+        Analyze Java code for FRR-VDR-TF-HI-01 compliance using AST.
+        
+        TODO: Implement Java analysis
+        """
+        findings = []
+        lines = code.split('\n')
+        
+        # TODO: Implement AST analysis for Java
+        return findings
+    
+    def analyze_typescript(self, code: str, file_path: str = "") -> List[Finding]:
+        """
+        Analyze TypeScript/JavaScript code for FRR-VDR-TF-HI-01 compliance using AST.
+        
+        TODO: Implement TypeScript analysis
+        """
+        findings = []
+        lines = code.split('\n')
+        
+        # TODO: Implement AST analysis for TypeScript
+        return findings
+    
+    # ============================================================================
+    # INFRASTRUCTURE AS CODE ANALYZERS (Regex-based)
+    # ============================================================================
+    
+    def analyze_bicep(self, code: str, file_path: str = "") -> List[Finding]:
+        """
+        Analyze Bicep infrastructure code for FRR-VDR-TF-HI-01 compliance.
+        
+        TODO: Implement Bicep analysis
+        - Detect relevant Azure resources
+        - Check for compliance violations
+        """
+        findings = []
+        lines = code.split('\n')
+        
+        # TODO: Implement Bicep regex patterns
+        # Example:
+        # resource_pattern = r"resource\s+\w+\s+'Microsoft\.\w+/\w+@[\d-]+'\s*="
+        
+        return findings
+    
+    def analyze_terraform(self, code: str, file_path: str = "") -> List[Finding]:
+        """
+        Analyze Terraform infrastructure code for FRR-VDR-TF-HI-01 compliance.
+        
+        TODO: Implement Terraform analysis
+        - Detect relevant resources
+        - Check for compliance violations
+        """
+        findings = []
+        lines = code.split('\n')
+        
+        # TODO: Implement Terraform regex patterns
+        return findings
+    
+    # ============================================================================
+    # CI/CD PIPELINE ANALYZERS (Regex-based)
+    # ============================================================================
+    
+    def analyze_github_actions(self, code: str, file_path: str = "") -> List[Finding]:
+        """
+        Analyze GitHub Actions workflow for FRR-VDR-TF-HI-01 compliance.
+        
+        TODO: Implement GitHub Actions analysis
+        - Check for required steps/actions
+        - Verify compliance configuration
+        """
+        findings = []
+        lines = code.split('\n')
+        
+        # TODO: Implement GitHub Actions analysis
+        return findings
+    
+    def analyze_azure_pipelines(self, code: str, file_path: str = "") -> List[Finding]:
+        """
+        Analyze Azure Pipelines YAML for FRR-VDR-TF-HI-01 compliance.
+        
+        TODO: Implement Azure Pipelines analysis
+        """
+        findings = []
+        lines = code.split('\n')
+        
+        # TODO: Implement Azure Pipelines analysis
+        return findings
+    
+    def analyze_gitlab_ci(self, code: str, file_path: str = "") -> List[Finding]:
+        """
+        Analyze GitLab CI YAML for FRR-VDR-TF-HI-01 compliance.
+        
+        TODO: Implement GitLab CI analysis
+        """
+        findings = []
+        lines = code.split('\n')
+        
+        # TODO: Implement GitLab CI analysis
+        return findings
+    
+    # ============================================================================
+    # EVIDENCE COLLECTION SUPPORT
+    # ============================================================================
+    
+    def get_evidence_collection_queries(self) -> Dict[str, List[str]]:
+        """
+        Get queries for collecting evidence of 7-day machine-readable VDR history (High impact).
+        
+        Returns queries to verify historical VDR data available in machine-readable format, updated weekly.
+        """
+        return {
+            "API service availability": [
+                "ApiManagement | where TimeGenerated > ago(7d) | where ApiPath contains 'vulnerability' or ApiPath contains 'vdr' | summarize RequestCount=count(), UniqueCallers=dcount(CallerIPAddress) by bin(TimeGenerated, 1d)",
+                "ApplicationInsights | where TimeGenerated > ago(7d) | where OperationName contains 'GetVulnerabilityHistory' | project TimeGenerated, ResultCode, ResponseTime, CallerIdentity"
+            ],
+            "Machine-readable format verification": [
+                "ApiResponses | where TimeGenerated > ago(7d) | where Endpoint contains 'vdr/history' | extend IsMachineReadable = (ContentType in ('application/json', 'application/xml', 'text/csv')) | summarize MachineReadableCount=countif(IsMachineReadable), TotalResponses=count()",
+                "DataExports | where ExportType == 'VDR History' | where TimeGenerated > ago(7d) | project TimeGenerated, Format, RecordCount, ExportedTo"
+            ],
+            "7-day update frequency verification": [
+                "VulnerabilityDataUpdates | summarize LastUpdate=max(TimeGenerated) by DataType | extend DaysSinceUpdate=datetime_diff('day', now(), LastUpdate) | where DaysSinceUpdate <= 7",
+                "DataRefreshJobs | where JobType == 'VDR History Sync' | where TimeGenerated > ago(7d) | summarize RefreshCount=count() by bin(TimeGenerated, 1d) | where RefreshCount >= 1"
+            ]
+        }
+    
+    def get_evidence_artifacts(self) -> List[str]:
+        """
+        Get list of evidence artifacts for 7-day machine-readable VDR history.
+        """
+        return [
+            "API service documentation for VDR history endpoint (machine-readable formats: JSON, XML, CSV)",
+            "API access logs showing authorized party usage (last 30 days)",
+            "Data refresh job schedules and execution logs (at least weekly updates)",
+            "Sample API responses demonstrating machine-readable format (JSON/XML/CSV structures)",
+            "Historical data retention policy (minimum 7 days for High impact systems)",
+            "API authentication and authorization configurations (necessary parties access)",
+            "Data freshness monitoring alerts (trigger if updates exceed 7 days)",
+            "Integration examples for automated VDR data retrieval"
+        ]
+    
+    def get_evidence_automation_recommendations(self) -> Dict[str, str]:
+        """
+        Get recommendations for automating evidence collection.
+        """
+        return {
+            "REST API implementation": "Implement RESTful API for VDR history providing machine-readable formats (JSON/XML/CSV) with authentication for necessary parties (Azure API Management, OAuth2)",
+            "Automated weekly updates": "Schedule automated data refresh jobs at least every 7 days, monitor execution success (Azure Data Factory, scheduled Logic Apps)",
+            "Machine-readable format enforcement": "Ensure all API responses use structured machine-readable formats, avoid PDF/human-only formats (JSON schema validation, OpenAPI specifications)",
+            "Data freshness monitoring": "Implement automated monitoring of data update frequency, alert if updates exceed 7-day threshold (Azure Monitor alerts, custom metrics)",
+            "Access tracking": "Log all API access by authorized parties, track usage patterns and data consumption (API Management analytics, Application Insights)"
+        }
