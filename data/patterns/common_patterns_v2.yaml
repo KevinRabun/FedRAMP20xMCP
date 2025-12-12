@@ -1,0 +1,1450 @@
+# COMMON PATTERNS V2 - V2 Schema
+# Migrated from V1 schema with enhanced evidence collection
+# 
+# NOTE: This is an automated migration. Manual review required for:
+# - Evidence collection queries (marked with TODO)
+# - Automation implementation code
+# - SSP mapping descriptions
+# - Test cases
+
+pattern_id: common.tagging.required_tags
+name: Required Azure Resource Tags
+description: Detects missing required tags for FedRAMP compliance
+family: COMMON
+severity: MEDIUM
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: '*'
+      property_path: tags
+      conditions:
+      - not_contains_key:Environment
+      - not_contains_key:Owner
+      - not_contains_key:CostCenter
+    regex_fallback: resource\s+\w+\s+'[^']+'
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_*
+      attribute: tags
+      conditions:
+      - not_contains_key:Environment
+      - not_contains_key:Owner
+    regex_fallback: resource\s+"azurerm_
+finding:
+  title_template: Missing required resource tags
+  description_template: Resource lacks required tags for governance and cost tracking.
+  remediation_template: "Add required tags:\ntags: {\n  Environment: 'Production'\
+    \  // or Dev, Test, Staging\n  Owner: 'security-team@example.com'\n  CostCenter:\
+    \ 'CC-12345'\n  DataClassification: 'Confidential'\n  ComplianceScope: 'FedRAMP-High'\n\
+    }\n"
+tags:
+- governance
+- tagging
+- compliance
+nist_controls:
+- cm-8
+related_ksis:
+- KSI-FSI-01
+ssp_mapping:
+  control_family: CM - Configuration Management
+  control_numbers:
+  - CM-8
+  ssp_sections:
+  - section: 'CM-8: Unknown'
+    description_template: '# TODO: Add SSP description for KSI-FSI-01'
+    implementation_details: '# TODO: Add implementation details'
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-FSI-01
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: 'TODO: Add positive test case'
+    code_sample: '# TODO: Add compliant code sample'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: 'TODO: Add negative test case'
+    code_sample: '# TODO: Add non-compliant code sample'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+
+---
+pattern_id: common.diagnostics.missing_diagnostic_settings
+name: Missing Diagnostic Settings
+description: Detects resources without diagnostic log export
+family: COMMON
+severity: HIGH
+pattern_type: configuration
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.Storage/*|Microsoft.Sql/*|Microsoft.KeyVault/*|Microsoft.Compute/*|Microsoft.Network/*
+      conditions:
+      - not_has_child_resource:Microsoft.Insights/diagnosticSettings
+    regex_fallback: resource\s+\w+\s+'Microsoft\.(Storage|Sql|KeyVault|Compute|Network)
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_storage_account|azurerm_sql_server|azurerm_key_vault|azurerm_virtual_machine|azurerm_network_interface
+      conditions:
+      - not_has_companion_resource:azurerm_monitor_diagnostic_setting
+    regex_fallback: resource\s+"azurerm_(storage_account|sql_server|key_vault)"
+finding:
+  title_template: Diagnostic settings not configured
+  description_template: Resource does not export logs to Log Analytics. Required for
+    audit and security monitoring.
+  remediation_template: "Add diagnostic settings:\n\nBicep:\nresource diagnostics\
+    \ 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {\n  scope: myResource\n\
+    \  name: 'logs-to-workspace'\n  properties: {\n    workspaceId: logAnalyticsWorkspace.id\n\
+    \    logs: [\n      {\n        categoryGroup: 'allLogs'\n        enabled: true\n\
+    \      }\n    ]\n    metrics: [\n      {\n        category: 'AllMetrics'\n   \
+    \     enabled: true\n      }\n    ]\n  }\n}\n"
+tags:
+- diagnostics
+- logging
+- audit
+nist_controls:
+- au-2
+- au-3
+- au-12
+related_ksis:
+- KSI-MLA-01
+- KSI-MLA-09
+evidence_artifacts:
+- artifact_type: logs
+  name: Authentication logs with MFA details
+  source: Azure Monitor - SigninLogs
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: Conditional Access policies export
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Authentication methods compliance report
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: CSV
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation code'
+    azure_services: &id001
+    - Application Insights
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Microsoft Sentinel
+    effort_hours: 4
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Log Analytics workspace
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 7
+    action: Enable diagnostic settings for all resources
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 8
+    action: Configure log retention (1 year minimum for FedRAMP)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 9
+    action: Set up Azure Monitor alerts
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 10
+    action: Deploy Microsoft Sentinel (if required)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 11
+    action: Create dashboards for compliance monitoring
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 12
+    action: Test log collection and alerting
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  total_effort_hours: 17
+ssp_mapping:
+  control_family: AU - Audit and Accountability
+  control_numbers:
+  - AU-2
+  - AU-3
+  - AU-12
+  ssp_sections:
+  - section: 'AU-2: Security Information and Event Management (SIEM)'
+    description_template: '# TODO: Add SSP description for KSI-MLA-01'
+    implementation_details: '# TODO: Add implementation details'
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Application Insights
+    tier: Standard
+    purpose: Required for Application Insights functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Log Analytics functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-01
+    requirement_name: Security Information and Event Management (SIEM)
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - control_id: AC-17.1
+      control_name: Monitoring and Control
+    - control_id: AC-20.1
+      control_name: Limits on Authorized Use
+    - control_id: AU-2
+      control_name: Event Logging
+    - control_id: AU-3
+      control_name: Content of Audit Records
+    - control_id: AU-3.1
+      control_name: Additional Audit Information
+testing:
+  positive_test_cases:
+  - description: 'TODO: Add positive test case'
+    code_sample: '# TODO: Add compliant code sample'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: 'TODO: Add negative test case'
+    code_sample: '# TODO: Add non-compliant code sample'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+
+---
+pattern_id: common.identity.managed_identity
+name: Managed Identity Usage
+description: Detects use of managed identity for authentication
+family: COMMON
+severity: INFO
+pattern_type: configuration
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: '*'
+      property_path: identity.type
+      value: SystemAssigned|UserAssigned
+    regex_fallback: identity:\s*\{
+    positive_indicators:
+    - SystemAssigned
+    - UserAssigned
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_*
+      has_block: identity
+    regex_fallback: identity\s*\{
+  python:
+    ast_queries:
+    - query_type: import_statement
+      target: azure.identity.DefaultAzureCredential
+    regex_fallback: from\s+azure\.identity\s+import\s+DefaultAzureCredential
+  csharp:
+    ast_queries:
+    - query_type: using_directive
+      target: Azure.Identity
+    regex_fallback: using\s+Azure\.Identity
+finding:
+  title_template: Managed identity detected
+  description_template: Resource uses managed identity for passwordless authentication.
+    Positive security pattern.
+  remediation_template: N/A - Positive finding
+tags:
+- identity
+- managed-identity
+- positive
+nist_controls:
+- ia-2
+- ia-5
+related_ksis:
+- KSI-IAM-01
+- KSI-SVC-02
+evidence_artifacts:
+- artifact_type: logs
+  name: Authentication logs with MFA details
+  source: Azure Monitor - SigninLogs
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: Conditional Access policies export
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Authentication methods compliance report
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: CSV
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation code'
+    azure_services: &id001
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Azure RBAC
+    - Conditional Access
+    - Log Analytics
+    - Microsoft Entra ID
+    - Privileged Identity Management
+    effort_hours: 4
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 6
+    action: Enable Microsoft Entra ID Premium P2
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 7
+    action: Configure Conditional Access policies
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 8
+    action: Set up phishing-resistant MFA (FIDO2, certificate-based)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 9
+    action: Configure Privileged Identity Management (PIM)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 10
+    action: Enable Identity Protection
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 11
+    action: Set up Azure RBAC with least privilege
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 12
+    action: Test MFA enforcement for all user types
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  total_effort_hours: 17
+ssp_mapping:
+  control_family: IA - Identification and Authentication
+  control_numbers:
+  - IA-2
+  - IA-5
+  ssp_sections:
+  - section: 'IA-2: Phishing-Resistant MFA'
+    description_template: '# TODO: Add SSP description for KSI-IAM-01'
+    implementation_details: '# TODO: Add implementation details'
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure RBAC
+    tier: Standard
+    purpose: Required for Azure RBAC functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Conditional Access
+    tier: Standard
+    purpose: Required for Conditional Access functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-IAM-01
+    requirement_name: Phishing-Resistant MFA
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - control_id: AC-2
+      control_name: Account Management
+    - control_id: IA-2
+      control_name: Identification and Authentication (Organizational Users)
+    - control_id: IA-2.1
+      control_name: Multi-factor Authentication to Privileged Accounts
+    - control_id: IA-2.2
+      control_name: Multi-factor Authentication to Non-privileged Accounts
+    - control_id: IA-2.8
+      control_name: Access to Accounts — Replay Resistant
+testing:
+  positive_test_cases:
+  - description: 'TODO: Add positive test case'
+    code_sample: '# TODO: Add compliant code sample'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: 'TODO: Add negative test case'
+    code_sample: '# TODO: Add non-compliant code sample'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+
+---
+pattern_id: common.network.public_access_enabled
+name: Public Network Access Enabled
+description: Detects resources with public network access
+family: COMMON
+severity: HIGH
+pattern_type: configuration
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.Storage/*|Microsoft.Sql/*|Microsoft.KeyVault/*
+      property_path: properties.publicNetworkAccess
+      value: Enabled
+    regex_fallback: publicNetworkAccess.*Enabled
+    negative_indicators:
+    - 'publicNetworkAccess: ''Enabled'''
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_storage_account|azurerm_sql_server|azurerm_key_vault
+      attribute: public_network_access_enabled
+      value: true
+    regex_fallback: public_network_access_enabled.*=.*true
+finding:
+  title_template: Public network access enabled
+  description_template: Resource allows public internet access. FedRAMP recommends
+    private endpoints for data-tier resources.
+  remediation_template: "Disable public access and add private endpoint:\n\nBicep:\n\
+    properties: {\n  publicNetworkAccess: 'Disabled'\n}\n\nresource privateEndpoint\
+    \ 'Microsoft.Network/privateEndpoints@2021-05-01' = {\n  name: '${resourceName}-pe'\n\
+    \  location: location\n  properties: {\n    subnet: {\n      id: subnetId\n  \
+    \  }\n    privateLinkServiceConnections: [\n      {\n        name: '${resourceName}-connection'\n\
+    \        properties: {\n          privateLinkServiceId: resource.id\n        \
+    \  groupIds: ['blob']  // or 'sqlServer', 'vault', etc.\n        }\n      }\n\
+    \    ]\n  }\n}\n"
+tags:
+- network
+- public-access
+- security-gap
+nist_controls:
+- sc-7
+- ac-4
+related_ksis:
+- KSI-SVC-06
+- KSI-CNA-01
+evidence_collection:
+  azure_monitor_kql:
+  - query: '# TODO: Extract from analyzer'
+    description: Evidence collection query
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: '# TODO: Extract from analyzer'
+    description: Azure CLI evidence collection
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation code'
+    azure_services: &id001
+    - Azure Automation
+    - Azure Blob Storage
+    - Azure Key Vault
+    - Azure Key Vault integration
+    - Azure Key Vault usage
+    - Azure Monitor
+    - Log Analytics
+    - Managed Identity
+    effort_hours: 4
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Azure Key Vault with soft delete
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 7
+    action: Configure access policies or RBAC
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 8
+    action: Set up Managed Identities for applications
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 9
+    action: Implement secret rotation automation
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 10
+    action: Configure diagnostic logging for Key Vault
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 11
+    action: Test secret retrieval from applications
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 12
+    action: Document secret management procedures
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 13
+    action: Create Standard Operating Procedures (SOPs)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 14
+    action: Get policy documentation approved by stakeholders
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 15
+    action: Train staff on new procedures
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 16
+    action: Set up periodic compliance reviews
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 17
+    action: Document evidence collection process
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  total_effort_hours: 17
+ssp_mapping:
+  control_family: SC - System and Communications Protection
+  control_numbers:
+  - SC-7
+  - AC-4
+  ssp_sections:
+  - section: 'SC-7: Secret Management'
+    description_template: '# TODO: Add SSP description for KSI-SVC-06'
+    implementation_details: '# TODO: Add implementation details'
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Automation
+    tier: Standard
+    purpose: Required for Azure Automation functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Key Vault
+    tier: Standard
+    purpose: Required for Azure Key Vault functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Key Vault integration
+    tier: Standard
+    purpose: Required for Azure Key Vault integration functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Key Vault usage
+    tier: Standard
+    purpose: Required for Azure Key Vault usage functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-SVC-06
+    requirement_name: Secret Management
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - control_id: AC-17.2
+      control_name: Protection of Confidentiality and Integrity Using Encryption
+    - control_id: IA-5.2
+      control_name: Public Key-based Authentication
+    - control_id: IA-5.6
+      control_name: Protection of Authenticators
+    - control_id: SC-12
+      control_name: Cryptographic Key Establishment and Management
+    - control_id: SC-17
+      control_name: Public Key Infrastructure Certificates
+testing:
+  positive_test_cases:
+  - description: 'TODO: Add positive test case'
+    code_sample: '# TODO: Add compliant code sample'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: 'TODO: Add negative test case'
+    code_sample: '# TODO: Add non-compliant code sample'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+
+---
+pattern_id: common.governance.azure_policy
+name: Azure Policy Assignment
+description: Detects Azure Policy assignments for compliance
+family: COMMON
+severity: INFO
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.Authorization/policyAssignments
+    regex_fallback: Microsoft\.Authorization/policyAssignments
+    positive_indicators:
+    - policyAssignments
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_policy_assignment|azurerm_subscription_policy_assignment
+    regex_fallback: azurerm_.*policy_assignment
+finding:
+  title_template: Azure Policy assignment detected
+  description_template: Policy-based governance enabled. Verify FedRAMP baseline policies
+    are assigned.
+  remediation_template: "Recommended policy initiatives for FedRAMP:\n- Azure Security\
+    \ Benchmark\n- NIST SP 800-53 Rev. 5\n- FedRAMP High\n- ISO 27001\n\nExample assignment:\n\
+    resource policyAssignment 'Microsoft.Authorization/policyAssignments@2021-06-01'\
+    \ = {\n  name: 'fedramp-high-compliance'\n  properties: {\n    policyDefinitionId:\
+    \ '/providers/Microsoft.Authorization/policySetDefinitions/...'\n    parameters:\
+    \ {...}\n  }\n}\n"
+tags:
+- governance
+- policy
+- positive
+nist_controls:
+- cm-2
+- cm-7
+related_ksis:
+- KSI-FSI-01
+- KSI-CCM-01
+ssp_mapping:
+  control_family: CM - Configuration Management
+  control_numbers:
+  - CM-2
+  - CM-7
+  ssp_sections:
+  - section: 'CM-2: Unknown'
+    description_template: '# TODO: Add SSP description for KSI-FSI-01'
+    implementation_details: '# TODO: Add implementation details'
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-FSI-01
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: 'TODO: Add positive test case'
+    code_sample: '# TODO: Add compliant code sample'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: 'TODO: Add negative test case'
+    code_sample: '# TODO: Add non-compliant code sample'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+
+---
+pattern_id: common.governance.resource_lock
+name: Resource Lock
+description: Detects resource locks for change protection
+family: COMMON
+severity: INFO
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.Authorization/locks
+      property_path: properties.level
+      value: CanNotDelete|ReadOnly
+    regex_fallback: Microsoft\.Authorization/locks
+    positive_indicators:
+    - CanNotDelete
+    - ReadOnly
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_management_lock
+    regex_fallback: azurerm_management_lock
+finding:
+  title_template: Resource lock detected
+  description_template: Resource has delete or read-only lock. Protects against accidental
+    changes.
+  remediation_template: N/A - Positive finding
+tags:
+- governance
+- change-control
+- positive
+nist_controls:
+- cm-3
+- cm-5
+related_ksis:
+- KSI-CCM-01
+ssp_mapping:
+  control_family: CM - Configuration Management
+  control_numbers:
+  - CM-3
+  - CM-5
+  ssp_sections:
+  - section: 'CM-3: Unknown'
+    description_template: '# TODO: Add SSP description for KSI-CCM-01'
+    implementation_details: '# TODO: Add implementation details'
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-CCM-01
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: 'TODO: Add positive test case'
+    code_sample: '# TODO: Add compliant code sample'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: 'TODO: Add negative test case'
+    code_sample: '# TODO: Add non-compliant code sample'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+
+---
+pattern_id: common.resilience.backup_missing
+name: Missing Backup Configuration
+description: Detects resources without backup enabled
+family: COMMON
+severity: HIGH
+pattern_type: configuration
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.Compute/virtualMachines|Microsoft.Sql/servers/databases
+      conditions:
+      - not_has_related_resource:Microsoft.RecoveryServices/vaults
+    regex_fallback: Microsoft\.(Compute/virtualMachines|Sql/servers/databases)
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_virtual_machine|azurerm_mssql_database
+      conditions:
+      - not_has_companion_resource:azurerm_backup_protected_vm|azurerm_backup_policy
+    regex_fallback: azurerm_(virtual_machine|mssql_database)
+finding:
+  title_template: Backup not configured
+  description_template: Resource does not have backup enabled. FedRAMP requires backup
+    for data availability and resilience.
+  remediation_template: "Configure Azure Backup:\n\nBicep:\nresource backupVault 'Microsoft.RecoveryServices/vaults@2021-12-01'\
+    \ = {\n  name: 'backup-vault'\n  location: location\n  sku: {\n    name: 'Standard'\n\
+    \  }\n  properties: {}\n}\n\nresource backupPolicy 'Microsoft.RecoveryServices/vaults/backupPolicies@2021-12-01'\
+    \ = {\n  parent: backupVault\n  name: 'daily-backup'\n  properties: {\n    backupManagementType:\
+    \ 'AzureIaasVM'\n    schedulePolicy: {\n      scheduleRunFrequency: 'Daily'\n\
+    \      scheduleRunTimes: ['2023-01-01T02:00:00Z']\n    }\n    retentionPolicy:\
+    \ {\n      dailySchedule: {\n        retentionDuration: {\n          count: 30\n\
+    \          durationType: 'Days'\n        }\n      }\n    }\n  }\n}\n"
+tags:
+- resilience
+- backup
+- security-gap
+nist_controls:
+- cp-9
+- cp-10
+related_ksis:
+- KSI-RPL-01
+- KSI-RPL-02
+evidence_artifacts:
+- artifact_type: logs
+  name: Authentication logs with MFA details
+  source: Azure Monitor - SigninLogs
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: Conditional Access policies export
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Authentication methods compliance report
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: CSV
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation code'
+    azure_services: &id001
+    - Availability Zones
+    - Azure Backup
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Azure Site Recovery
+    - Log Analytics
+    effort_hours: 4
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 6
+    action: Define Recovery Time Objective (RTO) and Recovery Point Objective (RPO)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 7
+    action: Document disaster recovery procedures
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 8
+    action: Configure Azure Site Recovery or Azure Backup
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 9
+    action: Set up geo-redundant storage
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 10
+    action: Deploy across availability zones
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 11
+    action: Test disaster recovery procedures
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 12
+    action: Document test results and lessons learned
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 13
+    action: Create Standard Operating Procedures (SOPs)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 14
+    action: Get policy documentation approved by stakeholders
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 15
+    action: Train staff on new procedures
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 16
+    action: Set up periodic compliance reviews
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 17
+    action: Document evidence collection process
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  total_effort_hours: 17
+ssp_mapping:
+  control_family: CP - Contingency Planning
+  control_numbers:
+  - CP-9
+  - CP-10
+  ssp_sections:
+  - section: 'CP-9: Recovery Objectives'
+    description_template: '# TODO: Add SSP description for KSI-RPL-01'
+    implementation_details: '# TODO: Add implementation details'
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Availability Zones
+    tier: Standard
+    purpose: Required for Availability Zones functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Backup
+    tier: Standard
+    purpose: Required for Azure Backup functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-RPL-01
+    requirement_name: Recovery Objectives
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - control_id: CP-2.3
+      control_name: Resume Mission and Business Functions
+    - control_id: CP-10
+      control_name: System Recovery and Reconstitution
+testing:
+  positive_test_cases:
+  - description: 'TODO: Add positive test case'
+    code_sample: '# TODO: Add compliant code sample'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: 'TODO: Add negative test case'
+    code_sample: '# TODO: Add non-compliant code sample'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+
+---
+pattern_id: common.resilience.geo_redundancy
+name: Geo-Redundant Storage
+description: Detects geo-redundancy configuration
+family: COMMON
+severity: INFO
+pattern_type: configuration
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.Storage/storageAccounts
+      property_path: sku.name
+      value: Standard_GRS|Standard_RAGRS|Standard_GZRS
+    regex_fallback: sku:\s*\{.*name:\s*'Standard_(GRS|RAGRS|GZRS)'
+    positive_indicators:
+    - GRS
+    - RAGRS
+    - GZRS
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_storage_account
+      attribute: account_replication_type
+      value: GRS|RAGRS|GZRS
+    regex_fallback: account_replication_type.*=.*"(GRS|RAGRS|GZRS)"
+finding:
+  title_template: Geo-redundant storage configured
+  description_template: Storage has geo-redundancy for disaster recovery. Verify RPO/RTO
+    meet FedRAMP requirements.
+  remediation_template: N/A - Positive finding
+tags:
+- resilience
+- geo-redundancy
+- positive
+nist_controls:
+- cp-6
+- cp-9
+related_ksis:
+- KSI-RPL-01
+- KSI-RPL-02
+evidence_artifacts:
+- artifact_type: logs
+  name: Authentication logs with MFA details
+  source: Azure Monitor - SigninLogs
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: Conditional Access policies export
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Authentication methods compliance report
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: CSV
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: '# TODO: Add implementation code'
+    azure_services: &id001
+    - Availability Zones
+    - Azure Backup
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Azure Site Recovery
+    - Log Analytics
+    effort_hours: 4
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: '# TODO: Add implementation code'
+    azure_services: *id001
+    effort_hours: 4
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 6
+    action: Define Recovery Time Objective (RTO) and Recovery Point Objective (RPO)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 7
+    action: Document disaster recovery procedures
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 8
+    action: Configure Azure Site Recovery or Azure Backup
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 9
+    action: Set up geo-redundant storage
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 10
+    action: Deploy across availability zones
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 11
+    action: Test disaster recovery procedures
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 12
+    action: Document test results and lessons learned
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 13
+    action: Create Standard Operating Procedures (SOPs)
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 14
+    action: Get policy documentation approved by stakeholders
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 15
+    action: Train staff on new procedures
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 16
+    action: Set up periodic compliance reviews
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  - step: 17
+    action: Document evidence collection process
+    azure_service: null
+    estimated_hours: 1
+    validation: Manual verification required
+  total_effort_hours: 17
+ssp_mapping:
+  control_family: CP - Contingency Planning
+  control_numbers:
+  - CP-6
+  - CP-9
+  ssp_sections:
+  - section: 'CP-6: Recovery Objectives'
+    description_template: '# TODO: Add SSP description for KSI-RPL-01'
+    implementation_details: '# TODO: Add implementation details'
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Availability Zones
+    tier: Standard
+    purpose: Required for Availability Zones functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Backup
+    tier: Standard
+    purpose: Required for Azure Backup functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    monthly_cost_estimate: Varies by usage
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-RPL-01
+    requirement_name: Recovery Objectives
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - control_id: CP-2.3
+      control_name: Resume Mission and Business Functions
+    - control_id: CP-10
+      control_name: System Recovery and Reconstitution
+testing:
+  positive_test_cases:
+  - description: 'TODO: Add positive test case'
+    code_sample: '# TODO: Add compliant code sample'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: 'TODO: Add negative test case'
+    code_sample: '# TODO: Add non-compliant code sample'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []

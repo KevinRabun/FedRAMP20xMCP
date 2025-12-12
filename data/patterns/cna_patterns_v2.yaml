@@ -1,0 +1,294 @@
+# CNA PATTERNS V2 - V2 Schema
+# Migrated from V1 schema with enhanced evidence collection
+# 
+# NOTE: This is an automated migration. Manual review required for:
+# - Evidence collection queries (marked with TODO)
+# - Automation implementation code
+# - SSP mapping descriptions
+# - Test cases
+
+pattern_id: cna.network.nsg_configuration
+name: Network Security Group Configuration
+family: CNA
+severity: high
+description: 'Detects Network Security Group (NSG) configuration for network traffic
+  restriction.
+
+  Aligns with KSI-CNA-01: Restrict Network Traffic.
+
+  '
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries: &id001
+    - query_type: resource_type
+      target: Microsoft.Network/networkSecurityGroups
+    - query_type: resource_type
+      target: azurerm_network_security_group
+    regex_fallback: (Microsoft\.Network/networkSecurityGroups)|(resource.*azurerm_network_security_group)|(securityRules.*deny|security_rule.*deny)
+  terraform:
+    ast_queries: *id001
+    regex_fallback: (Microsoft\.Network/networkSecurityGroups)|(resource.*azurerm_network_security_group)|(securityRules.*deny|security_rule.*deny)
+finding:
+  title: Network Security Group configured
+  description: IaC provisions NSG for network traffic restriction
+  recommendation: Ensure default deny rules and explicit allow rules per KSI-CNA-01
+  references:
+  - KSI-CNA-01
+  - FRR-CNA-01
+
+---
+pattern_id: cna.network.azure_firewall
+name: Azure Firewall Configuration
+family: CNA
+severity: high
+description: Detects Azure Firewall for centralized network security
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries: &id001
+    - query_type: resource_type
+      target: Microsoft.Network/azureFirewalls
+    - query_type: resource_type
+      target: azurerm_firewall
+    regex_fallback: (Microsoft\.Network/azureFirewalls)|(resource.*azurerm_firewall)
+  terraform:
+    ast_queries: *id001
+    regex_fallback: (Microsoft\.Network/azureFirewalls)|(resource.*azurerm_firewall)
+finding:
+  title: Azure Firewall configured for network security
+  description: IaC provisions Azure Firewall for traffic filtering
+  recommendation: Configure application and network rules with least privilege
+  references:
+  - KSI-CNA-01
+
+---
+pattern_id: cna.attack_surface.minimal_dependencies
+name: Minimal Dependencies Analysis
+family: CNA
+severity: medium
+description: 'Detects minimal dependency usage to reduce attack surface.
+
+  Aligns with KSI-CNA-02: Minimize the Attack Surface.
+
+  '
+pattern_type: import
+languages:
+  python:
+    regex_fallback: (^import |^from .* import |^using |^require\()
+  csharp:
+    regex_fallback: (^import |^from .* import |^using |^require\()
+  java:
+    regex_fallback: (^import |^from .* import |^using |^require\()
+  typescript:
+    regex_fallback: (^import |^from .* import |^using |^require\()
+finding:
+  title: Dependency analysis for attack surface
+  description: Code imports dependencies (should be minimal)
+  recommendation: Review and remove unused dependencies per KSI-CNA-02
+  references:
+  - KSI-CNA-02
+
+---
+pattern_id: cna.immutable_infra.container_image
+name: Immutable Container Image
+family: CNA
+severity: high
+description: 'Detects use of container images for immutable infrastructure.
+
+  Aligns with KSI-CNA-04: Immutable Infrastructure.
+
+  '
+pattern_type: configuration
+languages:
+  dockerfile:
+    regex_fallback: (FROM.*alpine|FROM.*distroless|FROM.*scratch)|(image:.*:.*@sha256:)
+  yaml:
+    regex_fallback: (FROM.*alpine|FROM.*distroless|FROM.*scratch)|(image:.*:.*@sha256:)
+finding:
+  title: Immutable container image configuration
+  description: Uses minimal, immutable base images
+  recommendation: Pin image versions with SHA256 digest per KSI-CNA-04
+  references:
+  - KSI-CNA-04
+
+---
+pattern_id: cna.iac.aks_cluster
+name: Azure Kubernetes Service Configuration
+family: CNA
+severity: high
+description: Detects AKS cluster configuration for cloud-native architecture
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries: &id001
+    - query_type: resource_type
+      target: Microsoft.ContainerService/managedClusters
+    - query_type: resource_type
+      target: azurerm_kubernetes_cluster
+    regex_fallback: (Microsoft\.ContainerService/managedClusters)|(resource.*azurerm_kubernetes_cluster)|(networkProfile.*networkPlugin.*azure)
+  terraform:
+    ast_queries: *id001
+    regex_fallback: (Microsoft\.ContainerService/managedClusters)|(resource.*azurerm_kubernetes_cluster)|(networkProfile.*networkPlugin.*azure)
+finding:
+  title: AKS cluster for cloud-native architecture
+  description: IaC provisions AKS cluster for containerized workloads
+  recommendation: Enable network policy (Calico/Azure) and Azure Policy add-on
+  references:
+  - KSI-CNA-01
+  - KSI-CNA-04
+
+---
+pattern_id: cna.iac.container_registry
+name: Azure Container Registry Configuration
+family: CNA
+severity: medium
+description: Detects ACR configuration for container image management
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries: &id001
+    - query_type: resource_type
+      target: Microsoft.ContainerRegistry/registries
+    - query_type: resource_type
+      target: azurerm_container_registry
+    regex_fallback: (Microsoft\.ContainerRegistry/registries)|(resource.*azurerm_container_registry)|(sku.*Premium)
+  terraform:
+    ast_queries: *id001
+    regex_fallback: (Microsoft\.ContainerRegistry/registries)|(resource.*azurerm_container_registry)|(sku.*Premium)
+finding:
+  title: Azure Container Registry configured
+  description: IaC provisions ACR for container image storage
+  recommendation: Enable vulnerability scanning and image signing per KSI-VDR-01
+  references:
+  - KSI-CNA-04
+  - KSI-VDR-01
+
+---
+pattern_id: cna.observability.monitoring_integration
+name: Cloud-Native Monitoring Integration
+family: CNA
+severity: high
+description: 'Detects monitoring integration for cloud-native observability.
+
+  Aligns with KSI-CNA-08: Monitoring and Observability.
+
+  '
+pattern_type: import
+languages:
+  python:
+    ast_queries: &id001
+    - query_type: import_statement
+      target: opencensus
+    - query_type: import_statement
+      target: opentelemetry
+    - query_type: import_statement
+      target: ApplicationInsights
+    regex_fallback: (import.*opencensus|from opencensus)|(import.*opentelemetry|from
+      opentelemetry)|(using.*ApplicationInsights)
+  csharp:
+    ast_queries: *id001
+    regex_fallback: (import.*opencensus|from opencensus)|(import.*opentelemetry|from
+      opentelemetry)|(using.*ApplicationInsights)
+  java:
+    ast_queries: *id001
+    regex_fallback: (import.*opencensus|from opencensus)|(import.*opentelemetry|from
+      opentelemetry)|(using.*ApplicationInsights)
+  typescript:
+    ast_queries: *id001
+    regex_fallback: (import.*opencensus|from opencensus)|(import.*opentelemetry|from
+      opentelemetry)|(using.*ApplicationInsights)
+finding:
+  title: Cloud-native monitoring integration detected
+  description: Code integrates monitoring for observability
+  recommendation: Ensure metrics, logs, and traces are exported to centralized system
+  references:
+  - KSI-CNA-08
+  - KSI-MLA-01
+
+---
+pattern_id: cna.api_gateway.configuration
+name: API Gateway Configuration
+family: CNA
+severity: high
+description: Detects API Gateway/Management configuration for cloud-native architecture
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries: &id001
+    - query_type: resource_type
+      target: Microsoft.ApiManagement/service
+    - query_type: resource_type
+      target: azurerm_api_management
+    regex_fallback: (Microsoft\.ApiManagement/service)|(resource.*azurerm_api_management)
+  terraform:
+    ast_queries: *id001
+    regex_fallback: (Microsoft\.ApiManagement/service)|(resource.*azurerm_api_management)
+finding:
+  title: API Gateway configured for cloud-native architecture
+  description: IaC provisions API Management for service exposure
+  recommendation: Configure policies for rate limiting, authentication, and logging
+  references:
+  - KSI-CNA-01
+  - FRR-CNA-02
+
+---
+pattern_id: cna.service_mesh.configuration
+name: Service Mesh Configuration
+family: CNA
+severity: medium
+description: Detects service mesh configuration for microservices communication
+pattern_type: configuration
+languages:
+  yaml:
+    regex_fallback: (kind:.*VirtualService|kind:.*DestinationRule)|(apiVersion:.*networking\.istio\.io)
+finding:
+  title: Service mesh configuration detected
+  description: Configuration includes service mesh for secure service-to-service communication
+  recommendation: Enable mTLS and configure authorization policies
+  references:
+  - KSI-CNA-01
+  - KSI-IAM-05
+
+---
+pattern_id: cna.cicd.container_build
+name: Container Build in CI/CD
+family: CNA
+severity: high
+description: Detects container image build steps in CI/CD pipeline
+pattern_type: pipeline
+languages:
+  github_actions:
+    regex_fallback: (docker build|buildx build|kaniko)|(task:.*Docker@|task:.*ContainerBuild@)
+  azure_pipelines:
+    regex_fallback: (docker build|buildx build|kaniko)|(task:.*Docker@|task:.*ContainerBuild@)
+  gitlab_ci:
+    regex_fallback: (docker build|buildx build|kaniko)|(task:.*Docker@|task:.*ContainerBuild@)
+finding:
+  title: Container build in CI/CD pipeline
+  description: Pipeline builds container images for cloud-native deployment
+  recommendation: Scan images for vulnerabilities before pushing per KSI-VDR-01
+  references:
+  - KSI-CNA-04
+  - KSI-VDR-01
+
+---
+pattern_id: cna.cicd.infrastructure_validation
+name: Infrastructure Validation in CI/CD
+family: CNA
+severity: high
+description: Detects IaC validation steps in CI/CD pipeline
+pattern_type: pipeline
+languages:
+  github_actions:
+    regex_fallback: (bicep build|terraform validate|terraform plan)|(az bicep build|checkov|tfsec)
+  azure_pipelines:
+    regex_fallback: (bicep build|terraform validate|terraform plan)|(az bicep build|checkov|tfsec)
+  gitlab_ci:
+    regex_fallback: (bicep build|terraform validate|terraform plan)|(az bicep build|checkov|tfsec)
+finding:
+  title: Infrastructure validation in CI/CD
+  description: Pipeline validates IaC before deployment
+  recommendation: Include security policy checks (Azure Policy, Checkov) per KSI-CNA-07
+  references:
+  - KSI-CNA-07
