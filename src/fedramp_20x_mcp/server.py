@@ -275,6 +275,52 @@ async def audit_preparation() -> str:
     return load_prompt('audit_preparation')
 
 
+@mcp.prompt()
+async def frr_code_review() -> str:
+    """
+    Guide for reviewing code against FedRAMP Requirements (FRR) using AST-powered semantic analysis.
+    
+    Use this prompt to:
+    - Review code for FRR compliance (VDR, ADS, RSC, UCM, CCM, SCN, MAS, ICP, FSI, PVA)
+    - Integrate FRR checks into pull request workflows
+    - Understand FRR findings and remediation strategies
+    - Validate vulnerability management, data sharing, and secure configuration
+    """
+    from .prompts import load_prompt
+    return load_prompt('frr_code_review')
+
+
+@mcp.prompt()
+async def frr_family_assessment() -> str:
+    """
+    Comprehensive guide for assessing compliance against specific FRR families.
+    
+    Use this prompt to:
+    - Conduct family-specific assessments (VDR, ADS, RSC, UCM, CCM, SCN, MAS, ICP, FSI, PVA)
+    - Understand all 199 FRR requirements across 10 families
+    - Plan evidence collection for FRR compliance
+    - Validate implementations using FRR analysis tools
+    """
+    from .prompts import load_prompt
+    return load_prompt('frr_family_assessment')
+
+
+@mcp.prompt()
+async def frr_implementation_roadmap() -> str:
+    """
+    Strategic roadmap for implementing all 199 FedRAMP Requirements (FRR) across your system.
+    
+    Use this prompt to:
+    - Plan phased FRR implementation (4 phases over 16 weeks)
+    - Prioritize high-impact FRR families (VDR, ADS, RSC, UCM first)
+    - Integrate FRR compliance into DevOps workflows
+    - Track implementation progress and metrics
+    - Combine FRR and KSI implementation strategies
+    """
+    from .prompts import load_prompt
+    return load_prompt('frr_implementation_roadmap')
+
+
 
 def main():
     """Run the FedRAMP 20x MCP server."""

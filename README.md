@@ -1084,7 +1084,7 @@ Get comprehensive architecture guidance for automated evidence collection system
 
 ## Available Prompts
 
-The server provides **15 prompts** for FedRAMP compliance workflows:
+The server provides **18 prompts** for FedRAMP compliance workflows:
 
 ### Comprehensive Planning & Assessment Prompts
 
@@ -1123,6 +1123,14 @@ The server provides **15 prompts** for FedRAMP compliance workflows:
 **ato_package_checklist** - Complete checklist for Authority to Operate (ATO) package preparation including all required artifacts, templates, and submission requirements
 
 **documentation_generator** - OSCAL SSP templates, procedure templates (VDR, ICP, SCN), and KSI implementation documentation templates
+
+### FRR Compliance & Code Review Prompts
+
+**frr_code_review** - Guide for reviewing code against FedRAMP Requirements (FRR) using AST-powered semantic analysis across all 10 FRR families (VDR, ADS, RSC, UCM, CCM, SCN, MAS, ICP, FSI, PVA) with PR workflow integration
+
+**frr_family_assessment** - Comprehensive family-specific assessment guide for all 199 FRR requirements with detailed checklists, assessment questions, and evidence planning for each of the 10 FRR families
+
+**frr_implementation_roadmap** - Strategic 16-week, 4-phase roadmap for implementing all 199 FRR requirements with prioritization framework, Azure service recommendations, and KSI integration strategies
 
 ## Data Source
 
