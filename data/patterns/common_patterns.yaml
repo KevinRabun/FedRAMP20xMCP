@@ -58,7 +58,7 @@ ssp_mapping:
 compliance_frameworks:
   fedramp_20x:
     requirement_id: KSI-CNA-01
-    requirement_name: Unknown
+    requirement_name: Restrict Network Traffic
     impact_levels:
     - Low
     - Moderate
@@ -864,7 +864,7 @@ ssp_mapping:
 compliance_frameworks:
   fedramp_20x:
     requirement_id: KSI-CNA-01
-    requirement_name: Unknown
+    requirement_name: Restrict Network Traffic
     impact_levels:
     - Low
     - Moderate
@@ -940,7 +940,7 @@ ssp_mapping:
 compliance_frameworks:
   fedramp_20x:
     requirement_id: KSI-CNA-01
-    requirement_name: Unknown
+    requirement_name: Restrict Network Traffic
     impact_levels:
     - Low
     - Moderate

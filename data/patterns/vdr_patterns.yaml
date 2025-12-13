@@ -77,7 +77,7 @@ ssp_mapping:
 compliance_frameworks:
   fedramp_20x:
     requirement_id: KSI-AFR-04
-    requirement_name: Unknown
+    requirement_name: Vulnerability Detection and Response
     impact_levels:
     - Low
     - Moderate
@@ -163,7 +163,7 @@ ssp_mapping:
 compliance_frameworks:
   fedramp_20x:
     requirement_id: KSI-AFR-04
-    requirement_name: Unknown
+    requirement_name: Vulnerability Detection and Response
     impact_levels:
     - Low
     - Moderate
@@ -265,7 +265,7 @@ ssp_mapping:
 compliance_frameworks:
   fedramp_20x:
     requirement_id: KSI-AFR-04
-    requirement_name: Unknown
+    requirement_name: Vulnerability Detection and Response
     impact_levels:
     - Low
     - Moderate
@@ -360,7 +360,7 @@ ssp_mapping:
 compliance_frameworks:
   fedramp_20x:
     requirement_id: KSI-AFR-04
-    requirement_name: Unknown
+    requirement_name: Vulnerability Detection and Response
     impact_levels:
     - Low
     - Moderate
@@ -450,7 +450,7 @@ ssp_mapping:
 compliance_frameworks:
   fedramp_20x:
     requirement_id: KSI-AFR-04
-    requirement_name: Unknown
+    requirement_name: Vulnerability Detection and Response
     impact_levels:
     - Low
     - Moderate
@@ -532,7 +532,7 @@ ssp_mapping:
 compliance_frameworks:
   fedramp_20x:
     requirement_id: KSI-AFR-04
-    requirement_name: Unknown
+    requirement_name: Vulnerability Detection and Response
     impact_levels:
     - Low
     - Moderate
@@ -607,7 +607,7 @@ ssp_mapping:
 compliance_frameworks:
   fedramp_20x:
     requirement_id: KSI-AFR-04
-    requirement_name: Unknown
+    requirement_name: Vulnerability Detection and Response
     impact_levels:
     - Low
     - Moderate
@@ -714,7 +714,7 @@ ssp_mapping:
 compliance_frameworks:
   fedramp_20x:
     requirement_id: KSI-AFR-04
-    requirement_name: Unknown
+    requirement_name: Vulnerability Detection and Response
     impact_levels:
     - Low
     - Moderate
@@ -789,7 +789,7 @@ ssp_mapping:
 compliance_frameworks:
   fedramp_20x:
     requirement_id: KSI-AFR-04
-    requirement_name: Unknown
+    requirement_name: Vulnerability Detection and Response
     impact_levels:
     - Low
     - Moderate
@@ -870,7 +870,7 @@ ssp_mapping:
 compliance_frameworks:
   fedramp_20x:
     requirement_id: KSI-AFR-04
-    requirement_name: Unknown
+    requirement_name: Vulnerability Detection and Response
     impact_levels:
     - Low
     - Moderate
