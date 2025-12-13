@@ -1,5 +1,34 @@
 # Copilot Instructions for FedRAMP 20x MCP Server
 
+## CRITICAL: USER INSTRUCTION COMPLIANCE (READ FIRST)
+
+**ABSOLUTE REQUIREMENTS - NO EXCEPTIONS:**
+
+1. **Follow User Instructions Literally**
+   - When user says "ALL FRRs and KSIs must be covered" - that means EVERY SINGLE ONE, not "most" or "majority"
+   - When user says "evaluate pattern by pattern" - do NOT create automation scripts instead
+   - When user specifies an approach, use EXACTLY that approach - do not substitute with "better ideas"
+   - User has domain expertise on FedRAMP requirements - trust their judgment over apparent efficiency gains
+
+2. **Verify Before Claiming**
+   - NEVER report coverage percentages, completeness, or implementation status without ACTUALLY checking the data
+   - Run verification commands to COUNT actual patterns/implementations before stating numbers
+   - If unsure, say "I need to verify" rather than making inaccurate claims
+   - Show the verification commands and results when reporting status
+
+3. **Manual Work When Requested**
+   - If user asks for pattern-by-pattern review, do that - no bulk processing
+   - If user asks for file-by-file evaluation, do that - no shortcuts
+   - Manual review ensures accuracy; automation can miss edge cases user knows about
+
+4. **User Knows Requirements, You Know Code**
+   - User has authoritative knowledge of what needs to be built
+   - You have access to existing code and patterns
+   - When user says something is required, it IS required - implement as specified
+   - Ask clarifying questions ONLY if requirements are genuinely ambiguous, not to suggest alternatives
+
+**FAILURE TO FOLLOW THESE RULES IS UNACCEPTABLE**
+
 ## Project Overview
 MCP server that loads FedRAMP 20x requirements from JSON files and official documentation markdown files, provides 48 MCP tools for querying requirements, and includes KSI-centric code analyzers for compliance checking across multiple languages.
 
