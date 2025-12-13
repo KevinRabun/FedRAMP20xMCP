@@ -34,6 +34,7 @@ class Finding:
         recommendation: Specific recommendation to fix the issue (alias: remediation)
         good_practice: Whether this is a positive finding (default: False)
         ksi_id: Optional KSI identifier (for KSI-centric architecture) - if provided and requirement_id is None, requirement_id will be set to ksi_id
+        pattern_id: Optional pattern identifier (e.g., "iam.mfa.fido2_import")
     """
     severity: Severity
     title: str
@@ -45,6 +46,7 @@ class Finding:
     code_snippet: Optional[str] = None
     good_practice: bool = False
     ksi_id: Optional[str] = None
+    pattern_id: Optional[str] = None
     
     def __post_init__(self):
         """Set requirement_id to ksi_id if not provided, handle remediation alias."""
@@ -72,6 +74,7 @@ class Finding:
         self.code_snippet = kwargs.get('code_snippet')
         self.good_practice = kwargs.get('good_practice', False)
         self.ksi_id = kwargs.get('ksi_id')
+        self.pattern_id = kwargs.get('pattern_id')
         
         # Run post-init logic
         if self.requirement_id is None and self.ksi_id is not None:
@@ -94,6 +97,8 @@ class Finding:
         }
         if self.ksi_id:
             result["ksi_id"] = self.ksi_id
+        if self.pattern_id:
+            result["pattern_id"] = self.pattern_id
         return result
 
 

@@ -33,7 +33,7 @@ def main():
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "svc.security.flask_security_headers" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.security.flask_security_headers" == f.pattern_id]
         assert len(findings) > 0, f"Pattern svc.security.flask_security_headers should detect this code"
     
     def test_svc_security_flask_security_headers_negative(self, analyzer):
@@ -49,7 +49,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "svc.security.flask_security_headers" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.security.flask_security_headers" == f.pattern_id]
         assert len(findings) == 0, f"Pattern svc.security.flask_security_headers should NOT detect compliant code"
 
 
@@ -61,7 +61,7 @@ print(result)"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "svc.security.aspnet_hsts" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.security.aspnet_hsts" == f.pattern_id]
         assert len(findings) > 0, f"Pattern svc.security.aspnet_hsts should detect this code"
     
     def test_svc_security_aspnet_hsts_negative(self, analyzer):
@@ -77,7 +77,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "svc.security.aspnet_hsts" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.security.aspnet_hsts" == f.pattern_id]
         assert len(findings) == 0, f"Pattern svc.security.aspnet_hsts should NOT detect compliant code"
 
 
@@ -89,7 +89,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "svc.security.missing_hsts" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.security.missing_hsts" == f.pattern_id]
         assert len(findings) > 0, f"Pattern svc.security.missing_hsts should detect this code"
     
     def test_svc_security_missing_hsts_negative(self, analyzer):
@@ -105,7 +105,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "svc.security.missing_hsts" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.security.missing_hsts" == f.pattern_id]
         assert len(findings) == 0, f"Pattern svc.security.missing_hsts should NOT detect compliant code"
 
 
@@ -117,7 +117,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "svc.security.csp_header" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.security.csp_header" == f.pattern_id]
         assert len(findings) > 0, f"Pattern svc.security.csp_header should detect this code"
     
     def test_svc_security_csp_header_negative(self, analyzer):
@@ -133,7 +133,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "svc.security.csp_header" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.security.csp_header" == f.pattern_id]
         assert len(findings) == 0, f"Pattern svc.security.csp_header should NOT detect compliant code"
 
 
@@ -151,7 +151,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "svc.secrets.keyvault_reference" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.secrets.keyvault_reference" == f.pattern_id]
         assert len(findings) > 0, f"Pattern svc.secrets.keyvault_reference should detect this code"
     
     def test_svc_secrets_keyvault_reference_negative(self, analyzer):
@@ -164,7 +164,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "svc.secrets.keyvault_reference" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.secrets.keyvault_reference" == f.pattern_id]
         assert len(findings) == 0, f"Pattern svc.secrets.keyvault_reference should NOT detect compliant code"
 
 
@@ -182,7 +182,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "svc.secrets.keyvault_soft_delete" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.secrets.keyvault_soft_delete" == f.pattern_id]
         assert len(findings) > 0, f"Pattern svc.secrets.keyvault_soft_delete should detect this code"
     
     def test_svc_secrets_keyvault_soft_delete_negative(self, analyzer):
@@ -195,7 +195,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "svc.secrets.keyvault_soft_delete" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.secrets.keyvault_soft_delete" == f.pattern_id]
         assert len(findings) == 0, f"Pattern svc.secrets.keyvault_soft_delete should NOT detect compliant code"
 
 
@@ -207,7 +207,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "svc.secrets.hardcoded_secret" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.secrets.hardcoded_secret" == f.pattern_id]
         assert len(findings) > 0, f"Pattern svc.secrets.hardcoded_secret should detect this code"
     
     def test_svc_secrets_hardcoded_secret_negative(self, analyzer):
@@ -223,7 +223,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "svc.secrets.hardcoded_secret" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.secrets.hardcoded_secret" == f.pattern_id]
         assert len(findings) == 0, f"Pattern svc.secrets.hardcoded_secret should NOT detect compliant code"
 
 
@@ -239,7 +239,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "svc.encryption.storage_encryption" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.encryption.storage_encryption" == f.pattern_id]
         assert len(findings) > 0, f"Pattern svc.encryption.storage_encryption should detect this code"
     
     def test_svc_encryption_storage_encryption_negative(self, analyzer):
@@ -252,7 +252,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "svc.encryption.storage_encryption" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.encryption.storage_encryption" == f.pattern_id]
         assert len(findings) == 0, f"Pattern svc.encryption.storage_encryption should NOT detect compliant code"
 
 
@@ -264,7 +264,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "svc.encryption.sql_tde" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.encryption.sql_tde" == f.pattern_id]
         assert len(findings) > 0, f"Pattern svc.encryption.sql_tde should detect this code"
     
     def test_svc_encryption_sql_tde_negative(self, analyzer):
@@ -277,7 +277,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "svc.encryption.sql_tde" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.encryption.sql_tde" == f.pattern_id]
         assert len(findings) == 0, f"Pattern svc.encryption.sql_tde should NOT detect compliant code"
 
 
@@ -294,7 +294,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "svc.network.nsg_allow_all" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.network.nsg_allow_all" == f.pattern_id]
         assert len(findings) > 0, f"Pattern svc.network.nsg_allow_all should detect this code"
     
     def test_svc_network_nsg_allow_all_negative(self, analyzer):
@@ -307,7 +307,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "svc.network.nsg_allow_all" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.network.nsg_allow_all" == f.pattern_id]
         assert len(findings) == 0, f"Pattern svc.network.nsg_allow_all should NOT detect compliant code"
 
 
@@ -319,7 +319,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "svc.network.private_endpoint" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.network.private_endpoint" == f.pattern_id]
         assert len(findings) > 0, f"Pattern svc.network.private_endpoint should detect this code"
     
     def test_svc_network_private_endpoint_negative(self, analyzer):
@@ -332,7 +332,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "svc.network.private_endpoint" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.network.private_endpoint" == f.pattern_id]
         assert len(findings) == 0, f"Pattern svc.network.private_endpoint should NOT detect compliant code"
 
 
@@ -344,7 +344,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "svc.tls.minimum_version" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.tls.minimum_version" == f.pattern_id]
         assert len(findings) > 0, f"Pattern svc.tls.minimum_version should detect this code"
     
     def test_svc_tls_minimum_version_negative(self, analyzer):
@@ -357,7 +357,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "svc.tls.minimum_version" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.tls.minimum_version" == f.pattern_id]
         assert len(findings) == 0, f"Pattern svc.tls.minimum_version should NOT detect compliant code"
 
 
@@ -369,7 +369,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "svc.waf.application_gateway" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.waf.application_gateway" == f.pattern_id]
         assert len(findings) > 0, f"Pattern svc.waf.application_gateway should detect this code"
     
     def test_svc_waf_application_gateway_negative(self, analyzer):
@@ -382,7 +382,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "svc.waf.application_gateway" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.waf.application_gateway" == f.pattern_id]
         assert len(findings) == 0, f"Pattern svc.waf.application_gateway should NOT detect compliant code"
 
 
@@ -394,7 +394,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "svc.secrets.key_vault_missing" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.secrets.key_vault_missing" == f.pattern_id]
         assert len(findings) > 0, f"Pattern svc.secrets.key_vault_missing should detect this code"
     
     def test_svc_secrets_key_vault_missing_negative(self, analyzer):
@@ -410,7 +410,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "svc.secrets.key_vault_missing" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.secrets.key_vault_missing" == f.pattern_id]
         assert len(findings) == 0, f"Pattern svc.secrets.key_vault_missing should NOT detect compliant code"
 
 
@@ -426,7 +426,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "svc.encryption.storage_https_only" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.encryption.storage_https_only" == f.pattern_id]
         assert len(findings) > 0, f"Pattern svc.encryption.storage_https_only should detect this code"
     
     def test_svc_encryption_storage_https_only_negative(self, analyzer):
@@ -439,7 +439,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "svc.encryption.storage_https_only" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.encryption.storage_https_only" == f.pattern_id]
         assert len(findings) == 0, f"Pattern svc.encryption.storage_https_only should NOT detect compliant code"
 
 
@@ -451,7 +451,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "svc.encryption.sql_tls_version" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.encryption.sql_tls_version" == f.pattern_id]
         assert len(findings) > 0, f"Pattern svc.encryption.sql_tls_version should detect this code"
     
     def test_svc_encryption_sql_tls_version_negative(self, analyzer):
@@ -467,7 +467,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "svc.encryption.sql_tls_version" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.encryption.sql_tls_version" == f.pattern_id]
         assert len(findings) == 0, f"Pattern svc.encryption.sql_tls_version should NOT detect compliant code"
 
 
@@ -483,7 +483,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "svc.network.storage_public_access" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.network.storage_public_access" == f.pattern_id]
         assert len(findings) > 0, f"Pattern svc.network.storage_public_access should detect this code"
     
     def test_svc_network_storage_public_access_negative(self, analyzer):
@@ -496,7 +496,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "svc.network.storage_public_access" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.network.storage_public_access" == f.pattern_id]
         assert len(findings) == 0, f"Pattern svc.network.storage_public_access should NOT detect compliant code"
 
 

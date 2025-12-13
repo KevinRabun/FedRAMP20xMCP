@@ -30,7 +30,7 @@ class TestCmtPatterns:
         result = analyzer.analyze(code, "github_actions")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "cmt.vcs.repository_integration" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cmt.vcs.repository_integration" == f.pattern_id]
         assert len(findings) > 0, f"Pattern cmt.vcs.repository_integration should detect this code"
     
     def test_cmt_vcs_repository_integration_negative(self, analyzer):
@@ -40,7 +40,7 @@ class TestCmtPatterns:
         result = analyzer.analyze(code, "github_actions")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "cmt.vcs.repository_integration" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cmt.vcs.repository_integration" == f.pattern_id]
         assert len(findings) == 0, f"Pattern cmt.vcs.repository_integration should NOT detect compliant code"
 
 
@@ -51,7 +51,7 @@ class TestCmtPatterns:
         result = analyzer.analyze(code, "github_actions")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "cmt.vcs.missing_integration" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cmt.vcs.missing_integration" == f.pattern_id]
         assert len(findings) > 0, f"Pattern cmt.vcs.missing_integration should detect this code"
     
     def test_cmt_vcs_missing_integration_negative(self, analyzer):
@@ -61,7 +61,7 @@ class TestCmtPatterns:
         result = analyzer.analyze(code, "github_actions")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "cmt.vcs.missing_integration" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cmt.vcs.missing_integration" == f.pattern_id]
         assert len(findings) == 0, f"Pattern cmt.vcs.missing_integration should NOT detect compliant code"
 
 
@@ -72,7 +72,7 @@ class TestCmtPatterns:
         result = analyzer.analyze(code, "github_actions")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "cmt.testing.pre_deploy_gates" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cmt.testing.pre_deploy_gates" == f.pattern_id]
         assert len(findings) > 0, f"Pattern cmt.testing.pre_deploy_gates should detect this code"
     
     def test_cmt_testing_pre_deploy_gates_negative(self, analyzer):
@@ -82,7 +82,7 @@ class TestCmtPatterns:
         result = analyzer.analyze(code, "github_actions")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "cmt.testing.pre_deploy_gates" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cmt.testing.pre_deploy_gates" == f.pattern_id]
         assert len(findings) == 0, f"Pattern cmt.testing.pre_deploy_gates should NOT detect compliant code"
 
 
@@ -94,7 +94,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "cmt.rollback.deployment_strategy" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cmt.rollback.deployment_strategy" == f.pattern_id]
         assert len(findings) > 0, f"Pattern cmt.rollback.deployment_strategy should detect this code"
     
     def test_cmt_rollback_deployment_strategy_negative(self, analyzer):
@@ -107,7 +107,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "cmt.rollback.deployment_strategy" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cmt.rollback.deployment_strategy" == f.pattern_id]
         assert len(findings) == 0, f"Pattern cmt.rollback.deployment_strategy should NOT detect compliant code"
 
 

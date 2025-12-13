@@ -31,7 +31,7 @@ print(result)"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "afr.crypto.weak_algorithms" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "afr.crypto.weak_algorithms" == f.pattern_id]
         assert len(findings) > 0, f"Pattern afr.crypto.weak_algorithms should detect this code"
     
     def test_afr_crypto_weak_algorithms_negative(self, analyzer):
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "afr.crypto.weak_algorithms" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "afr.crypto.weak_algorithms" == f.pattern_id]
         assert len(findings) == 0, f"Pattern afr.crypto.weak_algorithms should NOT detect compliant code"
 
 
@@ -59,7 +59,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "afr.config.debug_mode" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "afr.config.debug_mode" == f.pattern_id]
         assert len(findings) > 0, f"Pattern afr.config.debug_mode should detect this code"
     
     def test_afr_config_debug_mode_negative(self, analyzer):
@@ -75,7 +75,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "afr.config.debug_mode" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "afr.config.debug_mode" == f.pattern_id]
         assert len(findings) == 0, f"Pattern afr.config.debug_mode should NOT detect compliant code"
 
 
@@ -87,7 +87,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "afr.scanning.missing_vulnerability_scan" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "afr.scanning.missing_vulnerability_scan" == f.pattern_id]
         assert len(findings) > 0, f"Pattern afr.scanning.missing_vulnerability_scan should detect this code"
     
     def test_afr_scanning_missing_vulnerability_scan_negative(self, analyzer):
@@ -100,7 +100,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "afr.scanning.missing_vulnerability_scan" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "afr.scanning.missing_vulnerability_scan" == f.pattern_id]
         assert len(findings) == 0, f"Pattern afr.scanning.missing_vulnerability_scan should NOT detect compliant code"
 
 
@@ -112,7 +112,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "afr.config.insecure_defaults" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "afr.config.insecure_defaults" == f.pattern_id]
         assert len(findings) > 0, f"Pattern afr.config.insecure_defaults should detect this code"
     
     def test_afr_config_insecure_defaults_negative(self, analyzer):
@@ -125,7 +125,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "afr.config.insecure_defaults" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "afr.config.insecure_defaults" == f.pattern_id]
         assert len(findings) == 0, f"Pattern afr.config.insecure_defaults should NOT detect compliant code"
 
 

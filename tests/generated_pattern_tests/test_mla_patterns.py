@@ -31,7 +31,7 @@ print(result)"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "mla.logging.local_file" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "mla.logging.local_file" == f.pattern_id]
         assert len(findings) > 0, f"Pattern mla.logging.local_file should detect this code"
     
     def test_mla_logging_local_file_negative(self, analyzer):
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "mla.logging.local_file" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "mla.logging.local_file" == f.pattern_id]
         assert len(findings) == 0, f"Pattern mla.logging.local_file should NOT detect compliant code"
 
 
@@ -61,7 +61,7 @@ def main():
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "mla.logging.azure_monitor" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "mla.logging.azure_monitor" == f.pattern_id]
         assert len(findings) > 0, f"Pattern mla.logging.azure_monitor should detect this code"
     
     def test_mla_logging_azure_monitor_negative(self, analyzer):
@@ -77,7 +77,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "mla.logging.azure_monitor" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "mla.logging.azure_monitor" == f.pattern_id]
         assert len(findings) == 0, f"Pattern mla.logging.azure_monitor should NOT detect compliant code"
 
 
@@ -91,7 +91,7 @@ def main():
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "mla.logging.siem_integration" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "mla.logging.siem_integration" == f.pattern_id]
         assert len(findings) > 0, f"Pattern mla.logging.siem_integration should detect this code"
     
     def test_mla_logging_siem_integration_negative(self, analyzer):
@@ -107,7 +107,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "mla.logging.siem_integration" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "mla.logging.siem_integration" == f.pattern_id]
         assert len(findings) == 0, f"Pattern mla.logging.siem_integration should NOT detect compliant code"
 
 
@@ -119,7 +119,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "mla.retention.log_analytics_workspace" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "mla.retention.log_analytics_workspace" == f.pattern_id]
         assert len(findings) > 0, f"Pattern mla.retention.log_analytics_workspace should detect this code"
     
     def test_mla_retention_log_analytics_workspace_negative(self, analyzer):
@@ -132,7 +132,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "mla.retention.log_analytics_workspace" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "mla.retention.log_analytics_workspace" == f.pattern_id]
         assert len(findings) == 0, f"Pattern mla.retention.log_analytics_workspace should NOT detect compliant code"
 
 
@@ -144,7 +144,7 @@ print(result)"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "mla.monitoring.failed_login_tracking" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "mla.monitoring.failed_login_tracking" == f.pattern_id]
         assert len(findings) > 0, f"Pattern mla.monitoring.failed_login_tracking should detect this code"
     
     def test_mla_monitoring_failed_login_tracking_negative(self, analyzer):
@@ -160,7 +160,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "mla.monitoring.failed_login_tracking" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "mla.monitoring.failed_login_tracking" == f.pattern_id]
         assert len(findings) == 0, f"Pattern mla.monitoring.failed_login_tracking should NOT detect compliant code"
 
 
@@ -172,7 +172,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "mla.monitoring.azure_sentinel_analytics" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "mla.monitoring.azure_sentinel_analytics" == f.pattern_id]
         assert len(findings) > 0, f"Pattern mla.monitoring.azure_sentinel_analytics should detect this code"
     
     def test_mla_monitoring_azure_sentinel_analytics_negative(self, analyzer):
@@ -185,7 +185,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "mla.monitoring.azure_sentinel_analytics" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "mla.monitoring.azure_sentinel_analytics" == f.pattern_id]
         assert len(findings) == 0, f"Pattern mla.monitoring.azure_sentinel_analytics should NOT detect compliant code"
 
 
@@ -197,7 +197,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "mla.alerting.action_group" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "mla.alerting.action_group" == f.pattern_id]
         assert len(findings) > 0, f"Pattern mla.alerting.action_group should detect this code"
     
     def test_mla_alerting_action_group_negative(self, analyzer):
@@ -210,7 +210,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "mla.alerting.action_group" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "mla.alerting.action_group" == f.pattern_id]
         assert len(findings) == 0, f"Pattern mla.alerting.action_group should NOT detect compliant code"
 
 
@@ -222,7 +222,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "mla.alerting.metric_alert" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "mla.alerting.metric_alert" == f.pattern_id]
         assert len(findings) > 0, f"Pattern mla.alerting.metric_alert should detect this code"
     
     def test_mla_alerting_metric_alert_negative(self, analyzer):
@@ -235,7 +235,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "mla.alerting.metric_alert" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "mla.alerting.metric_alert" == f.pattern_id]
         assert len(findings) == 0, f"Pattern mla.alerting.metric_alert should NOT detect compliant code"
 
 
@@ -249,7 +249,7 @@ def main():
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "mla.apm.application_insights" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "mla.apm.application_insights" == f.pattern_id]
         assert len(findings) > 0, f"Pattern mla.apm.application_insights should detect this code"
     
     def test_mla_apm_application_insights_negative(self, analyzer):
@@ -265,7 +265,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "mla.apm.application_insights" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "mla.apm.application_insights" == f.pattern_id]
         assert len(findings) == 0, f"Pattern mla.apm.application_insights should NOT detect compliant code"
 
 
@@ -277,7 +277,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "mla.audit.activity_log" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "mla.audit.activity_log" == f.pattern_id]
         assert len(findings) > 0, f"Pattern mla.audit.activity_log should detect this code"
     
     def test_mla_audit_activity_log_negative(self, analyzer):
@@ -290,7 +290,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "mla.audit.activity_log" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "mla.audit.activity_log" == f.pattern_id]
         assert len(findings) == 0, f"Pattern mla.audit.activity_log should NOT detect compliant code"
 
 
@@ -302,7 +302,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "mla.audit.resource_logs_missing" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "mla.audit.resource_logs_missing" == f.pattern_id]
         assert len(findings) > 0, f"Pattern mla.audit.resource_logs_missing should detect this code"
     
     def test_mla_audit_resource_logs_missing_negative(self, analyzer):
@@ -315,7 +315,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "mla.audit.resource_logs_missing" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "mla.audit.resource_logs_missing" == f.pattern_id]
         assert len(findings) == 0, f"Pattern mla.audit.resource_logs_missing should NOT detect compliant code"
 
 

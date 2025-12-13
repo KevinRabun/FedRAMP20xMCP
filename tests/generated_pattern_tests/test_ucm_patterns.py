@@ -31,7 +31,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ucm.rbac.role_definition" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ucm.rbac.role_definition" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ucm.rbac.role_definition should detect this code"
     
     def test_ucm_rbac_role_definition_negative(self, analyzer):
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ucm.rbac.role_definition" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ucm.rbac.role_definition" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ucm.rbac.role_definition should NOT detect compliant code"
 
 
@@ -59,7 +59,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ucm.authorization.decorator" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ucm.authorization.decorator" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ucm.authorization.decorator should detect this code"
     
     def test_ucm_authorization_decorator_negative(self, analyzer):
@@ -75,7 +75,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ucm.authorization.decorator" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ucm.authorization.decorator" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ucm.authorization.decorator should NOT detect compliant code"
 
 
@@ -87,7 +87,7 @@ print(result)"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ucm.capability_check.explicit" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ucm.capability_check.explicit" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ucm.capability_check.explicit should detect this code"
     
     def test_ucm_capability_check_explicit_negative(self, analyzer):
@@ -103,7 +103,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ucm.capability_check.explicit" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ucm.capability_check.explicit" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ucm.capability_check.explicit should NOT detect compliant code"
 
 
@@ -115,7 +115,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ucm.least_privilege.default_deny" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ucm.least_privilege.default_deny" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ucm.least_privilege.default_deny should detect this code"
     
     def test_ucm_least_privilege_default_deny_negative(self, analyzer):
@@ -131,7 +131,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ucm.least_privilege.default_deny" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ucm.least_privilege.default_deny" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ucm.least_privilege.default_deny should NOT detect compliant code"
 
 
@@ -143,7 +143,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ucm.session.timeout" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ucm.session.timeout" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ucm.session.timeout should detect this code"
     
     def test_ucm_session_timeout_negative(self, analyzer):
@@ -159,7 +159,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ucm.session.timeout" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ucm.session.timeout" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ucm.session.timeout should NOT detect compliant code"
 
 
@@ -171,7 +171,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ucm.audit.access_log" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ucm.audit.access_log" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ucm.audit.access_log should detect this code"
     
     def test_ucm_audit_access_log_negative(self, analyzer):
@@ -187,7 +187,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ucm.audit.access_log" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ucm.audit.access_log" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ucm.audit.access_log should NOT detect compliant code"
 
 
@@ -199,7 +199,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ucm.missing_authorization" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ucm.missing_authorization" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ucm.missing_authorization should detect this code"
     
     def test_ucm_missing_authorization_negative(self, analyzer):
@@ -215,7 +215,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ucm.missing_authorization" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ucm.missing_authorization" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ucm.missing_authorization should NOT detect compliant code"
 
 
@@ -227,7 +227,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ucm.iac.managed_identity" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ucm.iac.managed_identity" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ucm.iac.managed_identity should detect this code"
     
     def test_ucm_iac_managed_identity_negative(self, analyzer):
@@ -240,7 +240,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ucm.iac.managed_identity" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ucm.iac.managed_identity" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ucm.iac.managed_identity should NOT detect compliant code"
 
 
@@ -252,7 +252,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ucm.iac.rbac_assignment" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ucm.iac.rbac_assignment" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ucm.iac.rbac_assignment should detect this code"
     
     def test_ucm_iac_rbac_assignment_negative(self, analyzer):
@@ -265,7 +265,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ucm.iac.rbac_assignment" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ucm.iac.rbac_assignment" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ucm.iac.rbac_assignment should NOT detect compliant code"
 
 
@@ -283,7 +283,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ucm.iac.key_vault_access_policy" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ucm.iac.key_vault_access_policy" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ucm.iac.key_vault_access_policy should detect this code"
     
     def test_ucm_iac_key_vault_access_policy_negative(self, analyzer):
@@ -296,7 +296,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ucm.iac.key_vault_access_policy" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ucm.iac.key_vault_access_policy" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ucm.iac.key_vault_access_policy should NOT detect compliant code"
 
 
@@ -307,7 +307,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "github_actions")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ucm.cicd.rbac_validation" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ucm.cicd.rbac_validation" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ucm.cicd.rbac_validation should detect this code"
     
     def test_ucm_cicd_rbac_validation_negative(self, analyzer):
@@ -317,7 +317,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "github_actions")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ucm.cicd.rbac_validation" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ucm.cicd.rbac_validation" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ucm.cicd.rbac_validation should NOT detect compliant code"
 
 

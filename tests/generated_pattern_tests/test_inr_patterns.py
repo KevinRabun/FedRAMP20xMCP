@@ -31,7 +31,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "inr.alerts.missing_configuration" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "inr.alerts.missing_configuration" == f.pattern_id]
         assert len(findings) > 0, f"Pattern inr.alerts.missing_configuration should detect this code"
     
     def test_inr_alerts_missing_configuration_negative(self, analyzer):
@@ -44,7 +44,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "inr.alerts.missing_configuration" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "inr.alerts.missing_configuration" == f.pattern_id]
         assert len(findings) == 0, f"Pattern inr.alerts.missing_configuration should NOT detect compliant code"
 
 
@@ -56,7 +56,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "inr.logging.incident_tracking" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "inr.logging.incident_tracking" == f.pattern_id]
         assert len(findings) > 0, f"Pattern inr.logging.incident_tracking should detect this code"
     
     def test_inr_logging_incident_tracking_negative(self, analyzer):
@@ -72,7 +72,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "inr.logging.incident_tracking" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "inr.logging.incident_tracking" == f.pattern_id]
         assert len(findings) == 0, f"Pattern inr.logging.incident_tracking should NOT detect compliant code"
 
 

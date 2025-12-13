@@ -31,7 +31,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "tpr.dependencies.unverified" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "tpr.dependencies.unverified" == f.pattern_id]
         assert len(findings) > 0, f"Pattern tpr.dependencies.unverified should detect this code"
     
     def test_tpr_dependencies_unverified_negative(self, analyzer):
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "tpr.dependencies.unverified" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "tpr.dependencies.unverified" == f.pattern_id]
         assert len(findings) == 0, f"Pattern tpr.dependencies.unverified should NOT detect compliant code"
 
 
@@ -59,7 +59,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "tpr.monitoring.supply_chain_missing" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "tpr.monitoring.supply_chain_missing" == f.pattern_id]
         assert len(findings) > 0, f"Pattern tpr.monitoring.supply_chain_missing should detect this code"
     
     def test_tpr_monitoring_supply_chain_missing_negative(self, analyzer):
@@ -75,7 +75,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "tpr.monitoring.supply_chain_missing" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "tpr.monitoring.supply_chain_missing" == f.pattern_id]
         assert len(findings) == 0, f"Pattern tpr.monitoring.supply_chain_missing should NOT detect compliant code"
 
 
@@ -87,7 +87,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "tpr.sources.insecure" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "tpr.sources.insecure" == f.pattern_id]
         assert len(findings) > 0, f"Pattern tpr.sources.insecure should detect this code"
     
     def test_tpr_sources_insecure_negative(self, analyzer):
@@ -103,7 +103,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "tpr.sources.insecure" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "tpr.sources.insecure" == f.pattern_id]
         assert len(findings) == 0, f"Pattern tpr.sources.insecure should NOT detect compliant code"
 
 
@@ -114,7 +114,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "github_actions")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "tpr.sbom.missing" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "tpr.sbom.missing" == f.pattern_id]
         assert len(findings) > 0, f"Pattern tpr.sbom.missing should detect this code"
     
     def test_tpr_sbom_missing_negative(self, analyzer):
@@ -124,7 +124,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "github_actions")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "tpr.sbom.missing" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "tpr.sbom.missing" == f.pattern_id]
         assert len(findings) == 0, f"Pattern tpr.sbom.missing should NOT detect compliant code"
 
 

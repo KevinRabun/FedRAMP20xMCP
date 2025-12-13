@@ -31,7 +31,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ced.training.missing_documentation" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ced.training.missing_documentation" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ced.training.missing_documentation should detect this code"
     
     def test_ced_training_missing_documentation_negative(self, analyzer):
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ced.training.missing_documentation" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ced.training.missing_documentation" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ced.training.missing_documentation should NOT detect compliant code"
 
 
@@ -59,7 +59,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ced.training.role_based_missing" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ced.training.role_based_missing" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ced.training.role_based_missing should detect this code"
     
     def test_ced_training_role_based_missing_negative(self, analyzer):
@@ -75,7 +75,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ced.training.role_based_missing" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ced.training.role_based_missing" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ced.training.role_based_missing should NOT detect compliant code"
 
 
@@ -87,7 +87,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ced.training.developer_gaps" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ced.training.developer_gaps" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ced.training.developer_gaps should detect this code"
     
     def test_ced_training_developer_gaps_negative(self, analyzer):
@@ -103,7 +103,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ced.training.developer_gaps" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ced.training.developer_gaps" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ced.training.developer_gaps should NOT detect compliant code"
 
 
@@ -115,7 +115,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ced.training.incident_response_missing" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ced.training.incident_response_missing" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ced.training.incident_response_missing should detect this code"
     
     def test_ced_training_incident_response_missing_negative(self, analyzer):
@@ -131,7 +131,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ced.training.incident_response_missing" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ced.training.incident_response_missing" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ced.training.incident_response_missing should NOT detect compliant code"
 
 

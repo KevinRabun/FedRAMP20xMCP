@@ -31,7 +31,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "common.tagging.required_tags" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "common.tagging.required_tags" == f.pattern_id]
         assert len(findings) > 0, f"Pattern common.tagging.required_tags should detect this code"
     
     def test_common_tagging_required_tags_negative(self, analyzer):
@@ -44,7 +44,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "common.tagging.required_tags" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "common.tagging.required_tags" == f.pattern_id]
         assert len(findings) == 0, f"Pattern common.tagging.required_tags should NOT detect compliant code"
 
 
@@ -56,7 +56,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "common.diagnostics.missing_diagnostic_settings" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "common.diagnostics.missing_diagnostic_settings" == f.pattern_id]
         assert len(findings) > 0, f"Pattern common.diagnostics.missing_diagnostic_settings should detect this code"
     
     def test_common_diagnostics_missing_diagnostic_settings_negative(self, analyzer):
@@ -69,7 +69,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "common.diagnostics.missing_diagnostic_settings" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "common.diagnostics.missing_diagnostic_settings" == f.pattern_id]
         assert len(findings) == 0, f"Pattern common.diagnostics.missing_diagnostic_settings should NOT detect compliant code"
 
 
@@ -83,7 +83,7 @@ def main():
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "common.identity.managed_identity" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "common.identity.managed_identity" == f.pattern_id]
         assert len(findings) > 0, f"Pattern common.identity.managed_identity should detect this code"
     
     def test_common_identity_managed_identity_negative(self, analyzer):
@@ -99,7 +99,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "common.identity.managed_identity" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "common.identity.managed_identity" == f.pattern_id]
         assert len(findings) == 0, f"Pattern common.identity.managed_identity should NOT detect compliant code"
 
 
@@ -111,7 +111,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "common.network.public_access_enabled" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "common.network.public_access_enabled" == f.pattern_id]
         assert len(findings) > 0, f"Pattern common.network.public_access_enabled should detect this code"
     
     def test_common_network_public_access_enabled_negative(self, analyzer):
@@ -124,7 +124,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "common.network.public_access_enabled" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "common.network.public_access_enabled" == f.pattern_id]
         assert len(findings) == 0, f"Pattern common.network.public_access_enabled should NOT detect compliant code"
 
 
@@ -136,7 +136,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "common.governance.azure_policy" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "common.governance.azure_policy" == f.pattern_id]
         assert len(findings) > 0, f"Pattern common.governance.azure_policy should detect this code"
     
     def test_common_governance_azure_policy_negative(self, analyzer):
@@ -149,7 +149,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "common.governance.azure_policy" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "common.governance.azure_policy" == f.pattern_id]
         assert len(findings) == 0, f"Pattern common.governance.azure_policy should NOT detect compliant code"
 
 
@@ -161,7 +161,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "common.governance.resource_lock" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "common.governance.resource_lock" == f.pattern_id]
         assert len(findings) > 0, f"Pattern common.governance.resource_lock should detect this code"
     
     def test_common_governance_resource_lock_negative(self, analyzer):
@@ -174,7 +174,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "common.governance.resource_lock" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "common.governance.resource_lock" == f.pattern_id]
         assert len(findings) == 0, f"Pattern common.governance.resource_lock should NOT detect compliant code"
 
 
@@ -186,7 +186,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "common.resilience.backup_missing" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "common.resilience.backup_missing" == f.pattern_id]
         assert len(findings) > 0, f"Pattern common.resilience.backup_missing should detect this code"
     
     def test_common_resilience_backup_missing_negative(self, analyzer):
@@ -199,7 +199,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "common.resilience.backup_missing" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "common.resilience.backup_missing" == f.pattern_id]
         assert len(findings) == 0, f"Pattern common.resilience.backup_missing should NOT detect compliant code"
 
 
@@ -211,7 +211,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "common.resilience.geo_redundancy" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "common.resilience.geo_redundancy" == f.pattern_id]
         assert len(findings) > 0, f"Pattern common.resilience.geo_redundancy should detect this code"
     
     def test_common_resilience_geo_redundancy_negative(self, analyzer):
@@ -224,7 +224,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "common.resilience.geo_redundancy" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "common.resilience.geo_redundancy" == f.pattern_id]
         assert len(findings) == 0, f"Pattern common.resilience.geo_redundancy should NOT detect compliant code"
 
 

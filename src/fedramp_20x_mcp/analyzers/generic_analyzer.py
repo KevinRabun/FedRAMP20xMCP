@@ -578,8 +578,10 @@ class GenericPatternAnalyzer:
                 continue
             
             if query_type == 'import_statement':
-                # Check for imports
+                # Check for imports (both 'import X' and 'from X import Y')
                 import_nodes = parser.find_nodes_by_type(root_node, 'import_statement')
+                # Also check for 'from X import Y' style imports (import_from_statement)
+                import_nodes.extend(parser.find_nodes_by_type(root_node, 'import_from_statement'))
                 for node in import_nodes:
                     node_text = parser.get_node_text(node, code_bytes)
                     if target in node_text:
@@ -704,7 +706,8 @@ class GenericPatternAnalyzer:
             code_snippet=code_snippet,
             recommendation=pattern.finding.get('remediation_template', ''),
             good_practice=is_positive,
-            ksi_id=pattern.related_ksis[0] if pattern.related_ksis else None
+            ksi_id=pattern.related_ksis[0] if pattern.related_ksis else None,
+            pattern_id=pattern.pattern_id
         )
 
 

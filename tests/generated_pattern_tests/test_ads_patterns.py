@@ -31,7 +31,7 @@ print(result)"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ads.machine_readable.json_export" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ads.machine_readable.json_export" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ads.machine_readable.json_export should detect this code"
     
     def test_ads_machine_readable_json_export_negative(self, analyzer):
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ads.machine_readable.json_export" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ads.machine_readable.json_export" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ads.machine_readable.json_export should NOT detect compliant code"
 
 
@@ -59,7 +59,7 @@ print(result)"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ads.machine_readable.xml_export" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ads.machine_readable.xml_export" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ads.machine_readable.xml_export should detect this code"
     
     def test_ads_machine_readable_xml_export_negative(self, analyzer):
@@ -75,7 +75,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ads.machine_readable.xml_export" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ads.machine_readable.xml_export" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ads.machine_readable.xml_export should NOT detect compliant code"
 
 
@@ -87,7 +87,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ads.api_endpoint.rest" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ads.api_endpoint.rest" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ads.api_endpoint.rest should detect this code"
     
     def test_ads_api_endpoint_rest_negative(self, analyzer):
@@ -103,7 +103,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ads.api_endpoint.rest" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ads.api_endpoint.rest" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ads.api_endpoint.rest should NOT detect compliant code"
 
 
@@ -117,7 +117,7 @@ def main():
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ads.structured_logging.structured_format" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ads.structured_logging.structured_format" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ads.structured_logging.structured_format should detect this code"
     
     def test_ads_structured_logging_structured_format_negative(self, analyzer):
@@ -133,7 +133,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ads.structured_logging.structured_format" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ads.structured_logging.structured_format" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ads.structured_logging.structured_format should NOT detect compliant code"
 
 
@@ -145,7 +145,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ads.audit_fields.required_fields" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ads.audit_fields.required_fields" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ads.audit_fields.required_fields should detect this code"
     
     def test_ads_audit_fields_required_fields_negative(self, analyzer):
@@ -161,7 +161,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ads.audit_fields.required_fields" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ads.audit_fields.required_fields" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ads.audit_fields.required_fields should NOT detect compliant code"
 
 
@@ -173,7 +173,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ads.query_api.filtering" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ads.query_api.filtering" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ads.query_api.filtering should detect this code"
     
     def test_ads_query_api_filtering_negative(self, analyzer):
@@ -189,7 +189,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ads.query_api.filtering" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ads.query_api.filtering" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ads.query_api.filtering should NOT detect compliant code"
 
 
@@ -201,7 +201,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ads.missing_machine_readable" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ads.missing_machine_readable" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ads.missing_machine_readable should detect this code"
     
     def test_ads_missing_machine_readable_negative(self, analyzer):
@@ -217,7 +217,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ads.missing_machine_readable" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ads.missing_machine_readable" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ads.missing_machine_readable should NOT detect compliant code"
 
 
@@ -229,7 +229,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ads.iac.azure_monitor_export" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ads.iac.azure_monitor_export" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ads.iac.azure_monitor_export should detect this code"
     
     def test_ads_iac_azure_monitor_export_negative(self, analyzer):
@@ -242,7 +242,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ads.iac.azure_monitor_export" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ads.iac.azure_monitor_export" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ads.iac.azure_monitor_export should NOT detect compliant code"
 
 
@@ -254,7 +254,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ads.iac.log_analytics_workspace" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ads.iac.log_analytics_workspace" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ads.iac.log_analytics_workspace should detect this code"
     
     def test_ads_iac_log_analytics_workspace_negative(self, analyzer):
@@ -267,7 +267,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ads.iac.log_analytics_workspace" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ads.iac.log_analytics_workspace" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ads.iac.log_analytics_workspace should NOT detect compliant code"
 
 
@@ -278,7 +278,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "github_actions")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ads.cicd.audit_export_step" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ads.cicd.audit_export_step" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ads.cicd.audit_export_step should detect this code"
     
     def test_ads_cicd_audit_export_step_negative(self, analyzer):
@@ -288,7 +288,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "github_actions")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ads.cicd.audit_export_step" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ads.cicd.audit_export_step" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ads.cicd.audit_export_step should NOT detect compliant code"
 
 

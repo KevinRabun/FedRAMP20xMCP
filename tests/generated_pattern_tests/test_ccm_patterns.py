@@ -31,7 +31,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ccm.version_control.git_usage" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ccm.version_control.git_usage" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ccm.version_control.git_usage should detect this code"
     
     def test_ccm_version_control_git_usage_negative(self, analyzer):
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ccm.version_control.git_usage" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ccm.version_control.git_usage" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ccm.version_control.git_usage should NOT detect compliant code"
 
 
@@ -59,7 +59,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ccm.change_logging.audit_log" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ccm.change_logging.audit_log" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ccm.change_logging.audit_log should detect this code"
     
     def test_ccm_change_logging_audit_log_negative(self, analyzer):
@@ -75,7 +75,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ccm.change_logging.audit_log" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ccm.change_logging.audit_log" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ccm.change_logging.audit_log should NOT detect compliant code"
 
 
@@ -86,7 +86,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "yaml")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ccm.approval_workflow.pull_request" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ccm.approval_workflow.pull_request" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ccm.approval_workflow.pull_request should detect this code"
     
     def test_ccm_approval_workflow_pull_request_negative(self, analyzer):
@@ -96,7 +96,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "yaml")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ccm.approval_workflow.pull_request" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ccm.approval_workflow.pull_request" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ccm.approval_workflow.pull_request should NOT detect compliant code"
 
 
@@ -107,7 +107,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "github_actions")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ccm.automated_testing.pre_deploy" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ccm.automated_testing.pre_deploy" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ccm.automated_testing.pre_deploy should detect this code"
     
     def test_ccm_automated_testing_pre_deploy_negative(self, analyzer):
@@ -117,7 +117,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "github_actions")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ccm.automated_testing.pre_deploy" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ccm.automated_testing.pre_deploy" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ccm.automated_testing.pre_deploy should NOT detect compliant code"
 
 
@@ -129,7 +129,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ccm.rollback.capability" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ccm.rollback.capability" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ccm.rollback.capability should detect this code"
     
     def test_ccm_rollback_capability_negative(self, analyzer):
@@ -145,7 +145,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ccm.rollback.capability" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ccm.rollback.capability" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ccm.rollback.capability should NOT detect compliant code"
 
 
@@ -156,7 +156,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "yaml")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ccm.baseline.configuration" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ccm.baseline.configuration" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ccm.baseline.configuration should detect this code"
     
     def test_ccm_baseline_configuration_negative(self, analyzer):
@@ -166,7 +166,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "yaml")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ccm.baseline.configuration" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ccm.baseline.configuration" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ccm.baseline.configuration should NOT detect compliant code"
 
 
@@ -178,7 +178,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ccm.change_approval.explicit" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ccm.change_approval.explicit" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ccm.change_approval.explicit should detect this code"
     
     def test_ccm_change_approval_explicit_negative(self, analyzer):
@@ -194,7 +194,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ccm.change_approval.explicit" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ccm.change_approval.explicit" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ccm.change_approval.explicit should NOT detect compliant code"
 
 
@@ -205,7 +205,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "github_actions")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ccm.iac.arm_template_validation" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ccm.iac.arm_template_validation" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ccm.iac.arm_template_validation should detect this code"
     
     def test_ccm_iac_arm_template_validation_negative(self, analyzer):
@@ -215,7 +215,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "github_actions")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ccm.iac.arm_template_validation" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ccm.iac.arm_template_validation" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ccm.iac.arm_template_validation should NOT detect compliant code"
 
 
@@ -226,7 +226,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "github_actions")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ccm.iac.terraform_plan" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ccm.iac.terraform_plan" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ccm.iac.terraform_plan should detect this code"
     
     def test_ccm_iac_terraform_plan_negative(self, analyzer):
@@ -236,7 +236,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "github_actions")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ccm.iac.terraform_plan" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ccm.iac.terraform_plan" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ccm.iac.terraform_plan should NOT detect compliant code"
 
 
@@ -247,7 +247,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "github_actions")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ccm.cicd.deployment_gate" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ccm.cicd.deployment_gate" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ccm.cicd.deployment_gate should detect this code"
     
     def test_ccm_cicd_deployment_gate_negative(self, analyzer):
@@ -257,7 +257,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "github_actions")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ccm.cicd.deployment_gate" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ccm.cicd.deployment_gate" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ccm.cicd.deployment_gate should NOT detect compliant code"
 
 
@@ -268,7 +268,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "github_actions")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ccm.cicd.configuration_backup" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ccm.cicd.configuration_backup" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ccm.cicd.configuration_backup should detect this code"
     
     def test_ccm_cicd_configuration_backup_negative(self, analyzer):
@@ -278,7 +278,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "github_actions")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ccm.cicd.configuration_backup" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ccm.cicd.configuration_backup" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ccm.cicd.configuration_backup should NOT detect compliant code"
 
 
@@ -290,7 +290,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "ccm.missing_version_control" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ccm.missing_version_control" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ccm.missing_version_control should detect this code"
     
     def test_ccm_missing_version_control_negative(self, analyzer):
@@ -306,7 +306,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "ccm.missing_version_control" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ccm.missing_version_control" == f.pattern_id]
         assert len(findings) == 0, f"Pattern ccm.missing_version_control should NOT detect compliant code"
 
 

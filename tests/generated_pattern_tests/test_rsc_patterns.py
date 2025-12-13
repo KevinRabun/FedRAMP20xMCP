@@ -31,7 +31,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "rsc.allocation.resource_limits" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.allocation.resource_limits" == f.pattern_id]
         assert len(findings) > 0, f"Pattern rsc.allocation.resource_limits should detect this code"
     
     def test_rsc_allocation_resource_limits_negative(self, analyzer):
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "rsc.allocation.resource_limits" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.allocation.resource_limits" == f.pattern_id]
         assert len(findings) == 0, f"Pattern rsc.allocation.resource_limits should NOT detect compliant code"
 
 
@@ -59,7 +59,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "rsc.monitoring.resource_metrics" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.monitoring.resource_metrics" == f.pattern_id]
         assert len(findings) > 0, f"Pattern rsc.monitoring.resource_metrics should detect this code"
     
     def test_rsc_monitoring_resource_metrics_negative(self, analyzer):
@@ -75,7 +75,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "rsc.monitoring.resource_metrics" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.monitoring.resource_metrics" == f.pattern_id]
         assert len(findings) == 0, f"Pattern rsc.monitoring.resource_metrics should NOT detect compliant code"
 
 
@@ -86,7 +86,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "yaml")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "rsc.scaling.autoscaling" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.scaling.autoscaling" == f.pattern_id]
         assert len(findings) > 0, f"Pattern rsc.scaling.autoscaling should detect this code"
     
     def test_rsc_scaling_autoscaling_negative(self, analyzer):
@@ -96,7 +96,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "yaml")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "rsc.scaling.autoscaling" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.scaling.autoscaling" == f.pattern_id]
         assert len(findings) == 0, f"Pattern rsc.scaling.autoscaling should NOT detect compliant code"
 
 
@@ -107,7 +107,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "yaml")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "rsc.quota.namespace_quota" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.quota.namespace_quota" == f.pattern_id]
         assert len(findings) > 0, f"Pattern rsc.quota.namespace_quota should detect this code"
     
     def test_rsc_quota_namespace_quota_negative(self, analyzer):
@@ -117,7 +117,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "yaml")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "rsc.quota.namespace_quota" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.quota.namespace_quota" == f.pattern_id]
         assert len(findings) == 0, f"Pattern rsc.quota.namespace_quota should NOT detect compliant code"
 
 
@@ -128,7 +128,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "yaml")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "rsc.allocation.priority_class" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.allocation.priority_class" == f.pattern_id]
         assert len(findings) > 0, f"Pattern rsc.allocation.priority_class should detect this code"
     
     def test_rsc_allocation_priority_class_negative(self, analyzer):
@@ -138,7 +138,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "yaml")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "rsc.allocation.priority_class" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.allocation.priority_class" == f.pattern_id]
         assert len(findings) == 0, f"Pattern rsc.allocation.priority_class should NOT detect compliant code"
 
 
@@ -150,7 +150,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "rsc.cost.budget_alert" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.cost.budget_alert" == f.pattern_id]
         assert len(findings) > 0, f"Pattern rsc.cost.budget_alert should detect this code"
     
     def test_rsc_cost_budget_alert_negative(self, analyzer):
@@ -163,7 +163,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "rsc.cost.budget_alert" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.cost.budget_alert" == f.pattern_id]
         assert len(findings) == 0, f"Pattern rsc.cost.budget_alert should NOT detect compliant code"
 
 
@@ -175,7 +175,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "rsc.iac.app_service_plan" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.iac.app_service_plan" == f.pattern_id]
         assert len(findings) > 0, f"Pattern rsc.iac.app_service_plan should detect this code"
     
     def test_rsc_iac_app_service_plan_negative(self, analyzer):
@@ -188,7 +188,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "rsc.iac.app_service_plan" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.iac.app_service_plan" == f.pattern_id]
         assert len(findings) == 0, f"Pattern rsc.iac.app_service_plan should NOT detect compliant code"
 
 
@@ -200,7 +200,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "rsc.iac.vm_size" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.iac.vm_size" == f.pattern_id]
         assert len(findings) > 0, f"Pattern rsc.iac.vm_size should detect this code"
     
     def test_rsc_iac_vm_size_negative(self, analyzer):
@@ -213,7 +213,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "rsc.iac.vm_size" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.iac.vm_size" == f.pattern_id]
         assert len(findings) == 0, f"Pattern rsc.iac.vm_size should NOT detect compliant code"
 
 
@@ -225,7 +225,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "rsc.iac.reserved_instances" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.iac.reserved_instances" == f.pattern_id]
         assert len(findings) > 0, f"Pattern rsc.iac.reserved_instances should detect this code"
     
     def test_rsc_iac_reserved_instances_negative(self, analyzer):
@@ -238,7 +238,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "rsc.iac.reserved_instances" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.iac.reserved_instances" == f.pattern_id]
         assert len(findings) == 0, f"Pattern rsc.iac.reserved_instances should NOT detect compliant code"
 
 
@@ -249,7 +249,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "github_actions")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "rsc.cicd.resource_validation" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.cicd.resource_validation" == f.pattern_id]
         assert len(findings) > 0, f"Pattern rsc.cicd.resource_validation should detect this code"
     
     def test_rsc_cicd_resource_validation_negative(self, analyzer):
@@ -259,7 +259,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "github_actions")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "rsc.cicd.resource_validation" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.cicd.resource_validation" == f.pattern_id]
         assert len(findings) == 0, f"Pattern rsc.cicd.resource_validation should NOT detect compliant code"
 
 
@@ -270,7 +270,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "yaml")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "rsc.missing_resource_limits" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.missing_resource_limits" == f.pattern_id]
         assert len(findings) > 0, f"Pattern rsc.missing_resource_limits should detect this code"
     
     def test_rsc_missing_resource_limits_negative(self, analyzer):
@@ -280,7 +280,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "yaml")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "rsc.missing_resource_limits" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.missing_resource_limits" == f.pattern_id]
         assert len(findings) == 0, f"Pattern rsc.missing_resource_limits should NOT detect compliant code"
 
 

@@ -31,7 +31,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "piy.pii.logging_detection" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "piy.pii.logging_detection" == f.pattern_id]
         assert len(findings) > 0, f"Pattern piy.pii.logging_detection should detect this code"
     
     def test_piy_pii_logging_detection_negative(self, analyzer):
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "piy.pii.logging_detection" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "piy.pii.logging_detection" == f.pattern_id]
         assert len(findings) == 0, f"Pattern piy.pii.logging_detection should NOT detect compliant code"
 
 
@@ -59,7 +59,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "piy.retention.missing_policy" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "piy.retention.missing_policy" == f.pattern_id]
         assert len(findings) > 0, f"Pattern piy.retention.missing_policy should detect this code"
     
     def test_piy_retention_missing_policy_negative(self, analyzer):
@@ -72,7 +72,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "piy.retention.missing_policy" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "piy.retention.missing_policy" == f.pattern_id]
         assert len(findings) == 0, f"Pattern piy.retention.missing_policy should NOT detect compliant code"
 
 
@@ -83,7 +83,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "markdown")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "piy.vdp.missing_program" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "piy.vdp.missing_program" == f.pattern_id]
         assert len(findings) > 0, f"Pattern piy.vdp.missing_program should detect this code"
     
     def test_piy_vdp_missing_program_negative(self, analyzer):
@@ -93,7 +93,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "markdown")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "piy.vdp.missing_program" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "piy.vdp.missing_program" == f.pattern_id]
         assert len(findings) == 0, f"Pattern piy.vdp.missing_program should NOT detect compliant code"
 
 
@@ -105,7 +105,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "piy.secure_by_design.missing_practices" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "piy.secure_by_design.missing_practices" == f.pattern_id]
         assert len(findings) > 0, f"Pattern piy.secure_by_design.missing_practices should detect this code"
     
     def test_piy_secure_by_design_missing_practices_negative(self, analyzer):
@@ -121,7 +121,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "piy.secure_by_design.missing_practices" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "piy.secure_by_design.missing_practices" == f.pattern_id]
         assert len(findings) == 0, f"Pattern piy.secure_by_design.missing_practices should NOT detect compliant code"
 
 
@@ -132,7 +132,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "github_actions")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "piy.evaluation.missing_validation" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "piy.evaluation.missing_validation" == f.pattern_id]
         assert len(findings) > 0, f"Pattern piy.evaluation.missing_validation should detect this code"
     
     def test_piy_evaluation_missing_validation_negative(self, analyzer):
@@ -142,7 +142,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "github_actions")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "piy.evaluation.missing_validation" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "piy.evaluation.missing_validation" == f.pattern_id]
         assert len(findings) == 0, f"Pattern piy.evaluation.missing_validation should NOT detect compliant code"
 
 
@@ -153,7 +153,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "markdown")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "piy.investment.missing_metrics" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "piy.investment.missing_metrics" == f.pattern_id]
         assert len(findings) > 0, f"Pattern piy.investment.missing_metrics should detect this code"
     
     def test_piy_investment_missing_metrics_negative(self, analyzer):
@@ -163,7 +163,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "markdown")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "piy.investment.missing_metrics" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "piy.investment.missing_metrics" == f.pattern_id]
         assert len(findings) == 0, f"Pattern piy.investment.missing_metrics should NOT detect compliant code"
 
 
@@ -175,7 +175,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "piy.supply_chain.unvetted_dependencies" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "piy.supply_chain.unvetted_dependencies" == f.pattern_id]
         assert len(findings) > 0, f"Pattern piy.supply_chain.unvetted_dependencies should detect this code"
     
     def test_piy_supply_chain_unvetted_dependencies_negative(self, analyzer):
@@ -191,7 +191,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "piy.supply_chain.unvetted_dependencies" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "piy.supply_chain.unvetted_dependencies" == f.pattern_id]
         assert len(findings) == 0, f"Pattern piy.supply_chain.unvetted_dependencies should NOT detect compliant code"
 
 
@@ -202,7 +202,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "markdown")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "piy.executive.missing_governance" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "piy.executive.missing_governance" == f.pattern_id]
         assert len(findings) > 0, f"Pattern piy.executive.missing_governance should detect this code"
     
     def test_piy_executive_missing_governance_negative(self, analyzer):
@@ -212,7 +212,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "markdown")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "piy.executive.missing_governance" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "piy.executive.missing_governance" == f.pattern_id]
         assert len(findings) == 0, f"Pattern piy.executive.missing_governance should NOT detect compliant code"
 
 

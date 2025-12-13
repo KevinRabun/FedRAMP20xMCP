@@ -135,7 +135,7 @@ from fedramp_20x_mcp.analyzers.base import Severity'''
         result = analyzer.analyze(code, "{lang}")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "{pattern_id}" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "{pattern_id}" == f.pattern_id]
         assert len(findings) > 0, f"Pattern {pattern_id} should detect this code"
     
     def test_{safe_method_name}_negative(self, analyzer):
@@ -145,7 +145,7 @@ from fedramp_20x_mcp.analyzers.base import Severity'''
         result = analyzer.analyze(code, "{lang}")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "{pattern_id}" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "{pattern_id}" == f.pattern_id]
         assert len(findings) == 0, f"Pattern {pattern_id} should NOT detect compliant code"
 '''
     

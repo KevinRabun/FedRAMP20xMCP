@@ -35,7 +35,7 @@ class TestRplPatterns:
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "rpl.storage.geo_redundancy" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rpl.storage.geo_redundancy" == f.pattern_id]
         assert len(findings) > 0, f"Pattern rpl.storage.geo_redundancy should detect this code"
     
     def test_rpl_storage_geo_redundancy_negative(self, analyzer):
@@ -48,7 +48,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "rpl.storage.geo_redundancy" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rpl.storage.geo_redundancy" == f.pattern_id]
         assert len(findings) == 0, f"Pattern rpl.storage.geo_redundancy should NOT detect compliant code"
 
 
@@ -60,7 +60,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "rpl.backup.missing_policy" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rpl.backup.missing_policy" == f.pattern_id]
         assert len(findings) > 0, f"Pattern rpl.backup.missing_policy should detect this code"
     
     def test_rpl_backup_missing_policy_negative(self, analyzer):
@@ -73,7 +73,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "rpl.backup.missing_policy" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rpl.backup.missing_policy" == f.pattern_id]
         assert len(findings) == 0, f"Pattern rpl.backup.missing_policy should NOT detect compliant code"
 
 

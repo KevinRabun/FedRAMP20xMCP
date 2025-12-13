@@ -36,7 +36,7 @@ class TestCnaPatterns:
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "cna.network.nsg_configuration" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cna.network.nsg_configuration" == f.pattern_id]
         assert len(findings) > 0, f"Pattern cna.network.nsg_configuration should detect this code"
     
     def test_cna_network_nsg_configuration_negative(self, analyzer):
@@ -49,7 +49,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "cna.network.nsg_configuration" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cna.network.nsg_configuration" == f.pattern_id]
         assert len(findings) == 0, f"Pattern cna.network.nsg_configuration should NOT detect compliant code"
 
 
@@ -61,7 +61,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "cna.network.azure_firewall" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cna.network.azure_firewall" == f.pattern_id]
         assert len(findings) > 0, f"Pattern cna.network.azure_firewall should detect this code"
     
     def test_cna_network_azure_firewall_negative(self, analyzer):
@@ -74,7 +74,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "cna.network.azure_firewall" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cna.network.azure_firewall" == f.pattern_id]
         assert len(findings) == 0, f"Pattern cna.network.azure_firewall should NOT detect compliant code"
 
 
@@ -86,7 +86,7 @@ trigger_pattern = True"""
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "cna.attack_surface.minimal_dependencies" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cna.attack_surface.minimal_dependencies" == f.pattern_id]
         assert len(findings) > 0, f"Pattern cna.attack_surface.minimal_dependencies should detect this code"
     
     def test_cna_attack_surface_minimal_dependencies_negative(self, analyzer):
@@ -102,7 +102,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "cna.attack_surface.minimal_dependencies" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cna.attack_surface.minimal_dependencies" == f.pattern_id]
         assert len(findings) == 0, f"Pattern cna.attack_surface.minimal_dependencies should NOT detect compliant code"
 
 
@@ -113,7 +113,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "dockerfile")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "cna.immutable_infra.container_image" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cna.immutable_infra.container_image" == f.pattern_id]
         assert len(findings) > 0, f"Pattern cna.immutable_infra.container_image should detect this code"
     
     def test_cna_immutable_infra_container_image_negative(self, analyzer):
@@ -123,7 +123,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "dockerfile")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "cna.immutable_infra.container_image" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cna.immutable_infra.container_image" == f.pattern_id]
         assert len(findings) == 0, f"Pattern cna.immutable_infra.container_image should NOT detect compliant code"
 
 
@@ -135,7 +135,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "cna.iac.aks_cluster" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cna.iac.aks_cluster" == f.pattern_id]
         assert len(findings) > 0, f"Pattern cna.iac.aks_cluster should detect this code"
     
     def test_cna_iac_aks_cluster_negative(self, analyzer):
@@ -148,7 +148,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "cna.iac.aks_cluster" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cna.iac.aks_cluster" == f.pattern_id]
         assert len(findings) == 0, f"Pattern cna.iac.aks_cluster should NOT detect compliant code"
 
 
@@ -160,7 +160,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "cna.iac.container_registry" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cna.iac.container_registry" == f.pattern_id]
         assert len(findings) > 0, f"Pattern cna.iac.container_registry should detect this code"
     
     def test_cna_iac_container_registry_negative(self, analyzer):
@@ -173,7 +173,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "cna.iac.container_registry" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cna.iac.container_registry" == f.pattern_id]
         assert len(findings) == 0, f"Pattern cna.iac.container_registry should NOT detect compliant code"
 
 
@@ -187,7 +187,7 @@ def main():
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "cna.observability.monitoring_integration" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cna.observability.monitoring_integration" == f.pattern_id]
         assert len(findings) > 0, f"Pattern cna.observability.monitoring_integration should detect this code"
     
     def test_cna_observability_monitoring_integration_negative(self, analyzer):
@@ -203,7 +203,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "cna.observability.monitoring_integration" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cna.observability.monitoring_integration" == f.pattern_id]
         assert len(findings) == 0, f"Pattern cna.observability.monitoring_integration should NOT detect compliant code"
 
 
@@ -215,7 +215,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "cna.api_gateway.configuration" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cna.api_gateway.configuration" == f.pattern_id]
         assert len(findings) > 0, f"Pattern cna.api_gateway.configuration should detect this code"
     
     def test_cna_api_gateway_configuration_negative(self, analyzer):
@@ -228,7 +228,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "cna.api_gateway.configuration" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cna.api_gateway.configuration" == f.pattern_id]
         assert len(findings) == 0, f"Pattern cna.api_gateway.configuration should NOT detect compliant code"
 
 
@@ -239,7 +239,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "yaml")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "cna.service_mesh.configuration" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cna.service_mesh.configuration" == f.pattern_id]
         assert len(findings) > 0, f"Pattern cna.service_mesh.configuration should detect this code"
     
     def test_cna_service_mesh_configuration_negative(self, analyzer):
@@ -249,7 +249,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "yaml")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "cna.service_mesh.configuration" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cna.service_mesh.configuration" == f.pattern_id]
         assert len(findings) == 0, f"Pattern cna.service_mesh.configuration should NOT detect compliant code"
 
 
@@ -260,7 +260,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "github_actions")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "cna.cicd.container_build" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cna.cicd.container_build" == f.pattern_id]
         assert len(findings) > 0, f"Pattern cna.cicd.container_build should detect this code"
     
     def test_cna_cicd_container_build_negative(self, analyzer):
@@ -270,7 +270,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "github_actions")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "cna.cicd.container_build" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cna.cicd.container_build" == f.pattern_id]
         assert len(findings) == 0, f"Pattern cna.cicd.container_build should NOT detect compliant code"
 
 
@@ -281,7 +281,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "github_actions")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "cna.cicd.infrastructure_validation" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cna.cicd.infrastructure_validation" == f.pattern_id]
         assert len(findings) > 0, f"Pattern cna.cicd.infrastructure_validation should detect this code"
     
     def test_cna_cicd_infrastructure_validation_negative(self, analyzer):
@@ -291,7 +291,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "github_actions")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "cna.cicd.infrastructure_validation" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "cna.cicd.infrastructure_validation" == f.pattern_id]
         assert len(findings) == 0, f"Pattern cna.cicd.infrastructure_validation should NOT detect compliant code"
 
 

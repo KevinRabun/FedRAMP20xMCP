@@ -30,7 +30,7 @@ class TestScnPatterns:
         result = analyzer.analyze(code, "github_actions")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "scn.sast.tool_integration" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.sast.tool_integration" == f.pattern_id]
         assert len(findings) > 0, f"Pattern scn.sast.tool_integration should detect this code"
     
     def test_scn_sast_tool_integration_negative(self, analyzer):
@@ -40,7 +40,7 @@ class TestScnPatterns:
         result = analyzer.analyze(code, "github_actions")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "scn.sast.tool_integration" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.sast.tool_integration" == f.pattern_id]
         assert len(findings) == 0, f"Pattern scn.sast.tool_integration should NOT detect compliant code"
 
 
@@ -51,7 +51,7 @@ class TestScnPatterns:
         result = analyzer.analyze(code, "github_actions")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "scn.sca.dependency_scanning" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.sca.dependency_scanning" == f.pattern_id]
         assert len(findings) > 0, f"Pattern scn.sca.dependency_scanning should detect this code"
     
     def test_scn_sca_dependency_scanning_negative(self, analyzer):
@@ -61,7 +61,7 @@ class TestScnPatterns:
         result = analyzer.analyze(code, "github_actions")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "scn.sca.dependency_scanning" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.sca.dependency_scanning" == f.pattern_id]
         assert len(findings) == 0, f"Pattern scn.sca.dependency_scanning should NOT detect compliant code"
 
 
@@ -72,7 +72,7 @@ class TestScnPatterns:
         result = analyzer.analyze(code, "github_actions")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "scn.container.image_scanning" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.container.image_scanning" == f.pattern_id]
         assert len(findings) > 0, f"Pattern scn.container.image_scanning should detect this code"
     
     def test_scn_container_image_scanning_negative(self, analyzer):
@@ -82,7 +82,7 @@ class TestScnPatterns:
         result = analyzer.analyze(code, "github_actions")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "scn.container.image_scanning" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.container.image_scanning" == f.pattern_id]
         assert len(findings) == 0, f"Pattern scn.container.image_scanning should NOT detect compliant code"
 
 
@@ -93,7 +93,7 @@ class TestScnPatterns:
         result = analyzer.analyze(code, "github_actions")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "scn.iac.security_scanning" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.iac.security_scanning" == f.pattern_id]
         assert len(findings) > 0, f"Pattern scn.iac.security_scanning should detect this code"
     
     def test_scn_iac_security_scanning_negative(self, analyzer):
@@ -103,7 +103,7 @@ class TestScnPatterns:
         result = analyzer.analyze(code, "github_actions")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "scn.iac.security_scanning" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.iac.security_scanning" == f.pattern_id]
         assert len(findings) == 0, f"Pattern scn.iac.security_scanning should NOT detect compliant code"
 
 
@@ -114,7 +114,7 @@ class TestScnPatterns:
         result = analyzer.analyze(code, "github_actions")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "scn.secrets.scanning" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.secrets.scanning" == f.pattern_id]
         assert len(findings) > 0, f"Pattern scn.secrets.scanning should detect this code"
     
     def test_scn_secrets_scanning_negative(self, analyzer):
@@ -124,7 +124,7 @@ class TestScnPatterns:
         result = analyzer.analyze(code, "github_actions")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "scn.secrets.scanning" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.secrets.scanning" == f.pattern_id]
         assert len(findings) == 0, f"Pattern scn.secrets.scanning should NOT detect compliant code"
 
 
@@ -135,7 +135,7 @@ class TestScnPatterns:
         result = analyzer.analyze(code, "github_actions")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "scn.dast.dynamic_testing" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.dast.dynamic_testing" == f.pattern_id]
         assert len(findings) > 0, f"Pattern scn.dast.dynamic_testing should detect this code"
     
     def test_scn_dast_dynamic_testing_negative(self, analyzer):
@@ -145,7 +145,7 @@ class TestScnPatterns:
         result = analyzer.analyze(code, "github_actions")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "scn.dast.dynamic_testing" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.dast.dynamic_testing" == f.pattern_id]
         assert len(findings) == 0, f"Pattern scn.dast.dynamic_testing should NOT detect compliant code"
 
 
@@ -159,7 +159,7 @@ def main():
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "scn.code.security_library" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.code.security_library" == f.pattern_id]
         assert len(findings) > 0, f"Pattern scn.code.security_library should detect this code"
     
     def test_scn_code_security_library_negative(self, analyzer):
@@ -175,7 +175,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "python")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "scn.code.security_library" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.code.security_library" == f.pattern_id]
         assert len(findings) == 0, f"Pattern scn.code.security_library should NOT detect compliant code"
 
 
@@ -186,7 +186,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "yaml")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "scn.policy.enforcement" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.policy.enforcement" == f.pattern_id]
         assert len(findings) > 0, f"Pattern scn.policy.enforcement should detect this code"
     
     def test_scn_policy_enforcement_negative(self, analyzer):
@@ -196,7 +196,7 @@ if __name__ == "__main__":
         result = analyzer.analyze(code, "yaml")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "scn.policy.enforcement" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.policy.enforcement" == f.pattern_id]
         assert len(findings) == 0, f"Pattern scn.policy.enforcement should NOT detect compliant code"
 
 
@@ -208,7 +208,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "scn.iac.defender_for_cloud" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.iac.defender_for_cloud" == f.pattern_id]
         assert len(findings) > 0, f"Pattern scn.iac.defender_for_cloud should detect this code"
     
     def test_scn_iac_defender_for_cloud_negative(self, analyzer):
@@ -221,7 +221,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "scn.iac.defender_for_cloud" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.iac.defender_for_cloud" == f.pattern_id]
         assert len(findings) == 0, f"Pattern scn.iac.defender_for_cloud should NOT detect compliant code"
 
 
@@ -233,7 +233,7 @@ resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
         result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "scn.iac.policy_assignment" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.iac.policy_assignment" == f.pattern_id]
         assert len(findings) > 0, f"Pattern scn.iac.policy_assignment should detect this code"
     
     def test_scn_iac_policy_assignment_negative(self, analyzer):
@@ -246,7 +246,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "bicep")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "scn.iac.policy_assignment" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.iac.policy_assignment" == f.pattern_id]
         assert len(findings) == 0, f"Pattern scn.iac.policy_assignment should NOT detect compliant code"
 
 
@@ -257,7 +257,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "github_actions")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "scn.cicd.scan_gate" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.cicd.scan_gate" == f.pattern_id]
         assert len(findings) > 0, f"Pattern scn.cicd.scan_gate should detect this code"
     
     def test_scn_cicd_scan_gate_negative(self, analyzer):
@@ -267,7 +267,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "github_actions")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "scn.cicd.scan_gate" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.cicd.scan_gate" == f.pattern_id]
         assert len(findings) == 0, f"Pattern scn.cicd.scan_gate should NOT detect compliant code"
 
 
@@ -278,7 +278,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "github_actions")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "scn.missing_sast" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.missing_sast" == f.pattern_id]
         assert len(findings) > 0, f"Pattern scn.missing_sast should detect this code"
     
     def test_scn_missing_sast_negative(self, analyzer):
@@ -288,7 +288,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "github_actions")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "scn.missing_sast" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.missing_sast" == f.pattern_id]
         assert len(findings) == 0, f"Pattern scn.missing_sast should NOT detect compliant code"
 
 
@@ -299,7 +299,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "github_actions")
         
         # Should detect the pattern
-        findings = [f for f in result.findings if "scn.missing_dependency_scan" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.missing_dependency_scan" == f.pattern_id]
         assert len(findings) > 0, f"Pattern scn.missing_dependency_scan should detect this code"
     
     def test_scn_missing_dependency_scan_negative(self, analyzer):
@@ -309,7 +309,7 @@ output resourceLocation string = location
         result = analyzer.analyze(code, "github_actions")
         
         # Should NOT detect the pattern
-        findings = [f for f in result.findings if "scn.missing_dependency_scan" in f.requirement_id]
+        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.missing_dependency_scan" == f.pattern_id]
         assert len(findings) == 0, f"Pattern scn.missing_dependency_scan should NOT detect compliant code"
 
 
