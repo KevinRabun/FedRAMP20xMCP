@@ -69,8 +69,13 @@ output resourceLocation string = location
 
     def test_cna_network_azure_firewall_positive(self, analyzer):
         """Test cna.network.azure_firewall: Azure Firewall Configuration - Should detect"""
-        code = """// Bicep code for cna.network.azure_firewall
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource firewall 'Microsoft.Network/azureFirewalls@2023-05-01' = {
+  name: 'myFirewall'
+  location: 'eastus'
+  properties: {
+    networkRuleCollections: []
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -94,8 +99,9 @@ output resourceLocation string = location
 
     def test_cna_attack_surface_minimal_dependencies_positive(self, analyzer):
         """Test cna.attack_surface.minimal_dependencies: Minimal Dependencies Analysis - Should detect"""
-        code = """# Pattern detected
-code_with_pattern = True"""
+        code = """import requests
+import numpy
+from flask import Flask, request"""
         
         result = analyzer.analyze(code, "python")
         
@@ -122,7 +128,9 @@ if __name__ == "__main__":
 
     def test_cna_immutable_infra_container_image_positive(self, analyzer):
         """Test cna.immutable_infra.container_image: Immutable Container Image - Should detect"""
-        code = """# Code that triggers cna.immutable_infra.container_image"""
+        code = """FROM gcr.io/distroless/python3-debian12
+COPY app.py /app/
+CMD ["app.py"]"""
         
         result = analyzer.analyze(code, "dockerfile")
         
@@ -143,8 +151,16 @@ if __name__ == "__main__":
 
     def test_cna_iac_aks_cluster_positive(self, analyzer):
         """Test cna.iac.aks_cluster: Azure Kubernetes Service Configuration - Should detect"""
-        code = """// Bicep code for cna.iac.aks_cluster
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource aks 'Microsoft.ContainerService/managedClusters@2023-07-01' = {
+  name: 'myAKS'
+  location: 'eastus'
+  properties: {
+    dnsPrefix: 'myaks'
+    networkProfile: {
+      networkPlugin: 'azure'
+    }
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -168,8 +184,13 @@ output resourceLocation string = location
 
     def test_cna_iac_container_registry_positive(self, analyzer):
         """Test cna.iac.container_registry: Azure Container Registry Configuration - Should detect"""
-        code = """// Bicep code for cna.iac.container_registry
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01' = {
+  name: 'myacr'
+  location: 'eastus'
+  sku: {
+    name: 'Premium'
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -223,8 +244,14 @@ if __name__ == "__main__":
 
     def test_cna_api_gateway_configuration_positive(self, analyzer):
         """Test cna.api_gateway.configuration: API Gateway Configuration - Should detect"""
-        code = """// Bicep code for cna.api_gateway.configuration
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource apim 'Microsoft.ApiManagement/service@2023-03-01' = {
+  name: 'myAPIManagement'
+  location: 'eastus'
+  sku: {
+    name: 'Developer'
+    capacity: 1
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -248,7 +275,13 @@ output resourceLocation string = location
 
     def test_cna_service_mesh_configuration_positive(self, analyzer):
         """Test cna.service_mesh.configuration: Service Mesh Configuration - Should detect"""
-        code = """# Code that triggers cna.service_mesh.configuration"""
+        code = """apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: my-service
+spec:
+  hosts:
+  - my-service"""
         
         result = analyzer.analyze(code, "yaml")
         
@@ -269,15 +302,15 @@ output resourceLocation string = location
 
     def test_cna_cicd_container_build_positive(self, analyzer):
         """Test cna.cicd.container_build: Container Build in CI/CD - Should detect"""
-        code = """name: CI Pipeline
+        code = """name: Container Build
 on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Build
-        run: echo "Building..." """
+      - name: Build container image
+        run: docker build -t myapp:latest ."""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -306,15 +339,15 @@ jobs:
 
     def test_cna_cicd_infrastructure_validation_positive(self, analyzer):
         """Test cna.cicd.infrastructure_validation: Infrastructure Validation in CI/CD - Should detect"""
-        code = """name: CI Pipeline
+        code = """name: IaC Validation
 on: [push]
 jobs:
-  build:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Build
-        run: echo "Building..." """
+      - name: Validate Bicep
+        run: az bicep build --file main.bicep"""
         
         result = analyzer.analyze(code, "github_actions")
         

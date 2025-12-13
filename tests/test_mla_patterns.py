@@ -36,13 +36,11 @@ print(result)"""
     
     def test_mla_logging_local_file_negative(self, analyzer):
         """Test mla.logging.local_file: Local File Logging - Should NOT detect"""
-        code = """def compliant_function():
-    # This is compliant code
-    return True
+        code = """from opencensus.ext.azure.log_exporter import AzureLogHandler
+import logging
 
-if __name__ == "__main__":
-    compliant_function()
-"""
+logger = logging.getLogger(__name__)
+logger.addHandler(AzureLogHandler(connection_string='InstrumentationKey=...'))"""
         
         result = analyzer.analyze(code, "python")
         
@@ -172,12 +170,15 @@ if __name__ == "__main__":
 
     def test_mla_monitoring_azure_sentinel_analytics_positive(self, analyzer):
         """Test mla.monitoring.azure_sentinel_analytics: Azure Sentinel Analytics Rule - Should detect"""
-        code = """resource diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: 'diagnostics'
+        code = """resource analyticsRule 'Microsoft.SecurityInsights/alertRules@2022-11-01' = {
+  name: 'suspiciousActivityRule'
+  kind: 'Scheduled'
   properties: {
-    workspaceId: logAnalyticsWorkspace.id
-    logs: []
-    metrics: []
+    displayName: 'Suspicious Login Activity'
+    enabled: true
+    query: 'SecurityEvent | where EventID == 4625'
+    queryFrequency: 'PT5M'
+    queryPeriod: 'PT1H'
   }
 }"""
         
@@ -203,8 +204,20 @@ output resourceLocation string = location
 
     def test_mla_alerting_action_group_positive(self, analyzer):
         """Test mla.alerting.action_group: Azure Monitor Action Group - Should detect"""
-        code = """// Bicep code for mla.alerting.action_group
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
+  name: 'security-alerts'
+  location: 'global'
+  properties: {
+    groupShortName: 'SecAlerts'
+    enabled: true
+    emailReceivers: [
+      {
+        name: 'Security Team'
+        emailAddress: 'security@example.com'
+      }
+    ]
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -228,8 +241,25 @@ output resourceLocation string = location
 
     def test_mla_alerting_metric_alert_positive(self, analyzer):
         """Test mla.alerting.metric_alert: Azure Monitor Metric Alert - Should detect"""
-        code = """// Bicep code for mla.alerting.metric_alert
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource metricAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
+  name: 'highCPUAlert'
+  location: 'global'
+  properties: {
+    severity: 2
+    enabled: true
+    criteria: {
+      'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
+      allOf: [
+        {
+          name: 'HighCPU'
+          metricName: 'Percentage CPU'
+          operator: 'GreaterThan'
+          threshold: 80
+        }
+      ]
+    }
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -283,8 +313,23 @@ if __name__ == "__main__":
 
     def test_mla_audit_activity_log_positive(self, analyzer):
         """Test mla.audit.activity_log: Azure Activity Log Export - Should detect"""
-        code = """// Bicep code for mla.audit.activity_log
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource activityLogDiag 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'activity-log-export'
+  scope: subscription()
+  properties: {
+    workspaceId: logAnalytics.id
+    logs: [
+      {
+        category: 'Administrative'
+        enabled: true
+      }
+      {
+        category: 'Security'
+        enabled: true
+      }
+    ]
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -308,8 +353,18 @@ output resourceLocation string = location
 
     def test_mla_audit_resource_logs_missing_positive(self, analyzer):
         """Test mla.audit.resource_logs_missing: Missing Resource Diagnostic Logs - Should detect"""
-        code = """// Bicep code for mla.audit.resource_logs_missing
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' = {
+  name: 'myKeyVault'
+  location: 'eastus'
+  properties: {
+    sku: {
+      family: 'A'
+      name: 'standard'
+    }
+    tenantId: tenant().tenantId
+  }
+  // Missing diagnostic settings!
+}"""
         
         result = analyzer.analyze(code, "bicep")
         

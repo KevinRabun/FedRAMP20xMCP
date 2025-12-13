@@ -226,11 +226,11 @@ description: Detects deployment gates or manual approval steps in CI/CD
 pattern_type: pipeline
 languages:
   github_actions:
-    regex_fallback: (environment.*production|deployment.*gate|manual.*approval)|(approvals.*required|when:.*manual)
+    regex_fallback: (environment:|deployment.*gate|manual.*approval|approvals.*required|when:.*manual|name:\s*production|environment:\s*production)
   azure_pipelines:
-    regex_fallback: (environment.*production|deployment.*gate|manual.*approval)|(approvals.*required|when:.*manual)
+    regex_fallback: (environment:|deployment.*gate|manual.*approval|approvals.*required|when:.*manual|name:\s*production|environment:\s*production)
   gitlab_ci:
-    regex_fallback: (environment.*production|deployment.*gate|manual.*approval)|(approvals.*required|when:.*manual)
+    regex_fallback: (environment:|deployment.*gate|manual.*approval|approvals.*required|when:.*manual|name:\s*production|environment:\s*production)
 finding:
   title: Deployment gate/approval configured
   description: CI/CD includes deployment gate or manual approval

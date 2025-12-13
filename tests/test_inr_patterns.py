@@ -25,8 +25,15 @@ class TestInrPatterns:
 
     def test_inr_alerts_missing_configuration_positive(self, analyzer):
         """Test inr.alerts.missing_configuration: Missing Alert Rules - Should detect"""
-        code = """// Bicep code for inr.alerts.missing_configuration
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+  name: 'myWorkspace'
+  location: 'eastus'
+  properties: {
+    sku: {
+      name: 'PerGB2018'
+    }
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -50,8 +57,13 @@ output resourceLocation string = location
 
     def test_inr_logging_incident_tracking_positive(self, analyzer):
         """Test inr.logging.incident_tracking: Missing Incident Logging - Should detect"""
-        code = """import logging
-logging.basicConfig(level=logging.INFO)"""
+        code = """def process_data(data):
+    try:
+        result = risky_operation(data)
+        return result
+    except Exception as e:
+        # No logging!
+        return None"""
         
         result = analyzer.analyze(code, "python")
         

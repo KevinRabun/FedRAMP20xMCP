@@ -44,14 +44,13 @@ jobs:
     def test_cmt_vcs_repository_integration_negative(self, analyzer):
         """Test cmt.vcs.repository_integration: Version Control Integration - Should NOT detect"""
         code = """name: Simple Pipeline
-on: [push]
+on: [manual]
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Run tests
-        run: npm test"""
+      - name: Build
+        run: echo 'Building...'"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -62,15 +61,17 @@ jobs:
 
     def test_cmt_vcs_missing_integration_positive(self, analyzer):
         """Test cmt.vcs.missing_integration: Missing Version Control - Should detect"""
-        code = """name: CI Pipeline
-on: [push]
+        code = """name: Deploy Pipeline
+on: [workflow_dispatch]
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Build
-        run: echo "Building..." """
+      - name: Deploy to Azure
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: myapp
+          package: ."""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -99,15 +100,20 @@ jobs:
 
     def test_cmt_testing_pre_deploy_gates_positive(self, analyzer):
         """Test cmt.testing.pre_deploy_gates: Pre-Deployment Testing Gates - Should detect"""
-        code = """name: CI Pipeline
+        code = """name: CI/CD Pipeline
 on: [push]
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Build
-        run: echo "Building..." """
+      - run: npm test
+  
+  deploy:
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: azure/webapps-deploy@v2"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -136,8 +142,18 @@ jobs:
 
     def test_cmt_rollback_deployment_strategy_positive(self, analyzer):
         """Test cmt.rollback.deployment_strategy: Rollback Capability - Should detect"""
-        code = """// Bicep code for cmt.rollback.deployment_strategy
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource webApp 'Microsoft.Web/sites@2022-09-01' = {
+  name: appName
+  location: location
+}
+
+resource stagingSlot 'Microsoft.Web/sites/slots@2022-09-01' = {
+  name: '${webApp.name}/staging'
+  location: location
+  properties: {
+    serverFarmId: webApp.properties.serverFarmId
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         

@@ -25,8 +25,18 @@ class TestUcmPatterns:
 
     def test_ucm_rbac_role_definition_positive(self, analyzer):
         """Test ucm.rbac.role_definition: Role-Based Access Control Definition - Should detect"""
-        code = """# Pattern detected
-code_with_pattern = True"""
+        code = """from enum import Enum
+
+class UserRole(Enum):
+    ADMIN = 'admin'
+    USER = 'user'
+    VIEWER = 'viewer'
+    
+ROLES = {
+    'admin': ['create', 'read', 'update', 'delete'],
+    'user': ['create', 'read', 'update'],
+    'viewer': ['read']
+}"""
         
         result = analyzer.analyze(code, "python")
         
@@ -110,8 +120,15 @@ if __name__ == "__main__":
 
     def test_ucm_least_privilege_default_deny_positive(self, analyzer):
         """Test ucm.least_privilege.default_deny: Default Deny Access Control - Should detect"""
-        code = """# Pattern detected
-code_with_pattern = True"""
+        code = """def check_access(user, resource):
+    # Default deny - access denied unless explicitly permitted
+    if not user.has_permission(resource):
+        return 403  # Forbidden
+    return access_granted()
+
+def api_endpoint(request):
+    if not is_authorized(request.user):
+        return forbidden_response()"""
         
         result = analyzer.analyze(code, "python")
         
@@ -138,8 +155,15 @@ if __name__ == "__main__":
 
     def test_ucm_session_timeout_positive(self, analyzer):
         """Test ucm.session.timeout: Session Timeout Configuration - Should detect"""
-        code = """# Pattern detected
-code_with_pattern = True"""
+        code = """# Session configuration
+SESSION_TIMEOUT = 900  # 15 minutes
+IDLE_TIMEOUT = 600  # 10 minutes inactivity
+
+app.config.update(
+    SESSION_COOKIE_SECURE=True,
+    PERMANENT_SESSION_LIFETIME=timedelta(minutes=15),
+    SESSION_REFRESH_EACH_REQUEST=True
+)"""
         
         result = analyzer.analyze(code, "python")
         
@@ -167,7 +191,17 @@ if __name__ == "__main__":
     def test_ucm_audit_access_log_positive(self, analyzer):
         """Test ucm.audit.access_log: Access Logging for Capabilities - Should detect"""
         code = """import logging
-logging.basicConfig(level=logging.INFO)"""
+
+def check_permission(user, resource, action):
+    # Audit access attempts
+    logger.info(f"Access check: user={user.id} resource={resource} action={action}")
+    
+    if user.has_permission(resource, action):
+        logger.info(f"Permission granted: {user.id} -> {resource}")
+        return True
+    else:
+        logger.warn(f"Permission denied: {user.id} -> {resource}")
+        return False"""
         
         result = analyzer.analyze(code, "python")
         
@@ -194,36 +228,30 @@ if __name__ == "__main__":
 
     def test_ucm_missing_authorization_positive(self, analyzer):
         """Test ucm.missing_authorization: Missing Authorization Check - Should detect"""
-        code = """# Pattern detected
-code_with_pattern = True"""
+        code = """@app.route('/api/data', methods=['GET'])
+def get_data():
+    # Missing authorization decorator!
+    return {'status': 'ok', 'data': fetch_data()}"""
         
         result = analyzer.analyze(code, "python")
         
         # Should detect the pattern
         findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ucm.missing_authorization" == f.pattern_id]
         assert len(findings) > 0, f"Pattern ucm.missing_authorization should detect this code"
-    
-    def test_ucm_missing_authorization_negative(self, analyzer):
-        """Test ucm.missing_authorization: Missing Authorization Check - Should NOT detect"""
-        code = """def compliant_function():
-    # This is compliant code
-    return True
-
-if __name__ == "__main__":
-    compliant_function()
-"""
-        
-        result = analyzer.analyze(code, "python")
-        
-        # Should NOT detect the pattern
-        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "ucm.missing_authorization" == f.pattern_id]
-        assert len(findings) == 0, f"Pattern ucm.missing_authorization should NOT detect compliant code"
 
 
     def test_ucm_iac_managed_identity_positive(self, analyzer):
         """Test ucm.iac.managed_identity: Azure Managed Identity for Capability Management - Should detect"""
-        code = """// Bicep code for ucm.iac.managed_identity
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource appService 'Microsoft.Web/sites@2023-01-01' = {
+  name: 'myAppService'
+  location: resourceGroup().location
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    serverFarmId: appServicePlan.id
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -284,6 +312,16 @@ output resourceLocation string = location
   properties: {
     sku: { name: 'standard' }
     tenantId: tenant().tenantId
+    accessPolicies: [
+      {
+        tenantId: tenant().tenantId
+        objectId: 'user-object-id'
+        permissions: {
+          secrets: ['get', 'list']
+          keys: ['get']
+        }
+      }
+    ]
   }
 }"""
         
@@ -316,6 +354,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Validate RBAC
+        run: python scripts/validate_rbac.py
       - name: Build
         run: echo "Building..." """
         

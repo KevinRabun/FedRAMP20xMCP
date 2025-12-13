@@ -11,6 +11,7 @@ pattern_id: ced.training.missing_documentation
 name: Missing Security Training Documentation
 description: Detects absence of security training documentation, tracking, or verification
   systems. KSI-CED-01 requires documented training programs for all employees.
+pattern_type: function_call
 severity: HIGH
 family: CED
 ksi_id: KSI-CED-01
@@ -50,6 +51,13 @@ languages:
     negative_indicators:
     - enabled
     - configured
+finding:
+  title: Missing security training documentation system
+  description: No automated tracking or verification of security training programs detected
+  recommendation: Implement documented security training programs with verification per KSI-CED-01
+  references:
+  - KSI-CED-01
+  - NIST AT-2, AT-3, AT-4
 remediation: "Implement documented security training programs with verification:\n\
   \n**Python (Training Tracking System):**\n```python\nfrom datetime import datetime,\
   \ timedelta\nfrom typing import List, Dict\nimport logging\n\nclass SecurityTrainingTracker:\n\
@@ -138,6 +146,7 @@ name: Insufficient Role-Based Security Training
 description: Detects missing role-specific security training for privileged users,
   administrators, or developers. KSI-CED-02 requires tailored training based on job
   responsibilities.
+pattern_type: configuration
 severity: HIGH
 family: CED
 ksi_id: KSI-CED-02
@@ -164,6 +173,13 @@ languages:
       property_path: properties.principalType
       conditions:
       - value_in:['User', 'ServicePrincipal']
+finding:
+  title: Missing role-based security training
+  description: Role assignments detected without corresponding training verification
+  recommendation: Implement tailored security training based on job responsibilities per KSI-CED-02
+  references:
+  - KSI-CED-02
+  - NIST AT-3, PS-2
 remediation: "Implement role-based security training programs:\n\n**Required Training\
   \ by Role:**\n\n**1. System Administrators:**\n- Advanced access control management\n\
   - Privileged account security\n- Audit log review and analysis\n- Incident response\
@@ -209,6 +225,7 @@ name: Inadequate Developer Security Training
 description: Detects security gaps in development practices indicating insufficient
   secure coding training. KSI-CED-03 requires comprehensive development and engineering
   security education.
+pattern_type: function_call
 severity: MEDIUM
 family: CED
 ksi_id: KSI-CED-03
@@ -223,6 +240,13 @@ languages:
     regex_fallback: (eval\(|Function\(|setTimeout\([^,]+\)|setInterval\([^,]+\)|innerHTML\s*=|outerHTML\s*=)
   csharp:
     regex_fallback: (Process\.Start\(|SqlCommand\(.*\+|Response\.Write\(.*\+|Eval\()
+finding:
+  title: Insecure code patterns detected
+  description: Use of dangerous functions indicates insufficient secure coding training
+  recommendation: Provide comprehensive secure development training per KSI-CED-03
+  references:
+  - KSI-CED-03
+  - NIST SA-15, SA-11
 remediation: "Implement comprehensive secure development training:\n\n**Core Secure\
   \ Coding Training Modules:**\n1. Input Validation and Sanitization\n2. Output Encoding\
   \ and XSS Prevention\n3. SQL Injection and ORM Security\n4. Authentication and Session\
@@ -244,6 +268,7 @@ pattern_id: ced.training.incident_response_missing
 name: Missing Incident Response Training
 description: Detects absence of incident response and disaster recovery training documentation.
   KSI-CED-04 requires IR/DR education for all personnel.
+pattern_type: configuration
 severity: HIGH
 family: CED
 ksi_id: KSI-CED-04
@@ -269,6 +294,13 @@ languages:
     regex_fallback: (Microsoft\.Insights/activityLogAlerts|Microsoft\.Insights/metricAlerts|Microsoft\.Security/automations)
   github_actions:
     regex_fallback: (on:\s*workflow_dispatch|on:\s*schedule|disaster.*recovery|incident.*response)
+finding:
+  title: Missing incident response training documentation
+  description: No evidence of IR/DR training or drill procedures
+  recommendation: Implement incident response and disaster recovery training per KSI-CED-04
+  references:
+  - KSI-CED-04
+  - NIST IR-2, CP-3, AT-3
 remediation: "Implement incident response and disaster recovery training:\n\n**Required\
   \ IR/DR Training Components:**\n\n**1. Incident Response Training:**\n- Incident\
   \ identification and classification\n- Reporting procedures and escalation\n- Containment\

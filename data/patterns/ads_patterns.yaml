@@ -162,13 +162,13 @@ description: Detects presence of required audit fields (timestamp, user, action,
 pattern_type: configuration
 languages:
   python:
-    regex_fallback: (timestamp.*user.*action.*resource)|("timestamp".*"userId".*"action".*"resourceId")
+    regex_fallback: (timestamp["']?\s*[:\=][^,}]*[,\s]+.*user[iI]d["']?\s*[:\=][^,}]*[,\s]+.*action["']?\s*[:\=][^,}]*[,\s]+.*resource[iI]d["']?\s*[:\=])
   csharp:
-    regex_fallback: (timestamp.*user.*action.*resource)|("timestamp".*"userId".*"action".*"resourceId")
+    regex_fallback: (timestamp["']?\s*[:\=][^,}]*[,\s]+.*user[iI]d["']?\s*[:\=][^,}]*[,\s]+.*action["']?\s*[:\=][^,}]*[,\s]+.*resource[iI]d["']?\s*[:\=])
   java:
-    regex_fallback: (timestamp.*user.*action.*resource)|("timestamp".*"userId".*"action".*"resourceId")
+    regex_fallback: (timestamp["']?\s*[:\=][^,}]*[,\s]+.*user[iI]d["']?\s*[:\=][^,}]*[,\s]+.*action["']?\s*[:\=][^,}]*[,\s]+.*resource[iI]d["']?\s*[:\=])
   typescript:
-    regex_fallback: (timestamp.*user.*action.*resource)|("timestamp".*"userId".*"action".*"resourceId")
+    regex_fallback: (timestamp["']?\s*[:\=][^,}]*[,\s]+.*user[iI]d["']?\s*[:\=][^,}]*[,\s]+.*action["']?\s*[:\=][^,}]*[,\s]+.*resource[iI]d["']?\s*[:\=])
 finding:
   title: Required audit fields configured
   description: Logging includes required audit fields (timestamp, user, action, resource)

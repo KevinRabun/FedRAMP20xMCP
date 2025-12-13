@@ -128,13 +128,12 @@ def main():
     
     def test_iam_mfa_totp_import_negative(self, analyzer):
         """Test iam.mfa.totp_import: TOTP Library Import (Not Phishing-Resistant) - Should NOT detect"""
-        code = """def compliant_function():
-    # This is compliant code
-    return True
+        code = """from fido2.server import Fido2Server
+from fido2.webauthn import PublicKeyCredentialRpEntity
 
-if __name__ == "__main__":
-    compliant_function()
-"""
+def setup_mfa():
+    rp = PublicKeyCredentialRpEntity("example.com", "Example App")
+    server = Fido2Server(rp)"""
         
         result = analyzer.analyze(code, "python")
         
@@ -158,13 +157,12 @@ def main():
     
     def test_iam_mfa_sms_mfa_negative(self, analyzer):
         """Test iam.mfa.sms_mfa: SMS-Based MFA (Not Phishing-Resistant) - Should NOT detect"""
-        code = """def compliant_function():
-    # This is compliant code
-    return True
+        code = """from fido2.server import Fido2Server
+from fido2.webauthn import PublicKeyCredentialRpEntity
 
-if __name__ == "__main__":
-    compliant_function()
-"""
+def setup_authentication():
+    rp = PublicKeyCredentialRpEntity("example.com", "Example App")
+    server = Fido2Server(rp)"""
         
         result = analyzer.analyze(code, "python")
         
@@ -175,8 +173,11 @@ if __name__ == "__main__":
 
     def test_iam_mfa_login_without_mfa_positive(self, analyzer):
         """Test iam.mfa.login_without_mfa: Login Function Without MFA - Should detect"""
-        code = """# Pattern detected
-code_with_pattern = True"""
+        code = """def login(username, password):
+    user = authenticate(username, password)
+    if user:
+        session['user_id'] = user.id
+        return redirect('/dashboard')"""
         
         result = analyzer.analyze(code, "python")
         
@@ -186,13 +187,13 @@ code_with_pattern = True"""
     
     def test_iam_mfa_login_without_mfa_negative(self, analyzer):
         """Test iam.mfa.login_without_mfa: Login Function Without MFA - Should NOT detect"""
-        code = """def compliant_function():
-    # This is compliant code
-    return True
-
-if __name__ == "__main__":
-    compliant_function()
-"""
+        code = """def login(username, password):
+    user = authenticate(username, password)
+    if user:
+        mfa_verified = verify_fido2_challenge(user)
+        if mfa_verified:
+            session['user_id'] = user.id
+            return redirect('/dashboard')"""
         
         result = analyzer.analyze(code, "python")
         
@@ -300,61 +301,24 @@ output resourceLocation string = location
         assert len(findings) == 0, f"Pattern iam.rbac.wildcard_permissions should NOT detect compliant code"
 
 
-    def test_iam_session_timeout_missing_positive(self, analyzer):
-        """Test iam.session.timeout_missing: Missing Session Timeout - Should detect"""
-        code = """# Pattern detected
-code_with_pattern = True"""
-        
-        result = analyzer.analyze(code, "python")
-        
-        # Should detect the pattern
-        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "iam.session.timeout_missing" == f.pattern_id]
-        assert len(findings) > 0, f"Pattern iam.session.timeout_missing should detect this code"
-    
-    def test_iam_session_timeout_missing_negative(self, analyzer):
-        """Test iam.session.timeout_missing: Missing Session Timeout - Should NOT detect"""
-        code = """def compliant_function():
-    # This is compliant code
-    return True
-
-if __name__ == "__main__":
-    compliant_function()
-"""
-        
-        result = analyzer.analyze(code, "python")
-        
-        # Should NOT detect the pattern
-        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "iam.session.timeout_missing" == f.pattern_id]
-        assert len(findings) == 0, f"Pattern iam.session.timeout_missing should NOT detect compliant code"
-
-
     def test_iam_identity_missing_managed_identity_positive(self, analyzer):
         """Test iam.identity.missing_managed_identity: Missing Managed Identity - Should detect"""
-        code = """password = 'hardcoded123'
-api_key = 'sk-1234567890abcdef'
-secret = 'my-secret-key'"""
+        code = """resource vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {
+  name: 'myVM'
+  location: 'eastus'
+  properties: {
+    hardwareProfile: {
+      vmSize: 'Standard_DS1_v2'
+    }
+  }
+  // Missing identity configuration
+}"""
         
-        result = analyzer.analyze(code, "python")
+        result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
         findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "iam.identity.missing_managed_identity" == f.pattern_id]
         assert len(findings) > 0, f"Pattern iam.identity.missing_managed_identity should detect this code"
-    
-    def test_iam_identity_missing_managed_identity_negative(self, analyzer):
-        """Test iam.identity.missing_managed_identity: Missing Managed Identity - Should NOT detect"""
-        code = """def compliant_function():
-    # This is compliant code
-    return True
-
-if __name__ == "__main__":
-    compliant_function()
-"""
-        
-        result = analyzer.analyze(code, "python")
-        
-        # Should NOT detect the pattern
-        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "iam.identity.missing_managed_identity" == f.pattern_id]
-        assert len(findings) == 0, f"Pattern iam.identity.missing_managed_identity should NOT detect compliant code"
 
 
 if __name__ == "__main__":

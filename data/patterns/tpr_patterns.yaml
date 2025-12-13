@@ -20,6 +20,11 @@ nist_controls:
 - sr-3
 - sr-4
 category: supply_chain_security
+pattern_type: configuration
+finding:
+  title_template: "Unverified dependency installation detected: {file_path}"
+  description_template: "Third-party dependencies are being installed without cryptographic integrity verification. KSI-TPR-03 requires verified supply chain components."
+  remediation_template: "Use package lock files with hash verification (requirements.txt with hashes, package-lock.json, Pipfile.lock) and verify signatures before installation."
 languages:
   python:
     regex_fallback: (pip install|requirements\.txt|poetry add|pipenv install)
@@ -129,6 +134,11 @@ nist_controls:
 - sr-11
 - ra-5
 category: supply_chain_monitoring
+pattern_type: configuration
+finding:
+  title_template: "Missing supply chain security monitoring: {file_path}"
+  description_template: "No supply chain security monitoring tools (Dependabot, Renovate, Snyk, etc.) detected in CI/CD configuration. KSI-TPR-04 requires continuous monitoring for dependency vulnerabilities and updates."
+  remediation_template: "Implement automated supply chain monitoring using Dependabot, Renovate, or similar tools to track vulnerabilities and dependency updates continuously."
 languages:
   github_actions:
     regex_fallback: (dependabot|renovate|snyk|whitesource)
@@ -240,6 +250,11 @@ nist_controls:
 - sa-12
 - sc-8
 category: package_source_security
+pattern_type: configuration
+finding:
+  title_template: "Insecure package source detected: {file_path}"
+  description_template: "Third-party packages are being sourced from untrusted or insecure sources (HTTP instead of HTTPS, or unofficial repositories). KSI-TPR-03 requires all dependencies to be obtained from verified, trusted sources."
+  remediation_template: "Configure package managers to use only HTTPS sources (pypi.org, npmjs.org, etc.) and remove --trusted-host or HTTP registry configurations."
 languages:
   python:
     regex_fallback: (--index-url\s+http:|--extra-index-url\s+http:|pip install.*--trusted-host)
@@ -283,6 +298,11 @@ nist_controls:
 - cm-8
 - sr-4
 category: sbom
+pattern_type: configuration
+finding:
+  title_template: "Missing SBOM generation: {file_path}"
+  description_template: "No Software Bill of Materials (SBOM) generation detected in CI/CD configuration. KSI-TPR-03 requires documented inventory of all third-party components using CycloneDX or SPDX format."
+  remediation_template: "Implement automated SBOM generation in CI/CD pipeline using tools like Syft, CycloneDX, or SPDX generators to maintain current component inventory."
 languages:
   github_actions:
     regex_fallback: (sbom|cyclonedx|spdx|syft)

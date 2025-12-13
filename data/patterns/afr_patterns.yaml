@@ -14,6 +14,7 @@ description: Detects use of weak cryptographic algorithms (MD5, SHA1, DES, RC4, 
   approved algorithms only.
 severity: CRITICAL
 family: AFR
+pattern_type: function_call
 ksi_id: KSI-AFR-11
 nist_controls:
 - sc-13
@@ -74,6 +75,13 @@ remediation: "Replace weak cryptographic algorithms with FIPS 140-2/3 approved a
   - NIST SP 800-52 Rev 2 (TLS): https://csrc.nist.gov/publications/detail/sp/800-52/rev-2/final\n\
   - NIST SP 800-57 Part 1 (Key Management): https://csrc.nist.gov/publications/detail/sp/800-57-part-1/rev-5/final\n\
   - FedRAMP UCM Guidance: https://www.fedramp.gov/using-cryptographic-modules/\n"
+finding:
+  title: Weak cryptographic algorithm detected
+  description: Code uses weak cryptographic algorithms that do not meet FIPS 140-2/3 requirements
+  recommendation: Replace with FIPS-approved algorithms (SHA-256+, AES-256, TLS 1.2+)
+  references:
+  - KSI-AFR-11
+  - NIST FIPS 140-3
 
 ---
 pattern_id: afr.config.debug_mode
@@ -83,6 +91,7 @@ description: Detects debug mode enabled in production environments. KSI-AFR-07 r
   traces.
 severity: HIGH
 family: AFR
+pattern_type: configuration
 ksi_id: KSI-AFR-07
 nist_controls:
 - cm-6
@@ -126,6 +135,13 @@ remediation: "Disable debug mode in production environments:\n\n**Python (Flask)
   \ '--configuration Release'  # Use Release, not Debug\n```\n\n**References:**\n\
   - OWASP: https://owasp.org/www-community/vulnerabilities/Information_exposure_through_debug_information\n\
   - FRR-AFR-07: Recommended Secure Configuration\n"
+finding:
+  title: Debug mode enabled in production
+  description: Application has debug mode enabled which may expose sensitive information
+  recommendation: Disable debug mode in production environments
+  references:
+  - KSI-AFR-07
+  - FRR-AFR-07
 
 ---
 pattern_id: afr.scanning.missing_vulnerability_scan
@@ -135,6 +151,7 @@ description: Detects missing vulnerability scanning (SAST, dependency scanning, 
   per FedRAMP VDR process.
 severity: HIGH
 family: AFR
+pattern_type: pipeline
 ksi_id: KSI-AFR-04
 nist_controls:
 - ra-5
@@ -198,6 +215,13 @@ remediation: "Implement comprehensive vulnerability scanning in CI/CD pipelines:
   \ compliance reports\n\n**References:**\n- FedRAMP VDR Process: https://www.fedramp.gov/vulnerability-detection-and-response/\n\
   - NIST SP 800-53 RA-5: https://csrc.nist.gov/publications/detail/sp/800-53/rev-5/final\n\
   - Microsoft Defender for Cloud: https://learn.microsoft.com/en-us/azure/defender-for-cloud/\n"
+finding:
+  title: Missing vulnerability scanning configuration
+  description: No vulnerability scanning detected in CI/CD pipeline or IaC
+  recommendation: Implement SAST, dependency scanning, and container scanning
+  references:
+  - KSI-AFR-04
+  - FRR-VDR-01
 
 ---
 pattern_id: afr.config.insecure_defaults
@@ -207,6 +231,7 @@ description: Detects insecure default configurations such as public network acce
   configurations.
 severity: HIGH
 family: AFR
+pattern_type: resource
 ksi_id: KSI-AFR-07
 nist_controls:
 - cm-6
@@ -281,3 +306,10 @@ remediation: "Configure secure defaults for all Azure resources:\n\n**Bicep (Sto
   \ Security Baseline: https://learn.microsoft.com/en-us/security/benchmark/azure/\n\
   - CIS Azure Foundations Benchmark: https://www.cisecurity.org/benchmark/azure\n\
   - FRR-AFR-07: Recommended Secure Configuration\n"
+finding:
+  title: Insecure default configuration detected
+  description: Resource configured with insecure defaults (public access, HTTP allowed, etc.)
+  recommendation: Enable secure defaults per Azure Security Baseline
+  references:
+  - KSI-AFR-07
+  - FRR-AFR-07

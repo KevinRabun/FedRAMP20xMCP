@@ -30,6 +30,7 @@ class Pattern:
     nist_controls: List[str]
     related_ksis: List[str]
     related_frrs: List[str]
+    requires_absence: Optional[List[str]] = None
     evidence_collection: Optional[Dict[str, Any]] = None
     evidence_artifacts: Optional[List[Dict[str, Any]]] = None
     automation: Optional[Dict[str, Any]] = None
@@ -108,6 +109,7 @@ class PatternLoader:
                             nist_controls=doc.get('nist_controls', []),
                             related_ksis=doc.get('related_ksis', []),
                             related_frrs=doc.get('related_frrs', []),
+                            requires_absence=doc.get('requires_absence'),
                             evidence_collection=doc.get('evidence_collection'),
                             evidence_artifacts=doc.get('evidence_artifacts'),
                             automation=doc.get('automation'),
@@ -248,12 +250,25 @@ class GenericPatternAnalyzer:
             tree = None
             parser = None
         
-        # Check each pattern
+        # Check each pattern (except requires_absence patterns)
+        absence_patterns = []
         for pattern in patterns:
+            # Skip requires_absence patterns - we'll check them separately
+            if hasattr(pattern, 'requires_absence') and pattern.requires_absence:
+                absence_patterns.append(pattern)
+                continue
+            
             pattern_findings = self._check_pattern(
                 pattern, code, language, file_path, tree, parser
             )
             findings.extend(pattern_findings)
+        
+        # Check for patterns that require absence of other patterns
+        for pattern in absence_patterns:
+            absence_findings = self._check_requires_absence(
+                pattern, code, language, file_path, tree, parser, findings
+            )
+            findings.extend(absence_findings)
         
         return AnalysisResult(findings=findings)
     
@@ -540,17 +555,94 @@ class GenericPatternAnalyzer:
             findings.extend(regex_findings)
         
         # Check positive/negative indicators
-        if 'positive_indicators' in lang_config:
-            indicator_findings = self._check_indicators(
-                pattern, lang_config['positive_indicators'], code, file_path, positive=True
-            )
-            findings.extend(indicator_findings)
+        # For "missing" patterns with BOTH positive and negative indicators:
+        # - positive_indicators = things that trigger the check (e.g., hardcoded secrets)
+        # - negative_indicators = things that make it compliant (e.g., proper handling)
+        # Only flag if positive exists BUT negative doesn't
+        pattern_id = pattern.pattern_id.lower() if hasattr(pattern, 'pattern_id') else ''
+        is_missing_pattern = 'missing' in pattern_id
+        has_both_indicators = ('positive_indicators' in lang_config and 
+                              'negative_indicators' in lang_config)
         
-        if 'negative_indicators' in lang_config:
-            indicator_findings = self._check_indicators(
-                pattern, lang_config['negative_indicators'], code, file_path, positive=False
+        if has_both_indicators and is_missing_pattern:
+            # Check if ANY positive indicator exists
+            positive_found = any(
+                indicator.lower() in code.lower() 
+                for indicator in lang_config['positive_indicators']
             )
-            findings.extend(indicator_findings)
+            
+            # Only check negative indicators if positive was found
+            if positive_found:
+                # Check if ANY negative indicator exists (would make it compliant)
+                negative_found = any(
+                    indicator.lower() in code.lower()
+                    for indicator in lang_config['negative_indicators']
+                )
+                
+                if not negative_found:
+                    # Has the problem (positive) but lacks the fix (negative)
+                    findings.append(self._create_finding(
+                        pattern, file_path, None, good_practice=False
+                    ))
+        else:
+            # Original logic for patterns without both indicators
+            if 'positive_indicators' in lang_config:
+                indicator_findings = self._check_indicators(
+                    pattern, lang_config['positive_indicators'], code, file_path, positive=True
+                )
+                findings.extend(indicator_findings)
+            
+            if 'negative_indicators' in lang_config:
+                indicator_findings = self._check_indicators(
+                    pattern, lang_config['negative_indicators'], code, file_path, positive=False
+                )
+                findings.extend(indicator_findings)
+        
+        return findings
+    
+    def _check_requires_absence(
+        self,
+        pattern: Pattern,
+        code: str,
+        language: str,
+        file_path: str,
+        tree: Any,
+        parser: Optional[ASTParser],
+        existing_findings: List[Finding]
+    ) -> List[Finding]:
+        """
+        Check if required patterns are absent.
+        
+        This is used for patterns like 'missing_machine_readable' that should fire
+        when certain other patterns are NOT detected.
+        
+        Args:
+            pattern: Pattern with requires_absence field
+            code: Code to analyze
+            language: Programming language
+            file_path: File path
+            tree: AST tree (if available)
+            parser: AST parser (if available)
+            existing_findings: Findings already detected in this code
+            
+        Returns:
+            List of findings if required patterns are absent
+        """
+        findings: List[Finding] = []
+        
+        # Get the pattern IDs that should be absent
+        required_absent = pattern.requires_absence if hasattr(pattern, 'requires_absence') else []
+        if not required_absent:
+            return findings
+        
+        # Check if any of the required patterns were detected
+        detected_pattern_ids = {f.pattern_id for f in existing_findings if hasattr(f, 'pattern_id')}
+        
+        # If NONE of the required patterns are present, create a finding
+        if not any(req_id in detected_pattern_ids for req_id in required_absent):
+            findings.append(self._create_finding(
+                pattern, file_path, None, None, None, None, good_practice=False
+            ))
         
         return findings
     
@@ -608,6 +700,26 @@ class GenericPatternAnalyzer:
                     node_text = parser.get_node_text(node, code_bytes)
                     if target in node_text:
                         findings.append(self._create_finding(pattern, file_path, node, code_bytes))
+            
+            elif query_type == 'decorator':
+                # Python decorators
+                decorator_nodes = parser.find_nodes_by_type(root_node, 'decorator')
+                for node in decorator_nodes:
+                    node_text = parser.get_node_text(node, code_bytes)
+                    # Remove @ prefix for comparison if target has it
+                    search_target = target.lstrip('@')
+                    if search_target in node_text:
+                        findings.append(self._create_finding(pattern, file_path, node, code_bytes))
+            
+            elif query_type == 'resource_type':
+                # Bicep/Terraform resource types
+                # For Bicep: resource name 'Microsoft.*/***' = {
+                # For Terraform: resource "azurerm_***" "name" {
+                if re.search(re.escape(target), code, re.IGNORECASE):
+                    line_number = code.find(target)
+                    if line_number != -1:
+                        line_number = code[:line_number].count('\n') + 1
+                        findings.append(self._create_finding(pattern, file_path, None, code_bytes, line_number))
         
         return findings
     
@@ -621,7 +733,7 @@ class GenericPatternAnalyzer:
         """Check code using regex pattern."""
         findings: List[Finding] = []
         
-        matches = re.finditer(regex_pattern, code, re.IGNORECASE | re.MULTILINE)
+        matches = re.finditer(regex_pattern, code, re.IGNORECASE | re.DOTALL)
         for match in matches:
             # Find line number
             line_number = code[:match.start()].count('\n') + 1

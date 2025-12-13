@@ -25,8 +25,10 @@ class TestCcmPatterns:
 
     def test_ccm_version_control_git_usage_positive(self, analyzer):
         """Test ccm.version_control.git_usage: Git Version Control Usage - Should detect"""
-        code = """# Pattern detected
-code_with_pattern = True"""
+        code = """# Git configuration
+# .gitignore file present
+# git commit changes
+files = ['.git/', '.gitignore']"""
         
         result = analyzer.analyze(code, "python")
         
@@ -54,7 +56,8 @@ if __name__ == "__main__":
     def test_ccm_change_logging_audit_log_positive(self, analyzer):
         """Test ccm.change_logging.audit_log: Change Audit Logging - Should detect"""
         code = """import logging
-logging.basicConfig(level=logging.INFO)"""
+logger = logging.getLogger(__name__)
+logger.info('Configuration change: updated database connection')"""
         
         result = analyzer.analyze(code, "python")
         
@@ -105,12 +108,12 @@ if __name__ == "__main__":
         code = """name: CI Pipeline
 on: [push]
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Build
-        run: echo "Building..." """
+      - name: Run tests
+        run: pytest tests/"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -120,15 +123,15 @@ jobs:
     
     def test_ccm_automated_testing_pre_deploy_negative(self, analyzer):
         """Test ccm.automated_testing.pre_deploy: Automated Testing Before Deployment - Should NOT detect"""
-        code = """name: Simple Pipeline
+        code = """name: Build Pipeline
 on: [push]
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Run tests
-        run: npm test"""
+      - name: Build application
+        run: npm run build"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -139,8 +142,9 @@ jobs:
 
     def test_ccm_rollback_capability_positive(self, analyzer):
         """Test ccm.rollback.capability: Rollback Capability - Should detect"""
-        code = """# Pattern detected
-code_with_pattern = True"""
+        code = """def rollback_deployment(version):
+    previous_version = get_previous_version()
+    deploy(previous_version)"""
         
         result = analyzer.analyze(code, "python")
         
@@ -188,8 +192,10 @@ if __name__ == "__main__":
 
     def test_ccm_change_approval_explicit_positive(self, analyzer):
         """Test ccm.change_approval.explicit: Explicit Change Approval Check - Should detect"""
-        code = """# Pattern detected
-code_with_pattern = True"""
+        code = """def deploy_changes(change_request):
+    if not change_request.is_approved():
+        raise ValueError('Change requires approval')
+    apply_changes(change_request)"""
         
         result = analyzer.analyze(code, "python")
         
@@ -216,15 +222,15 @@ if __name__ == "__main__":
 
     def test_ccm_iac_arm_template_validation_positive(self, analyzer):
         """Test ccm.iac.arm_template_validation: ARM Template Validation - Should detect"""
-        code = """name: CI Pipeline
+        code = """name: IaC Validation
 on: [push]
 jobs:
-  build:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Build
-        run: echo "Building..." """
+      - name: Validate ARM templates
+        run: az deployment group validate --template-file main.bicep"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -253,15 +259,15 @@ jobs:
 
     def test_ccm_iac_terraform_plan_positive(self, analyzer):
         """Test ccm.iac.terraform_plan: Terraform Plan for Change Preview - Should detect"""
-        code = """name: CI Pipeline
-on: [push]
+        code = """name: Terraform
+on: [pull_request]
 jobs:
-  build:
+  plan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Build
-        run: echo "Building..." """
+      - name: Terraform plan
+        run: terraform plan -out=tfplan"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -290,15 +296,18 @@ jobs:
 
     def test_ccm_cicd_deployment_gate_positive(self, analyzer):
         """Test ccm.cicd.deployment_gate: Deployment Gate/Approval - Should detect"""
-        code = """name: CI Pipeline
-on: [push]
+        code = """name: Deploy to Production
+on: workflow_dispatch
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://example.com
     steps:
       - uses: actions/checkout@v2
-      - name: Build
-        run: echo "Building..." """
+      - name: Deploy
+        run: deploy.sh"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -376,13 +385,10 @@ trigger_pattern = True"""
     
     def test_ccm_missing_version_control_negative(self, analyzer):
         """Test ccm.missing_version_control: Missing Version Control Evidence - Should NOT detect"""
-        code = """def compliant_function():
-    # This is compliant code
-    return True
-
-if __name__ == "__main__":
-    compliant_function()
-"""
+        code = """.gitignore
+*.pyc
+__pycache__/
+.env"""
         
         result = analyzer.analyze(code, "python")
         

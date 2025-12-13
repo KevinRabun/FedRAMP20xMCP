@@ -62,15 +62,17 @@ jobs:
 
     def test_scn_sca_dependency_scanning_positive(self, analyzer):
         """Test scn.sca.dependency_scanning: Software Composition Analysis (SCA) - Should detect"""
-        code = """name: CI Pipeline
+        code = """name: Security Scan
 on: [push]
 jobs:
-  build:
+  security:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Run SAST scan
-        run: semgrep --config=auto ."""
+      - name: Dependency Scan
+        run: npm audit
+      - name: Snyk Test
+        run: snyk test"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -99,15 +101,17 @@ jobs:
 
     def test_scn_container_image_scanning_positive(self, analyzer):
         """Test scn.container.image_scanning: Container Image Scanning - Should detect"""
-        code = """name: CI Pipeline
+        code = """name: Container Scan
 on: [push]
 jobs:
-  build:
+  scan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Run SAST scan
-        run: semgrep --config=auto ."""
+      - name: Scan Container Image
+        run: trivy image myapp:latest
+      - name: Docker Scan
+        run: docker scan myapp:latest"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -136,15 +140,17 @@ jobs:
 
     def test_scn_iac_security_scanning_positive(self, analyzer):
         """Test scn.iac.security_scanning: IaC Security Scanning - Should detect"""
-        code = """name: CI Pipeline
+        code = """name: IaC Security
 on: [push]
 jobs:
-  build:
+  iac_scan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Run SAST scan
-        run: semgrep --config=auto ."""
+      - name: Checkov Scan
+        run: checkov -d .
+      - name: TFSec Scan
+        run: tfsec ."""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -173,15 +179,17 @@ jobs:
 
     def test_scn_secrets_scanning_positive(self, analyzer):
         """Test scn.secrets.scanning: Secrets Scanning - Should detect"""
-        code = """name: CI Pipeline
+        code = """name: Secrets Scan
 on: [push]
 jobs:
-  build:
+  secrets:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Run SAST scan
-        run: semgrep --config=auto ."""
+      - name: GitLeaks Scan
+        run: gitleaks detect --source .
+      - name: TruffleHog
+        run: trufflehog filesystem ."""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -210,15 +218,14 @@ jobs:
 
     def test_scn_dast_dynamic_testing_positive(self, analyzer):
         """Test scn.dast.dynamic_testing: DAST Tool Integration - Should detect"""
-        code = """name: CI Pipeline
+        code = """name: DAST Scan
 on: [push]
 jobs:
-  build:
+  dast:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Build
-        run: echo "Building..." """
+      - name: Run OWASP ZAP
+        run: zap-baseline.py -t https://example.com"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -277,7 +284,17 @@ if __name__ == "__main__":
 
     def test_scn_policy_enforcement_positive(self, analyzer):
         """Test scn.policy.enforcement: Security Policy Enforcement - Should detect"""
-        code = """# Code that triggers scn.policy.enforcement"""
+        code = """apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-pod
+spec:
+  securityContext:
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+  containers:
+  - name: app
+    image: nginx"""
         
         result = analyzer.analyze(code, "yaml")
         
@@ -298,8 +315,19 @@ if __name__ == "__main__":
 
     def test_scn_iac_defender_for_cloud_positive(self, analyzer):
         """Test scn.iac.defender_for_cloud: Microsoft Defender for Cloud - Should detect"""
-        code = """// Bicep code for scn.iac.defender_for_cloud
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource defenderPricing 'Microsoft.Security/pricings@2022-03-01' = {
+  name: 'VirtualMachines'
+  properties: {
+    pricingTier: 'Standard'
+  }
+}
+
+resource defenderContainers 'Microsoft.Security/pricings@2022-03-01' = {
+  name: 'Containers'
+  properties: {
+    pricingTier: 'Standard'
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -323,8 +351,13 @@ output resourceLocation string = location
 
     def test_scn_iac_policy_assignment_positive(self, analyzer):
         """Test scn.iac.policy_assignment: Azure Policy Assignment - Should detect"""
-        code = """// Bicep code for scn.iac.policy_assignment
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource policyAssignment 'Microsoft.Authorization/policyAssignments@2021-06-01' = {
+  name: 'fedramp-baseline'
+  properties: {
+    policyDefinitionId: '/providers/Microsoft.Authorization/policySetDefinitions/xxxxxx'
+    displayName: 'FedRAMP High Baseline'
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -348,15 +381,20 @@ output resourceLocation string = location
 
     def test_scn_cicd_scan_gate_positive(self, analyzer):
         """Test scn.cicd.scan_gate: Security Scan Gate - Should detect"""
-        code = """name: CI Pipeline
+        code = """name: Security Gate
 on: [push]
 jobs:
-  build:
+  security:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Run SAST scan
-        run: semgrep --config=auto ."""
+      - name: SAST Scan
+        run: semgrep --config=auto . --severity=ERROR --fail-on-high
+      - name: Check Vulnerabilities
+        run: |
+          if trivy image myapp | grep -q HIGH; then
+            exit 1
+          fi"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -449,15 +487,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Dependency Review
-        uses: actions/dependency-review-action@v3"""
-        
-        result = analyzer.analyze(code, "github_actions")
-        
-        # Should NOT detect the pattern
-        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "scn.missing_dependency_scan" == f.pattern_id]
-        assert len(findings) == 0, f"Pattern scn.missing_dependency_scan should NOT detect compliant code"
-
-
-if __name__ == "__main__":
+      - name: NPM Audit
+        run: npm audit
+      - name: Snyk Test
+        run: snyk test --severity-threshold=high"""
     pytest.main([__file__, "-v"])

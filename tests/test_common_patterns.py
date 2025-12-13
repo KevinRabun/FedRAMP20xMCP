@@ -50,12 +50,15 @@ output resourceLocation string = location
 
     def test_common_diagnostics_missing_diagnostic_settings_positive(self, analyzer):
         """Test common.diagnostics.missing_diagnostic_settings: Missing Diagnostic Settings - Should detect"""
-        code = """resource diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: 'diagnostics'
+        code = """resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: 'mystorageaccount'
+  location: resourceGroup().location
+  kind: 'StorageV2'
+  sku: {
+    name: 'Standard_LRS'
+  }
   properties: {
-    workspaceId: logAnalyticsWorkspace.id
-    logs: []
-    metrics: []
+    accessTier: 'Hot'
   }
 }"""
         
@@ -111,8 +114,18 @@ if __name__ == "__main__":
 
     def test_common_network_public_access_enabled_positive(self, analyzer):
         """Test common.network.public_access_enabled: Public Network Access Enabled - Should detect"""
-        code = """// Bicep code for common.network.public_access_enabled
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: 'mystorageaccount'
+  location: resourceGroup().location
+  kind: 'StorageV2'
+  sku: {
+    name: 'Standard_LRS'
+  }
+  properties: {
+    publicNetworkAccess: 'Enabled'
+    accessTier: 'Hot'
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -136,8 +149,14 @@ output resourceLocation string = location
 
     def test_common_governance_azure_policy_positive(self, analyzer):
         """Test common.governance.azure_policy: Azure Policy Assignment - Should detect"""
-        code = """// Bicep code for common.governance.azure_policy
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource policyAssignment 'Microsoft.Authorization/policyAssignments@2023-04-01' = {
+  name: 'require-tags-policy'
+  properties: {
+    policyDefinitionId: '/providers/Microsoft.Authorization/policyDefinitions/96670d01-0a4d-4649-9c89-2d3abc0a5025'
+    parameters: {}
+    displayName: 'Require specified tags on resources'
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -161,8 +180,13 @@ output resourceLocation string = location
 
     def test_common_governance_resource_lock_positive(self, analyzer):
         """Test common.governance.resource_lock: Resource Lock - Should detect"""
-        code = """// Bicep code for common.governance.resource_lock
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource productionLock 'Microsoft.Authorization/locks@2020-05-01' = {
+  name: 'production-lock'
+  properties: {
+    level: 'CanNotDelete'
+    notes: 'Prevent accidental deletion'
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -186,8 +210,28 @@ output resourceLocation string = location
 
     def test_common_resilience_backup_missing_positive(self, analyzer):
         """Test common.resilience.backup_missing: Missing Backup Configuration - Should detect"""
-        code = """// Bicep code for common.resilience.backup_missing
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {
+  name: 'myVM'
+  location: resourceGroup().location
+  properties: {
+    hardwareProfile: {
+      vmSize: 'Standard_DS1_v2'
+    }
+    osProfile: {
+      computerName: 'myVM'
+      adminUsername: 'azureuser'
+      adminPassword: 'P@ssw0rd123!'
+    }
+    storageProfile: {
+      imageReference: {
+        publisher: 'MicrosoftWindowsServer'
+        offer: 'WindowsServer'
+        sku: '2019-Datacenter'
+        version: 'latest'
+      }
+    }
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -211,8 +255,17 @@ output resourceLocation string = location
 
     def test_common_resilience_geo_redundancy_positive(self, analyzer):
         """Test common.resilience.geo_redundancy: Geo-Redundant Storage - Should detect"""
-        code = """// Bicep code for common.resilience.geo_redundancy
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: 'mystorageaccount'
+  location: resourceGroup().location
+  kind: 'StorageV2'
+  sku: {
+    name: 'Standard_GRS'
+  }
+  properties: {
+    accessTier: 'Hot'
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         

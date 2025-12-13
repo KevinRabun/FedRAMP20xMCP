@@ -25,8 +25,10 @@ class TestAfrPatterns:
 
     def test_afr_crypto_weak_algorithms_positive(self, analyzer):
         """Test afr.crypto.weak_algorithms: Weak or Deprecated Cryptographic Algorithms - Should detect"""
-        code = """result = (data)
-print(result)"""
+        code = """import hashlib
+
+result = hashlib.md5(data.encode())
+print(result.hexdigest())"""
         
         result = analyzer.analyze(code, "python")
         
@@ -81,10 +83,17 @@ if __name__ == "__main__":
 
     def test_afr_scanning_missing_vulnerability_scan_positive(self, analyzer):
         """Test afr.scanning.missing_vulnerability_scan: Missing Vulnerability Scanning Configuration - Should detect"""
-        code = """// Bicep code for afr.scanning.missing_vulnerability_scan
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """name: Security Scanning
+on: [push]
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+      - uses: github/codeql-action/analyze@v3"""
         
-        result = analyzer.analyze(code, "bicep")
+        result = analyzer.analyze(code, "github_actions")
         
         # Should detect the pattern
         findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "afr.scanning.missing_vulnerability_scan" == f.pattern_id]
@@ -106,8 +115,14 @@ output resourceLocation string = location
 
     def test_afr_config_insecure_defaults_positive(self, analyzer):
         """Test afr.config.insecure_defaults: Insecure Default Configurations Detected - Should detect"""
-        code = """// Bicep code for afr.config.insecure_defaults
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: 'mystorageaccount'
+  location: 'eastus'
+  properties: {
+    supportsHttpsTrafficOnly: false
+    publicNetworkAccess: 'Enabled'
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         

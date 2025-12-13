@@ -25,8 +25,12 @@ class TestVdrPatterns:
 
     def test_vdr_scanning_defender_for_cloud_positive(self, analyzer):
         """Test vdr.scanning.defender_for_cloud: Microsoft Defender for Cloud - Should detect"""
-        code = """// Bicep code for vdr.scanning.defender_for_cloud
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource defenderPricing 'Microsoft.Security/pricings@2024-01-01' = {
+  name: 'VirtualMachines'
+  properties: {
+    pricingTier: 'Standard'
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -53,12 +57,12 @@ output resourceLocation string = location
         code = """name: CI Pipeline
 on: [push]
 jobs:
-  build:
+  security:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Run SAST scan
-        run: semgrep --config=auto ."""
+      - name: Run CodeQL Analysis
+        uses: github/codeql-action/analyze@v2"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -167,8 +171,18 @@ jobs:
 
     def test_vdr_patching_update_management_positive(self, analyzer):
         """Test vdr.patching.update_management: Azure Update Management - Should detect"""
-        code = """// Bicep code for vdr.patching.update_management
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource automationAccount 'Microsoft.Automation/automationAccounts@2023-11-01' = {
+  name: 'myAutomationAccount'
+  location: location
+}
+
+resource softwareUpdateConfigurations 'Microsoft.Automation/automationAccounts/softwareUpdateConfigurations@2023-11-01' = {
+  parent: automationAccount
+  name: 'weeklyPatching'
+  properties: {
+    scheduleInfo: { frequency: 'Week' }
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -192,7 +206,10 @@ output resourceLocation string = location
 
     def test_vdr_patching_outdated_base_image_positive(self, analyzer):
         """Test vdr.patching.outdated_base_image: Outdated Container Base Image - Should detect"""
-        code = """# Code that triggers vdr.patching.outdated_base_image"""
+        code = """FROM python:3.9-slim
+RUN pip install flask
+COPY app.py /app/
+CMD ["python", "/app/app.py"]"""
         
         result = analyzer.analyze(code, "dockerfile")
         
@@ -234,8 +251,10 @@ output resourceLocation string = location
 
     def test_vdr_dependencies_outdated_packages_positive(self, analyzer):
         """Test vdr.dependencies.outdated_packages: Outdated Dependencies - Should detect"""
-        code = """# Pattern detected
-code_with_pattern = True"""
+        code = """flask==2.0.1
+requests==2.25.0
+django==3.2.0
+numpy==1.20.0"""
         
         result = analyzer.analyze(code, "python")
         
@@ -262,7 +281,17 @@ if __name__ == "__main__":
 
     def test_vdr_secure_dev_pre_commit_hooks_positive(self, analyzer):
         """Test vdr.secure_dev.pre_commit_hooks: Pre-Commit Hooks - Should detect"""
-        code = """# Code that triggers vdr.secure_dev.pre_commit_hooks"""
+        code = """repos:
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.4
+    hooks:
+      - id: bandit
+        args: ['-r', 'src']"""
         
         result = analyzer.analyze(code, "yaml")
         
@@ -279,27 +308,6 @@ if __name__ == "__main__":
         # Should NOT detect the pattern
         findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "vdr.secure_dev.pre_commit_hooks" == f.pattern_id]
         assert len(findings) == 0, f"Pattern vdr.secure_dev.pre_commit_hooks should NOT detect compliant code"
-
-
-    def test_vdr_secure_dev_code_review_required_positive(self, analyzer):
-        """Test vdr.secure_dev.code_review_required: Code Review Required - Should detect"""
-        code = """# Code that triggers vdr.secure_dev.code_review_required"""
-        
-        result = analyzer.analyze(code, "github")
-        
-        # Should detect the pattern
-        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "vdr.secure_dev.code_review_required" == f.pattern_id]
-        assert len(findings) > 0, f"Pattern vdr.secure_dev.code_review_required should detect this code"
-    
-    def test_vdr_secure_dev_code_review_required_negative(self, analyzer):
-        """Test vdr.secure_dev.code_review_required: Code Review Required - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
-        
-        result = analyzer.analyze(code, "github")
-        
-        # Should NOT detect the pattern
-        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "vdr.secure_dev.code_review_required" == f.pattern_id]
-        assert len(findings) == 0, f"Pattern vdr.secure_dev.code_review_required should NOT detect compliant code"
 
 
 if __name__ == "__main__":

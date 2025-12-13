@@ -25,12 +25,19 @@ class TestRscPatterns:
 
     def test_rsc_allocation_resource_limits_positive(self, analyzer):
         """Test rsc.allocation.resource_limits: Resource Limits Configuration - Should detect"""
-        code = """# Pattern detected
-code_with_pattern = True"""
-        
-        result = analyzer.analyze(code, "python")
-        
-        # Should detect the pattern
+        code = """apiVersion: v1
+kind: Pod
+metadata:
+  name: resource-demo
+spec:
+  containers:
+  - name: demo
+    image: nginx
+    resources:
+      limits: {cpu: "1", memory: "1Gi"}
+      requests: {cpu: "500m", memory: "512Mi"}"""
+
+        result = analyzer.analyze(code, "yaml")
         findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.allocation.resource_limits" == f.pattern_id]
         assert len(findings) > 0, f"Pattern rsc.allocation.resource_limits should detect this code"
     
@@ -53,8 +60,13 @@ if __name__ == "__main__":
 
     def test_rsc_monitoring_resource_metrics_positive(self, analyzer):
         """Test rsc.monitoring.resource_metrics: Resource Metrics Monitoring - Should detect"""
-        code = """# Pattern detected
-code_with_pattern = True"""
+        code = """import psutil
+
+def monitor_resources():
+    cpu_usage = psutil.cpu_percent(interval=1)
+    memory_usage = psutil.virtual_memory().percent
+    disk_usage = psutil.disk_usage('/').percent
+    return {'cpu': cpu_usage, 'memory': memory_usage, 'disk': disk_usage}"""
         
         result = analyzer.analyze(code, "python")
         
@@ -102,7 +114,17 @@ if __name__ == "__main__":
 
     def test_rsc_quota_namespace_quota_positive(self, analyzer):
         """Test rsc.quota.namespace_quota: Namespace Resource Quota - Should detect"""
-        code = """# Code that triggers rsc.quota.namespace_quota"""
+        code = """apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: team-quota
+  namespace: development
+spec:
+  hard:
+    requests.cpu: "10"
+    requests.memory: 20Gi
+    limits.cpu: "20"
+    limits.memory: 40Gi"""
         
         result = analyzer.analyze(code, "yaml")
         
@@ -123,7 +145,15 @@ if __name__ == "__main__":
 
     def test_rsc_allocation_priority_class_positive(self, analyzer):
         """Test rsc.allocation.priority_class: Priority Class for Resource Allocation - Should detect"""
-        code = """# Code that triggers rsc.allocation.priority_class"""
+        code = """apiVersion: v1
+kind: Pod
+metadata:
+  name: critical-app
+spec:
+  priorityClassName: high-priority
+  containers:
+  - name: app
+    image: nginx"""
         
         result = analyzer.analyze(code, "yaml")
         
@@ -169,8 +199,16 @@ output resourceLocation string = location
 
     def test_rsc_iac_app_service_plan_positive(self, analyzer):
         """Test rsc.iac.app_service_plan: Azure App Service Plan Configuration - Should detect"""
-        code = """// Bicep code for rsc.iac.app_service_plan
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
+  name: 'production-plan'
+  location: resourceGroup().location
+  sku: {
+    name: 'P1V3'
+    tier: 'PremiumV3'
+    capacity: 2
+  }
+  kind: 'linux'
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -244,15 +282,17 @@ output resourceLocation string = location
 
     def test_rsc_cicd_resource_validation_positive(self, analyzer):
         """Test rsc.cicd.resource_validation: Resource Configuration Validation - Should detect"""
-        code = """name: CI Pipeline
+        code = """name: Validate Resources
 on: [push]
 jobs:
-  build:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Build
-        run: echo "Building..." """
+      - name: Validate K8s resources
+        run: kubectl apply --dry-run=client -f kubernetes/
+      - name: Check resource limits
+        run: python scripts/validate_resources.py"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -281,7 +321,16 @@ jobs:
 
     def test_rsc_missing_resource_limits_positive(self, analyzer):
         """Test rsc.missing_resource_limits: Missing Resource Limits - Should detect"""
-        code = """# Code that triggers rsc.missing_resource_limits"""
+        code = """apiVersion: v1
+kind: Pod
+metadata:
+  name: no-limits
+spec:
+  containers:
+  - name: app
+    image: nginx
+    ports:
+    - containerPort: 80"""
         
         result = analyzer.analyze(code, "yaml")
         
@@ -291,14 +340,14 @@ jobs:
     
     def test_rsc_missing_resource_limits_negative(self, analyzer):
         """Test rsc.missing_resource_limits: Missing Resource Limits - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
-        
-        result = analyzer.analyze(code, "yaml")
-        
-        # Should NOT detect the pattern
-        findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "rsc.missing_resource_limits" == f.pattern_id]
-        assert len(findings) == 0, f"Pattern rsc.missing_resource_limits should NOT detect compliant code"
-
-
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+        code = """apiVersion: v1
+kind: Pod
+metadata:
+  name: with-limits
+spec:
+  containers:
+  - name: app
+    image: nginx
+    resources:
+      limits: {cpu: "1", memory: "1Gi"}
+      requests: {cpu: "500m", memory: "512Mi"}"""

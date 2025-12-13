@@ -25,8 +25,12 @@ class TestPiyPatterns:
 
     def test_piy_pii_logging_detection_positive(self, analyzer):
         """Test piy.pii.logging_detection: PII in Logging Statements - Should detect"""
-        code = """result = logger.info|logger.debug|logger.warning|logger.error|print(data)
-print(result)"""
+        code = """import logging
+logger = logging.getLogger(__name__)
+
+logger.info(f"User email: {user.email}")
+logger.debug(f"SSN: {user.social_security}")
+print(f"Phone: {customer.phone}")"""
         
         result = analyzer.analyze(code, "python")
         
@@ -53,8 +57,15 @@ if __name__ == "__main__":
 
     def test_piy_retention_missing_policy_positive(self, analyzer):
         """Test piy.retention.missing_policy: Missing Data Retention Policy - Should detect"""
-        code = """// Bicep code for piy.retention.missing_policy
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        # Bicep blob service without deleteRetentionPolicy
+        code = """resource blobServices 'Microsoft.Storage/storageAccounts/blobServices@2023-01-01' = {
+      name: 'default'
+      properties: {
+        containerRetention: {
+          enabled: true
+        }
+      }
+    }"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -78,17 +89,12 @@ output resourceLocation string = location
 
     def test_piy_vdp_missing_program_positive(self, analyzer):
         """Test piy.vdp.missing_program: Missing Vulnerability Disclosure Program - Should detect"""
-        code = """name: CI Pipeline
-on: [push]
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Build
-        run: echo "Building..." """
+        code = """# Security
+We take security seriously.
+# SECURITY.md
+This file exists but has no contact info."""
         
-        result = analyzer.analyze(code, "github_actions")
+        result = analyzer.analyze(code, "markdown")
         
         # Should detect the pattern
         findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "piy.vdp.missing_program" == f.pattern_id]
@@ -162,15 +168,18 @@ jobs:
     
     def test_piy_evaluation_missing_validation_negative(self, analyzer):
         """Test piy.evaluation.missing_validation: Missing Implementation Validation - Should NOT detect"""
-        code = """name: Simple Pipeline
-on: [push]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Run tests
-        run: npm test"""
+        # Pipeline with security testing (has negative indicators)
+        code = """name: Security CI
+    on: [push]
+    jobs:
+      security-scan:
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v2
+          - name: OWASP ZAP Security Scan
+            run: zap-baseline.py -t https://example.com
+          - name: Penetration Testing
+            run: burp-scan"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -181,11 +190,18 @@ jobs:
 
     def test_piy_investment_missing_metrics_positive(self, analyzer):
         """Test piy.investment.missing_metrics: Missing Security Investment Metrics - Should detect"""
-        code = """# Code that triggers piy.investment.missing_metrics"""
+        # Documentation that mentions security metrics but lacks specific measurements
+        code = """# Security Metrics
+        
+        We track security effectiveness through various KPIs and performance measurements.
+        Our security program ROI is important to demonstrate value.
+        
+        ## Measurement Approach
+        We measure security effectiveness regularly."""
         
         result = analyzer.analyze(code, "markdown")
         
-        # Should detect the pattern
+        # Should detect the pattern (has positive indicators but lacks negative indicators like MTTR, MTTD)
         findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "piy.investment.missing_metrics" == f.pattern_id]
         assert len(findings) > 0, f"Pattern piy.investment.missing_metrics should detect this code"
     
@@ -202,8 +218,10 @@ jobs:
 
     def test_piy_supply_chain_unvetted_dependencies_positive(self, analyzer):
         """Test piy.supply_chain.unvetted_dependencies: Unvetted Supply Chain Dependencies - Should detect"""
-        code = """# Pattern detected
-code_with_pattern = True"""
+        code = """# requirements.txt
+django==4.2.0
+requests==2.31.0
+celery==5.3.0"""
         
         result = analyzer.analyze(code, "python")
         

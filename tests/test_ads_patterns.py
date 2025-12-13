@@ -81,7 +81,7 @@ if __name__ == "__main__":
 
     def test_ads_api_endpoint_rest_positive(self, analyzer):
         """Test ads.api_endpoint.rest: REST API for Audit Data Access - Should detect"""
-        code = """@@app.route
+        code = """@app.route('/api/audit')
 def protected_view():
     return 'Protected content'"""
         
@@ -140,8 +140,12 @@ if __name__ == "__main__":
 
     def test_ads_audit_fields_required_fields_positive(self, analyzer):
         """Test ads.audit_fields.required_fields: Required Audit Fields - Should detect"""
-        code = """# Pattern detected
-code_with_pattern = True"""
+        code = """audit_record = {
+    "timestamp": datetime.now(),
+    "userId": current_user.id,
+    "action": "data_access",
+    "resourceId": resource.id
+}"""
         
         result = analyzer.analyze(code, "python")
         
@@ -168,8 +172,11 @@ if __name__ == "__main__":
 
     def test_ads_query_api_filtering_positive(self, analyzer):
         """Test ads.query_api.filtering: Audit Data Query API - Should detect"""
-        code = """# Pattern detected
-code_with_pattern = True"""
+        code = """def query_audit_logs(start_date, end_date, user_id=None):
+    filters = {'timestamp': {'gte': start_date, 'lte': end_date}}
+    if user_id:
+        filters['user'] = user_id
+    return audit_logs.find(filters)"""
         
         result = analyzer.analyze(code, "python")
         
@@ -196,8 +203,10 @@ if __name__ == "__main__":
 
     def test_ads_missing_machine_readable_positive(self, analyzer):
         """Test ads.missing_machine_readable: Missing Machine-Readable Format - Should detect"""
-        code = """# Code that triggers ads.missing_machine_readable
-trigger_pattern = True"""
+        code = """def export_audit_data():
+    # No JSON or XML export
+    print('Audit data exported')
+    return True"""
         
         result = analyzer.analyze(code, "python")
         
@@ -207,12 +216,11 @@ trigger_pattern = True"""
     
     def test_ads_missing_machine_readable_negative(self, analyzer):
         """Test ads.missing_machine_readable: Missing Machine-Readable Format - Should NOT detect"""
-        code = """def compliant_function():
-    # This is compliant code
-    return True
+        code = """import json
 
-if __name__ == "__main__":
-    compliant_function()
+def export_audit_data(data):
+    # Has JSON export - compliant
+    return json.dumps(data)
 """
         
         result = analyzer.analyze(code, "python")
@@ -224,12 +232,18 @@ if __name__ == "__main__":
 
     def test_ads_iac_azure_monitor_export_positive(self, analyzer):
         """Test ads.iac.azure_monitor_export: Azure Monitor Data Export - Should detect"""
-        code = """resource diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: 'diagnostics'
+        code = """resource dataCollectionRule 'Microsoft.Insights/dataCollectionRules@2022-06-01' = {
+  name: 'auditDataCollection'
+  location: location
   properties: {
-    workspaceId: logAnalyticsWorkspace.id
-    logs: []
-    metrics: []
+    destinations: {
+      logAnalytics: [
+        {
+          workspaceResourceId: logAnalyticsWorkspace.id
+          name: 'auditWorkspace'
+        }
+      ]
+    }
   }
 }"""
         
@@ -286,7 +300,7 @@ output resourceLocation string = location
 
     def test_ads_cicd_audit_export_step_positive(self, analyzer):
         """Test ads.cicd.audit_export_step: CI/CD Audit Data Export Step - Should detect"""
-        code = """name: Configuration Backup
+        code = """name: Export Audit Data
 on:
   schedule:
     - cron: '0 0 * * *'
@@ -294,8 +308,8 @@ jobs:
   backup:
     runs-on: ubuntu-latest
     steps:
-      - name: Export configuration
-        run: az export --output backup.json"""
+      - name: Export audit logs
+        run: python scripts/export_audit.py"""
         
         result = analyzer.analyze(code, "github_actions")
         

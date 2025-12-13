@@ -222,10 +222,10 @@ languages:
       target: Microsoft.ManagedIdentity/userAssignedIdentities
     - query_type: resource_type
       target: azurerm_user_assigned_identity
-    regex_fallback: (identity\s*{.*type.*SystemAssigned)|(Microsoft\.ManagedIdentity/userAssignedIdentities)|(azurerm_user_assigned_identity)
+    regex_fallback: (identity.*type.*SystemAssigned)|(Microsoft\.ManagedIdentity/userAssignedIdentities)|(azurerm_user_assigned_identity)
   terraform:
     ast_queries: *id001
-    regex_fallback: (identity\s*{.*type.*SystemAssigned)|(Microsoft\.ManagedIdentity/userAssignedIdentities)|(azurerm_user_assigned_identity)
+    regex_fallback: (identity.*type.*SystemAssigned)|(Microsoft\.ManagedIdentity/userAssignedIdentities)|(azurerm_user_assigned_identity)
 finding:
   title: Azure Managed Identity for capability management
   description: IaC configures Managed Identity for service authorization

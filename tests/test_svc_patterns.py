@@ -94,12 +94,11 @@ code_with_pattern = True"""
     
     def test_svc_security_missing_hsts_negative(self, analyzer):
         """Test svc.security.missing_hsts: Missing HSTS Configuration - Should NOT detect"""
-        code = """def compliant_function():
-    # This is compliant code
-    return True
+        code = """from flask import Flask
+from flask_talisman import Talisman
 
-if __name__ == "__main__":
-    compliant_function()
+app = Flask(__name__)
+Talisman(app, force_https=True)
 """
         
         result = analyzer.analyze(code, "python")
@@ -111,8 +110,15 @@ if __name__ == "__main__":
 
     def test_svc_security_csp_header_positive(self, analyzer):
         """Test svc.security.csp_header: Content Security Policy - Should detect"""
-        code = """# Pattern detected
-code_with_pattern = True"""
+        code = """from flask import Flask
+
+app = Flask(__name__)
+
+@app.after_request
+def set_csp(response):
+    response.headers['Content-Security-Policy'] = "default-src 'self'"
+    return response
+"""
         
         result = analyzer.analyze(code, "python")
         
@@ -263,8 +269,24 @@ output resourceLocation string = location
 
     def test_svc_encryption_sql_tde_positive(self, analyzer):
         """Test svc.encryption.sql_tde: SQL Transparent Data Encryption - Should detect"""
-        code = """// Bicep code for svc.encryption.sql_tde
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource sqlServer 'Microsoft.Sql/servers@2021-11-01' = {
+  name: 'myserver'
+  location: 'eastus'
+}
+
+resource database 'Microsoft.Sql/servers/databases@2021-11-01' = {
+  parent: sqlServer
+  name: 'mydb'
+  location: 'eastus'
+}
+
+resource tde 'Microsoft.Sql/servers/databases/transparentDataEncryption@2021-11-01' = {
+  parent: database
+  name: 'current'
+  properties: {
+    state: 'Disabled'
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -288,25 +310,11 @@ output resourceLocation string = location
 
     def test_svc_network_nsg_allow_all_positive(self, analyzer):
         """Test svc.network.nsg_allow_all: Network Security Group Allow All - Should detect"""
-        code = """resource nsg 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
-  name: 'myNSG'
-  location: location
+        code = """resource nsgRule 'Microsoft.Network/networkSecurityGroups/securityRules@2021-02-01' = {
   properties: {
-    securityRules: [
-      {
-        name: 'AllowAll'
-        properties: {
-          priority: 100
-          direction: 'Inbound'
-          access: 'Allow'
-          protocol: '*'
-          sourceAddressPrefix: '*'
-          destinationAddressPrefix: '*'
-          sourcePortRange: '*'
-          destinationPortRange: '*'
-        }
-      }
-    ]
+    sourceAddressPrefix: '*'
+    access: 'Allow'
+    direction: 'Inbound'
   }
 }"""
         
@@ -332,8 +340,16 @@ output resourceLocation string = location
 
     def test_svc_network_private_endpoint_positive(self, analyzer):
         """Test svc.network.private_endpoint: Private Endpoint - Should detect"""
-        code = """// Bicep code for svc.network.private_endpoint
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource privateEndpoint 'Microsoft.Network/privateEndpoints@2021-05-01' = {
+  name: 'myPrivateEndpoint'
+  location: 'eastus'
+  properties: {
+    subnet: {
+      id: '/subscriptions/.../subnets/default'
+    }
+    privateLinkServiceConnections: []
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -357,8 +373,13 @@ output resourceLocation string = location
 
     def test_svc_tls_minimum_version_positive(self, analyzer):
         """Test svc.tls.minimum_version: TLS Minimum Version - Should detect"""
-        code = """// Bicep code for svc.tls.minimum_version
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' = {
+  name: 'mystorageacct'
+  location: 'eastus'
+  properties: {
+    minimumTlsVersion: 'TLS1_0'
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -382,8 +403,18 @@ output resourceLocation string = location
 
     def test_svc_waf_application_gateway_positive(self, analyzer):
         """Test svc.waf.application_gateway: Application Gateway with WAF - Should detect"""
-        code = """// Bicep code for svc.waf.application_gateway
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource appGateway 'Microsoft.Network/applicationGateways@2021-05-01' = {
+  name: 'myAppGateway'
+  location: 'eastus'
+  properties: {
+    webApplicationFirewallConfiguration: {
+      enabled: true
+      firewallMode: 'Prevention'
+      ruleSetType: 'OWASP'
+      ruleSetVersion: '3.2'
+    }
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -468,10 +499,16 @@ output resourceLocation string = location
 
     def test_svc_encryption_sql_tls_version_positive(self, analyzer):
         """Test svc.encryption.sql_tls_version: SQL Database Minimum TLS Version - Should detect"""
-        code = """# Pattern detected
-code_with_pattern = True"""
+        code = """resource sqlServer 'Microsoft.Sql/servers@2021-11-01' = {
+  name: 'myserver'
+  location: 'eastus'
+  properties: {
+    administratorLogin: 'sqladmin'
+    minimalTlsVersion: '1.0'
+  }
+}"""
         
-        result = analyzer.analyze(code, "python")
+        result = analyzer.analyze(code, "bicep")
         
         # Should detect the pattern
         findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "svc.encryption.sql_tls_version" == f.pattern_id]

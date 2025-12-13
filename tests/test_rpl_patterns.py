@@ -57,8 +57,16 @@ output resourceLocation string = location
 
     def test_rpl_backup_missing_policy_positive(self, analyzer):
         """Test rpl.backup.missing_policy: Missing Backup Policy - Should detect"""
-        code = """// Bicep code for rpl.backup.missing_policy
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {
+  name: 'myVM'
+  location: 'eastus'
+  properties: {
+    hardwareProfile: {
+      vmSize: 'Standard_DS1_v2'
+    }
+  }
+  // Missing backup vault configuration!
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
