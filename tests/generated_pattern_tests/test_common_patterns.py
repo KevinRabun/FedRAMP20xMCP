@@ -50,8 +50,14 @@ output resourceLocation string = location
 
     def test_common_diagnostics_missing_diagnostic_settings_positive(self, analyzer):
         """Test common.diagnostics.missing_diagnostic_settings: Missing Diagnostic Settings - Should detect"""
-        code = """// Bicep code for common.diagnostics.missing_diagnostic_settings
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'diagnostics'
+  properties: {
+    workspaceId: logAnalyticsWorkspace.id
+    logs: []
+    metrics: []
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         

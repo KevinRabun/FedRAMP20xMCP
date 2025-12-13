@@ -30,6 +30,9 @@ class TestRplPatterns:
   location: location
   sku: { name: 'Standard_LRS' }
   kind: 'StorageV2'
+  properties: {
+    allowBlobPublicAccess: true  // Potential issue
+  }
 }"""
         
         result = analyzer.analyze(code, "bicep")

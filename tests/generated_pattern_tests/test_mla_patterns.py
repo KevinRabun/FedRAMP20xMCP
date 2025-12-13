@@ -113,8 +113,14 @@ if __name__ == "__main__":
 
     def test_mla_retention_log_analytics_workspace_positive(self, analyzer):
         """Test mla.retention.log_analytics_workspace: Log Analytics Workspace Retention - Should detect"""
-        code = """// Bicep code for mla.retention.log_analytics_workspace
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+  name: 'myWorkspace'
+  location: location
+  properties: {
+    sku: { name: 'PerGB2018' }
+    retentionInDays: 30
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -166,8 +172,14 @@ if __name__ == "__main__":
 
     def test_mla_monitoring_azure_sentinel_analytics_positive(self, analyzer):
         """Test mla.monitoring.azure_sentinel_analytics: Azure Sentinel Analytics Rule - Should detect"""
-        code = """// Bicep code for mla.monitoring.azure_sentinel_analytics
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'diagnostics'
+  properties: {
+    workspaceId: logAnalyticsWorkspace.id
+    logs: []
+    metrics: []
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         

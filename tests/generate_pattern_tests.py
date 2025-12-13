@@ -227,14 +227,24 @@ from fedramp_20x_mcp.analyzers.base import Severity'''
                     return f"from {target} import *\n\ndef main():\n    pass"
                 else:
                     return f"import {target}\n\ndef main():\n    pass"
-            elif 'function_call' in pattern_type:
+            
+            # Handle decorator patterns
+            elif query_type == 'decorator' or 'decorator' in pattern_type:
+                return f"@{target}\ndef protected_view():\n    return 'Protected content'"
+            
+            # Handle function call patterns
+            elif 'function_call' in query_type or 'function_call' in pattern_type:
+                if 'login' in target.lower() or 'auth' in target.lower():
+                    return f"def authenticate_user(username, password):\n    return {target}(username, password)"
                 return f"result = {target}(data)\nprint(result)"
+            
+            # Handle class patterns
             elif 'class' in pattern_type:
                 return f"class MyClass({target}):\n    pass"
         
         # Fallback: analyze regex patterns for specific vulnerability types
         if regex_patterns:
-            pattern = regex_patterns[0]
+            pattern = regex_patterns[0] if isinstance(regex_patterns, list) else regex_patterns
             
             # Debug mode patterns
             if 'DEBUG' in pattern and 'True' in pattern:
@@ -258,6 +268,14 @@ from fedramp_20x_mcp.analyzers.base import Severity'''
             
             return f"# Pattern: {pattern}\ncode_with_pattern = True"
         
+        # Pattern-ID based generation (last resort)
+        if 'login_without_mfa' in pattern_id or 'login_required' in pattern_id:
+            return "def login(username, password):\n    # Login without MFA\n    return authenticate(username, password)"
+        elif 'timeout' in pattern_id:
+            return "from datetime import timedelta\napp.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=60)  # Exceeds 30 min"
+        elif 'managed_identity' in pattern_id:
+            return "# Using connection string instead of managed identity\nconnection = client.connect(connection_string='...')"
+        
         # Generic fallback
         return f"# Code that triggers {pattern_id}\ntrigger_pattern = True"
     
@@ -280,16 +298,77 @@ from fedramp_20x_mcp.analyzers.base import Severity'''
                                  ast_queries: List, regex_patterns: List) -> str:
         """Generate Bicep code that triggers pattern"""
         
+        # Extract resource type from AST queries
+        if ast_queries:
+            query = ast_queries[0]
+            target = query.get('target', '')
+            
+            # Wildcard permissions (check BEFORE rbac since it contains "rbac" too)
+            if 'wildcard' in pattern_id.lower() and 'permission' in pattern_id.lower():
+                return """resource roleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' = {
+  name: guid(subscription().id, 'CustomRole')
+  properties: {
+    roleName: 'Custom Admin Role'
+    description: 'Role with wildcard permissions'
+    permissions: [
+      {
+        actions: ['*']  // Wildcard - non-compliant
+        notActions: []
+      }
+    ]
+    assignableScopes: [
+      subscription().id
+    ]
+  }
+}"""
+            
+            # RBAC assignment patterns
+            elif 'rbac' in pattern_id.lower() or 'roleAssignment' in target:
+                return """resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(resourceGroup().id, 'Contributor')
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
+    principalId: 'user-principal-id'
+    principalType: 'User'
+  }
+}"""
+        
+        # Pattern-specific generation
         if 'nsg' in pattern_id.lower():
             return """resource nsg 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
   name: 'myNSG'
   location: location
   properties: {
-    securityRules: []
+    securityRules: [
+      {
+        name: 'AllowAll'
+        properties: {
+          priority: 100
+          direction: 'Inbound'
+          access: 'Allow'
+          protocol: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+        }
+      }
+    ]
   }
 }"""
         elif 'keyvault' in pattern_id.lower() or 'vault' in pattern_id.lower():
-            return """resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
+            if 'soft_delete' in pattern_id:
+                return """resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
+  name: 'myKeyVault'
+  location: location
+  properties: {
+    sku: { name: 'standard' }
+    tenantId: tenant().tenantId
+    enableSoftDelete: false  // Non-compliant
+  }
+}"""
+            else:
+                return """resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: 'myKeyVault'
   location: location
   properties: {
@@ -303,6 +382,27 @@ from fedramp_20x_mcp.analyzers.base import Severity'''
   location: location
   sku: { name: 'Standard_LRS' }
   kind: 'StorageV2'
+  properties: {
+    allowBlobPublicAccess: true  // Potential issue
+  }
+}"""
+        elif 'log_analytics' in pattern_id.lower() or 'workspace' in pattern_id.lower():
+            return """resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+  name: 'myWorkspace'
+  location: location
+  properties: {
+    sku: { name: 'PerGB2018' }
+    retentionInDays: 30
+  }
+}"""
+        elif 'monitor' in pattern_id.lower() or 'diagnostic' in pattern_id.lower():
+            return """resource diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'diagnostics'
+  properties: {
+    workspaceId: logAnalyticsWorkspace.id
+    logs: []
+    metrics: []
+  }
 }"""
         
         return f"// Bicep code for {pattern_id}\nresource example 'Microsoft.Resources/tags@2022-09-01' = {{}}"
@@ -320,13 +420,67 @@ from fedramp_20x_mcp.analyzers.base import Severity'''
                                ast_queries: List, regex_patterns: List) -> str:
         """Generate CI/CD YAML that triggers pattern"""
         
-        return f'''name: CI Pipeline
+        # SAST/scanning patterns
+        if 'sast' in pattern_id.lower() or 'scan' in pattern_id.lower():
+            return """name: CI Pipeline
 on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2'''
+      - uses: actions/checkout@v2
+      - name: Run SAST scan
+        run: semgrep --config=auto ."""
+        
+        # Dependency scanning
+        elif 'dependency' in pattern_id.lower() or 'sca' in pattern_id.lower():
+            return """name: Security Scan
+on: [push]
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Dependency scan
+        uses: github/dependency-review-action@v3"""
+        
+        # Container scanning
+        elif 'container' in pattern_id.lower() and 'scan' in pattern_id.lower():
+            return """name: Container Scan
+on: [push]
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build image
+        run: docker build -t myapp:latest .
+      - name: Scan image
+        run: trivy image myapp:latest"""
+        
+        # Backup/export patterns
+        elif 'backup' in pattern_id.lower() or 'export' in pattern_id.lower():
+            return """name: Configuration Backup
+on:
+  schedule:
+    - cron: '0 0 * * *'
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Export configuration
+        run: az export --output backup.json"""
+        
+        # Generic CI/CD
+        return """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: echo "Building..." """
     
     def _generate_generic_positive(self, pattern_id: str, pattern_type: str) -> str:
         """Generic positive example"""

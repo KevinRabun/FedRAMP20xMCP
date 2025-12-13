@@ -81,8 +81,9 @@ if __name__ == "__main__":
 
     def test_ads_api_endpoint_rest_positive(self, analyzer):
         """Test ads.api_endpoint.rest: REST API for Audit Data Access - Should detect"""
-        code = """# Code that triggers ads.api_endpoint.rest
-trigger_pattern = True"""
+        code = """@@app.route
+def protected_view():
+    return 'Protected content'"""
         
         result = analyzer.analyze(code, "python")
         
@@ -223,8 +224,14 @@ if __name__ == "__main__":
 
     def test_ads_iac_azure_monitor_export_positive(self, analyzer):
         """Test ads.iac.azure_monitor_export: Azure Monitor Data Export - Should detect"""
-        code = """// Bicep code for ads.iac.azure_monitor_export
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'diagnostics'
+  properties: {
+    workspaceId: logAnalyticsWorkspace.id
+    logs: []
+    metrics: []
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -248,8 +255,14 @@ output resourceLocation string = location
 
     def test_ads_iac_log_analytics_workspace_positive(self, analyzer):
         """Test ads.iac.log_analytics_workspace: Log Analytics Workspace for Audit Data - Should detect"""
-        code = """// Bicep code for ads.iac.log_analytics_workspace
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+  name: 'myWorkspace'
+  location: location
+  properties: {
+    sku: { name: 'PerGB2018' }
+    retentionInDays: 30
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         

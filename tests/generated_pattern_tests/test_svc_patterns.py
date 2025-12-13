@@ -176,6 +176,7 @@ output resourceLocation string = location
   properties: {
     sku: { name: 'standard' }
     tenantId: tenant().tenantId
+    enableSoftDelete: false  // Non-compliant
   }
 }"""
         
@@ -234,6 +235,9 @@ if __name__ == "__main__":
   location: location
   sku: { name: 'Standard_LRS' }
   kind: 'StorageV2'
+  properties: {
+    allowBlobPublicAccess: true  // Potential issue
+  }
 }"""
         
         result = analyzer.analyze(code, "bicep")
@@ -287,7 +291,21 @@ output resourceLocation string = location
   name: 'myNSG'
   location: location
   properties: {
-    securityRules: []
+    securityRules: [
+      {
+        name: 'AllowAll'
+        properties: {
+          priority: 100
+          direction: 'Inbound'
+          access: 'Allow'
+          protocol: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+        }
+      }
+    ]
   }
 }"""
         
@@ -421,6 +439,9 @@ if __name__ == "__main__":
   location: location
   sku: { name: 'Standard_LRS' }
   kind: 'StorageV2'
+  properties: {
+    allowBlobPublicAccess: true  // Potential issue
+  }
 }"""
         
         result = analyzer.analyze(code, "bicep")
@@ -478,6 +499,9 @@ if __name__ == "__main__":
   location: location
   sku: { name: 'Standard_LRS' }
   kind: 'StorageV2'
+  properties: {
+    allowBlobPublicAccess: true  // Potential issue
+  }
 }"""
         
         result = analyzer.analyze(code, "bicep")

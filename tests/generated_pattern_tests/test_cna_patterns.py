@@ -29,7 +29,21 @@ class TestCnaPatterns:
   name: 'myNSG'
   location: location
   properties: {
-    securityRules: []
+    securityRules: [
+      {
+        name: 'AllowAll'
+        properties: {
+          priority: 100
+          direction: 'Inbound'
+          access: 'Allow'
+          protocol: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+        }
+      }
+    ]
   }
 }"""
         

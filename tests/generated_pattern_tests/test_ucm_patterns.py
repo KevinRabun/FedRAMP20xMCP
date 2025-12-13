@@ -53,8 +53,9 @@ if __name__ == "__main__":
 
     def test_ucm_authorization_decorator_positive(self, analyzer):
         """Test ucm.authorization.decorator: Authorization Decorator/Attribute - Should detect"""
-        code = """# Code that triggers ucm.authorization.decorator
-trigger_pattern = True"""
+        code = """@@require_permission
+def protected_view():
+    return 'Protected content'"""
         
         result = analyzer.analyze(code, "python")
         
@@ -137,8 +138,8 @@ if __name__ == "__main__":
 
     def test_ucm_session_timeout_positive(self, analyzer):
         """Test ucm.session.timeout: Session Timeout Configuration - Should detect"""
-        code = """# Code that triggers ucm.session.timeout
-trigger_pattern = True"""
+        code = """from datetime import timedelta
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=60)  # Exceeds 30 min"""
         
         result = analyzer.analyze(code, "python")
         
@@ -246,8 +247,14 @@ output resourceLocation string = location
 
     def test_ucm_iac_rbac_assignment_positive(self, analyzer):
         """Test ucm.iac.rbac_assignment: Azure RBAC Role Assignment - Should detect"""
-        code = """// Bicep code for ucm.iac.rbac_assignment
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(resourceGroup().id, 'Contributor')
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
+    principalId: 'user-principal-id'
+    principalType: 'User'
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         

@@ -175,8 +175,9 @@ if __name__ == "__main__":
 
     def test_iam_mfa_login_without_mfa_positive(self, analyzer):
         """Test iam.mfa.login_without_mfa: Login Function Without MFA - Should detect"""
-        code = """# Code that triggers iam.mfa.login_without_mfa
-trigger_pattern = True"""
+        code = """def login(username, password):
+    # Login without MFA
+    return authenticate(username, password)"""
         
         result = analyzer.analyze(code, "python")
         
@@ -203,8 +204,9 @@ if __name__ == "__main__":
 
     def test_iam_mfa_decorator_login_required_positive(self, analyzer):
         """Test iam.mfa.decorator_login_required: Login Required Decorator Without MFA - Should detect"""
-        code = """# Code that triggers iam.mfa.decorator_login_required
-trigger_pattern = True"""
+        code = """@login_required
+def protected_view():
+    return 'Protected content'"""
         
         result = analyzer.analyze(code, "python")
         
@@ -231,8 +233,14 @@ if __name__ == "__main__":
 
     def test_iam_rbac_azure_rbac_assignment_positive(self, analyzer):
         """Test iam.rbac.azure_rbac_assignment: Azure RBAC Assignment - Should detect"""
-        code = """// Bicep code for iam.rbac.azure_rbac_assignment
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(resourceGroup().id, 'Contributor')
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
+    principalId: 'user-principal-id'
+    principalType: 'User'
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -256,8 +264,22 @@ output resourceLocation string = location
 
     def test_iam_rbac_wildcard_permissions_positive(self, analyzer):
         """Test iam.rbac.wildcard_permissions: Wildcard Permission Assignment - Should detect"""
-        code = """// Bicep code for iam.rbac.wildcard_permissions
-resource example 'Microsoft.Resources/tags@2022-09-01' = {}"""
+        code = """resource roleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' = {
+  name: guid(subscription().id, 'CustomRole')
+  properties: {
+    roleName: 'Custom Admin Role'
+    description: 'Role with wildcard permissions'
+    permissions: [
+      {
+        actions: ['*']  // Wildcard - non-compliant
+        notActions: []
+      }
+    ]
+    assignableScopes: [
+      subscription().id
+    ]
+  }
+}"""
         
         result = analyzer.analyze(code, "bicep")
         
@@ -281,8 +303,8 @@ output resourceLocation string = location
 
     def test_iam_session_timeout_missing_positive(self, analyzer):
         """Test iam.session.timeout_missing: Missing Session Timeout - Should detect"""
-        code = """# Code that triggers iam.session.timeout_missing
-trigger_pattern = True"""
+        code = """from datetime import timedelta
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=60)  # Exceeds 30 min"""
         
         result = analyzer.analyze(code, "python")
         
@@ -309,8 +331,8 @@ if __name__ == "__main__":
 
     def test_iam_identity_missing_managed_identity_positive(self, analyzer):
         """Test iam.identity.missing_managed_identity: Missing Managed Identity - Should detect"""
-        code = """# Code that triggers iam.identity.missing_managed_identity
-trigger_pattern = True"""
+        code = """# Using connection string instead of managed identity
+connection = client.connect(connection_string='...')"""
         
         result = analyzer.analyze(code, "python")
         

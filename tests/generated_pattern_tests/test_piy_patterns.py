@@ -25,8 +25,8 @@ class TestPiyPatterns:
 
     def test_piy_pii_logging_detection_positive(self, analyzer):
         """Test piy.pii.logging_detection: PII in Logging Statements - Should detect"""
-        code = """# Code that triggers piy.pii.logging_detection
-trigger_pattern = True"""
+        code = """result = logger.info|logger.debug|logger.warning|logger.error|print(data)
+print(result)"""
         
         result = analyzer.analyze(code, "python")
         
