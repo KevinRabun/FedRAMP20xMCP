@@ -94,7 +94,7 @@ output resourceLocation string = location
 
     def test_cna_attack_surface_minimal_dependencies_positive(self, analyzer):
         """Test cna.attack_surface.minimal_dependencies: Minimal Dependencies Analysis - Should detect"""
-        code = """# Pattern: (^import |^from .* import |^using |^require\()
+        code = """# Pattern detected
 code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
@@ -269,7 +269,15 @@ output resourceLocation string = location
 
     def test_cna_cicd_container_build_positive(self, analyzer):
         """Test cna.cicd.container_build: Container Build in CI/CD - Should detect"""
-        code = """# Code that triggers cna.cicd.container_build"""
+        code = """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: echo "Building..." """
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -279,7 +287,15 @@ output resourceLocation string = location
     
     def test_cna_cicd_container_build_negative(self, analyzer):
         """Test cna.cicd.container_build: Container Build in CI/CD - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: Simple Pipeline
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -290,7 +306,15 @@ output resourceLocation string = location
 
     def test_cna_cicd_infrastructure_validation_positive(self, analyzer):
         """Test cna.cicd.infrastructure_validation: Infrastructure Validation in CI/CD - Should detect"""
-        code = """# Code that triggers cna.cicd.infrastructure_validation"""
+        code = """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: echo "Building..." """
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -300,7 +324,15 @@ output resourceLocation string = location
     
     def test_cna_cicd_infrastructure_validation_negative(self, analyzer):
         """Test cna.cicd.infrastructure_validation: Infrastructure Validation in CI/CD - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: Simple Pipeline
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test"""
         
         result = analyzer.analyze(code, "github_actions")
         

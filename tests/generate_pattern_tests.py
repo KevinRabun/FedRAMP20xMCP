@@ -153,7 +153,7 @@ from fedramp_20x_mcp.analyzers.base import Severity'''
         """Get primary language for testing"""
         # Priority order
         priority = ['python', 'csharp', 'bicep', 'terraform', 'typescript', 
-                   'java', 'javascript', 'github-actions', 'azure-pipelines']
+                   'java', 'javascript', 'github_actions', 'azure_pipelines', 'gitlab_ci']
         
         for lang in priority:
             if lang in languages:
@@ -191,7 +191,7 @@ from fedramp_20x_mcp.analyzers.base import Severity'''
             return self._generate_bicep_positive(pattern_id, pattern_type, ast_queries, regex_patterns)
         elif lang == 'terraform':
             return self._generate_terraform_positive(pattern_id, pattern_type, ast_queries, regex_patterns)
-        elif lang in ['github-actions', 'azure-pipelines', 'gitlab-ci']:
+        elif lang in ['github_actions', 'azure_pipelines', 'gitlab_ci']:
             return self._generate_cicd_positive(pattern_id, pattern_type, ast_queries, regex_patterns)
         else:
             return self._generate_generic_positive(pattern_id, pattern_type)
@@ -200,6 +200,8 @@ from fedramp_20x_mcp.analyzers.base import Severity'''
         """Generate code that should NOT trigger the pattern"""
         
         pattern_id = pattern.get('pattern_id', '')
+        languages = pattern.get('languages', {})
+        lang_config = languages.get(lang, {})
         
         # Generate compliant/unrelated code
         if lang == 'python':
@@ -210,6 +212,8 @@ from fedramp_20x_mcp.analyzers.base import Severity'''
             return self._generate_bicep_negative(pattern_id)
         elif lang == 'terraform':
             return self._generate_terraform_negative(pattern_id)
+        elif lang in ['github_actions', 'azure_pipelines', 'gitlab_ci']:
+            return self._generate_cicd_negative(pattern_id, lang_config)
         else:
             return self._generate_generic_negative(pattern_id)
     
@@ -257,9 +261,9 @@ from fedramp_20x_mcp.analyzers.base import Severity'''
             
             # Hardcoded secrets
             if any(x in pattern.lower() for x in ['password', 'secret', 'api_key', 'token']):
-                return '''password = "hardcoded123"
-api_key = "sk-1234567890abcdef"
-secret = "my-secret-key"'''
+                return '''password = 'hardcoded123'
+api_key = 'sk-1234567890abcdef'
+secret = 'my-secret-key\''''
             
             # Weak crypto
             if 'md5' in pattern.lower() or 'sha1' in pattern.lower():
@@ -277,7 +281,8 @@ secret = "my-secret-key"'''
             if 'hsts' in pattern.lower() or 'strict-transport-security' in pattern.lower():
                 return "# Missing HSTS header\napp.config['SECURE_HEADERS'] = {}"
             
-            return f"# Pattern: {pattern}\ncode_with_pattern = True"
+            # Generic fallback - just return a simple comment without regex pattern
+            return "# Pattern detected\ncode_with_pattern = True"
         
         # Analyze from regex_fallback (string, not list)
         lang_config = {}
@@ -287,9 +292,9 @@ secret = "my-secret-key"'''
         elif hasattr(pattern_id, '__contains__'):
             # Pattern-ID based generation (more comprehensive)
             if 'hardcoded' in pattern_id and 'secret' in pattern_id:
-                return '''password = "hardcoded123"
-api_key = "sk-1234567890abcdef"
-secret = "my-secret-key"'''
+                return '''password = 'hardcoded123'
+api_key = 'sk-1234567890abcdef'
+secret = 'my-secret-key\''''
             elif 'weak' in pattern_id and ('crypto' in pattern_id or 'algorithm' in pattern_id):
                 return "import hashlib\nhash = hashlib.md5(data.encode())"
             elif 'missing' in pattern_id and 'hsts' in pattern_id:
@@ -447,9 +452,25 @@ secret = "my-secret-key"'''
                                ast_queries: List, regex_patterns: List) -> str:
         """Generate CI/CD YAML that triggers pattern"""
         
+        # Check if this is a "missing" pattern (should detect ABSENCE)
+        is_missing_pattern = 'missing' in pattern_id.lower()
+        
         # SAST/scanning patterns
         if 'sast' in pattern_id.lower() or 'scan' in pattern_id.lower():
-            return """name: CI Pipeline
+            if is_missing_pattern:
+                # Missing SAST - create pipeline WITHOUT scanning
+                return """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build application
+        run: npm install && npm run build"""
+            else:
+                # Has SAST - create pipeline WITH scanning
+                return """name: CI Pipeline
 on: [push]
 jobs:
   build:
@@ -461,7 +482,20 @@ jobs:
         
         # Dependency scanning
         elif 'dependency' in pattern_id.lower() or 'sca' in pattern_id.lower():
-            return """name: Security Scan
+            if is_missing_pattern:
+                # Missing dependency scan - create pipeline WITHOUT scanning
+                return """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: npm install"""
+            else:
+                # Has dependency scan
+                return """name: Security Scan
 on: [push]
 jobs:
   scan:
@@ -473,7 +507,22 @@ jobs:
         
         # Container scanning
         elif 'container' in pattern_id.lower() and 'scan' in pattern_id.lower():
-            return """name: Container Scan
+            if is_missing_pattern:
+                # Missing container scan - build image WITHOUT scanning
+                return """name: Build Container
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build image
+        run: docker build -t myapp:latest .
+      - name: Push image
+        run: docker push myapp:latest"""
+            else:
+                # Has container scan
+                return """name: Container Scan
 on: [push]
 jobs:
   scan:
@@ -508,6 +557,68 @@ jobs:
       - uses: actions/checkout@v2
       - name: Build
         run: echo "Building..." """
+    
+    def _generate_cicd_negative(self, pattern_id: str, lang_config: Dict) -> str:
+        """Generate CI/CD YAML that should NOT trigger pattern"""
+        
+        # Check if this is a "missing" pattern
+        is_missing_pattern = 'missing' in pattern_id.lower()
+        negative_indicators = lang_config.get('negative_indicators', [])
+        
+        # For "missing" patterns, the negative test should HAVE the required tools
+        if is_missing_pattern:
+            if 'sast' in pattern_id.lower():
+                # Has SAST - should NOT trigger "missing SAST" detection
+                return """name: CI Pipeline with SAST
+on: [push]
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2"""
+            
+            elif 'container' in pattern_id.lower() and 'scan' in pattern_id.lower():
+                # Has container scan - should NOT trigger "missing container scan"
+                return """name: Container Pipeline with Scanning
+on: [push]
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build image
+        run: docker build -t myapp:latest .
+      - name: Scan container
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: myapp:latest"""
+            
+            elif 'dependency' in pattern_id.lower():
+                # Has dependency scan
+                return """name: Pipeline with Dependency Scanning
+on: [push]
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v3"""
+        
+        # For non-missing patterns, just return unrelated pipeline
+        return """name: Simple Pipeline
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test"""
     
     def _generate_generic_positive(self, pattern_id: str, pattern_type: str) -> str:
         """Generic positive example"""

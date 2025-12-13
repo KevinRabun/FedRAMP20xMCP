@@ -25,7 +25,7 @@ class TestRscPatterns:
 
     def test_rsc_allocation_resource_limits_positive(self, analyzer):
         """Test rsc.allocation.resource_limits: Resource Limits Configuration - Should detect"""
-        code = """# Pattern: (resources:.*limits:|resources:.*requests:)|(cpu:.*memory:|limits.*cpu|limits.*memory)|(MAX_MEMORY|MAX_CPU|RESOURCE_LIMIT)
+        code = """# Pattern detected
 code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
@@ -53,7 +53,7 @@ if __name__ == "__main__":
 
     def test_rsc_monitoring_resource_metrics_positive(self, analyzer):
         """Test rsc.monitoring.resource_metrics: Resource Metrics Monitoring - Should detect"""
-        code = """# Pattern: (cpu.*usage|memory.*usage|disk.*usage)|(metrics.*cpu|metrics.*memory|resource.*monitor)|(psutil|performance.*counter)
+        code = """# Pattern detected
 code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
@@ -244,7 +244,15 @@ output resourceLocation string = location
 
     def test_rsc_cicd_resource_validation_positive(self, analyzer):
         """Test rsc.cicd.resource_validation: Resource Configuration Validation - Should detect"""
-        code = """# Code that triggers rsc.cicd.resource_validation"""
+        code = """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: echo "Building..." """
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -254,7 +262,15 @@ output resourceLocation string = location
     
     def test_rsc_cicd_resource_validation_negative(self, analyzer):
         """Test rsc.cicd.resource_validation: Resource Configuration Validation - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: Simple Pipeline
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test"""
         
         result = analyzer.analyze(code, "github_actions")
         

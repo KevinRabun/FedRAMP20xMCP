@@ -175,7 +175,7 @@ if __name__ == "__main__":
 
     def test_iam_mfa_login_without_mfa_positive(self, analyzer):
         """Test iam.mfa.login_without_mfa: Login Function Without MFA - Should detect"""
-        code = """# Pattern: def\s+\w*login\w*\([^)]*\):
+        code = """# Pattern detected
 code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
@@ -302,7 +302,7 @@ output resourceLocation string = location
 
     def test_iam_session_timeout_missing_positive(self, analyzer):
         """Test iam.session.timeout_missing: Missing Session Timeout - Should detect"""
-        code = """# Pattern: PERMANENT_SESSION_LIFETIME.*timedelta
+        code = """# Pattern detected
 code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
@@ -330,9 +330,9 @@ if __name__ == "__main__":
 
     def test_iam_identity_missing_managed_identity_positive(self, analyzer):
         """Test iam.identity.missing_managed_identity: Missing Managed Identity - Should detect"""
-        code = """password = "hardcoded123"
-api_key = "sk-1234567890abcdef"
-secret = "my-secret-key""""
+        code = """password = 'hardcoded123'
+api_key = 'sk-1234567890abcdef'
+secret = 'my-secret-key'"""
         
         result = analyzer.analyze(code, "python")
         

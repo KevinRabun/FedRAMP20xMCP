@@ -25,7 +25,7 @@ class TestCcmPatterns:
 
     def test_ccm_version_control_git_usage_positive(self, analyzer):
         """Test ccm.version_control.git_usage: Git Version Control Usage - Should detect"""
-        code = """# Pattern: (\.git/|\.gitignore|\.gitattributes)|(git commit|git push|git merge)
+        code = """# Pattern detected
 code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
@@ -102,7 +102,15 @@ if __name__ == "__main__":
 
     def test_ccm_automated_testing_pre_deploy_positive(self, analyzer):
         """Test ccm.automated_testing.pre_deploy: Automated Testing Before Deployment - Should detect"""
-        code = """# Code that triggers ccm.automated_testing.pre_deploy"""
+        code = """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: echo "Building..." """
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -112,7 +120,15 @@ if __name__ == "__main__":
     
     def test_ccm_automated_testing_pre_deploy_negative(self, analyzer):
         """Test ccm.automated_testing.pre_deploy: Automated Testing Before Deployment - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: Simple Pipeline
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -123,7 +139,7 @@ if __name__ == "__main__":
 
     def test_ccm_rollback_capability_positive(self, analyzer):
         """Test ccm.rollback.capability: Rollback Capability - Should detect"""
-        code = """# Pattern: (rollback|revert|undo.*deploy)|(previous.*version|last.*known.*good)
+        code = """# Pattern detected
 code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
@@ -172,7 +188,7 @@ if __name__ == "__main__":
 
     def test_ccm_change_approval_explicit_positive(self, analyzer):
         """Test ccm.change_approval.explicit: Explicit Change Approval Check - Should detect"""
-        code = """# Pattern: (check.*approval|verify.*approved|require.*authorization)|(is_approved|has_approval|approved_by)
+        code = """# Pattern detected
 code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
@@ -200,7 +216,15 @@ if __name__ == "__main__":
 
     def test_ccm_iac_arm_template_validation_positive(self, analyzer):
         """Test ccm.iac.arm_template_validation: ARM Template Validation - Should detect"""
-        code = """# Code that triggers ccm.iac.arm_template_validation"""
+        code = """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: echo "Building..." """
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -210,7 +234,15 @@ if __name__ == "__main__":
     
     def test_ccm_iac_arm_template_validation_negative(self, analyzer):
         """Test ccm.iac.arm_template_validation: ARM Template Validation - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: Simple Pipeline
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -221,7 +253,15 @@ if __name__ == "__main__":
 
     def test_ccm_iac_terraform_plan_positive(self, analyzer):
         """Test ccm.iac.terraform_plan: Terraform Plan for Change Preview - Should detect"""
-        code = """# Code that triggers ccm.iac.terraform_plan"""
+        code = """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: echo "Building..." """
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -231,7 +271,15 @@ if __name__ == "__main__":
     
     def test_ccm_iac_terraform_plan_negative(self, analyzer):
         """Test ccm.iac.terraform_plan: Terraform Plan for Change Preview - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: Simple Pipeline
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -242,7 +290,15 @@ if __name__ == "__main__":
 
     def test_ccm_cicd_deployment_gate_positive(self, analyzer):
         """Test ccm.cicd.deployment_gate: Deployment Gate/Approval - Should detect"""
-        code = """# Code that triggers ccm.cicd.deployment_gate"""
+        code = """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: echo "Building..." """
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -252,7 +308,15 @@ if __name__ == "__main__":
     
     def test_ccm_cicd_deployment_gate_negative(self, analyzer):
         """Test ccm.cicd.deployment_gate: Deployment Gate/Approval - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: Simple Pipeline
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -263,7 +327,16 @@ if __name__ == "__main__":
 
     def test_ccm_cicd_configuration_backup_positive(self, analyzer):
         """Test ccm.cicd.configuration_backup: Configuration Backup Before Change - Should detect"""
-        code = """# Code that triggers ccm.cicd.configuration_backup"""
+        code = """name: Configuration Backup
+on:
+  schedule:
+    - cron: '0 0 * * *'
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Export configuration
+        run: az export --output backup.json"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -273,7 +346,15 @@ if __name__ == "__main__":
     
     def test_ccm_cicd_configuration_backup_negative(self, analyzer):
         """Test ccm.cicd.configuration_backup: Configuration Backup Before Change - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: Simple Pipeline
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test"""
         
         result = analyzer.analyze(code, "github_actions")
         

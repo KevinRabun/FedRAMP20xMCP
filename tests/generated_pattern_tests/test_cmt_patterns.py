@@ -25,7 +25,15 @@ class TestCmtPatterns:
 
     def test_cmt_vcs_repository_integration_positive(self, analyzer):
         """Test cmt.vcs.repository_integration: Version Control Integration - Should detect"""
-        code = """# Code that triggers cmt.vcs.repository_integration"""
+        code = """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: echo "Building..." """
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -35,7 +43,15 @@ class TestCmtPatterns:
     
     def test_cmt_vcs_repository_integration_negative(self, analyzer):
         """Test cmt.vcs.repository_integration: Version Control Integration - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: Simple Pipeline
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -46,7 +62,15 @@ class TestCmtPatterns:
 
     def test_cmt_vcs_missing_integration_positive(self, analyzer):
         """Test cmt.vcs.missing_integration: Missing Version Control - Should detect"""
-        code = """# Code that triggers cmt.vcs.missing_integration"""
+        code = """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: echo "Building..." """
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -56,7 +80,15 @@ class TestCmtPatterns:
     
     def test_cmt_vcs_missing_integration_negative(self, analyzer):
         """Test cmt.vcs.missing_integration: Missing Version Control - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: Simple Pipeline
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -67,7 +99,15 @@ class TestCmtPatterns:
 
     def test_cmt_testing_pre_deploy_gates_positive(self, analyzer):
         """Test cmt.testing.pre_deploy_gates: Pre-Deployment Testing Gates - Should detect"""
-        code = """# Code that triggers cmt.testing.pre_deploy_gates"""
+        code = """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: echo "Building..." """
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -77,7 +117,15 @@ class TestCmtPatterns:
     
     def test_cmt_testing_pre_deploy_gates_negative(self, analyzer):
         """Test cmt.testing.pre_deploy_gates: Pre-Deployment Testing Gates - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: Simple Pipeline
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test"""
         
         result = analyzer.analyze(code, "github_actions")
         

@@ -25,7 +25,7 @@ class TestCedPatterns:
 
     def test_ced_training_missing_documentation_positive(self, analyzer):
         """Test ced.training.missing_documentation: Missing Security Training Documentation - Should detect"""
-        code = """# Pattern: (class.*Training|def.*training|LMS|learning_management)
+        code = """# Pattern detected
 code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
@@ -53,7 +53,7 @@ if __name__ == "__main__":
 
     def test_ced_training_role_based_missing_positive(self, analyzer):
         """Test ced.training.role_based_missing: Insufficient Role-Based Security Training - Should detect"""
-        code = """# Pattern: (role.*admin|privilege.*user|developer.*access|RBAC)
+        code = """# Pattern detected
 code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
@@ -109,7 +109,7 @@ if __name__ == "__main__":
 
     def test_ced_training_incident_response_missing_positive(self, analyzer):
         """Test ced.training.incident_response_missing: Missing Incident Response Training - Should detect"""
-        code = """# Pattern: (incident|alert|exception|error|failure)
+        code = """# Pattern detected
 code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")

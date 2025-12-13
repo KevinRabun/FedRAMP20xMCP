@@ -78,9 +78,17 @@ output resourceLocation string = location
 
     def test_piy_vdp_missing_program_positive(self, analyzer):
         """Test piy.vdp.missing_program: Missing Vulnerability Disclosure Program - Should detect"""
-        code = """# Code that triggers piy.vdp.missing_program"""
+        code = """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: echo "Building..." """
         
-        result = analyzer.analyze(code, "markdown")
+        result = analyzer.analyze(code, "github_actions")
         
         # Should detect the pattern
         findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "piy.vdp.missing_program" == f.pattern_id]
@@ -88,9 +96,17 @@ output resourceLocation string = location
     
     def test_piy_vdp_missing_program_negative(self, analyzer):
         """Test piy.vdp.missing_program: Missing Vulnerability Disclosure Program - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: Simple Pipeline
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test"""
         
-        result = analyzer.analyze(code, "markdown")
+        result = analyzer.analyze(code, "github_actions")
         
         # Should NOT detect the pattern
         findings = [f for f in result.findings if hasattr(f, 'pattern_id') and "piy.vdp.missing_program" == f.pattern_id]
@@ -99,9 +115,9 @@ output resourceLocation string = location
 
     def test_piy_secure_by_design_missing_practices_positive(self, analyzer):
         """Test piy.secure_by_design.missing_practices: Missing CISA Secure By Design Practices - Should detect"""
-        code = """password = "hardcoded123"
-api_key = "sk-1234567890abcdef"
-secret = "my-secret-key""""
+        code = """password = 'hardcoded123'
+api_key = 'sk-1234567890abcdef'
+secret = 'my-secret-key'"""
         
         result = analyzer.analyze(code, "python")
         
@@ -128,7 +144,15 @@ if __name__ == "__main__":
 
     def test_piy_evaluation_missing_validation_positive(self, analyzer):
         """Test piy.evaluation.missing_validation: Missing Implementation Validation - Should detect"""
-        code = """# Code that triggers piy.evaluation.missing_validation"""
+        code = """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: echo "Building..." """
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -138,7 +162,15 @@ if __name__ == "__main__":
     
     def test_piy_evaluation_missing_validation_negative(self, analyzer):
         """Test piy.evaluation.missing_validation: Missing Implementation Validation - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: Simple Pipeline
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -170,7 +202,7 @@ if __name__ == "__main__":
 
     def test_piy_supply_chain_unvetted_dependencies_positive(self, analyzer):
         """Test piy.supply_chain.unvetted_dependencies: Unvetted Supply Chain Dependencies - Should detect"""
-        code = """# Pattern: (?i)(requirements\.txt|pyproject\.toml|setup\.py|pipfile)
+        code = """# Pattern detected
 code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")

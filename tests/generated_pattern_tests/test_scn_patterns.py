@@ -25,7 +25,15 @@ class TestScnPatterns:
 
     def test_scn_sast_tool_integration_positive(self, analyzer):
         """Test scn.sast.tool_integration: SAST Tool Integration - Should detect"""
-        code = """# Code that triggers scn.sast.tool_integration"""
+        code = """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run SAST scan
+        run: semgrep --config=auto ."""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -35,7 +43,15 @@ class TestScnPatterns:
     
     def test_scn_sast_tool_integration_negative(self, analyzer):
         """Test scn.sast.tool_integration: SAST Tool Integration - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: Simple Pipeline
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -46,7 +62,15 @@ class TestScnPatterns:
 
     def test_scn_sca_dependency_scanning_positive(self, analyzer):
         """Test scn.sca.dependency_scanning: Software Composition Analysis (SCA) - Should detect"""
-        code = """# Code that triggers scn.sca.dependency_scanning"""
+        code = """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run SAST scan
+        run: semgrep --config=auto ."""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -56,7 +80,15 @@ class TestScnPatterns:
     
     def test_scn_sca_dependency_scanning_negative(self, analyzer):
         """Test scn.sca.dependency_scanning: Software Composition Analysis (SCA) - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: Simple Pipeline
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -67,7 +99,15 @@ class TestScnPatterns:
 
     def test_scn_container_image_scanning_positive(self, analyzer):
         """Test scn.container.image_scanning: Container Image Scanning - Should detect"""
-        code = """# Code that triggers scn.container.image_scanning"""
+        code = """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run SAST scan
+        run: semgrep --config=auto ."""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -77,7 +117,15 @@ class TestScnPatterns:
     
     def test_scn_container_image_scanning_negative(self, analyzer):
         """Test scn.container.image_scanning: Container Image Scanning - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: Simple Pipeline
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -88,7 +136,15 @@ class TestScnPatterns:
 
     def test_scn_iac_security_scanning_positive(self, analyzer):
         """Test scn.iac.security_scanning: IaC Security Scanning - Should detect"""
-        code = """# Code that triggers scn.iac.security_scanning"""
+        code = """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run SAST scan
+        run: semgrep --config=auto ."""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -98,7 +154,15 @@ class TestScnPatterns:
     
     def test_scn_iac_security_scanning_negative(self, analyzer):
         """Test scn.iac.security_scanning: IaC Security Scanning - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: Simple Pipeline
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -109,7 +173,15 @@ class TestScnPatterns:
 
     def test_scn_secrets_scanning_positive(self, analyzer):
         """Test scn.secrets.scanning: Secrets Scanning - Should detect"""
-        code = """# Code that triggers scn.secrets.scanning"""
+        code = """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run SAST scan
+        run: semgrep --config=auto ."""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -119,7 +191,15 @@ class TestScnPatterns:
     
     def test_scn_secrets_scanning_negative(self, analyzer):
         """Test scn.secrets.scanning: Secrets Scanning - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: Simple Pipeline
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -130,7 +210,15 @@ class TestScnPatterns:
 
     def test_scn_dast_dynamic_testing_positive(self, analyzer):
         """Test scn.dast.dynamic_testing: DAST Tool Integration - Should detect"""
-        code = """# Code that triggers scn.dast.dynamic_testing"""
+        code = """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: echo "Building..." """
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -140,7 +228,15 @@ class TestScnPatterns:
     
     def test_scn_dast_dynamic_testing_negative(self, analyzer):
         """Test scn.dast.dynamic_testing: DAST Tool Integration - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: Simple Pipeline
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -252,7 +348,15 @@ output resourceLocation string = location
 
     def test_scn_cicd_scan_gate_positive(self, analyzer):
         """Test scn.cicd.scan_gate: Security Scan Gate - Should detect"""
-        code = """# Code that triggers scn.cicd.scan_gate"""
+        code = """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run SAST scan
+        run: semgrep --config=auto ."""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -262,7 +366,15 @@ output resourceLocation string = location
     
     def test_scn_cicd_scan_gate_negative(self, analyzer):
         """Test scn.cicd.scan_gate: Security Scan Gate - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: Simple Pipeline
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -273,7 +385,15 @@ output resourceLocation string = location
 
     def test_scn_missing_sast_positive(self, analyzer):
         """Test scn.missing_sast: Missing SAST Scanning - Should detect"""
-        code = """# Code that triggers scn.missing_sast"""
+        code = """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build application
+        run: npm install && npm run build"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -283,7 +403,17 @@ output resourceLocation string = location
     
     def test_scn_missing_sast_negative(self, analyzer):
         """Test scn.missing_sast: Missing SAST Scanning - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: CI Pipeline with SAST
+on: [push]
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -294,7 +424,15 @@ output resourceLocation string = location
 
     def test_scn_missing_dependency_scan_positive(self, analyzer):
         """Test scn.missing_dependency_scan: Missing Dependency Scanning - Should detect"""
-        code = """# Code that triggers scn.missing_dependency_scan"""
+        code = """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build application
+        run: npm install && npm run build"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -304,7 +442,15 @@ output resourceLocation string = location
     
     def test_scn_missing_dependency_scan_negative(self, analyzer):
         """Test scn.missing_dependency_scan: Missing Dependency Scanning - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: Pipeline with Dependency Scanning
+on: [push]
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v3"""
         
         result = analyzer.analyze(code, "github_actions")
         

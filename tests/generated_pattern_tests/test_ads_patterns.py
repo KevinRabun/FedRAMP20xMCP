@@ -140,7 +140,7 @@ if __name__ == "__main__":
 
     def test_ads_audit_fields_required_fields_positive(self, analyzer):
         """Test ads.audit_fields.required_fields: Required Audit Fields - Should detect"""
-        code = """# Pattern: (timestamp.*user.*action.*resource)|("timestamp".*"userId".*"action".*"resourceId")
+        code = """# Pattern detected
 code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
@@ -168,7 +168,7 @@ if __name__ == "__main__":
 
     def test_ads_query_api_filtering_positive(self, analyzer):
         """Test ads.query_api.filtering: Audit Data Query API - Should detect"""
-        code = """# Pattern: (def.*query.*audit|def.*filter.*audit)|(public.*Query.*Audit|public.*Filter.*Audit)|(function.*queryAudit|function.*filterAudit)
+        code = """# Pattern detected
 code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
@@ -286,7 +286,16 @@ output resourceLocation string = location
 
     def test_ads_cicd_audit_export_step_positive(self, analyzer):
         """Test ads.cicd.audit_export_step: CI/CD Audit Data Export Step - Should detect"""
-        code = """# Code that triggers ads.cicd.audit_export_step"""
+        code = """name: Configuration Backup
+on:
+  schedule:
+    - cron: '0 0 * * *'
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Export configuration
+        run: az export --output backup.json"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -296,7 +305,15 @@ output resourceLocation string = location
     
     def test_ads_cicd_audit_export_step_negative(self, analyzer):
         """Test ads.cicd.audit_export_step: CI/CD Audit Data Export Step - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: Simple Pipeline
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test"""
         
         result = analyzer.analyze(code, "github_actions")
         

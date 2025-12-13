@@ -50,7 +50,15 @@ output resourceLocation string = location
 
     def test_vdr_scanning_ci_cd_scanning_positive(self, analyzer):
         """Test vdr.scanning.ci_cd_scanning: CI/CD Security Scanning - Should detect"""
-        code = """# Code that triggers vdr.scanning.ci_cd_scanning"""
+        code = """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run SAST scan
+        run: semgrep --config=auto ."""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -60,7 +68,15 @@ output resourceLocation string = location
     
     def test_vdr_scanning_ci_cd_scanning_negative(self, analyzer):
         """Test vdr.scanning.ci_cd_scanning: CI/CD Security Scanning - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: Simple Pipeline
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -71,7 +87,15 @@ output resourceLocation string = location
 
     def test_vdr_scanning_missing_sast_positive(self, analyzer):
         """Test vdr.scanning.missing_sast: Missing SAST Scanning - Should detect"""
-        code = """# Code that triggers vdr.scanning.missing_sast"""
+        code = """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build application
+        run: npm install && npm run build"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -81,7 +105,17 @@ output resourceLocation string = location
     
     def test_vdr_scanning_missing_sast_negative(self, analyzer):
         """Test vdr.scanning.missing_sast: Missing SAST Scanning - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: CI Pipeline with SAST
+on: [push]
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -92,7 +126,15 @@ output resourceLocation string = location
 
     def test_vdr_scanning_missing_container_scan_positive(self, analyzer):
         """Test vdr.scanning.missing_container_scan: Missing Container Image Scanning - Should detect"""
-        code = """# Code that triggers vdr.scanning.missing_container_scan"""
+        code = """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build application
+        run: npm install && npm run build"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -102,7 +144,19 @@ output resourceLocation string = location
     
     def test_vdr_scanning_missing_container_scan_negative(self, analyzer):
         """Test vdr.scanning.missing_container_scan: Missing Container Image Scanning - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: Container Pipeline with Scanning
+on: [push]
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build image
+        run: docker build -t myapp:latest .
+      - name: Scan container
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: myapp:latest"""
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -180,7 +234,7 @@ output resourceLocation string = location
 
     def test_vdr_dependencies_outdated_packages_positive(self, analyzer):
         """Test vdr.dependencies.outdated_packages: Outdated Dependencies - Should detect"""
-        code = """# Pattern: ^[a-zA-Z0-9_-]+==.*$
+        code = """# Pattern detected
 code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")

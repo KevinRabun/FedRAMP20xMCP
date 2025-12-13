@@ -640,21 +640,48 @@ class GenericPatternAnalyzer:
         file_path: str,
         positive: bool = True
     ) -> List[Finding]:
-        """Check for positive/negative indicators."""
+        """Check for positive/negative indicators.
+        
+        SEMANTICS:
+        - Positive indicators: Their PRESENCE is good (create finding when found)
+        - Negative indicators: Depends on pattern type:
+          * For "missing_*" patterns: These are REQUIRED things - create finding when ABSENT
+          * For other patterns: These are BAD things - create finding when PRESENT
+        """
         findings: List[Finding] = []
         
-        for indicator in indicators:
-            if indicator.lower() in code.lower():
-                if positive:
-                    # Positive indicator found - this is good
+        if positive:
+            # Positive indicators - finding them is good
+            for indicator in indicators:
+                if indicator.lower() in code.lower():
+                    # Positive indicator found - this is good practice
                     findings.append(self._create_finding(
                         pattern, file_path, None, good_practice=True
                     ))
-                else:
-                    # Negative indicator found - this is bad
+        else:
+            # Negative indicators - semantics depend on pattern type
+            pattern_id = pattern.pattern_id.lower() if hasattr(pattern, 'pattern_id') else ''
+            is_missing_pattern = 'missing' in pattern_id or 'absence' in pattern_id
+            
+            if is_missing_pattern:
+                # For "missing_*" patterns: negative_indicators are REQUIRED things
+                # Create finding if NONE are present (something is missing)
+                any_found = any(indicator.lower() in code.lower() for indicator in indicators)
+                
+                if not any_found:
+                    # None of the required indicators found - this is bad
                     findings.append(self._create_finding(
                         pattern, file_path, None, good_practice=False
                     ))
+            else:
+                # For detection patterns: negative_indicators are BAD things
+                # Create finding if ANY are present
+                for indicator in indicators:
+                    if indicator.lower() in code.lower():
+                        # Negative indicator found - this is bad
+                        findings.append(self._create_finding(
+                            pattern, file_path, None, good_practice=False
+                        ))
         
         return findings
     

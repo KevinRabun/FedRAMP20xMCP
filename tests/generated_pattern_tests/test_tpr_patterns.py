@@ -25,7 +25,7 @@ class TestTprPatterns:
 
     def test_tpr_dependencies_unverified_positive(self, analyzer):
         """Test tpr.dependencies.unverified: Unverified Third-Party Dependencies - Should detect"""
-        code = """# Pattern: (pip install|requirements\.txt|poetry add|pipenv install)
+        code = """# Pattern detected
 code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
@@ -53,7 +53,7 @@ if __name__ == "__main__":
 
     def test_tpr_monitoring_supply_chain_missing_positive(self, analyzer):
         """Test tpr.monitoring.supply_chain_missing: Missing Supply Chain Security Monitoring - Should detect"""
-        code = """# Pattern: (safety check|pip-audit|bandit|snyk)
+        code = """# Pattern detected
 code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
@@ -81,7 +81,7 @@ if __name__ == "__main__":
 
     def test_tpr_sources_insecure_positive(self, analyzer):
         """Test tpr.sources.insecure: Insecure Third-Party Package Sources - Should detect"""
-        code = """# Pattern: (--index-url\s+http:|--extra-index-url\s+http:|pip install.*--trusted-host)
+        code = """# Pattern detected
 code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
@@ -109,7 +109,15 @@ if __name__ == "__main__":
 
     def test_tpr_sbom_missing_positive(self, analyzer):
         """Test tpr.sbom.missing: Missing Software Bill of Materials (SBOM) - Should detect"""
-        code = """# Code that triggers tpr.sbom.missing"""
+        code = """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: echo "Building..." """
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -119,7 +127,15 @@ if __name__ == "__main__":
     
     def test_tpr_sbom_missing_negative(self, analyzer):
         """Test tpr.sbom.missing: Missing Software Bill of Materials (SBOM) - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: Simple Pipeline
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test"""
         
         result = analyzer.analyze(code, "github_actions")
         

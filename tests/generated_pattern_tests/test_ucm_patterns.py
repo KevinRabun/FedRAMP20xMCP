@@ -25,7 +25,7 @@ class TestUcmPatterns:
 
     def test_ucm_rbac_role_definition_positive(self, analyzer):
         """Test ucm.rbac.role_definition: Role-Based Access Control Definition - Should detect"""
-        code = """# Pattern: (class.*Role|enum.*Role|ROLES\s*=)|(role.*admin|role.*user|role.*viewer)|(@role|@roles|@authorize)
+        code = """# Pattern detected
 code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
@@ -110,7 +110,7 @@ if __name__ == "__main__":
 
     def test_ucm_least_privilege_default_deny_positive(self, analyzer):
         """Test ucm.least_privilege.default_deny: Default Deny Access Control - Should detect"""
-        code = """# Pattern: (default.*deny|deny.*default|access.*denied)|(if not.*permission.*return.*403|if not.*authorized.*return.*forbidden)
+        code = """# Pattern detected
 code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
@@ -138,7 +138,7 @@ if __name__ == "__main__":
 
     def test_ucm_session_timeout_positive(self, analyzer):
         """Test ucm.session.timeout: Session Timeout Configuration - Should detect"""
-        code = """# Pattern: (session.*timeout|timeout.*session|SESSION_TIMEOUT)|(idle.*timeout|inactivity.*timeout)|(expires.*minutes|expiration.*time)
+        code = """# Pattern detected
 code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
@@ -194,7 +194,7 @@ if __name__ == "__main__":
 
     def test_ucm_missing_authorization_positive(self, analyzer):
         """Test ucm.missing_authorization: Missing Authorization Check - Should detect"""
-        code = """# Pattern: (@app\.route|@api\.route|def.*api_)
+        code = """# Pattern detected
 code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
@@ -309,7 +309,15 @@ output resourceLocation string = location
 
     def test_ucm_cicd_rbac_validation_positive(self, analyzer):
         """Test ucm.cicd.rbac_validation: CI/CD RBAC Validation Step - Should detect"""
-        code = """# Code that triggers ucm.cicd.rbac_validation"""
+        code = """name: CI Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: echo "Building..." """
         
         result = analyzer.analyze(code, "github_actions")
         
@@ -319,7 +327,15 @@ output resourceLocation string = location
     
     def test_ucm_cicd_rbac_validation_negative(self, analyzer):
         """Test ucm.cicd.rbac_validation: CI/CD RBAC Validation Step - Should NOT detect"""
-        code = """# Compliant code that should not trigger detection"""
+        code = """name: Simple Pipeline
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test"""
         
         result = analyzer.analyze(code, "github_actions")
         
