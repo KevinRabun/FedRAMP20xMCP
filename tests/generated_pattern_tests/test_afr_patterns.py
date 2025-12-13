@@ -53,8 +53,8 @@ if __name__ == "__main__":
 
     def test_afr_config_debug_mode_positive(self, analyzer):
         """Test afr.config.debug_mode: Debug Mode Enabled in Production - Should detect"""
-        code = """# Code that triggers afr.config.debug_mode
-trigger_pattern = True"""
+        code = """DEBUG = True
+app.debug = True"""
         
         result = analyzer.analyze(code, "python")
         

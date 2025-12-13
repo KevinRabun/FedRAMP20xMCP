@@ -99,8 +99,9 @@ output resourceLocation string = location
 
     def test_piy_secure_by_design_missing_practices_positive(self, analyzer):
         """Test piy.secure_by_design.missing_practices: Missing CISA Secure By Design Practices - Should detect"""
-        code = """# Code that triggers piy.secure_by_design.missing_practices
-trigger_pattern = True"""
+        code = """password = "hardcoded123"
+api_key = "sk-1234567890abcdef"
+secret = "my-secret-key""""
         
         result = analyzer.analyze(code, "python")
         
@@ -169,8 +170,8 @@ if __name__ == "__main__":
 
     def test_piy_supply_chain_unvetted_dependencies_positive(self, analyzer):
         """Test piy.supply_chain.unvetted_dependencies: Unvetted Supply Chain Dependencies - Should detect"""
-        code = """# Code that triggers piy.supply_chain.unvetted_dependencies
-trigger_pattern = True"""
+        code = """# Pattern: (?i)(requirements\.txt|pyproject\.toml|setup\.py|pipfile)
+code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
         

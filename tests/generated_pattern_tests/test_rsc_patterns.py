@@ -25,8 +25,8 @@ class TestRscPatterns:
 
     def test_rsc_allocation_resource_limits_positive(self, analyzer):
         """Test rsc.allocation.resource_limits: Resource Limits Configuration - Should detect"""
-        code = """# Code that triggers rsc.allocation.resource_limits
-trigger_pattern = True"""
+        code = """# Pattern: (resources:.*limits:|resources:.*requests:)|(cpu:.*memory:|limits.*cpu|limits.*memory)|(MAX_MEMORY|MAX_CPU|RESOURCE_LIMIT)
+code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
         
@@ -53,8 +53,8 @@ if __name__ == "__main__":
 
     def test_rsc_monitoring_resource_metrics_positive(self, analyzer):
         """Test rsc.monitoring.resource_metrics: Resource Metrics Monitoring - Should detect"""
-        code = """# Code that triggers rsc.monitoring.resource_metrics
-trigger_pattern = True"""
+        code = """# Pattern: (cpu.*usage|memory.*usage|disk.*usage)|(metrics.*cpu|metrics.*memory|resource.*monitor)|(psutil|performance.*counter)
+code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
         

@@ -50,8 +50,8 @@ output resourceLocation string = location
 
     def test_inr_logging_incident_tracking_positive(self, analyzer):
         """Test inr.logging.incident_tracking: Missing Incident Logging - Should detect"""
-        code = """# Code that triggers inr.logging.incident_tracking
-trigger_pattern = True"""
+        code = """import logging
+logging.basicConfig(level=logging.INFO)"""
         
         result = analyzer.analyze(code, "python")
         

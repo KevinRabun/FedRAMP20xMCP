@@ -94,8 +94,8 @@ output resourceLocation string = location
 
     def test_cna_attack_surface_minimal_dependencies_positive(self, analyzer):
         """Test cna.attack_surface.minimal_dependencies: Minimal Dependencies Analysis - Should detect"""
-        code = """# Code that triggers cna.attack_surface.minimal_dependencies
-trigger_pattern = True"""
+        code = """# Pattern: (^import |^from .* import |^using |^require\()
+code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
         

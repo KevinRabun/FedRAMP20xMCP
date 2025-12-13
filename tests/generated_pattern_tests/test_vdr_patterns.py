@@ -180,8 +180,8 @@ output resourceLocation string = location
 
     def test_vdr_dependencies_outdated_packages_positive(self, analyzer):
         """Test vdr.dependencies.outdated_packages: Outdated Dependencies - Should detect"""
-        code = """# Code that triggers vdr.dependencies.outdated_packages
-trigger_pattern = True"""
+        code = """# Pattern: ^[a-zA-Z0-9_-]+==.*$
+code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
         

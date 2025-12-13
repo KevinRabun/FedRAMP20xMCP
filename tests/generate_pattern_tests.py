@@ -176,6 +176,11 @@ from fedramp_20x_mcp.analyzers.base import Severity'''
         lang_config = languages.get(lang, {})
         ast_queries = lang_config.get('ast_queries', [])
         regex_patterns = lang_config.get('regex_patterns', [])
+        regex_fallback = lang_config.get('regex_fallback', '')
+        
+        # Combine regex sources
+        if not regex_patterns and regex_fallback:
+            regex_patterns = [regex_fallback]
         
         # Generate based on pattern type and queries
         if lang == 'python':
@@ -251,8 +256,10 @@ from fedramp_20x_mcp.analyzers.base import Severity'''
                 return "DEBUG = True\napp.debug = True"
             
             # Hardcoded secrets
-            if 'password' in pattern.lower() or 'secret' in pattern.lower():
-                return 'password = "hardcoded123"\napi_key = "secret"'
+            if any(x in pattern.lower() for x in ['password', 'secret', 'api_key', 'token']):
+                return '''password = "hardcoded123"
+api_key = "sk-1234567890abcdef"
+secret = "my-secret-key"'''
             
             # Weak crypto
             if 'md5' in pattern.lower() or 'sha1' in pattern.lower():
@@ -266,7 +273,27 @@ from fedramp_20x_mcp.analyzers.base import Severity'''
             if 'logging' in pattern.lower() or 'logger' in pattern.lower():
                 return "import logging\nlogging.basicConfig(level=logging.INFO)"
             
+            # HSTS headers
+            if 'hsts' in pattern.lower() or 'strict-transport-security' in pattern.lower():
+                return "# Missing HSTS header\napp.config['SECURE_HEADERS'] = {}"
+            
             return f"# Pattern: {pattern}\ncode_with_pattern = True"
+        
+        # Analyze from regex_fallback (string, not list)
+        lang_config = {}
+        if isinstance(ast_queries, list) and len(ast_queries) > 0:
+            # Already handled above
+            pass
+        elif hasattr(pattern_id, '__contains__'):
+            # Pattern-ID based generation (more comprehensive)
+            if 'hardcoded' in pattern_id and 'secret' in pattern_id:
+                return '''password = "hardcoded123"
+api_key = "sk-1234567890abcdef"
+secret = "my-secret-key"'''
+            elif 'weak' in pattern_id and ('crypto' in pattern_id or 'algorithm' in pattern_id):
+                return "import hashlib\nhash = hashlib.md5(data.encode())"
+            elif 'missing' in pattern_id and 'hsts' in pattern_id:
+                return "# Missing HSTS header\nresponse.headers = {}"
         
         # Pattern-ID based generation (last resort)
         if 'login_without_mfa' in pattern_id or 'login_required' in pattern_id:

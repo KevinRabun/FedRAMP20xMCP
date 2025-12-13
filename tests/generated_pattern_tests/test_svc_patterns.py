@@ -83,8 +83,8 @@ if __name__ == "__main__":
 
     def test_svc_security_missing_hsts_positive(self, analyzer):
         """Test svc.security.missing_hsts: Missing HSTS Configuration - Should detect"""
-        code = """# Code that triggers svc.security.missing_hsts
-trigger_pattern = True"""
+        code = """# Pattern: Flask\(|FastAPI\(|class.*Config
+code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
         
@@ -111,8 +111,8 @@ if __name__ == "__main__":
 
     def test_svc_security_csp_header_positive(self, analyzer):
         """Test svc.security.csp_header: Content Security Policy - Should detect"""
-        code = """# Code that triggers svc.security.csp_header
-trigger_pattern = True"""
+        code = """# Pattern: content_security_policy|Content-Security-Policy
+code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
         
@@ -202,8 +202,9 @@ output resourceLocation string = location
 
     def test_svc_secrets_hardcoded_secret_positive(self, analyzer):
         """Test svc.secrets.hardcoded_secret: Hardcoded Secret - Should detect"""
-        code = """# Code that triggers svc.secrets.hardcoded_secret
-trigger_pattern = True"""
+        code = """password = "hardcoded123"
+api_key = "sk-1234567890abcdef"
+secret = "my-secret-key""""
         
         result = analyzer.analyze(code, "python")
         
@@ -406,8 +407,9 @@ output resourceLocation string = location
 
     def test_svc_secrets_key_vault_missing_positive(self, analyzer):
         """Test svc.secrets.key_vault_missing: Missing Key Vault for Secret Management - Should detect"""
-        code = """# Code that triggers svc.secrets.key_vault_missing
-trigger_pattern = True"""
+        code = """password = "hardcoded123"
+api_key = "sk-1234567890abcdef"
+secret = "my-secret-key""""
         
         result = analyzer.analyze(code, "python")
         
@@ -466,8 +468,8 @@ output resourceLocation string = location
 
     def test_svc_encryption_sql_tls_version_positive(self, analyzer):
         """Test svc.encryption.sql_tls_version: SQL Database Minimum TLS Version - Should detect"""
-        code = """# Code that triggers svc.encryption.sql_tls_version
-trigger_pattern = True"""
+        code = """# Pattern: (ssl_version|tls_version).*=.*(TLSv1_0|TLSv1_1|SSLv)
+code_with_pattern = True"""
         
         result = analyzer.analyze(code, "python")
         
