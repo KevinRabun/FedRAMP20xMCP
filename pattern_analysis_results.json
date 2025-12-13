@@ -1,0 +1,259 @@
+{
+  "summary": {
+    "total_files": 19,
+    "total_patterns": 155,
+    "total_todos": 14
+  },
+  "file_stats": {
+    "ads_patterns.yaml": {
+      "count": 10,
+      "has_evidence_artifacts": 10,
+      "has_automation": 10,
+      "has_implementation": 10,
+      "has_ssp_mapping": 10,
+      "has_evidence_collection": 0,
+      "has_azure_guidance": 10,
+      "has_compliance_frameworks": 10,
+      "has_testing": 10,
+      "todos_found": 0
+    },
+    "ads_patterns_v2_complete.yaml": {
+      "count": 2,
+      "has_evidence_artifacts": 2,
+      "has_automation": 2,
+      "has_implementation": 2,
+      "has_ssp_mapping": 2,
+      "has_evidence_collection": 2,
+      "has_azure_guidance": 2,
+      "has_compliance_frameworks": 2,
+      "has_testing": 2,
+      "todos_found": 0
+    },
+    "afr_patterns.yaml": {
+      "count": 4,
+      "has_evidence_artifacts": 4,
+      "has_automation": 4,
+      "has_implementation": 4,
+      "has_ssp_mapping": 4,
+      "has_evidence_collection": 0,
+      "has_azure_guidance": 4,
+      "has_compliance_frameworks": 4,
+      "has_testing": 4,
+      "todos_found": 0
+    },
+    "ccm_patterns.yaml": {
+      "count": 12,
+      "has_evidence_artifacts": 12,
+      "has_automation": 12,
+      "has_implementation": 12,
+      "has_ssp_mapping": 12,
+      "has_evidence_collection": 0,
+      "has_azure_guidance": 12,
+      "has_compliance_frameworks": 12,
+      "has_testing": 12,
+      "todos_found": 0
+    },
+    "ced_patterns.yaml": {
+      "count": 4,
+      "has_evidence_artifacts": 4,
+      "has_automation": 4,
+      "has_implementation": 4,
+      "has_ssp_mapping": 4,
+      "has_evidence_collection": 0,
+      "has_azure_guidance": 4,
+      "has_compliance_frameworks": 4,
+      "has_testing": 4,
+      "todos_found": 0
+    },
+    "cmt_patterns.yaml": {
+      "count": 4,
+      "has_evidence_artifacts": 2,
+      "has_automation": 4,
+      "has_implementation": 4,
+      "has_ssp_mapping": 4,
+      "has_evidence_collection": 4,
+      "has_azure_guidance": 4,
+      "has_compliance_frameworks": 4,
+      "has_testing": 4,
+      "todos_found": 3
+    },
+    "cna_patterns.yaml": {
+      "count": 11,
+      "has_evidence_artifacts": 11,
+      "has_automation": 11,
+      "has_implementation": 11,
+      "has_ssp_mapping": 11,
+      "has_evidence_collection": 0,
+      "has_azure_guidance": 11,
+      "has_compliance_frameworks": 11,
+      "has_testing": 11,
+      "todos_found": 0
+    },
+    "common_patterns.yaml": {
+      "count": 8,
+      "has_evidence_artifacts": 4,
+      "has_automation": 5,
+      "has_implementation": 5,
+      "has_ssp_mapping": 8,
+      "has_evidence_collection": 0,
+      "has_azure_guidance": 5,
+      "has_compliance_frameworks": 8,
+      "has_testing": 8,
+      "todos_found": 0
+    },
+    "iam_patterns.yaml": {
+      "count": 11,
+      "has_evidence_artifacts": 7,
+      "has_automation": 11,
+      "has_implementation": 11,
+      "has_ssp_mapping": 11,
+      "has_evidence_collection": 3,
+      "has_azure_guidance": 11,
+      "has_compliance_frameworks": 11,
+      "has_testing": 11,
+      "todos_found": 0
+    },
+    "inr_patterns.yaml": {
+      "count": 2,
+      "has_evidence_artifacts": 1,
+      "has_automation": 2,
+      "has_implementation": 2,
+      "has_ssp_mapping": 2,
+      "has_evidence_collection": 2,
+      "has_azure_guidance": 2,
+      "has_compliance_frameworks": 2,
+      "has_testing": 2,
+      "todos_found": 0
+    },
+    "mla_patterns.yaml": {
+      "count": 11,
+      "has_evidence_artifacts": 3,
+      "has_automation": 9,
+      "has_implementation": 9,
+      "has_ssp_mapping": 11,
+      "has_evidence_collection": 1,
+      "has_azure_guidance": 9,
+      "has_compliance_frameworks": 11,
+      "has_testing": 11,
+      "todos_found": 0
+    },
+    "piy_patterns.yaml": {
+      "count": 8,
+      "has_evidence_artifacts": 8,
+      "has_automation": 8,
+      "has_implementation": 8,
+      "has_ssp_mapping": 8,
+      "has_evidence_collection": 8,
+      "has_azure_guidance": 8,
+      "has_compliance_frameworks": 8,
+      "has_testing": 8,
+      "todos_found": 4
+    },
+    "rpl_patterns.yaml": {
+      "count": 2,
+      "has_evidence_artifacts": 2,
+      "has_automation": 2,
+      "has_implementation": 2,
+      "has_ssp_mapping": 2,
+      "has_evidence_collection": 2,
+      "has_azure_guidance": 2,
+      "has_compliance_frameworks": 2,
+      "has_testing": 2,
+      "todos_found": 0
+    },
+    "rsc_patterns.yaml": {
+      "count": 11,
+      "has_evidence_artifacts": 11,
+      "has_automation": 11,
+      "has_implementation": 11,
+      "has_ssp_mapping": 11,
+      "has_evidence_collection": 0,
+      "has_azure_guidance": 11,
+      "has_compliance_frameworks": 11,
+      "has_testing": 11,
+      "todos_found": 0
+    },
+    "scn_patterns.yaml": {
+      "count": 13,
+      "has_evidence_artifacts": 13,
+      "has_automation": 13,
+      "has_implementation": 13,
+      "has_ssp_mapping": 13,
+      "has_evidence_collection": 0,
+      "has_azure_guidance": 13,
+      "has_compliance_frameworks": 13,
+      "has_testing": 13,
+      "todos_found": 0
+    },
+    "svc_patterns.yaml": {
+      "count": 17,
+      "has_evidence_artifacts": 2,
+      "has_automation": 17,
+      "has_implementation": 17,
+      "has_ssp_mapping": 17,
+      "has_evidence_collection": 0,
+      "has_azure_guidance": 17,
+      "has_compliance_frameworks": 17,
+      "has_testing": 17,
+      "todos_found": 0
+    },
+    "tpr_patterns.yaml": {
+      "count": 4,
+      "has_evidence_artifacts": 4,
+      "has_automation": 4,
+      "has_implementation": 4,
+      "has_ssp_mapping": 4,
+      "has_evidence_collection": 0,
+      "has_azure_guidance": 4,
+      "has_compliance_frameworks": 4,
+      "has_testing": 4,
+      "todos_found": 0
+    },
+    "ucm_patterns.yaml": {
+      "count": 11,
+      "has_evidence_artifacts": 11,
+      "has_automation": 11,
+      "has_implementation": 11,
+      "has_ssp_mapping": 11,
+      "has_evidence_collection": 0,
+      "has_azure_guidance": 11,
+      "has_compliance_frameworks": 11,
+      "has_testing": 11,
+      "todos_found": 0
+    },
+    "vdr_patterns.yaml": {
+      "count": 10,
+      "has_evidence_artifacts": 0,
+      "has_automation": 0,
+      "has_implementation": 0,
+      "has_ssp_mapping": 10,
+      "has_evidence_collection": 0,
+      "has_azure_guidance": 0,
+      "has_compliance_frameworks": 10,
+      "has_testing": 10,
+      "todos_found": 7
+    }
+  },
+  "detailed_issues": {
+    "cmt_patterns.yaml": [
+      "cmt.vcs.repository_integration: testing.positive_test_cases has TODO",
+      "cmt.vcs.missing_integration: testing.positive_test_cases has TODO",
+      "cmt.testing.pre_deploy_gates: testing.positive_test_cases has TODO"
+    ],
+    "piy_patterns.yaml": [
+      "piy.vdp.missing_program: testing.positive_test_cases has TODO",
+      "piy.evaluation.missing_validation: testing.positive_test_cases has TODO",
+      "piy.investment.missing_metrics: testing.positive_test_cases has TODO",
+      "piy.executive.missing_governance: testing.positive_test_cases has TODO"
+    ],
+    "vdr_patterns.yaml": [
+      "vdr.scanning.ci_cd_scanning: testing.positive_test_cases has TODO",
+      "vdr.scanning.missing_sast: testing.positive_test_cases has TODO",
+      "vdr.scanning.missing_container_scan: testing.positive_test_cases has TODO",
+      "vdr.patching.outdated_base_image: testing.positive_test_cases has TODO",
+      "vdr.dependencies.dependabot: testing.positive_test_cases has TODO",
+      "vdr.secure_dev.pre_commit_hooks: testing.positive_test_cases has TODO",
+      "vdr.secure_dev.code_review_required: testing.positive_test_cases has TODO"
+    ]
+  }
+}
