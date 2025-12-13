@@ -152,52 +152,42 @@ implementation:
   - step: 1
     action: Review FedRAMP 20x requirement documentation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 2
     action: Identify systems and resources in scope
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 3
     action: Create resource group for FedRAMP resources
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 4
     action: Set up Azure Key Vault for secrets management
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 5
     action: Configure Log Analytics workspace
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 6
     action: Generate infrastructure-as-code templates (Bicep/Terraform)
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 7
     action: Deploy infrastructure via CI/CD pipeline
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 8
     action: Implement automated compliance checking
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 9
     action: Set up automated evidence collection
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 10
     action: Test detection logic against sample code
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
 ssp_mapping:
   control_family: AR - Unknown
@@ -443,52 +433,42 @@ implementation:
   - step: 1
     action: Review FedRAMP 20x requirement documentation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 2
     action: Identify systems and resources in scope
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 3
     action: Create resource group for FedRAMP resources
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 4
     action: Set up Azure Key Vault for secrets management
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 5
     action: Configure Log Analytics workspace
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 6
     action: Generate infrastructure-as-code templates (Bicep/Terraform)
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 7
     action: Deploy infrastructure via CI/CD pipeline
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 8
     action: Implement automated compliance checking
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 9
     action: Set up automated evidence collection
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 10
     action: Test detection logic against sample code
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
 ssp_mapping:
   control_family: SI - System and Information Integrity
@@ -539,7 +519,7 @@ azure_guidance:
 compliance_frameworks:
   fedramp_20x:
     requirement_id: KSI-PIY-02
-    requirement_name: Data Minimization
+    requirement_name: Security Objectives and Requirements
     impact_levels:
     - Low
     - Moderate
@@ -730,52 +710,42 @@ implementation:
   - step: 1
     action: Review FedRAMP 20x requirement documentation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 2
     action: Identify systems and resources in scope
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 3
     action: Create resource group for FedRAMP resources
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 4
     action: Set up Azure Key Vault for secrets management
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 5
     action: Configure Log Analytics workspace
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 6
     action: Create Standard Operating Procedures (SOPs)
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 7
     action: Get policy documentation approved by stakeholders
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 8
     action: Train staff on new procedures
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 9
     action: Set up periodic compliance reviews
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 10
     action: Document evidence collection process
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
 ssp_mapping:
   control_family: SI - System and Information Integrity
@@ -1064,52 +1034,42 @@ implementation:
   - step: 1
     action: Review FedRAMP 20x requirement documentation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 2
     action: Identify systems and resources in scope
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 3
     action: Create resource group for FedRAMP resources
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 4
     action: Set up Azure Key Vault for secrets management
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 5
     action: Configure Log Analytics workspace
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 6
     action: Create Standard Operating Procedures (SOPs)
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 7
     action: Get policy documentation approved by stakeholders
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 8
     action: Train staff on new procedures
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 9
     action: Set up periodic compliance reviews
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 10
     action: Document evidence collection process
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
 ssp_mapping:
   control_family: SA - System and Services Acquisition
@@ -1401,52 +1361,42 @@ implementation:
   - step: 1
     action: Review FedRAMP 20x requirement documentation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 2
     action: Identify systems and resources in scope
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 3
     action: Create resource group for FedRAMP resources
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 4
     action: Set up Azure Key Vault for secrets management
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 5
     action: Configure Log Analytics workspace
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 6
     action: Create Standard Operating Procedures (SOPs)
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 7
     action: Get policy documentation approved by stakeholders
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 8
     action: Train staff on new procedures
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 9
     action: Set up periodic compliance reviews
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 10
     action: Document evidence collection process
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
 ssp_mapping:
   control_family: CA - Assessment, Authorization, and Monitoring
@@ -1773,52 +1723,42 @@ implementation:
   - step: 1
     action: Review FedRAMP 20x requirement documentation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 2
     action: Identify systems and resources in scope
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 3
     action: Create resource group for FedRAMP resources
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 4
     action: Set up Azure Key Vault for secrets management
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 5
     action: Configure Log Analytics workspace
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 6
     action: Create Standard Operating Procedures (SOPs)
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 7
     action: Get policy documentation approved by stakeholders
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 8
     action: Train staff on new procedures
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 9
     action: Set up periodic compliance reviews
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 10
     action: Document evidence collection process
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
 ssp_mapping:
   control_family: PM - Program Management
@@ -2125,52 +2065,42 @@ implementation:
   - step: 1
     action: Review FedRAMP 20x requirement documentation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 2
     action: Identify systems and resources in scope
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 3
     action: Create resource group for FedRAMP resources
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 4
     action: Set up Azure Key Vault for secrets management
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 5
     action: Configure Log Analytics workspace
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 6
     action: Create Standard Operating Procedures (SOPs)
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 7
     action: Get policy documentation approved by stakeholders
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 8
     action: Train staff on new procedures
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 9
     action: Set up periodic compliance reviews
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 10
     action: Document evidence collection process
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
 ssp_mapping:
   control_family: SA - System and Services Acquisition
@@ -2436,52 +2366,42 @@ implementation:
   - step: 1
     action: Review FedRAMP 20x requirement documentation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 2
     action: Identify systems and resources in scope
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 3
     action: Create resource group for FedRAMP resources
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 4
     action: Set up Azure Key Vault for secrets management
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 5
     action: Configure Log Analytics workspace
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 6
     action: Create Standard Operating Procedures (SOPs)
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 7
     action: Get policy documentation approved by stakeholders
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 8
     action: Train staff on new procedures
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 9
     action: Set up periodic compliance reviews
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 10
     action: Document evidence collection process
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
 ssp_mapping:
   control_family: PM - Program Management

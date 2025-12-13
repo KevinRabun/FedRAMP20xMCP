@@ -20,7 +20,7 @@ This server loads FedRAMP 20x data from the official [FedRAMP documentation repo
 
 ### Complete Data Coverage
 
-The server provides access to **271 requirements** across FedRAMP 20x documents:
+The server provides access to **271 requirements** (199 FRRs + 72 KSIs) plus **50 definitions** (FRDs) across FedRAMP 20x documents:
 
 **FedRAMP Requirements (FRR) - 199 requirements across 10 families:**
 - **ADS** - Authorization Data Sharing (20 requirements)

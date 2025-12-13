@@ -109,87 +109,70 @@ implementation:
   - step: 1
     action: Review FedRAMP 20x requirement documentation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 2
     action: Identify systems and resources in scope
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 3
     action: Create resource group for FedRAMP resources
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 4
     action: Set up Azure Key Vault for secrets management
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 5
     action: Configure Log Analytics workspace
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 6
     action: Deploy Azure Key Vault with soft delete
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 7
     action: Configure access policies or RBAC
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 8
     action: Set up Managed Identities for applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 9
     action: Implement secret rotation automation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 10
     action: Configure diagnostic logging for Key Vault
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 11
     action: Test secret retrieval from applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 12
     action: Document secret management procedures
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 13
     action: Generate infrastructure-as-code templates (Bicep/Terraform)
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 14
     action: Deploy infrastructure via CI/CD pipeline
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 15
     action: Implement automated compliance checking
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 16
     action: Set up automated evidence collection
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 17
     action: Test detection logic against sample code
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
 ssp_mapping:
   control_family: SC - System and Communications Protection
@@ -375,87 +358,70 @@ implementation:
   - step: 1
     action: Review FedRAMP 20x requirement documentation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 2
     action: Identify systems and resources in scope
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 3
     action: Create resource group for FedRAMP resources
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 4
     action: Set up Azure Key Vault for secrets management
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 5
     action: Configure Log Analytics workspace
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 6
     action: Deploy Azure Key Vault with soft delete
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 7
     action: Configure access policies or RBAC
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 8
     action: Set up Managed Identities for applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 9
     action: Implement secret rotation automation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 10
     action: Configure diagnostic logging for Key Vault
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 11
     action: Test secret retrieval from applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 12
     action: Document secret management procedures
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 13
     action: Generate infrastructure-as-code templates (Bicep/Terraform)
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 14
     action: Deploy infrastructure via CI/CD pipeline
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 15
     action: Implement automated compliance checking
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 16
     action: Set up automated evidence collection
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 17
     action: Test detection logic against sample code
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
 ssp_mapping:
   control_family: SC - System and Communications Protection
@@ -652,87 +618,70 @@ implementation:
   - step: 1
     action: Review FedRAMP 20x requirement documentation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 2
     action: Identify systems and resources in scope
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 3
     action: Create resource group for FedRAMP resources
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 4
     action: Set up Azure Key Vault for secrets management
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 5
     action: Configure Log Analytics workspace
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 6
     action: Deploy Azure Key Vault with soft delete
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 7
     action: Configure access policies or RBAC
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 8
     action: Set up Managed Identities for applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 9
     action: Implement secret rotation automation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 10
     action: Configure diagnostic logging for Key Vault
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 11
     action: Test secret retrieval from applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 12
     action: Document secret management procedures
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 13
     action: Generate infrastructure-as-code templates (Bicep/Terraform)
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 14
     action: Deploy infrastructure via CI/CD pipeline
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 15
     action: Implement automated compliance checking
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 16
     action: Set up automated evidence collection
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 17
     action: Test detection logic against sample code
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
 ssp_mapping:
   control_family: SC - System and Communications Protection
@@ -918,87 +867,70 @@ implementation:
   - step: 1
     action: Review FedRAMP 20x requirement documentation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 2
     action: Identify systems and resources in scope
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 3
     action: Create resource group for FedRAMP resources
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 4
     action: Set up Azure Key Vault for secrets management
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 5
     action: Configure Log Analytics workspace
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 6
     action: Deploy Azure Key Vault with soft delete
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 7
     action: Configure access policies or RBAC
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 8
     action: Set up Managed Identities for applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 9
     action: Implement secret rotation automation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 10
     action: Configure diagnostic logging for Key Vault
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 11
     action: Test secret retrieval from applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 12
     action: Document secret management procedures
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 13
     action: Generate infrastructure-as-code templates (Bicep/Terraform)
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 14
     action: Deploy infrastructure via CI/CD pipeline
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 15
     action: Implement automated compliance checking
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 16
     action: Set up automated evidence collection
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 17
     action: Test detection logic against sample code
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
 ssp_mapping:
   control_family: SI - System and Information Integrity
@@ -1166,87 +1098,70 @@ implementation:
   - step: 1
     action: Review FedRAMP 20x requirement documentation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 2
     action: Identify systems and resources in scope
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 3
     action: Create resource group for FedRAMP resources
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 4
     action: Set up Azure Key Vault for secrets management
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 5
     action: Configure Log Analytics workspace
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 6
     action: Deploy Azure Key Vault with soft delete
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 7
     action: Configure access policies or RBAC
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 8
     action: Set up Managed Identities for applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 9
     action: Implement secret rotation automation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 10
     action: Configure diagnostic logging for Key Vault
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 11
     action: Test secret retrieval from applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 12
     action: Document secret management procedures
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 13
     action: Generate infrastructure-as-code templates (Bicep/Terraform)
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 14
     action: Deploy infrastructure via CI/CD pipeline
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 15
     action: Implement automated compliance checking
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 16
     action: Set up automated evidence collection
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 17
     action: Test detection logic against sample code
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
 ssp_mapping:
   control_family: SC - System and Communications Protection
@@ -1421,87 +1336,70 @@ implementation:
   - step: 1
     action: Review FedRAMP 20x requirement documentation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 2
     action: Identify systems and resources in scope
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 3
     action: Create resource group for FedRAMP resources
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 4
     action: Set up Azure Key Vault for secrets management
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 5
     action: Configure Log Analytics workspace
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 6
     action: Deploy Azure Key Vault with soft delete
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 7
     action: Configure access policies or RBAC
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 8
     action: Set up Managed Identities for applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 9
     action: Implement secret rotation automation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 10
     action: Configure diagnostic logging for Key Vault
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 11
     action: Test secret retrieval from applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 12
     action: Document secret management procedures
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 13
     action: Generate infrastructure-as-code templates (Bicep/Terraform)
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 14
     action: Deploy infrastructure via CI/CD pipeline
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 15
     action: Implement automated compliance checking
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 16
     action: Set up automated evidence collection
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 17
     action: Test detection logic against sample code
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
 ssp_mapping:
   control_family: SC - System and Communications Protection
@@ -1710,87 +1608,70 @@ implementation:
   - step: 1
     action: Review FedRAMP 20x requirement documentation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 2
     action: Identify systems and resources in scope
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 3
     action: Create resource group for FedRAMP resources
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 4
     action: Set up Azure Key Vault for secrets management
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 5
     action: Configure Log Analytics workspace
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 6
     action: Deploy Azure Key Vault with soft delete
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 7
     action: Configure access policies or RBAC
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 8
     action: Set up Managed Identities for applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 9
     action: Implement secret rotation automation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 10
     action: Configure diagnostic logging for Key Vault
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 11
     action: Test secret retrieval from applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 12
     action: Document secret management procedures
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 13
     action: Generate infrastructure-as-code templates (Bicep/Terraform)
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 14
     action: Deploy infrastructure via CI/CD pipeline
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 15
     action: Implement automated compliance checking
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 16
     action: Set up automated evidence collection
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 17
     action: Test detection logic against sample code
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
 ssp_mapping:
   control_family: IA - Identification and Authentication
@@ -1962,87 +1843,70 @@ implementation:
   - step: 1
     action: Review FedRAMP 20x requirement documentation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 2
     action: Identify systems and resources in scope
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 3
     action: Create resource group for FedRAMP resources
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 4
     action: Set up Azure Key Vault for secrets management
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 5
     action: Configure Log Analytics workspace
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 6
     action: Deploy Azure Key Vault with soft delete
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 7
     action: Configure access policies or RBAC
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 8
     action: Set up Managed Identities for applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 9
     action: Implement secret rotation automation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 10
     action: Configure diagnostic logging for Key Vault
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 11
     action: Test secret retrieval from applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 12
     action: Document secret management procedures
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 13
     action: Generate infrastructure-as-code templates (Bicep/Terraform)
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 14
     action: Deploy infrastructure via CI/CD pipeline
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 15
     action: Implement automated compliance checking
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 16
     action: Set up automated evidence collection
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 17
     action: Test detection logic against sample code
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
 ssp_mapping:
   control_family: SC - System and Communications Protection
@@ -2210,87 +2074,70 @@ implementation:
   - step: 1
     action: Review FedRAMP 20x requirement documentation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 2
     action: Identify systems and resources in scope
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 3
     action: Create resource group for FedRAMP resources
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 4
     action: Set up Azure Key Vault for secrets management
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 5
     action: Configure Log Analytics workspace
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 6
     action: Deploy Azure Key Vault with soft delete
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 7
     action: Configure access policies or RBAC
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 8
     action: Set up Managed Identities for applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 9
     action: Implement secret rotation automation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 10
     action: Configure diagnostic logging for Key Vault
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 11
     action: Test secret retrieval from applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 12
     action: Document secret management procedures
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 13
     action: Generate infrastructure-as-code templates (Bicep/Terraform)
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 14
     action: Deploy infrastructure via CI/CD pipeline
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 15
     action: Implement automated compliance checking
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 16
     action: Set up automated evidence collection
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 17
     action: Test detection logic against sample code
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
 ssp_mapping:
   control_family: SC - System and Communications Protection
@@ -2474,87 +2321,70 @@ implementation:
   - step: 1
     action: Review FedRAMP 20x requirement documentation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 2
     action: Identify systems and resources in scope
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 3
     action: Create resource group for FedRAMP resources
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 4
     action: Set up Azure Key Vault for secrets management
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 5
     action: Configure Log Analytics workspace
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 6
     action: Deploy Azure Key Vault with soft delete
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 7
     action: Configure access policies or RBAC
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 8
     action: Set up Managed Identities for applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 9
     action: Implement secret rotation automation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 10
     action: Configure diagnostic logging for Key Vault
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 11
     action: Test secret retrieval from applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 12
     action: Document secret management procedures
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 13
     action: Create Standard Operating Procedures (SOPs)
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 14
     action: Get policy documentation approved by stakeholders
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 15
     action: Train staff on new procedures
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 16
     action: Set up periodic compliance reviews
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 17
     action: Document evidence collection process
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
 ssp_mapping:
   control_family: AC - Access Control
@@ -2718,87 +2548,70 @@ implementation:
   - step: 1
     action: Review FedRAMP 20x requirement documentation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 2
     action: Identify systems and resources in scope
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 3
     action: Create resource group for FedRAMP resources
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 4
     action: Set up Azure Key Vault for secrets management
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 5
     action: Configure Log Analytics workspace
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 6
     action: Deploy Azure Key Vault with soft delete
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 7
     action: Configure access policies or RBAC
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 8
     action: Set up Managed Identities for applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 9
     action: Implement secret rotation automation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 10
     action: Configure diagnostic logging for Key Vault
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 11
     action: Test secret retrieval from applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 12
     action: Document secret management procedures
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 13
     action: Create Standard Operating Procedures (SOPs)
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 14
     action: Get policy documentation approved by stakeholders
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 15
     action: Train staff on new procedures
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 16
     action: Set up periodic compliance reviews
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 17
     action: Document evidence collection process
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
 ssp_mapping:
   control_family: SC - System and Communications Protection
@@ -2969,87 +2782,70 @@ implementation:
   - step: 1
     action: Review FedRAMP 20x requirement documentation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 2
     action: Identify systems and resources in scope
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 3
     action: Create resource group for FedRAMP resources
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 4
     action: Set up Azure Key Vault for secrets management
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 5
     action: Configure Log Analytics workspace
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 6
     action: Deploy Azure Key Vault with soft delete
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 7
     action: Configure access policies or RBAC
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 8
     action: Set up Managed Identities for applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 9
     action: Implement secret rotation automation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 10
     action: Configure diagnostic logging for Key Vault
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 11
     action: Test secret retrieval from applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 12
     action: Document secret management procedures
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 13
     action: Create Standard Operating Procedures (SOPs)
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 14
     action: Get policy documentation approved by stakeholders
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 15
     action: Train staff on new procedures
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 16
     action: Set up periodic compliance reviews
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 17
     action: Document evidence collection process
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
 ssp_mapping:
   control_family: SC - System and Communications Protection
@@ -3224,87 +3020,70 @@ implementation:
   - step: 1
     action: Review FedRAMP 20x requirement documentation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 2
     action: Identify systems and resources in scope
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 3
     action: Create resource group for FedRAMP resources
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 4
     action: Set up Azure Key Vault for secrets management
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 5
     action: Configure Log Analytics workspace
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 6
     action: Deploy Azure Key Vault with soft delete
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 7
     action: Configure access policies or RBAC
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 8
     action: Set up Managed Identities for applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 9
     action: Implement secret rotation automation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 10
     action: Configure diagnostic logging for Key Vault
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 11
     action: Test secret retrieval from applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 12
     action: Document secret management procedures
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 13
     action: Generate infrastructure-as-code templates (Bicep/Terraform)
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 14
     action: Deploy infrastructure via CI/CD pipeline
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 15
     action: Implement automated compliance checking
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 16
     action: Set up automated evidence collection
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 17
     action: Test detection logic against sample code
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
 ssp_mapping:
   control_family: SI - System and Information Integrity
@@ -3477,87 +3256,70 @@ implementation:
   - step: 1
     action: Review FedRAMP 20x requirement documentation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 2
     action: Identify systems and resources in scope
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 3
     action: Create resource group for FedRAMP resources
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 4
     action: Set up Azure Key Vault for secrets management
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 5
     action: Configure Log Analytics workspace
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 6
     action: Deploy Azure Key Vault with soft delete
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 7
     action: Configure access policies or RBAC
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 8
     action: Set up Managed Identities for applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 9
     action: Implement secret rotation automation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 10
     action: Configure diagnostic logging for Key Vault
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 11
     action: Test secret retrieval from applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 12
     action: Document secret management procedures
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 13
     action: Generate infrastructure-as-code templates (Bicep/Terraform)
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 14
     action: Deploy infrastructure via CI/CD pipeline
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 15
     action: Implement automated compliance checking
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 16
     action: Set up automated evidence collection
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 17
     action: Test detection logic against sample code
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
 ssp_mapping:
   control_family: CM - Configuration Management
@@ -3727,87 +3489,70 @@ implementation:
   - step: 1
     action: Review FedRAMP 20x requirement documentation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 2
     action: Identify systems and resources in scope
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 3
     action: Create resource group for FedRAMP resources
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 4
     action: Set up Azure Key Vault for secrets management
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 5
     action: Configure Log Analytics workspace
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 6
     action: Deploy Azure Key Vault with soft delete
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 7
     action: Configure access policies or RBAC
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 8
     action: Set up Managed Identities for applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 9
     action: Implement secret rotation automation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 10
     action: Configure diagnostic logging for Key Vault
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 11
     action: Test secret retrieval from applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 12
     action: Document secret management procedures
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 13
     action: Generate infrastructure-as-code templates (Bicep/Terraform)
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 14
     action: Deploy infrastructure via CI/CD pipeline
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 15
     action: Implement automated compliance checking
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 16
     action: Set up automated evidence collection
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 17
     action: Test detection logic against sample code
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
 ssp_mapping:
   control_family: SC - System and Communications Protection
@@ -3972,87 +3717,70 @@ implementation:
   - step: 1
     action: Review FedRAMP 20x requirement documentation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 2
     action: Identify systems and resources in scope
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 3
     action: Create resource group for FedRAMP resources
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 4
     action: Set up Azure Key Vault for secrets management
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 5
     action: Configure Log Analytics workspace
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 6
     action: Deploy Azure Key Vault with soft delete
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 7
     action: Configure access policies or RBAC
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 8
     action: Set up Managed Identities for applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 9
     action: Implement secret rotation automation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 10
     action: Configure diagnostic logging for Key Vault
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 11
     action: Test secret retrieval from applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 12
     action: Document secret management procedures
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 13
     action: Generate infrastructure-as-code templates (Bicep/Terraform)
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 14
     action: Deploy infrastructure via CI/CD pipeline
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 15
     action: Implement automated compliance checking
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 16
     action: Set up automated evidence collection
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 17
     action: Test detection logic against sample code
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
 ssp_mapping:
   control_family: SC - System and Communications Protection
@@ -4224,87 +3952,70 @@ implementation:
   - step: 1
     action: Review FedRAMP 20x requirement documentation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 2
     action: Identify systems and resources in scope
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 3
     action: Create resource group for FedRAMP resources
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 4
     action: Set up Azure Key Vault for secrets management
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 5
     action: Configure Log Analytics workspace
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 6
     action: Deploy Azure Key Vault with soft delete
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 7
     action: Configure access policies or RBAC
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 8
     action: Set up Managed Identities for applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 9
     action: Implement secret rotation automation
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 10
     action: Configure diagnostic logging for Key Vault
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 11
     action: Test secret retrieval from applications
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 12
     action: Document secret management procedures
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 13
     action: Generate infrastructure-as-code templates (Bicep/Terraform)
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 14
     action: Deploy infrastructure via CI/CD pipeline
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 15
     action: Implement automated compliance checking
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 16
     action: Set up automated evidence collection
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
   - step: 17
     action: Test detection logic against sample code
     azure_service: null
-    estimated_hours: 1
     validation: Manual verification required
 ssp_mapping:
   control_family: SC - System and Communications Protection

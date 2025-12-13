@@ -112,38 +112,31 @@ implementation:
   - step: 1
     action: Review CCM FedRAMP requirements
     azure_service: null
-    estimated_hours: 2
     validation: Requirements documented and team trained
   - step: 2
     action: Design CCM implementation architecture
     azure_service: null
-    estimated_hours: 4
     validation: Architecture review completed and approved
   - step: 3
     action: Implement CCM controls in code/IaC
     azure_service: Application code and IaC
-    estimated_hours: 16
     validation: Code review completed, unit tests pass
   - step: 4
     action: Configure Azure services for CCM
     azure_service: Azure Portal
-    estimated_hours: 8
     validation: Services configured per requirements
     bicep_template: templates/bicep/ccm/main.bicep
   - step: 5
     action: Set up monitoring and alerting
     azure_service: Azure Monitor
-    estimated_hours: 4
     validation: Alerts configured and tested
   - step: 6
     action: Implement automated compliance checking
     azure_service: Azure Pipelines
-    estimated_hours: 6
     validation: CI/CD pipeline validates compliance
   - step: 7
     action: Document implementation and evidence collection
     azure_service: null
-    estimated_hours: 4
     validation: Documentation complete and reviewed
   validation_queries:
   - az resource list --resource-group $RG --query "[?contains(type, 'CCM')]"
@@ -185,8 +178,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: FRR-CCM-01
+    requirement_name: Ongoing Authorization Reports
     impact_levels:
     - Low
     - Moderate
@@ -314,38 +307,31 @@ implementation:
   - step: 1
     action: Review CCM FedRAMP requirements
     azure_service: null
-    estimated_hours: 2
     validation: Requirements documented and team trained
   - step: 2
     action: Design CCM implementation architecture
     azure_service: null
-    estimated_hours: 4
     validation: Architecture review completed and approved
   - step: 3
     action: Implement CCM controls in code/IaC
     azure_service: Application code and IaC
-    estimated_hours: 16
     validation: Code review completed, unit tests pass
   - step: 4
     action: Configure Azure services for CCM
     azure_service: Azure Portal
-    estimated_hours: 8
     validation: Services configured per requirements
     bicep_template: templates/bicep/ccm/main.bicep
   - step: 5
     action: Set up monitoring and alerting
     azure_service: Azure Monitor
-    estimated_hours: 4
     validation: Alerts configured and tested
   - step: 6
     action: Implement automated compliance checking
     azure_service: Azure Pipelines
-    estimated_hours: 6
     validation: CI/CD pipeline validates compliance
   - step: 7
     action: Document implementation and evidence collection
     azure_service: null
-    estimated_hours: 4
     validation: Documentation complete and reviewed
   validation_queries:
   - az resource list --resource-group $RG --query "[?contains(type, 'CCM')]"
@@ -387,8 +373,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: FRR-CCM-01
+    requirement_name: Ongoing Authorization Reports
     impact_levels:
     - Low
     - Moderate
@@ -510,38 +496,31 @@ implementation:
   - step: 1
     action: Review CCM FedRAMP requirements
     azure_service: null
-    estimated_hours: 2
     validation: Requirements documented and team trained
   - step: 2
     action: Design CCM implementation architecture
     azure_service: null
-    estimated_hours: 4
     validation: Architecture review completed and approved
   - step: 3
     action: Implement CCM controls in code/IaC
     azure_service: Application code and IaC
-    estimated_hours: 16
     validation: Code review completed, unit tests pass
   - step: 4
     action: Configure Azure services for CCM
     azure_service: Azure Portal
-    estimated_hours: 8
     validation: Services configured per requirements
     bicep_template: templates/bicep/ccm/main.bicep
   - step: 5
     action: Set up monitoring and alerting
     azure_service: Azure Monitor
-    estimated_hours: 4
     validation: Alerts configured and tested
   - step: 6
     action: Implement automated compliance checking
     azure_service: Azure Pipelines
-    estimated_hours: 6
     validation: CI/CD pipeline validates compliance
   - step: 7
     action: Document implementation and evidence collection
     azure_service: null
-    estimated_hours: 4
     validation: Documentation complete and reviewed
   validation_queries:
   - az resource list --resource-group $RG --query "[?contains(type, 'CCM')]"
@@ -583,8 +562,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: FRR-CCM-01
+    requirement_name: Ongoing Authorization Reports
     impact_levels:
     - Low
     - Moderate
@@ -714,38 +693,31 @@ implementation:
   - step: 1
     action: Review CCM FedRAMP requirements
     azure_service: null
-    estimated_hours: 2
     validation: Requirements documented and team trained
   - step: 2
     action: Design CCM implementation architecture
     azure_service: null
-    estimated_hours: 4
     validation: Architecture review completed and approved
   - step: 3
     action: Implement CCM controls in code/IaC
     azure_service: Application code and IaC
-    estimated_hours: 16
     validation: Code review completed, unit tests pass
   - step: 4
     action: Configure Azure services for CCM
     azure_service: Azure Portal
-    estimated_hours: 8
     validation: Services configured per requirements
     bicep_template: templates/bicep/ccm/main.bicep
   - step: 5
     action: Set up monitoring and alerting
     azure_service: Azure Monitor
-    estimated_hours: 4
     validation: Alerts configured and tested
   - step: 6
     action: Implement automated compliance checking
     azure_service: Azure Pipelines
-    estimated_hours: 6
     validation: CI/CD pipeline validates compliance
   - step: 7
     action: Document implementation and evidence collection
     azure_service: null
-    estimated_hours: 4
     validation: Documentation complete and reviewed
   validation_queries:
   - az resource list --resource-group $RG --query "[?contains(type, 'CCM')]"
@@ -787,8 +759,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: FRR-CCM-01
+    requirement_name: Ongoing Authorization Reports
     impact_levels:
     - Low
     - Moderate
@@ -917,38 +889,31 @@ implementation:
   - step: 1
     action: Review CCM FedRAMP requirements
     azure_service: null
-    estimated_hours: 2
     validation: Requirements documented and team trained
   - step: 2
     action: Design CCM implementation architecture
     azure_service: null
-    estimated_hours: 4
     validation: Architecture review completed and approved
   - step: 3
     action: Implement CCM controls in code/IaC
     azure_service: Application code and IaC
-    estimated_hours: 16
     validation: Code review completed, unit tests pass
   - step: 4
     action: Configure Azure services for CCM
     azure_service: Azure Portal
-    estimated_hours: 8
     validation: Services configured per requirements
     bicep_template: templates/bicep/ccm/main.bicep
   - step: 5
     action: Set up monitoring and alerting
     azure_service: Azure Monitor
-    estimated_hours: 4
     validation: Alerts configured and tested
   - step: 6
     action: Implement automated compliance checking
     azure_service: Azure Pipelines
-    estimated_hours: 6
     validation: CI/CD pipeline validates compliance
   - step: 7
     action: Document implementation and evidence collection
     azure_service: null
-    estimated_hours: 4
     validation: Documentation complete and reviewed
   validation_queries:
   - az resource list --resource-group $RG --query "[?contains(type, 'CCM')]"
@@ -990,8 +955,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: FRR-CCM-01
+    requirement_name: Ongoing Authorization Reports
     impact_levels:
     - Low
     - Moderate
@@ -1114,38 +1079,31 @@ implementation:
   - step: 1
     action: Review CCM FedRAMP requirements
     azure_service: null
-    estimated_hours: 2
     validation: Requirements documented and team trained
   - step: 2
     action: Design CCM implementation architecture
     azure_service: null
-    estimated_hours: 4
     validation: Architecture review completed and approved
   - step: 3
     action: Implement CCM controls in code/IaC
     azure_service: Application code and IaC
-    estimated_hours: 16
     validation: Code review completed, unit tests pass
   - step: 4
     action: Configure Azure services for CCM
     azure_service: Azure Portal
-    estimated_hours: 8
     validation: Services configured per requirements
     bicep_template: templates/bicep/ccm/main.bicep
   - step: 5
     action: Set up monitoring and alerting
     azure_service: Azure Monitor
-    estimated_hours: 4
     validation: Alerts configured and tested
   - step: 6
     action: Implement automated compliance checking
     azure_service: Azure Pipelines
-    estimated_hours: 6
     validation: CI/CD pipeline validates compliance
   - step: 7
     action: Document implementation and evidence collection
     azure_service: null
-    estimated_hours: 4
     validation: Documentation complete and reviewed
   validation_queries:
   - az resource list --resource-group $RG --query "[?contains(type, 'CCM')]"
@@ -1187,8 +1145,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: FRR-CCM-01
+    requirement_name: Ongoing Authorization Reports
     impact_levels:
     - Low
     - Moderate
@@ -1315,38 +1273,31 @@ implementation:
   - step: 1
     action: Review CCM FedRAMP requirements
     azure_service: null
-    estimated_hours: 2
     validation: Requirements documented and team trained
   - step: 2
     action: Design CCM implementation architecture
     azure_service: null
-    estimated_hours: 4
     validation: Architecture review completed and approved
   - step: 3
     action: Implement CCM controls in code/IaC
     azure_service: Application code and IaC
-    estimated_hours: 16
     validation: Code review completed, unit tests pass
   - step: 4
     action: Configure Azure services for CCM
     azure_service: Azure Portal
-    estimated_hours: 8
     validation: Services configured per requirements
     bicep_template: templates/bicep/ccm/main.bicep
   - step: 5
     action: Set up monitoring and alerting
     azure_service: Azure Monitor
-    estimated_hours: 4
     validation: Alerts configured and tested
   - step: 6
     action: Implement automated compliance checking
     azure_service: Azure Pipelines
-    estimated_hours: 6
     validation: CI/CD pipeline validates compliance
   - step: 7
     action: Document implementation and evidence collection
     azure_service: null
-    estimated_hours: 4
     validation: Documentation complete and reviewed
   validation_queries:
   - az resource list --resource-group $RG --query "[?contains(type, 'CCM')]"
@@ -1388,8 +1339,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: FRR-CCM-01
+    requirement_name: Ongoing Authorization Reports
     impact_levels:
     - Low
     - Moderate
@@ -1515,38 +1466,31 @@ implementation:
   - step: 1
     action: Review CCM FedRAMP requirements
     azure_service: null
-    estimated_hours: 2
     validation: Requirements documented and team trained
   - step: 2
     action: Design CCM implementation architecture
     azure_service: null
-    estimated_hours: 4
     validation: Architecture review completed and approved
   - step: 3
     action: Implement CCM controls in code/IaC
     azure_service: Application code and IaC
-    estimated_hours: 16
     validation: Code review completed, unit tests pass
   - step: 4
     action: Configure Azure services for CCM
     azure_service: Azure Portal
-    estimated_hours: 8
     validation: Services configured per requirements
     bicep_template: templates/bicep/ccm/main.bicep
   - step: 5
     action: Set up monitoring and alerting
     azure_service: Azure Monitor
-    estimated_hours: 4
     validation: Alerts configured and tested
   - step: 6
     action: Implement automated compliance checking
     azure_service: Azure Pipelines
-    estimated_hours: 6
     validation: CI/CD pipeline validates compliance
   - step: 7
     action: Document implementation and evidence collection
     azure_service: null
-    estimated_hours: 4
     validation: Documentation complete and reviewed
   validation_queries:
   - az resource list --resource-group $RG --query "[?contains(type, 'CCM')]"
@@ -1588,8 +1532,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: FRR-CCM-01
+    requirement_name: Ongoing Authorization Reports
     impact_levels:
     - Low
     - Moderate
@@ -1715,38 +1659,31 @@ implementation:
   - step: 1
     action: Review CCM FedRAMP requirements
     azure_service: null
-    estimated_hours: 2
     validation: Requirements documented and team trained
   - step: 2
     action: Design CCM implementation architecture
     azure_service: null
-    estimated_hours: 4
     validation: Architecture review completed and approved
   - step: 3
     action: Implement CCM controls in code/IaC
     azure_service: Application code and IaC
-    estimated_hours: 16
     validation: Code review completed, unit tests pass
   - step: 4
     action: Configure Azure services for CCM
     azure_service: Azure Portal
-    estimated_hours: 8
     validation: Services configured per requirements
     bicep_template: templates/bicep/ccm/main.bicep
   - step: 5
     action: Set up monitoring and alerting
     azure_service: Azure Monitor
-    estimated_hours: 4
     validation: Alerts configured and tested
   - step: 6
     action: Implement automated compliance checking
     azure_service: Azure Pipelines
-    estimated_hours: 6
     validation: CI/CD pipeline validates compliance
   - step: 7
     action: Document implementation and evidence collection
     azure_service: null
-    estimated_hours: 4
     validation: Documentation complete and reviewed
   validation_queries:
   - az resource list --resource-group $RG --query "[?contains(type, 'CCM')]"
@@ -1788,8 +1725,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: FRR-CCM-01
+    requirement_name: Ongoing Authorization Reports
     impact_levels:
     - Low
     - Moderate
@@ -1914,38 +1851,31 @@ implementation:
   - step: 1
     action: Review CCM FedRAMP requirements
     azure_service: null
-    estimated_hours: 2
     validation: Requirements documented and team trained
   - step: 2
     action: Design CCM implementation architecture
     azure_service: null
-    estimated_hours: 4
     validation: Architecture review completed and approved
   - step: 3
     action: Implement CCM controls in code/IaC
     azure_service: Application code and IaC
-    estimated_hours: 16
     validation: Code review completed, unit tests pass
   - step: 4
     action: Configure Azure services for CCM
     azure_service: Azure Portal
-    estimated_hours: 8
     validation: Services configured per requirements
     bicep_template: templates/bicep/ccm/main.bicep
   - step: 5
     action: Set up monitoring and alerting
     azure_service: Azure Monitor
-    estimated_hours: 4
     validation: Alerts configured and tested
   - step: 6
     action: Implement automated compliance checking
     azure_service: Azure Pipelines
-    estimated_hours: 6
     validation: CI/CD pipeline validates compliance
   - step: 7
     action: Document implementation and evidence collection
     azure_service: null
-    estimated_hours: 4
     validation: Documentation complete and reviewed
   validation_queries:
   - az resource list --resource-group $RG --query "[?contains(type, 'CCM')]"
@@ -1987,8 +1917,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: FRR-CCM-01
+    requirement_name: Ongoing Authorization Reports
     impact_levels:
     - Low
     - Moderate
@@ -2113,38 +2043,31 @@ implementation:
   - step: 1
     action: Review CCM FedRAMP requirements
     azure_service: null
-    estimated_hours: 2
     validation: Requirements documented and team trained
   - step: 2
     action: Design CCM implementation architecture
     azure_service: null
-    estimated_hours: 4
     validation: Architecture review completed and approved
   - step: 3
     action: Implement CCM controls in code/IaC
     azure_service: Application code and IaC
-    estimated_hours: 16
     validation: Code review completed, unit tests pass
   - step: 4
     action: Configure Azure services for CCM
     azure_service: Azure Portal
-    estimated_hours: 8
     validation: Services configured per requirements
     bicep_template: templates/bicep/ccm/main.bicep
   - step: 5
     action: Set up monitoring and alerting
     azure_service: Azure Monitor
-    estimated_hours: 4
     validation: Alerts configured and tested
   - step: 6
     action: Implement automated compliance checking
     azure_service: Azure Pipelines
-    estimated_hours: 6
     validation: CI/CD pipeline validates compliance
   - step: 7
     action: Document implementation and evidence collection
     azure_service: null
-    estimated_hours: 4
     validation: Documentation complete and reviewed
   validation_queries:
   - az resource list --resource-group $RG --query "[?contains(type, 'CCM')]"
@@ -2186,8 +2109,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: FRR-CCM-01
+    requirement_name: Ongoing Authorization Reports
     impact_levels:
     - Low
     - Moderate
@@ -2314,38 +2237,31 @@ implementation:
   - step: 1
     action: Review CCM FedRAMP requirements
     azure_service: null
-    estimated_hours: 2
     validation: Requirements documented and team trained
   - step: 2
     action: Design CCM implementation architecture
     azure_service: null
-    estimated_hours: 4
     validation: Architecture review completed and approved
   - step: 3
     action: Implement CCM controls in code/IaC
     azure_service: Application code and IaC
-    estimated_hours: 16
     validation: Code review completed, unit tests pass
   - step: 4
     action: Configure Azure services for CCM
     azure_service: Azure Portal
-    estimated_hours: 8
     validation: Services configured per requirements
     bicep_template: templates/bicep/ccm/main.bicep
   - step: 5
     action: Set up monitoring and alerting
     azure_service: Azure Monitor
-    estimated_hours: 4
     validation: Alerts configured and tested
   - step: 6
     action: Implement automated compliance checking
     azure_service: Azure Pipelines
-    estimated_hours: 6
     validation: CI/CD pipeline validates compliance
   - step: 7
     action: Document implementation and evidence collection
     azure_service: null
-    estimated_hours: 4
     validation: Documentation complete and reviewed
   validation_queries:
   - az resource list --resource-group $RG --query "[?contains(type, 'CCM')]"
@@ -2387,8 +2303,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: FRR-CCM-01
+    requirement_name: Ongoing Authorization Reports
     impact_levels:
     - Low
     - Moderate

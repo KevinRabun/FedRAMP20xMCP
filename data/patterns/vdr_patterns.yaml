@@ -76,7 +76,7 @@ ssp_mapping:
     - Compliance reports
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-VDR-01
+    requirement_id: KSI-AFR-04
     requirement_name: Unknown
     impact_levels:
     - Low
@@ -162,7 +162,7 @@ ssp_mapping:
     - Compliance reports
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-VDR-01
+    requirement_id: KSI-AFR-04
     requirement_name: Unknown
     impact_levels:
     - Low
@@ -264,7 +264,7 @@ ssp_mapping:
     - Compliance reports
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-VDR-01
+    requirement_id: KSI-AFR-04
     requirement_name: Unknown
     impact_levels:
     - Low
@@ -359,7 +359,7 @@ ssp_mapping:
     - Compliance reports
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-VDR-02
+    requirement_id: KSI-AFR-04
     requirement_name: Unknown
     impact_levels:
     - Low
@@ -449,7 +449,7 @@ ssp_mapping:
     - Compliance reports
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-VDR-03
+    requirement_id: KSI-AFR-04
     requirement_name: Unknown
     impact_levels:
     - Low
@@ -531,7 +531,7 @@ ssp_mapping:
     - Compliance reports
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-VDR-03
+    requirement_id: KSI-AFR-04
     requirement_name: Unknown
     impact_levels:
     - Low
@@ -606,7 +606,7 @@ ssp_mapping:
     - Compliance reports
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-VDR-04
+    requirement_id: KSI-AFR-04
     requirement_name: Unknown
     impact_levels:
     - Low
@@ -713,7 +713,7 @@ ssp_mapping:
     - Compliance reports
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-VDR-04
+    requirement_id: KSI-AFR-04
     requirement_name: Unknown
     impact_levels:
     - Low
@@ -788,7 +788,7 @@ ssp_mapping:
     - Compliance reports
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-VDR-05
+    requirement_id: KSI-AFR-04
     requirement_name: Unknown
     impact_levels:
     - Low
@@ -869,7 +869,7 @@ ssp_mapping:
     - Compliance reports
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-VDR-05
+    requirement_id: KSI-AFR-04
     requirement_name: Unknown
     impact_levels:
     - Low
