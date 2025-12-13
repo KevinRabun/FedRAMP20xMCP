@@ -129,7 +129,6 @@ automation:
     - Azure Pipelines
     - Log Analytics
     - Microsoft Sentinel
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -139,7 +138,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate mla.logging.local_file\
       \ compliance\n      python validate.py --pattern mla.logging.local_file"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -149,7 +147,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate mla.logging.local_file\
       \ compliance\n      python validate.py --pattern mla.logging.local_file"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -240,7 +237,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: AU - Audit and Accountability
   control_numbers:
@@ -268,27 +264,22 @@ azure_guidance:
   - service: Application Insights
     tier: Standard
     purpose: Required for Application Insights functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Log Analytics
     tier: Standard
     purpose: Required for Log Analytics functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -301,18 +292,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-17.1
-      control_name: Monitoring and Control
-    - control_id: AC-20.1
-      control_name: Limits on Authorized Use
-    - control_id: AU-2
-      control_name: Event Logging
-    - control_id: AU-3
-      control_name: Content of Audit Records
-    - control_id: AU-3.1
-      control_name: Additional Audit Information
 testing:
   positive_test_cases:
   - description: Compliant python implementation of mla.logging.local_file
@@ -418,7 +397,6 @@ automation:
     - Azure Pipelines
     - Log Analytics
     - Microsoft Sentinel
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -428,7 +406,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate mla.logging.azure_monitor\
       \ compliance\n      python validate.py --pattern mla.logging.azure_monitor"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -438,7 +415,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate mla.logging.azure_monitor\
       \ compliance\n      python validate.py --pattern mla.logging.azure_monitor"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -529,7 +505,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: AU - Audit and Accountability
   control_numbers:
@@ -557,27 +532,22 @@ azure_guidance:
   - service: Application Insights
     tier: Standard
     purpose: Required for Application Insights functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Log Analytics
     tier: Standard
     purpose: Required for Log Analytics functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -590,18 +560,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-17.1
-      control_name: Monitoring and Control
-    - control_id: AC-20.1
-      control_name: Limits on Authorized Use
-    - control_id: AU-2
-      control_name: Event Logging
-    - control_id: AU-3
-      control_name: Content of Audit Records
-    - control_id: AU-3.1
-      control_name: Additional Audit Information
 testing:
   positive_test_cases:
   - description: Compliant python implementation of mla.logging.azure_monitor
@@ -700,7 +658,6 @@ automation:
     - Azure Pipelines
     - Log Analytics
     - Microsoft Sentinel
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -710,7 +667,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate mla.logging.siem_integration\
       \ compliance\n      python validate.py --pattern mla.logging.siem_integration"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -720,7 +676,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate mla.logging.siem_integration\
       \ compliance\n      python validate.py --pattern mla.logging.siem_integration"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -811,7 +766,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: AU - Audit and Accountability
   control_numbers:
@@ -838,27 +792,22 @@ azure_guidance:
   - service: Application Insights
     tier: Standard
     purpose: Required for Application Insights functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Log Analytics
     tier: Standard
     purpose: Required for Log Analytics functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -871,18 +820,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-17.1
-      control_name: Monitoring and Control
-    - control_id: AC-20.1
-      control_name: Limits on Authorized Use
-    - control_id: AU-2
-      control_name: Event Logging
-    - control_id: AU-3
-      control_name: Content of Audit Records
-    - control_id: AU-3.1
-      control_name: Additional Audit Information
 testing:
   positive_test_cases:
   - description: Compliant python implementation of mla.logging.siem_integration
@@ -937,13 +874,22 @@ related_ksis:
 - KSI-MLA-02
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      Resources
+      | where type == 'microsoft.operationalinsights/workspaces'
+      | extend retentionDays = tostring(properties.retentionInDays)
+      | project name, resourceGroup, retentionDays, location
+      | where toint(retentionDays) < 90
+      | order by name asc
+    description: Query Log Analytics workspaces with retention less than 90 days
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az monitor log-analytics workspace list \
+        --query "[?properties.retentionInDays<\`90\`].{name:name, retention:properties.retentionInDays, resourceGroup:resourceGroup}" \
+        --output json
+    description: List workspaces with insufficient retention
     output_format: json
     frequency: weekly
 automation:
@@ -961,7 +907,6 @@ automation:
     - Azure Monitor
     - Log Analytics
     - Microsoft Sentinel
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -971,7 +916,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate mla.retention.log_analytics_workspace\
       \ compliance\n      python validate.py --pattern mla.retention.log_analytics_workspace"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -981,7 +925,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate mla.retention.log_analytics_workspace\
       \ compliance\n      python validate.py --pattern mla.retention.log_analytics_workspace"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -1072,7 +1015,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: AU - Audit and Accountability
   control_numbers:
@@ -1096,27 +1038,22 @@ azure_guidance:
   - service: Application Insights
     tier: Standard
     purpose: Required for Application Insights functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Log Analytics
     tier: Standard
     purpose: Required for Log Analytics functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Microsoft Sentinel
     tier: Standard
     purpose: Required for Microsoft Sentinel functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -1127,18 +1064,6 @@ compliance_frameworks:
     requirement_id: KSI-MLA-02
     requirement_name: Audit Logging
     impact_levels: []
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-2.4
-      control_name: ''
-    - control_id: AC-6.9
-      control_name: ''
-    - control_id: AU-2
-      control_name: ''
-    - control_id: AU-6
-      control_name: ''
-    - control_id: AU-6.1
-      control_name: ''
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of mla.retention.log_analytics_workspace
@@ -1219,13 +1144,22 @@ related_ksis:
 - KSI-MLA-05
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      SigninLogs
+      | where TimeGenerated > ago(24h)
+      | where ResultType != "0"
+      | summarize FailedAttempts=count() by UserPrincipalName, IPAddress, bin(TimeGenerated, 5m)
+      | where FailedAttempts >= 5
+      | order by FailedAttempts desc
+    description: Detect potential brute-force attacks with 5+ failed logins in 5 minutes
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az monitor metrics alert list \
+        --query "[?contains(name, 'failed') || contains(name, 'login')].{name:name, enabled:enabled, criteria:criteria}" \
+        --output json
+    description: List alerts configured for failed login monitoring
     output_format: json
     frequency: weekly
 automation:
@@ -1244,7 +1178,6 @@ automation:
     - Azure Pipelines
     - Log Analytics
     - Microsoft Sentinel
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -1254,7 +1187,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate mla.monitoring.failed_login_tracking\
       \ compliance\n      python validate.py --pattern mla.monitoring.failed_login_tracking"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -1264,7 +1196,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate mla.monitoring.failed_login_tracking\
       \ compliance\n      python validate.py --pattern mla.monitoring.failed_login_tracking"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -1355,7 +1286,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: AU - Audit and Accountability
   control_numbers:
@@ -1381,27 +1311,22 @@ azure_guidance:
   - service: Application Insights
     tier: Standard
     purpose: Required for Application Insights functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Log Analytics
     tier: Standard
     purpose: Required for Log Analytics functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -1414,16 +1339,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: CA-7
-      control_name: Continuous Monitoring
-    - control_id: CM-2
-      control_name: Baseline Configuration
-    - control_id: CM-6
-      control_name: Configuration Settings
-    - control_id: SI-7.7
-      control_name: Integration of Detection and Response
 testing:
   positive_test_cases:
   - description: Compliant python implementation of mla.monitoring.failed_login_tracking
@@ -1491,13 +1406,24 @@ related_ksis:
 - KSI-MLA-07
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      Resources
+      | where type == 'microsoft.securityinsights/alertrules'
+      | extend enabled = tostring(properties.enabled)
+      | extend severity = tostring(properties.severity)
+      | project name, resourceGroup, enabled, severity, kind
+      | order by name asc
+    description: Query enabled Sentinel analytic rules
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az sentinel alert-rule list \
+        --resource-group <RESOURCE_GROUP> \
+        --workspace-name <WORKSPACE_NAME> \
+        --query "[].{name:name, enabled:enabled, severity:severity, kind:kind}" \
+        --output json
+    description: List Sentinel analytics rules
     output_format: json
     frequency: weekly
 automation:
@@ -1516,7 +1442,6 @@ automation:
     - Azure Pipelines
     - Log Analytics
     - Microsoft Sentinel
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -1526,7 +1451,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate mla.monitoring.azure_sentinel_analytics\
       \ compliance\n      python validate.py --pattern mla.monitoring.azure_sentinel_analytics"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -1536,7 +1460,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate mla.monitoring.azure_sentinel_analytics\
       \ compliance\n      python validate.py --pattern mla.monitoring.azure_sentinel_analytics"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -1627,7 +1550,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: SI - System and Information Integrity
   control_numbers:
@@ -1654,27 +1576,22 @@ azure_guidance:
   - service: Application Insights
     tier: Standard
     purpose: Required for Application Insights functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Log Analytics
     tier: Standard
     purpose: Required for Log Analytics functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -1687,16 +1604,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: CA-7
-      control_name: Continuous Monitoring
-    - control_id: CM-2
-      control_name: Baseline Configuration
-    - control_id: CM-6
-      control_name: Configuration Settings
-    - control_id: SI-7.7
-      control_name: Integration of Detection and Response
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of mla.monitoring.azure_sentinel_analytics
@@ -1747,13 +1654,23 @@ related_ksis:
 - KSI-MLA-07
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      Resources
+      | where type == 'microsoft.insights/actiongroups'
+      | extend enabled = tostring(properties.enabled)
+      | extend emailReceivers = properties.emailReceivers
+      | extend smsReceivers = properties.smsReceivers
+      | project name, resourceGroup, enabled, emailReceivers, smsReceivers, location
+      | order by name asc
+    description: Query configured action groups for alerting
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az monitor action-group list \
+        --query "[].{name:name, enabled:enabled, emailReceivers:emailReceivers, resourceGroup:resourceGroup}" \
+        --output json
+    description: List all action groups with receiver configuration
     output_format: json
     frequency: weekly
 automation:
@@ -1771,7 +1688,6 @@ automation:
     - Azure Monitor
     - Log Analytics
     - Microsoft Sentinel
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -1781,7 +1697,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate mla.alerting.action_group\
       \ compliance\n      python validate.py --pattern mla.alerting.action_group"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -1791,7 +1706,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate mla.alerting.action_group\
       \ compliance\n      python validate.py --pattern mla.alerting.action_group"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -1882,7 +1796,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: IR - Incident Response
   control_numbers:
@@ -1908,27 +1821,22 @@ azure_guidance:
   - service: Application Insights
     tier: Standard
     purpose: Required for Application Insights functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Log Analytics
     tier: Standard
     purpose: Required for Log Analytics functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Microsoft Sentinel
     tier: Standard
     purpose: Required for Microsoft Sentinel functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -1941,18 +1849,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-2.4
-      control_name: Automated Audit Actions
-    - control_id: AC-6.9
-      control_name: Log Use of Privileged Functions
-    - control_id: AC-17.1
-      control_name: Monitoring and Control
-    - control_id: AC-20.1
-      control_name: Limits on Authorized Use
-    - control_id: AU-2
-      control_name: Event Logging
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of mla.alerting.action_group
@@ -2014,13 +1910,23 @@ related_ksis:
 - KSI-RPL-01
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      Resources
+      | where type == 'microsoft.insights/metricalerts'
+      | extend enabled = tostring(properties.enabled)
+      | extend severity = tostring(properties.severity)
+      | extend targetResourceType = tostring(properties.targetResourceType)
+      | project name, resourceGroup, enabled, severity, targetResourceType
+      | order by name asc
+    description: Query all metric alert rules and their configuration
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az monitor metrics alert list \
+        --query "[].{name:name, enabled:enabled, severity:severity, targetResourceType:targetResourceType}" \
+        --output json
+    description: List all metric alert rules
     output_format: json
     frequency: weekly
 automation:
@@ -2038,7 +1944,6 @@ automation:
     - Azure Monitor
     - Log Analytics
     - Microsoft Sentinel
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -2048,7 +1953,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate mla.alerting.metric_alert\
       \ compliance\n      python validate.py --pattern mla.alerting.metric_alert"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -2058,7 +1962,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate mla.alerting.metric_alert\
       \ compliance\n      python validate.py --pattern mla.alerting.metric_alert"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -2149,7 +2052,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: SI - System and Information Integrity
   control_numbers:
@@ -2175,27 +2077,22 @@ azure_guidance:
   - service: Application Insights
     tier: Standard
     purpose: Required for Application Insights functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Log Analytics
     tier: Standard
     purpose: Required for Log Analytics functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Microsoft Sentinel
     tier: Standard
     purpose: Required for Microsoft Sentinel functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -2208,18 +2105,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-2.4
-      control_name: Automated Audit Actions
-    - control_id: AC-6.9
-      control_name: Log Use of Privileged Functions
-    - control_id: AC-17.1
-      control_name: Monitoring and Control
-    - control_id: AC-20.1
-      control_name: Limits on Authorized Use
-    - control_id: AU-2
-      control_name: Event Logging
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of mla.alerting.metric_alert
@@ -2281,13 +2166,24 @@ related_ksis:
 - KSI-MLA-08
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      Resources
+      | where type == 'microsoft.insights/components'
+      | extend applicationType = tostring(properties.Application_Type)
+      | extend ingestionMode = tostring(properties.IngestionMode)
+      | project name, resourceGroup, applicationType, ingestionMode, location
+      | order by name asc
+    description: Query Application Insights components configuration
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az monitor app-insights component show \
+        --resource-group <RESOURCE_GROUP> \
+        --app <APP_NAME> \
+        --query "{name:name, applicationType:applicationType, kind:kind, ingestionMode:ingestionMode}" \
+        --output json
+    description: Show Application Insights configuration and telemetry settings
     output_format: json
     frequency: weekly
 automation:
@@ -2305,7 +2201,6 @@ automation:
     - Azure Monitor
     - Log Analytics
     - Microsoft Sentinel
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -2315,7 +2210,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate mla.apm.application_insights\
       \ compliance\n      python validate.py --pattern mla.apm.application_insights"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -2325,7 +2219,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate mla.apm.application_insights\
       \ compliance\n      python validate.py --pattern mla.apm.application_insights"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -2416,7 +2309,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: SI - System and Information Integrity
   control_numbers:
@@ -2443,27 +2335,22 @@ azure_guidance:
   - service: Application Insights
     tier: Standard
     purpose: Required for Application Insights functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Log Analytics
     tier: Standard
     purpose: Required for Log Analytics functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Microsoft Sentinel
     tier: Standard
     purpose: Required for Microsoft Sentinel functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -2476,10 +2363,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: SI-11
-      control_name: Error Handling
 testing:
   positive_test_cases:
   - description: Compliant python implementation of mla.apm.application_insights

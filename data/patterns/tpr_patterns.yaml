@@ -168,7 +168,6 @@ automation:
     azure_services:
     - Azure Policy
     - Azure Monitor
-    effort_hours: 4
   continuous_monitoring:
     description: Azure Monitor alerts for TPR violations
     implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
@@ -179,7 +178,6 @@ automation:
     azure_services:
     - Azure Monitor
     - Application Insights
-    effort_hours: 3
   cicd_validation:
     description: CI/CD pipeline validation for TPR
     implementation: "# GitHub Actions\n- name: Validate TPR Compliance\n  run: |\n\
@@ -190,7 +188,6 @@ automation:
     azure_services:
     - Azure Pipelines
     - GitHub Actions
-    effort_hours: 2
 implementation:
   prerequisites:
   - Azure subscription with Contributor access
@@ -237,7 +234,6 @@ implementation:
   validation_queries:
   - az resource list --resource-group $RG --query "[?contains(type, 'TPR')]"
   - az monitor metrics list --resource $RESOURCE_ID
-  total_effort_hours: 44
 ssp_mapping:
   control_family: TPR - TPR
   control_numbers: *id001
@@ -260,7 +256,6 @@ azure_guidance:
   - service: Azure Monitor
     tier: Standard
     purpose: Primary service for TPR compliance
-    monthly_cost_estimate: $50-200 depending on usage
     alternatives:
     - Alternative Azure services or third-party tools
   well_architected_framework:
@@ -279,17 +274,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - AU-2
-    - AU-3
-  pci_dss_4:
-    requirements:
-    - 10.2.1
-    - 10.2.2
-  hipaa:
-    standards:
-    - 164.312(b) - Audit controls
 testing:
   positive_test_cases:
   - description: Compliant python code sample
@@ -478,7 +462,6 @@ automation:
     azure_services:
     - Azure Policy
     - Azure Monitor
-    effort_hours: 4
   continuous_monitoring:
     description: Azure Monitor alerts for TPR violations
     implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
@@ -489,7 +472,6 @@ automation:
     azure_services:
     - Azure Monitor
     - Application Insights
-    effort_hours: 3
   cicd_validation:
     description: CI/CD pipeline validation for TPR
     implementation: "# GitHub Actions\n- name: Validate TPR Compliance\n  run: |\n\
@@ -500,7 +482,6 @@ automation:
     azure_services:
     - Azure Pipelines
     - GitHub Actions
-    effort_hours: 2
 implementation:
   prerequisites:
   - Azure subscription with Contributor access
@@ -547,7 +528,6 @@ implementation:
   validation_queries:
   - az resource list --resource-group $RG --query "[?contains(type, 'TPR')]"
   - az monitor metrics list --resource $RESOURCE_ID
-  total_effort_hours: 44
 ssp_mapping:
   control_family: TPR - TPR
   control_numbers: *id001
@@ -570,7 +550,6 @@ azure_guidance:
   - service: Azure Monitor
     tier: Standard
     purpose: Primary service for TPR compliance
-    monthly_cost_estimate: $50-200 depending on usage
     alternatives:
     - Alternative Azure services or third-party tools
   well_architected_framework:
@@ -589,17 +568,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - AU-2
-    - AU-3
-  pci_dss_4:
-    requirements:
-    - 10.2.1
-    - 10.2.2
-  hipaa:
-    standards:
-    - 164.312(b) - Audit controls
 testing:
   positive_test_cases:
   - description: Compliant github_actions code sample
@@ -721,7 +689,6 @@ automation:
     azure_services:
     - Azure Policy
     - Azure Monitor
-    effort_hours: 4
   continuous_monitoring:
     description: Azure Monitor alerts for TPR violations
     implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
@@ -732,7 +699,6 @@ automation:
     azure_services:
     - Azure Monitor
     - Application Insights
-    effort_hours: 3
   cicd_validation:
     description: CI/CD pipeline validation for TPR
     implementation: "# GitHub Actions\n- name: Validate TPR Compliance\n  run: |\n\
@@ -743,7 +709,6 @@ automation:
     azure_services:
     - Azure Pipelines
     - GitHub Actions
-    effort_hours: 2
 implementation:
   prerequisites:
   - Azure subscription with Contributor access
@@ -790,7 +755,6 @@ implementation:
   validation_queries:
   - az resource list --resource-group $RG --query "[?contains(type, 'TPR')]"
   - az monitor metrics list --resource $RESOURCE_ID
-  total_effort_hours: 44
 ssp_mapping:
   control_family: TPR - TPR
   control_numbers: *id001
@@ -813,7 +777,6 @@ azure_guidance:
   - service: Azure Monitor
     tier: Standard
     purpose: Primary service for TPR compliance
-    monthly_cost_estimate: $50-200 depending on usage
     alternatives:
     - Alternative Azure services or third-party tools
   well_architected_framework:
@@ -832,17 +795,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - AU-2
-    - AU-3
-  pci_dss_4:
-    requirements:
-    - 10.2.1
-    - 10.2.2
-  hipaa:
-    standards:
-    - 164.312(b) - Audit controls
 testing:
   positive_test_cases:
   - description: Compliant python code sample
@@ -980,7 +932,6 @@ automation:
     azure_services:
     - Azure Policy
     - Azure Monitor
-    effort_hours: 4
   continuous_monitoring:
     description: Azure Monitor alerts for TPR violations
     implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
@@ -991,7 +942,6 @@ automation:
     azure_services:
     - Azure Monitor
     - Application Insights
-    effort_hours: 3
   cicd_validation:
     description: CI/CD pipeline validation for TPR
     implementation: "# GitHub Actions\n- name: Validate TPR Compliance\n  run: |\n\
@@ -1002,7 +952,6 @@ automation:
     azure_services:
     - Azure Pipelines
     - GitHub Actions
-    effort_hours: 2
 implementation:
   prerequisites:
   - Azure subscription with Contributor access
@@ -1049,7 +998,6 @@ implementation:
   validation_queries:
   - az resource list --resource-group $RG --query "[?contains(type, 'TPR')]"
   - az monitor metrics list --resource $RESOURCE_ID
-  total_effort_hours: 44
 ssp_mapping:
   control_family: TPR - TPR
   control_numbers: *id001
@@ -1072,7 +1020,6 @@ azure_guidance:
   - service: Azure Monitor
     tier: Standard
     purpose: Primary service for TPR compliance
-    monthly_cost_estimate: $50-200 depending on usage
     alternatives:
     - Alternative Azure services or third-party tools
   well_architected_framework:
@@ -1091,17 +1038,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - AU-2
-    - AU-3
-  pci_dss_4:
-    requirements:
-    - 10.2.1
-    - 10.2.2
-  hipaa:
-    standards:
-    - 164.312(b) - Audit controls
 testing:
   positive_test_cases:
   - description: Compliant github_actions code sample

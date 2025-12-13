@@ -154,7 +154,6 @@ automation:
     - Azure Pipelines
     - Log Analytics
     - Microsoft Sentinel
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -165,7 +164,6 @@ automation:
       \   script: |\n      # Validate common.diagnostics.missing_diagnostic_settings\
       \ compliance\n      python validate.py --pattern common.diagnostics.missing_diagnostic_settings"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -176,7 +174,6 @@ automation:
       \   script: |\n      # Validate common.diagnostics.missing_diagnostic_settings\
       \ compliance\n      python validate.py --pattern common.diagnostics.missing_diagnostic_settings"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -267,7 +264,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: AU - Audit and Accountability
   control_numbers:
@@ -295,27 +291,22 @@ azure_guidance:
   - service: Application Insights
     tier: Standard
     purpose: Required for Application Insights functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Log Analytics
     tier: Standard
     purpose: Required for Log Analytics functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -328,18 +319,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-17.1
-      control_name: Monitoring and Control
-    - control_id: AC-20.1
-      control_name: Limits on Authorized Use
-    - control_id: AU-2
-      control_name: Event Logging
-    - control_id: AU-3
-      control_name: Content of Audit Records
-    - control_id: AU-3.1
-      control_name: Additional Audit Information
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of common.diagnostics.missing_diagnostic_settings
@@ -440,7 +419,6 @@ automation:
     - Log Analytics
     - Microsoft Entra ID
     - Privileged Identity Management
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -450,7 +428,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate common.identity.managed_identity\
       \ compliance\n      python validate.py --pattern common.identity.managed_identity"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -460,7 +437,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate common.identity.managed_identity\
       \ compliance\n      python validate.py --pattern common.identity.managed_identity"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -551,7 +527,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: IA - Identification and Authentication
   control_numbers:
@@ -578,27 +553,22 @@ azure_guidance:
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure RBAC
     tier: Standard
     purpose: Required for Azure RBAC functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Conditional Access
     tier: Standard
     purpose: Required for Conditional Access functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -611,18 +581,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-2
-      control_name: Account Management
-    - control_id: IA-2
-      control_name: Identification and Authentication (Organizational Users)
-    - control_id: IA-2.1
-      control_name: Multi-factor Authentication to Privileged Accounts
-    - control_id: IA-2.2
-      control_name: Multi-factor Authentication to Non-privileged Accounts
-    - control_id: IA-2.8
-      control_name: Access to Accounts — Replay Resistant
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of common.identity.managed_identity
@@ -684,13 +642,22 @@ related_ksis:
 - KSI-CNA-01
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      Resources
+      | where type in~ ('microsoft.storage/storageaccounts', 'microsoft.sql/servers', 'microsoft.keyvault/vaults')
+      | extend publicAccess = tostring(properties.publicNetworkAccess)
+      | where publicAccess == 'Enabled' or isnull(publicAccess)
+      | project name, type, resourceGroup, location, publicAccess
+      | order by name asc
+    description: Query resources with public network access enabled
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az resource list \
+        --query "[?type=='Microsoft.Storage/storageAccounts' || type=='Microsoft.Sql/servers' || type=='Microsoft.KeyVault/vaults'].{name:name, resourceGroup:resourceGroup, publicAccess:properties.publicNetworkAccess}" \
+        --output json
+    description: List resources with public network access settings
     output_format: json
     frequency: weekly
 automation:
@@ -711,7 +678,6 @@ automation:
     - Azure Monitor
     - Log Analytics
     - Managed Identity
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -721,7 +687,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate common.network.public_access_enabled\
       \ compliance\n      python validate.py --pattern common.network.public_access_enabled"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -731,7 +696,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate common.network.public_access_enabled\
       \ compliance\n      python validate.py --pattern common.network.public_access_enabled"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -822,7 +786,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: SC - System and Communications Protection
   control_numbers:
@@ -848,27 +811,22 @@ azure_guidance:
   - service: Azure Automation
     tier: Standard
     purpose: Required for Azure Automation functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Key Vault
     tier: Standard
     purpose: Required for Azure Key Vault functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Key Vault integration
     tier: Standard
     purpose: Required for Azure Key Vault integration functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Key Vault usage
     tier: Standard
     purpose: Required for Azure Key Vault usage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -881,18 +839,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-17.2
-      control_name: Protection of Confidentiality and Integrity Using Encryption
-    - control_id: IA-5.2
-      control_name: Public Key-based Authentication
-    - control_id: IA-5.6
-      control_name: Protection of Authenticators
-    - control_id: SC-12
-      control_name: Cryptographic Key Establishment and Management
-    - control_id: SC-17
-      control_name: Public Key Infrastructure Certificates
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of common.network.public_access_enabled
@@ -1142,7 +1088,6 @@ automation:
     - Azure Pipelines
     - Azure Site Recovery
     - Log Analytics
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -1152,7 +1097,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate common.resilience.backup_missing\
       \ compliance\n      python validate.py --pattern common.resilience.backup_missing"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -1162,7 +1106,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate common.resilience.backup_missing\
       \ compliance\n      python validate.py --pattern common.resilience.backup_missing"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -1253,7 +1196,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: CP - Contingency Planning
   control_numbers:
@@ -1279,27 +1221,22 @@ azure_guidance:
   - service: Availability Zones
     tier: Standard
     purpose: Required for Availability Zones functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Backup
     tier: Standard
     purpose: Required for Azure Backup functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -1312,12 +1249,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: CP-2.3
-      control_name: Resume Mission and Business Functions
-    - control_id: CP-10
-      control_name: System Recovery and Reconstitution
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of common.resilience.backup_missing
@@ -1408,7 +1339,6 @@ automation:
     - Azure Pipelines
     - Azure Site Recovery
     - Log Analytics
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -1418,7 +1348,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate common.resilience.geo_redundancy\
       \ compliance\n      python validate.py --pattern common.resilience.geo_redundancy"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -1428,7 +1357,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate common.resilience.geo_redundancy\
       \ compliance\n      python validate.py --pattern common.resilience.geo_redundancy"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -1519,7 +1447,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: CP - Contingency Planning
   control_numbers:
@@ -1545,27 +1472,22 @@ azure_guidance:
   - service: Availability Zones
     tier: Standard
     purpose: Required for Availability Zones functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Backup
     tier: Standard
     purpose: Required for Azure Backup functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -1578,12 +1500,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: CP-2.3
-      control_name: Resume Mission and Business Functions
-    - control_id: CP-10
-      control_name: System Recovery and Reconstitution
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of common.resilience.geo_redundancy

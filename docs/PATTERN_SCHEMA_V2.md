@@ -101,7 +101,6 @@ automation:
         properties: { pricingTier: 'Standard' }
       }
     azure_services: ["Microsoft Defender for Cloud"]
-    effort_hours: 2
     
   cicd_integration:
     description: "Integrate vulnerability scanning in CI/CD"
@@ -110,7 +109,6 @@ automation:
       - name: Run Trivy scan
         uses: aquasecurity/trivy-action@master
     azure_services: ["GitHub Advanced Security", "Azure DevOps"]
-    effort_hours: 4
 
 # NEW: Implementation guidance (replaces implementation checklist in metadata)
 implementation:
@@ -134,8 +132,6 @@ implementation:
       
   validation_queries:
     - "az ad sp list --filter \"displayName eq 'MFA-Required'\""
-    
-  total_effort_hours: 8
 
 # NEW: SSP (System Security Plan) mapping
 ssp_mapping:
@@ -174,13 +170,11 @@ azure_guidance:
     - service: "Microsoft Entra ID"
       tier: "Premium P2"
       purpose: "Conditional Access and MFA enforcement"
-      monthly_cost_estimate: "$9/user"
       alternatives: []
       
     - service: "Conditional Access"
       tier: "Premium P2"
       purpose: "Policy enforcement"
-      monthly_cost_estimate: "Included in Entra ID P2"
       alternatives: ["Third-party IAM with Azure AD integration"]
   
   well_architected_framework:
@@ -283,7 +277,6 @@ testing:
 | `automation.<key>.description` | string | What to automate |
 | `automation.<key>.implementation` | string | Code/config to implement |
 | `automation.<key>.azure_services` | array | Azure services used |
-| `automation.<key>.effort_hours` | float | Estimated implementation time |
 
 ### Implementation Fields (NEW)
 
@@ -299,7 +292,6 @@ testing:
 | `implementation.steps[].validation` | string | How to verify |
 | `implementation.steps[].bicep_template` | string | Optional template path |
 | `implementation.validation_queries` | array | Queries to validate implementation |
-| `implementation.total_effort_hours` | float | Total time estimate |
 
 ### SSP Mapping Fields (NEW)
 
@@ -323,7 +315,6 @@ testing:
 | `azure_guidance.recommended_services[].service` | string | Service name |
 | `azure_guidance.recommended_services[].tier` | string | Service tier |
 | `azure_guidance.recommended_services[].purpose` | string | Why use this service |
-| `azure_guidance.recommended_services[].monthly_cost_estimate` | string | Cost estimate |
 | `azure_guidance.recommended_services[].alternatives` | array | Alternative services |
 | `azure_guidance.well_architected_framework` | object | WAF reference |
 | `azure_guidance.cloud_adoption_framework` | object | CAF reference |

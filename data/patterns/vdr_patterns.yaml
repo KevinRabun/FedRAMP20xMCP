@@ -170,7 +170,24 @@ compliance_frameworks:
 testing:
   positive_test_cases:
   - description: Compliant github_actions implementation of vdr.scanning.ci_cd_scanning
-    code_sample: '# TODO: Add compliant code sample'
+    code_sample: |
+      # GitHub Actions workflow with security scanning
+      name: Security Scan
+      on: [push, pull_request]
+      jobs:
+        security:
+          runs-on: ubuntu-latest
+          steps:
+            - uses: actions/checkout@v4
+            - name: Initialize CodeQL
+              uses: github/codeql-action/init@v2
+              with:
+                languages: python, javascript
+            - name: Run Trivy vulnerability scanner
+              uses: aquasecurity/trivy-action@master
+              with:
+                scan-type: 'fs'
+                severity: 'CRITICAL,HIGH'
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
@@ -255,7 +272,21 @@ compliance_frameworks:
 testing:
   positive_test_cases:
   - description: Compliant github_actions implementation of vdr.scanning.missing_sast
-    code_sample: '# TODO: Add compliant code sample'
+    code_sample: |
+      # GitHub Actions workflow WITH SAST (compliant - no missing SAST)
+      name: Build and Test
+      on: [push, pull_request]
+      jobs:
+        sast:
+          runs-on: ubuntu-latest
+          steps:
+            - uses: actions/checkout@v4
+            - name: Initialize CodeQL
+              uses: github/codeql-action/init@v2
+              with:
+                languages: python
+            - name: Perform CodeQL Analysis
+              uses: github/codeql-action/analyze@v2
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
@@ -336,7 +367,28 @@ compliance_frameworks:
 testing:
   positive_test_cases:
   - description: Compliant github_actions implementation of vdr.scanning.missing_container_scan
-    code_sample: '# TODO: Add compliant code sample'
+    code_sample: |
+      # GitHub Actions workflow WITH container scanning (compliant)
+      name: Build Container
+      on: [push]
+      jobs:
+        build:
+          runs-on: ubuntu-latest
+          steps:
+            - uses: actions/checkout@v4
+            - name: Build Docker image
+              uses: docker/build-push-action@v5
+              with:
+                context: .
+                tags: myapp:${{ github.sha }}
+                push: false
+            - name: Run Trivy vulnerability scanner
+              uses: aquasecurity/trivy-action@master
+              with:
+                image-ref: 'myapp:${{ github.sha }}'
+                format: 'sarif'
+                severity: 'CRITICAL,HIGH'
+                exit-code: '1'
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
@@ -487,7 +539,16 @@ compliance_frameworks:
 testing:
   positive_test_cases:
   - description: Compliant dockerfile implementation of vdr.patching.outdated_base_image
-    code_sample: '# TODO: Add compliant code sample'
+    code_sample: |
+      # Dockerfile with pinned base image using SHA256 digest
+      FROM python:3.12-slim@sha256:2be8daddbb82756f7d1f2c7ece706aadcb284bf6ab6d769ea695cc3ed6016743
+      
+      WORKDIR /app
+      COPY requirements.txt .
+      RUN pip install --no-cache-dir -r requirements.txt
+      COPY . .
+      
+      CMD ["python", "app.py"]
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
@@ -553,7 +614,27 @@ compliance_frameworks:
 testing:
   positive_test_cases:
   - description: Compliant yaml implementation of vdr.dependencies.dependabot
-    code_sample: '# TODO: Add compliant code sample'
+    code_sample: |
+      # .github/dependabot.yml - Automated dependency updates
+      version: 2
+      updates:
+        - package-ecosystem: "pip"
+          directory: "/"
+          schedule:
+            interval: "weekly"
+          open-pull-requests-limit: 10
+          labels:
+            - "dependencies"
+            - "security"
+        - package-ecosystem: "npm"
+          directory: "/"
+          schedule:
+            interval: "weekly"
+          open-pull-requests-limit: 10
+        - package-ecosystem: "docker"
+          directory: "/"
+          schedule:
+            interval: "weekly"
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
@@ -715,7 +796,23 @@ compliance_frameworks:
 testing:
   positive_test_cases:
   - description: Compliant yaml implementation of vdr.secure_dev.pre_commit_hooks
-    code_sample: '# TODO: Add compliant code sample'
+    code_sample: |
+      # .pre-commit-config.yaml - Security checks before commits
+      repos:
+        - repo: https://github.com/Yelp/detect-secrets
+          rev: v1.4.0
+          hooks:
+            - id: detect-secrets
+              args: ['--baseline', '.secrets.baseline']
+        - repo: https://github.com/PyCQA/bandit
+          rev: 1.7.5
+          hooks:
+            - id: bandit
+              args: ['-r', 'src/']
+        - repo: https://github.com/gitleaks/gitleaks
+          rev: v8.18.0
+          hooks:
+            - id: gitleaks
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
@@ -780,7 +877,24 @@ compliance_frameworks:
 testing:
   positive_test_cases:
   - description: Compliant github implementation of vdr.secure_dev.code_review_required
-    code_sample: '# TODO: Add compliant code sample'
+    code_sample: |
+      # GitHub branch protection configuration (API response)
+      {
+        "required_pull_request_reviews": {
+          "dismiss_stale_reviews": true,
+          "require_code_owner_reviews": true,
+          "required_approving_review_count": 2,
+          "require_last_push_approval": true
+        },
+        "required_status_checks": {
+          "strict": true,
+          "contexts": ["security-scan", "tests"]
+        },
+        "enforce_admins": true,
+        "required_linear_history": true,
+        "allow_force_pushes": false,
+        "allow_deletions": false
+      }
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:

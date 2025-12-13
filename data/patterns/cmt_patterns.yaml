@@ -66,13 +66,25 @@ related_ksis:
 - KSI-CMT-01
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      AzureActivity
+      | where OperationNameValue contains "Microsoft.Resources/deployments"
+      | where ActivityStatusValue == "Success"
+      | extend DeploymentName = tostring(Properties_d.deploymentName)
+      | extend SourceControl = tostring(Properties_d.parameters.sourceControlUrl)
+      | where isnotempty(SourceControl)
+      | project TimeGenerated, ResourceGroup, DeploymentName, SourceControl, Caller
+      | order by TimeGenerated desc
+    description: Query deployments with source control tracking
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az deployment group list \
+        --resource-group <RESOURCE_GROUP> \
+        --query "[?properties.provisioningState=='Succeeded'].{name:name, timestamp:properties.timestamp, templateLink:properties.templateLink.uri}" \
+        --output json
+    description: List deployments with template source URLs
     output_format: json
     frequency: weekly
 automation:
@@ -88,7 +100,6 @@ automation:
     - Azure Blob Storage
     - Azure Monitor
     - Log Analytics
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -98,7 +109,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate cmt.vcs.repository_integration\
       \ compliance\n      python validate.py --pattern cmt.vcs.repository_integration"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -108,7 +118,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate cmt.vcs.repository_integration\
       \ compliance\n      python validate.py --pattern cmt.vcs.repository_integration"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -164,7 +173,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 10
 ssp_mapping:
   control_family: CM - Configuration Management
   control_numbers:
@@ -191,17 +199,14 @@ azure_guidance:
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Log Analytics
     tier: Standard
     purpose: Required for Log Analytics functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -214,22 +219,39 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AU-2
-      control_name: Event Logging
-    - control_id: CM-3
-      control_name: Configuration Change Control
-    - control_id: CM-3.2
-      control_name: Testing, Validation, and Documentation of Changes
-    - control_id: CM-4.2
-      control_name: Verification of Controls
-    - control_id: CM-6
-      control_name: Configuration Settings
 testing:
   positive_test_cases:
   - description: Compliant github_actions implementation of cmt.vcs.repository_integration
-    code_sample: '# TODO: Add compliant code sample'
+    code_sample: |
+      name: Deploy with Version Control Tracking
+      
+      on:
+        push:
+          branches: [main]
+      
+      jobs:
+        deploy:
+          runs-on: ubuntu-latest
+          steps:
+          - uses: actions/checkout@v4
+            with:
+              fetch-depth: 0
+          
+          - name: Log deployment metadata
+            run: |
+              echo "Commit SHA: ${{ github.sha }}"
+              echo "Repository: ${{ github.repository }}"
+              echo "Branch: ${{ github.ref_name }}"
+              echo "Triggered by: ${{ github.actor }}"
+          
+          - name: Deploy to Azure
+            run: |
+              az deployment group create \
+                --resource-group prod-rg \
+                --template-file infrastructure/main.bicep \
+                --parameters sourceControlUrl=${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }} \
+                             commitSha=${{ github.sha }} \
+                             deployedBy=${{ github.actor }}
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
@@ -318,13 +340,25 @@ related_ksis:
 - KSI-CMT-01
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      AzureActivity
+      | where OperationNameValue contains "Microsoft.Resources/deployments"
+      | where ActivityStatusValue == "Success"
+      | extend SourceControl = tostring(Properties_d.parameters.sourceControlUrl)
+      | where isempty(SourceControl) or SourceControl == ""
+      | project TimeGenerated, ResourceGroup, ResourceId, Caller
+      | summarize MissingVCSCount=count() by bin(TimeGenerated, 1d)
+      | order by TimeGenerated desc
+    description: Query deployments missing source control tracking
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az deployment group list \
+        --resource-group <RESOURCE_GROUP> \
+        --query "[?properties.provisioningState=='Succeeded' && (properties.parameters.sourceControlUrl==null || properties.parameters.sourceControlUrl=='')].{name:name, timestamp:properties.timestamp}" \
+        --output json
+    description: List deployments without source control URLs
     output_format: json
     frequency: weekly
 automation:
@@ -340,7 +374,6 @@ automation:
     - Azure Blob Storage
     - Azure Monitor
     - Log Analytics
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -350,7 +383,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate cmt.vcs.missing_integration\
       \ compliance\n      python validate.py --pattern cmt.vcs.missing_integration"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -360,7 +392,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate cmt.vcs.missing_integration\
       \ compliance\n      python validate.py --pattern cmt.vcs.missing_integration"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -416,7 +447,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 10
 ssp_mapping:
   control_family: CM - Configuration Management
   control_numbers:
@@ -443,17 +473,14 @@ azure_guidance:
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Log Analytics
     tier: Standard
     purpose: Required for Log Analytics functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -466,22 +493,30 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AU-2
-      control_name: Event Logging
-    - control_id: CM-3
-      control_name: Configuration Change Control
-    - control_id: CM-3.2
-      control_name: Testing, Validation, and Documentation of Changes
-    - control_id: CM-4.2
-      control_name: Verification of Controls
-    - control_id: CM-6
-      control_name: Configuration Settings
 testing:
   positive_test_cases:
   - description: Compliant github_actions implementation of cmt.vcs.missing_integration
-    code_sample: '# TODO: Add compliant code sample'
+    code_sample: |
+      name: Deploy with VCS Integration
+      
+      on:
+        push:
+          branches: [main]
+      
+      jobs:
+        deploy:
+          runs-on: ubuntu-latest
+          steps:
+          - uses: actions/checkout@v4
+          
+          - name: Deploy with source control metadata
+            run: |
+              az deployment group create \
+                --resource-group prod-rg \
+                --template-file infrastructure/main.bicep \
+                --parameters sourceControlUrl=${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }} \
+                             commitSha=${{ github.sha }} \
+                             branch=${{ github.ref_name }}
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
@@ -599,7 +634,6 @@ automation:
     - Azure Monitor
     - Azure Pipelines
     - Log Analytics
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -609,7 +643,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate cmt.testing.pre_deploy_gates\
       \ compliance\n      python validate.py --pattern cmt.testing.pre_deploy_gates"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -619,7 +652,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate cmt.testing.pre_deploy_gates\
       \ compliance\n      python validate.py --pattern cmt.testing.pre_deploy_gates"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -675,7 +707,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 10
 ssp_mapping:
   control_family: CM - Configuration Management
   control_numbers:
@@ -702,22 +733,18 @@ azure_guidance:
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Log Analytics
     tier: Standard
     purpose: Required for Log Analytics functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -730,20 +757,51 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: CM-3
-      control_name: Configuration Change Control
-    - control_id: CM-3.2
-      control_name: Testing, Validation, and Documentation of Changes
-    - control_id: CM-4.2
-      control_name: Verification of Controls
-    - control_id: SI-2
-      control_name: Flaw Remediation
 testing:
   positive_test_cases:
   - description: Compliant github_actions implementation of cmt.testing.pre_deploy_gates
-    code_sample: '# TODO: Add compliant code sample'
+    code_sample: |
+      name: Deploy with Testing Gates
+      
+      on:
+        push:
+          branches: [main]
+      
+      jobs:
+        test:
+          runs-on: ubuntu-latest
+          steps:
+          - uses: actions/checkout@v4
+          
+          - name: Run unit tests
+            run: pytest tests/unit --cov --cov-fail-under=80
+          
+          - name: Run integration tests
+            run: pytest tests/integration
+          
+          - name: Security scan
+            run: |
+              bandit -r src/ -f json -o security-report.json
+              trivy fs --severity HIGH,CRITICAL .
+          
+          - name: Performance tests
+            run: pytest tests/performance --benchmark-only
+        
+        deploy:
+          needs: test
+          runs-on: ubuntu-latest
+          steps:
+          - uses: actions/checkout@v4
+          
+          - name: Deploy to staging
+            run: az deployment group create --resource-group staging-rg --template-file main.bicep
+          
+          - name: Smoke tests
+            run: pytest tests/smoke --base-url https://staging.example.com
+          
+          - name: Deploy to production
+            if: success()
+            run: az deployment group create --resource-group prod-rg --template-file main.bicep
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
@@ -905,7 +963,6 @@ automation:
     - Azure Monitor
     - Azure Pipelines
     - Log Analytics
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -915,7 +972,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate cmt.rollback.deployment_strategy\
       \ compliance\n      python validate.py --pattern cmt.rollback.deployment_strategy"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -925,7 +981,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate cmt.rollback.deployment_strategy\
       \ compliance\n      python validate.py --pattern cmt.rollback.deployment_strategy"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -981,7 +1036,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 10
 ssp_mapping:
   control_family: CM - Configuration Management
   control_numbers:
@@ -1008,22 +1062,18 @@ azure_guidance:
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Log Analytics
     tier: Standard
     purpose: Required for Log Analytics functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -1036,18 +1086,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: CM-3
-      control_name: Configuration Change Control
-    - control_id: CM-3.2
-      control_name: Testing, Validation, and Documentation of Changes
-    - control_id: CM-3.4
-      control_name: Security and Privacy Representatives
-    - control_id: CM-5
-      control_name: Access Restrictions for Change
-    - control_id: CM-7.1
-      control_name: Periodic Review
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of cmt.rollback.deployment_strategy

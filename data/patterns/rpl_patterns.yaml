@@ -102,7 +102,6 @@ automation:
     - Azure Pipelines
     - Azure Site Recovery
     - Log Analytics
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -112,7 +111,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate rpl.storage.geo_redundancy\
       \ compliance\n      python validate.py --pattern rpl.storage.geo_redundancy"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -122,7 +120,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate rpl.storage.geo_redundancy\
       \ compliance\n      python validate.py --pattern rpl.storage.geo_redundancy"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -213,7 +210,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: CP - Contingency Planning
   control_numbers:
@@ -240,27 +236,22 @@ azure_guidance:
   - service: Availability Zones
     tier: Standard
     purpose: Required for Availability Zones functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Backup
     tier: Standard
     purpose: Required for Azure Backup functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -273,18 +264,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: CP-2
-      control_name: Contingency Plan
-    - control_id: CP-2.1
-      control_name: Coordinate with Related Plans
-    - control_id: CP-2.3
-      control_name: Resume Mission and Business Functions
-    - control_id: CP-4.1
-      control_name: Coordinate with Related Plans
-    - control_id: CP-6
-      control_name: Alternate Storage Site
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of rpl.storage.geo_redundancy
@@ -433,7 +412,6 @@ automation:
     - Azure Site Recovery
     - Azure WAF Reliability
     - Log Analytics
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -443,7 +421,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate rpl.backup.missing_policy\
       \ compliance\n      python validate.py --pattern rpl.backup.missing_policy"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -453,7 +430,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate rpl.backup.missing_policy\
       \ compliance\n      python validate.py --pattern rpl.backup.missing_policy"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -544,7 +520,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: CP - Contingency Planning
   control_numbers:
@@ -571,27 +546,22 @@ azure_guidance:
   - service: Availability Zones
     tier: Standard
     purpose: Required for Availability Zones functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Backup
     tier: Standard
     purpose: Required for Azure Backup functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Backup SDK
     tier: Standard
     purpose: Required for Azure Backup SDK functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -604,18 +574,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: CM-2.3
-      control_name: Retention of Previous Configurations
-    - control_id: CP-6
-      control_name: Alternate Storage Site
-    - control_id: CP-9
-      control_name: System Backup
-    - control_id: CP-10
-      control_name: System Recovery and Reconstitution
-    - control_id: CP-10.2
-      control_name: Transaction Recovery
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of rpl.backup.missing_policy

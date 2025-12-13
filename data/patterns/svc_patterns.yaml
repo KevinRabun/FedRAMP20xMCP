@@ -47,13 +47,23 @@ related_ksis:
 - KSI-SVC-01
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      AppServiceHTTPLogs
+      | where TimeGenerated > ago(7d)
+      | extend SecurityHeaders = extract_all(@"(Strict-Transport-Security|Content-Security-Policy|X-Frame-Options|X-Content-Type-Options)", dynamic([1]), CsHeaders)
+      | where array_length(SecurityHeaders) > 0
+      | summarize count() by SecurityHeaders
+    description: Query HTTP logs to verify security headers are present
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az webapp config show \
+        --resource-group <RESOURCE_GROUP> \
+        --name <APP_NAME> \
+        --query "{httpLoggingEnabled:httpLoggingEnabled, detailedErrorLoggingEnabled:detailedErrorLoggingEnabled}" \
+        --output json
+    description: Verify web app logging configuration for security header validation
     output_format: json
     frequency: weekly
 automation:
@@ -73,7 +83,6 @@ automation:
     - Azure Pipelines
     - Log Analytics
     - Managed Identity
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -83,7 +92,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.security.flask_security_headers\
       \ compliance\n      python validate.py --pattern svc.security.flask_security_headers"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -93,7 +101,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.security.flask_security_headers\
       \ compliance\n      python validate.py --pattern svc.security.flask_security_headers"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -184,7 +191,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: SC - System and Communications Protection
   control_numbers:
@@ -210,27 +216,22 @@ azure_guidance:
   - service: Azure Automation
     tier: Standard
     purpose: Required for Azure Automation functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Key Vault
     tier: Standard
     purpose: Required for Azure Key Vault functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -243,18 +244,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: CM-7.1
-      control_name: Periodic Review
-    - control_id: CM-12.1
-      control_name: Automated Tools to Support Information Location
-    - control_id: MA-2
-      control_name: Controlled Maintenance
-    - control_id: PL-8
-      control_name: Security and Privacy Architectures
-    - control_id: SC-7
-      control_name: Boundary Protection
 testing:
   positive_test_cases:
   - description: Compliant python implementation of svc.security.flask_security_headers
@@ -324,13 +313,23 @@ related_ksis:
 - KSI-SVC-01
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      AppServiceHTTPLogs
+      | where TimeGenerated > ago(7d)
+      | extend HstsHeader = extract(@"Strict-Transport-Security:\s*([^;]+)", 1, ScHeaders)
+      | where isnotempty(HstsHeader)
+      | summarize count() by HstsHeader
+    description: Verify HSTS header is present and check max-age value
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az webapp show \
+        --resource-group <RESOURCE_GROUP> \
+        --name <APP_NAME> \
+        --query "{httpsOnly:httpsOnly, clientAffinityEnabled:clientAffinityEnabled}" \
+        --output json
+    description: Check web app HTTPS enforcement
     output_format: json
     frequency: weekly
 automation:
@@ -350,7 +349,6 @@ automation:
     - Azure Pipelines
     - Log Analytics
     - Managed Identity
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -360,7 +358,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.security.aspnet_hsts\
       \ compliance\n      python validate.py --pattern svc.security.aspnet_hsts"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -370,7 +367,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.security.aspnet_hsts\
       \ compliance\n      python validate.py --pattern svc.security.aspnet_hsts"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -461,7 +457,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: SC - System and Communications Protection
   control_numbers:
@@ -487,27 +482,22 @@ azure_guidance:
   - service: Azure Automation
     tier: Standard
     purpose: Required for Azure Automation functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Key Vault
     tier: Standard
     purpose: Required for Azure Key Vault functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -520,18 +510,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: CM-7.1
-      control_name: Periodic Review
-    - control_id: CM-12.1
-      control_name: Automated Tools to Support Information Location
-    - control_id: MA-2
-      control_name: Controlled Maintenance
-    - control_id: PL-8
-      control_name: Security and Privacy Architectures
-    - control_id: SC-7
-      control_name: Boundary Protection
 testing:
   positive_test_cases:
   - description: Compliant python implementation of svc.security.aspnet_hsts
@@ -613,13 +591,22 @@ related_ksis:
 - KSI-SVC-01
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      AppServiceHTTPLogs
+      | where TimeGenerated > ago(7d)
+      | extend HstsHeader = extract(@"Strict-Transport-Security", 1, ScHeaders)
+      | where isempty(HstsHeader)
+      | summarize MissingHstsCount=count() by CsHost
+      | order by MissingHstsCount desc
+    description: Detect responses missing HSTS header
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az webapp list \
+        --query "[?httpsOnly==\`false\`].{name:name, resourceGroup:resourceGroup, httpsOnly:httpsOnly}" \
+        --output json
+    description: List web apps not enforcing HTTPS
     output_format: json
     frequency: weekly
 automation:
@@ -639,7 +626,6 @@ automation:
     - Azure Pipelines
     - Log Analytics
     - Managed Identity
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -649,7 +635,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.security.missing_hsts\
       \ compliance\n      python validate.py --pattern svc.security.missing_hsts"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -659,7 +644,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.security.missing_hsts\
       \ compliance\n      python validate.py --pattern svc.security.missing_hsts"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -750,7 +734,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: SC - System and Communications Protection
   control_numbers:
@@ -776,27 +759,22 @@ azure_guidance:
   - service: Azure Automation
     tier: Standard
     purpose: Required for Azure Automation functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Key Vault
     tier: Standard
     purpose: Required for Azure Key Vault functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -809,18 +787,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: CM-7.1
-      control_name: Periodic Review
-    - control_id: CM-12.1
-      control_name: Automated Tools to Support Information Location
-    - control_id: MA-2
-      control_name: Controlled Maintenance
-    - control_id: PL-8
-      control_name: Security and Privacy Architectures
-    - control_id: SC-7
-      control_name: Boundary Protection
 testing:
   positive_test_cases:
   - description: Compliant python implementation of svc.security.missing_hsts
@@ -888,13 +854,25 @@ related_ksis:
 - KSI-SVC-01
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      AppServiceHTTPLogs
+      | where TimeGenerated > ago(7d)
+      | extend CspHeader = extract(@"Content-Security-Policy:\s*(.+?)\r?", 1, ScHeaders)
+      | where isnotempty(CspHeader)
+      | extend HasUnsafeInline = CspHeader contains "unsafe-inline"
+      | extend HasUnsafeEval = CspHeader contains "unsafe-eval"
+      | summarize count() by CspHeader, HasUnsafeInline, HasUnsafeEval
+    description: Analyze CSP headers for unsafe directives
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az webapp config appsettings list \
+        --resource-group <RESOURCE_GROUP> \
+        --name <APP_NAME> \
+        --query "[?name=='CSP_HEADER'].value" \
+        --output json
+    description: Check for CSP configuration in app settings
     output_format: json
     frequency: weekly
 automation:
@@ -914,7 +892,6 @@ automation:
     - Azure Pipelines
     - Log Analytics
     - Managed Identity
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -924,7 +901,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.security.csp_header\
       \ compliance\n      python validate.py --pattern svc.security.csp_header"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -934,7 +910,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.security.csp_header\
       \ compliance\n      python validate.py --pattern svc.security.csp_header"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -1025,7 +1000,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: SI - System and Information Integrity
   control_numbers:
@@ -1051,27 +1025,22 @@ azure_guidance:
   - service: Azure Automation
     tier: Standard
     purpose: Required for Azure Automation functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Key Vault
     tier: Standard
     purpose: Required for Azure Key Vault functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -1084,18 +1053,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: CM-7.1
-      control_name: Periodic Review
-    - control_id: CM-12.1
-      control_name: Automated Tools to Support Information Location
-    - control_id: MA-2
-      control_name: Controlled Maintenance
-    - control_id: PL-8
-      control_name: Security and Privacy Architectures
-    - control_id: SC-7
-      control_name: Boundary Protection
 testing:
   positive_test_cases:
   - description: Compliant python implementation of svc.security.csp_header
@@ -1149,13 +1106,21 @@ related_ksis:
 - KSI-SVC-02
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      AzureDiagnostics
+      | where ResourceType == "VAULTS"
+      | where OperationName == "SecretGet" or OperationName == "SecretList"
+      | summarize AccessCount=count() by CallerIPAddress, identity_claim_appid_g
+      | order by AccessCount desc
+    description: Track Key Vault secret access patterns
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az keyvault list \
+        --query "[].{name:name, resourceGroup:resourceGroup, enableSoftDelete:properties.enableSoftDelete, enablePurgeProtection:properties.enablePurgeProtection}" \
+        --output json
+    description: List Key Vaults and their protection settings
     output_format: json
     frequency: weekly
 automation:
@@ -1175,7 +1140,6 @@ automation:
     - Azure Pipelines
     - Log Analytics
     - Managed Identity
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -1185,7 +1149,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.secrets.keyvault_reference\
       \ compliance\n      python validate.py --pattern svc.secrets.keyvault_reference"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -1195,7 +1158,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.secrets.keyvault_reference\
       \ compliance\n      python validate.py --pattern svc.secrets.keyvault_reference"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -1286,7 +1248,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: SC - System and Communications Protection
   control_numbers:
@@ -1311,27 +1272,22 @@ azure_guidance:
   - service: Azure Automation
     tier: Standard
     purpose: Required for Azure Automation functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Key Vault
     tier: Standard
     purpose: Required for Azure Key Vault functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -1344,18 +1300,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-1
-      control_name: Policy and Procedures
-    - control_id: AC-17.2
-      control_name: Protection of Confidentiality and Integrity Using Encryption
-    - control_id: CP-9.8
-      control_name: Cryptographic Protection
-    - control_id: SC-8
-      control_name: Transmission Confidentiality and Integrity
-    - control_id: SC-8.1
-      control_name: Cryptographic Protection
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of svc.secrets.keyvault_reference
@@ -1416,13 +1360,22 @@ related_ksis:
 - KSI-SVC-02
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      Resources
+      | where type == "microsoft.keyvault/vaults"
+      | extend softDelete = tostring(properties.enableSoftDelete)
+      | extend purgeProtection = tostring(properties.enablePurgeProtection)
+      | where softDelete != "true" or purgeProtection != "true"
+      | project name, resourceGroup, softDelete, purgeProtection, location
+    description: Query Key Vaults missing soft-delete or purge protection
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az keyvault list \
+        --query "[?properties.enableSoftDelete!=\`true\` || properties.enablePurgeProtection!=\`true\`].{name:name, softDelete:properties.enableSoftDelete, purgeProtection:properties.enablePurgeProtection}" \
+        --output json
+    description: List Key Vaults without required protections
     output_format: json
     frequency: weekly
 automation:
@@ -1442,7 +1395,6 @@ automation:
     - Azure Pipelines
     - Log Analytics
     - Managed Identity
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -1452,7 +1404,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.secrets.keyvault_soft_delete\
       \ compliance\n      python validate.py --pattern svc.secrets.keyvault_soft_delete"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -1462,7 +1413,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.secrets.keyvault_soft_delete\
       \ compliance\n      python validate.py --pattern svc.secrets.keyvault_soft_delete"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -1553,7 +1503,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: SC - System and Communications Protection
   control_numbers:
@@ -1578,27 +1527,22 @@ azure_guidance:
   - service: Azure Automation
     tier: Standard
     purpose: Required for Azure Automation functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Key Vault
     tier: Standard
     purpose: Required for Azure Key Vault functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -1611,18 +1555,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-1
-      control_name: Policy and Procedures
-    - control_id: AC-17.2
-      control_name: Protection of Confidentiality and Integrity Using Encryption
-    - control_id: CP-9.8
-      control_name: Cryptographic Protection
-    - control_id: SC-8
-      control_name: Transmission Confidentiality and Integrity
-    - control_id: SC-8.1
-      control_name: Cryptographic Protection
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of svc.secrets.keyvault_soft_delete
@@ -1717,13 +1649,22 @@ related_ksis:
 - KSI-SVC-02
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      AzureDiagnostics
+      | where Category == 'AuditEvent'
+      | where OperationName contains 'SecretGet' or OperationName contains 'KeyGet'
+      | where ResultSignature == 'Unauthorized'
+      | summarize UnauthorizedAccess=count() by CallerIPAddress, Resource
+      | order by UnauthorizedAccess desc
+    description: Detect potential hardcoded secret usage via unauthorized Key Vault access
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az keyvault list \
+        --query "[].{name:name, resourceGroup:resourceGroup, vaultUri:properties.vaultUri}" \
+        --output json
+    description: List Key Vaults for secret reference validation
     output_format: json
     frequency: weekly
 automation:
@@ -1743,7 +1684,6 @@ automation:
     - Azure Pipelines
     - Log Analytics
     - Managed Identity
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -1753,7 +1693,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.secrets.hardcoded_secret\
       \ compliance\n      python validate.py --pattern svc.secrets.hardcoded_secret"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -1763,7 +1702,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.secrets.hardcoded_secret\
       \ compliance\n      python validate.py --pattern svc.secrets.hardcoded_secret"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -1854,7 +1792,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: IA - Identification and Authentication
   control_numbers:
@@ -1879,27 +1816,22 @@ azure_guidance:
   - service: Azure Automation
     tier: Standard
     purpose: Required for Azure Automation functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Key Vault
     tier: Standard
     purpose: Required for Azure Key Vault functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -1912,18 +1844,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-1
-      control_name: Policy and Procedures
-    - control_id: AC-17.2
-      control_name: Protection of Confidentiality and Integrity Using Encryption
-    - control_id: CP-9.8
-      control_name: Cryptographic Protection
-    - control_id: SC-8
-      control_name: Transmission Confidentiality and Integrity
-    - control_id: SC-8.1
-      control_name: Cryptographic Protection
 testing:
   positive_test_cases:
   - description: Compliant python implementation of svc.secrets.hardcoded_secret
@@ -1982,13 +1902,21 @@ related_ksis:
 - KSI-SVC-04
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      Resources
+      | where type == 'microsoft.storage/storageaccounts'
+      | extend EncryptionEnabled = properties.encryption.services.blob.enabled
+      | where EncryptionEnabled != true
+      | project name, resourceGroup, location, EncryptionEnabled
+    description: Detect storage accounts without blob encryption
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az storage account list \
+        --query "[?encryption.services.blob.enabled!=\`true\`].{name:name, resourceGroup:resourceGroup, encryption:encryption}" \
+        --output json
+    description: List storage accounts with disabled encryption
     output_format: json
     frequency: weekly
 automation:
@@ -2008,7 +1936,6 @@ automation:
     - Azure Pipelines
     - Log Analytics
     - Managed Identity
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -2018,7 +1945,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.encryption.storage_encryption\
       \ compliance\n      python validate.py --pattern svc.encryption.storage_encryption"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -2028,7 +1954,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.encryption.storage_encryption\
       \ compliance\n      python validate.py --pattern svc.encryption.storage_encryption"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -2119,7 +2044,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: SC - System and Communications Protection
   control_numbers:
@@ -2145,27 +2069,22 @@ azure_guidance:
   - service: Azure Automation
     tier: Standard
     purpose: Required for Azure Automation functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Key Vault
     tier: Standard
     purpose: Required for Azure Key Vault functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -2178,18 +2097,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-2.4
-      control_name: Automated Audit Actions
-    - control_id: CM-2
-      control_name: Baseline Configuration
-    - control_id: CM-2.2
-      control_name: Automation Support for Accuracy and Currency
-    - control_id: CM-2.3
-      control_name: Retention of Previous Configurations
-    - control_id: CM-6
-      control_name: Configuration Settings
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of svc.encryption.storage_encryption
@@ -2243,13 +2150,21 @@ related_ksis:
 - KSI-SVC-04
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      Resources
+      | where type == 'microsoft.sql/servers/databases'
+      | extend TdeStatus = properties.transparentDataEncryption
+      | where TdeStatus != 'Enabled'
+      | project name, resourceGroup, serverName = split(id, '/')[8], TdeStatus
+    description: Detect SQL databases without Transparent Data Encryption
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az sql db list --ids $(az sql server list --query "[].id" -o tsv) \
+        --query "[?transparentDataEncryption!='Enabled'].{database:name, server:serverName, resourceGroup:resourceGroup, tde:transparentDataEncryption}" \
+        --output json
+    description: List SQL databases with TDE disabled
     output_format: json
     frequency: weekly
 automation:
@@ -2269,7 +2184,6 @@ automation:
     - Azure Pipelines
     - Log Analytics
     - Managed Identity
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -2279,7 +2193,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.encryption.sql_tde\
       \ compliance\n      python validate.py --pattern svc.encryption.sql_tde"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -2289,7 +2202,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.encryption.sql_tde\
       \ compliance\n      python validate.py --pattern svc.encryption.sql_tde"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -2380,7 +2292,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: SC - System and Communications Protection
   control_numbers:
@@ -2406,27 +2317,22 @@ azure_guidance:
   - service: Azure Automation
     tier: Standard
     purpose: Required for Azure Automation functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Key Vault
     tier: Standard
     purpose: Required for Azure Key Vault functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -2439,18 +2345,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-2.4
-      control_name: Automated Audit Actions
-    - control_id: CM-2
-      control_name: Baseline Configuration
-    - control_id: CM-2.2
-      control_name: Automation Support for Accuracy and Currency
-    - control_id: CM-2.3
-      control_name: Retention of Previous Configurations
-    - control_id: CM-6
-      control_name: Configuration Settings
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of svc.encryption.sql_tde
@@ -2516,13 +2410,24 @@ related_ksis:
 - KSI-SVC-06
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      Resources
+      | where type == 'microsoft.network/networksecuritygroups'
+      | extend AllowAllRules = properties.securityRules
+      | mvexpand AllowAllRules
+      | where AllowAllRules.properties.access == 'Allow'
+        and (AllowAllRules.properties.sourceAddressPrefix == '*' or AllowAllRules.properties.sourceAddressPrefix == '0.0.0.0/0')
+        and (AllowAllRules.properties.destinationPortRange == '*' or AllowAllRules.properties.destinationPortRanges contains '*')
+      | project name, resourceGroup, ruleName=AllowAllRules.name, source=AllowAllRules.properties.sourceAddressPrefix, ports=AllowAllRules.properties.destinationPortRange
+    description: Detect NSG rules allowing all traffic from any source
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az network nsg list \
+        --query "[].{name:name, resourceGroup:resourceGroup, rules:securityRules[?access=='Allow' && sourceAddressPrefix=='*']}" \
+        --output json
+    description: List NSGs with overly permissive allow rules
     output_format: json
     frequency: weekly
 automation:
@@ -2543,7 +2448,6 @@ automation:
     - Azure Monitor
     - Log Analytics
     - Managed Identity
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -2553,7 +2457,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.network.nsg_allow_all\
       \ compliance\n      python validate.py --pattern svc.network.nsg_allow_all"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -2563,7 +2466,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.network.nsg_allow_all\
       \ compliance\n      python validate.py --pattern svc.network.nsg_allow_all"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -2654,7 +2556,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: AC - Access Control
   control_numbers:
@@ -2680,27 +2581,22 @@ azure_guidance:
   - service: Azure Automation
     tier: Standard
     purpose: Required for Azure Automation functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Key Vault
     tier: Standard
     purpose: Required for Azure Key Vault functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Key Vault integration
     tier: Standard
     purpose: Required for Azure Key Vault integration functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Key Vault usage
     tier: Standard
     purpose: Required for Azure Key Vault usage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -2713,18 +2609,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-17.2
-      control_name: Protection of Confidentiality and Integrity Using Encryption
-    - control_id: IA-5.2
-      control_name: Public Key-based Authentication
-    - control_id: IA-5.6
-      control_name: Protection of Authenticators
-    - control_id: SC-12
-      control_name: Cryptographic Key Establishment and Management
-    - control_id: SC-17
-      control_name: Public Key Infrastructure Certificates
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of svc.network.nsg_allow_all
@@ -2774,13 +2658,20 @@ related_ksis:
 - KSI-SVC-06
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      Resources
+      | where type == 'microsoft.network/privateendpoints'
+      | extend ConnectionState = properties.manualPrivateLinkServiceConnections[0].properties.privateLinkServiceConnectionState.status
+      | project name, resourceGroup, subnet=properties.subnet.id, ConnectionState
+    description: Detect private endpoints and their connection states
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az network private-endpoint list \
+        --query "[].{name:name, resourceGroup:resourceGroup, subnet:subnet.id, connections:manualPrivateLinkServiceConnections}" \
+        --output json
+    description: List private endpoints for network isolation validation
     output_format: json
     frequency: weekly
 automation:
@@ -2801,7 +2692,6 @@ automation:
     - Azure Monitor
     - Log Analytics
     - Managed Identity
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -2811,7 +2701,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.network.private_endpoint\
       \ compliance\n      python validate.py --pattern svc.network.private_endpoint"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -2821,7 +2710,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.network.private_endpoint\
       \ compliance\n      python validate.py --pattern svc.network.private_endpoint"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -2912,7 +2800,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: SC - System and Communications Protection
   control_numbers:
@@ -2938,27 +2825,22 @@ azure_guidance:
   - service: Azure Automation
     tier: Standard
     purpose: Required for Azure Automation functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Key Vault
     tier: Standard
     purpose: Required for Azure Key Vault functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Key Vault integration
     tier: Standard
     purpose: Required for Azure Key Vault integration functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Key Vault usage
     tier: Standard
     purpose: Required for Azure Key Vault usage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -2971,18 +2853,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-17.2
-      control_name: Protection of Confidentiality and Integrity Using Encryption
-    - control_id: IA-5.2
-      control_name: Public Key-based Authentication
-    - control_id: IA-5.6
-      control_name: Protection of Authenticators
-    - control_id: SC-12
-      control_name: Cryptographic Key Establishment and Management
-    - control_id: SC-17
-      control_name: Public Key Infrastructure Certificates
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of svc.network.private_endpoint
@@ -3038,13 +2908,22 @@ related_ksis:
 - KSI-SVC-07
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      Resources
+      | where type in ('microsoft.storage/storageaccounts', 'microsoft.web/sites', 'microsoft.sql/servers')
+      | extend TlsVersion = coalesce(properties.minimumTlsVersion, properties.minTlsVersion, 'Not Set')
+      | where TlsVersion !in ('TLS1_2', 'TLS1_3', '1.2', '1.3')
+      | project name, resourceGroup, type, TlsVersion
+    description: Detect resources with TLS version less than 1.2
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az resource list \
+        --resource-type "Microsoft.Storage/storageAccounts" "Microsoft.Web/sites" "Microsoft.Sql/servers" \
+        --query "[?properties.minimumTlsVersion!='TLS1_2' && properties.minimumTlsVersion!='TLS1_3'].{name:name, resourceGroup:resourceGroup, tlsVersion:properties.minimumTlsVersion}" \
+        --output json
+    description: List resources with insufficient TLS versions
     output_format: json
     frequency: weekly
 automation:
@@ -3064,7 +2943,6 @@ automation:
     - Azure Pipelines
     - Log Analytics
     - Managed Identity
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -3074,7 +2952,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.tls.minimum_version\
       \ compliance\n      python validate.py --pattern svc.tls.minimum_version"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -3084,7 +2961,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.tls.minimum_version\
       \ compliance\n      python validate.py --pattern svc.tls.minimum_version"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -3175,7 +3051,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: SC - System and Communications Protection
   control_numbers:
@@ -3201,27 +3076,22 @@ azure_guidance:
   - service: Azure Automation
     tier: Standard
     purpose: Required for Azure Automation functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Key Vault
     tier: Standard
     purpose: Required for Azure Key Vault functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -3234,14 +3104,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: CA-7.4
-      control_name: Risk Monitoring
-    - control_id: RA-5
-      control_name: Vulnerability Monitoring and Scanning
-    - control_id: RA-7
-      control_name: Risk Response
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of svc.tls.minimum_version
@@ -3336,7 +3198,6 @@ automation:
     - Azure Pipelines
     - Log Analytics
     - Managed Identity
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -3346,7 +3207,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.waf.application_gateway\
       \ compliance\n      python validate.py --pattern svc.waf.application_gateway"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -3356,7 +3216,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.waf.application_gateway\
       \ compliance\n      python validate.py --pattern svc.waf.application_gateway"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -3447,7 +3306,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: SI - System and Information Integrity
   control_numbers:
@@ -3474,27 +3332,22 @@ azure_guidance:
   - service: Azure Automation
     tier: Standard
     purpose: Required for Azure Automation functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Key Vault
     tier: Standard
     purpose: Required for Azure Key Vault functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -3506,12 +3359,6 @@ compliance_frameworks:
     requirement_name: Communication Integrity
     impact_levels:
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: SC-23
-      control_name: Session Authenticity
-    - control_id: SI-7.1
-      control_name: Integrity Checks
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of svc.waf.application_gateway
@@ -3570,13 +3417,21 @@ related_ksis:
 - KSI-SVC-01
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      Resources
+      | where type in ('microsoft.web/sites', 'microsoft.storage/storageaccounts', 'microsoft.sql/servers')
+      | extend HasKeyVaultReference = isnotnull(properties.siteConfig.appSettings) or isnotnull(properties.keyVaultProperties)
+      | where not(HasKeyVaultReference)
+      | project name, resourceGroup, type, HasKeyVaultReference
+    description: Detect resources not using Key Vault for secret management
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az webapp config appsettings list --ids $(az webapp list --query "[].id" -o tsv) \
+        --query "[?!contains(value, '@Microsoft.KeyVault')].{app:id, setting:name, hasKeyVault:contains(value, 'KeyVault')}" \
+        --output json
+    description: List app settings not referencing Key Vault
     output_format: json
     frequency: weekly
 automation:
@@ -3596,7 +3451,6 @@ automation:
     - Azure Pipelines
     - Log Analytics
     - Managed Identity
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -3606,7 +3460,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.secrets.key_vault_missing\
       \ compliance\n      python validate.py --pattern svc.secrets.key_vault_missing"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -3616,7 +3469,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.secrets.key_vault_missing\
       \ compliance\n      python validate.py --pattern svc.secrets.key_vault_missing"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -3707,7 +3559,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: CM - Configuration Management
   control_numbers:
@@ -3734,27 +3585,22 @@ azure_guidance:
   - service: Azure Automation
     tier: Standard
     purpose: Required for Azure Automation functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Key Vault
     tier: Standard
     purpose: Required for Azure Key Vault functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -3767,18 +3613,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: CM-7.1
-      control_name: Periodic Review
-    - control_id: CM-12.1
-      control_name: Automated Tools to Support Information Location
-    - control_id: MA-2
-      control_name: Controlled Maintenance
-    - control_id: PL-8
-      control_name: Security and Privacy Architectures
-    - control_id: SC-7
-      control_name: Boundary Protection
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of svc.secrets.key_vault_missing
@@ -3833,13 +3667,21 @@ related_ksis:
 - KSI-SVC-02
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      Resources
+      | where type == 'microsoft.storage/storageaccounts'
+      | extend HttpsOnly = properties.supportsHttpsTrafficOnly
+      | where HttpsOnly != true
+      | project name, resourceGroup, location, HttpsOnly
+    description: Detect storage accounts allowing unencrypted HTTP traffic
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az storage account list \
+        --query "[?enableHttpsTrafficOnly!=\`true\`].{name:name, resourceGroup:resourceGroup, httpsOnly:enableHttpsTrafficOnly}" \
+        --output json
+    description: List storage accounts without HTTPS-only enforcement
     output_format: json
     frequency: weekly
 automation:
@@ -3859,7 +3701,6 @@ automation:
     - Azure Pipelines
     - Log Analytics
     - Managed Identity
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -3869,7 +3710,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.encryption.storage_https_only\
       \ compliance\n      python validate.py --pattern svc.encryption.storage_https_only"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -3879,7 +3719,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.encryption.storage_https_only\
       \ compliance\n      python validate.py --pattern svc.encryption.storage_https_only"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -3970,7 +3809,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: SC - System and Communications Protection
   control_numbers:
@@ -3996,27 +3834,22 @@ azure_guidance:
   - service: Azure Automation
     tier: Standard
     purpose: Required for Azure Automation functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Key Vault
     tier: Standard
     purpose: Required for Azure Key Vault functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -4029,18 +3862,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-1
-      control_name: Policy and Procedures
-    - control_id: AC-17.2
-      control_name: Protection of Confidentiality and Integrity Using Encryption
-    - control_id: CP-9.8
-      control_name: Cryptographic Protection
-    - control_id: SC-8
-      control_name: Transmission Confidentiality and Integrity
-    - control_id: SC-8.1
-      control_name: Cryptographic Protection
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of svc.encryption.storage_https_only
@@ -4091,13 +3912,21 @@ related_ksis:
 - KSI-SVC-02
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      Resources
+      | where type in ('microsoft.sql/servers', 'microsoft.dbformysql/servers', 'microsoft.dbforpostgresql/servers')
+      | extend MinTlsVersion = properties.minimalTlsVersion
+      | where MinTlsVersion != '1.2' and MinTlsVersion != '1.3'
+      | project name, resourceGroup, type, MinTlsVersion
+    description: Detect database servers without minimum TLS 1.2
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az sql server list \
+        --query "[?minimalTlsVersion!='1.2' && minimalTlsVersion!='1.3'].{name:name, resourceGroup:resourceGroup, tlsVersion:minimalTlsVersion}" \
+        --output json
+    description: List SQL servers with insufficient TLS versions
     output_format: json
     frequency: weekly
 automation:
@@ -4117,7 +3946,6 @@ automation:
     - Azure Pipelines
     - Log Analytics
     - Managed Identity
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -4127,7 +3955,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.encryption.sql_tls_version\
       \ compliance\n      python validate.py --pattern svc.encryption.sql_tls_version"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -4137,7 +3964,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.encryption.sql_tls_version\
       \ compliance\n      python validate.py --pattern svc.encryption.sql_tls_version"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -4228,7 +4054,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: SC - System and Communications Protection
   control_numbers:
@@ -4254,27 +4079,22 @@ azure_guidance:
   - service: Azure Automation
     tier: Standard
     purpose: Required for Azure Automation functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Key Vault
     tier: Standard
     purpose: Required for Azure Key Vault functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -4287,18 +4107,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-1
-      control_name: Policy and Procedures
-    - control_id: AC-17.2
-      control_name: Protection of Confidentiality and Integrity Using Encryption
-    - control_id: CP-9.8
-      control_name: Cryptographic Protection
-    - control_id: SC-8
-      control_name: Transmission Confidentiality and Integrity
-    - control_id: SC-8.1
-      control_name: Cryptographic Protection
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of svc.encryption.sql_tls_version
@@ -4390,7 +4198,6 @@ automation:
     - Azure Pipelines
     - Log Analytics
     - Managed Identity
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -4400,7 +4207,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.network.storage_public_access\
       \ compliance\n      python validate.py --pattern svc.network.storage_public_access"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -4410,7 +4216,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate svc.network.storage_public_access\
       \ compliance\n      python validate.py --pattern svc.network.storage_public_access"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -4501,7 +4306,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: SC - System and Communications Protection
   control_numbers:
@@ -4528,27 +4332,22 @@ azure_guidance:
   - service: Azure Automation
     tier: Standard
     purpose: Required for Azure Automation functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Key Vault
     tier: Standard
     purpose: Required for Azure Key Vault functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -4560,12 +4359,6 @@ compliance_frameworks:
     requirement_name: Data Destruction
     impact_levels:
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: SI-12.3
-      control_name: Information Disposal
-    - control_id: SI-18.4
-      control_name: Individual Requests
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of svc.network.storage_public_access

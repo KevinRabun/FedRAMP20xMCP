@@ -88,7 +88,6 @@ automation:
     - Log Analytics
     - Microsoft Entra ID
     - Privileged Identity Management
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -98,7 +97,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.fido2_import\
       \ compliance\n      python validate.py --pattern iam.mfa.fido2_import"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -108,7 +106,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.fido2_import\
       \ compliance\n      python validate.py --pattern iam.mfa.fido2_import"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -199,7 +196,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: IA - Identification and Authentication
   control_numbers:
@@ -228,27 +224,22 @@ azure_guidance:
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure RBAC
     tier: Standard
     purpose: Required for Azure RBAC functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Conditional Access
     tier: Standard
     purpose: Required for Conditional Access functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -261,18 +252,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-2
-      control_name: Account Management
-    - control_id: IA-2
-      control_name: Identification and Authentication (Organizational Users)
-    - control_id: IA-2.1
-      control_name: Multi-factor Authentication to Privileged Accounts
-    - control_id: IA-2.2
-      control_name: Multi-factor Authentication to Non-privileged Accounts
-    - control_id: IA-2.8
-      control_name: Access to Accounts — Replay Resistant
 testing:
   positive_test_cases:
   - description: Compliant python implementation of iam.mfa.fido2_import
@@ -372,7 +351,6 @@ automation:
     - Log Analytics
     - Microsoft Entra ID
     - Privileged Identity Management
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -382,7 +360,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.webauthn_import\
       \ compliance\n      python validate.py --pattern iam.mfa.webauthn_import"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -392,7 +369,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.webauthn_import\
       \ compliance\n      python validate.py --pattern iam.mfa.webauthn_import"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -483,7 +459,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: IA - Identification and Authentication
   control_numbers:
@@ -512,27 +487,22 @@ azure_guidance:
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure RBAC
     tier: Standard
     purpose: Required for Azure RBAC functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Conditional Access
     tier: Standard
     purpose: Required for Conditional Access functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -545,18 +515,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-2
-      control_name: Account Management
-    - control_id: IA-2
-      control_name: Identification and Authentication (Organizational Users)
-    - control_id: IA-2.1
-      control_name: Multi-factor Authentication to Privileged Accounts
-    - control_id: IA-2.2
-      control_name: Multi-factor Authentication to Non-privileged Accounts
-    - control_id: IA-2.8
-      control_name: Access to Accounts — Replay Resistant
 testing:
   positive_test_cases:
   - description: Compliant python implementation of iam.mfa.webauthn_import
@@ -658,7 +616,6 @@ automation:
     - Log Analytics
     - Microsoft Entra ID
     - Privileged Identity Management
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -668,7 +625,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.azure_ad_import\
       \ compliance\n      python validate.py --pattern iam.mfa.azure_ad_import"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -678,7 +634,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.azure_ad_import\
       \ compliance\n      python validate.py --pattern iam.mfa.azure_ad_import"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -769,7 +724,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: IA - Identification and Authentication
   control_numbers:
@@ -795,27 +749,22 @@ azure_guidance:
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure RBAC
     tier: Standard
     purpose: Required for Azure RBAC functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Conditional Access
     tier: Standard
     purpose: Required for Conditional Access functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -828,18 +777,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-2
-      control_name: Account Management
-    - control_id: IA-2
-      control_name: Identification and Authentication (Organizational Users)
-    - control_id: IA-2.1
-      control_name: Multi-factor Authentication to Privileged Accounts
-    - control_id: IA-2.2
-      control_name: Multi-factor Authentication to Non-privileged Accounts
-    - control_id: IA-2.8
-      control_name: Access to Accounts — Replay Resistant
 testing:
   positive_test_cases:
   - description: Compliant python implementation of iam.mfa.azure_ad_import
@@ -952,7 +889,6 @@ automation:
     - Log Analytics
     - Microsoft Entra ID
     - Privileged Identity Management
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -962,7 +898,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.totp_import\
       \ compliance\n      python validate.py --pattern iam.mfa.totp_import"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -972,7 +907,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.totp_import\
       \ compliance\n      python validate.py --pattern iam.mfa.totp_import"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -1063,7 +997,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: IA - Identification and Authentication
   control_numbers:
@@ -1090,27 +1023,22 @@ azure_guidance:
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure RBAC
     tier: Standard
     purpose: Required for Azure RBAC functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Conditional Access
     tier: Standard
     purpose: Required for Conditional Access functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -1123,18 +1051,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-2
-      control_name: Account Management
-    - control_id: IA-2
-      control_name: Identification and Authentication (Organizational Users)
-    - control_id: IA-2.1
-      control_name: Multi-factor Authentication to Privileged Accounts
-    - control_id: IA-2.2
-      control_name: Multi-factor Authentication to Non-privileged Accounts
-    - control_id: IA-2.8
-      control_name: Access to Accounts — Replay Resistant
 testing:
   positive_test_cases:
   - description: Compliant python implementation of iam.mfa.totp_import
@@ -1242,7 +1158,6 @@ automation:
     - Log Analytics
     - Microsoft Entra ID
     - Privileged Identity Management
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -1252,7 +1167,6 @@ automation:
       \  inputs:\n    script: |\n      # Validate iam.mfa.sms_mfa compliance\n   \
       \   python validate.py --pattern iam.mfa.sms_mfa"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -1262,7 +1176,6 @@ automation:
       \  inputs:\n    script: |\n      # Validate iam.mfa.sms_mfa compliance\n   \
       \   python validate.py --pattern iam.mfa.sms_mfa"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -1353,7 +1266,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: IA - Identification and Authentication
   control_numbers:
@@ -1380,27 +1292,22 @@ azure_guidance:
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure RBAC
     tier: Standard
     purpose: Required for Azure RBAC functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Conditional Access
     tier: Standard
     purpose: Required for Conditional Access functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -1413,18 +1320,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-2
-      control_name: Account Management
-    - control_id: IA-2
-      control_name: Identification and Authentication (Organizational Users)
-    - control_id: IA-2.1
-      control_name: Multi-factor Authentication to Privileged Accounts
-    - control_id: IA-2.2
-      control_name: Multi-factor Authentication to Non-privileged Accounts
-    - control_id: IA-2.8
-      control_name: Access to Accounts — Replay Resistant
 testing:
   positive_test_cases:
   - description: Compliant python implementation of iam.mfa.sms_mfa
@@ -1566,7 +1461,6 @@ automation:
     - Log Analytics
     - Microsoft Entra ID
     - Privileged Identity Management
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -1576,7 +1470,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.login_without_mfa\
       \ compliance\n      python validate.py --pattern iam.mfa.login_without_mfa"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -1586,7 +1479,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.login_without_mfa\
       \ compliance\n      python validate.py --pattern iam.mfa.login_without_mfa"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -1677,7 +1569,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: IA - Identification and Authentication
   control_numbers:
@@ -1705,27 +1596,22 @@ azure_guidance:
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure RBAC
     tier: Standard
     purpose: Required for Azure RBAC functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Conditional Access
     tier: Standard
     purpose: Required for Conditional Access functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -1738,18 +1624,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-2
-      control_name: Account Management
-    - control_id: IA-2
-      control_name: Identification and Authentication (Organizational Users)
-    - control_id: IA-2.1
-      control_name: Multi-factor Authentication to Privileged Accounts
-    - control_id: IA-2.2
-      control_name: Multi-factor Authentication to Non-privileged Accounts
-    - control_id: IA-2.8
-      control_name: Access to Accounts — Replay Resistant
 testing:
   positive_test_cases:
   - description: Compliant python implementation of iam.mfa.login_without_mfa
@@ -1857,7 +1731,6 @@ automation:
     - Log Analytics
     - Microsoft Entra ID
     - Privileged Identity Management
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -1867,7 +1740,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.decorator_login_required\
       \ compliance\n      python validate.py --pattern iam.mfa.decorator_login_required"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -1877,7 +1749,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.decorator_login_required\
       \ compliance\n      python validate.py --pattern iam.mfa.decorator_login_required"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -1968,7 +1839,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: IA - Identification and Authentication
   control_numbers:
@@ -1994,27 +1864,22 @@ azure_guidance:
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure RBAC
     tier: Standard
     purpose: Required for Azure RBAC functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Conditional Access
     tier: Standard
     purpose: Required for Conditional Access functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -2027,18 +1892,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-2
-      control_name: Account Management
-    - control_id: IA-2
-      control_name: Identification and Authentication (Organizational Users)
-    - control_id: IA-2.1
-      control_name: Multi-factor Authentication to Privileged Accounts
-    - control_id: IA-2.2
-      control_name: Multi-factor Authentication to Non-privileged Accounts
-    - control_id: IA-2.8
-      control_name: Access to Accounts — Replay Resistant
 testing:
   positive_test_cases:
   - description: Compliant python implementation of iam.mfa.decorator_login_required
@@ -2090,13 +1943,23 @@ related_ksis:
 - KSI-IAM-02
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      AzureActivity
+      | where OperationNameValue == "Microsoft.Authorization/roleAssignments/write"
+      | extend RoleDefinitionId = tostring(Properties_d.roleDefinitionId)
+      | extend PrincipalId = tostring(Properties_d.principalId)
+      | extend Scope = tostring(Properties_d.scope)
+      | project TimeGenerated, Caller, RoleDefinitionId, PrincipalId, Scope
+      | order by TimeGenerated desc
+    description: Query role assignment operations for audit trail
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az role assignment list \
+        --query "[].{principalName:principalName, roleDefinitionName:roleDefinitionName, scope:scope}" \
+        --output json
+    description: List all role assignments in subscription
     output_format: json
     frequency: weekly
 automation:
@@ -2119,7 +1982,6 @@ automation:
     - Log Analytics
     - Microsoft Entra ID
     - Privileged Identity Management
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -2129,7 +1991,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate iam.rbac.azure_rbac_assignment\
       \ compliance\n      python validate.py --pattern iam.rbac.azure_rbac_assignment"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -2139,7 +2000,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate iam.rbac.azure_rbac_assignment\
       \ compliance\n      python validate.py --pattern iam.rbac.azure_rbac_assignment"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -2230,7 +2090,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: AC - Access Control
   control_numbers:
@@ -2257,27 +2116,22 @@ azure_guidance:
   - service: Azure AD
     tier: Standard
     purpose: Required for Azure AD functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure AD configuration
     tier: Standard
     purpose: Required for Azure AD configuration functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -2288,18 +2142,6 @@ compliance_frameworks:
     requirement_id: KSI-IAM-02
     requirement_name: Passwordless Authentication
     impact_levels: []
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-2
-      control_name: Account Management
-    - control_id: AC-3
-      control_name: Access Enforcement
-    - control_id: IA-2.1
-      control_name: Multi-factor Authentication to Privileged Accounts
-    - control_id: IA-2.2
-      control_name: Multi-factor Authentication to Non-privileged Accounts
-    - control_id: IA-2.8
-      control_name: Access to Accounts — Replay Resistant
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of iam.rbac.azure_rbac_assignment
@@ -2353,13 +2195,24 @@ related_ksis:
 - KSI-IAM-03
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      Resources
+      | where type == 'microsoft.authorization/roledefinitions'
+      | extend permissions = parse_json(properties.permissions)
+      | mv-expand permission = permissions
+      | extend actions = permission.actions
+      | where actions contains '*'
+      | project name, id, actions, properties.roleName
+      | order by name asc
+    description: Query custom role definitions with wildcard permissions
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az role definition list --custom-role-only true \
+        --query "[?contains(to_string(permissions[0].actions), '*')].{name:roleName, actions:permissions[0].actions}" \
+        --output json
+    description: List custom roles with wildcard actions
     output_format: json
     frequency: weekly
 automation:
@@ -2382,7 +2235,6 @@ automation:
     - Log Analytics
     - Microsoft Entra ID
     - Privileged Identity Management
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -2392,7 +2244,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate iam.rbac.wildcard_permissions\
       \ compliance\n      python validate.py --pattern iam.rbac.wildcard_permissions"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -2402,7 +2253,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate iam.rbac.wildcard_permissions\
       \ compliance\n      python validate.py --pattern iam.rbac.wildcard_permissions"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -2493,7 +2343,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: AC - Access Control
   control_numbers:
@@ -2520,27 +2369,22 @@ azure_guidance:
   - service: Azure AD
     tier: Standard
     purpose: Required for Azure AD functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure AD configuration
     tier: Standard
     purpose: Required for Azure AD configuration functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -2551,18 +2395,6 @@ compliance_frameworks:
     requirement_id: KSI-IAM-02
     requirement_name: Passwordless Authentication
     impact_levels: []
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-2
-      control_name: Account Management
-    - control_id: AC-3
-      control_name: Access Enforcement
-    - control_id: IA-2.1
-      control_name: Multi-factor Authentication to Privileged Accounts
-    - control_id: IA-2.2
-      control_name: Multi-factor Authentication to Non-privileged Accounts
-    - control_id: IA-2.8
-      control_name: Access to Accounts — Replay Resistant
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of iam.rbac.wildcard_permissions
@@ -2633,13 +2465,24 @@ related_ksis:
 - KSI-IAM-05
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      AppServiceHTTPLogs
+      | where TimeGenerated > ago(7d)
+      | where CsUriStem contains "login" or CsUriStem contains "auth"
+      | summarize SessionCount=count(), AvgDuration=avg(TimeTaken) by UserAgent
+      | where AvgDuration > 1800000  // Sessions longer than 30 minutes
+      | order by AvgDuration desc
+    description: Detect potentially long-running sessions exceeding recommended timeout
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az webapp config show \
+        --resource-group <RESOURCE_GROUP> \
+        --name <APP_NAME> \
+        --query "{sessionTimeout: properties.sessionTimeout, idleTimeout: properties.idleTimeout}" \
+        --output json
+    description: Check web app session timeout configuration
     output_format: json
     frequency: weekly
 automation:
@@ -2660,7 +2503,6 @@ automation:
     - Log Analytics
     - Microsoft Entra ID
     - Privileged Identity Management
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -2670,7 +2512,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate iam.session.timeout_missing\
       \ compliance\n      python validate.py --pattern iam.session.timeout_missing"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -2680,7 +2521,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate iam.session.timeout_missing\
       \ compliance\n      python validate.py --pattern iam.session.timeout_missing"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -2771,7 +2611,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: SC - System and Communications Protection
   control_numbers:
@@ -2797,27 +2636,22 @@ azure_guidance:
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Pipelines
     tier: Standard
     purpose: Required for Azure Pipelines functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure RBAC
     tier: Standard
     purpose: Required for Azure RBAC functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Conditional Access
     tier: Standard
     purpose: Required for Conditional Access functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -2830,18 +2664,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-2.5
-      control_name: Inactivity Logout
-    - control_id: AC-2.6
-      control_name: Dynamic Privilege Management
-    - control_id: AC-3
-      control_name: Access Enforcement
-    - control_id: AC-4
-      control_name: Information Flow Enforcement
-    - control_id: AC-6
-      control_name: Least Privilege
 testing:
   positive_test_cases:
   - description: Compliant python implementation of iam.session.timeout_missing
@@ -2962,13 +2784,23 @@ related_ksis:
 - KSI-IAM-06
 evidence_collection:
   azure_monitor_kql:
-  - query: '# TODO: Extract from analyzer'
-    description: Evidence collection query
+  - query: |
+      Resources
+      | where type in~ ('microsoft.web/sites', 'microsoft.compute/virtualmachines', 'microsoft.containerservice/managedclusters')
+      | extend identityType = tostring(identity.type)
+      | where isnull(identityType) or identityType == 'None'
+      | project name, type, resourceGroup, location
+      | order by name asc
+    description: Query Azure resources without managed identity configured
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: '# TODO: Extract from analyzer'
-    description: Azure CLI evidence collection
+  - command: |
+      az resource list \
+        --query "[?type=='Microsoft.Web/sites' || type=='Microsoft.Compute/virtualMachines'].{name:name, type:type, identity:identity}" \
+        | jq '[.[] | select(.identity == null or .identity.type == \"None\")]' \
+        --output json
+    description: List resources missing managed identity
     output_format: json
     frequency: weekly
 automation:
@@ -2990,7 +2822,6 @@ automation:
     - Log Analytics
     - Microsoft Entra ID
     - Privileged Identity Management
-    effort_hours: 4
   automation_2:
     description: Azure Monitor for continuous monitoring
     implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
@@ -3000,7 +2831,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate iam.identity.missing_managed_identity\
       \ compliance\n      python validate.py --pattern iam.identity.missing_managed_identity"
     azure_services: *id001
-    effort_hours: 4
   automation_3:
     description: Log Analytics queries for compliance validation
     implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
@@ -3010,7 +2840,6 @@ automation:
       \ Validation'\n  inputs:\n    script: |\n      # Validate iam.identity.missing_managed_identity\
       \ compliance\n      python validate.py --pattern iam.identity.missing_managed_identity"
     azure_services: *id001
-    effort_hours: 4
 implementation:
   prerequisites:
   - Azure subscription with required permissions
@@ -3101,7 +2930,6 @@ implementation:
     azure_service: null
     estimated_hours: 1
     validation: Manual verification required
-  total_effort_hours: 17
 ssp_mapping:
   control_family: IA - Identification and Authentication
   control_numbers:
@@ -3129,27 +2957,22 @@ azure_guidance:
   - service: Azure AD
     tier: Standard
     purpose: Required for Azure AD functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Blob Storage
     tier: Standard
     purpose: Required for Azure Blob Storage functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure Monitor
     tier: Standard
     purpose: Required for Azure Monitor functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Azure RBAC
     tier: Standard
     purpose: Required for Azure RBAC functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   - service: Conditional Access
     tier: Standard
     purpose: Required for Conditional Access functionality
-    monthly_cost_estimate: Varies by usage
     alternatives: []
   well_architected_framework:
     pillar: Security
@@ -3162,18 +2985,6 @@ compliance_frameworks:
     impact_levels:
     - Low
     - Moderate
-  nist_800_53_rev5:
-    controls:
-    - control_id: AC-2
-      control_name: Account Management
-    - control_id: AC-2.1
-      control_name: Automated System Account Management
-    - control_id: AC-2.3
-      control_name: Disable Accounts
-    - control_id: AC-2.13
-      control_name: Disable Accounts for High-risk Individuals
-    - control_id: AC-7
-      control_name: Unsuccessful Logon Attempts
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of iam.identity.missing_managed_identity

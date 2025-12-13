@@ -150,7 +150,6 @@ automation:
     azure_services:
       - Azure Policy
       - Microsoft Entra ID
-    effort_hours: 4
 ```
 
 ### SSP Mapping
@@ -194,7 +193,6 @@ implementation:
       azure_service: Conditional Access
       estimated_hours: 2
       validation: Test policy enforcement with test user
-  total_effort_hours: 8
 ```
 
 See [PATTERN_SCHEMA_V2.md](PATTERN_SCHEMA_V2.md) for complete V2 schema documentation.
