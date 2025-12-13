@@ -48,10 +48,11 @@ async def export_to_excel(
     
     # Determine output path
     if output_path is None:
-        downloads_folder = str(Path.home() / "Downloads")
+        downloads_folder = Path.home() / "Downloads"
+        downloads_folder.mkdir(parents=True, exist_ok=True)  # Create if doesn't exist
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"FedRAMP_20x_{export_type}_{timestamp}.xlsx"
-        output_path = os.path.join(downloads_folder, filename)
+        output_path = str(downloads_folder / filename)
     
     # Create workbook
     wb = Workbook()
