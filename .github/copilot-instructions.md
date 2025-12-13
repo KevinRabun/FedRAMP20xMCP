@@ -7,7 +7,7 @@ MCP server that loads FedRAMP 20x requirements from JSON files and official docu
 FedRAMP 20x requires **machine-readable** formats (JSON/XML/structured data) for FRR-ADS. **OSCAL is NOT mentioned in FedRAMP 20x requirements** - it's one optional NIST-based implementation approach. Source: FRR-ADS-01 specifies "machine-readable" only.
 
 ## Data & Capabilities
-- **199 FedRAMP Requirements (FRRs)** from 10 families (ADS, CCM, FSI, ICP, MAS, PVA, RSC, SCN, UCM, VDR)
+- **199 FedRAMP Requirements (FRRs)** from 11 families (ADS, CCM, FSI, ICP, KSI, MAS, PVA, RSC, SCN, UCM, VDR)
 - **50 FedRAMP Definitions** (FRD family)
 - **72 Key Security Indicators (KSIs)** from 11 families (AFR, CED, CMT, CNA, IAM, INR, MLA, PIY, RPL, SVC, TPR)
 - **48 MCP tools** organized in 13 modules
