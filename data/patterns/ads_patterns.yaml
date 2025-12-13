@@ -1999,3 +1999,1723 @@ testing:
     expected_finding: true
   validation_scripts:
   - tests/test_ads_patterns.py::test_ads_cicd_audit_export_step
+---
+pattern_id: ads.frr.frr_ads_01
+name: Public Information Compliance
+description: Validates compliance with FRR-ADS-01 - Public Information
+family: ADS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ADS-01 - Public Information compliance check
+  description_template: Configuration requires validation for FRR-ADS-01 compliance
+  remediation_template: Implement FRR-ADS-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ads
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ADS-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ADS-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ADS-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ADS-01 compliance validation
+    implementation: |
+      # FRR-ADS-01 compliance automation
+      # GitHub Actions
+      - name: FRR-ADS-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ads.frr.frr_ads_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ADS-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ADS-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ADS-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ADS-01"
+        RequirementName = "Public Information"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ads.frr.frr_ads_02
+name: Consistency Between Formats Compliance
+description: Validates compliance with FRR-ADS-02 - Consistency Between Formats
+family: ADS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ADS-02 - Consistency Between Formats compliance check
+  description_template: Configuration requires validation for FRR-ADS-02 compliance
+  remediation_template: Implement FRR-ADS-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ads
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ADS-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ADS-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ADS-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ADS-02 compliance validation
+    implementation: |
+      # FRR-ADS-02 compliance automation
+      # GitHub Actions
+      - name: FRR-ADS-02 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ads.frr.frr_ads_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ADS-02 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ADS-02 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-02'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ADS-02
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ADS-02"
+        RequirementName = "Consistency Between Formats"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-02.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ads.frr.frr_ads_03
+name: Detailed Service List Compliance
+description: Validates compliance with FRR-ADS-03 - Detailed Service List
+family: ADS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ADS-03 - Detailed Service List compliance check
+  description_template: Configuration requires validation for FRR-ADS-03 compliance
+  remediation_template: Implement FRR-ADS-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ads
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ADS-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ADS-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ADS-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ADS-03 compliance validation
+    implementation: |
+      # FRR-ADS-03 compliance automation
+      # GitHub Actions
+      - name: FRR-ADS-03 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ads.frr.frr_ads_03 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ADS-03 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ADS-03 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-03'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ADS-03
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ADS-03"
+        RequirementName = "Detailed Service List"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-03.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ads.frr.frr_ads_04
+name: Uninterrupted Sharing Compliance
+description: Validates compliance with FRR-ADS-04 - Uninterrupted Sharing
+family: ADS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ADS-04 - Uninterrupted Sharing compliance check
+  description_template: Configuration requires validation for FRR-ADS-04 compliance
+  remediation_template: Implement FRR-ADS-04 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ads
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ADS-04
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ADS-04 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ADS-04 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ADS-04 compliance validation
+    implementation: |
+      # FRR-ADS-04 compliance automation
+      # GitHub Actions
+      - name: FRR-ADS-04 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ads.frr.frr_ads_04 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ADS-04 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ADS-04 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-04'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ADS-04
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ADS-04"
+        RequirementName = "Uninterrupted Sharing"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-04.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ads.frr.frr_ads_05
+name: Responsible Information Sharing Compliance
+description: Validates compliance with FRR-ADS-05 - Responsible Information Sharing
+family: ADS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ADS-05 - Responsible Information Sharing compliance check
+  description_template: Configuration requires validation for FRR-ADS-05 compliance
+  remediation_template: Implement FRR-ADS-05 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ads
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ADS-05
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ADS-05 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ADS-05 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ADS-05 compliance validation
+    implementation: |
+      # FRR-ADS-05 compliance automation
+      # GitHub Actions
+      - name: FRR-ADS-05 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ads.frr.frr_ads_05 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ADS-05 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ADS-05 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-05'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ADS-05
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ADS-05"
+        RequirementName = "Responsible Information Sharing"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-05.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ads.frr.frr_ads_06
+name: USDA Connect Community Portal Compliance
+description: Validates compliance with FRR-ADS-06 - USDA Connect Community Portal
+family: ADS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ADS-06 - USDA Connect Community Portal compliance check
+  description_template: Configuration requires validation for FRR-ADS-06 compliance
+  remediation_template: Implement FRR-ADS-06 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ads
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ADS-06
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ADS-06 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ADS-06 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ADS-06 compliance validation
+    implementation: |
+      # FRR-ADS-06 compliance automation
+      # GitHub Actions
+      - name: FRR-ADS-06 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ads.frr.frr_ads_06 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ADS-06 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ADS-06 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-06'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ADS-06
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ADS-06"
+        RequirementName = "USDA Connect Community Portal"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-06.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ads.frr.frr_ads_07
+name: FedRAMP-Compatible Trust Centers Compliance
+description: Validates compliance with FRR-ADS-07 - FedRAMP-Compatible Trust Centers
+family: ADS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ADS-07 - FedRAMP-Compatible Trust Centers compliance check
+  description_template: Configuration requires validation for FRR-ADS-07 compliance
+  remediation_template: Implement FRR-ADS-07 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ads
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ADS-07
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ADS-07 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ADS-07 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ADS-07 compliance validation
+    implementation: |
+      # FRR-ADS-07 compliance automation
+      # GitHub Actions
+      - name: FRR-ADS-07 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ads.frr.frr_ads_07 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ADS-07 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ADS-07 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-07'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ADS-07
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ADS-07"
+        RequirementName = "FedRAMP-Compatible Trust Centers"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-07.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ads.frr.frr_ads_08
+name: Trust Center Migration Notification Compliance
+description: Validates compliance with FRR-ADS-08 - Trust Center Migration Notification
+family: ADS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ADS-08 - Trust Center Migration Notification compliance check
+  description_template: Configuration requires validation for FRR-ADS-08 compliance
+  remediation_template: Implement FRR-ADS-08 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ads
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ADS-08
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ADS-08 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ADS-08 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ADS-08 compliance validation
+    implementation: |
+      # FRR-ADS-08 compliance automation
+      # GitHub Actions
+      - name: FRR-ADS-08 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ads.frr.frr_ads_08 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ADS-08 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ADS-08 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-08'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ADS-08
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ADS-08"
+        RequirementName = "Trust Center Migration Notification"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-08.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ads.frr.frr_ads_09
+name: Historical Authorization Data Compliance
+description: Validates compliance with FRR-ADS-09 - Historical Authorization Data
+family: ADS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ADS-09 - Historical Authorization Data compliance check
+  description_template: Configuration requires validation for FRR-ADS-09 compliance
+  remediation_template: Implement FRR-ADS-09 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ads
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ADS-09
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ADS-09 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ADS-09 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ADS-09 compliance validation
+    implementation: |
+      # FRR-ADS-09 compliance automation
+      # GitHub Actions
+      - name: FRR-ADS-09 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ads.frr.frr_ads_09 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ADS-09 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ADS-09 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-09'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ADS-09
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ADS-09"
+        RequirementName = "Historical Authorization Data"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-09.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ads.frr.frr_ads_10
+name: Best Practices and Technical Assistance Compliance
+description: Validates compliance with FRR-ADS-10 - Best Practices and Technical Assistance
+family: ADS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ADS-10 - Best Practices and Technical Assistance compliance check
+  description_template: Configuration requires validation for FRR-ADS-10 compliance
+  remediation_template: Implement FRR-ADS-10 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ads
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ADS-10
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ADS-10 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ADS-10 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ADS-10 compliance validation
+    implementation: |
+      # FRR-ADS-10 compliance automation
+      # GitHub Actions
+      - name: FRR-ADS-10 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ads.frr.frr_ads_10 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ADS-10 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ADS-10 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-10'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ADS-10
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ADS-10"
+        RequirementName = "Best Practices and Technical Assistance"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-10.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ads.frr.frr_ads_ac_01
+name: Public Guidance Compliance
+description: Validates compliance with FRR-ADS-AC-01 - Public Guidance
+family: ADS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ADS-AC-01 - Public Guidance compliance check
+  description_template: Configuration requires validation for FRR-ADS-AC-01 compliance
+  remediation_template: Implement FRR-ADS-AC-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ads
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ADS-AC-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ADS-AC-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ADS-AC-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ADS-AC-01 compliance validation
+    implementation: |
+      # FRR-ADS-AC-01 compliance automation
+      # GitHub Actions
+      - name: FRR-ADS-AC-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ads.frr.frr_ads_ac_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ADS-AC-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ADS-AC-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-AC-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ADS-AC-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ADS-AC-01"
+        RequirementName = "Public Guidance"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-AC-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ads.frr.frr_ads_ac_02
+name: Prospective Customer Access Compliance
+description: Validates compliance with FRR-ADS-AC-02 - Prospective Customer Access
+family: ADS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ADS-AC-02 - Prospective Customer Access compliance check
+  description_template: Configuration requires validation for FRR-ADS-AC-02 compliance
+  remediation_template: Implement FRR-ADS-AC-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ads
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ADS-AC-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ADS-AC-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ADS-AC-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ADS-AC-02 compliance validation
+    implementation: |
+      # FRR-ADS-AC-02 compliance automation
+      # GitHub Actions
+      - name: FRR-ADS-AC-02 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ads.frr.frr_ads_ac_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ADS-AC-02 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ADS-AC-02 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-AC-02'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ADS-AC-02
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ADS-AC-02"
+        RequirementName = "Prospective Customer Access"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-AC-02.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ads.frr.frr_ads_ex_01
+name: Legacy Self-Managed Repository Exception Compliance
+description: Validates compliance with FRR-ADS-EX-01 - Legacy Self-Managed Repository Exception
+family: ADS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ADS-EX-01 - Legacy Self-Managed Repository Exception compliance check
+  description_template: Configuration requires validation for FRR-ADS-EX-01 compliance
+  remediation_template: Implement FRR-ADS-EX-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ads
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ADS-EX-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ADS-EX-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ADS-EX-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ADS-EX-01 compliance validation
+    implementation: |
+      # FRR-ADS-EX-01 compliance automation
+      # GitHub Actions
+      - name: FRR-ADS-EX-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ads.frr.frr_ads_ex_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ADS-EX-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ADS-EX-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-EX-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ADS-EX-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ADS-EX-01"
+        RequirementName = "Legacy Self-Managed Repository Exception"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-EX-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ads.frr.frr_ads_tc_01
+name: Trust Center Assessment Compliance
+description: Validates compliance with FRR-ADS-TC-01 - Trust Center Assessment
+family: ADS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ADS-TC-01 - Trust Center Assessment compliance check
+  description_template: Configuration requires validation for FRR-ADS-TC-01 compliance
+  remediation_template: Implement FRR-ADS-TC-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ads
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ADS-TC-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ADS-TC-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ADS-TC-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ADS-TC-01 compliance validation
+    implementation: |
+      # FRR-ADS-TC-01 compliance automation
+      # GitHub Actions
+      - name: FRR-ADS-TC-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ads.frr.frr_ads_tc_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ADS-TC-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ADS-TC-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-TC-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ADS-TC-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ADS-TC-01"
+        RequirementName = "Trust Center Assessment"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-TC-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ads.frr.frr_ads_tc_02
+name: Human and Machine-Readable Compliance
+description: Validates compliance with FRR-ADS-TC-02 - Human and Machine-Readable
+family: ADS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ADS-TC-02 - Human and Machine-Readable compliance check
+  description_template: Configuration requires validation for FRR-ADS-TC-02 compliance
+  remediation_template: Implement FRR-ADS-TC-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ads
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ADS-TC-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ADS-TC-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ADS-TC-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ADS-TC-02 compliance validation
+    implementation: |
+      # FRR-ADS-TC-02 compliance automation
+      # GitHub Actions
+      - name: FRR-ADS-TC-02 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ads.frr.frr_ads_tc_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ADS-TC-02 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ADS-TC-02 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-TC-02'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ADS-TC-02
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ADS-TC-02"
+        RequirementName = "Human and Machine-Readable"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-TC-02.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ads.frr.frr_ads_tc_03
+name: Programmatic Access Compliance
+description: Validates compliance with FRR-ADS-TC-03 - Programmatic Access
+family: ADS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ADS-TC-03 - Programmatic Access compliance check
+  description_template: Configuration requires validation for FRR-ADS-TC-03 compliance
+  remediation_template: Implement FRR-ADS-TC-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ads
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ADS-TC-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ADS-TC-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ADS-TC-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ADS-TC-03 compliance validation
+    implementation: |
+      # FRR-ADS-TC-03 compliance automation
+      # GitHub Actions
+      - name: FRR-ADS-TC-03 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ads.frr.frr_ads_tc_03 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ADS-TC-03 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ADS-TC-03 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-TC-03'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ADS-TC-03
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ADS-TC-03"
+        RequirementName = "Programmatic Access"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-TC-03.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ads.frr.frr_ads_tc_04
+name: Self-Service Access Management Compliance
+description: Validates compliance with FRR-ADS-TC-04 - Self-Service Access Management
+family: ADS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ADS-TC-04 - Self-Service Access Management compliance check
+  description_template: Configuration requires validation for FRR-ADS-TC-04 compliance
+  remediation_template: Implement FRR-ADS-TC-04 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ads
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ADS-TC-04
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ADS-TC-04 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ADS-TC-04 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ADS-TC-04 compliance validation
+    implementation: |
+      # FRR-ADS-TC-04 compliance automation
+      # GitHub Actions
+      - name: FRR-ADS-TC-04 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ads.frr.frr_ads_tc_04 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ADS-TC-04 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ADS-TC-04 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-TC-04'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ADS-TC-04
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ADS-TC-04"
+        RequirementName = "Self-Service Access Management"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-TC-04.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ads.frr.frr_ads_tc_05
+name: Access Inventory Compliance
+description: Validates compliance with FRR-ADS-TC-05 - Access Inventory
+family: ADS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ADS-TC-05 - Access Inventory compliance check
+  description_template: Configuration requires validation for FRR-ADS-TC-05 compliance
+  remediation_template: Implement FRR-ADS-TC-05 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ads
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ADS-TC-05
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ADS-TC-05 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ADS-TC-05 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ADS-TC-05 compliance validation
+    implementation: |
+      # FRR-ADS-TC-05 compliance automation
+      # GitHub Actions
+      - name: FRR-ADS-TC-05 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ads.frr.frr_ads_tc_05 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ADS-TC-05 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ADS-TC-05 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-TC-05'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ADS-TC-05
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ADS-TC-05"
+        RequirementName = "Access Inventory"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-TC-05.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ads.frr.frr_ads_tc_06
+name: Access Logging Compliance
+description: Validates compliance with FRR-ADS-TC-06 - Access Logging
+family: ADS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ADS-TC-06 - Access Logging compliance check
+  description_template: Configuration requires validation for FRR-ADS-TC-06 compliance
+  remediation_template: Implement FRR-ADS-TC-06 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ads
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ADS-TC-06
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ADS-TC-06 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ADS-TC-06 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ADS-TC-06 compliance validation
+    implementation: |
+      # FRR-ADS-TC-06 compliance automation
+      # GitHub Actions
+      - name: FRR-ADS-TC-06 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ads.frr.frr_ads_tc_06 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ADS-TC-06 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ADS-TC-06 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-TC-06'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ADS-TC-06
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ADS-TC-06"
+        RequirementName = "Access Logging"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-TC-06.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ads.frr.frr_ads_tc_07
+name: Responsive Performance Compliance
+description: Validates compliance with FRR-ADS-TC-07 - Responsive Performance
+family: ADS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ADS-TC-07 - Responsive Performance compliance check
+  description_template: Configuration requires validation for FRR-ADS-TC-07 compliance
+  remediation_template: Implement FRR-ADS-TC-07 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ads
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ADS-TC-07
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ADS-TC-07 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ADS-TC-07 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ADS-TC-07 compliance validation
+    implementation: |
+      # FRR-ADS-TC-07 compliance automation
+      # GitHub Actions
+      - name: FRR-ADS-TC-07 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ads.frr.frr_ads_tc_07 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ADS-TC-07 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ADS-TC-07 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ADS-TC-07'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ADS-TC-07
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ADS-TC-07"
+        RequirementName = "Responsive Performance"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ADS-TC-07.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']

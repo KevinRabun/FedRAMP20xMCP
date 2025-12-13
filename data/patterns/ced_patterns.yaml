@@ -1020,3 +1020,323 @@ testing:
     expected_finding: true
   validation_scripts:
   - tests/test_ced_patterns.py::test_ced_training_incident_response_missing
+---
+pattern_id: ced.compliance.ksi_ced_01
+name: General Education Detection
+description: Detects compliance indicators for KSI-CED-01 - General Education
+family: CED
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: General Education compliance check
+  description_template: Configuration may not fully implement KSI-CED-01 - General Education
+  remediation_template: Review and implement KSI-CED-01 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ced
+- compliance
+- ksi-ced-01
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-CED-01
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-CED-01 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-CED-01 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-CED-01 compliance enforcement
+    implementation: |
+      # Azure Policy for KSI-CED-01 compliance
+      # GitHub Actions
+      - name: KSI-CED-01 Compliance Check
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ced.compliance.ksi_ced_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: PowerShell@2
+        displayName: 'KSI-CED-01 Validation'
+        inputs:
+          script: |
+            # Validate KSI-CED-01 compliance
+            python validate.py --pattern ced.compliance.ksi_ced_01
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-CED-01
+    implementation: |
+      # Azure Monitor for KSI-CED-01 continuous monitoring
+      # Log Analytics Query
+      AzureActivity
+      | where CategoryValue == "Policy"
+      | where OperationNameValue contains "KSI-CED-01"
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels: ['Low', 'Moderate']
+---
+pattern_id: ced.compliance.ksi_ced_02
+name: Role-Specific Education Detection
+description: Detects compliance indicators for KSI-CED-02 - Role-Specific Education
+family: CED
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: Role-Specific Education compliance check
+  description_template: Configuration may not fully implement KSI-CED-02 - Role-Specific Education
+  remediation_template: Review and implement KSI-CED-02 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ced
+- compliance
+- ksi-ced-02
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-CED-02
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-CED-02 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-CED-02 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-CED-02 compliance enforcement
+    implementation: |
+      # Azure Policy for KSI-CED-02 compliance
+      # GitHub Actions
+      - name: KSI-CED-02 Compliance Check
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ced.compliance.ksi_ced_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: PowerShell@2
+        displayName: 'KSI-CED-02 Validation'
+        inputs:
+          script: |
+            # Validate KSI-CED-02 compliance
+            python validate.py --pattern ced.compliance.ksi_ced_02
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-CED-02
+    implementation: |
+      # Azure Monitor for KSI-CED-02 continuous monitoring
+      # Log Analytics Query
+      AzureActivity
+      | where CategoryValue == "Policy"
+      | where OperationNameValue contains "KSI-CED-02"
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels: ['Low', 'Moderate']
+---
+pattern_id: ced.compliance.ksi_ced_03
+name: Development and Engineering Education Detection
+description: Detects compliance indicators for KSI-CED-03 - Development and Engineering Education
+family: CED
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: Development and Engineering Education compliance check
+  description_template: Configuration may not fully implement KSI-CED-03 - Development and Engineering Education
+  remediation_template: Review and implement KSI-CED-03 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ced
+- compliance
+- ksi-ced-03
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-CED-03
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-CED-03 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-CED-03 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-CED-03 compliance enforcement
+    implementation: |
+      # Azure Policy for KSI-CED-03 compliance
+      # GitHub Actions
+      - name: KSI-CED-03 Compliance Check
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ced.compliance.ksi_ced_03 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: PowerShell@2
+        displayName: 'KSI-CED-03 Validation'
+        inputs:
+          script: |
+            # Validate KSI-CED-03 compliance
+            python validate.py --pattern ced.compliance.ksi_ced_03
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-CED-03
+    implementation: |
+      # Azure Monitor for KSI-CED-03 continuous monitoring
+      # Log Analytics Query
+      AzureActivity
+      | where CategoryValue == "Policy"
+      | where OperationNameValue contains "KSI-CED-03"
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels: ['Low', 'Moderate']
+---
+pattern_id: ced.compliance.ksi_ced_04
+name: Incident Response and Disaster Recovery Education Detection
+description: Detects compliance indicators for KSI-CED-04 - Incident Response and Disaster Recovery Education
+family: CED
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: Incident Response and Disaster Recovery Education compliance check
+  description_template: Configuration may not fully implement KSI-CED-04 - Incident Response and Disaster Recovery Education
+  remediation_template: Review and implement KSI-CED-04 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ced
+- compliance
+- ksi-ced-04
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-CED-04
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-CED-04 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-CED-04 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-CED-04 compliance enforcement
+    implementation: |
+      # Azure Policy for KSI-CED-04 compliance
+      # GitHub Actions
+      - name: KSI-CED-04 Compliance Check
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ced.compliance.ksi_ced_04 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: PowerShell@2
+        displayName: 'KSI-CED-04 Validation'
+        inputs:
+          script: |
+            # Validate KSI-CED-04 compliance
+            python validate.py --pattern ced.compliance.ksi_ced_04
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-CED-04
+    implementation: |
+      # Azure Monitor for KSI-CED-04 continuous monitoring
+      # Log Analytics Query
+      AzureActivity
+      | where CategoryValue == "Policy"
+      | where OperationNameValue contains "KSI-CED-04"
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels: ['Low', 'Moderate']

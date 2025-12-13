@@ -25,10 +25,7 @@ languages:
 finding:
   title_template: Missing required resource tags
   description_template: Resource lacks required tags for governance and cost tracking.
-  remediation_template: "Add required tags:\ntags: {\n  Environment: 'Production'\
-    \  // or Dev, Test, Staging\n  Owner: 'security-team@example.com'\n  CostCenter:\
-    \ 'CC-12345'\n  DataClassification: 'Confidential'\n  ComplianceScope: 'FedRAMP-High'\n\
-    }\n"
+  remediation_template: "Add required tags:\ntags: {\n  Environment: 'Production'  // or Dev, Test, Staging\n  Owner: 'security-team@example.com'\n  CostCenter: 'CC-12345'\n  DataClassification: 'Confidential'\n  ComplianceScope: 'FedRAMP-High'\n}\n"
 tags:
 - governance
 - tagging
@@ -43,15 +40,8 @@ ssp_mapping:
   - CM-8
   ssp_sections:
   - section: 'CM-8: Unknown'
-    description_template: The system implements Unknown Requirement controls in accordance
-      with FedRAMP 20x requirements. Requirement statement not available... Implementation
-      leverages Azure native services combined with application-level controls and
-      automated monitoring to ensure continuous compliance.
-    implementation_details: Azure services including Azure Monitor are configured
-      to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform)
-      templates ensure consistent deployment across environments. Automated compliance
-      checking in CI/CD pipelines validates all changes against Unknown Requirement
-      requirements before deployment.
+    description_template: The system implements Unknown Requirement controls in accordance with FedRAMP 20x requirements. Requirement statement not available... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Unknown Requirement requirements before deployment.
     evidence_references:
     - Configuration exports
     - Compliance reports
@@ -65,10 +55,7 @@ compliance_frameworks:
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of common.tagging.required_tags
-    code_sample: "// Bicep compliant configuration for common.tagging.required_tags\n\
-      resource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name:\
-      \ 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n\
-      }"
+    code_sample: "// Bicep compliant configuration for common.tagging.required_tags\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
@@ -77,6 +64,52 @@ testing:
     expected_severity: HIGH
     expected_finding: true
   validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy enforcement\n# GitHub Actions\n- name: Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern common.tagging.required_tags \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'Compliance Validation'\n  inputs:\n    script: |\n      # Validate compliance\n      python validate.py --pattern common.tagging.required_tags\n"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring and alerting
+    implementation: '# Azure Monitor continuous monitoring
+
+      # Log Analytics Query
+
+      AzureActivity
+
+      | where CategoryValue == "Policy" or CategoryValue == "Security"
+
+      | where ResourceId contains "common.tagging.required_tags"
+
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+
+      '
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+    - Azure Alerts
 ---
 pattern_id: common.diagnostics.missing_diagnostic_settings
 name: Missing Diagnostic Settings
@@ -99,14 +132,8 @@ languages:
     regex_fallback: resource\s+"azurerm_(storage_account|sql_server|key_vault)"
 finding:
   title_template: Diagnostic settings not configured
-  description_template: Resource does not export logs to Log Analytics. Required for
-    audit and security monitoring.
-  remediation_template: "Add diagnostic settings:\n\nBicep:\nresource diagnostics\
-    \ 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {\n  scope: myResource\n\
-    \  name: 'logs-to-workspace'\n  properties: {\n    workspaceId: logAnalyticsWorkspace.id\n\
-    \    logs: [\n      {\n        categoryGroup: 'allLogs'\n        enabled: true\n\
-    \      }\n    ]\n    metrics: [\n      {\n        category: 'AllMetrics'\n   \
-    \     enabled: true\n      }\n    ]\n  }\n}\n"
+  description_template: Resource does not export logs to Log Analytics. Required for audit and security monitoring.
+  remediation_template: "Add diagnostic settings:\n\nBicep:\nresource diagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {\n  scope: myResource\n  name: 'logs-to-workspace'\n  properties: {\n    workspaceId: logAnalyticsWorkspace.id\n    logs: [\n      {\n        categoryGroup: 'allLogs'\n        enabled: true\n      }\n    ]\n    metrics: [\n      {\n        category: 'AllMetrics'\n        enabled: true\n      }\n    ]\n  }\n}\n"
 tags:
 - diagnostics
 - logging
@@ -140,13 +167,7 @@ evidence_artifacts:
 automation:
   automation_1:
     description: Azure Policy for compliance enforcement
-    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n\
-      - name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern common.diagnostics.missing_diagnostic_settings \\\n  \
-      \    --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName:\
-      \ 'common.diagnostics.missing_diagnostic_settings Validation'\n  inputs:\n \
-      \   script: |\n      # Validate common.diagnostics.missing_diagnostic_settings\
-      \ compliance\n      python validate.py --pattern common.diagnostics.missing_diagnostic_settings"
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern common.diagnostics.missing_diagnostic_settings \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.diagnostics.missing_diagnostic_settings Validation'\n  inputs:\n    script: |\n      # Validate common.diagnostics.missing_diagnostic_settings compliance\n      python validate.py --pattern common.diagnostics.missing_diagnostic_settings"
     azure_services: &id001
     - Application Insights
     - Azure Blob Storage
@@ -156,23 +177,11 @@ automation:
     - Microsoft Sentinel
   automation_2:
     description: Azure Monitor for continuous monitoring
-    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
-      - name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern common.diagnostics.missing_diagnostic_settings \\\n  \
-      \    --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName:\
-      \ 'common.diagnostics.missing_diagnostic_settings Validation'\n  inputs:\n \
-      \   script: |\n      # Validate common.diagnostics.missing_diagnostic_settings\
-      \ compliance\n      python validate.py --pattern common.diagnostics.missing_diagnostic_settings"
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern common.diagnostics.missing_diagnostic_settings \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.diagnostics.missing_diagnostic_settings Validation'\n  inputs:\n    script: |\n      # Validate common.diagnostics.missing_diagnostic_settings compliance\n      python validate.py --pattern common.diagnostics.missing_diagnostic_settings"
     azure_services: *id001
   automation_3:
     description: Log Analytics queries for compliance validation
-    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
-      - name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern common.diagnostics.missing_diagnostic_settings \\\n  \
-      \    --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName:\
-      \ 'common.diagnostics.missing_diagnostic_settings Validation'\n  inputs:\n \
-      \   script: |\n      # Validate common.diagnostics.missing_diagnostic_settings\
-      \ compliance\n      python validate.py --pattern common.diagnostics.missing_diagnostic_settings"
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern common.diagnostics.missing_diagnostic_settings \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.diagnostics.missing_diagnostic_settings Validation'\n  inputs:\n    script: |\n      # Validate common.diagnostics.missing_diagnostic_settings compliance\n      python validate.py --pattern common.diagnostics.missing_diagnostic_settings"
     azure_services: *id001
 implementation:
   prerequisites:
@@ -255,17 +264,8 @@ ssp_mapping:
   - AU-12
   ssp_sections:
   - section: 'AU-2: Security Information and Event Management (SIEM)'
-    description_template: The system implements Security Information and Event Management
-      (SIEM) controls in accordance with FedRAMP 20x requirements. Operate a Security
-      Information and Event Management (SIEM) or similar system(s) for centralized,
-      tamper-resistant logging of events, activities, and changes.... Implementation
-      leverages Azure native services combined with application-level controls and
-      automated monitoring to ensure continuous compliance.
-    implementation_details: Azure services including Application Insights, Azure Blob
-      Storage, Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code
-      (Bicep/Terraform) templates ensure consistent deployment across environments.
-      Automated compliance checking in CI/CD pipelines validates all changes against
-      Security Information and Event Management (SIEM) requirements before deployment.
+    description_template: The system implements Security Information and Event Management (SIEM) controls in accordance with FedRAMP 20x requirements. Operate a Security Information and Event Management (SIEM) or similar system(s) for centralized, tamper-resistant logging of events, activities, and changes.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Application Insights, Azure Blob Storage, Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Security Information and Event Management (SIEM) requirements before deployment.
     evidence_references:
     - Configuration exports
     - Compliance reports
@@ -305,16 +305,12 @@ compliance_frameworks:
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of common.diagnostics.missing_diagnostic_settings
-    code_sample: "// Bicep compliant configuration for common.diagnostics.missing_diagnostic_settings\n\
-      resource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name:\
-      \ 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n\
-      }"
+    code_sample: "// Bicep compliant configuration for common.diagnostics.missing_diagnostic_settings\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
   - description: Non-compliant bicep code violating common.diagnostics.missing_diagnostic_settings
-    code_sample: '# Non-compliant code missing common.diagnostics.missing_diagnostic_settings
-      requirements'
+    code_sample: '# Non-compliant code missing common.diagnostics.missing_diagnostic_settings requirements'
     expected_severity: HIGH
     expected_finding: true
   validation_scripts: []
@@ -352,8 +348,7 @@ languages:
     regex_fallback: using\s+Azure\.Identity
 finding:
   title_template: Managed identity detected
-  description_template: Resource uses managed identity for passwordless authentication.
-    Positive security pattern.
+  description_template: Resource uses managed identity for passwordless authentication. Positive security pattern.
   remediation_template: N/A - Positive finding
 tags:
 - identity
@@ -387,12 +382,7 @@ evidence_artifacts:
 automation:
   automation_1:
     description: Azure Policy for compliance enforcement
-    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n\
-      - name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern common.identity.managed_identity \\\n      --code-path\
-      \ ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.identity.managed_identity\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate common.identity.managed_identity\
-      \ compliance\n      python validate.py --pattern common.identity.managed_identity"
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern common.identity.managed_identity \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.identity.managed_identity Validation'\n  inputs:\n    script: |\n      # Validate common.identity.managed_identity compliance\n      python validate.py --pattern common.identity.managed_identity"
     azure_services: &id001
     - Azure Blob Storage
     - Azure Monitor
@@ -404,21 +394,11 @@ automation:
     - Privileged Identity Management
   automation_2:
     description: Azure Monitor for continuous monitoring
-    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
-      - name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern common.identity.managed_identity \\\n      --code-path\
-      \ ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.identity.managed_identity\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate common.identity.managed_identity\
-      \ compliance\n      python validate.py --pattern common.identity.managed_identity"
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern common.identity.managed_identity \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.identity.managed_identity Validation'\n  inputs:\n    script: |\n      # Validate common.identity.managed_identity compliance\n      python validate.py --pattern common.identity.managed_identity"
     azure_services: *id001
   automation_3:
     description: Log Analytics queries for compliance validation
-    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
-      - name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern common.identity.managed_identity \\\n      --code-path\
-      \ ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.identity.managed_identity\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate common.identity.managed_identity\
-      \ compliance\n      python validate.py --pattern common.identity.managed_identity"
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern common.identity.managed_identity \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.identity.managed_identity Validation'\n  inputs:\n    script: |\n      # Validate common.identity.managed_identity compliance\n      python validate.py --pattern common.identity.managed_identity"
     azure_services: *id001
 implementation:
   prerequisites:
@@ -500,17 +480,8 @@ ssp_mapping:
   - IA-5
   ssp_sections:
   - section: 'IA-2: Phishing-Resistant MFA'
-    description_template: The system implements Phishing-Resistant MFA controls in
-      accordance with FedRAMP 20x requirements. Enforce multi-factor authentication
-      (MFA) using methods that are difficult to intercept or impersonate (phishing-resistant
-      MFA) for all user authentication.... Implementation leverages Azure native services
-      combined with application-level controls and automated monitoring to ensure
-      continuous compliance.
-    implementation_details: Azure services including Azure Blob Storage, Azure Monitor,
-      Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code
-      (Bicep/Terraform) templates ensure consistent deployment across environments.
-      Automated compliance checking in CI/CD pipelines validates all changes against
-      Phishing-Resistant MFA requirements before deployment.
+    description_template: The system implements Phishing-Resistant MFA controls in accordance with FedRAMP 20x requirements. Enforce multi-factor authentication (MFA) using methods that are difficult to intercept or impersonate (phishing-resistant MFA) for all user authentication.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Blob Storage, Azure Monitor, Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Phishing-Resistant MFA requirements before deployment.
     evidence_references:
     - Configuration exports
     - Compliance reports
@@ -550,10 +521,7 @@ compliance_frameworks:
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of common.identity.managed_identity
-    code_sample: "// Bicep compliant configuration for common.identity.managed_identity\n\
-      resource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name:\
-      \ 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n\
-      }"
+    code_sample: "// Bicep compliant configuration for common.identity.managed_identity\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
@@ -586,16 +554,8 @@ languages:
     regex_fallback: public_network_access_enabled.*=.*true
 finding:
   title_template: Public network access enabled
-  description_template: Resource allows public internet access. FedRAMP recommends
-    private endpoints for data-tier resources.
-  remediation_template: "Disable public access and add private endpoint:\n\nBicep:\n\
-    properties: {\n  publicNetworkAccess: 'Disabled'\n}\n\nresource privateEndpoint\
-    \ 'Microsoft.Network/privateEndpoints@2021-05-01' = {\n  name: '${resourceName}-pe'\n\
-    \  location: location\n  properties: {\n    subnet: {\n      id: subnetId\n  \
-    \  }\n    privateLinkServiceConnections: [\n      {\n        name: '${resourceName}-connection'\n\
-    \        properties: {\n          privateLinkServiceId: resource.id\n        \
-    \  groupIds: ['blob']  // or 'sqlServer', 'vault', etc.\n        }\n      }\n\
-    \    ]\n  }\n}\n"
+  description_template: Resource allows public internet access. FedRAMP recommends private endpoints for data-tier resources.
+  remediation_template: "Disable public access and add private endpoint:\n\nBicep:\nproperties: {\n  publicNetworkAccess: 'Disabled'\n}\n\nresource privateEndpoint 'Microsoft.Network/privateEndpoints@2021-05-01' = {\n  name: '${resourceName}-pe'\n  location: location\n  properties: {\n    subnet: {\n      id: subnetId\n    }\n    privateLinkServiceConnections: [\n      {\n        name: '${resourceName}-connection'\n        properties: {\n          privateLinkServiceId: resource.id\n          groupIds: ['blob']  // or 'sqlServer', 'vault', etc.\n        }\n      }\n    ]\n  }\n}\n"
 tags:
 - network
 - public-access
@@ -608,33 +568,31 @@ related_ksis:
 - KSI-CNA-01
 evidence_collection:
   azure_monitor_kql:
-  - query: |
-      Resources
-      | where type in~ ('microsoft.storage/storageaccounts', 'microsoft.sql/servers', 'microsoft.keyvault/vaults')
+  - query: 'Resources
+
+      | where type in~ (''microsoft.storage/storageaccounts'', ''microsoft.sql/servers'', ''microsoft.keyvault/vaults'')
+
       | extend publicAccess = tostring(properties.publicNetworkAccess)
-      | where publicAccess == 'Enabled' or isnull(publicAccess)
+
+      | where publicAccess == ''Enabled'' or isnull(publicAccess)
+
       | project name, type, resourceGroup, location, publicAccess
+
       | order by name asc
+
+      '
     description: Query resources with public network access enabled
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: |
-      az resource list \
-        --query "[?type=='Microsoft.Storage/storageAccounts' || type=='Microsoft.Sql/servers' || type=='Microsoft.KeyVault/vaults'].{name:name, resourceGroup:resourceGroup, publicAccess:properties.publicNetworkAccess}" \
-        --output json
+  - command: "az resource list \\\n  --query \"[?type=='Microsoft.Storage/storageAccounts' || type=='Microsoft.Sql/servers' || type=='Microsoft.KeyVault/vaults'].{name:name, resourceGroup:resourceGroup, publicAccess:properties.publicNetworkAccess}\" \\\n  --output json\n"
     description: List resources with public network access settings
     output_format: json
     frequency: weekly
 automation:
   automation_1:
     description: Azure Policy for compliance enforcement
-    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n\
-      - name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern common.network.public_access_enabled \\\n      --code-path\
-      \ ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.network.public_access_enabled\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate common.network.public_access_enabled\
-      \ compliance\n      python validate.py --pattern common.network.public_access_enabled"
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern common.network.public_access_enabled \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.network.public_access_enabled Validation'\n  inputs:\n    script: |\n      # Validate common.network.public_access_enabled compliance\n      python validate.py --pattern common.network.public_access_enabled"
     azure_services: &id001
     - Azure Automation
     - Azure Blob Storage
@@ -646,21 +604,11 @@ automation:
     - Managed Identity
   automation_2:
     description: Azure Monitor for continuous monitoring
-    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
-      - name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern common.network.public_access_enabled \\\n      --code-path\
-      \ ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.network.public_access_enabled\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate common.network.public_access_enabled\
-      \ compliance\n      python validate.py --pattern common.network.public_access_enabled"
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern common.network.public_access_enabled \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.network.public_access_enabled Validation'\n  inputs:\n    script: |\n      # Validate common.network.public_access_enabled compliance\n      python validate.py --pattern common.network.public_access_enabled"
     azure_services: *id001
   automation_3:
     description: Log Analytics queries for compliance validation
-    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
-      - name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern common.network.public_access_enabled \\\n      --code-path\
-      \ ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.network.public_access_enabled\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate common.network.public_access_enabled\
-      \ compliance\n      python validate.py --pattern common.network.public_access_enabled"
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern common.network.public_access_enabled \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.network.public_access_enabled Validation'\n  inputs:\n    script: |\n      # Validate common.network.public_access_enabled compliance\n      python validate.py --pattern common.network.public_access_enabled"
     azure_services: *id001
 implementation:
   prerequisites:
@@ -742,16 +690,8 @@ ssp_mapping:
   - AC-4
   ssp_sections:
   - section: 'SC-7: Secret Management'
-    description_template: The system implements Secret Management controls in accordance
-      with FedRAMP 20x requirements. Implement secure secret management using Azure
-      Key Vault or equivalent... Implementation leverages Azure native services combined
-      with application-level controls and automated monitoring to ensure continuous
-      compliance.
-    implementation_details: Azure services including Azure Automation, Azure Blob
-      Storage, Azure Key Vault are configured to enforce compliance requirements.
-      Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment
-      across environments. Automated compliance checking in CI/CD pipelines validates
-      all changes against Secret Management requirements before deployment.
+    description_template: The system implements Secret Management controls in accordance with FedRAMP 20x requirements. Implement secure secret management using Azure Key Vault or equivalent... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Automation, Azure Blob Storage, Azure Key Vault are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Secret Management requirements before deployment.
     evidence_references:
     - Configuration exports
     - Compliance reports
@@ -791,19 +731,34 @@ compliance_frameworks:
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of common.network.public_access_enabled
-    code_sample: "// Bicep compliant configuration for common.network.public_access_enabled\n\
-      resource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name:\
-      \ 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n\
-      }"
+    code_sample: "// Bicep compliant configuration for common.network.public_access_enabled\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
   - description: Non-compliant bicep code violating common.network.public_access_enabled
-    code_sample: '# Non-compliant code missing common.network.public_access_enabled
-      requirements'
+    code_sample: '# Non-compliant code missing common.network.public_access_enabled requirements'
     expected_severity: HIGH
     expected_finding: true
   validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
 ---
 pattern_id: common.governance.azure_policy
 name: Azure Policy Assignment
@@ -824,14 +779,8 @@ languages:
     regex_fallback: azurerm_.*policy_assignment
 finding:
   title_template: Azure Policy assignment detected
-  description_template: Policy-based governance enabled. Verify FedRAMP baseline policies
-    are assigned.
-  remediation_template: "Recommended policy initiatives for FedRAMP:\n- Azure Security\
-    \ Benchmark\n- NIST SP 800-53 Rev. 5\n- FedRAMP High\n- ISO 27001\n\nExample assignment:\n\
-    resource policyAssignment 'Microsoft.Authorization/policyAssignments@2021-06-01'\
-    \ = {\n  name: 'fedramp-high-compliance'\n  properties: {\n    policyDefinitionId:\
-    \ '/providers/Microsoft.Authorization/policySetDefinitions/...'\n    parameters:\
-    \ {...}\n  }\n}\n"
+  description_template: Policy-based governance enabled. Verify FedRAMP baseline policies are assigned.
+  remediation_template: "Recommended policy initiatives for FedRAMP:\n- Azure Security Benchmark\n- NIST SP 800-53 Rev. 5\n- FedRAMP High\n- ISO 27001\n\nExample assignment:\nresource policyAssignment 'Microsoft.Authorization/policyAssignments@2021-06-01' = {\n  name: 'fedramp-high-compliance'\n  properties: {\n    policyDefinitionId: '/providers/Microsoft.Authorization/policySetDefinitions/...'\n    parameters: {...}\n  }\n}\n"
 tags:
 - governance
 - policy
@@ -849,15 +798,8 @@ ssp_mapping:
   - CM-7
   ssp_sections:
   - section: 'CM-2: Unknown'
-    description_template: The system implements Unknown Requirement controls in accordance
-      with FedRAMP 20x requirements. Requirement statement not available... Implementation
-      leverages Azure native services combined with application-level controls and
-      automated monitoring to ensure continuous compliance.
-    implementation_details: Azure services including Azure Monitor are configured
-      to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform)
-      templates ensure consistent deployment across environments. Automated compliance
-      checking in CI/CD pipelines validates all changes against Unknown Requirement
-      requirements before deployment.
+    description_template: The system implements Unknown Requirement controls in accordance with FedRAMP 20x requirements. Requirement statement not available... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Unknown Requirement requirements before deployment.
     evidence_references:
     - Configuration exports
     - Compliance reports
@@ -871,10 +813,7 @@ compliance_frameworks:
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of common.governance.azure_policy
-    code_sample: "// Bicep compliant configuration for common.governance.azure_policy\n\
-      resource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name:\
-      \ 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n\
-      }"
+    code_sample: "// Bicep compliant configuration for common.governance.azure_policy\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
@@ -883,6 +822,52 @@ testing:
     expected_severity: HIGH
     expected_finding: true
   validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy enforcement\n# GitHub Actions\n- name: Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern common.governance.azure_policy \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'Compliance Validation'\n  inputs:\n    script: |\n      # Validate compliance\n      python validate.py --pattern common.governance.azure_policy\n"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring and alerting
+    implementation: '# Azure Monitor continuous monitoring
+
+      # Log Analytics Query
+
+      AzureActivity
+
+      | where CategoryValue == "Policy" or CategoryValue == "Security"
+
+      | where ResourceId contains "common.governance.azure_policy"
+
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+
+      '
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+    - Azure Alerts
 ---
 pattern_id: common.governance.resource_lock
 name: Resource Lock
@@ -906,8 +891,7 @@ languages:
     regex_fallback: azurerm_management_lock
 finding:
   title_template: Resource lock detected
-  description_template: Resource has delete or read-only lock. Protects against accidental
-    changes.
+  description_template: Resource has delete or read-only lock. Protects against accidental changes.
   remediation_template: N/A - Positive finding
 tags:
 - governance
@@ -925,15 +909,8 @@ ssp_mapping:
   - CM-5
   ssp_sections:
   - section: 'CM-3: Unknown'
-    description_template: The system implements Unknown Requirement controls in accordance
-      with FedRAMP 20x requirements. Requirement statement not available... Implementation
-      leverages Azure native services combined with application-level controls and
-      automated monitoring to ensure continuous compliance.
-    implementation_details: Azure services including Azure Monitor are configured
-      to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform)
-      templates ensure consistent deployment across environments. Automated compliance
-      checking in CI/CD pipelines validates all changes against Unknown Requirement
-      requirements before deployment.
+    description_template: The system implements Unknown Requirement controls in accordance with FedRAMP 20x requirements. Requirement statement not available... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Unknown Requirement requirements before deployment.
     evidence_references:
     - Configuration exports
     - Compliance reports
@@ -947,10 +924,7 @@ compliance_frameworks:
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of common.governance.resource_lock
-    code_sample: "// Bicep compliant configuration for common.governance.resource_lock\n\
-      resource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name:\
-      \ 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n\
-      }"
+    code_sample: "// Bicep compliant configuration for common.governance.resource_lock\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
@@ -959,6 +933,52 @@ testing:
     expected_severity: HIGH
     expected_finding: true
   validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy enforcement\n# GitHub Actions\n- name: Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern common.governance.resource_lock \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'Compliance Validation'\n  inputs:\n    script: |\n      # Validate compliance\n      python validate.py --pattern common.governance.resource_lock\n"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring and alerting
+    implementation: '# Azure Monitor continuous monitoring
+
+      # Log Analytics Query
+
+      AzureActivity
+
+      | where CategoryValue == "Policy" or CategoryValue == "Security"
+
+      | where ResourceId contains "common.governance.resource_lock"
+
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+
+      '
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+    - Azure Alerts
 ---
 pattern_id: common.resilience.backup_missing
 name: Missing Backup Configuration
@@ -981,16 +1001,8 @@ languages:
     regex_fallback: azurerm_(virtual_machine|mssql_database)
 finding:
   title_template: Backup not configured
-  description_template: Resource does not have backup enabled. FedRAMP requires backup
-    for data availability and resilience.
-  remediation_template: "Configure Azure Backup:\n\nBicep:\nresource backupVault 'Microsoft.RecoveryServices/vaults@2021-12-01'\
-    \ = {\n  name: 'backup-vault'\n  location: location\n  sku: {\n    name: 'Standard'\n\
-    \  }\n  properties: {}\n}\n\nresource backupPolicy 'Microsoft.RecoveryServices/vaults/backupPolicies@2021-12-01'\
-    \ = {\n  parent: backupVault\n  name: 'daily-backup'\n  properties: {\n    backupManagementType:\
-    \ 'AzureIaasVM'\n    schedulePolicy: {\n      scheduleRunFrequency: 'Daily'\n\
-    \      scheduleRunTimes: ['2023-01-01T02:00:00Z']\n    }\n    retentionPolicy:\
-    \ {\n      dailySchedule: {\n        retentionDuration: {\n          count: 30\n\
-    \          durationType: 'Days'\n        }\n      }\n    }\n  }\n}\n"
+  description_template: Resource does not have backup enabled. FedRAMP requires backup for data availability and resilience.
+  remediation_template: "Configure Azure Backup:\n\nBicep:\nresource backupVault 'Microsoft.RecoveryServices/vaults@2021-12-01' = {\n  name: 'backup-vault'\n  location: location\n  sku: {\n    name: 'Standard'\n  }\n  properties: {}\n}\n\nresource backupPolicy 'Microsoft.RecoveryServices/vaults/backupPolicies@2021-12-01' = {\n  parent: backupVault\n  name: 'daily-backup'\n  properties: {\n    backupManagementType: 'AzureIaasVM'\n    schedulePolicy: {\n      scheduleRunFrequency: 'Daily'\n      scheduleRunTimes: ['2023-01-01T02:00:00Z']\n    }\n    retentionPolicy: {\n      dailySchedule: {\n        retentionDuration: {\n          count: 30\n          durationType: 'Days'\n        }\n      }\n    }\n  }\n}\n"
 tags:
 - resilience
 - backup
@@ -1023,12 +1035,7 @@ evidence_artifacts:
 automation:
   automation_1:
     description: Azure Policy for compliance enforcement
-    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n\
-      - name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern common.resilience.backup_missing \\\n      --code-path\
-      \ ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.resilience.backup_missing\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate common.resilience.backup_missing\
-      \ compliance\n      python validate.py --pattern common.resilience.backup_missing"
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern common.resilience.backup_missing \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.resilience.backup_missing Validation'\n  inputs:\n    script: |\n      # Validate common.resilience.backup_missing compliance\n      python validate.py --pattern common.resilience.backup_missing"
     azure_services: &id001
     - Availability Zones
     - Azure Backup
@@ -1039,21 +1046,11 @@ automation:
     - Log Analytics
   automation_2:
     description: Azure Monitor for continuous monitoring
-    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
-      - name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern common.resilience.backup_missing \\\n      --code-path\
-      \ ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.resilience.backup_missing\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate common.resilience.backup_missing\
-      \ compliance\n      python validate.py --pattern common.resilience.backup_missing"
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern common.resilience.backup_missing \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.resilience.backup_missing Validation'\n  inputs:\n    script: |\n      # Validate common.resilience.backup_missing compliance\n      python validate.py --pattern common.resilience.backup_missing"
     azure_services: *id001
   automation_3:
     description: Log Analytics queries for compliance validation
-    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
-      - name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern common.resilience.backup_missing \\\n      --code-path\
-      \ ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.resilience.backup_missing\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate common.resilience.backup_missing\
-      \ compliance\n      python validate.py --pattern common.resilience.backup_missing"
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern common.resilience.backup_missing \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.resilience.backup_missing Validation'\n  inputs:\n    script: |\n      # Validate common.resilience.backup_missing compliance\n      python validate.py --pattern common.resilience.backup_missing"
     azure_services: *id001
 implementation:
   prerequisites:
@@ -1135,16 +1132,8 @@ ssp_mapping:
   - CP-10
   ssp_sections:
   - section: 'CP-9: Recovery Objectives'
-    description_template: The system implements Recovery Objectives controls in accordance
-      with FedRAMP 20x requirements. Define Recovery Time Objectives (RTO) and Recovery
-      Point Objectives (RPO).... Implementation leverages Azure native services combined
-      with application-level controls and automated monitoring to ensure continuous
-      compliance.
-    implementation_details: Azure services including Availability Zones, Azure Backup,
-      Azure Blob Storage are configured to enforce compliance requirements. Infrastructure-as-code
-      (Bicep/Terraform) templates ensure consistent deployment across environments.
-      Automated compliance checking in CI/CD pipelines validates all changes against
-      Recovery Objectives requirements before deployment.
+    description_template: The system implements Recovery Objectives controls in accordance with FedRAMP 20x requirements. Define Recovery Time Objectives (RTO) and Recovery Point Objectives (RPO).... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Availability Zones, Azure Backup, Azure Blob Storage are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Recovery Objectives requirements before deployment.
     evidence_references:
     - Configuration exports
     - Compliance reports
@@ -1184,10 +1173,7 @@ compliance_frameworks:
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of common.resilience.backup_missing
-    code_sample: "// Bicep compliant configuration for common.resilience.backup_missing\n\
-      resource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name:\
-      \ 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n\
-      }"
+    code_sample: "// Bicep compliant configuration for common.resilience.backup_missing\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
@@ -1222,8 +1208,7 @@ languages:
     regex_fallback: account_replication_type.*=.*"(GRS|RAGRS|GZRS)"
 finding:
   title_template: Geo-redundant storage configured
-  description_template: Storage has geo-redundancy for disaster recovery. Verify RPO/RTO
-    meet FedRAMP requirements.
+  description_template: Storage has geo-redundancy for disaster recovery. Verify RPO/RTO meet FedRAMP requirements.
   remediation_template: N/A - Positive finding
 tags:
 - resilience
@@ -1257,12 +1242,7 @@ evidence_artifacts:
 automation:
   automation_1:
     description: Azure Policy for compliance enforcement
-    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n\
-      - name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern common.resilience.geo_redundancy \\\n      --code-path\
-      \ ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.resilience.geo_redundancy\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate common.resilience.geo_redundancy\
-      \ compliance\n      python validate.py --pattern common.resilience.geo_redundancy"
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern common.resilience.geo_redundancy \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.resilience.geo_redundancy Validation'\n  inputs:\n    script: |\n      # Validate common.resilience.geo_redundancy compliance\n      python validate.py --pattern common.resilience.geo_redundancy"
     azure_services: &id001
     - Availability Zones
     - Azure Backup
@@ -1273,21 +1253,11 @@ automation:
     - Log Analytics
   automation_2:
     description: Azure Monitor for continuous monitoring
-    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
-      - name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern common.resilience.geo_redundancy \\\n      --code-path\
-      \ ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.resilience.geo_redundancy\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate common.resilience.geo_redundancy\
-      \ compliance\n      python validate.py --pattern common.resilience.geo_redundancy"
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern common.resilience.geo_redundancy \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.resilience.geo_redundancy Validation'\n  inputs:\n    script: |\n      # Validate common.resilience.geo_redundancy compliance\n      python validate.py --pattern common.resilience.geo_redundancy"
     azure_services: *id001
   automation_3:
     description: Log Analytics queries for compliance validation
-    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
-      - name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern common.resilience.geo_redundancy \\\n      --code-path\
-      \ ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.resilience.geo_redundancy\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate common.resilience.geo_redundancy\
-      \ compliance\n      python validate.py --pattern common.resilience.geo_redundancy"
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: COMMON Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern common.resilience.geo_redundancy \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'common.resilience.geo_redundancy Validation'\n  inputs:\n    script: |\n      # Validate common.resilience.geo_redundancy compliance\n      python validate.py --pattern common.resilience.geo_redundancy"
     azure_services: *id001
 implementation:
   prerequisites:
@@ -1369,16 +1339,8 @@ ssp_mapping:
   - CP-9
   ssp_sections:
   - section: 'CP-6: Recovery Objectives'
-    description_template: The system implements Recovery Objectives controls in accordance
-      with FedRAMP 20x requirements. Define Recovery Time Objectives (RTO) and Recovery
-      Point Objectives (RPO).... Implementation leverages Azure native services combined
-      with application-level controls and automated monitoring to ensure continuous
-      compliance.
-    implementation_details: Azure services including Availability Zones, Azure Backup,
-      Azure Blob Storage are configured to enforce compliance requirements. Infrastructure-as-code
-      (Bicep/Terraform) templates ensure consistent deployment across environments.
-      Automated compliance checking in CI/CD pipelines validates all changes against
-      Recovery Objectives requirements before deployment.
+    description_template: The system implements Recovery Objectives controls in accordance with FedRAMP 20x requirements. Define Recovery Time Objectives (RTO) and Recovery Point Objectives (RPO).... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Availability Zones, Azure Backup, Azure Blob Storage are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Recovery Objectives requirements before deployment.
     evidence_references:
     - Configuration exports
     - Compliance reports
@@ -1418,10 +1380,7 @@ compliance_frameworks:
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of common.resilience.geo_redundancy
-    code_sample: "// Bicep compliant configuration for common.resilience.geo_redundancy\n\
-      resource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name:\
-      \ 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n\
-      }"
+    code_sample: "// Bicep compliant configuration for common.resilience.geo_redundancy\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:

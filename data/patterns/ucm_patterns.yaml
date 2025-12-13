@@ -2172,3 +2172,347 @@ testing:
     expected_finding: true
   validation_scripts:
   - tests/test_ucm_patterns.py::test_ucm_cicd_rbac_validation
+---
+pattern_id: ucm.frr.frr_ucm_01
+name: Cryptographic Module Documentation Compliance
+description: Validates compliance with FRR-UCM-01 - Cryptographic Module Documentation
+family: UCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-UCM-01 - Cryptographic Module Documentation compliance check
+  description_template: Configuration requires validation for FRR-UCM-01 compliance
+  remediation_template: Implement FRR-UCM-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ucm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-UCM-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-UCM-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-UCM-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-UCM-01 compliance validation
+    implementation: |
+      # FRR-UCM-01 compliance automation
+      # GitHub Actions
+      - name: FRR-UCM-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ucm.frr.frr_ucm_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-UCM-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-UCM-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-UCM-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-UCM-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-UCM-01"
+        RequirementName = "Cryptographic Module Documentation"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-UCM-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ucm.frr.frr_ucm_02
+name: Use of Validated Cryptographic Modules Compliance
+description: Validates compliance with FRR-UCM-02 - Use of Validated Cryptographic Modules
+family: UCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-UCM-02 - Use of Validated Cryptographic Modules compliance check
+  description_template: Configuration requires validation for FRR-UCM-02 compliance
+  remediation_template: Implement FRR-UCM-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ucm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-UCM-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-UCM-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-UCM-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-UCM-02 compliance validation
+    implementation: |
+      # FRR-UCM-02 compliance automation
+      # GitHub Actions
+      - name: FRR-UCM-02 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ucm.frr.frr_ucm_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-UCM-02 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-UCM-02 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-UCM-02'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-UCM-02
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-UCM-02"
+        RequirementName = "Use of Validated Cryptographic Modules"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-UCM-02.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ucm.frr.frr_ucm_03
+name: Update Streams (Moderate) Compliance
+description: Validates compliance with FRR-UCM-03 - Update Streams (Moderate)
+family: UCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-UCM-03 - Update Streams (Moderate) compliance check
+  description_template: Configuration requires validation for FRR-UCM-03 compliance
+  remediation_template: Implement FRR-UCM-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ucm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-UCM-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-UCM-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-UCM-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-UCM-03 compliance validation
+    implementation: |
+      # FRR-UCM-03 compliance automation
+      # GitHub Actions
+      - name: FRR-UCM-03 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ucm.frr.frr_ucm_03 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-UCM-03 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-UCM-03 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-UCM-03'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-UCM-03
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-UCM-03"
+        RequirementName = "Update Streams (Moderate)"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-UCM-03.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Moderate']
+---
+pattern_id: ucm.frr.frr_ucm_04
+name: Update Streams (High) Compliance
+description: Validates compliance with FRR-UCM-04 - Update Streams (High)
+family: UCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-UCM-04 - Update Streams (High) compliance check
+  description_template: Configuration requires validation for FRR-UCM-04 compliance
+  remediation_template: Implement FRR-UCM-04 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ucm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-UCM-04
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-UCM-04 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-UCM-04 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-UCM-04 compliance validation
+    implementation: |
+      # FRR-UCM-04 compliance automation
+      # GitHub Actions
+      - name: FRR-UCM-04 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ucm.frr.frr_ucm_04 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-UCM-04 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-UCM-04 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-UCM-04'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-UCM-04
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-UCM-04"
+        RequirementName = "Update Streams (High)"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-UCM-04.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['High']

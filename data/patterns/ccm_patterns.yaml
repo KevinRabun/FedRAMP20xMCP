@@ -2325,3 +2325,2153 @@ testing:
     expected_finding: true
   validation_scripts:
   - tests/test_ccm_patterns.py::test_ccm_missing_version_control
+---
+pattern_id: ccm.frr.frr_ccm_01
+name: Ongoing Authorization Reports Compliance
+description: Validates compliance with FRR-CCM-01 - Ongoing Authorization Reports
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-01 - Ongoing Authorization Reports compliance check
+  description_template: Configuration requires validation for FRR-CCM-01 compliance
+  remediation_template: Implement FRR-CCM-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-01 compliance validation
+    implementation: |
+      # FRR-CCM-01 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-01"
+        RequirementName = "Ongoing Authorization Reports"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_02
+name: Avoiding Simultaneous Reports Compliance
+description: Validates compliance with FRR-CCM-02 - Avoiding Simultaneous Reports
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-02 - Avoiding Simultaneous Reports compliance check
+  description_template: Configuration requires validation for FRR-CCM-02 compliance
+  remediation_template: Implement FRR-CCM-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-02 compliance validation
+    implementation: |
+      # FRR-CCM-02 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-02 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-02 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-02 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-02'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-02
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-02"
+        RequirementName = "Avoiding Simultaneous Reports"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-02.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_03
+name: Public Next Report Date Compliance
+description: Validates compliance with FRR-CCM-03 - Public Next Report Date
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-03 - Public Next Report Date compliance check
+  description_template: Configuration requires validation for FRR-CCM-03 compliance
+  remediation_template: Implement FRR-CCM-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-03 compliance validation
+    implementation: |
+      # FRR-CCM-03 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-03 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_03 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-03 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-03 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-03'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-03
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-03"
+        RequirementName = "Public Next Report Date"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-03.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_04
+name: Feedback Mechanism Compliance
+description: Validates compliance with FRR-CCM-04 - Feedback Mechanism
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-04 - Feedback Mechanism compliance check
+  description_template: Configuration requires validation for FRR-CCM-04 compliance
+  remediation_template: Implement FRR-CCM-04 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-04
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-04 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-04 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-04 compliance validation
+    implementation: |
+      # FRR-CCM-04 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-04 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_04 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-04 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-04 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-04'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-04
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-04"
+        RequirementName = "Feedback Mechanism"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-04.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_05
+name: Anonymized Feedback Summary Compliance
+description: Validates compliance with FRR-CCM-05 - Anonymized Feedback Summary
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-05 - Anonymized Feedback Summary compliance check
+  description_template: Configuration requires validation for FRR-CCM-05 compliance
+  remediation_template: Implement FRR-CCM-05 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-05
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-05 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-05 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-05 compliance validation
+    implementation: |
+      # FRR-CCM-05 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-05 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_05 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-05 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-05 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-05'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-05
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-05"
+        RequirementName = "Anonymized Feedback Summary"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-05.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_06
+name: Protect Sensitive Information Compliance
+description: Validates compliance with FRR-CCM-06 - Protect Sensitive Information
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-06 - Protect Sensitive Information compliance check
+  description_template: Configuration requires validation for FRR-CCM-06 compliance
+  remediation_template: Implement FRR-CCM-06 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-06
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-06 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-06 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-06 compliance validation
+    implementation: |
+      # FRR-CCM-06 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-06 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_06 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-06 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-06 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-06'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-06
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-06"
+        RequirementName = "Protect Sensitive Information"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-06.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_07
+name: Responsible Public Sharing Compliance
+description: Validates compliance with FRR-CCM-07 - Responsible Public Sharing
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-07 - Responsible Public Sharing compliance check
+  description_template: Configuration requires validation for FRR-CCM-07 compliance
+  remediation_template: Implement FRR-CCM-07 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-07
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-07 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-07 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-07 compliance validation
+    implementation: |
+      # FRR-CCM-07 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-07 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_07 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-07 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-07 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-07'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-07
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-07"
+        RequirementName = "Responsible Public Sharing"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-07.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_ag_01
+name: Review Ongoing Reports Compliance
+description: Validates compliance with FRR-CCM-AG-01 - Review Ongoing Reports
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-AG-01 - Review Ongoing Reports compliance check
+  description_template: Configuration requires validation for FRR-CCM-AG-01 compliance
+  remediation_template: Implement FRR-CCM-AG-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-AG-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-AG-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-AG-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-AG-01 compliance validation
+    implementation: |
+      # FRR-CCM-AG-01 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-AG-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_ag_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-AG-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-AG-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-AG-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-AG-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-AG-01"
+        RequirementName = "Review Ongoing Reports"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-AG-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_ag_02
+name: Consider Security Category Compliance
+description: Validates compliance with FRR-CCM-AG-02 - Consider Security Category
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-AG-02 - Consider Security Category compliance check
+  description_template: Configuration requires validation for FRR-CCM-AG-02 compliance
+  remediation_template: Implement FRR-CCM-AG-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-AG-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-AG-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-AG-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-AG-02 compliance validation
+    implementation: |
+      # FRR-CCM-AG-02 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-AG-02 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_ag_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-AG-02 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-AG-02 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-AG-02'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-AG-02
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-AG-02"
+        RequirementName = "Consider Security Category"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-AG-02.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_ag_03
+name: Senior Security Reviewer Compliance
+description: Validates compliance with FRR-CCM-AG-03 - Senior Security Reviewer
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-AG-03 - Senior Security Reviewer compliance check
+  description_template: Configuration requires validation for FRR-CCM-AG-03 compliance
+  remediation_template: Implement FRR-CCM-AG-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-AG-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-AG-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-AG-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-AG-03 compliance validation
+    implementation: |
+      # FRR-CCM-AG-03 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-AG-03 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_ag_03 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-AG-03 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-AG-03 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-AG-03'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-AG-03
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-AG-03"
+        RequirementName = "Senior Security Reviewer"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-AG-03.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['High']
+---
+pattern_id: ccm.frr.frr_ccm_ag_04
+name: Notify Provider of Concerns Compliance
+description: Validates compliance with FRR-CCM-AG-04 - Notify Provider of Concerns
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-AG-04 - Notify Provider of Concerns compliance check
+  description_template: Configuration requires validation for FRR-CCM-AG-04 compliance
+  remediation_template: Implement FRR-CCM-AG-04 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-AG-04
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-AG-04 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-AG-04 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-AG-04 compliance validation
+    implementation: |
+      # FRR-CCM-AG-04 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-AG-04 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_ag_04 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-AG-04 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-AG-04 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-AG-04'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-AG-04
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-AG-04"
+        RequirementName = "Notify Provider of Concerns"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-AG-04.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_ag_05
+name: Notify FedRAMP of Concerns Compliance
+description: Validates compliance with FRR-CCM-AG-05 - Notify FedRAMP of Concerns
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-AG-05 - Notify FedRAMP of Concerns compliance check
+  description_template: Configuration requires validation for FRR-CCM-AG-05 compliance
+  remediation_template: Implement FRR-CCM-AG-05 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-AG-05
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-AG-05 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-AG-05 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-AG-05 compliance validation
+    implementation: |
+      # FRR-CCM-AG-05 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-AG-05 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_ag_05 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-AG-05 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-AG-05 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-AG-05'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-AG-05
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-AG-05"
+        RequirementName = "Notify FedRAMP of Concerns"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-AG-05.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_ag_06
+name: No Additional Requirements Compliance
+description: Validates compliance with FRR-CCM-AG-06 - No Additional Requirements
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-AG-06 - No Additional Requirements compliance check
+  description_template: Configuration requires validation for FRR-CCM-AG-06 compliance
+  remediation_template: Implement FRR-CCM-AG-06 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-AG-06
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-AG-06 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-AG-06 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-AG-06 compliance validation
+    implementation: |
+      # FRR-CCM-AG-06 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-AG-06 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_ag_06 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-AG-06 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-AG-06 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-AG-06'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-AG-06
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-AG-06"
+        RequirementName = "No Additional Requirements"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-AG-06.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_ag_07
+name: Notify FedRAMP After Requests Compliance
+description: Validates compliance with FRR-CCM-AG-07 - Notify FedRAMP After Requests
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-AG-07 - Notify FedRAMP After Requests compliance check
+  description_template: Configuration requires validation for FRR-CCM-AG-07 compliance
+  remediation_template: Implement FRR-CCM-AG-07 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-AG-07
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-AG-07 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-AG-07 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-AG-07 compliance validation
+    implementation: |
+      # FRR-CCM-AG-07 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-AG-07 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_ag_07 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-AG-07 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-AG-07 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-AG-07'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-AG-07
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-AG-07"
+        RequirementName = "Notify FedRAMP After Requests"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-AG-07.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_qr_01
+name: Quarterly Review Hosting Compliance
+description: Validates compliance with FRR-CCM-QR-01 - Quarterly Review Hosting
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-QR-01 - Quarterly Review Hosting compliance check
+  description_template: Configuration requires validation for FRR-CCM-QR-01 compliance
+  remediation_template: Implement FRR-CCM-QR-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-QR-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-QR-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-QR-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-QR-01 compliance validation
+    implementation: |
+      # FRR-CCM-QR-01 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-QR-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_qr_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-QR-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-QR-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-QR-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-QR-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-QR-01"
+        RequirementName = "Quarterly Review Hosting"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-QR-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low']
+---
+pattern_id: ccm.frr.frr_ccm_qr_02
+name: Quarterly Review Compliance
+description: Validates compliance with FRR-CCM-QR-02 - Quarterly Review
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-QR-02 - Quarterly Review compliance check
+  description_template: Configuration requires validation for FRR-CCM-QR-02 compliance
+  remediation_template: Implement FRR-CCM-QR-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-QR-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-QR-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-QR-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-QR-02 compliance validation
+    implementation: |
+      # FRR-CCM-QR-02 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-QR-02 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_qr_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-QR-02 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-QR-02 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-QR-02'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-QR-02
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-QR-02"
+        RequirementName = "Quarterly Review"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-QR-02.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_qr_03
+name: Review Scheduling Window Compliance
+description: Validates compliance with FRR-CCM-QR-03 - Review Scheduling Window
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-QR-03 - Review Scheduling Window compliance check
+  description_template: Configuration requires validation for FRR-CCM-QR-03 compliance
+  remediation_template: Implement FRR-CCM-QR-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-QR-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-QR-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-QR-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-QR-03 compliance validation
+    implementation: |
+      # FRR-CCM-QR-03 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-QR-03 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_qr_03 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-QR-03 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-QR-03 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-QR-03'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-QR-03
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-QR-03"
+        RequirementName = "Review Scheduling Window"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-QR-03.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_qr_04
+name: No Irresponsible Disclosure Compliance
+description: Validates compliance with FRR-CCM-QR-04 - No Irresponsible Disclosure
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-QR-04 - No Irresponsible Disclosure compliance check
+  description_template: Configuration requires validation for FRR-CCM-QR-04 compliance
+  remediation_template: Implement FRR-CCM-QR-04 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-QR-04
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-QR-04 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-QR-04 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-QR-04 compliance validation
+    implementation: |
+      # FRR-CCM-QR-04 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-QR-04 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_qr_04 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-QR-04 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-QR-04 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-QR-04'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-QR-04
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-QR-04"
+        RequirementName = "No Irresponsible Disclosure"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-QR-04.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_qr_05
+name: Meeting Registration Info Compliance
+description: Validates compliance with FRR-CCM-QR-05 - Meeting Registration Info
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-QR-05 - Meeting Registration Info compliance check
+  description_template: Configuration requires validation for FRR-CCM-QR-05 compliance
+  remediation_template: Implement FRR-CCM-QR-05 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-QR-05
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-QR-05 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-QR-05 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-QR-05 compliance validation
+    implementation: |
+      # FRR-CCM-QR-05 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-QR-05 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_qr_05 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-QR-05 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-QR-05 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-QR-05'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-QR-05
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-QR-05"
+        RequirementName = "Meeting Registration Info"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-QR-05.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_qr_06
+name: Next Review Date Compliance
+description: Validates compliance with FRR-CCM-QR-06 - Next Review Date
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-QR-06 - Next Review Date compliance check
+  description_template: Configuration requires validation for FRR-CCM-QR-06 compliance
+  remediation_template: Implement FRR-CCM-QR-06 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-QR-06
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-QR-06 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-QR-06 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-QR-06 compliance validation
+    implementation: |
+      # FRR-CCM-QR-06 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-QR-06 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_qr_06 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-QR-06 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-QR-06 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-QR-06'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-QR-06
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-QR-06"
+        RequirementName = "Next Review Date"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-QR-06.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_qr_07
+name: Additional Content Compliance
+description: Validates compliance with FRR-CCM-QR-07 - Additional Content
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-QR-07 - Additional Content compliance check
+  description_template: Configuration requires validation for FRR-CCM-QR-07 compliance
+  remediation_template: Implement FRR-CCM-QR-07 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-QR-07
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-QR-07 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-QR-07 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-QR-07 compliance validation
+    implementation: |
+      # FRR-CCM-QR-07 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-QR-07 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_qr_07 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-QR-07 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-QR-07 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-QR-07'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-QR-07
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-QR-07"
+        RequirementName = "Additional Content"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-QR-07.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_qr_08
+name: Restrict Third Parties Compliance
+description: Validates compliance with FRR-CCM-QR-08 - Restrict Third Parties
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-QR-08 - Restrict Third Parties compliance check
+  description_template: Configuration requires validation for FRR-CCM-QR-08 compliance
+  remediation_template: Implement FRR-CCM-QR-08 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-QR-08
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-QR-08 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-QR-08 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-QR-08 compliance validation
+    implementation: |
+      # FRR-CCM-QR-08 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-QR-08 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_qr_08 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-QR-08 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-QR-08 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-QR-08'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-QR-08
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-QR-08"
+        RequirementName = "Restrict Third Parties"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-QR-08.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_qr_09
+name: Record/Transcribe Reviews Compliance
+description: Validates compliance with FRR-CCM-QR-09 - Record/Transcribe Reviews
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-QR-09 - Record/Transcribe Reviews compliance check
+  description_template: Configuration requires validation for FRR-CCM-QR-09 compliance
+  remediation_template: Implement FRR-CCM-QR-09 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-QR-09
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-QR-09 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-QR-09 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-QR-09 compliance validation
+    implementation: |
+      # FRR-CCM-QR-09 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-QR-09 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_qr_09 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-QR-09 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-QR-09 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-QR-09'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-QR-09
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-QR-09"
+        RequirementName = "Record/Transcribe Reviews"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-QR-09.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_qr_10
+name: Share Recordings Responsibly Compliance
+description: Validates compliance with FRR-CCM-QR-10 - Share Recordings Responsibly
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-QR-10 - Share Recordings Responsibly compliance check
+  description_template: Configuration requires validation for FRR-CCM-QR-10 compliance
+  remediation_template: Implement FRR-CCM-QR-10 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-QR-10
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-QR-10 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-QR-10 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-QR-10 compliance validation
+    implementation: |
+      # FRR-CCM-QR-10 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-QR-10 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_qr_10 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-QR-10 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-QR-10 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-QR-10'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-QR-10
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-QR-10"
+        RequirementName = "Share Recordings Responsibly"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-QR-10.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_qr_11
+name: Share Content Responsibly Compliance
+description: Validates compliance with FRR-CCM-QR-11 - Share Content Responsibly
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-QR-11 - Share Content Responsibly compliance check
+  description_template: Configuration requires validation for FRR-CCM-QR-11 compliance
+  remediation_template: Implement FRR-CCM-QR-11 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-QR-11
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-QR-11 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-QR-11 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-QR-11 compliance validation
+    implementation: |
+      # FRR-CCM-QR-11 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-QR-11 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_qr_11 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-QR-11 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-QR-11 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-QR-11'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-QR-11
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-QR-11"
+        RequirementName = "Share Content Responsibly"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-QR-11.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']

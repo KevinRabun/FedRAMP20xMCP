@@ -2164,3 +2164,563 @@ testing:
     expected_finding: true
   validation_scripts:
   - tests/test_cna_patterns.py::test_cna_cicd_infrastructure_validation
+---
+pattern_id: cna.compliance.ksi_cna_02
+name: Minimize the Attack Surface Detection
+description: Detects compliance indicators for KSI-CNA-02 - Minimize the Attack Surface
+family: CNA
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: Minimize the Attack Surface compliance check
+  description_template: Configuration may not fully implement KSI-CNA-02 - Minimize the Attack Surface
+  remediation_template: Review and implement KSI-CNA-02 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- cna
+- compliance
+- ksi-cna-02
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-CNA-02
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-CNA-02 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-CNA-02 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-CNA-02 compliance enforcement
+    implementation: |
+      # Azure Policy for KSI-CNA-02 compliance
+      # GitHub Actions
+      - name: KSI-CNA-02 Compliance Check
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern cna.compliance.ksi_cna_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: PowerShell@2
+        displayName: 'KSI-CNA-02 Validation'
+        inputs:
+          script: |
+            # Validate KSI-CNA-02 compliance
+            python validate.py --pattern cna.compliance.ksi_cna_02
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-CNA-02
+    implementation: |
+      # Azure Monitor for KSI-CNA-02 continuous monitoring
+      # Log Analytics Query
+      AzureActivity
+      | where CategoryValue == "Policy"
+      | where OperationNameValue contains "KSI-CNA-02"
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels: ['Low', 'Moderate']
+---
+pattern_id: cna.compliance.ksi_cna_03
+name: Enforce Traffic Flow Detection
+description: Detects compliance indicators for KSI-CNA-03 - Enforce Traffic Flow
+family: CNA
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: Enforce Traffic Flow compliance check
+  description_template: Configuration may not fully implement KSI-CNA-03 - Enforce Traffic Flow
+  remediation_template: Review and implement KSI-CNA-03 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- cna
+- compliance
+- ksi-cna-03
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-CNA-03
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-CNA-03 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-CNA-03 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-CNA-03 compliance enforcement
+    implementation: |
+      # Azure Policy for KSI-CNA-03 compliance
+      # GitHub Actions
+      - name: KSI-CNA-03 Compliance Check
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern cna.compliance.ksi_cna_03 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: PowerShell@2
+        displayName: 'KSI-CNA-03 Validation'
+        inputs:
+          script: |
+            # Validate KSI-CNA-03 compliance
+            python validate.py --pattern cna.compliance.ksi_cna_03
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-CNA-03
+    implementation: |
+      # Azure Monitor for KSI-CNA-03 continuous monitoring
+      # Log Analytics Query
+      AzureActivity
+      | where CategoryValue == "Policy"
+      | where OperationNameValue contains "KSI-CNA-03"
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels: ['Low', 'Moderate']
+---
+pattern_id: cna.compliance.ksi_cna_04
+name: Immutable Infrastructure Detection
+description: Detects compliance indicators for KSI-CNA-04 - Immutable Infrastructure
+family: CNA
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: Immutable Infrastructure compliance check
+  description_template: Configuration may not fully implement KSI-CNA-04 - Immutable Infrastructure
+  remediation_template: Review and implement KSI-CNA-04 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- cna
+- compliance
+- ksi-cna-04
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-CNA-04
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-CNA-04 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-CNA-04 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-CNA-04 compliance enforcement
+    implementation: |
+      # Azure Policy for KSI-CNA-04 compliance
+      # GitHub Actions
+      - name: KSI-CNA-04 Compliance Check
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern cna.compliance.ksi_cna_04 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: PowerShell@2
+        displayName: 'KSI-CNA-04 Validation'
+        inputs:
+          script: |
+            # Validate KSI-CNA-04 compliance
+            python validate.py --pattern cna.compliance.ksi_cna_04
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-CNA-04
+    implementation: |
+      # Azure Monitor for KSI-CNA-04 continuous monitoring
+      # Log Analytics Query
+      AzureActivity
+      | where CategoryValue == "Policy"
+      | where OperationNameValue contains "KSI-CNA-04"
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels: ['Low', 'Moderate']
+---
+pattern_id: cna.compliance.ksi_cna_05
+name: Unwanted Activity Detection
+description: Detects compliance indicators for KSI-CNA-05 - Unwanted Activity
+family: CNA
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: Unwanted Activity compliance check
+  description_template: Configuration may not fully implement KSI-CNA-05 - Unwanted Activity
+  remediation_template: Review and implement KSI-CNA-05 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- cna
+- compliance
+- ksi-cna-05
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-CNA-05
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-CNA-05 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-CNA-05 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-CNA-05 compliance enforcement
+    implementation: |
+      # Azure Policy for KSI-CNA-05 compliance
+      # GitHub Actions
+      - name: KSI-CNA-05 Compliance Check
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern cna.compliance.ksi_cna_05 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: PowerShell@2
+        displayName: 'KSI-CNA-05 Validation'
+        inputs:
+          script: |
+            # Validate KSI-CNA-05 compliance
+            python validate.py --pattern cna.compliance.ksi_cna_05
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-CNA-05
+    implementation: |
+      # Azure Monitor for KSI-CNA-05 continuous monitoring
+      # Log Analytics Query
+      AzureActivity
+      | where CategoryValue == "Policy"
+      | where OperationNameValue contains "KSI-CNA-05"
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels: ['Low', 'Moderate']
+---
+pattern_id: cna.compliance.ksi_cna_06
+name: High Availability Detection
+description: Detects compliance indicators for KSI-CNA-06 - High Availability
+family: CNA
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: High Availability compliance check
+  description_template: Configuration may not fully implement KSI-CNA-06 - High Availability
+  remediation_template: Review and implement KSI-CNA-06 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- cna
+- compliance
+- ksi-cna-06
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-CNA-06
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-CNA-06 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-CNA-06 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-CNA-06 compliance enforcement
+    implementation: |
+      # Azure Policy for KSI-CNA-06 compliance
+      # GitHub Actions
+      - name: KSI-CNA-06 Compliance Check
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern cna.compliance.ksi_cna_06 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: PowerShell@2
+        displayName: 'KSI-CNA-06 Validation'
+        inputs:
+          script: |
+            # Validate KSI-CNA-06 compliance
+            python validate.py --pattern cna.compliance.ksi_cna_06
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-CNA-06
+    implementation: |
+      # Azure Monitor for KSI-CNA-06 continuous monitoring
+      # Log Analytics Query
+      AzureActivity
+      | where CategoryValue == "Policy"
+      | where OperationNameValue contains "KSI-CNA-06"
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels: ['Low', 'Moderate']
+---
+pattern_id: cna.compliance.ksi_cna_07
+name: Best Practices Detection
+description: Detects compliance indicators for KSI-CNA-07 - Best Practices
+family: CNA
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: Best Practices compliance check
+  description_template: Configuration may not fully implement KSI-CNA-07 - Best Practices
+  remediation_template: Review and implement KSI-CNA-07 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- cna
+- compliance
+- ksi-cna-07
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-CNA-07
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-CNA-07 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-CNA-07 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-CNA-07 compliance enforcement
+    implementation: |
+      # Azure Policy for KSI-CNA-07 compliance
+      # GitHub Actions
+      - name: KSI-CNA-07 Compliance Check
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern cna.compliance.ksi_cna_07 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: PowerShell@2
+        displayName: 'KSI-CNA-07 Validation'
+        inputs:
+          script: |
+            # Validate KSI-CNA-07 compliance
+            python validate.py --pattern cna.compliance.ksi_cna_07
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-CNA-07
+    implementation: |
+      # Azure Monitor for KSI-CNA-07 continuous monitoring
+      # Log Analytics Query
+      AzureActivity
+      | where CategoryValue == "Policy"
+      | where OperationNameValue contains "KSI-CNA-07"
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels: ['Low', 'Moderate']
+---
+pattern_id: cna.compliance.ksi_cna_08
+name: Persistent Assessment and Automated Enforcement Detection
+description: Detects compliance indicators for KSI-CNA-08 - Persistent Assessment and Automated Enforcement
+family: CNA
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: Persistent Assessment and Automated Enforcement compliance check
+  description_template: Configuration may not fully implement KSI-CNA-08 - Persistent Assessment and Automated Enforcement
+  remediation_template: Review and implement KSI-CNA-08 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- cna
+- compliance
+- ksi-cna-08
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-CNA-08
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-CNA-08 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-CNA-08 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-CNA-08 compliance enforcement
+    implementation: |
+      # Azure Policy for KSI-CNA-08 compliance
+      # GitHub Actions
+      - name: KSI-CNA-08 Compliance Check
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern cna.compliance.ksi_cna_08 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: PowerShell@2
+        displayName: 'KSI-CNA-08 Validation'
+        inputs:
+          script: |
+            # Validate KSI-CNA-08 compliance
+            python validate.py --pattern cna.compliance.ksi_cna_08
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-CNA-08
+    implementation: |
+      # Azure Monitor for KSI-CNA-08 continuous monitoring
+      # Log Analytics Query
+      AzureActivity
+      | where CategoryValue == "Policy"
+      | where OperationNameValue contains "KSI-CNA-08"
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels: ['Moderate']

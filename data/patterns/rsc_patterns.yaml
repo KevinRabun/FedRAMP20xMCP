@@ -2104,3 +2104,863 @@ testing:
     expected_finding: true
   validation_scripts:
   - tests/test_rsc_patterns.py::test_rsc_missing_resource_limits
+---
+pattern_id: rsc.frr.frr_rsc_01
+name: Top-Level Administrative Accounts Guidance Compliance
+description: Validates compliance with FRR-RSC-01 - Top-Level Administrative Accounts Guidance
+family: RSC
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-RSC-01 - Top-Level Administrative Accounts Guidance compliance check
+  description_template: Configuration requires validation for FRR-RSC-01 compliance
+  remediation_template: Implement FRR-RSC-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- rsc
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-RSC-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-RSC-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-RSC-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-RSC-01 compliance validation
+    implementation: |
+      # FRR-RSC-01 compliance automation
+      # GitHub Actions
+      - name: FRR-RSC-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-RSC-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-RSC-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-RSC-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-RSC-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-RSC-01"
+        RequirementName = "Top-Level Administrative Accounts Guidance"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-RSC-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_02
+name: Top-Level Administrative Accounts Security Settings Guidance Compliance
+description: Validates compliance with FRR-RSC-02 - Top-Level Administrative Accounts Security Settings Guidance
+family: RSC
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-RSC-02 - Top-Level Administrative Accounts Security Settings Guidance compliance check
+  description_template: Configuration requires validation for FRR-RSC-02 compliance
+  remediation_template: Implement FRR-RSC-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- rsc
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-RSC-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-RSC-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-RSC-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-RSC-02 compliance validation
+    implementation: |
+      # FRR-RSC-02 compliance automation
+      # GitHub Actions
+      - name: FRR-RSC-02 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-RSC-02 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-RSC-02 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-RSC-02'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-RSC-02
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-RSC-02"
+        RequirementName = "Top-Level Administrative Accounts Security Settings Guidance"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-RSC-02.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_03
+name: Privileged Accounts Security Settings Guidance Compliance
+description: Validates compliance with FRR-RSC-03 - Privileged Accounts Security Settings Guidance
+family: RSC
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-RSC-03 - Privileged Accounts Security Settings Guidance compliance check
+  description_template: Configuration requires validation for FRR-RSC-03 compliance
+  remediation_template: Implement FRR-RSC-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- rsc
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-RSC-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-RSC-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-RSC-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-RSC-03 compliance validation
+    implementation: |
+      # FRR-RSC-03 compliance automation
+      # GitHub Actions
+      - name: FRR-RSC-03 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_03 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-RSC-03 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-RSC-03 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-RSC-03'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-RSC-03
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-RSC-03"
+        RequirementName = "Privileged Accounts Security Settings Guidance"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-RSC-03.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_04
+name: Secure Defaults on Provisioning Compliance
+description: Validates compliance with FRR-RSC-04 - Secure Defaults on Provisioning
+family: RSC
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-RSC-04 - Secure Defaults on Provisioning compliance check
+  description_template: Configuration requires validation for FRR-RSC-04 compliance
+  remediation_template: Implement FRR-RSC-04 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- rsc
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-RSC-04
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-RSC-04 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-RSC-04 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-RSC-04 compliance validation
+    implementation: |
+      # FRR-RSC-04 compliance automation
+      # GitHub Actions
+      - name: FRR-RSC-04 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_04 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-RSC-04 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-RSC-04 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-RSC-04'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-RSC-04
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-RSC-04"
+        RequirementName = "Secure Defaults on Provisioning"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-RSC-04.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_05
+name: Comparison Capability Compliance
+description: Validates compliance with FRR-RSC-05 - Comparison Capability
+family: RSC
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-RSC-05 - Comparison Capability compliance check
+  description_template: Configuration requires validation for FRR-RSC-05 compliance
+  remediation_template: Implement FRR-RSC-05 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- rsc
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-RSC-05
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-RSC-05 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-RSC-05 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-RSC-05 compliance validation
+    implementation: |
+      # FRR-RSC-05 compliance automation
+      # GitHub Actions
+      - name: FRR-RSC-05 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_05 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-RSC-05 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-RSC-05 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-RSC-05'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-RSC-05
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-RSC-05"
+        RequirementName = "Comparison Capability"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-RSC-05.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_06
+name: Export Capability Compliance
+description: Validates compliance with FRR-RSC-06 - Export Capability
+family: RSC
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-RSC-06 - Export Capability compliance check
+  description_template: Configuration requires validation for FRR-RSC-06 compliance
+  remediation_template: Implement FRR-RSC-06 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- rsc
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-RSC-06
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-RSC-06 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-RSC-06 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-RSC-06 compliance validation
+    implementation: |
+      # FRR-RSC-06 compliance automation
+      # GitHub Actions
+      - name: FRR-RSC-06 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_06 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-RSC-06 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-RSC-06 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-RSC-06'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-RSC-06
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-RSC-06"
+        RequirementName = "Export Capability"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-RSC-06.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_07
+name: API Capability Compliance
+description: Validates compliance with FRR-RSC-07 - API Capability
+family: RSC
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-RSC-07 - API Capability compliance check
+  description_template: Configuration requires validation for FRR-RSC-07 compliance
+  remediation_template: Implement FRR-RSC-07 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- rsc
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-RSC-07
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-RSC-07 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-RSC-07 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-RSC-07 compliance validation
+    implementation: |
+      # FRR-RSC-07 compliance automation
+      # GitHub Actions
+      - name: FRR-RSC-07 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_07 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-RSC-07 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-RSC-07 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-RSC-07'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-RSC-07
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-RSC-07"
+        RequirementName = "API Capability"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-RSC-07.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_08
+name: Machine-Readable Guidance Compliance
+description: Validates compliance with FRR-RSC-08 - Machine-Readable Guidance
+family: RSC
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-RSC-08 - Machine-Readable Guidance compliance check
+  description_template: Configuration requires validation for FRR-RSC-08 compliance
+  remediation_template: Implement FRR-RSC-08 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- rsc
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-RSC-08
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-RSC-08 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-RSC-08 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-RSC-08 compliance validation
+    implementation: |
+      # FRR-RSC-08 compliance automation
+      # GitHub Actions
+      - name: FRR-RSC-08 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_08 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-RSC-08 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-RSC-08 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-RSC-08'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-RSC-08
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-RSC-08"
+        RequirementName = "Machine-Readable Guidance"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-RSC-08.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_09
+name: Publish Guidance Compliance
+description: Validates compliance with FRR-RSC-09 - Publish Guidance
+family: RSC
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-RSC-09 - Publish Guidance compliance check
+  description_template: Configuration requires validation for FRR-RSC-09 compliance
+  remediation_template: Implement FRR-RSC-09 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- rsc
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-RSC-09
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-RSC-09 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-RSC-09 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-RSC-09 compliance validation
+    implementation: |
+      # FRR-RSC-09 compliance automation
+      # GitHub Actions
+      - name: FRR-RSC-09 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_09 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-RSC-09 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-RSC-09 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-RSC-09'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-RSC-09
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-RSC-09"
+        RequirementName = "Publish Guidance"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-RSC-09.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_10
+name: Versioning and Release History Compliance
+description: Validates compliance with FRR-RSC-10 - Versioning and Release History
+family: RSC
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-RSC-10 - Versioning and Release History compliance check
+  description_template: Configuration requires validation for FRR-RSC-10 compliance
+  remediation_template: Implement FRR-RSC-10 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- rsc
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-RSC-10
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-RSC-10 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-RSC-10 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-RSC-10 compliance validation
+    implementation: |
+      # FRR-RSC-10 compliance automation
+      # GitHub Actions
+      - name: FRR-RSC-10 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_10 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-RSC-10 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-RSC-10 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-RSC-10'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-RSC-10
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-RSC-10"
+        RequirementName = "Versioning and Release History"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-RSC-10.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']

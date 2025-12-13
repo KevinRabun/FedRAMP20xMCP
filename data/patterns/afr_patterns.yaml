@@ -983,3 +983,883 @@ testing:
     expected_finding: true
   validation_scripts:
   - tests/test_afr_patterns.py::test_afr_config_insecure_defaults
+---
+pattern_id: afr.compliance.ksi_afr_01
+name: Minimum Assessment Scope Detection
+description: Detects compliance indicators for KSI-AFR-01 - Minimum Assessment Scope
+family: AFR
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: Minimum Assessment Scope compliance check
+  description_template: Configuration may not fully implement KSI-AFR-01 - Minimum Assessment Scope
+  remediation_template: Review and implement KSI-AFR-01 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- afr
+- compliance
+- ksi-afr-01
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-AFR-01
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-AFR-01 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-AFR-01 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-AFR-01 compliance enforcement
+    implementation: |
+      # Azure Policy for KSI-AFR-01 compliance
+      # GitHub Actions
+      - name: KSI-AFR-01 Compliance Check
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern afr.compliance.ksi_afr_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: PowerShell@2
+        displayName: 'KSI-AFR-01 Validation'
+        inputs:
+          script: |
+            # Validate KSI-AFR-01 compliance
+            python validate.py --pattern afr.compliance.ksi_afr_01
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-AFR-01
+    implementation: |
+      # Azure Monitor for KSI-AFR-01 continuous monitoring
+      # Log Analytics Query
+      AzureActivity
+      | where CategoryValue == "Policy"
+      | where OperationNameValue contains "KSI-AFR-01"
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels: ['Low', 'Moderate']
+---
+pattern_id: afr.compliance.ksi_afr_02
+name: Key Security Indicators Detection
+description: Detects compliance indicators for KSI-AFR-02 - Key Security Indicators
+family: AFR
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: Key Security Indicators compliance check
+  description_template: Configuration may not fully implement KSI-AFR-02 - Key Security Indicators
+  remediation_template: Review and implement KSI-AFR-02 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- afr
+- compliance
+- ksi-afr-02
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-AFR-02
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-AFR-02 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-AFR-02 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-AFR-02 compliance enforcement
+    implementation: |
+      # Azure Policy for KSI-AFR-02 compliance
+      # GitHub Actions
+      - name: KSI-AFR-02 Compliance Check
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern afr.compliance.ksi_afr_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: PowerShell@2
+        displayName: 'KSI-AFR-02 Validation'
+        inputs:
+          script: |
+            # Validate KSI-AFR-02 compliance
+            python validate.py --pattern afr.compliance.ksi_afr_02
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-AFR-02
+    implementation: |
+      # Azure Monitor for KSI-AFR-02 continuous monitoring
+      # Log Analytics Query
+      AzureActivity
+      | where CategoryValue == "Policy"
+      | where OperationNameValue contains "KSI-AFR-02"
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels: ['Low', 'Moderate']
+---
+pattern_id: afr.compliance.ksi_afr_03
+name: Authorization Data Sharing Detection
+description: Detects compliance indicators for KSI-AFR-03 - Authorization Data Sharing
+family: AFR
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: Authorization Data Sharing compliance check
+  description_template: Configuration may not fully implement KSI-AFR-03 - Authorization Data Sharing
+  remediation_template: Review and implement KSI-AFR-03 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- afr
+- compliance
+- ksi-afr-03
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-AFR-03
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-AFR-03 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-AFR-03 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-AFR-03 compliance enforcement
+    implementation: |
+      # Azure Policy for KSI-AFR-03 compliance
+      # GitHub Actions
+      - name: KSI-AFR-03 Compliance Check
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern afr.compliance.ksi_afr_03 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: PowerShell@2
+        displayName: 'KSI-AFR-03 Validation'
+        inputs:
+          script: |
+            # Validate KSI-AFR-03 compliance
+            python validate.py --pattern afr.compliance.ksi_afr_03
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-AFR-03
+    implementation: |
+      # Azure Monitor for KSI-AFR-03 continuous monitoring
+      # Log Analytics Query
+      AzureActivity
+      | where CategoryValue == "Policy"
+      | where OperationNameValue contains "KSI-AFR-03"
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels: ['Low', 'Moderate']
+---
+pattern_id: afr.compliance.ksi_afr_04
+name: Vulnerability Detection and Response Detection
+description: Detects compliance indicators for KSI-AFR-04 - Vulnerability Detection and Response
+family: AFR
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: Vulnerability Detection and Response compliance check
+  description_template: Configuration may not fully implement KSI-AFR-04 - Vulnerability Detection and Response
+  remediation_template: Review and implement KSI-AFR-04 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- afr
+- compliance
+- ksi-afr-04
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-AFR-04
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-AFR-04 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-AFR-04 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-AFR-04 compliance enforcement
+    implementation: |
+      # Azure Policy for KSI-AFR-04 compliance
+      # GitHub Actions
+      - name: KSI-AFR-04 Compliance Check
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern afr.compliance.ksi_afr_04 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: PowerShell@2
+        displayName: 'KSI-AFR-04 Validation'
+        inputs:
+          script: |
+            # Validate KSI-AFR-04 compliance
+            python validate.py --pattern afr.compliance.ksi_afr_04
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-AFR-04
+    implementation: |
+      # Azure Monitor for KSI-AFR-04 continuous monitoring
+      # Log Analytics Query
+      AzureActivity
+      | where CategoryValue == "Policy"
+      | where OperationNameValue contains "KSI-AFR-04"
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels: ['Low', 'Moderate']
+---
+pattern_id: afr.compliance.ksi_afr_05
+name: Significant Change Notifications Detection
+description: Detects compliance indicators for KSI-AFR-05 - Significant Change Notifications
+family: AFR
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: Significant Change Notifications compliance check
+  description_template: Configuration may not fully implement KSI-AFR-05 - Significant Change Notifications
+  remediation_template: Review and implement KSI-AFR-05 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- afr
+- compliance
+- ksi-afr-05
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-AFR-05
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-AFR-05 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-AFR-05 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-AFR-05 compliance enforcement
+    implementation: |
+      # Azure Policy for KSI-AFR-05 compliance
+      # GitHub Actions
+      - name: KSI-AFR-05 Compliance Check
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern afr.compliance.ksi_afr_05 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: PowerShell@2
+        displayName: 'KSI-AFR-05 Validation'
+        inputs:
+          script: |
+            # Validate KSI-AFR-05 compliance
+            python validate.py --pattern afr.compliance.ksi_afr_05
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-AFR-05
+    implementation: |
+      # Azure Monitor for KSI-AFR-05 continuous monitoring
+      # Log Analytics Query
+      AzureActivity
+      | where CategoryValue == "Policy"
+      | where OperationNameValue contains "KSI-AFR-05"
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels: ['Low', 'Moderate']
+---
+pattern_id: afr.compliance.ksi_afr_06
+name: Collaborative Continuous Monitoring Detection
+description: Detects compliance indicators for KSI-AFR-06 - Collaborative Continuous Monitoring
+family: AFR
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: Collaborative Continuous Monitoring compliance check
+  description_template: Configuration may not fully implement KSI-AFR-06 - Collaborative Continuous Monitoring
+  remediation_template: Review and implement KSI-AFR-06 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- afr
+- compliance
+- ksi-afr-06
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-AFR-06
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-AFR-06 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-AFR-06 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-AFR-06 compliance enforcement
+    implementation: |
+      # Azure Policy for KSI-AFR-06 compliance
+      # GitHub Actions
+      - name: KSI-AFR-06 Compliance Check
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern afr.compliance.ksi_afr_06 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: PowerShell@2
+        displayName: 'KSI-AFR-06 Validation'
+        inputs:
+          script: |
+            # Validate KSI-AFR-06 compliance
+            python validate.py --pattern afr.compliance.ksi_afr_06
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-AFR-06
+    implementation: |
+      # Azure Monitor for KSI-AFR-06 continuous monitoring
+      # Log Analytics Query
+      AzureActivity
+      | where CategoryValue == "Policy"
+      | where OperationNameValue contains "KSI-AFR-06"
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels: ['Low', 'Moderate']
+---
+pattern_id: afr.compliance.ksi_afr_07
+name: Recommended Secure Configuration Detection
+description: Detects compliance indicators for KSI-AFR-07 - Recommended Secure Configuration
+family: AFR
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: Recommended Secure Configuration compliance check
+  description_template: Configuration may not fully implement KSI-AFR-07 - Recommended Secure Configuration
+  remediation_template: Review and implement KSI-AFR-07 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- afr
+- compliance
+- ksi-afr-07
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-AFR-07
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-AFR-07 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-AFR-07 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-AFR-07 compliance enforcement
+    implementation: |
+      # Azure Policy for KSI-AFR-07 compliance
+      # GitHub Actions
+      - name: KSI-AFR-07 Compliance Check
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern afr.compliance.ksi_afr_07 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: PowerShell@2
+        displayName: 'KSI-AFR-07 Validation'
+        inputs:
+          script: |
+            # Validate KSI-AFR-07 compliance
+            python validate.py --pattern afr.compliance.ksi_afr_07
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-AFR-07
+    implementation: |
+      # Azure Monitor for KSI-AFR-07 continuous monitoring
+      # Log Analytics Query
+      AzureActivity
+      | where CategoryValue == "Policy"
+      | where OperationNameValue contains "KSI-AFR-07"
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels: ['Low', 'Moderate']
+---
+pattern_id: afr.compliance.ksi_afr_08
+name: FedRAMP Security Inbox Detection
+description: Detects compliance indicators for KSI-AFR-08 - FedRAMP Security Inbox
+family: AFR
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FedRAMP Security Inbox compliance check
+  description_template: Configuration may not fully implement KSI-AFR-08 - FedRAMP Security Inbox
+  remediation_template: Review and implement KSI-AFR-08 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- afr
+- compliance
+- ksi-afr-08
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-AFR-08
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-AFR-08 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-AFR-08 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-AFR-08 compliance enforcement
+    implementation: |
+      # Azure Policy for KSI-AFR-08 compliance
+      # GitHub Actions
+      - name: KSI-AFR-08 Compliance Check
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern afr.compliance.ksi_afr_08 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: PowerShell@2
+        displayName: 'KSI-AFR-08 Validation'
+        inputs:
+          script: |
+            # Validate KSI-AFR-08 compliance
+            python validate.py --pattern afr.compliance.ksi_afr_08
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-AFR-08
+    implementation: |
+      # Azure Monitor for KSI-AFR-08 continuous monitoring
+      # Log Analytics Query
+      AzureActivity
+      | where CategoryValue == "Policy"
+      | where OperationNameValue contains "KSI-AFR-08"
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels: ['Low', 'Moderate']
+---
+pattern_id: afr.compliance.ksi_afr_09
+name: Persistent Validation and Assessment Detection
+description: Detects compliance indicators for KSI-AFR-09 - Persistent Validation and Assessment
+family: AFR
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: Persistent Validation and Assessment compliance check
+  description_template: Configuration may not fully implement KSI-AFR-09 - Persistent Validation and Assessment
+  remediation_template: Review and implement KSI-AFR-09 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- afr
+- compliance
+- ksi-afr-09
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-AFR-09
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-AFR-09 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-AFR-09 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-AFR-09 compliance enforcement
+    implementation: |
+      # Azure Policy for KSI-AFR-09 compliance
+      # GitHub Actions
+      - name: KSI-AFR-09 Compliance Check
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern afr.compliance.ksi_afr_09 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: PowerShell@2
+        displayName: 'KSI-AFR-09 Validation'
+        inputs:
+          script: |
+            # Validate KSI-AFR-09 compliance
+            python validate.py --pattern afr.compliance.ksi_afr_09
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-AFR-09
+    implementation: |
+      # Azure Monitor for KSI-AFR-09 continuous monitoring
+      # Log Analytics Query
+      AzureActivity
+      | where CategoryValue == "Policy"
+      | where OperationNameValue contains "KSI-AFR-09"
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels: ['Low', 'Moderate']
+---
+pattern_id: afr.compliance.ksi_afr_10
+name: Incident Communications Procedures Detection
+description: Detects compliance indicators for KSI-AFR-10 - Incident Communications Procedures
+family: AFR
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: Incident Communications Procedures compliance check
+  description_template: Configuration may not fully implement KSI-AFR-10 - Incident Communications Procedures
+  remediation_template: Review and implement KSI-AFR-10 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- afr
+- compliance
+- ksi-afr-10
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-AFR-10
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-AFR-10 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-AFR-10 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-AFR-10 compliance enforcement
+    implementation: |
+      # Azure Policy for KSI-AFR-10 compliance
+      # GitHub Actions
+      - name: KSI-AFR-10 Compliance Check
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern afr.compliance.ksi_afr_10 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: PowerShell@2
+        displayName: 'KSI-AFR-10 Validation'
+        inputs:
+          script: |
+            # Validate KSI-AFR-10 compliance
+            python validate.py --pattern afr.compliance.ksi_afr_10
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-AFR-10
+    implementation: |
+      # Azure Monitor for KSI-AFR-10 continuous monitoring
+      # Log Analytics Query
+      AzureActivity
+      | where CategoryValue == "Policy"
+      | where OperationNameValue contains "KSI-AFR-10"
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels: ['Low', 'Moderate']
+---
+pattern_id: afr.compliance.ksi_afr_11
+name: Using Cryptographic Modules Detection
+description: Detects compliance indicators for KSI-AFR-11 - Using Cryptographic Modules
+family: AFR
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: Using Cryptographic Modules compliance check
+  description_template: Configuration may not fully implement KSI-AFR-11 - Using Cryptographic Modules
+  remediation_template: Review and implement KSI-AFR-11 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- afr
+- compliance
+- ksi-afr-11
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-AFR-11
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-AFR-11 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-AFR-11 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-AFR-11 compliance enforcement
+    implementation: |
+      # Azure Policy for KSI-AFR-11 compliance
+      # GitHub Actions
+      - name: KSI-AFR-11 Compliance Check
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern afr.compliance.ksi_afr_11 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: PowerShell@2
+        displayName: 'KSI-AFR-11 Validation'
+        inputs:
+          script: |
+            # Validate KSI-AFR-11 compliance
+            python validate.py --pattern afr.compliance.ksi_afr_11
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-AFR-11
+    implementation: |
+      # Azure Monitor for KSI-AFR-11 continuous monitoring
+      # Log Analytics Query
+      AzureActivity
+      | where CategoryValue == "Policy"
+      | where OperationNameValue contains "KSI-AFR-11"
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels: ['Low', 'Moderate']

@@ -32,8 +32,7 @@ languages:
     regex_fallback: import.*@simplewebauthn
 finding:
   title_template: Phishing-resistant MFA library detected (FIDO2)
-  description_template: FIDO2/WebAuthn library import found, indicating phishing-resistant
-    MFA capability.
+  description_template: FIDO2/WebAuthn library import found, indicating phishing-resistant MFA capability.
   remediation_template: N/A - Positive finding indicating compliance
   evidence_collection:
   - FIDO2 authentication flow implementation
@@ -73,12 +72,7 @@ evidence_artifacts:
 automation:
   automation_1:
     description: Azure Policy for compliance enforcement
-    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.mfa.fido2_import \\\n      --code-path ./src\n   \
-      \ \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.fido2_import\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.fido2_import\
-      \ compliance\n      python validate.py --pattern iam.mfa.fido2_import"
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.fido2_import \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.fido2_import Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.fido2_import compliance\n      python validate.py --pattern iam.mfa.fido2_import"
     azure_services: &id001
     - Azure Blob Storage
     - Azure Monitor
@@ -90,21 +84,11 @@ automation:
     - Privileged Identity Management
   automation_2:
     description: Azure Monitor for continuous monitoring
-    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.mfa.fido2_import \\\n      --code-path ./src\n   \
-      \ \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.fido2_import\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.fido2_import\
-      \ compliance\n      python validate.py --pattern iam.mfa.fido2_import"
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.fido2_import \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.fido2_import Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.fido2_import compliance\n      python validate.py --pattern iam.mfa.fido2_import"
     azure_services: *id001
   automation_3:
     description: Log Analytics queries for compliance validation
-    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.mfa.fido2_import \\\n      --code-path ./src\n   \
-      \ \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.fido2_import\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.fido2_import\
-      \ compliance\n      python validate.py --pattern iam.mfa.fido2_import"
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.fido2_import \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.fido2_import Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.fido2_import compliance\n      python validate.py --pattern iam.mfa.fido2_import"
     azure_services: *id001
 implementation:
   prerequisites:
@@ -188,17 +172,8 @@ ssp_mapping:
   - IA-2.8
   ssp_sections:
   - section: 'IA-2: Phishing-Resistant MFA'
-    description_template: The system implements Phishing-Resistant MFA controls in
-      accordance with FedRAMP 20x requirements. Enforce multi-factor authentication
-      (MFA) using methods that are difficult to intercept or impersonate (phishing-resistant
-      MFA) for all user authentication.... Implementation leverages Azure native services
-      combined with application-level controls and automated monitoring to ensure
-      continuous compliance.
-    implementation_details: Azure services including Azure Blob Storage, Azure Monitor,
-      Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code
-      (Bicep/Terraform) templates ensure consistent deployment across environments.
-      Automated compliance checking in CI/CD pipelines validates all changes against
-      Phishing-Resistant MFA requirements before deployment.
+    description_template: The system implements Phishing-Resistant MFA controls in accordance with FedRAMP 20x requirements. Enforce multi-factor authentication (MFA) using methods that are difficult to intercept or impersonate (phishing-resistant MFA) for all user authentication.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Blob Storage, Azure Monitor, Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Phishing-Resistant MFA requirements before deployment.
     evidence_references:
     - Configuration exports
     - Compliance reports
@@ -238,15 +213,12 @@ compliance_frameworks:
 testing:
   positive_test_cases:
   - description: Compliant python implementation of iam.mfa.fido2_import
-    code_sample: "# Python compliant code for iam.mfa.fido2_import\nimport logging\n\
-      \ndef compliant_function():\n    \"\"\"Implements iam.mfa.fido2_import requirements.\"\
-      \"\"\n    logging.info(\"Compliant implementation\")\n    return True"
+    code_sample: "# Python compliant code for iam.mfa.fido2_import\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements iam.mfa.fido2_import requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
   - description: Non-compliant python code violating iam.mfa.fido2_import
-    code_sample: "# Python non-compliant code for iam.mfa.fido2_import\ndef non_compliant_function():\n\
-      \    # Missing required implementation\n    pass"
+    code_sample: "# Python non-compliant code for iam.mfa.fido2_import\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
     expected_severity: HIGH
     expected_finding: true
   validation_scripts: []
@@ -283,8 +255,7 @@ languages:
     regex_fallback: import.*['"].*webauthn
 finding:
   title_template: Phishing-resistant MFA library detected (WebAuthn)
-  description_template: WebAuthn library import found, indicating phishing-resistant
-    MFA capability.
+  description_template: WebAuthn library import found, indicating phishing-resistant MFA capability.
   remediation_template: N/A - Positive finding
 tags:
 - mfa
@@ -319,12 +290,7 @@ evidence_artifacts:
 automation:
   automation_1:
     description: Azure Policy for compliance enforcement
-    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.mfa.webauthn_import \\\n      --code-path ./src\n\
-      \    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.webauthn_import\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.webauthn_import\
-      \ compliance\n      python validate.py --pattern iam.mfa.webauthn_import"
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.webauthn_import \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.webauthn_import Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.webauthn_import compliance\n      python validate.py --pattern iam.mfa.webauthn_import"
     azure_services: &id001
     - Azure Blob Storage
     - Azure Monitor
@@ -336,21 +302,11 @@ automation:
     - Privileged Identity Management
   automation_2:
     description: Azure Monitor for continuous monitoring
-    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.mfa.webauthn_import \\\n      --code-path ./src\n\
-      \    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.webauthn_import\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.webauthn_import\
-      \ compliance\n      python validate.py --pattern iam.mfa.webauthn_import"
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.webauthn_import \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.webauthn_import Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.webauthn_import compliance\n      python validate.py --pattern iam.mfa.webauthn_import"
     azure_services: *id001
   automation_3:
     description: Log Analytics queries for compliance validation
-    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.mfa.webauthn_import \\\n      --code-path ./src\n\
-      \    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.webauthn_import\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.webauthn_import\
-      \ compliance\n      python validate.py --pattern iam.mfa.webauthn_import"
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.webauthn_import \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.webauthn_import Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.webauthn_import compliance\n      python validate.py --pattern iam.mfa.webauthn_import"
     azure_services: *id001
 implementation:
   prerequisites:
@@ -434,17 +390,8 @@ ssp_mapping:
   - IA-2.8
   ssp_sections:
   - section: 'IA-2: Phishing-Resistant MFA'
-    description_template: The system implements Phishing-Resistant MFA controls in
-      accordance with FedRAMP 20x requirements. Enforce multi-factor authentication
-      (MFA) using methods that are difficult to intercept or impersonate (phishing-resistant
-      MFA) for all user authentication.... Implementation leverages Azure native services
-      combined with application-level controls and automated monitoring to ensure
-      continuous compliance.
-    implementation_details: Azure services including Azure Blob Storage, Azure Monitor,
-      Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code
-      (Bicep/Terraform) templates ensure consistent deployment across environments.
-      Automated compliance checking in CI/CD pipelines validates all changes against
-      Phishing-Resistant MFA requirements before deployment.
+    description_template: The system implements Phishing-Resistant MFA controls in accordance with FedRAMP 20x requirements. Enforce multi-factor authentication (MFA) using methods that are difficult to intercept or impersonate (phishing-resistant MFA) for all user authentication.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Blob Storage, Azure Monitor, Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Phishing-Resistant MFA requirements before deployment.
     evidence_references:
     - Configuration exports
     - Compliance reports
@@ -484,15 +431,12 @@ compliance_frameworks:
 testing:
   positive_test_cases:
   - description: Compliant python implementation of iam.mfa.webauthn_import
-    code_sample: "# Python compliant code for iam.mfa.webauthn_import\nimport logging\n\
-      \ndef compliant_function():\n    \"\"\"Implements iam.mfa.webauthn_import requirements.\"\
-      \"\"\n    logging.info(\"Compliant implementation\")\n    return True"
+    code_sample: "# Python compliant code for iam.mfa.webauthn_import\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements iam.mfa.webauthn_import requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
   - description: Non-compliant python code violating iam.mfa.webauthn_import
-    code_sample: "# Python non-compliant code for iam.mfa.webauthn_import\ndef non_compliant_function():\n\
-      \    # Missing required implementation\n    pass"
+    code_sample: "# Python non-compliant code for iam.mfa.webauthn_import\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
     expected_severity: HIGH
     expected_finding: true
   validation_scripts: []
@@ -533,10 +477,8 @@ languages:
     regex_fallback: import.*@azure/msal
 finding:
   title_template: Azure AD authentication detected
-  description_template: Azure AD/MSAL library found. Verify Conditional Access policies
-    enforce phishing-resistant MFA.
-  remediation_template: Ensure Conditional Access policy requires phishing-resistant
-    MFA methods (certificate, FIDO2, Windows Hello)
+  description_template: Azure AD/MSAL library found. Verify Conditional Access policies enforce phishing-resistant MFA.
+  remediation_template: Ensure Conditional Access policy requires phishing-resistant MFA methods (certificate, FIDO2, Windows Hello)
 tags:
 - mfa
 - azure-ad
@@ -567,12 +509,7 @@ evidence_artifacts:
 automation:
   automation_1:
     description: Azure Policy for compliance enforcement
-    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.mfa.azure_ad_import \\\n      --code-path ./src\n\
-      \    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.azure_ad_import\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.azure_ad_import\
-      \ compliance\n      python validate.py --pattern iam.mfa.azure_ad_import"
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.azure_ad_import \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.azure_ad_import Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.azure_ad_import compliance\n      python validate.py --pattern iam.mfa.azure_ad_import"
     azure_services: &id001
     - Azure Blob Storage
     - Azure Monitor
@@ -584,21 +521,11 @@ automation:
     - Privileged Identity Management
   automation_2:
     description: Azure Monitor for continuous monitoring
-    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.mfa.azure_ad_import \\\n      --code-path ./src\n\
-      \    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.azure_ad_import\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.azure_ad_import\
-      \ compliance\n      python validate.py --pattern iam.mfa.azure_ad_import"
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.azure_ad_import \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.azure_ad_import Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.azure_ad_import compliance\n      python validate.py --pattern iam.mfa.azure_ad_import"
     azure_services: *id001
   automation_3:
     description: Log Analytics queries for compliance validation
-    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.mfa.azure_ad_import \\\n      --code-path ./src\n\
-      \    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.azure_ad_import\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.azure_ad_import\
-      \ compliance\n      python validate.py --pattern iam.mfa.azure_ad_import"
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.azure_ad_import \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.azure_ad_import Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.azure_ad_import compliance\n      python validate.py --pattern iam.mfa.azure_ad_import"
     azure_services: *id001
 implementation:
   prerequisites:
@@ -679,17 +606,8 @@ ssp_mapping:
   - IA-2
   ssp_sections:
   - section: 'IA-2: Phishing-Resistant MFA'
-    description_template: The system implements Phishing-Resistant MFA controls in
-      accordance with FedRAMP 20x requirements. Enforce multi-factor authentication
-      (MFA) using methods that are difficult to intercept or impersonate (phishing-resistant
-      MFA) for all user authentication.... Implementation leverages Azure native services
-      combined with application-level controls and automated monitoring to ensure
-      continuous compliance.
-    implementation_details: Azure services including Azure Blob Storage, Azure Monitor,
-      Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code
-      (Bicep/Terraform) templates ensure consistent deployment across environments.
-      Automated compliance checking in CI/CD pipelines validates all changes against
-      Phishing-Resistant MFA requirements before deployment.
+    description_template: The system implements Phishing-Resistant MFA controls in accordance with FedRAMP 20x requirements. Enforce multi-factor authentication (MFA) using methods that are difficult to intercept or impersonate (phishing-resistant MFA) for all user authentication.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Blob Storage, Azure Monitor, Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Phishing-Resistant MFA requirements before deployment.
     evidence_references:
     - Configuration exports
     - Compliance reports
@@ -729,15 +647,12 @@ compliance_frameworks:
 testing:
   positive_test_cases:
   - description: Compliant python implementation of iam.mfa.azure_ad_import
-    code_sample: "# Python compliant code for iam.mfa.azure_ad_import\nimport logging\n\
-      \ndef compliant_function():\n    \"\"\"Implements iam.mfa.azure_ad_import requirements.\"\
-      \"\"\n    logging.info(\"Compliant implementation\")\n    return True"
+    code_sample: "# Python compliant code for iam.mfa.azure_ad_import\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements iam.mfa.azure_ad_import requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
   - description: Non-compliant python code violating iam.mfa.azure_ad_import
-    code_sample: "# Python non-compliant code for iam.mfa.azure_ad_import\ndef non_compliant_function():\n\
-      \    # Missing required implementation\n    pass"
+    code_sample: "# Python non-compliant code for iam.mfa.azure_ad_import\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
     expected_severity: HIGH
     expected_finding: true
   validation_scripts: []
@@ -775,8 +690,7 @@ languages:
     regex_fallback: import.*['"]otplib
 finding:
   title_template: TOTP-based MFA detected (not phishing-resistant)
-  description_template: TOTP library found. Time-based One-Time Passwords are vulnerable
-    to phishing. FedRAMP 20x requires phishing-resistant MFA.
+  description_template: TOTP library found. Time-based One-Time Passwords are vulnerable to phishing. FedRAMP 20x requires phishing-resistant MFA.
   remediation_template: 'Migrate to phishing-resistant MFA:
 
     - FIDO2 (use fido2 or @simplewebauthn libraries)
@@ -823,12 +737,7 @@ evidence_artifacts:
 automation:
   automation_1:
     description: Azure Policy for compliance enforcement
-    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.mfa.totp_import \\\n      --code-path ./src\n    \n\
-      # Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.totp_import\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.totp_import\
-      \ compliance\n      python validate.py --pattern iam.mfa.totp_import"
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.totp_import \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.totp_import Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.totp_import compliance\n      python validate.py --pattern iam.mfa.totp_import"
     azure_services: &id001
     - Azure Blob Storage
     - Azure Monitor
@@ -840,21 +749,11 @@ automation:
     - Privileged Identity Management
   automation_2:
     description: Azure Monitor for continuous monitoring
-    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.mfa.totp_import \\\n      --code-path ./src\n    \n\
-      # Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.totp_import\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.totp_import\
-      \ compliance\n      python validate.py --pattern iam.mfa.totp_import"
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.totp_import \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.totp_import Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.totp_import compliance\n      python validate.py --pattern iam.mfa.totp_import"
     azure_services: *id001
   automation_3:
     description: Log Analytics queries for compliance validation
-    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.mfa.totp_import \\\n      --code-path ./src\n    \n\
-      # Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.totp_import\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.totp_import\
-      \ compliance\n      python validate.py --pattern iam.mfa.totp_import"
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.totp_import \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.totp_import Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.totp_import compliance\n      python validate.py --pattern iam.mfa.totp_import"
     azure_services: *id001
 implementation:
   prerequisites:
@@ -936,17 +835,8 @@ ssp_mapping:
   - IA-2.8
   ssp_sections:
   - section: 'IA-2: Phishing-Resistant MFA'
-    description_template: The system implements Phishing-Resistant MFA controls in
-      accordance with FedRAMP 20x requirements. Enforce multi-factor authentication
-      (MFA) using methods that are difficult to intercept or impersonate (phishing-resistant
-      MFA) for all user authentication.... Implementation leverages Azure native services
-      combined with application-level controls and automated monitoring to ensure
-      continuous compliance.
-    implementation_details: Azure services including Azure Blob Storage, Azure Monitor,
-      Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code
-      (Bicep/Terraform) templates ensure consistent deployment across environments.
-      Automated compliance checking in CI/CD pipelines validates all changes against
-      Phishing-Resistant MFA requirements before deployment.
+    description_template: The system implements Phishing-Resistant MFA controls in accordance with FedRAMP 20x requirements. Enforce multi-factor authentication (MFA) using methods that are difficult to intercept or impersonate (phishing-resistant MFA) for all user authentication.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Blob Storage, Azure Monitor, Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Phishing-Resistant MFA requirements before deployment.
     evidence_references:
     - Configuration exports
     - Compliance reports
@@ -986,15 +876,12 @@ compliance_frameworks:
 testing:
   positive_test_cases:
   - description: Compliant python implementation of iam.mfa.totp_import
-    code_sample: "# Python compliant code for iam.mfa.totp_import\nimport logging\n\
-      \ndef compliant_function():\n    \"\"\"Implements iam.mfa.totp_import requirements.\"\
-      \"\"\n    logging.info(\"Compliant implementation\")\n    return True"
+    code_sample: "# Python compliant code for iam.mfa.totp_import\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements iam.mfa.totp_import requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
   - description: Non-compliant python code violating iam.mfa.totp_import
-    code_sample: "# Python non-compliant code for iam.mfa.totp_import\ndef non_compliant_function():\n\
-      \    # Missing required implementation\n    pass"
+    code_sample: "# Python non-compliant code for iam.mfa.totp_import\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
     expected_severity: HIGH
     expected_finding: true
   validation_scripts: []
@@ -1031,8 +918,7 @@ languages:
     regex_fallback: import.*['"]twilio
 finding:
   title_template: SMS-based MFA detected (not phishing-resistant)
-  description_template: SMS MFA library found. SMS is vulnerable to SIM swapping and
-    phishing attacks. FedRAMP 20x prohibits SMS-only MFA.
+  description_template: SMS MFA library found. SMS is vulnerable to SIM swapping and phishing attacks. FedRAMP 20x prohibits SMS-only MFA.
   remediation_template: 'Replace SMS MFA with phishing-resistant methods:
 
     - FIDO2 security keys
@@ -1075,12 +961,7 @@ evidence_artifacts:
 automation:
   automation_1:
     description: Azure Policy for compliance enforcement
-    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.mfa.sms_mfa \\\n      --code-path ./src\n    \n# Azure\
-      \ Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.sms_mfa Validation'\n\
-      \  inputs:\n    script: |\n      # Validate iam.mfa.sms_mfa compliance\n   \
-      \   python validate.py --pattern iam.mfa.sms_mfa"
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.sms_mfa \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.sms_mfa Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.sms_mfa compliance\n      python validate.py --pattern iam.mfa.sms_mfa"
     azure_services: &id001
     - Azure Blob Storage
     - Azure Monitor
@@ -1092,21 +973,11 @@ automation:
     - Privileged Identity Management
   automation_2:
     description: Azure Monitor for continuous monitoring
-    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.mfa.sms_mfa \\\n      --code-path ./src\n    \n# Azure\
-      \ Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.sms_mfa Validation'\n\
-      \  inputs:\n    script: |\n      # Validate iam.mfa.sms_mfa compliance\n   \
-      \   python validate.py --pattern iam.mfa.sms_mfa"
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.sms_mfa \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.sms_mfa Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.sms_mfa compliance\n      python validate.py --pattern iam.mfa.sms_mfa"
     azure_services: *id001
   automation_3:
     description: Log Analytics queries for compliance validation
-    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.mfa.sms_mfa \\\n      --code-path ./src\n    \n# Azure\
-      \ Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.sms_mfa Validation'\n\
-      \  inputs:\n    script: |\n      # Validate iam.mfa.sms_mfa compliance\n   \
-      \   python validate.py --pattern iam.mfa.sms_mfa"
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.sms_mfa \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.sms_mfa Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.sms_mfa compliance\n      python validate.py --pattern iam.mfa.sms_mfa"
     azure_services: *id001
 implementation:
   prerequisites:
@@ -1188,17 +1059,8 @@ ssp_mapping:
   - IA-2.8
   ssp_sections:
   - section: 'IA-2: Phishing-Resistant MFA'
-    description_template: The system implements Phishing-Resistant MFA controls in
-      accordance with FedRAMP 20x requirements. Enforce multi-factor authentication
-      (MFA) using methods that are difficult to intercept or impersonate (phishing-resistant
-      MFA) for all user authentication.... Implementation leverages Azure native services
-      combined with application-level controls and automated monitoring to ensure
-      continuous compliance.
-    implementation_details: Azure services including Azure Blob Storage, Azure Monitor,
-      Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code
-      (Bicep/Terraform) templates ensure consistent deployment across environments.
-      Automated compliance checking in CI/CD pipelines validates all changes against
-      Phishing-Resistant MFA requirements before deployment.
+    description_template: The system implements Phishing-Resistant MFA controls in accordance with FedRAMP 20x requirements. Enforce multi-factor authentication (MFA) using methods that are difficult to intercept or impersonate (phishing-resistant MFA) for all user authentication.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Blob Storage, Azure Monitor, Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Phishing-Resistant MFA requirements before deployment.
     evidence_references:
     - Configuration exports
     - Compliance reports
@@ -1238,15 +1100,12 @@ compliance_frameworks:
 testing:
   positive_test_cases:
   - description: Compliant python implementation of iam.mfa.sms_mfa
-    code_sample: "# Python compliant code for iam.mfa.sms_mfa\nimport logging\n\n\
-      def compliant_function():\n    \"\"\"Implements iam.mfa.sms_mfa requirements.\"\
-      \"\"\n    logging.info(\"Compliant implementation\")\n    return True"
+    code_sample: "# Python compliant code for iam.mfa.sms_mfa\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements iam.mfa.sms_mfa requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
   - description: Non-compliant python code violating iam.mfa.sms_mfa
-    code_sample: "# Python non-compliant code for iam.mfa.sms_mfa\ndef non_compliant_function():\n\
-      \    # Missing required implementation\n    pass"
+    code_sample: "# Python non-compliant code for iam.mfa.sms_mfa\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
     expected_severity: HIGH
     expected_finding: true
   validation_scripts: []
@@ -1312,8 +1171,7 @@ languages:
     - fido2
 finding:
   title_template: Login without MFA enforcement
-  description_template: Login function detected without multi-factor authentication.
-    KSI-IAM-01 requires phishing-resistant MFA for ALL user authentication.
+  description_template: Login function detected without multi-factor authentication. KSI-IAM-01 requires phishing-resistant MFA for ALL user authentication.
   remediation_template: 'Add MFA to login flow:
 
     1. After password validation, initiate MFA challenge
@@ -1361,12 +1219,7 @@ evidence_artifacts:
 automation:
   automation_1:
     description: Azure Policy for compliance enforcement
-    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.mfa.login_without_mfa \\\n      --code-path ./src\n\
-      \    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.login_without_mfa\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.login_without_mfa\
-      \ compliance\n      python validate.py --pattern iam.mfa.login_without_mfa"
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.login_without_mfa \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.login_without_mfa Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.login_without_mfa compliance\n      python validate.py --pattern iam.mfa.login_without_mfa"
     azure_services: &id001
     - Azure Blob Storage
     - Azure Monitor
@@ -1378,21 +1231,11 @@ automation:
     - Privileged Identity Management
   automation_2:
     description: Azure Monitor for continuous monitoring
-    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.mfa.login_without_mfa \\\n      --code-path ./src\n\
-      \    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.login_without_mfa\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.login_without_mfa\
-      \ compliance\n      python validate.py --pattern iam.mfa.login_without_mfa"
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.login_without_mfa \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.login_without_mfa Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.login_without_mfa compliance\n      python validate.py --pattern iam.mfa.login_without_mfa"
     azure_services: *id001
   automation_3:
     description: Log Analytics queries for compliance validation
-    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.mfa.login_without_mfa \\\n      --code-path ./src\n\
-      \    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.login_without_mfa\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.login_without_mfa\
-      \ compliance\n      python validate.py --pattern iam.mfa.login_without_mfa"
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.login_without_mfa \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.login_without_mfa Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.login_without_mfa compliance\n      python validate.py --pattern iam.mfa.login_without_mfa"
     azure_services: *id001
 implementation:
   prerequisites:
@@ -1475,17 +1318,8 @@ ssp_mapping:
   - IA-2.2
   ssp_sections:
   - section: 'IA-2: Phishing-Resistant MFA'
-    description_template: The system implements Phishing-Resistant MFA controls in
-      accordance with FedRAMP 20x requirements. Enforce multi-factor authentication
-      (MFA) using methods that are difficult to intercept or impersonate (phishing-resistant
-      MFA) for all user authentication.... Implementation leverages Azure native services
-      combined with application-level controls and automated monitoring to ensure
-      continuous compliance.
-    implementation_details: Azure services including Azure Blob Storage, Azure Monitor,
-      Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code
-      (Bicep/Terraform) templates ensure consistent deployment across environments.
-      Automated compliance checking in CI/CD pipelines validates all changes against
-      Phishing-Resistant MFA requirements before deployment.
+    description_template: The system implements Phishing-Resistant MFA controls in accordance with FedRAMP 20x requirements. Enforce multi-factor authentication (MFA) using methods that are difficult to intercept or impersonate (phishing-resistant MFA) for all user authentication.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Blob Storage, Azure Monitor, Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Phishing-Resistant MFA requirements before deployment.
     evidence_references:
     - Configuration exports
     - Compliance reports
@@ -1525,16 +1359,12 @@ compliance_frameworks:
 testing:
   positive_test_cases:
   - description: Compliant python implementation of iam.mfa.login_without_mfa
-    code_sample: "# Python compliant code for iam.mfa.login_without_mfa\nimport logging\n\
-      \ndef compliant_function():\n    \"\"\"Implements iam.mfa.login_without_mfa\
-      \ requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return\
-      \ True"
+    code_sample: "# Python compliant code for iam.mfa.login_without_mfa\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements iam.mfa.login_without_mfa requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
   - description: Non-compliant python code violating iam.mfa.login_without_mfa
-    code_sample: "# Python non-compliant code for iam.mfa.login_without_mfa\ndef non_compliant_function():\n\
-      \    # Missing required implementation\n    pass"
+    code_sample: "# Python non-compliant code for iam.mfa.login_without_mfa\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
     expected_severity: HIGH
     expected_finding: true
   validation_scripts: []
@@ -1580,10 +1410,8 @@ languages:
     regex_fallback: '@RequireAuth'
 finding:
   title_template: Authentication decorator without MFA
-  description_template: '@login_required used without MFA enforcement. Password-only
-    auth does not meet KSI-IAM-01.'
-  remediation_template: "Add MFA decorator:\n@login_required\n@mfa_required  # Add\
-    \ this\ndef protected_view():\n    ...\n"
+  description_template: '@login_required used without MFA enforcement. Password-only auth does not meet KSI-IAM-01.'
+  remediation_template: "Add MFA decorator:\n@login_required\n@mfa_required  # Add this\ndef protected_view():\n    ...\n"
 tags:
 - mfa
 - decorator
@@ -1614,12 +1442,7 @@ evidence_artifacts:
 automation:
   automation_1:
     description: Azure Policy for compliance enforcement
-    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.mfa.decorator_login_required \\\n      --code-path\
-      \ ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.decorator_login_required\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.decorator_login_required\
-      \ compliance\n      python validate.py --pattern iam.mfa.decorator_login_required"
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.decorator_login_required \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.decorator_login_required Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.decorator_login_required compliance\n      python validate.py --pattern iam.mfa.decorator_login_required"
     azure_services: &id001
     - Azure Blob Storage
     - Azure Monitor
@@ -1631,21 +1454,11 @@ automation:
     - Privileged Identity Management
   automation_2:
     description: Azure Monitor for continuous monitoring
-    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.mfa.decorator_login_required \\\n      --code-path\
-      \ ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.decorator_login_required\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.decorator_login_required\
-      \ compliance\n      python validate.py --pattern iam.mfa.decorator_login_required"
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.decorator_login_required \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.decorator_login_required Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.decorator_login_required compliance\n      python validate.py --pattern iam.mfa.decorator_login_required"
     azure_services: *id001
   automation_3:
     description: Log Analytics queries for compliance validation
-    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.mfa.decorator_login_required \\\n      --code-path\
-      \ ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.decorator_login_required\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.decorator_login_required\
-      \ compliance\n      python validate.py --pattern iam.mfa.decorator_login_required"
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.decorator_login_required \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.decorator_login_required Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.decorator_login_required compliance\n      python validate.py --pattern iam.mfa.decorator_login_required"
     azure_services: *id001
 implementation:
   prerequisites:
@@ -1726,17 +1539,8 @@ ssp_mapping:
   - IA-2
   ssp_sections:
   - section: 'IA-2: Phishing-Resistant MFA'
-    description_template: The system implements Phishing-Resistant MFA controls in
-      accordance with FedRAMP 20x requirements. Enforce multi-factor authentication
-      (MFA) using methods that are difficult to intercept or impersonate (phishing-resistant
-      MFA) for all user authentication.... Implementation leverages Azure native services
-      combined with application-level controls and automated monitoring to ensure
-      continuous compliance.
-    implementation_details: Azure services including Azure Blob Storage, Azure Monitor,
-      Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code
-      (Bicep/Terraform) templates ensure consistent deployment across environments.
-      Automated compliance checking in CI/CD pipelines validates all changes against
-      Phishing-Resistant MFA requirements before deployment.
+    description_template: The system implements Phishing-Resistant MFA controls in accordance with FedRAMP 20x requirements. Enforce multi-factor authentication (MFA) using methods that are difficult to intercept or impersonate (phishing-resistant MFA) for all user authentication.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Blob Storage, Azure Monitor, Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Phishing-Resistant MFA requirements before deployment.
     evidence_references:
     - Configuration exports
     - Compliance reports
@@ -1776,16 +1580,12 @@ compliance_frameworks:
 testing:
   positive_test_cases:
   - description: Compliant python implementation of iam.mfa.decorator_login_required
-    code_sample: "# Python compliant code for iam.mfa.decorator_login_required\nimport\
-      \ logging\n\ndef compliant_function():\n    \"\"\"Implements iam.mfa.decorator_login_required\
-      \ requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return\
-      \ True"
+    code_sample: "# Python compliant code for iam.mfa.decorator_login_required\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements iam.mfa.decorator_login_required requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
   - description: Non-compliant python code violating iam.mfa.decorator_login_required
-    code_sample: "# Python non-compliant code for iam.mfa.decorator_login_required\n\
-      def non_compliant_function():\n    # Missing required implementation\n    pass"
+    code_sample: "# Python non-compliant code for iam.mfa.decorator_login_required\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
     expected_severity: HIGH
     expected_finding: true
   validation_scripts: []
@@ -1810,8 +1610,7 @@ languages:
     regex_fallback: resource\s+"azurerm_role_assignment"
 finding:
   title_template: Azure RBAC assignment detected
-  description_template: RBAC role assignment found. Verify least privilege principle
-    is applied.
+  description_template: RBAC role assignment found. Verify least privilege principle is applied.
   remediation_template: Review role assignments to ensure minimal required permissions
 tags:
 - rbac
@@ -1824,34 +1623,33 @@ related_ksis:
 - KSI-IAM-02
 evidence_collection:
   azure_monitor_kql:
-  - query: |
-      AzureActivity
+  - query: 'AzureActivity
+
       | where OperationNameValue == "Microsoft.Authorization/roleAssignments/write"
+
       | extend RoleDefinitionId = tostring(Properties_d.roleDefinitionId)
+
       | extend PrincipalId = tostring(Properties_d.principalId)
+
       | extend Scope = tostring(Properties_d.scope)
+
       | project TimeGenerated, Caller, RoleDefinitionId, PrincipalId, Scope
+
       | order by TimeGenerated desc
+
+      '
     description: Query role assignment operations for audit trail
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: |
-      az role assignment list \
-        --query "[].{principalName:principalName, roleDefinitionName:roleDefinitionName, scope:scope}" \
-        --output json
+  - command: "az role assignment list \\\n  --query \"[].{principalName:principalName, roleDefinitionName:roleDefinitionName, scope:scope}\" \\\n  --output json\n"
     description: List all role assignments in subscription
     output_format: json
     frequency: weekly
 automation:
   automation_1:
     description: Azure Policy for compliance enforcement
-    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.rbac.azure_rbac_assignment \\\n      --code-path ./src\n\
-      \    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.rbac.azure_rbac_assignment\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.rbac.azure_rbac_assignment\
-      \ compliance\n      python validate.py --pattern iam.rbac.azure_rbac_assignment"
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.rbac.azure_rbac_assignment \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.rbac.azure_rbac_assignment Validation'\n  inputs:\n    script: |\n      # Validate iam.rbac.azure_rbac_assignment compliance\n      python validate.py --pattern iam.rbac.azure_rbac_assignment"
     azure_services: &id001
     - Azure AD
     - Azure AD configuration
@@ -1865,21 +1663,11 @@ automation:
     - Privileged Identity Management
   automation_2:
     description: Azure Monitor for continuous monitoring
-    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.rbac.azure_rbac_assignment \\\n      --code-path ./src\n\
-      \    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.rbac.azure_rbac_assignment\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.rbac.azure_rbac_assignment\
-      \ compliance\n      python validate.py --pattern iam.rbac.azure_rbac_assignment"
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.rbac.azure_rbac_assignment \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.rbac.azure_rbac_assignment Validation'\n  inputs:\n    script: |\n      # Validate iam.rbac.azure_rbac_assignment compliance\n      python validate.py --pattern iam.rbac.azure_rbac_assignment"
     azure_services: *id001
   automation_3:
     description: Log Analytics queries for compliance validation
-    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.rbac.azure_rbac_assignment \\\n      --code-path ./src\n\
-      \    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.rbac.azure_rbac_assignment\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.rbac.azure_rbac_assignment\
-      \ compliance\n      python validate.py --pattern iam.rbac.azure_rbac_assignment"
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.rbac.azure_rbac_assignment \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.rbac.azure_rbac_assignment Validation'\n  inputs:\n    script: |\n      # Validate iam.rbac.azure_rbac_assignment compliance\n      python validate.py --pattern iam.rbac.azure_rbac_assignment"
     azure_services: *id001
 implementation:
   prerequisites:
@@ -1961,17 +1749,8 @@ ssp_mapping:
   - AC-6
   ssp_sections:
   - section: 'AC-2: Passwordless Authentication'
-    description_template: The system implements Passwordless Authentication controls
-      in accordance with FedRAMP 20x requirements. Use secure passwordless methods
-      for user authentication and authorization when feasible, otherwise enforce strong
-      passwords with MFA.... Implementation leverages Azure native services combined
-      with application-level controls and automated monitoring to ensure continuous
-      compliance.
-    implementation_details: Azure services including Azure AD, Azure AD configuration,
-      Azure Blob Storage are configured to enforce compliance requirements. Infrastructure-as-code
-      (Bicep/Terraform) templates ensure consistent deployment across environments.
-      Automated compliance checking in CI/CD pipelines validates all changes against
-      Passwordless Authentication requirements before deployment.
+    description_template: The system implements Passwordless Authentication controls in accordance with FedRAMP 20x requirements. Use secure passwordless methods for user authentication and authorization when feasible, otherwise enforce strong passwords with MFA.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure AD, Azure AD configuration, Azure Blob Storage are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Passwordless Authentication requirements before deployment.
     evidence_references:
     - Configuration exports
     - Compliance reports
@@ -2011,10 +1790,7 @@ compliance_frameworks:
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of iam.rbac.azure_rbac_assignment
-    code_sample: "// Bicep compliant configuration for iam.rbac.azure_rbac_assignment\n\
-      resource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name:\
-      \ 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n\
-      }"
+    code_sample: "// Bicep compliant configuration for iam.rbac.azure_rbac_assignment\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
@@ -2023,6 +1799,25 @@ testing:
     expected_severity: HIGH
     expected_finding: true
   validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
 ---
 pattern_id: iam.rbac.wildcard_permissions
 name: Wildcard Permission Assignment
@@ -2045,10 +1840,8 @@ languages:
     regex_fallback: actions.*=.*\[.*\*
 finding:
   title_template: Wildcard permission detected
-  description_template: Role definition uses wildcard (*) permissions, violating least
-    privilege principle (KSI-IAM-02).
-  remediation_template: 'Replace wildcard with specific actions: [''Microsoft.Storage/storageAccounts/read'',
-    ...]'
+  description_template: Role definition uses wildcard (*) permissions, violating least privilege principle (KSI-IAM-02).
+  remediation_template: 'Replace wildcard with specific actions: [''Microsoft.Storage/storageAccounts/read'', ...]'
 tags:
 - rbac
 - least-privilege
@@ -2061,35 +1854,35 @@ related_ksis:
 - KSI-IAM-03
 evidence_collection:
   azure_monitor_kql:
-  - query: |
-      Resources
-      | where type == 'microsoft.authorization/roledefinitions'
+  - query: 'Resources
+
+      | where type == ''microsoft.authorization/roledefinitions''
+
       | extend permissions = parse_json(properties.permissions)
+
       | mv-expand permission = permissions
+
       | extend actions = permission.actions
-      | where actions contains '*'
+
+      | where actions contains ''*''
+
       | project name, id, actions, properties.roleName
+
       | order by name asc
+
+      '
     description: Query custom role definitions with wildcard permissions
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: |
-      az role definition list --custom-role-only true \
-        --query "[?contains(to_string(permissions[0].actions), '*')].{name:roleName, actions:permissions[0].actions}" \
-        --output json
+  - command: "az role definition list --custom-role-only true \\\n  --query \"[?contains(to_string(permissions[0].actions), '*')].{name:roleName, actions:permissions[0].actions}\" \\\n  --output json\n"
     description: List custom roles with wildcard actions
     output_format: json
     frequency: weekly
 automation:
   automation_1:
     description: Azure Policy for compliance enforcement
-    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.rbac.wildcard_permissions \\\n      --code-path ./src\n\
-      \    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.rbac.wildcard_permissions\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.rbac.wildcard_permissions\
-      \ compliance\n      python validate.py --pattern iam.rbac.wildcard_permissions"
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.rbac.wildcard_permissions \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.rbac.wildcard_permissions Validation'\n  inputs:\n    script: |\n      # Validate iam.rbac.wildcard_permissions compliance\n      python validate.py --pattern iam.rbac.wildcard_permissions"
     azure_services: &id001
     - Azure AD
     - Azure AD configuration
@@ -2103,21 +1896,11 @@ automation:
     - Privileged Identity Management
   automation_2:
     description: Azure Monitor for continuous monitoring
-    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.rbac.wildcard_permissions \\\n      --code-path ./src\n\
-      \    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.rbac.wildcard_permissions\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.rbac.wildcard_permissions\
-      \ compliance\n      python validate.py --pattern iam.rbac.wildcard_permissions"
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.rbac.wildcard_permissions \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.rbac.wildcard_permissions Validation'\n  inputs:\n    script: |\n      # Validate iam.rbac.wildcard_permissions compliance\n      python validate.py --pattern iam.rbac.wildcard_permissions"
     azure_services: *id001
   automation_3:
     description: Log Analytics queries for compliance validation
-    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.rbac.wildcard_permissions \\\n      --code-path ./src\n\
-      \    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.rbac.wildcard_permissions\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.rbac.wildcard_permissions\
-      \ compliance\n      python validate.py --pattern iam.rbac.wildcard_permissions"
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.rbac.wildcard_permissions \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.rbac.wildcard_permissions Validation'\n  inputs:\n    script: |\n      # Validate iam.rbac.wildcard_permissions compliance\n      python validate.py --pattern iam.rbac.wildcard_permissions"
     azure_services: *id001
 implementation:
   prerequisites:
@@ -2199,17 +1982,8 @@ ssp_mapping:
   - AC-6.1
   ssp_sections:
   - section: 'AC-6: Passwordless Authentication'
-    description_template: The system implements Passwordless Authentication controls
-      in accordance with FedRAMP 20x requirements. Use secure passwordless methods
-      for user authentication and authorization when feasible, otherwise enforce strong
-      passwords with MFA.... Implementation leverages Azure native services combined
-      with application-level controls and automated monitoring to ensure continuous
-      compliance.
-    implementation_details: Azure services including Azure AD, Azure AD configuration,
-      Azure Blob Storage are configured to enforce compliance requirements. Infrastructure-as-code
-      (Bicep/Terraform) templates ensure consistent deployment across environments.
-      Automated compliance checking in CI/CD pipelines validates all changes against
-      Passwordless Authentication requirements before deployment.
+    description_template: The system implements Passwordless Authentication controls in accordance with FedRAMP 20x requirements. Use secure passwordless methods for user authentication and authorization when feasible, otherwise enforce strong passwords with MFA.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure AD, Azure AD configuration, Azure Blob Storage are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Passwordless Authentication requirements before deployment.
     evidence_references:
     - Configuration exports
     - Compliance reports
@@ -2249,10 +2023,7 @@ compliance_frameworks:
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of iam.rbac.wildcard_permissions
-    code_sample: "// Bicep compliant configuration for iam.rbac.wildcard_permissions\n\
-      resource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name:\
-      \ 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n\
-      }"
+    code_sample: "// Bicep compliant configuration for iam.rbac.wildcard_permissions\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
@@ -2261,6 +2032,25 @@ testing:
     expected_severity: HIGH
     expected_finding: true
   validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
 ---
 pattern_id: iam.session.timeout_missing
 name: Missing Session Timeout
@@ -2296,8 +2086,7 @@ languages:
     regex_fallback: maxAge\s*:\s*
 finding:
   title_template: Session timeout exceeds 30 minutes or not configured
-  description_template: Session timeout missing or exceeds FedRAMP guidance of 30
-    minutes for non-privileged users.
+  description_template: Session timeout missing or exceeds FedRAMP guidance of 30 minutes for non-privileged users.
   remediation_template: 'Configure session timeout:
 
     Python (Flask): app.config[''PERMANENT_SESSION_LIFETIME''] = timedelta(minutes=30)
@@ -2316,35 +2105,31 @@ related_ksis:
 - KSI-IAM-05
 evidence_collection:
   azure_monitor_kql:
-  - query: |
-      AppServiceHTTPLogs
+  - query: 'AppServiceHTTPLogs
+
       | where TimeGenerated > ago(7d)
+
       | where CsUriStem contains "login" or CsUriStem contains "auth"
+
       | summarize SessionCount=count(), AvgDuration=avg(TimeTaken) by UserAgent
+
       | where AvgDuration > 1800000  // Sessions longer than 30 minutes
+
       | order by AvgDuration desc
+
+      '
     description: Detect potentially long-running sessions exceeding recommended timeout
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: |
-      az webapp config show \
-        --resource-group <RESOURCE_GROUP> \
-        --name <APP_NAME> \
-        --query "{sessionTimeout: properties.sessionTimeout, idleTimeout: properties.idleTimeout}" \
-        --output json
+  - command: "az webapp config show \\\n  --resource-group <RESOURCE_GROUP> \\\n  --name <APP_NAME> \\\n  --query \"{sessionTimeout: properties.sessionTimeout, idleTimeout: properties.idleTimeout}\" \\\n  --output json\n"
     description: Check web app session timeout configuration
     output_format: json
     frequency: weekly
 automation:
   automation_1:
     description: Azure Policy for compliance enforcement
-    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.session.timeout_missing \\\n      --code-path ./src\n\
-      \    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.session.timeout_missing\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.session.timeout_missing\
-      \ compliance\n      python validate.py --pattern iam.session.timeout_missing"
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.session.timeout_missing \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.session.timeout_missing Validation'\n  inputs:\n    script: |\n      # Validate iam.session.timeout_missing compliance\n      python validate.py --pattern iam.session.timeout_missing"
     azure_services: &id001
     - Azure Blob Storage
     - Azure Monitor
@@ -2356,21 +2141,11 @@ automation:
     - Privileged Identity Management
   automation_2:
     description: Azure Monitor for continuous monitoring
-    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.session.timeout_missing \\\n      --code-path ./src\n\
-      \    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.session.timeout_missing\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.session.timeout_missing\
-      \ compliance\n      python validate.py --pattern iam.session.timeout_missing"
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.session.timeout_missing \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.session.timeout_missing Validation'\n  inputs:\n    script: |\n      # Validate iam.session.timeout_missing compliance\n      python validate.py --pattern iam.session.timeout_missing"
     azure_services: *id001
   automation_3:
     description: Log Analytics queries for compliance validation
-    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.session.timeout_missing \\\n      --code-path ./src\n\
-      \    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.session.timeout_missing\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.session.timeout_missing\
-      \ compliance\n      python validate.py --pattern iam.session.timeout_missing"
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.session.timeout_missing \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.session.timeout_missing Validation'\n  inputs:\n    script: |\n      # Validate iam.session.timeout_missing compliance\n      python validate.py --pattern iam.session.timeout_missing"
     azure_services: *id001
 implementation:
   prerequisites:
@@ -2452,16 +2227,8 @@ ssp_mapping:
   - AC-12
   ssp_sections:
   - section: 'SC-23: Least Privilege'
-    description_template: The system implements Least Privilege controls in accordance
-      with FedRAMP 20x requirements. Configure identity and access management with
-      measures that always verify each user or device can only access the resources
-      they need.... Implementation leverages Azure native services combined with application-level
-      controls and automated monitoring to ensure continuous compliance.
-    implementation_details: Azure services including Azure Blob Storage, Azure Monitor,
-      Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code
-      (Bicep/Terraform) templates ensure consistent deployment across environments.
-      Automated compliance checking in CI/CD pipelines validates all changes against
-      Least Privilege requirements before deployment.
+    description_template: The system implements Least Privilege controls in accordance with FedRAMP 20x requirements. Configure identity and access management with measures that always verify each user or device can only access the resources they need.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Blob Storage, Azure Monitor, Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Least Privilege requirements before deployment.
     evidence_references:
     - Configuration exports
     - Compliance reports
@@ -2501,24 +2268,38 @@ compliance_frameworks:
 testing:
   positive_test_cases:
   - description: Compliant python implementation of iam.session.timeout_missing
-    code_sample: "# Python compliant code for iam.session.timeout_missing\nimport\
-      \ logging\n\ndef compliant_function():\n    \"\"\"Implements iam.session.timeout_missing\
-      \ requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return\
-      \ True"
+    code_sample: "# Python compliant code for iam.session.timeout_missing\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements iam.session.timeout_missing requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
   - description: Non-compliant python code violating iam.session.timeout_missing
-    code_sample: "# Python non-compliant code for iam.session.timeout_missing\ndef\
-      \ non_compliant_function():\n    # Missing required implementation\n    pass"
+    code_sample: "# Python non-compliant code for iam.session.timeout_missing\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
     expected_severity: HIGH
     expected_finding: true
   validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
 ---
 pattern_id: iam.identity.missing_managed_identity
 name: Missing Managed Identity
-description: 'Detects Azure resources without managed identity configured (KSI-IAM-06:
-  Service Account Security)'
+description: 'Detects Azure resources without managed identity configured (KSI-IAM-06: Service Account Security)'
 family: IAM
 severity: CRITICAL
 pattern_type: resource_configuration
@@ -2573,26 +2354,9 @@ languages:
     regex_fallback: (connectionString|password|accessKey|accountKey)\s*=\s*['"][^'"]+['"](?!.*DefaultAzureCredential|.*ManagedIdentityCredential)
 finding:
   title_template: Resource missing managed identity configuration
-  description_template: '{resource_type} does not have managed identity enabled. KSI-IAM-06
-    requires service accounts to use managed identities instead of embedded credentials.'
-  remediation_template: "Enable managed identity:\n\nBicep (System-Assigned):\nresource\
-    \ vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {\n  name: vmName\n  location:\
-    \ location\n  identity: {\n    type: 'SystemAssigned'\n  }\n  // ... other properties\n\
-    }\n\nBicep (User-Assigned):\nresource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31'\
-    \ = {\n  name: 'myIdentity'\n  location: location\n}\n\nresource vm 'Microsoft.Compute/virtualMachines@2023-03-01'\
-    \ = {\n  name: vmName\n  location: location\n  identity: {\n    type: 'UserAssigned'\n\
-    \    userAssignedIdentities: {\n      '${managedIdentity.id}': {}\n    }\n  }\n\
-    }\n\nTerraform:\nresource \"azurerm_virtual_machine\" \"example\" {\n  # ... other\
-    \ config\n  identity {\n    type = \"SystemAssigned\"\n  }\n}\n\nPython (Azure\
-    \ SDK):\nfrom azure.identity import DefaultAzureCredential, ManagedIdentityCredential\n\
-    \n# Use DefaultAzureCredential (works with managed identity)\ncredential = DefaultAzureCredential()\n\
-    \n# Or explicitly use managed identity\ncredential = ManagedIdentityCredential()\n\
-    \n# Use with Azure SDK clients\nfrom azure.storage.blob import BlobServiceClient\n\
-    blob_service = BlobServiceClient(\n    account_url=\"https://mystorageaccount.blob.core.windows.net\"\
-    ,\n    credential=credential\n)\n\nC# (Azure SDK):\nusing Azure.Identity;\nusing\
-    \ Azure.Storage.Blobs;\n\nvar credential = new DefaultAzureCredential();\nvar\
-    \ blobService = new BlobServiceClient(\n    new Uri(\"https://mystorageaccount.blob.core.windows.net\"\
-    ),\n    credential\n);\n"
+  description_template: '{resource_type} does not have managed identity enabled. KSI-IAM-06 requires service accounts to use managed identities instead of embedded credentials.'
+  remediation_template: "Enable managed identity:\n\nBicep (System-Assigned):\nresource vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {\n  name: vmName\n  location: location\n  identity: {\n    type: 'SystemAssigned'\n  }\n  // ... other properties\n}\n\nBicep (User-Assigned):\nresource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {\n  name: 'myIdentity'\n  location: location\n}\n\nresource vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {\n  name: vmName\n  location: location\n  identity: {\n    type: 'UserAssigned'\n    userAssignedIdentities: {\n      '${managedIdentity.id}': {}\n    }\n  }\n}\n\nTerraform:\nresource \"azurerm_virtual_machine\" \"example\" {\n  # ... other config\n  identity {\n    type = \"SystemAssigned\"\n  }\n}\n\nPython (Azure SDK):\nfrom azure.identity import DefaultAzureCredential, ManagedIdentityCredential\n\n# Use DefaultAzureCredential (works with managed identity)\ncredential = DefaultAzureCredential()\n\n# Or explicitly\
+    \ use managed identity\ncredential = ManagedIdentityCredential()\n\n# Use with Azure SDK clients\nfrom azure.storage.blob import BlobServiceClient\nblob_service = BlobServiceClient(\n    account_url=\"https://mystorageaccount.blob.core.windows.net\",\n    credential=credential\n)\n\nC# (Azure SDK):\nusing Azure.Identity;\nusing Azure.Storage.Blobs;\n\nvar credential = new DefaultAzureCredential();\nvar blobService = new BlobServiceClient(\n    new Uri(\"https://mystorageaccount.blob.core.windows.net\"),\n    credential\n);\n"
   evidence_collection:
   - Managed identity configuration for each resource
   - RBAC role assignments for managed identities
@@ -2618,34 +2382,31 @@ related_ksis:
 - KSI-IAM-06
 evidence_collection:
   azure_monitor_kql:
-  - query: |
-      Resources
-      | where type in~ ('microsoft.web/sites', 'microsoft.compute/virtualmachines', 'microsoft.containerservice/managedclusters')
+  - query: 'Resources
+
+      | where type in~ (''microsoft.web/sites'', ''microsoft.compute/virtualmachines'', ''microsoft.containerservice/managedclusters'')
+
       | extend identityType = tostring(identity.type)
-      | where isnull(identityType) or identityType == 'None'
+
+      | where isnull(identityType) or identityType == ''None''
+
       | project name, type, resourceGroup, location
+
       | order by name asc
+
+      '
     description: Query Azure resources without managed identity configured
     retention_days: 90
     schedule: daily
   azure_cli:
-  - command: |
-      az resource list \
-        --query "[?type=='Microsoft.Web/sites' || type=='Microsoft.Compute/virtualMachines'].{name:name, type:type, identity:identity}" \
-        | jq '[.[] | select(.identity == null or .identity.type == \"None\")]' \
-        --output json
+  - command: "az resource list \\\n  --query \"[?type=='Microsoft.Web/sites' || type=='Microsoft.Compute/virtualMachines'].{name:name, type:type, identity:identity}\" \\\n  | jq '[.[] | select(.identity == null or .identity.type == \\\"None\\\")]' \\\n  --output json\n"
     description: List resources missing managed identity
     output_format: json
     frequency: weekly
 automation:
   automation_1:
     description: Azure Policy for compliance enforcement
-    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.identity.missing_managed_identity \\\n      --code-path\
-      \ ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.identity.missing_managed_identity\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.identity.missing_managed_identity\
-      \ compliance\n      python validate.py --pattern iam.identity.missing_managed_identity"
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.identity.missing_managed_identity \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.identity.missing_managed_identity Validation'\n  inputs:\n    script: |\n      # Validate iam.identity.missing_managed_identity compliance\n      python validate.py --pattern iam.identity.missing_managed_identity"
     azure_services: &id001
     - Azure AD
     - Azure Blob Storage
@@ -2658,21 +2419,11 @@ automation:
     - Privileged Identity Management
   automation_2:
     description: Azure Monitor for continuous monitoring
-    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.identity.missing_managed_identity \\\n      --code-path\
-      \ ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.identity.missing_managed_identity\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.identity.missing_managed_identity\
-      \ compliance\n      python validate.py --pattern iam.identity.missing_managed_identity"
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.identity.missing_managed_identity \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.identity.missing_managed_identity Validation'\n  inputs:\n    script: |\n      # Validate iam.identity.missing_managed_identity compliance\n      python validate.py --pattern iam.identity.missing_managed_identity"
     azure_services: *id001
   automation_3:
     description: Log Analytics queries for compliance validation
-    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
-      - name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
-      \ \\\n      --pattern iam.identity.missing_managed_identity \\\n      --code-path\
-      \ ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.identity.missing_managed_identity\
-      \ Validation'\n  inputs:\n    script: |\n      # Validate iam.identity.missing_managed_identity\
-      \ compliance\n      python validate.py --pattern iam.identity.missing_managed_identity"
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.identity.missing_managed_identity \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.identity.missing_managed_identity Validation'\n  inputs:\n    script: |\n      # Validate iam.identity.missing_managed_identity compliance\n      python validate.py --pattern iam.identity.missing_managed_identity"
     azure_services: *id001
 implementation:
   prerequisites:
@@ -2756,16 +2507,8 @@ ssp_mapping:
   - SC-13
   ssp_sections:
   - section: 'IA-5: Suspicious Activity'
-    description_template: The system implements Suspicious Activity controls in accordance
-      with FedRAMP 20x requirements. Automatically disable or otherwise secure accounts
-      with privileged access in response to suspicious activity... Implementation
-      leverages Azure native services combined with application-level controls and
-      automated monitoring to ensure continuous compliance.
-    implementation_details: Azure services including Azure AD, Azure Blob Storage,
-      Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code
-      (Bicep/Terraform) templates ensure consistent deployment across environments.
-      Automated compliance checking in CI/CD pipelines validates all changes against
-      Suspicious Activity requirements before deployment.
+    description_template: The system implements Suspicious Activity controls in accordance with FedRAMP 20x requirements. Automatically disable or otherwise secure accounts with privileged access in response to suspicious activity... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure AD, Azure Blob Storage, Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Suspicious Activity requirements before deployment.
     evidence_references:
     - Configuration exports
     - Compliance reports
@@ -2805,16 +2548,177 @@ compliance_frameworks:
 testing:
   positive_test_cases:
   - description: Compliant bicep implementation of iam.identity.missing_managed_identity
-    code_sample: "// Bicep compliant configuration for iam.identity.missing_managed_identity\n\
-      resource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name:\
-      \ 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n\
-      }"
+    code_sample: "// Bicep compliant configuration for iam.identity.missing_managed_identity\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
     expected_severity: INFO
     expected_finding: true
   negative_test_cases:
   - description: Non-compliant bicep code violating iam.identity.missing_managed_identity
-    code_sample: '# Non-compliant code missing iam.identity.missing_managed_identity
-      requirements'
+    code_sample: '# Non-compliant code missing iam.identity.missing_managed_identity requirements'
     expected_severity: HIGH
     expected_finding: true
   validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: iam.compliance.ksi_iam_04
+name: Just-in-Time Authorization Detection
+description: Detects compliance indicators for KSI-IAM-04 - Just-in-Time Authorization
+family: IAM
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: Just-in-Time Authorization compliance check
+  description_template: Configuration may not fully implement KSI-IAM-04 - Just-in-Time Authorization
+  remediation_template: Review and implement KSI-IAM-04 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- iam
+- compliance
+- ksi-iam-04
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-IAM-04
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-IAM-04 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-IAM-04 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-IAM-04 compliance enforcement
+    implementation: "# Azure Policy for KSI-IAM-04 compliance\n# GitHub Actions\n- name: KSI-IAM-04 Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.compliance.ksi_iam_04 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'KSI-IAM-04 Validation'\n  inputs:\n    script: |\n      # Validate KSI-IAM-04 compliance\n      python validate.py --pattern iam.compliance.ksi_iam_04\n"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-IAM-04
+    implementation: '# Azure Monitor for KSI-IAM-04 continuous monitoring
+
+      # Log Analytics Query
+
+      AzureActivity
+
+      | where CategoryValue == "Policy"
+
+      | where OperationNameValue contains "KSI-IAM-04"
+
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+
+      '
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels:
+- Low
+- Moderate
+---
+pattern_id: iam.compliance.ksi_iam_07
+name: Automated Account Management Detection
+description: Detects compliance indicators for KSI-IAM-07 - Automated Account Management
+family: IAM
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: Automated Account Management compliance check
+  description_template: Configuration may not fully implement KSI-IAM-07 - Automated Account Management
+  remediation_template: Review and implement KSI-IAM-07 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- iam
+- compliance
+- ksi-iam-07
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-IAM-07
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-IAM-07 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-IAM-07 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-IAM-07 compliance enforcement
+    implementation: "# Azure Policy for KSI-IAM-07 compliance\n# GitHub Actions\n- name: KSI-IAM-07 Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.compliance.ksi_iam_07 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'KSI-IAM-07 Validation'\n  inputs:\n    script: |\n      # Validate KSI-IAM-07 compliance\n      python validate.py --pattern iam.compliance.ksi_iam_07\n"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-IAM-07
+    implementation: '# Azure Monitor for KSI-IAM-07 continuous monitoring
+
+      # Log Analytics Query
+
+      AzureActivity
+
+      | where CategoryValue == "Policy"
+
+      | where OperationNameValue contains "KSI-IAM-07"
+
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+
+      '
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels:
+- Low
+- Moderate

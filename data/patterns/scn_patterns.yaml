@@ -2520,3 +2520,1895 @@ testing:
     expected_finding: true
   validation_scripts:
   - tests/test_scn_patterns.py::test_scn_missing_dependency_scan
+---
+pattern_id: scn.frr.frr_scn_01
+name: Notifications Compliance
+description: Validates compliance with FRR-SCN-01 - Notifications
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-01 - Notifications compliance check
+  description_template: Configuration requires validation for FRR-SCN-01 compliance
+  remediation_template: Implement FRR-SCN-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-01 compliance validation
+    implementation: |
+      # FRR-SCN-01 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-01"
+        RequirementName = "Notifications"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_02
+name: Procedures and Documentation Compliance
+description: Validates compliance with FRR-SCN-02 - Procedures and Documentation
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-02 - Procedures and Documentation compliance check
+  description_template: Configuration requires validation for FRR-SCN-02 compliance
+  remediation_template: Implement FRR-SCN-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-02 compliance validation
+    implementation: |
+      # FRR-SCN-02 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-02 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-02 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-02 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-02'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-02
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-02"
+        RequirementName = "Procedures and Documentation"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-02.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_03
+name: Evaluate Changes Compliance
+description: Validates compliance with FRR-SCN-03 - Evaluate Changes
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-03 - Evaluate Changes compliance check
+  description_template: Configuration requires validation for FRR-SCN-03 compliance
+  remediation_template: Implement FRR-SCN-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-03 compliance validation
+    implementation: |
+      # FRR-SCN-03 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-03 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_03 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-03 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-03 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-03'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-03
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-03"
+        RequirementName = "Evaluate Changes"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-03.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_04
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-04 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-04 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-04 compliance
+  remediation_template: Implement FRR-SCN-04 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-04
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-04 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-04 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-04 compliance validation
+    implementation: |
+      # FRR-SCN-04 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-04 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_04 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-04 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-04 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-04'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-04
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-04"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-04.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_05
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-05 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-05 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-05 compliance
+  remediation_template: Implement FRR-SCN-05 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-05
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-05 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-05 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-05 compliance validation
+    implementation: |
+      # FRR-SCN-05 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-05 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_05 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-05 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-05 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-05'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-05
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-05"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-05.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_06
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-06 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-06 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-06 compliance
+  remediation_template: Implement FRR-SCN-06 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-06
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-06 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-06 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-06 compliance validation
+    implementation: |
+      # FRR-SCN-06 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-06 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_06 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-06 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-06 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-06'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-06
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-06"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-06.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_07
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-07 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-07 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-07 compliance
+  remediation_template: Implement FRR-SCN-07 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-07
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-07 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-07 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-07 compliance validation
+    implementation: |
+      # FRR-SCN-07 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-07 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_07 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-07 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-07 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-07'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-07
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-07"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-07.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_08
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-08 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-08 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-08 compliance
+  remediation_template: Implement FRR-SCN-08 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-08
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-08 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-08 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-08 compliance validation
+    implementation: |
+      # FRR-SCN-08 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-08 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_08 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-08 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-08 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-08'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-08
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-08"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-08.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_09
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-09 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-09 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-09 compliance
+  remediation_template: Implement FRR-SCN-09 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-09
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-09 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-09 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-09 compliance validation
+    implementation: |
+      # FRR-SCN-09 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-09 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_09 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-09 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-09 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-09'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-09
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-09"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-09.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_10
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-10 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-10 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-10 compliance
+  remediation_template: Implement FRR-SCN-10 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-10
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-10 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-10 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-10 compliance validation
+    implementation: |
+      # FRR-SCN-10 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-10 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_10 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-10 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-10 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-10'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-10
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-10"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-10.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_ad_01
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-AD-01 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-AD-01 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-AD-01 compliance
+  remediation_template: Implement FRR-SCN-AD-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-AD-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-AD-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-AD-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-AD-01 compliance validation
+    implementation: |
+      # FRR-SCN-AD-01 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-AD-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_ad_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-AD-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-AD-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-AD-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-AD-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-AD-01"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-AD-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_ex_01
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-EX-01 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-EX-01 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-EX-01 compliance
+  remediation_template: Implement FRR-SCN-EX-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-EX-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-EX-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-EX-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-EX-01 compliance validation
+    implementation: |
+      # FRR-SCN-EX-01 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-EX-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_ex_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-EX-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-EX-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-EX-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-EX-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-EX-01"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-EX-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_ex_02
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-EX-02 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-EX-02 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-EX-02 compliance
+  remediation_template: Implement FRR-SCN-EX-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-EX-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-EX-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-EX-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-EX-02 compliance validation
+    implementation: |
+      # FRR-SCN-EX-02 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-EX-02 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_ex_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-EX-02 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-EX-02 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-EX-02'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-EX-02
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-EX-02"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-EX-02.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_im_01
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-IM-01 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-IM-01 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-IM-01 compliance
+  remediation_template: Implement FRR-SCN-IM-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-IM-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-IM-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-IM-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-IM-01 compliance validation
+    implementation: |
+      # FRR-SCN-IM-01 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-IM-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_im_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-IM-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-IM-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-IM-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-IM-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-IM-01"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-IM-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_rr_01
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-RR-01 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-RR-01 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-RR-01 compliance
+  remediation_template: Implement FRR-SCN-RR-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-RR-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-RR-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-RR-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-RR-01 compliance validation
+    implementation: |
+      # FRR-SCN-RR-01 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-RR-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_rr_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-RR-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-RR-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-RR-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-RR-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-RR-01"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-RR-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_tr_01
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-TR-01 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-TR-01 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-TR-01 compliance
+  remediation_template: Implement FRR-SCN-TR-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-TR-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-TR-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-TR-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-TR-01 compliance validation
+    implementation: |
+      # FRR-SCN-TR-01 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-TR-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_tr_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-TR-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-TR-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-TR-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-TR-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-TR-01"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-TR-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_tr_02
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-TR-02 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-TR-02 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-TR-02 compliance
+  remediation_template: Implement FRR-SCN-TR-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-TR-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-TR-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-TR-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-TR-02 compliance validation
+    implementation: |
+      # FRR-SCN-TR-02 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-TR-02 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_tr_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-TR-02 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-TR-02 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-TR-02'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-TR-02
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-TR-02"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-TR-02.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_tr_03
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-TR-03 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-TR-03 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-TR-03 compliance
+  remediation_template: Implement FRR-SCN-TR-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-TR-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-TR-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-TR-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-TR-03 compliance validation
+    implementation: |
+      # FRR-SCN-TR-03 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-TR-03 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_tr_03 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-TR-03 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-TR-03 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-TR-03'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-TR-03
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-TR-03"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-TR-03.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_tr_04
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-TR-04 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-TR-04 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-TR-04 compliance
+  remediation_template: Implement FRR-SCN-TR-04 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-TR-04
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-TR-04 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-TR-04 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-TR-04 compliance validation
+    implementation: |
+      # FRR-SCN-TR-04 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-TR-04 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_tr_04 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-TR-04 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-TR-04 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-TR-04'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-TR-04
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-TR-04"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-TR-04.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_tr_05
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-TR-05 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-TR-05 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-TR-05 compliance
+  remediation_template: Implement FRR-SCN-TR-05 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-TR-05
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-TR-05 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-TR-05 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-TR-05 compliance validation
+    implementation: |
+      # FRR-SCN-TR-05 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-TR-05 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_tr_05 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-TR-05 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-TR-05 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-TR-05'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-TR-05
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-TR-05"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-TR-05.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_tr_06
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-TR-06 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-TR-06 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-TR-06 compliance
+  remediation_template: Implement FRR-SCN-TR-06 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-TR-06
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-TR-06 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-TR-06 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-TR-06 compliance validation
+    implementation: |
+      # FRR-SCN-TR-06 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-TR-06 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_tr_06 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-TR-06 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-TR-06 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-TR-06'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-TR-06
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-TR-06"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-TR-06.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_tr_07
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-TR-07 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-TR-07 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-TR-07 compliance
+  remediation_template: Implement FRR-SCN-TR-07 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-TR-07
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-TR-07 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-TR-07 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-TR-07 compliance validation
+    implementation: |
+      # FRR-SCN-TR-07 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-TR-07 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_tr_07 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-TR-07 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-TR-07 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-TR-07'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-TR-07
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-TR-07"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-TR-07.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']

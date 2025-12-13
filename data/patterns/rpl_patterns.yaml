@@ -555,3 +555,83 @@ testing:
     expected_severity: HIGH
     expected_finding: true
   validation_scripts: []
+---
+pattern_id: rpl.compliance.ksi_rpl_04
+name: Recovery Testing Detection
+description: Detects compliance indicators for KSI-RPL-04 - Recovery Testing
+family: RPL
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: Recovery Testing compliance check
+  description_template: Configuration may not fully implement KSI-RPL-04 - Recovery Testing
+  remediation_template: Review and implement KSI-RPL-04 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- rpl
+- compliance
+- ksi-rpl-04
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-RPL-04
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-RPL-04 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-RPL-04 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-RPL-04 compliance enforcement
+    implementation: |
+      # Azure Policy for KSI-RPL-04 compliance
+      # GitHub Actions
+      - name: KSI-RPL-04 Compliance Check
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rpl.compliance.ksi_rpl_04 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: PowerShell@2
+        displayName: 'KSI-RPL-04 Validation'
+        inputs:
+          script: |
+            # Validate KSI-RPL-04 compliance
+            python validate.py --pattern rpl.compliance.ksi_rpl_04
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-RPL-04
+    implementation: |
+      # Azure Monitor for KSI-RPL-04 continuous monitoring
+      # Log Analytics Query
+      AzureActivity
+      | where CategoryValue == "Policy"
+      | where OperationNameValue contains "KSI-RPL-04"
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels: ['Low', 'Moderate']
