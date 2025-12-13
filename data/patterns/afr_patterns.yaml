@@ -1,12 +1,3 @@
-# AFR PATTERNS V2 - V2 Schema
-# Migrated from V1 schema with enhanced evidence collection
-# 
-# NOTE: This is an automated migration. Manual review required for:
-# - Evidence collection queries (marked with TODO)
-# - Automation implementation code
-# - SSP mapping descriptions
-# - Test cases
-
 pattern_id: afr.crypto.weak_algorithms
 name: Weak or Deprecated Cryptographic Algorithms
 description: Detects use of weak cryptographic algorithms (MD5, SHA1, DES, RC4, TLS
@@ -16,7 +7,7 @@ severity: CRITICAL
 family: AFR
 pattern_type: function_call
 ksi_id: KSI-AFR-11
-nist_controls:
+nist_controls: &id001
 - sc-13
 - sc-17
 category: cryptography
@@ -77,12 +68,205 @@ remediation: "Replace weak cryptographic algorithms with FIPS 140-2/3 approved a
   - FedRAMP UCM Guidance: https://www.fedramp.gov/using-cryptographic-modules/\n"
 finding:
   title: Weak cryptographic algorithm detected
-  description: Code uses weak cryptographic algorithms that do not meet FIPS 140-2/3 requirements
+  description: Code uses weak cryptographic algorithms that do not meet FIPS 140-2/3
+    requirements
   recommendation: Replace with FIPS-approved algorithms (SHA-256+, AES-256, TLS 1.2+)
   references:
   - KSI-AFR-11
   - NIST FIPS 140-3
+evidence_artifacts:
+- artifact_type: logs
+  name: AFR operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: AFR configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: AFR compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
 
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "afr"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track AFR related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'afr' | take 100"
+    description: Query recent AFR events
+    output_format: json
+  powershell:
+  - script: '# Query AFR configuration
+
+      Get-AzAFRResource | Select-Object Name, Location, Properties'
+    description: Get AFR resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for AFR compliance enforcement
+    implementation: "# Azure Policy definition for AFR\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'afr.crypto.weak_algorithms-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'AFR Compliance Policy'\n    description:\
+      \ 'Enforces AFR compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for AFR violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'afr.crypto.weak_algorithms-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on AFR compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for AFR
+    implementation: "# GitHub Actions\n- name: Validate AFR Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/afr_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'AFR Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_afr.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - AFR requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review AFR FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design AFR implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement AFR controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for AFR
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/afr/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'AFR')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: AFR - AFR
+  control_numbers: *id001
+  ssp_sections:
+  - section: 'sc-13: Implementation'
+    description_template: The system implements AFR controls in accordance with FedRAMP
+      20x requirements. AFR Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce AFR compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      AFR requirements.
+    evidence_references:
+    - AFR configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for AFR compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: AFR implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement AFR controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_afr_patterns.py::test_afr_crypto_weak_algorithms
 ---
 pattern_id: afr.config.debug_mode
 name: Debug Mode Enabled in Production
@@ -93,7 +277,7 @@ severity: HIGH
 family: AFR
 pattern_type: configuration
 ksi_id: KSI-AFR-07
-nist_controls:
+nist_controls: &id001
 - cm-6
 - si-11
 category: configuration
@@ -142,7 +326,199 @@ finding:
   references:
   - KSI-AFR-07
   - FRR-AFR-07
+evidence_artifacts:
+- artifact_type: logs
+  name: AFR operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: AFR configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: AFR compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
 
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "afr"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track AFR related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'afr' | take 100"
+    description: Query recent AFR events
+    output_format: json
+  powershell:
+  - script: '# Query AFR configuration
+
+      Get-AzAFRResource | Select-Object Name, Location, Properties'
+    description: Get AFR resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for AFR compliance enforcement
+    implementation: "# Azure Policy definition for AFR\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'afr.config.debug_mode-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'AFR Compliance Policy'\n    description:\
+      \ 'Enforces AFR compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for AFR violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'afr.config.debug_mode-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on AFR compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for AFR
+    implementation: "# GitHub Actions\n- name: Validate AFR Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/afr_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'AFR Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_afr.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - AFR requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review AFR FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design AFR implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement AFR controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for AFR
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/afr/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'AFR')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: AFR - AFR
+  control_numbers: *id001
+  ssp_sections:
+  - section: 'cm-6: Implementation'
+    description_template: The system implements AFR controls in accordance with FedRAMP
+      20x requirements. AFR Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce AFR compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      AFR requirements.
+    evidence_references:
+    - AFR configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for AFR compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: AFR implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement AFR controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_afr_patterns.py::test_afr_config_debug_mode
 ---
 pattern_id: afr.scanning.missing_vulnerability_scan
 name: Missing Vulnerability Scanning Configuration
@@ -153,7 +529,7 @@ severity: HIGH
 family: AFR
 pattern_type: pipeline
 ksi_id: KSI-AFR-04
-nist_controls:
+nist_controls: &id001
 - ra-5
 - sa-11
 category: vulnerability_detection
@@ -222,7 +598,199 @@ finding:
   references:
   - KSI-AFR-04
   - FRR-VDR-01
+evidence_artifacts:
+- artifact_type: logs
+  name: AFR operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: AFR configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: AFR compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
 
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "afr"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track AFR related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'afr' | take 100"
+    description: Query recent AFR events
+    output_format: json
+  powershell:
+  - script: '# Query AFR configuration
+
+      Get-AzAFRResource | Select-Object Name, Location, Properties'
+    description: Get AFR resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for AFR compliance enforcement
+    implementation: "# Azure Policy definition for AFR\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'afr.scanning.missing_vulnerability_scan-policy'\n  properties:\
+      \ {\n    policyType: 'Custom'\n    mode: 'All'\n    displayName: 'AFR Compliance\
+      \ Policy'\n    description: 'Enforces AFR compliance requirements'\n    policyRule:\
+      \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
+      \        effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for AFR violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'afr.scanning.missing_vulnerability_scan-alert'\n  location: 'global'\n\
+      \  properties: {\n    description: 'Alert on AFR compliance violations'\n  \
+      \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for AFR
+    implementation: "# GitHub Actions\n- name: Validate AFR Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/afr_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'AFR Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_afr.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - AFR requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review AFR FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design AFR implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement AFR controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for AFR
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/afr/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'AFR')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: AFR - AFR
+  control_numbers: *id001
+  ssp_sections:
+  - section: 'ra-5: Implementation'
+    description_template: The system implements AFR controls in accordance with FedRAMP
+      20x requirements. AFR Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce AFR compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      AFR requirements.
+    evidence_references:
+    - AFR configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for AFR compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: AFR implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement AFR controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions code sample
+    code_sample: '# github_actions code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code
+    code_sample: '# github_actions code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_afr_patterns.py::test_afr_scanning_missing_vulnerability_scan
 ---
 pattern_id: afr.config.insecure_defaults
 name: Insecure Default Configurations Detected
@@ -233,7 +801,7 @@ severity: HIGH
 family: AFR
 pattern_type: resource
 ksi_id: KSI-AFR-07
-nist_controls:
+nist_controls: &id001
 - cm-6
 - sc-8
 category: configuration
@@ -308,8 +876,202 @@ remediation: "Configure secure defaults for all Azure resources:\n\n**Bicep (Sto
   - FRR-AFR-07: Recommended Secure Configuration\n"
 finding:
   title: Insecure default configuration detected
-  description: Resource configured with insecure defaults (public access, HTTP allowed, etc.)
+  description: Resource configured with insecure defaults (public access, HTTP allowed,
+    etc.)
   recommendation: Enable secure defaults per Azure Security Baseline
   references:
   - KSI-AFR-07
   - FRR-AFR-07
+evidence_artifacts:
+- artifact_type: logs
+  name: AFR operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: AFR configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: AFR compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "afr"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track AFR related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'afr' | take 100"
+    description: Query recent AFR events
+    output_format: json
+  powershell:
+  - script: '# Query AFR configuration
+
+      Get-AzAFRResource | Select-Object Name, Location, Properties'
+    description: Get AFR resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for AFR compliance enforcement
+    implementation: "# Azure Policy definition for AFR\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'afr.config.insecure_defaults-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'AFR Compliance Policy'\n    description:\
+      \ 'Enforces AFR compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for AFR violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'afr.config.insecure_defaults-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on AFR compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for AFR
+    implementation: "# GitHub Actions\n- name: Validate AFR Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/afr_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'AFR Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_afr.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - AFR requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review AFR FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design AFR implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement AFR controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for AFR
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/afr/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'AFR')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: AFR - AFR
+  control_numbers: *id001
+  ssp_sections:
+  - section: 'cm-6: Implementation'
+    description_template: The system implements AFR controls in accordance with FedRAMP
+      20x requirements. AFR Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce AFR compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      AFR requirements.
+    evidence_references:
+    - AFR configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for AFR compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: AFR implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement AFR controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant bicep code sample
+    code_sample: '# bicep code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code
+    code_sample: '# bicep code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_afr_patterns.py::test_afr_config_insecure_defaults

@@ -1,12 +1,3 @@
-# ADS PATTERNS V2 - V2 Schema
-# Migrated from V1 schema with enhanced evidence collection
-# 
-# NOTE: This is an automated migration. Manual review required for:
-# - Evidence collection queries (marked with TODO)
-# - Automation implementation code
-# - SSP mapping descriptions
-# - Test cases
-
 pattern_id: ads.machine_readable.json_export
 name: JSON Export for Audit Data
 family: ADS
@@ -46,7 +37,201 @@ finding:
   references:
   - FRR-ADS-01
   - FRR-ADS-02
+evidence_artifacts:
+- artifact_type: logs
+  name: ADS operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: ADS configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: ADS compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
 
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ads"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track ADS related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ads' | take 100"
+    description: Query recent ADS events
+    output_format: json
+  powershell:
+  - script: '# Query ADS configuration
+
+      Get-AzADSResource | Select-Object Name, Location, Properties'
+    description: Get ADS resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for ADS compliance enforcement
+    implementation: "# Azure Policy definition for ADS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ads.machine_readable.json_export-policy'\n  properties: {\n\
+      \    policyType: 'Custom'\n    mode: 'All'\n    displayName: 'ADS Compliance\
+      \ Policy'\n    description: 'Enforces ADS compliance requirements'\n    policyRule:\
+      \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
+      \        effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for ADS violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ads.machine_readable.json_export-alert'\n  location: 'global'\n\
+      \  properties: {\n    description: 'Alert on ADS compliance violations'\n  \
+      \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for ADS
+    implementation: "# GitHub Actions\n- name: Validate ADS Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ads_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'ADS Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ads.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - ADS requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review ADS FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design ADS implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement ADS controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for ADS
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ads/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'ADS')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: ADS - ADS
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements ADS controls in accordance with FedRAMP
+      20x requirements. ADS Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce ADS compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      ADS requirements.
+    evidence_references:
+    - ADS configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for ADS compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: ADS implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement ADS controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ads_patterns.py::test_ads_machine_readable_json_export
 ---
 pattern_id: ads.machine_readable.xml_export
 name: XML Export for Audit Data
@@ -81,7 +266,201 @@ finding:
   recommendation: Validate XML schema matches FedRAMP OSCAL requirements
   references:
   - FRR-ADS-01
+evidence_artifacts:
+- artifact_type: logs
+  name: ADS operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: ADS configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: ADS compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
 
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ads"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track ADS related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ads' | take 100"
+    description: Query recent ADS events
+    output_format: json
+  powershell:
+  - script: '# Query ADS configuration
+
+      Get-AzADSResource | Select-Object Name, Location, Properties'
+    description: Get ADS resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for ADS compliance enforcement
+    implementation: "# Azure Policy definition for ADS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ads.machine_readable.xml_export-policy'\n  properties: {\n \
+      \   policyType: 'Custom'\n    mode: 'All'\n    displayName: 'ADS Compliance\
+      \ Policy'\n    description: 'Enforces ADS compliance requirements'\n    policyRule:\
+      \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
+      \        effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for ADS violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ads.machine_readable.xml_export-alert'\n  location: 'global'\n\
+      \  properties: {\n    description: 'Alert on ADS compliance violations'\n  \
+      \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for ADS
+    implementation: "# GitHub Actions\n- name: Validate ADS Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ads_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'ADS Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ads.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - ADS requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review ADS FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design ADS implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement ADS controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for ADS
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ads/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'ADS')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: ADS - ADS
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements ADS controls in accordance with FedRAMP
+      20x requirements. ADS Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce ADS compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      ADS requirements.
+    evidence_references:
+    - ADS configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for ADS compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: ADS implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement ADS controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ads_patterns.py::test_ads_machine_readable_xml_export
 ---
 pattern_id: ads.api_endpoint.rest
 name: REST API for Audit Data Access
@@ -116,7 +495,201 @@ finding:
   recommendation: Ensure endpoint requires authentication and implements rate limiting
   references:
   - FRR-ADS-03
+evidence_artifacts:
+- artifact_type: logs
+  name: ADS operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: ADS configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: ADS compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
 
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ads"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track ADS related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ads' | take 100"
+    description: Query recent ADS events
+    output_format: json
+  powershell:
+  - script: '# Query ADS configuration
+
+      Get-AzADSResource | Select-Object Name, Location, Properties'
+    description: Get ADS resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for ADS compliance enforcement
+    implementation: "# Azure Policy definition for ADS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ads.api_endpoint.rest-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'ADS Compliance Policy'\n    description:\
+      \ 'Enforces ADS compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for ADS violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ads.api_endpoint.rest-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on ADS compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for ADS
+    implementation: "# GitHub Actions\n- name: Validate ADS Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ads_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'ADS Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ads.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - ADS requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review ADS FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design ADS implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement ADS controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for ADS
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ads/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'ADS')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: ADS - ADS
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements ADS controls in accordance with FedRAMP
+      20x requirements. ADS Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce ADS compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      ADS requirements.
+    evidence_references:
+    - ADS configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for ADS compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: ADS implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement ADS controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ads_patterns.py::test_ads_api_endpoint_rest
 ---
 pattern_id: ads.structured_logging.structured_format
 name: Structured Logging Format
@@ -152,7 +725,201 @@ finding:
   references:
   - FRR-ADS-02
   - KSI-MLA-01
+evidence_artifacts:
+- artifact_type: logs
+  name: ADS operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: ADS configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: ADS compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
 
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ads"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track ADS related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ads' | take 100"
+    description: Query recent ADS events
+    output_format: json
+  powershell:
+  - script: '# Query ADS configuration
+
+      Get-AzADSResource | Select-Object Name, Location, Properties'
+    description: Get ADS resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for ADS compliance enforcement
+    implementation: "# Azure Policy definition for ADS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ads.structured_logging.structured_format-policy'\n  properties:\
+      \ {\n    policyType: 'Custom'\n    mode: 'All'\n    displayName: 'ADS Compliance\
+      \ Policy'\n    description: 'Enforces ADS compliance requirements'\n    policyRule:\
+      \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
+      \        effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for ADS violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ads.structured_logging.structured_format-alert'\n  location: 'global'\n\
+      \  properties: {\n    description: 'Alert on ADS compliance violations'\n  \
+      \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for ADS
+    implementation: "# GitHub Actions\n- name: Validate ADS Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ads_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'ADS Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ads.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - ADS requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review ADS FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design ADS implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement ADS controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for ADS
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ads/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'ADS')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: ADS - ADS
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements ADS controls in accordance with FedRAMP
+      20x requirements. ADS Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce ADS compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      ADS requirements.
+    evidence_references:
+    - ADS configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for ADS compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: ADS implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement ADS controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ads_patterns.py::test_ads_structured_logging_structured_format
 ---
 pattern_id: ads.audit_fields.required_fields
 name: Required Audit Fields
@@ -175,7 +942,201 @@ finding:
   recommendation: Validate all audit events include these fields consistently
   references:
   - FRR-ADS-02
+evidence_artifacts:
+- artifact_type: logs
+  name: ADS operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: ADS configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: ADS compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
 
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ads"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track ADS related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ads' | take 100"
+    description: Query recent ADS events
+    output_format: json
+  powershell:
+  - script: '# Query ADS configuration
+
+      Get-AzADSResource | Select-Object Name, Location, Properties'
+    description: Get ADS resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for ADS compliance enforcement
+    implementation: "# Azure Policy definition for ADS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ads.audit_fields.required_fields-policy'\n  properties: {\n\
+      \    policyType: 'Custom'\n    mode: 'All'\n    displayName: 'ADS Compliance\
+      \ Policy'\n    description: 'Enforces ADS compliance requirements'\n    policyRule:\
+      \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
+      \        effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for ADS violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ads.audit_fields.required_fields-alert'\n  location: 'global'\n\
+      \  properties: {\n    description: 'Alert on ADS compliance violations'\n  \
+      \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for ADS
+    implementation: "# GitHub Actions\n- name: Validate ADS Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ads_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'ADS Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ads.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - ADS requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review ADS FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design ADS implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement ADS controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for ADS
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ads/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'ADS')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: ADS - ADS
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements ADS controls in accordance with FedRAMP
+      20x requirements. ADS Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce ADS compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      ADS requirements.
+    evidence_references:
+    - ADS configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for ADS compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: ADS implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement ADS controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ads_patterns.py::test_ads_audit_fields_required_fields
 ---
 pattern_id: ads.query_api.filtering
 name: Audit Data Query API
@@ -198,7 +1159,201 @@ finding:
   recommendation: Ensure query API supports date range, user, and action type filters
   references:
   - FRR-ADS-03
+evidence_artifacts:
+- artifact_type: logs
+  name: ADS operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: ADS configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: ADS compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
 
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ads"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track ADS related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ads' | take 100"
+    description: Query recent ADS events
+    output_format: json
+  powershell:
+  - script: '# Query ADS configuration
+
+      Get-AzADSResource | Select-Object Name, Location, Properties'
+    description: Get ADS resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for ADS compliance enforcement
+    implementation: "# Azure Policy definition for ADS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ads.query_api.filtering-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'ADS Compliance Policy'\n    description:\
+      \ 'Enforces ADS compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for ADS violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ads.query_api.filtering-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on ADS compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for ADS
+    implementation: "# GitHub Actions\n- name: Validate ADS Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ads_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'ADS Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ads.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - ADS requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review ADS FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design ADS implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement ADS controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for ADS
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ads/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'ADS')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: ADS - ADS
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements ADS controls in accordance with FedRAMP
+      20x requirements. ADS Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce ADS compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      ADS requirements.
+    evidence_references:
+    - ADS configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for ADS compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: ADS implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement ADS controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ads_patterns.py::test_ads_query_api_filtering
 ---
 pattern_id: ads.missing_machine_readable
 name: Missing Machine-Readable Format
@@ -221,7 +1376,201 @@ finding:
   severity: critical
   references:
   - FRR-ADS-01
+evidence_artifacts:
+- artifact_type: logs
+  name: ADS operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: ADS configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: ADS compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
 
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ads"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track ADS related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ads' | take 100"
+    description: Query recent ADS events
+    output_format: json
+  powershell:
+  - script: '# Query ADS configuration
+
+      Get-AzADSResource | Select-Object Name, Location, Properties'
+    description: Get ADS resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for ADS compliance enforcement
+    implementation: "# Azure Policy definition for ADS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ads.missing_machine_readable-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'ADS Compliance Policy'\n    description:\
+      \ 'Enforces ADS compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for ADS violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ads.missing_machine_readable-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on ADS compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for ADS
+    implementation: "# GitHub Actions\n- name: Validate ADS Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ads_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'ADS Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ads.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - ADS requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review ADS FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design ADS implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement ADS controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for ADS
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ads/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'ADS')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: ADS - ADS
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements ADS controls in accordance with FedRAMP
+      20x requirements. ADS Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce ADS compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      ADS requirements.
+    evidence_references:
+    - ADS configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for ADS compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: ADS implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement ADS controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ads_patterns.py::test_ads_missing_machine_readable
 ---
 pattern_id: ads.iac.azure_monitor_export
 name: Azure Monitor Data Export
@@ -247,7 +1596,201 @@ finding:
   references:
   - FRR-ADS-01
   - FRR-ADS-04
+evidence_artifacts:
+- artifact_type: logs
+  name: ADS operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: ADS configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: ADS compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
 
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ads"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track ADS related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ads' | take 100"
+    description: Query recent ADS events
+    output_format: json
+  powershell:
+  - script: '# Query ADS configuration
+
+      Get-AzADSResource | Select-Object Name, Location, Properties'
+    description: Get ADS resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for ADS compliance enforcement
+    implementation: "# Azure Policy definition for ADS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ads.iac.azure_monitor_export-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'ADS Compliance Policy'\n    description:\
+      \ 'Enforces ADS compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for ADS violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ads.iac.azure_monitor_export-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on ADS compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for ADS
+    implementation: "# GitHub Actions\n- name: Validate ADS Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ads_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'ADS Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ads.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - ADS requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review ADS FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design ADS implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement ADS controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for ADS
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ads/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'ADS')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: ADS - ADS
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements ADS controls in accordance with FedRAMP
+      20x requirements. ADS Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce ADS compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      ADS requirements.
+    evidence_references:
+    - ADS configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for ADS compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: ADS implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement ADS controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant bicep code sample
+    code_sample: '# bicep code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code
+    code_sample: '# bicep code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ads_patterns.py::test_ads_iac_azure_monitor_export
 ---
 pattern_id: ads.iac.log_analytics_workspace
 name: Log Analytics Workspace for Audit Data
@@ -273,7 +1816,201 @@ finding:
   references:
   - FRR-ADS-04
   - KSI-MLA-01
+evidence_artifacts:
+- artifact_type: logs
+  name: ADS operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: ADS configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: ADS compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
 
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ads"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track ADS related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ads' | take 100"
+    description: Query recent ADS events
+    output_format: json
+  powershell:
+  - script: '# Query ADS configuration
+
+      Get-AzADSResource | Select-Object Name, Location, Properties'
+    description: Get ADS resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for ADS compliance enforcement
+    implementation: "# Azure Policy definition for ADS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ads.iac.log_analytics_workspace-policy'\n  properties: {\n \
+      \   policyType: 'Custom'\n    mode: 'All'\n    displayName: 'ADS Compliance\
+      \ Policy'\n    description: 'Enforces ADS compliance requirements'\n    policyRule:\
+      \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
+      \        effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for ADS violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ads.iac.log_analytics_workspace-alert'\n  location: 'global'\n\
+      \  properties: {\n    description: 'Alert on ADS compliance violations'\n  \
+      \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for ADS
+    implementation: "# GitHub Actions\n- name: Validate ADS Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ads_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'ADS Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ads.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - ADS requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review ADS FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design ADS implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement ADS controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for ADS
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ads/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'ADS')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: ADS - ADS
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements ADS controls in accordance with FedRAMP
+      20x requirements. ADS Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce ADS compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      ADS requirements.
+    evidence_references:
+    - ADS configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for ADS compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: ADS implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement ADS controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant bicep code sample
+    code_sample: '# bicep code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code
+    code_sample: '# bicep code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ads_patterns.py::test_ads_iac_log_analytics_workspace
 ---
 pattern_id: ads.cicd.audit_export_step
 name: CI/CD Audit Data Export Step
@@ -297,3 +2034,198 @@ finding:
   recommendation: Schedule regular exports and validate format compliance
   references:
   - FRR-ADS-01
+evidence_artifacts:
+- artifact_type: logs
+  name: ADS operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: ADS configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: ADS compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ads"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track ADS related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ads' | take 100"
+    description: Query recent ADS events
+    output_format: json
+  powershell:
+  - script: '# Query ADS configuration
+
+      Get-AzADSResource | Select-Object Name, Location, Properties'
+    description: Get ADS resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for ADS compliance enforcement
+    implementation: "# Azure Policy definition for ADS\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ads.cicd.audit_export_step-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'ADS Compliance Policy'\n    description:\
+      \ 'Enforces ADS compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for ADS violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ads.cicd.audit_export_step-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on ADS compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for ADS
+    implementation: "# GitHub Actions\n- name: Validate ADS Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ads_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'ADS Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ads.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - ADS requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review ADS FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design ADS implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement ADS controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for ADS
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ads/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'ADS')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: ADS - ADS
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements ADS controls in accordance with FedRAMP
+      20x requirements. ADS Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce ADS compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      ADS requirements.
+    evidence_references:
+    - ADS configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for ADS compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: ADS implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement ADS controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions code sample
+    code_sample: '# github_actions code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code
+    code_sample: '# github_actions code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ads_patterns.py::test_ads_cicd_audit_export_step

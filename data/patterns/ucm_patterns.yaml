@@ -1,12 +1,3 @@
-# UCM PATTERNS V2 - V2 Schema
-# Migrated from V1 schema with enhanced evidence collection
-# 
-# NOTE: This is an automated migration. Manual review required for:
-# - Evidence collection queries (marked with TODO)
-# - Automation implementation code
-# - SSP mapping descriptions
-# - Test cases
-
 pattern_id: ucm.rbac.role_definition
 name: Role-Based Access Control Definition
 family: UCM
@@ -33,7 +24,201 @@ finding:
   references:
   - FRR-UCM-01
   - KSI-IAM-05
+evidence_artifacts:
+- artifact_type: logs
+  name: UCM operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: UCM configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: UCM compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
 
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ucm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track UCM related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ucm' | take 100"
+    description: Query recent UCM events
+    output_format: json
+  powershell:
+  - script: '# Query UCM configuration
+
+      Get-AzUCMResource | Select-Object Name, Location, Properties'
+    description: Get UCM resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for UCM compliance enforcement
+    implementation: "# Azure Policy definition for UCM\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ucm.rbac.role_definition-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'UCM Compliance Policy'\n    description:\
+      \ 'Enforces UCM compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for UCM violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ucm.rbac.role_definition-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on UCM compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for UCM
+    implementation: "# GitHub Actions\n- name: Validate UCM Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ucm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'UCM Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ucm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - UCM requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review UCM FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design UCM implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement UCM controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for UCM
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ucm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'UCM')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: UCM - UCM
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements UCM controls in accordance with FedRAMP
+      20x requirements. UCM Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce UCM compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      UCM requirements.
+    evidence_references:
+    - UCM configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for UCM compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: UCM implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement UCM controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ucm_patterns.py::test_ucm_rbac_role_definition
 ---
 pattern_id: ucm.authorization.decorator
 name: Authorization Decorator/Attribute
@@ -71,7 +256,201 @@ finding:
   references:
   - FRR-UCM-01
   - FRR-UCM-02
+evidence_artifacts:
+- artifact_type: logs
+  name: UCM operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: UCM configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: UCM compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
 
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ucm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track UCM related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ucm' | take 100"
+    description: Query recent UCM events
+    output_format: json
+  powershell:
+  - script: '# Query UCM configuration
+
+      Get-AzUCMResource | Select-Object Name, Location, Properties'
+    description: Get UCM resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for UCM compliance enforcement
+    implementation: "# Azure Policy definition for UCM\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ucm.authorization.decorator-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'UCM Compliance Policy'\n    description:\
+      \ 'Enforces UCM compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for UCM violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ucm.authorization.decorator-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on UCM compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for UCM
+    implementation: "# GitHub Actions\n- name: Validate UCM Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ucm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'UCM Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ucm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - UCM requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review UCM FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design UCM implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement UCM controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for UCM
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ucm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'UCM')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: UCM - UCM
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements UCM controls in accordance with FedRAMP
+      20x requirements. UCM Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce UCM compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      UCM requirements.
+    evidence_references:
+    - UCM configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for UCM compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: UCM implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement UCM controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ucm_patterns.py::test_ucm_authorization_decorator
 ---
 pattern_id: ucm.capability_check.explicit
 name: Explicit Capability Check
@@ -104,7 +483,201 @@ finding:
   recommendation: Ensure checks are applied consistently across all sensitive operations
   references:
   - FRR-UCM-02
+evidence_artifacts:
+- artifact_type: logs
+  name: UCM operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: UCM configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: UCM compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
 
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ucm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track UCM related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ucm' | take 100"
+    description: Query recent UCM events
+    output_format: json
+  powershell:
+  - script: '# Query UCM configuration
+
+      Get-AzUCMResource | Select-Object Name, Location, Properties'
+    description: Get UCM resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for UCM compliance enforcement
+    implementation: "# Azure Policy definition for UCM\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ucm.capability_check.explicit-policy'\n  properties: {\n   \
+      \ policyType: 'Custom'\n    mode: 'All'\n    displayName: 'UCM Compliance Policy'\n\
+      \    description: 'Enforces UCM compliance requirements'\n    policyRule: {\n\
+      \      if: {\n        // Add specific conditions\n      }\n      then: {\n \
+      \       effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for UCM violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ucm.capability_check.explicit-alert'\n  location: 'global'\n \
+      \ properties: {\n    description: 'Alert on UCM compliance violations'\n   \
+      \ severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for UCM
+    implementation: "# GitHub Actions\n- name: Validate UCM Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ucm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'UCM Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ucm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - UCM requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review UCM FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design UCM implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement UCM controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for UCM
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ucm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'UCM')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: UCM - UCM
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements UCM controls in accordance with FedRAMP
+      20x requirements. UCM Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce UCM compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      UCM requirements.
+    evidence_references:
+    - UCM configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for UCM compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: UCM implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement UCM controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ucm_patterns.py::test_ucm_capability_check_explicit
 ---
 pattern_id: ucm.least_privilege.default_deny
 name: Default Deny Access Control
@@ -133,7 +706,201 @@ finding:
   references:
   - FRR-UCM-01
   - KSI-IAM-05
+evidence_artifacts:
+- artifact_type: logs
+  name: UCM operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: UCM configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: UCM compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
 
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ucm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track UCM related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ucm' | take 100"
+    description: Query recent UCM events
+    output_format: json
+  powershell:
+  - script: '# Query UCM configuration
+
+      Get-AzUCMResource | Select-Object Name, Location, Properties'
+    description: Get UCM resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for UCM compliance enforcement
+    implementation: "# Azure Policy definition for UCM\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ucm.least_privilege.default_deny-policy'\n  properties: {\n\
+      \    policyType: 'Custom'\n    mode: 'All'\n    displayName: 'UCM Compliance\
+      \ Policy'\n    description: 'Enforces UCM compliance requirements'\n    policyRule:\
+      \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
+      \        effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for UCM violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ucm.least_privilege.default_deny-alert'\n  location: 'global'\n\
+      \  properties: {\n    description: 'Alert on UCM compliance violations'\n  \
+      \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for UCM
+    implementation: "# GitHub Actions\n- name: Validate UCM Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ucm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'UCM Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ucm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - UCM requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review UCM FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design UCM implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement UCM controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for UCM
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ucm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'UCM')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: UCM - UCM
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements UCM controls in accordance with FedRAMP
+      20x requirements. UCM Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce UCM compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      UCM requirements.
+    evidence_references:
+    - UCM configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for UCM compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: UCM implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement UCM controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ucm_patterns.py::test_ucm_least_privilege_default_deny
 ---
 pattern_id: ucm.session.timeout
 name: Session Timeout Configuration
@@ -156,7 +923,201 @@ finding:
   recommendation: Ensure timeout complies with FedRAMP requirements (15 min for moderate)
   references:
   - FRR-UCM-03
+evidence_artifacts:
+- artifact_type: logs
+  name: UCM operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: UCM configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: UCM compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
 
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ucm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track UCM related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ucm' | take 100"
+    description: Query recent UCM events
+    output_format: json
+  powershell:
+  - script: '# Query UCM configuration
+
+      Get-AzUCMResource | Select-Object Name, Location, Properties'
+    description: Get UCM resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for UCM compliance enforcement
+    implementation: "# Azure Policy definition for UCM\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ucm.session.timeout-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'UCM Compliance Policy'\n    description:\
+      \ 'Enforces UCM compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for UCM violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ucm.session.timeout-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on UCM compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for UCM
+    implementation: "# GitHub Actions\n- name: Validate UCM Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ucm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'UCM Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ucm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - UCM requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review UCM FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design UCM implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement UCM controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for UCM
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ucm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'UCM')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: UCM - UCM
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements UCM controls in accordance with FedRAMP
+      20x requirements. UCM Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce UCM compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      UCM requirements.
+    evidence_references:
+    - UCM configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for UCM compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: UCM implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement UCM controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ucm_patterns.py::test_ucm_session_timeout
 ---
 pattern_id: ucm.audit.access_log
 name: Access Logging for Capabilities
@@ -180,7 +1141,201 @@ finding:
   references:
   - FRR-UCM-04
   - FRR-ADS-02
+evidence_artifacts:
+- artifact_type: logs
+  name: UCM operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: UCM configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: UCM compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
 
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ucm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track UCM related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ucm' | take 100"
+    description: Query recent UCM events
+    output_format: json
+  powershell:
+  - script: '# Query UCM configuration
+
+      Get-AzUCMResource | Select-Object Name, Location, Properties'
+    description: Get UCM resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for UCM compliance enforcement
+    implementation: "# Azure Policy definition for UCM\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ucm.audit.access_log-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'UCM Compliance Policy'\n    description:\
+      \ 'Enforces UCM compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for UCM violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ucm.audit.access_log-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on UCM compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for UCM
+    implementation: "# GitHub Actions\n- name: Validate UCM Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ucm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'UCM Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ucm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - UCM requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review UCM FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design UCM implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement UCM controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for UCM
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ucm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'UCM')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: UCM - UCM
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements UCM controls in accordance with FedRAMP
+      20x requirements. UCM Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce UCM compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      UCM requirements.
+    evidence_references:
+    - UCM configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for UCM compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: UCM implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement UCM controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ucm_patterns.py::test_ucm_audit_access_log
 ---
 pattern_id: ucm.missing_authorization
 name: Missing Authorization Check
@@ -207,7 +1362,201 @@ finding:
   references:
   - FRR-UCM-01
   - FRR-UCM-02
+evidence_artifacts:
+- artifact_type: logs
+  name: UCM operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: UCM configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: UCM compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
 
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ucm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track UCM related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ucm' | take 100"
+    description: Query recent UCM events
+    output_format: json
+  powershell:
+  - script: '# Query UCM configuration
+
+      Get-AzUCMResource | Select-Object Name, Location, Properties'
+    description: Get UCM resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for UCM compliance enforcement
+    implementation: "# Azure Policy definition for UCM\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ucm.missing_authorization-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'UCM Compliance Policy'\n    description:\
+      \ 'Enforces UCM compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for UCM violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ucm.missing_authorization-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on UCM compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for UCM
+    implementation: "# GitHub Actions\n- name: Validate UCM Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ucm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'UCM Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ucm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - UCM requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review UCM FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design UCM implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement UCM controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for UCM
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ucm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'UCM')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: UCM - UCM
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements UCM controls in accordance with FedRAMP
+      20x requirements. UCM Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce UCM compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      UCM requirements.
+    evidence_references:
+    - UCM configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for UCM compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: UCM implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement UCM controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ucm_patterns.py::test_ucm_missing_authorization
 ---
 pattern_id: ucm.iac.managed_identity
 name: Azure Managed Identity for Capability Management
@@ -233,7 +1582,201 @@ finding:
   references:
   - FRR-UCM-01
   - KSI-IAM-05
+evidence_artifacts:
+- artifact_type: logs
+  name: UCM operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: UCM configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: UCM compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
 
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ucm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track UCM related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ucm' | take 100"
+    description: Query recent UCM events
+    output_format: json
+  powershell:
+  - script: '# Query UCM configuration
+
+      Get-AzUCMResource | Select-Object Name, Location, Properties'
+    description: Get UCM resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for UCM compliance enforcement
+    implementation: "# Azure Policy definition for UCM\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ucm.iac.managed_identity-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'UCM Compliance Policy'\n    description:\
+      \ 'Enforces UCM compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for UCM violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ucm.iac.managed_identity-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on UCM compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for UCM
+    implementation: "# GitHub Actions\n- name: Validate UCM Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ucm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'UCM Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ucm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - UCM requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review UCM FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design UCM implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement UCM controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for UCM
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ucm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'UCM')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: UCM - UCM
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements UCM controls in accordance with FedRAMP
+      20x requirements. UCM Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce UCM compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      UCM requirements.
+    evidence_references:
+    - UCM configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for UCM compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: UCM implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement UCM controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant bicep code sample
+    code_sample: '# bicep code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code
+    code_sample: '# bicep code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ucm_patterns.py::test_ucm_iac_managed_identity
 ---
 pattern_id: ucm.iac.rbac_assignment
 name: Azure RBAC Role Assignment
@@ -258,7 +1801,201 @@ finding:
   recommendation: Verify role assignments follow least privilege principle
   references:
   - FRR-UCM-01
+evidence_artifacts:
+- artifact_type: logs
+  name: UCM operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: UCM configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: UCM compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
 
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ucm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track UCM related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ucm' | take 100"
+    description: Query recent UCM events
+    output_format: json
+  powershell:
+  - script: '# Query UCM configuration
+
+      Get-AzUCMResource | Select-Object Name, Location, Properties'
+    description: Get UCM resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for UCM compliance enforcement
+    implementation: "# Azure Policy definition for UCM\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ucm.iac.rbac_assignment-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'UCM Compliance Policy'\n    description:\
+      \ 'Enforces UCM compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for UCM violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ucm.iac.rbac_assignment-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on UCM compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for UCM
+    implementation: "# GitHub Actions\n- name: Validate UCM Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ucm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'UCM Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ucm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - UCM requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review UCM FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design UCM implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement UCM controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for UCM
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ucm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'UCM')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: UCM - UCM
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements UCM controls in accordance with FedRAMP
+      20x requirements. UCM Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce UCM compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      UCM requirements.
+    evidence_references:
+    - UCM configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for UCM compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: UCM implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement UCM controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant bicep code sample
+    code_sample: '# bicep code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code
+    code_sample: '# bicep code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ucm_patterns.py::test_ucm_iac_rbac_assignment
 ---
 pattern_id: ucm.iac.key_vault_access_policy
 name: Key Vault Access Policy
@@ -278,7 +2015,201 @@ finding:
   references:
   - FRR-UCM-01
   - KSI-SVC-01
+evidence_artifacts:
+- artifact_type: logs
+  name: UCM operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: UCM configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: UCM compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
 
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ucm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track UCM related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ucm' | take 100"
+    description: Query recent UCM events
+    output_format: json
+  powershell:
+  - script: '# Query UCM configuration
+
+      Get-AzUCMResource | Select-Object Name, Location, Properties'
+    description: Get UCM resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for UCM compliance enforcement
+    implementation: "# Azure Policy definition for UCM\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ucm.iac.key_vault_access_policy-policy'\n  properties: {\n \
+      \   policyType: 'Custom'\n    mode: 'All'\n    displayName: 'UCM Compliance\
+      \ Policy'\n    description: 'Enforces UCM compliance requirements'\n    policyRule:\
+      \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
+      \        effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for UCM violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ucm.iac.key_vault_access_policy-alert'\n  location: 'global'\n\
+      \  properties: {\n    description: 'Alert on UCM compliance violations'\n  \
+      \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for UCM
+    implementation: "# GitHub Actions\n- name: Validate UCM Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ucm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'UCM Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ucm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - UCM requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review UCM FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design UCM implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement UCM controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for UCM
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ucm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'UCM')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: UCM - UCM
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements UCM controls in accordance with FedRAMP
+      20x requirements. UCM Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce UCM compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      UCM requirements.
+    evidence_references:
+    - UCM configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for UCM compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: UCM implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement UCM controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant bicep code sample
+    code_sample: '# bicep code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code
+    code_sample: '# bicep code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ucm_patterns.py::test_ucm_iac_key_vault_access_policy
 ---
 pattern_id: ucm.cicd.rbac_validation
 name: CI/CD RBAC Validation Step
@@ -299,3 +2230,198 @@ finding:
   recommendation: Include automated tests for least privilege compliance
   references:
   - FRR-UCM-01
+evidence_artifacts:
+- artifact_type: logs
+  name: UCM operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: UCM configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: UCM compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ucm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track UCM related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ucm' | take 100"
+    description: Query recent UCM events
+    output_format: json
+  powershell:
+  - script: '# Query UCM configuration
+
+      Get-AzUCMResource | Select-Object Name, Location, Properties'
+    description: Get UCM resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for UCM compliance enforcement
+    implementation: "# Azure Policy definition for UCM\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ucm.cicd.rbac_validation-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'UCM Compliance Policy'\n    description:\
+      \ 'Enforces UCM compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for UCM violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ucm.cicd.rbac_validation-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on UCM compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for UCM
+    implementation: "# GitHub Actions\n- name: Validate UCM Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ucm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'UCM Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ucm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - UCM requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review UCM FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design UCM implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement UCM controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for UCM
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ucm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'UCM')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: UCM - UCM
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements UCM controls in accordance with FedRAMP
+      20x requirements. UCM Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce UCM compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      UCM requirements.
+    evidence_references:
+    - UCM configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for UCM compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: UCM implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement UCM controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions code sample
+    code_sample: '# github_actions code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code
+    code_sample: '# github_actions code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ucm_patterns.py::test_ucm_cicd_rbac_validation

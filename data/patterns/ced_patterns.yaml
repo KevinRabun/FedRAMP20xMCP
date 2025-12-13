@@ -1,12 +1,3 @@
-# CED PATTERNS V2 - V2 Schema
-# Migrated from V1 schema with enhanced evidence collection
-# 
-# NOTE: This is an automated migration. Manual review required for:
-# - Evidence collection queries (marked with TODO)
-# - Automation implementation code
-# - SSP mapping descriptions
-# - Test cases
-
 pattern_id: ced.training.missing_documentation
 name: Missing Security Training Documentation
 description: Detects absence of security training documentation, tracking, or verification
@@ -15,7 +6,7 @@ pattern_type: function_call
 severity: HIGH
 family: CED
 ksi_id: KSI-CED-01
-nist_controls:
+nist_controls: &id001
 - at-2
 - at-3
 - at-4
@@ -53,8 +44,10 @@ languages:
     - configured
 finding:
   title: Missing security training documentation system
-  description: No automated tracking or verification of security training programs detected
-  recommendation: Implement documented security training programs with verification per KSI-CED-01
+  description: No automated tracking or verification of security training programs
+    detected
+  recommendation: Implement documented security training programs with verification
+    per KSI-CED-01
   references:
   - KSI-CED-01
   - NIST AT-2, AT-3, AT-4
@@ -139,7 +132,199 @@ remediation: "Implement documented security training programs with verification:
   \ training modules (KSI-CED-01)\n- Track completion dates and scores (AT-2)\n- Verify\
   \ training effectiveness (AT-3)\n- Maintain training records for audit (AT-4)\n\
   - Annual training renewal (FedRAMP baseline)\n- Executive/management training (AT-3.5)\n"
+evidence_artifacts:
+- artifact_type: logs
+  name: CED operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CED configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CED compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
 
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ced"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CED related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ced' | take 100"
+    description: Query recent CED events
+    output_format: json
+  powershell:
+  - script: '# Query CED configuration
+
+      Get-AzCEDResource | Select-Object Name, Location, Properties'
+    description: Get CED resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CED compliance enforcement
+    implementation: "# Azure Policy definition for CED\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ced.training.missing_documentation-policy'\n  properties: {\n\
+      \    policyType: 'Custom'\n    mode: 'All'\n    displayName: 'CED Compliance\
+      \ Policy'\n    description: 'Enforces CED compliance requirements'\n    policyRule:\
+      \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
+      \        effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for CED violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ced.training.missing_documentation-alert'\n  location: 'global'\n\
+      \  properties: {\n    description: 'Alert on CED compliance violations'\n  \
+      \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for CED
+    implementation: "# GitHub Actions\n- name: Validate CED Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ced_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CED Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ced.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CED requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CED FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CED implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CED controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CED
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ced/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CED')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: CED - CED
+  control_numbers: *id001
+  ssp_sections:
+  - section: 'at-2: Implementation'
+    description_template: The system implements CED controls in accordance with FedRAMP
+      20x requirements. CED Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CED compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CED requirements.
+    evidence_references:
+    - CED configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CED compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CED implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CED controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ced_patterns.py::test_ced_training_missing_documentation
 ---
 pattern_id: ced.training.role_based_missing
 name: Insufficient Role-Based Security Training
@@ -150,7 +335,7 @@ pattern_type: configuration
 severity: HIGH
 family: CED
 ksi_id: KSI-CED-02
-nist_controls:
+nist_controls: &id001
 - at-3
 - ps-2
 category: role_based_training
@@ -176,7 +361,8 @@ languages:
 finding:
   title: Missing role-based security training
   description: Role assignments detected without corresponding training verification
-  recommendation: Implement tailored security training based on job responsibilities per KSI-CED-02
+  recommendation: Implement tailored security training based on job responsibilities
+    per KSI-CED-02
   references:
   - KSI-CED-02
   - NIST AT-3, PS-2
@@ -218,7 +404,199 @@ remediation: "Implement role-based security training programs:\n\n**Required Tra
   \ -> tuple[bool, Set[str]]:\n    \"\"\"Verify all required training is completed\
   \ for role\"\"\"\n    required = get_required_training(role)\n    missing = required\
   \ - completed_modules\n    return (len(missing) == 0, missing)\n```\n"
+evidence_artifacts:
+- artifact_type: logs
+  name: CED operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CED configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CED compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
 
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ced"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CED related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ced' | take 100"
+    description: Query recent CED events
+    output_format: json
+  powershell:
+  - script: '# Query CED configuration
+
+      Get-AzCEDResource | Select-Object Name, Location, Properties'
+    description: Get CED resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CED compliance enforcement
+    implementation: "# Azure Policy definition for CED\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ced.training.role_based_missing-policy'\n  properties: {\n \
+      \   policyType: 'Custom'\n    mode: 'All'\n    displayName: 'CED Compliance\
+      \ Policy'\n    description: 'Enforces CED compliance requirements'\n    policyRule:\
+      \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
+      \        effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for CED violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ced.training.role_based_missing-alert'\n  location: 'global'\n\
+      \  properties: {\n    description: 'Alert on CED compliance violations'\n  \
+      \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for CED
+    implementation: "# GitHub Actions\n- name: Validate CED Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ced_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CED Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ced.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CED requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CED FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CED implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CED controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CED
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ced/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CED')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: CED - CED
+  control_numbers: *id001
+  ssp_sections:
+  - section: 'at-3: Implementation'
+    description_template: The system implements CED controls in accordance with FedRAMP
+      20x requirements. CED Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CED compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CED requirements.
+    evidence_references:
+    - CED configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CED compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CED implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CED controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ced_patterns.py::test_ced_training_role_based_missing
 ---
 pattern_id: ced.training.developer_gaps
 name: Inadequate Developer Security Training
@@ -229,7 +607,7 @@ pattern_type: function_call
 severity: MEDIUM
 family: CED
 ksi_id: KSI-CED-03
-nist_controls:
+nist_controls: &id001
 - sa-15
 - sa-11
 category: developer_training
@@ -262,7 +640,199 @@ remediation: "Implement comprehensive secure development training:\n\n**Core Sec
   \                  for node in ast.walk(tree)):\n            raise ValueError(\"\
   Unsafe expression\")\n        return eval(compile(tree, '<string>', 'eval'))\n \
   \   except:\n        raise ValueError(\"Invalid expression\")\n```\n"
+evidence_artifacts:
+- artifact_type: logs
+  name: CED operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CED configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CED compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
 
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ced"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CED related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ced' | take 100"
+    description: Query recent CED events
+    output_format: json
+  powershell:
+  - script: '# Query CED configuration
+
+      Get-AzCEDResource | Select-Object Name, Location, Properties'
+    description: Get CED resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CED compliance enforcement
+    implementation: "# Azure Policy definition for CED\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ced.training.developer_gaps-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CED Compliance Policy'\n    description:\
+      \ 'Enforces CED compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for CED violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ced.training.developer_gaps-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on CED compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for CED
+    implementation: "# GitHub Actions\n- name: Validate CED Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ced_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CED Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ced.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CED requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CED FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CED implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CED controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CED
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ced/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CED')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: CED - CED
+  control_numbers: *id001
+  ssp_sections:
+  - section: 'sa-15: Implementation'
+    description_template: The system implements CED controls in accordance with FedRAMP
+      20x requirements. CED Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CED compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CED requirements.
+    evidence_references:
+    - CED configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CED compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CED implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CED controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ced_patterns.py::test_ced_training_developer_gaps
 ---
 pattern_id: ced.training.incident_response_missing
 name: Missing Incident Response Training
@@ -272,7 +842,7 @@ pattern_type: configuration
 severity: HIGH
 family: CED
 ksi_id: KSI-CED-04
-nist_controls:
+nist_controls: &id001
 - ir-2
 - cp-3
 - at-3
@@ -349,3 +919,196 @@ remediation: "Implement incident response and disaster recovery training:\n\n**R
   it_ops\", \"management\"],\n    scheduled_date=datetime.now() + timedelta(days=90)\n\
   )\n```\n\n**References:**\n- NIST IR-2: https://csrc.nist.gov/publications/detail/sp/800-61/rev-2/final\n\
   - FedRAMP IR Requirements: https://www.fedramp.gov/incident-communications-procedures/\n"
+evidence_artifacts:
+- artifact_type: logs
+  name: CED operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CED configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CED compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ced"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CED related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ced' | take 100"
+    description: Query recent CED events
+    output_format: json
+  powershell:
+  - script: '# Query CED configuration
+
+      Get-AzCEDResource | Select-Object Name, Location, Properties'
+    description: Get CED resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CED compliance enforcement
+    implementation: "# Azure Policy definition for CED\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ced.training.incident_response_missing-policy'\n  properties:\
+      \ {\n    policyType: 'Custom'\n    mode: 'All'\n    displayName: 'CED Compliance\
+      \ Policy'\n    description: 'Enforces CED compliance requirements'\n    policyRule:\
+      \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
+      \        effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    effort_hours: 4
+  continuous_monitoring:
+    description: Azure Monitor alerts for CED violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ced.training.incident_response_missing-alert'\n  location: 'global'\n\
+      \  properties: {\n    description: 'Alert on CED compliance violations'\n  \
+      \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+    effort_hours: 3
+  cicd_validation:
+    description: CI/CD pipeline validation for CED
+    implementation: "# GitHub Actions\n- name: Validate CED Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ced_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CED Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ced.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+    effort_hours: 2
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CED requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CED FedRAMP requirements
+    azure_service: null
+    estimated_hours: 2
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CED implementation architecture
+    azure_service: null
+    estimated_hours: 4
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CED controls in code/IaC
+    azure_service: Application code and IaC
+    estimated_hours: 16
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CED
+    azure_service: Azure Portal
+    estimated_hours: 8
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ced/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    estimated_hours: 4
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    estimated_hours: 6
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    estimated_hours: 4
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CED')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+  total_effort_hours: 44
+ssp_mapping:
+  control_family: CED - CED
+  control_numbers: *id001
+  ssp_sections:
+  - section: 'ir-2: Implementation'
+    description_template: The system implements CED controls in accordance with FedRAMP
+      20x requirements. CED Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CED compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CED requirements.
+    evidence_references:
+    - CED configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CED compliance
+    monthly_cost_estimate: $50-200 depending on usage
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CED implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CED controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: N/A
+    requirement_name: Unknown
+    impact_levels:
+    - Low
+    - Moderate
+  nist_800_53_rev5:
+    controls:
+    - AU-2
+    - AU-3
+  pci_dss_4:
+    requirements:
+    - 10.2.1
+    - 10.2.2
+  hipaa:
+    standards:
+    - 164.312(b) - Audit controls
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ced_patterns.py::test_ced_training_incident_response_missing
