@@ -262,8 +262,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: KSI-TPR-03
+    requirement_name: Supply Chain Risk Management
     impact_levels:
     - Low
     - Moderate
@@ -549,8 +549,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: KSI-TPR-04
+    requirement_name: Supply Chain Risk Monitoring
     impact_levels:
     - Low
     - Moderate
@@ -769,8 +769,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: KSI-TPR-03
+    requirement_name: Supply Chain Risk Management
     impact_levels:
     - Low
     - Moderate
@@ -1005,8 +1005,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: KSI-TPR-03
+    requirement_name: Supply Chain Risk Management
     impact_levels:
     - Low
     - Moderate

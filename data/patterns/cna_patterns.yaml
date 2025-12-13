@@ -177,8 +177,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: KSI-CNA-01
+    requirement_name: Restrict Network Traffic
     impact_levels:
     - Low
     - Moderate
@@ -373,8 +373,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: KSI-CNA-01
+    requirement_name: Restrict Network Traffic
     impact_levels:
     - Low
     - Moderate
@@ -571,8 +571,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: KSI-CNA-02
+    requirement_name: Minimize the Attack Surface
     impact_levels:
     - Low
     - Moderate
@@ -765,8 +765,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: KSI-CNA-04
+    requirement_name: Immutable Infrastructure
     impact_levels:
     - Low
     - Moderate
@@ -962,8 +962,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: KSI-CNA-07
+    requirement_name: Best Practices
     impact_levels:
     - Low
     - Moderate
@@ -1159,8 +1159,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: KSI-CNA-04
+    requirement_name: Immutable Infrastructure
     impact_levels:
     - Low
     - Moderate
@@ -1372,10 +1372,9 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: KSI-CNA-08
+    requirement_name: Persistent Assessment and Automated Enforcement
     impact_levels:
-    - Low
     - Moderate
 testing:
   positive_test_cases:
@@ -1569,8 +1568,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: KSI-CNA-01
+    requirement_name: Restrict Network Traffic
     impact_levels:
     - Low
     - Moderate
@@ -1758,8 +1757,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: KSI-CNA-01
+    requirement_name: Restrict Network Traffic
     impact_levels:
     - Low
     - Moderate
@@ -1951,8 +1950,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: KSI-CNA-04
+    requirement_name: Immutable Infrastructure
     impact_levels:
     - Low
     - Moderate
@@ -2143,8 +2142,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: KSI-CNA-07
+    requirement_name: Best Practices
     impact_levels:
     - Low
     - Moderate

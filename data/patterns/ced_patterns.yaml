@@ -280,8 +280,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: KSI-CED-01
+    requirement_name: General Education
     impact_levels:
     - Low
     - Moderate
@@ -529,8 +529,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: KSI-CED-02
+    requirement_name: Role-Specific Education
     impact_levels:
     - Low
     - Moderate
@@ -742,8 +742,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: KSI-CED-03
+    requirement_name: Development and Engineering Education
     impact_levels:
     - Low
     - Moderate
@@ -998,8 +998,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: N/A
-    requirement_name: Unknown
+    requirement_id: KSI-CED-04
+    requirement_name: Incident Response and Disaster Recovery Education
     impact_levels:
     - Low
     - Moderate
