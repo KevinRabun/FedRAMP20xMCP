@@ -1,0 +1,1376 @@
+---
+pattern_id: fsi.frr.frr_fsi_01
+name: Verified Emails Compliance
+description: Validates compliance with FRR-FSI-01 - Verified Emails
+family: FSI
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-FSI-01 - Verified Emails compliance check
+  description_template: Configuration requires validation for FRR-FSI-01 compliance
+  remediation_template: Implement FRR-FSI-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- fsi
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-FSI-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-FSI-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-FSI-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-FSI-01 compliance validation
+    implementation: |
+      # FRR-FSI-01 compliance automation
+      # GitHub Actions
+      - name: FRR-FSI-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern fsi.frr.frr_fsi_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-FSI-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-FSI-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-FSI-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-FSI-01"
+        RequirementName = "Verified Emails"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: fsi.frr.frr_fsi_02
+name: Criticality Designators Compliance
+description: Validates compliance with FRR-FSI-02 - Criticality Designators
+family: FSI
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-FSI-02 - Criticality Designators compliance check
+  description_template: Configuration requires validation for FRR-FSI-02 compliance
+  remediation_template: Implement FRR-FSI-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- fsi
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-FSI-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-FSI-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-FSI-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-FSI-02 compliance validation
+    implementation: |
+      # FRR-FSI-02 compliance automation
+      # GitHub Actions
+      - name: FRR-FSI-02 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern fsi.frr.frr_fsi_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-FSI-02 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-FSI-02 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-02'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-FSI-02
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-FSI-02"
+        RequirementName = "Criticality Designators"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-02.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: fsi.frr.frr_fsi_03
+name: Sender Addresses Compliance
+description: Validates compliance with FRR-FSI-03 - Sender Addresses
+family: FSI
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-FSI-03 - Sender Addresses compliance check
+  description_template: Configuration requires validation for FRR-FSI-03 compliance
+  remediation_template: Implement FRR-FSI-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- fsi
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-FSI-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-FSI-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-FSI-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-FSI-03 compliance validation
+    implementation: |
+      # FRR-FSI-03 compliance automation
+      # GitHub Actions
+      - name: FRR-FSI-03 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern fsi.frr.frr_fsi_03 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-FSI-03 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-FSI-03 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-03'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-FSI-03
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-FSI-03"
+        RequirementName = "Sender Addresses"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-03.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: fsi.frr.frr_fsi_04
+name: Public Notice of Emergency Tests Compliance
+description: Validates compliance with FRR-FSI-04 - Public Notice of Emergency Tests
+family: FSI
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-FSI-04 - Public Notice of Emergency Tests compliance check
+  description_template: Configuration requires validation for FRR-FSI-04 compliance
+  remediation_template: Implement FRR-FSI-04 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- fsi
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-FSI-04
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-FSI-04 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-FSI-04 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-FSI-04 compliance validation
+    implementation: |
+      # FRR-FSI-04 compliance automation
+      # GitHub Actions
+      - name: FRR-FSI-04 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern fsi.frr.frr_fsi_04 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-FSI-04 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-FSI-04 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-04'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-FSI-04
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-FSI-04"
+        RequirementName = "Public Notice of Emergency Tests"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-04.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: fsi.frr.frr_fsi_05
+name: Required Actions Compliance
+description: Validates compliance with FRR-FSI-05 - Required Actions
+family: FSI
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-FSI-05 - Required Actions compliance check
+  description_template: Configuration requires validation for FRR-FSI-05 compliance
+  remediation_template: Implement FRR-FSI-05 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- fsi
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-FSI-05
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-FSI-05 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-FSI-05 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-FSI-05 compliance validation
+    implementation: |
+      # FRR-FSI-05 compliance automation
+      # GitHub Actions
+      - name: FRR-FSI-05 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern fsi.frr.frr_fsi_05 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-FSI-05 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-FSI-05 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-05'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-FSI-05
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-FSI-05"
+        RequirementName = "Required Actions"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-05.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: fsi.frr.frr_fsi_06
+name: Response Timeframes Compliance
+description: Validates compliance with FRR-FSI-06 - Response Timeframes
+family: FSI
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-FSI-06 - Response Timeframes compliance check
+  description_template: Configuration requires validation for FRR-FSI-06 compliance
+  remediation_template: Implement FRR-FSI-06 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- fsi
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-FSI-06
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-FSI-06 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-FSI-06 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-FSI-06 compliance validation
+    implementation: |
+      # FRR-FSI-06 compliance automation
+      # GitHub Actions
+      - name: FRR-FSI-06 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern fsi.frr.frr_fsi_06 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-FSI-06 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-FSI-06 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-06'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-FSI-06
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-FSI-06"
+        RequirementName = "Response Timeframes"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-06.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: fsi.frr.frr_fsi_07
+name: Corrective Actions Compliance
+description: Validates compliance with FRR-FSI-07 - Corrective Actions
+family: FSI
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-FSI-07 - Corrective Actions compliance check
+  description_template: Configuration requires validation for FRR-FSI-07 compliance
+  remediation_template: Implement FRR-FSI-07 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- fsi
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-FSI-07
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-FSI-07 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-FSI-07 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-FSI-07 compliance validation
+    implementation: |
+      # FRR-FSI-07 compliance automation
+      # GitHub Actions
+      - name: FRR-FSI-07 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern fsi.frr.frr_fsi_07 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-FSI-07 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-FSI-07 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-07'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-FSI-07
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-FSI-07"
+        RequirementName = "Corrective Actions"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-07.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: fsi.frr.frr_fsi_08
+name: Response Metrics Compliance
+description: Validates compliance with FRR-FSI-08 - Response Metrics
+family: FSI
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-FSI-08 - Response Metrics compliance check
+  description_template: Configuration requires validation for FRR-FSI-08 compliance
+  remediation_template: Implement FRR-FSI-08 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- fsi
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-FSI-08
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-FSI-08 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-FSI-08 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-FSI-08 compliance validation
+    implementation: |
+      # FRR-FSI-08 compliance automation
+      # GitHub Actions
+      - name: FRR-FSI-08 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern fsi.frr.frr_fsi_08 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-FSI-08 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-FSI-08 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-08'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-FSI-08
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-FSI-08"
+        RequirementName = "Response Metrics"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-08.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: fsi.frr.frr_fsi_09
+name: FedRAMP Security Inbox Compliance
+description: Validates compliance with FRR-FSI-09 - FedRAMP Security Inbox
+family: FSI
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-FSI-09 - FedRAMP Security Inbox compliance check
+  description_template: Configuration requires validation for FRR-FSI-09 compliance
+  remediation_template: Implement FRR-FSI-09 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- fsi
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-FSI-09
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-FSI-09 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-FSI-09 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-FSI-09 compliance validation
+    implementation: |
+      # FRR-FSI-09 compliance automation
+      # GitHub Actions
+      - name: FRR-FSI-09 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern fsi.frr.frr_fsi_09 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-FSI-09 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-FSI-09 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-09'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-FSI-09
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-FSI-09"
+        RequirementName = "FedRAMP Security Inbox"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-09.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: fsi.frr.frr_fsi_10
+name: Receiving Messages Compliance
+description: Validates compliance with FRR-FSI-10 - Receiving Messages
+family: FSI
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-FSI-10 - Receiving Messages compliance check
+  description_template: Configuration requires validation for FRR-FSI-10 compliance
+  remediation_template: Implement FRR-FSI-10 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- fsi
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-FSI-10
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-FSI-10 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-FSI-10 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-FSI-10 compliance validation
+    implementation: |
+      # FRR-FSI-10 compliance automation
+      # GitHub Actions
+      - name: FRR-FSI-10 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern fsi.frr.frr_fsi_10 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-FSI-10 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-FSI-10 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-10'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-FSI-10
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-FSI-10"
+        RequirementName = "Receiving Messages"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-10.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: fsi.frr.frr_fsi_11
+name: Response Compliance
+description: Validates compliance with FRR-FSI-11 - Response
+family: FSI
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-FSI-11 - Response compliance check
+  description_template: Configuration requires validation for FRR-FSI-11 compliance
+  remediation_template: Implement FRR-FSI-11 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- fsi
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-FSI-11
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-FSI-11 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-FSI-11 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-FSI-11 compliance validation
+    implementation: |
+      # FRR-FSI-11 compliance automation
+      # GitHub Actions
+      - name: FRR-FSI-11 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern fsi.frr.frr_fsi_11 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-FSI-11 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-FSI-11 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-11'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-FSI-11
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-FSI-11"
+        RequirementName = "Response"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-11.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: fsi.frr.frr_fsi_12
+name: Notification of Changes Compliance
+description: Validates compliance with FRR-FSI-12 - Notification of Changes
+family: FSI
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-FSI-12 - Notification of Changes compliance check
+  description_template: Configuration requires validation for FRR-FSI-12 compliance
+  remediation_template: Implement FRR-FSI-12 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- fsi
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-FSI-12
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-FSI-12 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-FSI-12 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-FSI-12 compliance validation
+    implementation: |
+      # FRR-FSI-12 compliance automation
+      # GitHub Actions
+      - name: FRR-FSI-12 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern fsi.frr.frr_fsi_12 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-FSI-12 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-FSI-12 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-12'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-FSI-12
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-FSI-12"
+        RequirementName = "Notification of Changes"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-12.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: fsi.frr.frr_fsi_13
+name: Acknowledgment of Receipt Compliance
+description: Validates compliance with FRR-FSI-13 - Acknowledgment of Receipt
+family: FSI
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-FSI-13 - Acknowledgment of Receipt compliance check
+  description_template: Configuration requires validation for FRR-FSI-13 compliance
+  remediation_template: Implement FRR-FSI-13 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- fsi
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-FSI-13
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-FSI-13 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-FSI-13 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-FSI-13 compliance validation
+    implementation: |
+      # FRR-FSI-13 compliance automation
+      # GitHub Actions
+      - name: FRR-FSI-13 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern fsi.frr.frr_fsi_13 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-FSI-13 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-FSI-13 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-13'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-FSI-13
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-FSI-13"
+        RequirementName = "Acknowledgment of Receipt"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-13.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: fsi.frr.frr_fsi_14
+name: Required Response for Emergency Messages Compliance
+description: Validates compliance with FRR-FSI-14 - Required Response for Emergency Messages
+family: FSI
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-FSI-14 - Required Response for Emergency Messages compliance check
+  description_template: Configuration requires validation for FRR-FSI-14 compliance
+  remediation_template: Implement FRR-FSI-14 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- fsi
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-FSI-14
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-FSI-14 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-FSI-14 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-FSI-14 compliance validation
+    implementation: |
+      # FRR-FSI-14 compliance automation
+      # GitHub Actions
+      - name: FRR-FSI-14 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern fsi.frr.frr_fsi_14 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-FSI-14 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-FSI-14 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-14'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-FSI-14
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-FSI-14"
+        RequirementName = "Required Response for Emergency Messages"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-14.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: fsi.frr.frr_fsi_15
+name: Routing Compliance
+description: Validates compliance with FRR-FSI-15 - Routing
+family: FSI
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-FSI-15 - Routing compliance check
+  description_template: Configuration requires validation for FRR-FSI-15 compliance
+  remediation_template: Implement FRR-FSI-15 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- fsi
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-FSI-15
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-FSI-15 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-FSI-15 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-FSI-15 compliance validation
+    implementation: |
+      # FRR-FSI-15 compliance automation
+      # GitHub Actions
+      - name: FRR-FSI-15 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern fsi.frr.frr_fsi_15 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-FSI-15 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-FSI-15 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-15'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-FSI-15
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-FSI-15"
+        RequirementName = "Routing"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-15.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: fsi.frr.frr_fsi_16
+name: Recommended Response for Important Messages Compliance
+description: Validates compliance with FRR-FSI-16 - Recommended Response for Important Messages
+family: FSI
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-FSI-16 - Recommended Response for Important Messages compliance check
+  description_template: Configuration requires validation for FRR-FSI-16 compliance
+  remediation_template: Implement FRR-FSI-16 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- fsi
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-FSI-16
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-FSI-16 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-FSI-16 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-FSI-16 compliance validation
+    implementation: |
+      # FRR-FSI-16 compliance automation
+      # GitHub Actions
+      - name: FRR-FSI-16 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern fsi.frr.frr_fsi_16 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-FSI-16 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-FSI-16 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-FSI-16'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-FSI-16
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-FSI-16"
+        RequirementName = "Recommended Response for Important Messages"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-FSI-16.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']

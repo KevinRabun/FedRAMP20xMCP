@@ -1,0 +1,172 @@
+---
+pattern_id: ksi.frr.frr_ksi_01
+name: Application of Key Security Indicators Compliance
+description: Validates compliance with FRR-KSI-01 - Application of Key Security Indicators
+family: KSI
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-KSI-01 - Application of Key Security Indicators compliance check
+  description_template: Configuration requires validation for FRR-KSI-01 compliance
+  remediation_template: Implement FRR-KSI-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ksi
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-KSI-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-KSI-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-KSI-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-KSI-01 compliance validation
+    implementation: |
+      # FRR-KSI-01 compliance automation
+      # GitHub Actions
+      - name: FRR-KSI-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ksi.frr.frr_ksi_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-KSI-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-KSI-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-KSI-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-KSI-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-KSI-01"
+        RequirementName = "Application of Key Security Indicators"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-KSI-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate']
+---
+pattern_id: ksi.frr.frr_ksi_02
+name: Implementation Summaries Compliance
+description: Validates compliance with FRR-KSI-02 - Implementation Summaries
+family: KSI
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-KSI-02 - Implementation Summaries compliance check
+  description_template: Configuration requires validation for FRR-KSI-02 compliance
+  remediation_template: Implement FRR-KSI-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ksi
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-KSI-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-KSI-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-KSI-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-KSI-02 compliance validation
+    implementation: |
+      # FRR-KSI-02 compliance automation
+      # GitHub Actions
+      - name: FRR-KSI-02 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ksi.frr.frr_ksi_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-KSI-02 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-KSI-02 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-KSI-02'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-KSI-02
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-KSI-02"
+        RequirementName = "Implementation Summaries"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-KSI-02.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate']

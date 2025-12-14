@@ -1,0 +1,4477 @@
+pattern_id: ccm.version_control.git_usage
+name: Git Version Control Usage
+family: CCM
+severity: high
+description: 'Detects Git version control system usage for change management.
+
+  Aligns with KSI-CMT-01: Version Control and Change Logging.
+
+  '
+pattern_type: configuration
+languages:
+  python:
+    regex_fallback: (\.git/|\.gitignore|\.gitattributes)|(git commit|git push|git
+      merge)
+  csharp:
+    regex_fallback: (\.git/|\.gitignore|\.gitattributes)|(git commit|git push|git
+      merge)
+  java:
+    regex_fallback: (\.git/|\.gitignore|\.gitattributes)|(git commit|git push|git
+      merge)
+  typescript:
+    regex_fallback: (\.git/|\.gitignore|\.gitattributes)|(git commit|git push|git
+      merge)
+finding:
+  title: Git version control detected
+  description: Project uses Git for version control and change tracking
+  recommendation: Ensure all configuration changes go through Git workflow per KSI-CMT-01
+  references:
+  - KSI-CMT-01
+  - FRR-CCM-01
+evidence_artifacts:
+- artifact_type: logs
+  name: CCM operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CCM configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CCM compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ccm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CCM related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ccm' | take 100"
+    description: Query recent CCM events
+    output_format: json
+  powershell:
+  - script: '# Query CCM configuration
+
+      Get-AzCCMResource | Select-Object Name, Location, Properties'
+    description: Get CCM resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CCM compliance enforcement
+    implementation: "# Azure Policy definition for CCM\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ccm.version_control.git_usage-policy'\n  properties: {\n   \
+      \ policyType: 'Custom'\n    mode: 'All'\n    displayName: 'CCM Compliance Policy'\n\
+      \    description: 'Enforces CCM compliance requirements'\n    policyRule: {\n\
+      \      if: {\n        // Add specific conditions\n      }\n      then: {\n \
+      \       effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CCM violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ccm.version_control.git_usage-alert'\n  location: 'global'\n \
+      \ properties: {\n    description: 'Alert on CCM compliance violations'\n   \
+      \ severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CCM
+    implementation: "# GitHub Actions\n- name: Validate CCM Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ccm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CCM Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ccm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CCM requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CCM FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CCM implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CCM controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CCM
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ccm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CCM')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CCM - CCM
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CCM controls in accordance with FedRAMP
+      20x requirements. CCM Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CCM compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CCM requirements.
+    evidence_references:
+    - CCM configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CCM compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CCM implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CCM controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-CCM-01
+    requirement_name: Ongoing Authorization Reports
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ccm_patterns.py::test_ccm_version_control_git_usage
+---
+pattern_id: ccm.change_logging.audit_log
+name: Change Audit Logging
+family: CCM
+severity: high
+description: Detects logging of configuration changes for audit trail
+pattern_type: function_call
+languages:
+  python:
+    regex_fallback: (log.*config.*change|audit.*configuration|logger.*modify)|(log\.info.*update|log\.warn.*change)
+  csharp:
+    regex_fallback: (log.*config.*change|audit.*configuration|logger.*modify)|(log\.info.*update|log\.warn.*change)
+  java:
+    regex_fallback: (log.*config.*change|audit.*configuration|logger.*modify)|(log\.info.*update|log\.warn.*change)
+  typescript:
+    regex_fallback: (log.*config.*change|audit.*configuration|logger.*modify)|(log\.info.*update|log\.warn.*change)
+finding:
+  title: Configuration change logging detected
+  description: Code logs configuration changes for audit purposes
+  recommendation: Include user, timestamp, old/new values per KSI-CMT-01
+  references:
+  - KSI-CMT-01
+  - FRR-ADS-02
+evidence_artifacts:
+- artifact_type: logs
+  name: CCM operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CCM configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CCM compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ccm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CCM related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ccm' | take 100"
+    description: Query recent CCM events
+    output_format: json
+  powershell:
+  - script: '# Query CCM configuration
+
+      Get-AzCCMResource | Select-Object Name, Location, Properties'
+    description: Get CCM resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CCM compliance enforcement
+    implementation: "# Azure Policy definition for CCM\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ccm.change_logging.audit_log-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CCM Compliance Policy'\n    description:\
+      \ 'Enforces CCM compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CCM violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ccm.change_logging.audit_log-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on CCM compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CCM
+    implementation: "# GitHub Actions\n- name: Validate CCM Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ccm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CCM Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ccm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CCM requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CCM FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CCM implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CCM controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CCM
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ccm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CCM')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CCM - CCM
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CCM controls in accordance with FedRAMP
+      20x requirements. CCM Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CCM compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CCM requirements.
+    evidence_references:
+    - CCM configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CCM compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CCM implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CCM controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-CCM-01
+    requirement_name: Ongoing Authorization Reports
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ccm_patterns.py::test_ccm_change_logging_audit_log
+---
+pattern_id: ccm.approval_workflow.pull_request
+name: Pull Request Approval Workflow
+family: CCM
+severity: high
+description: Detects pull request workflow for change approval
+pattern_type: configuration
+languages:
+  yaml:
+    regex_fallback: (pull_request|merge_request)|(required_approving_review_count|approval_count)|(CODEOWNERS|code-review)
+finding:
+  title: Pull request approval workflow configured
+  description: Repository requires PR approval before merging changes
+  recommendation: Require at least 2 approvals for production changes per FRR-CCM-02
+  references:
+  - FRR-CCM-02
+  - KSI-CMT-02
+evidence_artifacts:
+- artifact_type: logs
+  name: CCM operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CCM configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CCM compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ccm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CCM related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ccm' | take 100"
+    description: Query recent CCM events
+    output_format: json
+  powershell:
+  - script: '# Query CCM configuration
+
+      Get-AzCCMResource | Select-Object Name, Location, Properties'
+    description: Get CCM resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CCM compliance enforcement
+    implementation: "# Azure Policy definition for CCM\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ccm.approval_workflow.pull_request-policy'\n  properties: {\n\
+      \    policyType: 'Custom'\n    mode: 'All'\n    displayName: 'CCM Compliance\
+      \ Policy'\n    description: 'Enforces CCM compliance requirements'\n    policyRule:\
+      \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
+      \        effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CCM violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ccm.approval_workflow.pull_request-alert'\n  location: 'global'\n\
+      \  properties: {\n    description: 'Alert on CCM compliance violations'\n  \
+      \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CCM
+    implementation: "# GitHub Actions\n- name: Validate CCM Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ccm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CCM Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ccm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CCM requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CCM FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CCM implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CCM controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CCM
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ccm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CCM')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CCM - CCM
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CCM controls in accordance with FedRAMP
+      20x requirements. CCM Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CCM compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CCM requirements.
+    evidence_references:
+    - CCM configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CCM compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CCM implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CCM controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-CCM-01
+    requirement_name: Ongoing Authorization Reports
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant yaml code sample
+    code_sample: '# yaml code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant yaml code
+    code_sample: '# yaml code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ccm_patterns.py::test_ccm_approval_workflow_pull_request
+---
+pattern_id: ccm.automated_testing.pre_deploy
+name: Automated Testing Before Deployment
+family: CCM
+severity: critical
+description: 'Detects automated testing in CI/CD before deployment.
+
+  Aligns with KSI-CMT-03: Automated Testing and Validation.
+
+  '
+pattern_type: pipeline
+languages:
+  github_actions:
+    regex_fallback: (run:.*test|script:.*test|pytest|jest|mvn test)|(task:.*VSTest@|task:.*DotNetCoreCLI@.*test)
+  azure_pipelines:
+    regex_fallback: (run:.*test|script:.*test|pytest|jest|mvn test)|(task:.*VSTest@|task:.*DotNetCoreCLI@.*test)
+  gitlab_ci:
+    regex_fallback: (run:.*test|script:.*test|pytest|jest|mvn test)|(task:.*VSTest@|task:.*DotNetCoreCLI@.*test)
+finding:
+  title: Automated testing before deployment
+  description: CI/CD pipeline runs automated tests before deployment
+  recommendation: Include unit, integration, and security tests per KSI-CMT-03
+  references:
+  - KSI-CMT-03
+  - FRR-CCM-03
+evidence_artifacts:
+- artifact_type: logs
+  name: CCM operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CCM configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CCM compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ccm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CCM related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ccm' | take 100"
+    description: Query recent CCM events
+    output_format: json
+  powershell:
+  - script: '# Query CCM configuration
+
+      Get-AzCCMResource | Select-Object Name, Location, Properties'
+    description: Get CCM resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CCM compliance enforcement
+    implementation: "# Azure Policy definition for CCM\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ccm.automated_testing.pre_deploy-policy'\n  properties: {\n\
+      \    policyType: 'Custom'\n    mode: 'All'\n    displayName: 'CCM Compliance\
+      \ Policy'\n    description: 'Enforces CCM compliance requirements'\n    policyRule:\
+      \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
+      \        effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CCM violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ccm.automated_testing.pre_deploy-alert'\n  location: 'global'\n\
+      \  properties: {\n    description: 'Alert on CCM compliance violations'\n  \
+      \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CCM
+    implementation: "# GitHub Actions\n- name: Validate CCM Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ccm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CCM Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ccm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CCM requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CCM FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CCM implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CCM controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CCM
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ccm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CCM')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CCM - CCM
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CCM controls in accordance with FedRAMP
+      20x requirements. CCM Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CCM compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CCM requirements.
+    evidence_references:
+    - CCM configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CCM compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CCM implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CCM controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-CCM-01
+    requirement_name: Ongoing Authorization Reports
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions code sample
+    code_sample: '# github_actions code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code
+    code_sample: '# github_actions code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ccm_patterns.py::test_ccm_automated_testing_pre_deploy
+---
+pattern_id: ccm.rollback.capability
+name: Rollback Capability
+family: CCM
+severity: high
+description: Detects rollback capability in deployment process
+pattern_type: configuration
+languages:
+  python:
+    regex_fallback: (rollback|revert|undo.*deploy)|(previous.*version|last.*known.*good)
+  csharp:
+    regex_fallback: (rollback|revert|undo.*deploy)|(previous.*version|last.*known.*good)
+  java:
+    regex_fallback: (rollback|revert|undo.*deploy)|(previous.*version|last.*known.*good)
+  typescript:
+    regex_fallback: (rollback|revert|undo.*deploy)|(previous.*version|last.*known.*good)
+  yaml:
+    regex_fallback: (rollback|revert|undo.*deploy)|(previous.*version|last.*known.*good)
+finding:
+  title: Rollback capability detected
+  description: Deployment process includes rollback capability
+  recommendation: Test rollback procedure regularly per FRR-CCM-04
+  references:
+  - FRR-CCM-04
+evidence_artifacts:
+- artifact_type: logs
+  name: CCM operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CCM configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CCM compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ccm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CCM related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ccm' | take 100"
+    description: Query recent CCM events
+    output_format: json
+  powershell:
+  - script: '# Query CCM configuration
+
+      Get-AzCCMResource | Select-Object Name, Location, Properties'
+    description: Get CCM resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CCM compliance enforcement
+    implementation: "# Azure Policy definition for CCM\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ccm.rollback.capability-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CCM Compliance Policy'\n    description:\
+      \ 'Enforces CCM compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CCM violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ccm.rollback.capability-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on CCM compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CCM
+    implementation: "# GitHub Actions\n- name: Validate CCM Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ccm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CCM Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ccm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CCM requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CCM FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CCM implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CCM controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CCM
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ccm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CCM')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CCM - CCM
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CCM controls in accordance with FedRAMP
+      20x requirements. CCM Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CCM compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CCM requirements.
+    evidence_references:
+    - CCM configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CCM compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CCM implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CCM controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-CCM-01
+    requirement_name: Ongoing Authorization Reports
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ccm_patterns.py::test_ccm_rollback_capability
+---
+pattern_id: ccm.baseline.configuration
+name: Baseline Configuration Management
+family: CCM
+severity: high
+description: Detects baseline configuration management practices
+pattern_type: configuration
+languages:
+  yaml:
+    regex_fallback: (baseline|standard.*config|default.*settings)|(config.*template|configuration.*baseline)
+  json:
+    regex_fallback: (baseline|standard.*config|default.*settings)|(config.*template|configuration.*baseline)
+finding:
+  title: Baseline configuration detected
+  description: Configuration includes baseline/standard settings
+  recommendation: Document and version control baseline configurations per FRR-CCM-05
+  references:
+  - FRR-CCM-05
+evidence_artifacts:
+- artifact_type: logs
+  name: CCM operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CCM configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CCM compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ccm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CCM related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ccm' | take 100"
+    description: Query recent CCM events
+    output_format: json
+  powershell:
+  - script: '# Query CCM configuration
+
+      Get-AzCCMResource | Select-Object Name, Location, Properties'
+    description: Get CCM resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CCM compliance enforcement
+    implementation: "# Azure Policy definition for CCM\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ccm.baseline.configuration-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CCM Compliance Policy'\n    description:\
+      \ 'Enforces CCM compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CCM violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ccm.baseline.configuration-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on CCM compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CCM
+    implementation: "# GitHub Actions\n- name: Validate CCM Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ccm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CCM Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ccm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CCM requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CCM FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CCM implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CCM controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CCM
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ccm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CCM')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CCM - CCM
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CCM controls in accordance with FedRAMP
+      20x requirements. CCM Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CCM compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CCM requirements.
+    evidence_references:
+    - CCM configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CCM compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CCM implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CCM controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-CCM-01
+    requirement_name: Ongoing Authorization Reports
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant yaml code sample
+    code_sample: '# yaml code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant yaml code
+    code_sample: '# yaml code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ccm_patterns.py::test_ccm_baseline_configuration
+---
+pattern_id: ccm.change_approval.explicit
+name: Explicit Change Approval Check
+family: CCM
+severity: high
+description: Detects explicit change approval checks in code
+pattern_type: function_call
+languages:
+  python:
+    regex_fallback: (check.*approval|verify.*approved|require.*authorization)|(is_approved|has_approval|approved_by)
+  csharp:
+    regex_fallback: (check.*approval|verify.*approved|require.*authorization)|(is_approved|has_approval|approved_by)
+  java:
+    regex_fallback: (check.*approval|verify.*approved|require.*authorization)|(is_approved|has_approval|approved_by)
+  typescript:
+    regex_fallback: (check.*approval|verify.*approved|require.*authorization)|(is_approved|has_approval|approved_by)
+finding:
+  title: Explicit change approval check
+  description: Code enforces change approval before execution
+  recommendation: Integrate with ticketing system (ServiceNow, JIRA) per FRR-CCM-02
+  references:
+  - FRR-CCM-02
+evidence_artifacts:
+- artifact_type: logs
+  name: CCM operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CCM configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CCM compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ccm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CCM related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ccm' | take 100"
+    description: Query recent CCM events
+    output_format: json
+  powershell:
+  - script: '# Query CCM configuration
+
+      Get-AzCCMResource | Select-Object Name, Location, Properties'
+    description: Get CCM resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CCM compliance enforcement
+    implementation: "# Azure Policy definition for CCM\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ccm.change_approval.explicit-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CCM Compliance Policy'\n    description:\
+      \ 'Enforces CCM compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CCM violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ccm.change_approval.explicit-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on CCM compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CCM
+    implementation: "# GitHub Actions\n- name: Validate CCM Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ccm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CCM Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ccm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CCM requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CCM FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CCM implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CCM controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CCM
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ccm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CCM')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CCM - CCM
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CCM controls in accordance with FedRAMP
+      20x requirements. CCM Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CCM compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CCM requirements.
+    evidence_references:
+    - CCM configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CCM compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CCM implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CCM controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-CCM-01
+    requirement_name: Ongoing Authorization Reports
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ccm_patterns.py::test_ccm_change_approval_explicit
+---
+pattern_id: ccm.iac.arm_template_validation
+name: ARM Template Validation
+family: CCM
+severity: high
+description: Detects ARM/Bicep template validation for IaC change management
+pattern_type: pipeline
+languages:
+  github_actions:
+    regex_fallback: (az deployment.*validate|bicep build|arm-ttk)|(task:.*AzureResourceManagerTemplateDeployment@.*validate)
+  azure_pipelines:
+    regex_fallback: (az deployment.*validate|bicep build|arm-ttk)|(task:.*AzureResourceManagerTemplateDeployment@.*validate)
+  gitlab_ci:
+    regex_fallback: (az deployment.*validate|bicep build|arm-ttk)|(task:.*AzureResourceManagerTemplateDeployment@.*validate)
+finding:
+  title: ARM/Bicep template validation
+  description: Pipeline validates ARM templates before deployment
+  recommendation: Include policy compliance checks per KSI-CNA-07
+  references:
+  - FRR-CCM-03
+  - KSI-CNA-07
+evidence_artifacts:
+- artifact_type: logs
+  name: CCM operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CCM configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CCM compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ccm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CCM related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ccm' | take 100"
+    description: Query recent CCM events
+    output_format: json
+  powershell:
+  - script: '# Query CCM configuration
+
+      Get-AzCCMResource | Select-Object Name, Location, Properties'
+    description: Get CCM resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CCM compliance enforcement
+    implementation: "# Azure Policy definition for CCM\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ccm.iac.arm_template_validation-policy'\n  properties: {\n \
+      \   policyType: 'Custom'\n    mode: 'All'\n    displayName: 'CCM Compliance\
+      \ Policy'\n    description: 'Enforces CCM compliance requirements'\n    policyRule:\
+      \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
+      \        effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CCM violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ccm.iac.arm_template_validation-alert'\n  location: 'global'\n\
+      \  properties: {\n    description: 'Alert on CCM compliance violations'\n  \
+      \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CCM
+    implementation: "# GitHub Actions\n- name: Validate CCM Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ccm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CCM Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ccm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CCM requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CCM FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CCM implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CCM controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CCM
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ccm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CCM')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CCM - CCM
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CCM controls in accordance with FedRAMP
+      20x requirements. CCM Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CCM compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CCM requirements.
+    evidence_references:
+    - CCM configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CCM compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CCM implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CCM controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-CCM-01
+    requirement_name: Ongoing Authorization Reports
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions code sample
+    code_sample: '# github_actions code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code
+    code_sample: '# github_actions code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ccm_patterns.py::test_ccm_iac_arm_template_validation
+---
+pattern_id: ccm.iac.terraform_plan
+name: Terraform Plan for Change Preview
+family: CCM
+severity: high
+description: Detects Terraform plan step for change preview and approval
+pattern_type: pipeline
+languages:
+  github_actions:
+    regex_fallback: (terraform plan|tf plan)|(terraform apply.*-auto-approve)
+  azure_pipelines:
+    regex_fallback: (terraform plan|tf plan)|(terraform apply.*-auto-approve)
+  gitlab_ci:
+    regex_fallback: (terraform plan|tf plan)|(terraform apply.*-auto-approve)
+finding:
+  title: Terraform plan for change preview
+  description: Pipeline runs terraform plan to preview changes
+  recommendation: Require manual approval between plan and apply per FRR-CCM-02
+  references:
+  - FRR-CCM-02
+  - FRR-CCM-03
+evidence_artifacts:
+- artifact_type: logs
+  name: CCM operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CCM configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CCM compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ccm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CCM related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ccm' | take 100"
+    description: Query recent CCM events
+    output_format: json
+  powershell:
+  - script: '# Query CCM configuration
+
+      Get-AzCCMResource | Select-Object Name, Location, Properties'
+    description: Get CCM resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CCM compliance enforcement
+    implementation: "# Azure Policy definition for CCM\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ccm.iac.terraform_plan-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CCM Compliance Policy'\n    description:\
+      \ 'Enforces CCM compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CCM violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ccm.iac.terraform_plan-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on CCM compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CCM
+    implementation: "# GitHub Actions\n- name: Validate CCM Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ccm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CCM Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ccm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CCM requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CCM FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CCM implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CCM controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CCM
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ccm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CCM')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CCM - CCM
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CCM controls in accordance with FedRAMP
+      20x requirements. CCM Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CCM compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CCM requirements.
+    evidence_references:
+    - CCM configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CCM compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CCM implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CCM controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-CCM-01
+    requirement_name: Ongoing Authorization Reports
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions code sample
+    code_sample: '# github_actions code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code
+    code_sample: '# github_actions code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ccm_patterns.py::test_ccm_iac_terraform_plan
+---
+pattern_id: ccm.cicd.deployment_gate
+name: Deployment Gate/Approval
+family: CCM
+severity: critical
+description: Detects deployment gates or manual approval steps in CI/CD
+pattern_type: pipeline
+languages:
+  github_actions:
+    regex_fallback: (environment:|deployment.*gate|manual.*approval|approvals.*required|when:.*manual|name:\s*production|environment:\s*production)
+  azure_pipelines:
+    regex_fallback: (environment:|deployment.*gate|manual.*approval|approvals.*required|when:.*manual|name:\s*production|environment:\s*production)
+  gitlab_ci:
+    regex_fallback: (environment:|deployment.*gate|manual.*approval|approvals.*required|when:.*manual|name:\s*production|environment:\s*production)
+finding:
+  title: Deployment gate/approval configured
+  description: CI/CD includes deployment gate or manual approval
+  recommendation: Require approval from authorized personnel per FRR-CCM-02
+  references:
+  - FRR-CCM-02
+evidence_artifacts:
+- artifact_type: logs
+  name: CCM operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CCM configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CCM compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ccm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CCM related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ccm' | take 100"
+    description: Query recent CCM events
+    output_format: json
+  powershell:
+  - script: '# Query CCM configuration
+
+      Get-AzCCMResource | Select-Object Name, Location, Properties'
+    description: Get CCM resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CCM compliance enforcement
+    implementation: "# Azure Policy definition for CCM\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ccm.cicd.deployment_gate-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CCM Compliance Policy'\n    description:\
+      \ 'Enforces CCM compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CCM violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ccm.cicd.deployment_gate-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on CCM compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CCM
+    implementation: "# GitHub Actions\n- name: Validate CCM Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ccm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CCM Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ccm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CCM requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CCM FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CCM implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CCM controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CCM
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ccm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CCM')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CCM - CCM
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CCM controls in accordance with FedRAMP
+      20x requirements. CCM Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CCM compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CCM requirements.
+    evidence_references:
+    - CCM configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CCM compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CCM implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CCM controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-CCM-01
+    requirement_name: Ongoing Authorization Reports
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions code sample
+    code_sample: '# github_actions code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code
+    code_sample: '# github_actions code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ccm_patterns.py::test_ccm_cicd_deployment_gate
+---
+pattern_id: ccm.cicd.configuration_backup
+name: Configuration Backup Before Change
+family: CCM
+severity: medium
+description: Detects configuration backup steps before applying changes
+pattern_type: pipeline
+languages:
+  github_actions:
+    regex_fallback: (backup.*config|snapshot.*before|export.*settings)|(az.*export|terraform.*state.*pull)
+  azure_pipelines:
+    regex_fallback: (backup.*config|snapshot.*before|export.*settings)|(az.*export|terraform.*state.*pull)
+  gitlab_ci:
+    regex_fallback: (backup.*config|snapshot.*before|export.*settings)|(az.*export|terraform.*state.*pull)
+finding:
+  title: Configuration backup before change
+  description: Pipeline backs up configuration before applying changes
+  recommendation: Store backups in immutable storage per FRR-CCM-04
+  references:
+  - FRR-CCM-04
+evidence_artifacts:
+- artifact_type: logs
+  name: CCM operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CCM configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CCM compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ccm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CCM related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ccm' | take 100"
+    description: Query recent CCM events
+    output_format: json
+  powershell:
+  - script: '# Query CCM configuration
+
+      Get-AzCCMResource | Select-Object Name, Location, Properties'
+    description: Get CCM resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CCM compliance enforcement
+    implementation: "# Azure Policy definition for CCM\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ccm.cicd.configuration_backup-policy'\n  properties: {\n   \
+      \ policyType: 'Custom'\n    mode: 'All'\n    displayName: 'CCM Compliance Policy'\n\
+      \    description: 'Enforces CCM compliance requirements'\n    policyRule: {\n\
+      \      if: {\n        // Add specific conditions\n      }\n      then: {\n \
+      \       effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CCM violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ccm.cicd.configuration_backup-alert'\n  location: 'global'\n \
+      \ properties: {\n    description: 'Alert on CCM compliance violations'\n   \
+      \ severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CCM
+    implementation: "# GitHub Actions\n- name: Validate CCM Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ccm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CCM Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ccm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CCM requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CCM FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CCM implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CCM controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CCM
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ccm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CCM')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CCM - CCM
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CCM controls in accordance with FedRAMP
+      20x requirements. CCM Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CCM compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CCM requirements.
+    evidence_references:
+    - CCM configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CCM compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CCM implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CCM controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-CCM-01
+    requirement_name: Ongoing Authorization Reports
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions code sample
+    code_sample: '# github_actions code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code
+    code_sample: '# github_actions code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ccm_patterns.py::test_ccm_cicd_configuration_backup
+---
+pattern_id: ccm.missing_version_control
+name: Missing Version Control Evidence
+family: CCM
+severity: critical
+description: Detects absence of version control configuration
+pattern_type: configuration
+languages:
+  python: {}
+  csharp: {}
+  java: {}
+  typescript: {}
+requires_absence:
+- ccm.version_control.git_usage
+finding:
+  title: No version control evidence detected
+  description: Project lacks Git or other version control system
+  severity: critical
+  recommendation: Implement Git version control immediately per KSI-CMT-01
+  references:
+  - KSI-CMT-01
+  - FRR-CCM-01
+evidence_artifacts:
+- artifact_type: logs
+  name: CCM operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: CCM configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: CCM compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "ccm"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track CCM related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'ccm' | take 100"
+    description: Query recent CCM events
+    output_format: json
+  powershell:
+  - script: '# Query CCM configuration
+
+      Get-AzCCMResource | Select-Object Name, Location, Properties'
+    description: Get CCM resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for CCM compliance enforcement
+    implementation: "# Azure Policy definition for CCM\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'ccm.missing_version_control-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'CCM Compliance Policy'\n    description:\
+      \ 'Enforces CCM compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for CCM violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'ccm.missing_version_control-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on CCM compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for CCM
+    implementation: "# GitHub Actions\n- name: Validate CCM Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/ccm_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'CCM Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_ccm.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - CCM requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review CCM FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design CCM implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement CCM controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for CCM
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/ccm/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'CCM')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: CCM - CCM
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements CCM controls in accordance with FedRAMP
+      20x requirements. CCM Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce CCM compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      CCM requirements.
+    evidence_references:
+    - CCM configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for CCM compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: CCM implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement CCM controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-CCM-01
+    requirement_name: Ongoing Authorization Reports
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_ccm_patterns.py::test_ccm_missing_version_control
+---
+pattern_id: ccm.frr.frr_ccm_01
+name: Ongoing Authorization Reports Compliance
+description: Validates compliance with FRR-CCM-01 - Ongoing Authorization Reports
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-01 - Ongoing Authorization Reports compliance check
+  description_template: Configuration requires validation for FRR-CCM-01 compliance
+  remediation_template: Implement FRR-CCM-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-01 compliance validation
+    implementation: |
+      # FRR-CCM-01 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-01"
+        RequirementName = "Ongoing Authorization Reports"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_02
+name: Avoiding Simultaneous Reports Compliance
+description: Validates compliance with FRR-CCM-02 - Avoiding Simultaneous Reports
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-02 - Avoiding Simultaneous Reports compliance check
+  description_template: Configuration requires validation for FRR-CCM-02 compliance
+  remediation_template: Implement FRR-CCM-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-02 compliance validation
+    implementation: |
+      # FRR-CCM-02 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-02 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-02 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-02 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-02'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-02
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-02"
+        RequirementName = "Avoiding Simultaneous Reports"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-02.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_03
+name: Public Next Report Date Compliance
+description: Validates compliance with FRR-CCM-03 - Public Next Report Date
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-03 - Public Next Report Date compliance check
+  description_template: Configuration requires validation for FRR-CCM-03 compliance
+  remediation_template: Implement FRR-CCM-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-03 compliance validation
+    implementation: |
+      # FRR-CCM-03 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-03 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_03 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-03 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-03 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-03'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-03
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-03"
+        RequirementName = "Public Next Report Date"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-03.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_04
+name: Feedback Mechanism Compliance
+description: Validates compliance with FRR-CCM-04 - Feedback Mechanism
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-04 - Feedback Mechanism compliance check
+  description_template: Configuration requires validation for FRR-CCM-04 compliance
+  remediation_template: Implement FRR-CCM-04 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-04
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-04 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-04 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-04 compliance validation
+    implementation: |
+      # FRR-CCM-04 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-04 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_04 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-04 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-04 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-04'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-04
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-04"
+        RequirementName = "Feedback Mechanism"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-04.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_05
+name: Anonymized Feedback Summary Compliance
+description: Validates compliance with FRR-CCM-05 - Anonymized Feedback Summary
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-05 - Anonymized Feedback Summary compliance check
+  description_template: Configuration requires validation for FRR-CCM-05 compliance
+  remediation_template: Implement FRR-CCM-05 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-05
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-05 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-05 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-05 compliance validation
+    implementation: |
+      # FRR-CCM-05 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-05 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_05 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-05 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-05 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-05'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-05
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-05"
+        RequirementName = "Anonymized Feedback Summary"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-05.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_06
+name: Protect Sensitive Information Compliance
+description: Validates compliance with FRR-CCM-06 - Protect Sensitive Information
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-06 - Protect Sensitive Information compliance check
+  description_template: Configuration requires validation for FRR-CCM-06 compliance
+  remediation_template: Implement FRR-CCM-06 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-06
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-06 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-06 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-06 compliance validation
+    implementation: |
+      # FRR-CCM-06 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-06 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_06 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-06 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-06 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-06'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-06
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-06"
+        RequirementName = "Protect Sensitive Information"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-06.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_07
+name: Responsible Public Sharing Compliance
+description: Validates compliance with FRR-CCM-07 - Responsible Public Sharing
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-07 - Responsible Public Sharing compliance check
+  description_template: Configuration requires validation for FRR-CCM-07 compliance
+  remediation_template: Implement FRR-CCM-07 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-07
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-07 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-07 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-07 compliance validation
+    implementation: |
+      # FRR-CCM-07 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-07 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_07 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-07 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-07 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-07'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-07
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-07"
+        RequirementName = "Responsible Public Sharing"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-07.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_ag_01
+name: Review Ongoing Reports Compliance
+description: Validates compliance with FRR-CCM-AG-01 - Review Ongoing Reports
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-AG-01 - Review Ongoing Reports compliance check
+  description_template: Configuration requires validation for FRR-CCM-AG-01 compliance
+  remediation_template: Implement FRR-CCM-AG-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-AG-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-AG-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-AG-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-AG-01 compliance validation
+    implementation: |
+      # FRR-CCM-AG-01 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-AG-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_ag_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-AG-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-AG-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-AG-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-AG-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-AG-01"
+        RequirementName = "Review Ongoing Reports"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-AG-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_ag_02
+name: Consider Security Category Compliance
+description: Validates compliance with FRR-CCM-AG-02 - Consider Security Category
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-AG-02 - Consider Security Category compliance check
+  description_template: Configuration requires validation for FRR-CCM-AG-02 compliance
+  remediation_template: Implement FRR-CCM-AG-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-AG-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-AG-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-AG-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-AG-02 compliance validation
+    implementation: |
+      # FRR-CCM-AG-02 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-AG-02 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_ag_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-AG-02 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-AG-02 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-AG-02'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-AG-02
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-AG-02"
+        RequirementName = "Consider Security Category"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-AG-02.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_ag_03
+name: Senior Security Reviewer Compliance
+description: Validates compliance with FRR-CCM-AG-03 - Senior Security Reviewer
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-AG-03 - Senior Security Reviewer compliance check
+  description_template: Configuration requires validation for FRR-CCM-AG-03 compliance
+  remediation_template: Implement FRR-CCM-AG-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-AG-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-AG-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-AG-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-AG-03 compliance validation
+    implementation: |
+      # FRR-CCM-AG-03 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-AG-03 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_ag_03 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-AG-03 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-AG-03 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-AG-03'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-AG-03
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-AG-03"
+        RequirementName = "Senior Security Reviewer"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-AG-03.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['High']
+---
+pattern_id: ccm.frr.frr_ccm_ag_04
+name: Notify Provider of Concerns Compliance
+description: Validates compliance with FRR-CCM-AG-04 - Notify Provider of Concerns
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-AG-04 - Notify Provider of Concerns compliance check
+  description_template: Configuration requires validation for FRR-CCM-AG-04 compliance
+  remediation_template: Implement FRR-CCM-AG-04 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-AG-04
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-AG-04 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-AG-04 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-AG-04 compliance validation
+    implementation: |
+      # FRR-CCM-AG-04 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-AG-04 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_ag_04 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-AG-04 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-AG-04 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-AG-04'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-AG-04
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-AG-04"
+        RequirementName = "Notify Provider of Concerns"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-AG-04.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_ag_05
+name: Notify FedRAMP of Concerns Compliance
+description: Validates compliance with FRR-CCM-AG-05 - Notify FedRAMP of Concerns
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-AG-05 - Notify FedRAMP of Concerns compliance check
+  description_template: Configuration requires validation for FRR-CCM-AG-05 compliance
+  remediation_template: Implement FRR-CCM-AG-05 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-AG-05
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-AG-05 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-AG-05 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-AG-05 compliance validation
+    implementation: |
+      # FRR-CCM-AG-05 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-AG-05 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_ag_05 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-AG-05 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-AG-05 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-AG-05'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-AG-05
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-AG-05"
+        RequirementName = "Notify FedRAMP of Concerns"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-AG-05.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_ag_06
+name: No Additional Requirements Compliance
+description: Validates compliance with FRR-CCM-AG-06 - No Additional Requirements
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-AG-06 - No Additional Requirements compliance check
+  description_template: Configuration requires validation for FRR-CCM-AG-06 compliance
+  remediation_template: Implement FRR-CCM-AG-06 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-AG-06
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-AG-06 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-AG-06 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-AG-06 compliance validation
+    implementation: |
+      # FRR-CCM-AG-06 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-AG-06 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_ag_06 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-AG-06 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-AG-06 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-AG-06'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-AG-06
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-AG-06"
+        RequirementName = "No Additional Requirements"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-AG-06.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_ag_07
+name: Notify FedRAMP After Requests Compliance
+description: Validates compliance with FRR-CCM-AG-07 - Notify FedRAMP After Requests
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-AG-07 - Notify FedRAMP After Requests compliance check
+  description_template: Configuration requires validation for FRR-CCM-AG-07 compliance
+  remediation_template: Implement FRR-CCM-AG-07 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-AG-07
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-AG-07 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-AG-07 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-AG-07 compliance validation
+    implementation: |
+      # FRR-CCM-AG-07 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-AG-07 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_ag_07 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-AG-07 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-AG-07 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-AG-07'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-AG-07
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-AG-07"
+        RequirementName = "Notify FedRAMP After Requests"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-AG-07.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_qr_01
+name: Quarterly Review Hosting Compliance
+description: Validates compliance with FRR-CCM-QR-01 - Quarterly Review Hosting
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-QR-01 - Quarterly Review Hosting compliance check
+  description_template: Configuration requires validation for FRR-CCM-QR-01 compliance
+  remediation_template: Implement FRR-CCM-QR-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-QR-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-QR-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-QR-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-QR-01 compliance validation
+    implementation: |
+      # FRR-CCM-QR-01 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-QR-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_qr_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-QR-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-QR-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-QR-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-QR-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-QR-01"
+        RequirementName = "Quarterly Review Hosting"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-QR-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low']
+---
+pattern_id: ccm.frr.frr_ccm_qr_02
+name: Quarterly Review Compliance
+description: Validates compliance with FRR-CCM-QR-02 - Quarterly Review
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-QR-02 - Quarterly Review compliance check
+  description_template: Configuration requires validation for FRR-CCM-QR-02 compliance
+  remediation_template: Implement FRR-CCM-QR-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-QR-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-QR-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-QR-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-QR-02 compliance validation
+    implementation: |
+      # FRR-CCM-QR-02 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-QR-02 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_qr_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-QR-02 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-QR-02 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-QR-02'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-QR-02
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-QR-02"
+        RequirementName = "Quarterly Review"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-QR-02.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_qr_03
+name: Review Scheduling Window Compliance
+description: Validates compliance with FRR-CCM-QR-03 - Review Scheduling Window
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-QR-03 - Review Scheduling Window compliance check
+  description_template: Configuration requires validation for FRR-CCM-QR-03 compliance
+  remediation_template: Implement FRR-CCM-QR-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-QR-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-QR-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-QR-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-QR-03 compliance validation
+    implementation: |
+      # FRR-CCM-QR-03 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-QR-03 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_qr_03 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-QR-03 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-QR-03 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-QR-03'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-QR-03
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-QR-03"
+        RequirementName = "Review Scheduling Window"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-QR-03.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_qr_04
+name: No Irresponsible Disclosure Compliance
+description: Validates compliance with FRR-CCM-QR-04 - No Irresponsible Disclosure
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-QR-04 - No Irresponsible Disclosure compliance check
+  description_template: Configuration requires validation for FRR-CCM-QR-04 compliance
+  remediation_template: Implement FRR-CCM-QR-04 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-QR-04
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-QR-04 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-QR-04 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-QR-04 compliance validation
+    implementation: |
+      # FRR-CCM-QR-04 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-QR-04 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_qr_04 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-QR-04 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-QR-04 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-QR-04'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-QR-04
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-QR-04"
+        RequirementName = "No Irresponsible Disclosure"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-QR-04.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_qr_05
+name: Meeting Registration Info Compliance
+description: Validates compliance with FRR-CCM-QR-05 - Meeting Registration Info
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-QR-05 - Meeting Registration Info compliance check
+  description_template: Configuration requires validation for FRR-CCM-QR-05 compliance
+  remediation_template: Implement FRR-CCM-QR-05 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-QR-05
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-QR-05 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-QR-05 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-QR-05 compliance validation
+    implementation: |
+      # FRR-CCM-QR-05 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-QR-05 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_qr_05 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-QR-05 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-QR-05 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-QR-05'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-QR-05
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-QR-05"
+        RequirementName = "Meeting Registration Info"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-QR-05.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_qr_06
+name: Next Review Date Compliance
+description: Validates compliance with FRR-CCM-QR-06 - Next Review Date
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-QR-06 - Next Review Date compliance check
+  description_template: Configuration requires validation for FRR-CCM-QR-06 compliance
+  remediation_template: Implement FRR-CCM-QR-06 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-QR-06
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-QR-06 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-QR-06 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-QR-06 compliance validation
+    implementation: |
+      # FRR-CCM-QR-06 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-QR-06 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_qr_06 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-QR-06 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-QR-06 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-QR-06'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-QR-06
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-QR-06"
+        RequirementName = "Next Review Date"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-QR-06.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_qr_07
+name: Additional Content Compliance
+description: Validates compliance with FRR-CCM-QR-07 - Additional Content
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-QR-07 - Additional Content compliance check
+  description_template: Configuration requires validation for FRR-CCM-QR-07 compliance
+  remediation_template: Implement FRR-CCM-QR-07 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-QR-07
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-QR-07 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-QR-07 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-QR-07 compliance validation
+    implementation: |
+      # FRR-CCM-QR-07 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-QR-07 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_qr_07 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-QR-07 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-QR-07 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-QR-07'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-QR-07
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-QR-07"
+        RequirementName = "Additional Content"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-QR-07.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_qr_08
+name: Restrict Third Parties Compliance
+description: Validates compliance with FRR-CCM-QR-08 - Restrict Third Parties
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-QR-08 - Restrict Third Parties compliance check
+  description_template: Configuration requires validation for FRR-CCM-QR-08 compliance
+  remediation_template: Implement FRR-CCM-QR-08 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-QR-08
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-QR-08 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-QR-08 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-QR-08 compliance validation
+    implementation: |
+      # FRR-CCM-QR-08 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-QR-08 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_qr_08 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-QR-08 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-QR-08 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-QR-08'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-QR-08
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-QR-08"
+        RequirementName = "Restrict Third Parties"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-QR-08.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_qr_09
+name: Record/Transcribe Reviews Compliance
+description: Validates compliance with FRR-CCM-QR-09 - Record/Transcribe Reviews
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-QR-09 - Record/Transcribe Reviews compliance check
+  description_template: Configuration requires validation for FRR-CCM-QR-09 compliance
+  remediation_template: Implement FRR-CCM-QR-09 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-QR-09
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-QR-09 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-QR-09 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-QR-09 compliance validation
+    implementation: |
+      # FRR-CCM-QR-09 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-QR-09 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_qr_09 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-QR-09 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-QR-09 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-QR-09'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-QR-09
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-QR-09"
+        RequirementName = "Record/Transcribe Reviews"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-QR-09.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_qr_10
+name: Share Recordings Responsibly Compliance
+description: Validates compliance with FRR-CCM-QR-10 - Share Recordings Responsibly
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-QR-10 - Share Recordings Responsibly compliance check
+  description_template: Configuration requires validation for FRR-CCM-QR-10 compliance
+  remediation_template: Implement FRR-CCM-QR-10 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-QR-10
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-QR-10 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-QR-10 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-QR-10 compliance validation
+    implementation: |
+      # FRR-CCM-QR-10 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-QR-10 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_qr_10 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-QR-10 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-QR-10 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-QR-10'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-QR-10
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-QR-10"
+        RequirementName = "Share Recordings Responsibly"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-QR-10.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: ccm.frr.frr_ccm_qr_11
+name: Share Content Responsibly Compliance
+description: Validates compliance with FRR-CCM-QR-11 - Share Content Responsibly
+family: CCM
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-CCM-QR-11 - Share Content Responsibly compliance check
+  description_template: Configuration requires validation for FRR-CCM-QR-11 compliance
+  remediation_template: Implement FRR-CCM-QR-11 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- ccm
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-CCM-QR-11
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-CCM-QR-11 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-CCM-QR-11 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-CCM-QR-11 compliance validation
+    implementation: |
+      # FRR-CCM-QR-11 compliance automation
+      # GitHub Actions
+      - name: FRR-CCM-QR-11 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern ccm.frr.frr_ccm_qr_11 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-CCM-QR-11 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-CCM-QR-11 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-CCM-QR-11'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-CCM-QR-11
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-CCM-QR-11"
+        RequirementName = "Share Content Responsibly"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-CCM-QR-11.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']

@@ -20,19 +20,35 @@ This server loads FedRAMP 20x data from the official [FedRAMP documentation repo
 
 ### Complete Data Coverage
 
-The server provides access to **329 requirements** across all 12 FedRAMP 20x documents:
-- **ADS** - Authorization Data Sharing (22 requirements)
+The server provides access to **271 requirements** (199 FRRs + 72 KSIs) plus **50 definitions** (FRDs) across FedRAMP 20x documents:
+
+**FedRAMP Requirements (FRR) - 199 requirements across 10 families:**
+- **ADS** - Authorization Data Sharing (20 requirements)
 - **CCM** - Collaborative Continuous Monitoring (25 requirements)
-- **FRD** - FedRAMP Definitions (50 definitions)
 - **FSI** - FedRAMP Security Inbox (16 requirements)
 - **ICP** - Incident Communications Procedures (9 requirements)
-- **KSI** - Key Security Indicators (72 indicators)
 - **MAS** - Minimum Assessment Scope (12 requirements)
 - **PVA** - Persistent Validation and Assessment (22 requirements)
 - **RSC** - Recommended Secure Configuration (10 requirements)
-- **SCN** - Significant Change Notifications (26 requirements)
+- **SCN** - Significant Change Notifications (22 requirements)
 - **UCM** - Using Cryptographic Modules (4 requirements)
-- **VDR** - Vulnerability Detection and Response (59 requirements)
+- **VDR** - Vulnerability Detection and Response (57 requirements)
+- **KSI** - Key Security Indicators (2 requirements)
+
+**Key Security Indicators (KSI) - 72 indicators across 11 families:**
+- **AFR** - Architecture, Features, and Resources (11 indicators)
+- **CED** - Continuous Evidence Delivery (4 indicators)
+- **CMT** - Continuous Monitoring and Testing (5 indicators)
+- **CNA** - Cloud Native Architecture (8 indicators)
+- **IAM** - Identity and Access Management (7 indicators)
+- **INR** - Incident and Near-Miss Reporting (3 indicators)
+- **MLA** - Monitoring, Logging, and Alerting (8 indicators)
+- **PIY** - Privacy and Transparency (8 indicators)
+- **RPL** - Resilience and Recovery Planning (4 indicators)
+- **SVC** - Secure Coding and Vulnerability Management (10 indicators)
+- **TPR** - Third-Party Risk Management (4 indicators)
+
+**FedRAMP Definitions (FRD) - 50 official term definitions**
 
 ## Features
 
@@ -47,6 +63,33 @@ The server provides access to **329 requirements** across all 12 FedRAMP 20x doc
 - **Implementation Planning**: Generate strategic interview questions to help product managers and engineers think through FedRAMP 20x implementation considerations
 - **AST-Powered Code Analysis**: Advanced Abstract Syntax Tree parsing using tree-sitter for accurate, context-aware security analysis across Python, C#, Java, TypeScript/JavaScript, Bicep, and Terraform
 - **Semantic Analysis**: Deep code understanding with symbol resolution, control flow analysis, and interprocedural analysis capabilities
+- **🚀 Hybrid Analysis (NEW)**: Combines fast pattern-based detection (120 YAML patterns) with deep traditional analyzers (72 KSIs + 199 FRRs) for comprehensive, performant compliance checking
+- **Pattern Engine**: Declarative YAML-driven detection across 14 languages with intelligent deduplication and coverage metadata
+
+### Hybrid Analysis Architecture
+
+The server uses a **hybrid analysis approach** combining two complementary analysis methods:
+
+1. **Pattern Engine** (Fast, Broad Coverage)
+   - **120 YAML-defined patterns** across 11 requirement families
+   - **14 languages**: Python, C#, Java, TypeScript, JavaScript, Bicep, Terraform, GitHub Actions, Azure Pipelines, GitLab CI, YAML, JSON, Dockerfile, GitHub
+   - AST-first detection with regex fallback for accuracy
+   - Declarative, easy-to-maintain pattern definitions
+   - Coverage: ADS, CCM, CNA, COMMON, IAM, MLA, RSC, SCN, SVC, UCM, VDR
+
+2. **Traditional Analyzers** (Deep, Specialized)
+   - **72 KSI analyzers** for Key Security Indicators
+   - **199 FRR analyzers** for specific FedRAMP requirements
+   - Context-aware, interprocedural analysis
+   - Complex security logic and data flow tracking
+
+3. **Intelligent Deduplication**
+   - Merges findings from both engines
+   - Removes duplicates (same requirement + similar description)
+   - Prefers pattern findings when duplicate (faster, clearer source)
+   - Preserves unique insights from both approaches
+
+**Performance**: Pattern engine provides comparable speed to traditional analyzers with broader language coverage. First-run initialization overhead is amortized across multiple analyses.
 
 **Important Clarification: OSCAL Format**
 FedRAMP 20x requires **machine-readable** formats (JSON, XML, or structured data) for Authorization Data Sharing. **OSCAL is NOT mentioned in FedRAMP 20x requirements** - it's a NIST standard that can be used as one potential implementation approach. The actual requirement is simply "machine-readable" - you can use custom JSON/XML or OSCAL based on your implementation needs.
@@ -210,7 +253,7 @@ For CI/CD integration, multi-server setup with Azure and GitHub, or detailed tro
 
 ## Available Tools
 
-The server provides **45 tools** organized into the following categories:
+The server provides **48 tools** organized into the following categories:
 
 **Core Tools (11):** Query requirements, definitions, KSIs, and KSI evidence automation
 **FRR Analysis Tools (7):** Analyze code against FedRAMP Requirements (FRR) with comprehensive compliance checking across all 199 requirements

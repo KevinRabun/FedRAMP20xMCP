@@ -1,0 +1,570 @@
+pattern_id: inr.alerts.missing_configuration
+name: Missing Alert Rules
+description: 'Detects missing alert configuration for security events (KSI-INR-01: Incident Detection)'
+family: INR
+severity: CRITICAL
+pattern_type: resource_configuration
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.OperationalInsights/workspaces
+      conditions:
+      - not_has_companion_resource:Microsoft.Insights/scheduledQueryRules
+      - not_has_companion_resource:Microsoft.SecurityInsights/alertRules
+    - resource_type: Microsoft.Storage/storageAccounts|Microsoft.Sql/servers|Microsoft.KeyVault/vaults
+      conditions:
+      - not_has_companion_resource:Microsoft.Insights/metricAlerts
+    regex_fallback: (Microsoft\.OperationalInsights/workspaces|Microsoft\.Storage/storageAccounts|Microsoft\.Sql/servers)(?!.*Microsoft\.Insights/(scheduledQueryRules|metricAlerts))
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_log_analytics_workspace
+      conditions:
+      - not_has_companion_resource:azurerm_monitor_scheduled_query_rules_alert|azurerm_sentinel_alert_rule
+    - resource_type: azurerm_storage_account|azurerm_sql_server|azurerm_key_vault
+      conditions:
+      - not_has_companion_resource:azurerm_monitor_metric_alert
+    regex_fallback: resource\s+"azurerm_(log_analytics_workspace|storage_account|sql_server|key_vault)"(?!.*azurerm_monitor_(scheduled_query_rules_alert|metric_alert))
+  github_actions:
+    ast_queries:
+    - query_type: workflow_job
+      conditions:
+      - not_has_step:azure/login
+      - not_has_step:monitoring
+    regex_fallback: on:\s*(push|workflow_dispatch)(?!.*azure/login|.*monitoring)
+  azure_pipelines:
+    ast_queries:
+    - query_type: pipeline_stage
+      conditions:
+      - not_has_task:AzureMonitor|AzureCLI
+    regex_fallback: stages:(?!.*AzureMonitor|.*monitoring)
+finding:
+  title_template: Missing alert rules for security events
+  description_template: '{resource_type} does not have alert rules configured. KSI-INR-01 requires real-time alerting for security incidents.'
+  remediation_template: "Configure alert rules:\n\nBicep (Log Analytics Alert):\nresource alertRule 'Microsoft.Insights/scheduledQueryRules@2021-08-01' = {\n  name: 'security-events-alert'\n  location: location\n  properties: {\n    displayName: 'Security Events Alert'\n    severity: 1  // Critical\n    enabled: true\n    evaluationFrequency: 'PT5M'  // Every 5 minutes\n    windowSize: 'PT15M'\n    criteria: {\n      allOf: [\n        {\n          query: '''\n            SecurityEvent\n            | where EventID in (4625, 4648, 4740)  // Failed logons, explicit credentials, account lockout\n            | summarize Count = count() by Computer, Account\n            | where Count > 5\n          '''\n          timeAggregation: 'Count'\n          operator: 'GreaterThan'\n          threshold: 0\n        }\n      ]\n    }\n    actions: {\n      actionGroups: [\n        actionGroup.id\n      ]\n    }\n    scopes: [\n      logAnalyticsWorkspace.id\n    ]\n  }\n}\n\nBicep (Metric Alert):\nresource\
+    \ metricAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {\n  name: 'storage-unauthorized-access'\n  location: 'global'\n  properties: {\n    severity: 1\n    enabled: true\n    evaluationFrequency: 'PT1M'\n    windowSize: 'PT5M'\n    criteria: {\n      'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'\n      allOf: [\n        {\n          name: 'UnauthorizedAccess'\n          metricName: 'Transactions'\n          dimensions: [\n            {\n              name: 'ResponseType'\n              operator: 'Include'\n              values: ['ClientOtherError', 'AuthorizationError']\n            }\n          ]\n          operator: 'GreaterThan'\n          threshold: 10\n          timeAggregation: 'Total'\n        }\n      ]\n    }\n    actions: [\n      {\n        actionGroupId: actionGroup.id\n      }\n    ]\n    scopes: [\n      storageAccount.id\n    ]\n  }\n}\n\nTerraform:\nresource \"azurerm_monitor_scheduled_query_rules_alert\" \"security_events\" {\n \
+    \ name                = \"security-events-alert\"\n  location            = azurerm_resource_group.main.location\n  resource_group_name = azurerm_resource_group.main.name\n  \n  data_source_id = azurerm_log_analytics_workspace.main.id\n  query          = <<-QUERY\n    SecurityEvent\n    | where EventID in (4625, 4648, 4740)\n    | summarize Count = count() by Computer, Account\n    | where Count > 5\n  QUERY\n  \n  frequency   = 5\n  time_window = 15\n  severity    = 1\n  \n  action {\n    action_group = [azurerm_monitor_action_group.main.id]\n  }\n  \n  trigger {\n    operator  = \"GreaterThan\"\n    threshold = 0\n  }\n}\n\nRequired Alert Categories:\n1. Authentication failures (EventID 4625, 4648)\n2. Privilege escalation (EventID 4672, 4673)\n3. Resource access violations (401, 403 errors)\n4. Configuration changes (audit logs)\n5. Data exfiltration indicators (large downloads, unusual access patterns)\n"
+  evidence_collection:
+  - Alert rule configurations with query/metric definitions
+  - Action group configuration (email, SMS, webhook)
+  - Alert history showing triggered incidents
+  - Response time metrics (detection to acknowledgment)
+  azure_services:
+  - Azure Monitor
+  - Azure Sentinel
+  - Azure Log Analytics
+  - Azure Action Groups
+tags:
+- alerts
+- incident-detection
+- critical-gap
+nist_controls:
+- ir-4
+- ir-5
+- si-4
+- au-5
+related_ksis:
+- KSI-INR-01
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'Resources
+
+      | where type =~ ''microsoft.insights/metricalerts'' or type =~ ''microsoft.insights/activitylogalerts''
+
+      | extend enabled = tostring(properties.enabled)
+
+      | extend severity = tostring(properties.severity)
+
+      | project name, type, resourceGroup, enabled, severity, location
+
+      | order by name asc
+
+      '
+    description: Query configured metric and activity log alerts
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az monitor metrics alert list \\\n  --query \"[].{name:name, enabled:enabled, severity:severity, resourceGroup:resourceGroup}\" \\\n  --output json\n"
+    description: List all metric alert rules
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: INR Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern inr.alerts.missing_configuration \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'inr.alerts.missing_configuration Validation'\n  inputs:\n    script: |\n      # Validate inr.alerts.missing_configuration compliance\n      python validate.py --pattern inr.alerts.missing_configuration"
+    azure_services: &id001
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Microsoft Sentinel
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: INR Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern inr.alerts.missing_configuration \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'inr.alerts.missing_configuration Validation'\n  inputs:\n    script: |\n      # Validate inr.alerts.missing_configuration compliance\n      python validate.py --pattern inr.alerts.missing_configuration"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: INR Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern inr.alerts.missing_configuration \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'inr.alerts.missing_configuration Validation'\n  inputs:\n    script: |\n      # Validate inr.alerts.missing_configuration compliance\n      python validate.py --pattern inr.alerts.missing_configuration"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Develop incident response plan
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Set up incident tracking system
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Configure Azure Monitor alerts for security events
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Enable Microsoft Sentinel for SIEM
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Define escalation procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Conduct tabletop exercises
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Document incident response procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: IR - Incident Response
+  control_numbers:
+  - IR-4
+  - IR-5
+  - SI-4
+  - AU-5
+  ssp_sections:
+  - section: 'IR-4: Incident Response Procedure'
+    description_template: The system implements Incident Response Procedure controls in accordance with FedRAMP 20x requirements. Always follow a documented incident response procedure.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Blob Storage, Azure Monitor, Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Incident Response Procedure requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Log Analytics functionality
+    alternatives: []
+  - service: Microsoft Sentinel
+    tier: Standard
+    purpose: Required for Microsoft Sentinel functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-INR-01
+    requirement_name: Incident Response Procedure
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of inr.alerts.missing_configuration
+    code_sample: "// Bicep compliant configuration for inr.alerts.missing_configuration\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating inr.alerts.missing_configuration
+    code_sample: '# Non-compliant code missing inr.alerts.missing_configuration requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: inr.logging.incident_tracking
+name: Missing Incident Logging
+description: 'Detects missing incident tracking/logging integration (KSI-INR-02: Incident Response)'
+family: INR
+severity: HIGH
+pattern_type: integration_check
+languages:
+  python:
+    ast_queries:
+    - query_type: import_statement
+      conditions:
+      - not_has_any_import:opencensus|applicationinsights|azure.monitor|azure.security.keyvault
+    - query_type: exception_handler
+      conditions:
+      - not_has_logging_call
+      - not_has_telemetry_call
+    regex_fallback: except\s+.*:\s*(?!.*logger\.|.*logging\.|.*telemetry)
+  csharp:
+    ast_queries:
+    - query_type: catch_clause
+      conditions:
+      - not_has_logging_call
+    - query_type: using_directive
+      conditions:
+      - not_has_any:Microsoft.ApplicationInsights|Microsoft.Extensions.Logging
+    regex_fallback: catch\s*\([^)]+\)\s*\{(?!.*\.Log|.*logger\.|.*telemetry)
+  java:
+    ast_queries:
+    - query_type: catch_clause
+      conditions:
+      - not_has_logging_call
+    - query_type: import_declaration
+      conditions:
+      - not_has_any:org.slf4j|java.util.logging|com.microsoft.applicationinsights
+    regex_fallback: catch\s*\([^)]+\)\s*\{(?!.*log\.|.*logger\.|.*LOGGER\.)
+  typescript:
+    ast_queries:
+    - query_type: catch_clause
+      conditions:
+      - not_has_logging_call
+    - query_type: import_statement
+      conditions:
+      - not_has_any:applicationinsights|@azure/monitor
+    regex_fallback: catch\s*\([^)]+\)\s*\{(?!.*console\.(error|warn)|.*logger\.|.*telemetry)
+finding:
+  title_template: Exception handling without incident logging
+  description_template: Exception handler found without proper incident logging. KSI-INR-02 requires all incidents to be logged and tracked.
+  remediation_template: "Add incident logging:\n\nPython (Application Insights):\nfrom opencensus.ext.azure.log_exporter import AzureLogHandler\nimport logging\n\nlogger = logging.getLogger(__name__)\nlogger.addHandler(AzureLogHandler(connection_string='InstrumentationKey=...'))\n\ntry:\n    # ... application code\nexcept Exception as e:\n    logger.error(\n        f\"Incident: {type(e).__name__}\",\n        extra={\n            'custom_dimensions': {\n                'error_type': type(e).__name__,\n                'error_message': str(e),\n                'severity': 'high',\n                'incident_id': str(uuid.uuid4()),\n                'timestamp': datetime.utcnow().isoformat()\n            }\n        }\n    )\n    raise\n\nC# (Application Insights):\nusing Microsoft.ApplicationInsights;\nusing Microsoft.ApplicationInsights.DataContracts;\n\nvar telemetryClient = new TelemetryClient();\n\ntry\n{\n    // ... application code\n}\ncatch (Exception ex)\n{\n    telemetryClient.TrackException(ex,\
+    \ new Dictionary<string, string>\n    {\n        { \"IncidentId\", Guid.NewGuid().ToString() },\n        { \"Severity\", \"High\" },\n        { \"Timestamp\", DateTime.UtcNow.ToString(\"o\") }\n    });\n    throw;\n}\n\nRequired Incident Data:\n- Incident ID (unique identifier)\n- Timestamp (UTC)\n- Severity level\n- Error type and message\n- Stack trace\n- User context (if applicable)\n- Resource affected\n- Remediation steps taken\n"
+  evidence_collection:
+  - Exception handling code with logging
+  - Application Insights/Log Analytics configuration
+  - Incident tracking dashboard
+  - Sample incident logs with required fields
+  azure_services:
+  - Application Insights
+  - Azure Monitor
+  - Azure Log Analytics
+requires_presence:
+- mla.logging.azure_monitor
+tags:
+- incident-logging
+- exception-handling
+- security-gap
+nist_controls:
+- ir-6
+- ir-8
+- au-6
+related_ksis:
+- KSI-INR-02
+evidence_artifacts:
+- artifact_type: logs
+  name: Authentication logs with MFA details
+  source: Azure Monitor - SigninLogs
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: Conditional Access policies export
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Authentication methods compliance report
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: CSV
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: INR Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern inr.logging.incident_tracking \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'inr.logging.incident_tracking Validation'\n  inputs:\n    script: |\n      # Validate inr.logging.incident_tracking compliance\n      python validate.py --pattern inr.logging.incident_tracking"
+    azure_services: &id001
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Microsoft Sentinel
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: INR Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern inr.logging.incident_tracking \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'inr.logging.incident_tracking Validation'\n  inputs:\n    script: |\n      # Validate inr.logging.incident_tracking compliance\n      python validate.py --pattern inr.logging.incident_tracking"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: INR Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern inr.logging.incident_tracking \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'inr.logging.incident_tracking Validation'\n  inputs:\n    script: |\n      # Validate inr.logging.incident_tracking compliance\n      python validate.py --pattern inr.logging.incident_tracking"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Develop incident response plan
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Set up incident tracking system
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Configure Azure Monitor alerts for security events
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Enable Microsoft Sentinel for SIEM
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Define escalation procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Conduct tabletop exercises
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Document incident response procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: IR - Incident Response
+  control_numbers:
+  - IR-6
+  - IR-8
+  - AU-6
+  ssp_sections:
+  - section: 'IR-6: Incident Logging'
+    description_template: The system implements Incident Logging controls in accordance with FedRAMP 20x requirements. Maintain a log of incidents and periodically review past incidents for patterns or vulnerabilities.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Blob Storage, Azure Monitor, Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Incident Logging requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Log Analytics functionality
+    alternatives: []
+  - service: Microsoft Sentinel
+    tier: Standard
+    purpose: Required for Microsoft Sentinel functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-INR-02
+    requirement_name: Incident Logging
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python implementation of inr.logging.incident_tracking
+    code_sample: "# Python compliant code for inr.logging.incident_tracking\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements inr.logging.incident_tracking requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code violating inr.logging.incident_tracking
+    code_sample: "# Python non-compliant code for inr.logging.incident_tracking\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+---
+pattern_id: inr.compliance.ksi_inr_03
+name: Incident After Action Reports Detection
+description: Detects compliance indicators for KSI-INR-03 - Incident After Action Reports
+family: INR
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: Incident After Action Reports compliance check
+  description_template: Configuration may not fully implement KSI-INR-03 - Incident After Action Reports
+  remediation_template: Review and implement KSI-INR-03 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- inr
+- compliance
+- ksi-inr-03
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-INR-03
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-INR-03 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-INR-03 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-INR-03 compliance enforcement
+    implementation: "# Azure Policy for KSI-INR-03 compliance\n# GitHub Actions\n- name: KSI-INR-03 Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern inr.compliance.ksi_inr_03 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'KSI-INR-03 Validation'\n  inputs:\n    script: |\n      # Validate KSI-INR-03 compliance\n      python validate.py --pattern inr.compliance.ksi_inr_03\n"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-INR-03
+    implementation: '# Azure Monitor for KSI-INR-03 continuous monitoring
+
+      # Log Analytics Query
+
+      AzureActivity
+
+      | where CategoryValue == "Policy"
+
+      | where OperationNameValue contains "KSI-INR-03"
+
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+
+      '
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels:
+- Low
+- Moderate

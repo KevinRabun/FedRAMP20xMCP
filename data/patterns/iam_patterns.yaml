@@ -1,0 +1,2724 @@
+pattern_id: iam.mfa.fido2_import
+name: FIDO2 Library Import
+description: Detects import of FIDO2 library for phishing-resistant MFA
+family: IAM
+severity: INFO
+pattern_type: import
+languages:
+  python:
+    ast_queries:
+    - query_type: import_statement
+      target: fido2
+      match_type: contains
+    regex_fallback: import\s+fido2|from\s+fido2
+    positive_indicators:
+    - fido2
+  csharp:
+    ast_queries:
+    - query_type: using_directive
+      target: Fido2NetLib
+    regex_fallback: using\s+Fido2NetLib
+    positive_indicators:
+    - Fido2NetLib
+  java:
+    ast_queries:
+    - query_type: import_declaration
+      target: com.yubico.webauthn
+    regex_fallback: import\s+com\.yubico\.webauthn
+  typescript:
+    ast_queries:
+    - query_type: import_statement
+      target: '@simplewebauthn'
+    regex_fallback: import.*@simplewebauthn
+finding:
+  title_template: Phishing-resistant MFA library detected (FIDO2)
+  description_template: FIDO2/WebAuthn library import found, indicating phishing-resistant MFA capability.
+  remediation_template: N/A - Positive finding indicating compliance
+  evidence_collection:
+  - FIDO2 authentication flow implementation
+  - Registration and authentication code
+  azure_services:
+  - Microsoft Entra ID
+tags:
+- mfa
+- fido2
+- positive
+nist_controls:
+- ia-2
+- ia-2.1
+- ia-2.2
+- ia-2.8
+related_ksis:
+- KSI-IAM-01
+evidence_artifacts:
+- artifact_type: logs
+  name: Authentication logs with MFA details
+  source: Azure Monitor - SigninLogs
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: Conditional Access policies export
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Authentication methods compliance report
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: CSV
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.fido2_import \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.fido2_import Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.fido2_import compliance\n      python validate.py --pattern iam.mfa.fido2_import"
+    azure_services: &id001
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Azure RBAC
+    - Conditional Access
+    - Log Analytics
+    - Microsoft Entra ID
+    - Privileged Identity Management
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.fido2_import \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.fido2_import Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.fido2_import compliance\n      python validate.py --pattern iam.mfa.fido2_import"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.fido2_import \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.fido2_import Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.fido2_import compliance\n      python validate.py --pattern iam.mfa.fido2_import"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Enable Microsoft Entra ID Premium P2
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure Conditional Access policies
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up phishing-resistant MFA (FIDO2, certificate-based)
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Configure Privileged Identity Management (PIM)
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Enable Identity Protection
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Set up Azure RBAC with least privilege
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Test MFA enforcement for all user types
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: IA - Identification and Authentication
+  control_numbers:
+  - IA-2
+  - IA-2.1
+  - IA-2.2
+  - IA-2.8
+  ssp_sections:
+  - section: 'IA-2: Phishing-Resistant MFA'
+    description_template: The system implements Phishing-Resistant MFA controls in accordance with FedRAMP 20x requirements. Enforce multi-factor authentication (MFA) using methods that are difficult to intercept or impersonate (phishing-resistant MFA) for all user authentication.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Blob Storage, Azure Monitor, Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Phishing-Resistant MFA requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  - service: Azure RBAC
+    tier: Standard
+    purpose: Required for Azure RBAC functionality
+    alternatives: []
+  - service: Conditional Access
+    tier: Standard
+    purpose: Required for Conditional Access functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-IAM-01
+    requirement_name: Phishing-Resistant MFA
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python implementation of iam.mfa.fido2_import
+    code_sample: "# Python compliant code for iam.mfa.fido2_import\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements iam.mfa.fido2_import requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code violating iam.mfa.fido2_import
+    code_sample: "# Python non-compliant code for iam.mfa.fido2_import\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+---
+pattern_id: iam.mfa.webauthn_import
+name: WebAuthn Library Import
+description: Detects import of WebAuthn library for phishing-resistant MFA
+family: IAM
+severity: INFO
+pattern_type: import
+languages:
+  python:
+    ast_queries:
+    - query_type: import_statement
+      target: webauthn
+    regex_fallback: import\s+webauthn|from\s+webauthn
+    positive_indicators:
+    - webauthn
+    - py_webauthn
+  csharp:
+    ast_queries:
+    - query_type: using_directive
+      target: Fido2NetLib
+    regex_fallback: using\s+Fido2NetLib
+  java:
+    ast_queries:
+    - query_type: import_declaration
+      target: com.yubico.webauthn
+    regex_fallback: import\s+com\.yubico\.webauthn
+  typescript:
+    ast_queries:
+    - query_type: import_statement
+      target: webauthn
+    regex_fallback: import.*['"].*webauthn
+finding:
+  title_template: Phishing-resistant MFA library detected (WebAuthn)
+  description_template: WebAuthn library import found, indicating phishing-resistant MFA capability.
+  remediation_template: N/A - Positive finding
+tags:
+- mfa
+- webauthn
+- positive
+nist_controls:
+- ia-2
+- ia-2.1
+- ia-2.2
+- ia-2.8
+related_ksis:
+- KSI-IAM-01
+evidence_artifacts:
+- artifact_type: logs
+  name: Authentication logs with MFA details
+  source: Azure Monitor - SigninLogs
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: Conditional Access policies export
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Authentication methods compliance report
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: CSV
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.webauthn_import \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.webauthn_import Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.webauthn_import compliance\n      python validate.py --pattern iam.mfa.webauthn_import"
+    azure_services: &id001
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Azure RBAC
+    - Conditional Access
+    - Log Analytics
+    - Microsoft Entra ID
+    - Privileged Identity Management
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.webauthn_import \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.webauthn_import Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.webauthn_import compliance\n      python validate.py --pattern iam.mfa.webauthn_import"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.webauthn_import \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.webauthn_import Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.webauthn_import compliance\n      python validate.py --pattern iam.mfa.webauthn_import"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Enable Microsoft Entra ID Premium P2
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure Conditional Access policies
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up phishing-resistant MFA (FIDO2, certificate-based)
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Configure Privileged Identity Management (PIM)
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Enable Identity Protection
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Set up Azure RBAC with least privilege
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Test MFA enforcement for all user types
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: IA - Identification and Authentication
+  control_numbers:
+  - IA-2
+  - IA-2.1
+  - IA-2.2
+  - IA-2.8
+  ssp_sections:
+  - section: 'IA-2: Phishing-Resistant MFA'
+    description_template: The system implements Phishing-Resistant MFA controls in accordance with FedRAMP 20x requirements. Enforce multi-factor authentication (MFA) using methods that are difficult to intercept or impersonate (phishing-resistant MFA) for all user authentication.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Blob Storage, Azure Monitor, Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Phishing-Resistant MFA requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  - service: Azure RBAC
+    tier: Standard
+    purpose: Required for Azure RBAC functionality
+    alternatives: []
+  - service: Conditional Access
+    tier: Standard
+    purpose: Required for Conditional Access functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-IAM-01
+    requirement_name: Phishing-Resistant MFA
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python implementation of iam.mfa.webauthn_import
+    code_sample: "# Python compliant code for iam.mfa.webauthn_import\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements iam.mfa.webauthn_import requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code violating iam.mfa.webauthn_import
+    code_sample: "# Python non-compliant code for iam.mfa.webauthn_import\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+---
+pattern_id: iam.mfa.azure_ad_import
+name: Azure AD/MSAL Import
+description: Detects Azure AD authentication libraries
+family: IAM
+severity: INFO
+pattern_type: import
+languages:
+  python:
+    ast_queries:
+    - query_type: import_statement
+      target: msal
+    - query_type: import_statement
+      target: azure.identity
+    regex_fallback: import\s+msal|from\s+msal|from\s+azure\.identity
+    positive_indicators:
+    - msal
+    - azure.identity
+  csharp:
+    ast_queries:
+    - query_type: using_directive
+      target: Microsoft.Identity
+    - query_type: using_directive
+      target: Microsoft.Authentication
+    regex_fallback: using\s+Microsoft\.(Identity|Authentication)
+  java:
+    ast_queries:
+    - query_type: import_declaration
+      target: com.microsoft.aad
+    regex_fallback: import\s+com\.microsoft\.aad
+  typescript:
+    ast_queries:
+    - query_type: import_statement
+      target: '@azure/msal'
+    regex_fallback: import.*@azure/msal
+finding:
+  title_template: Azure AD authentication detected
+  description_template: Azure AD/MSAL library found. Verify Conditional Access policies enforce phishing-resistant MFA.
+  remediation_template: Ensure Conditional Access policy requires phishing-resistant MFA methods (certificate, FIDO2, Windows Hello)
+tags:
+- mfa
+- azure-ad
+- conditional-check
+nist_controls:
+- ia-2
+related_ksis:
+- KSI-IAM-01
+evidence_artifacts:
+- artifact_type: logs
+  name: Authentication logs with MFA details
+  source: Azure Monitor - SigninLogs
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: Conditional Access policies export
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Authentication methods compliance report
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: CSV
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.azure_ad_import \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.azure_ad_import Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.azure_ad_import compliance\n      python validate.py --pattern iam.mfa.azure_ad_import"
+    azure_services: &id001
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Azure RBAC
+    - Conditional Access
+    - Log Analytics
+    - Microsoft Entra ID
+    - Privileged Identity Management
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.azure_ad_import \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.azure_ad_import Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.azure_ad_import compliance\n      python validate.py --pattern iam.mfa.azure_ad_import"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.azure_ad_import \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.azure_ad_import Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.azure_ad_import compliance\n      python validate.py --pattern iam.mfa.azure_ad_import"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Enable Microsoft Entra ID Premium P2
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure Conditional Access policies
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up phishing-resistant MFA (FIDO2, certificate-based)
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Configure Privileged Identity Management (PIM)
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Enable Identity Protection
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Set up Azure RBAC with least privilege
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Test MFA enforcement for all user types
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: IA - Identification and Authentication
+  control_numbers:
+  - IA-2
+  ssp_sections:
+  - section: 'IA-2: Phishing-Resistant MFA'
+    description_template: The system implements Phishing-Resistant MFA controls in accordance with FedRAMP 20x requirements. Enforce multi-factor authentication (MFA) using methods that are difficult to intercept or impersonate (phishing-resistant MFA) for all user authentication.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Blob Storage, Azure Monitor, Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Phishing-Resistant MFA requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  - service: Azure RBAC
+    tier: Standard
+    purpose: Required for Azure RBAC functionality
+    alternatives: []
+  - service: Conditional Access
+    tier: Standard
+    purpose: Required for Conditional Access functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-IAM-01
+    requirement_name: Phishing-Resistant MFA
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python implementation of iam.mfa.azure_ad_import
+    code_sample: "# Python compliant code for iam.mfa.azure_ad_import\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements iam.mfa.azure_ad_import requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code violating iam.mfa.azure_ad_import
+    code_sample: "# Python non-compliant code for iam.mfa.azure_ad_import\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+---
+pattern_id: iam.mfa.totp_import
+name: TOTP Library Import (Not Phishing-Resistant)
+description: Detects TOTP-based MFA which is NOT phishing-resistant
+family: IAM
+severity: MEDIUM
+pattern_type: import
+languages:
+  python:
+    ast_queries:
+    - query_type: import_statement
+      target: pyotp
+    regex_fallback: import\s+pyotp|from\s+pyotp
+    negative_indicators:
+    - pyotp
+    - totp
+    - otp
+  csharp:
+    ast_queries:
+    - query_type: using_directive
+      target: OtpNet
+    regex_fallback: using\s+OtpNet
+  java:
+    ast_queries:
+    - query_type: import_declaration
+      target: org.jboss.aerogear.security.otp
+    regex_fallback: import\s+.*\.otp
+  typescript:
+    ast_queries:
+    - query_type: import_statement
+      target: otplib
+    regex_fallback: import.*['"]otplib
+finding:
+  title_template: TOTP-based MFA detected (not phishing-resistant)
+  description_template: TOTP library found. Time-based One-Time Passwords are vulnerable to phishing. FedRAMP 20x requires phishing-resistant MFA.
+  remediation_template: 'Migrate to phishing-resistant MFA:
+
+    - FIDO2 (use fido2 or @simplewebauthn libraries)
+
+    - WebAuthn (use py_webauthn or webauthn-json)
+
+    - Azure AD Conditional Access with certificate-based auth
+
+    '
+  evidence_collection:
+  - MFA method migration plan
+  - User communication about MFA changes
+requires_absence:
+- iam.mfa.fido2_import
+- iam.mfa.webauthn_import
+tags:
+- mfa
+- totp
+- security-gap
+nist_controls:
+- ia-2
+- ia-2.8
+related_ksis:
+- KSI-IAM-01
+evidence_artifacts:
+- artifact_type: logs
+  name: Authentication logs with MFA details
+  source: Azure Monitor - SigninLogs
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: Conditional Access policies export
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Authentication methods compliance report
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: CSV
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.totp_import \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.totp_import Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.totp_import compliance\n      python validate.py --pattern iam.mfa.totp_import"
+    azure_services: &id001
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Azure RBAC
+    - Conditional Access
+    - Log Analytics
+    - Microsoft Entra ID
+    - Privileged Identity Management
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.totp_import \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.totp_import Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.totp_import compliance\n      python validate.py --pattern iam.mfa.totp_import"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.totp_import \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.totp_import Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.totp_import compliance\n      python validate.py --pattern iam.mfa.totp_import"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Enable Microsoft Entra ID Premium P2
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure Conditional Access policies
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up phishing-resistant MFA (FIDO2, certificate-based)
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Configure Privileged Identity Management (PIM)
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Enable Identity Protection
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Set up Azure RBAC with least privilege
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Test MFA enforcement for all user types
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: IA - Identification and Authentication
+  control_numbers:
+  - IA-2
+  - IA-2.8
+  ssp_sections:
+  - section: 'IA-2: Phishing-Resistant MFA'
+    description_template: The system implements Phishing-Resistant MFA controls in accordance with FedRAMP 20x requirements. Enforce multi-factor authentication (MFA) using methods that are difficult to intercept or impersonate (phishing-resistant MFA) for all user authentication.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Blob Storage, Azure Monitor, Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Phishing-Resistant MFA requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  - service: Azure RBAC
+    tier: Standard
+    purpose: Required for Azure RBAC functionality
+    alternatives: []
+  - service: Conditional Access
+    tier: Standard
+    purpose: Required for Conditional Access functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-IAM-01
+    requirement_name: Phishing-Resistant MFA
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python implementation of iam.mfa.totp_import
+    code_sample: "# Python compliant code for iam.mfa.totp_import\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements iam.mfa.totp_import requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code violating iam.mfa.totp_import
+    code_sample: "# Python non-compliant code for iam.mfa.totp_import\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+---
+pattern_id: iam.mfa.sms_mfa
+name: SMS-Based MFA (Not Phishing-Resistant)
+description: Detects SMS-based MFA which is NOT phishing-resistant
+family: IAM
+severity: HIGH
+pattern_type: import
+languages:
+  python:
+    ast_queries:
+    - query_type: import_statement
+      target: twilio
+    regex_fallback: import\s+twilio|from\s+twilio
+    negative_indicators:
+    - twilio
+    - sms
+  csharp:
+    ast_queries:
+    - query_type: using_directive
+      target: Twilio
+    regex_fallback: using\s+Twilio
+  java:
+    ast_queries:
+    - query_type: import_declaration
+      target: com.twilio
+    regex_fallback: import\s+com\.twilio
+  typescript:
+    ast_queries:
+    - query_type: import_statement
+      target: twilio
+    regex_fallback: import.*['"]twilio
+finding:
+  title_template: SMS-based MFA detected (not phishing-resistant)
+  description_template: SMS MFA library found. SMS is vulnerable to SIM swapping and phishing attacks. FedRAMP 20x prohibits SMS-only MFA.
+  remediation_template: 'Replace SMS MFA with phishing-resistant methods:
+
+    - FIDO2 security keys
+
+    - WebAuthn (biometrics, platform authenticators)
+
+    - Certificate-based authentication via Azure AD
+
+    '
+requires_absence:
+- iam.mfa.fido2_import
+tags:
+- mfa
+- sms
+- critical-gap
+nist_controls:
+- ia-2
+- ia-2.8
+related_ksis:
+- KSI-IAM-01
+evidence_artifacts:
+- artifact_type: logs
+  name: Authentication logs with MFA details
+  source: Azure Monitor - SigninLogs
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: Conditional Access policies export
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Authentication methods compliance report
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: CSV
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.sms_mfa \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.sms_mfa Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.sms_mfa compliance\n      python validate.py --pattern iam.mfa.sms_mfa"
+    azure_services: &id001
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Azure RBAC
+    - Conditional Access
+    - Log Analytics
+    - Microsoft Entra ID
+    - Privileged Identity Management
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.sms_mfa \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.sms_mfa Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.sms_mfa compliance\n      python validate.py --pattern iam.mfa.sms_mfa"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.sms_mfa \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.sms_mfa Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.sms_mfa compliance\n      python validate.py --pattern iam.mfa.sms_mfa"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Enable Microsoft Entra ID Premium P2
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure Conditional Access policies
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up phishing-resistant MFA (FIDO2, certificate-based)
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Configure Privileged Identity Management (PIM)
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Enable Identity Protection
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Set up Azure RBAC with least privilege
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Test MFA enforcement for all user types
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: IA - Identification and Authentication
+  control_numbers:
+  - IA-2
+  - IA-2.8
+  ssp_sections:
+  - section: 'IA-2: Phishing-Resistant MFA'
+    description_template: The system implements Phishing-Resistant MFA controls in accordance with FedRAMP 20x requirements. Enforce multi-factor authentication (MFA) using methods that are difficult to intercept or impersonate (phishing-resistant MFA) for all user authentication.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Blob Storage, Azure Monitor, Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Phishing-Resistant MFA requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  - service: Azure RBAC
+    tier: Standard
+    purpose: Required for Azure RBAC functionality
+    alternatives: []
+  - service: Conditional Access
+    tier: Standard
+    purpose: Required for Conditional Access functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-IAM-01
+    requirement_name: Phishing-Resistant MFA
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python implementation of iam.mfa.sms_mfa
+    code_sample: "# Python compliant code for iam.mfa.sms_mfa\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements iam.mfa.sms_mfa requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code violating iam.mfa.sms_mfa
+    code_sample: "# Python non-compliant code for iam.mfa.sms_mfa\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+---
+pattern_id: iam.mfa.login_without_mfa
+name: Login Function Without MFA
+description: Detects login functions without MFA enforcement
+family: IAM
+severity: CRITICAL
+pattern_type: function_definition
+languages:
+  python:
+    ast_queries:
+    - query_type: function_definition
+      target: login
+      conditions:
+      - function_name_contains:login
+      - not_contains_in_body:mfa
+      - not_contains_in_body:two_factor
+      - not_contains_in_body:fido2
+    regex_fallback: 'def\s+\w*login\w*\([^)]*\):'
+    negative_indicators:
+    - mfa
+    - two_factor
+    - fido2
+    - webauthn
+    - totp
+  csharp:
+    ast_queries:
+    - query_type: method_declaration
+      target: Login
+      conditions:
+      - method_name_contains:Login
+      - has_attribute:HttpPost
+      - not_contains_in_body:TwoFactor
+    regex_fallback: public\s+.*\s+Login\s*\(
+    negative_indicators:
+    - TwoFactor
+    - Mfa
+    - RequiresTwoFactor
+  java:
+    ast_queries:
+    - query_type: method_declaration
+      target: login
+      conditions:
+      - method_name_contains:login
+      - not_contains_in_body:mfa
+    regex_fallback: public\s+.*\s+login\s*\(
+    negative_indicators:
+    - mfa
+    - twoFactor
+  typescript:
+    ast_queries:
+    - query_type: function_declaration
+      target: login
+      conditions:
+      - function_name_contains:login
+      - not_contains_in_body:mfa
+    regex_fallback: function\s+\w*login\w*\(
+    negative_indicators:
+    - mfa
+    - twoFactor
+    - fido2
+finding:
+  title_template: Login without MFA enforcement
+  description_template: Login function detected without multi-factor authentication. KSI-IAM-01 requires phishing-resistant MFA for ALL user authentication.
+  remediation_template: 'Add MFA to login flow:
+
+    1. After password validation, initiate MFA challenge
+
+    2. Use FIDO2/WebAuthn for phishing resistance
+
+    3. Store MFA status in session
+
+    4. Require MFA re-authentication for sensitive operations
+
+    '
+requires_absence:
+- iam.mfa.fido2_import
+- iam.mfa.webauthn_import
+- iam.mfa.azure_ad_import
+tags:
+- mfa
+- authentication
+- critical-gap
+nist_controls:
+- ia-2
+- ia-2.1
+- ia-2.2
+related_ksis:
+- KSI-IAM-01
+evidence_artifacts:
+- artifact_type: logs
+  name: Authentication logs with MFA details
+  source: Azure Monitor - SigninLogs
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: Conditional Access policies export
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Authentication methods compliance report
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: CSV
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.login_without_mfa \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.login_without_mfa Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.login_without_mfa compliance\n      python validate.py --pattern iam.mfa.login_without_mfa"
+    azure_services: &id001
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Azure RBAC
+    - Conditional Access
+    - Log Analytics
+    - Microsoft Entra ID
+    - Privileged Identity Management
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.login_without_mfa \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.login_without_mfa Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.login_without_mfa compliance\n      python validate.py --pattern iam.mfa.login_without_mfa"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.login_without_mfa \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.login_without_mfa Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.login_without_mfa compliance\n      python validate.py --pattern iam.mfa.login_without_mfa"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Enable Microsoft Entra ID Premium P2
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure Conditional Access policies
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up phishing-resistant MFA (FIDO2, certificate-based)
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Configure Privileged Identity Management (PIM)
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Enable Identity Protection
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Set up Azure RBAC with least privilege
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Test MFA enforcement for all user types
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: IA - Identification and Authentication
+  control_numbers:
+  - IA-2
+  - IA-2.1
+  - IA-2.2
+  ssp_sections:
+  - section: 'IA-2: Phishing-Resistant MFA'
+    description_template: The system implements Phishing-Resistant MFA controls in accordance with FedRAMP 20x requirements. Enforce multi-factor authentication (MFA) using methods that are difficult to intercept or impersonate (phishing-resistant MFA) for all user authentication.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Blob Storage, Azure Monitor, Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Phishing-Resistant MFA requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  - service: Azure RBAC
+    tier: Standard
+    purpose: Required for Azure RBAC functionality
+    alternatives: []
+  - service: Conditional Access
+    tier: Standard
+    purpose: Required for Conditional Access functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-IAM-01
+    requirement_name: Phishing-Resistant MFA
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python implementation of iam.mfa.login_without_mfa
+    code_sample: "# Python compliant code for iam.mfa.login_without_mfa\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements iam.mfa.login_without_mfa requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code violating iam.mfa.login_without_mfa
+    code_sample: "# Python non-compliant code for iam.mfa.login_without_mfa\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+---
+pattern_id: iam.mfa.decorator_login_required
+name: Login Required Decorator Without MFA
+description: Detects @login_required without @mfa_required
+family: IAM
+severity: HIGH
+pattern_type: decorator
+languages:
+  python:
+    ast_queries:
+    - query_type: decorator
+      target: login_required
+      conditions:
+      - not_has_sibling_decorator:mfa_required
+      - not_has_sibling_decorator:two_factor_required
+    regex_fallback: '@login_required'
+    negative_indicators:
+    - '@mfa_required'
+    - '@two_factor_required'
+  csharp:
+    ast_queries:
+    - query_type: attribute
+      target: Authorize
+      conditions:
+      - not_has_attribute:RequireTwoFactor
+    regex_fallback: \[Authorize\]
+  java:
+    ast_queries:
+    - query_type: annotation
+      target: PreAuthorize
+      conditions:
+      - not_contains:mfa
+    regex_fallback: '@PreAuthorize'
+  typescript:
+    ast_queries:
+    - query_type: decorator
+      target: RequireAuth
+      conditions:
+      - not_has_decorator:RequireMfa
+    regex_fallback: '@RequireAuth'
+finding:
+  title_template: Authentication decorator without MFA
+  description_template: '@login_required used without MFA enforcement. Password-only auth does not meet KSI-IAM-01.'
+  remediation_template: "Add MFA decorator:\n@login_required\n@mfa_required  # Add this\ndef protected_view():\n    ...\n"
+tags:
+- mfa
+- decorator
+- security-gap
+nist_controls:
+- ia-2
+related_ksis:
+- KSI-IAM-01
+evidence_artifacts:
+- artifact_type: logs
+  name: Authentication logs with MFA details
+  source: Azure Monitor - SigninLogs
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: Conditional Access policies export
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Authentication methods compliance report
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: CSV
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.decorator_login_required \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.decorator_login_required Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.decorator_login_required compliance\n      python validate.py --pattern iam.mfa.decorator_login_required"
+    azure_services: &id001
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Azure RBAC
+    - Conditional Access
+    - Log Analytics
+    - Microsoft Entra ID
+    - Privileged Identity Management
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.decorator_login_required \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.decorator_login_required Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.decorator_login_required compliance\n      python validate.py --pattern iam.mfa.decorator_login_required"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.mfa.decorator_login_required \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.mfa.decorator_login_required Validation'\n  inputs:\n    script: |\n      # Validate iam.mfa.decorator_login_required compliance\n      python validate.py --pattern iam.mfa.decorator_login_required"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Enable Microsoft Entra ID Premium P2
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure Conditional Access policies
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up phishing-resistant MFA (FIDO2, certificate-based)
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Configure Privileged Identity Management (PIM)
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Enable Identity Protection
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Set up Azure RBAC with least privilege
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Test MFA enforcement for all user types
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: IA - Identification and Authentication
+  control_numbers:
+  - IA-2
+  ssp_sections:
+  - section: 'IA-2: Phishing-Resistant MFA'
+    description_template: The system implements Phishing-Resistant MFA controls in accordance with FedRAMP 20x requirements. Enforce multi-factor authentication (MFA) using methods that are difficult to intercept or impersonate (phishing-resistant MFA) for all user authentication.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Blob Storage, Azure Monitor, Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Phishing-Resistant MFA requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  - service: Azure RBAC
+    tier: Standard
+    purpose: Required for Azure RBAC functionality
+    alternatives: []
+  - service: Conditional Access
+    tier: Standard
+    purpose: Required for Conditional Access functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-IAM-01
+    requirement_name: Phishing-Resistant MFA
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python implementation of iam.mfa.decorator_login_required
+    code_sample: "# Python compliant code for iam.mfa.decorator_login_required\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements iam.mfa.decorator_login_required requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code violating iam.mfa.decorator_login_required
+    code_sample: "# Python non-compliant code for iam.mfa.decorator_login_required\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+---
+pattern_id: iam.rbac.azure_rbac_assignment
+name: Azure RBAC Assignment
+description: Detects Azure RBAC role assignments in IaC
+family: IAM
+severity: INFO
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.Authorization/roleAssignments
+      properties:
+      - roleDefinitionId
+      - principalId
+    regex_fallback: resource.*Microsoft\.Authorization/roleAssignments
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_role_assignment
+    regex_fallback: resource\s+"azurerm_role_assignment"
+finding:
+  title_template: Azure RBAC assignment detected
+  description_template: RBAC role assignment found. Verify least privilege principle is applied.
+  remediation_template: Review role assignments to ensure minimal required permissions
+tags:
+- rbac
+- least-privilege
+- positive
+nist_controls:
+- ac-2
+- ac-6
+related_ksis:
+- KSI-IAM-02
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AzureActivity
+
+      | where OperationNameValue == "Microsoft.Authorization/roleAssignments/write"
+
+      | extend RoleDefinitionId = tostring(Properties_d.roleDefinitionId)
+
+      | extend PrincipalId = tostring(Properties_d.principalId)
+
+      | extend Scope = tostring(Properties_d.scope)
+
+      | project TimeGenerated, Caller, RoleDefinitionId, PrincipalId, Scope
+
+      | order by TimeGenerated desc
+
+      '
+    description: Query role assignment operations for audit trail
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az role assignment list \\\n  --query \"[].{principalName:principalName, roleDefinitionName:roleDefinitionName, scope:scope}\" \\\n  --output json\n"
+    description: List all role assignments in subscription
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.rbac.azure_rbac_assignment \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.rbac.azure_rbac_assignment Validation'\n  inputs:\n    script: |\n      # Validate iam.rbac.azure_rbac_assignment compliance\n      python validate.py --pattern iam.rbac.azure_rbac_assignment"
+    azure_services: &id001
+    - Azure AD
+    - Azure AD configuration
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Azure RBAC
+    - Conditional Access
+    - Log Analytics
+    - Microsoft Entra ID
+    - Privileged Identity Management
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.rbac.azure_rbac_assignment \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.rbac.azure_rbac_assignment Validation'\n  inputs:\n    script: |\n      # Validate iam.rbac.azure_rbac_assignment compliance\n      python validate.py --pattern iam.rbac.azure_rbac_assignment"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.rbac.azure_rbac_assignment \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.rbac.azure_rbac_assignment Validation'\n  inputs:\n    script: |\n      # Validate iam.rbac.azure_rbac_assignment compliance\n      python validate.py --pattern iam.rbac.azure_rbac_assignment"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Enable Microsoft Entra ID Premium P2
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure Conditional Access policies
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up phishing-resistant MFA (FIDO2, certificate-based)
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Configure Privileged Identity Management (PIM)
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Enable Identity Protection
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Set up Azure RBAC with least privilege
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Test MFA enforcement for all user types
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: AC - Access Control
+  control_numbers:
+  - AC-2
+  - AC-6
+  ssp_sections:
+  - section: 'AC-2: Passwordless Authentication'
+    description_template: The system implements Passwordless Authentication controls in accordance with FedRAMP 20x requirements. Use secure passwordless methods for user authentication and authorization when feasible, otherwise enforce strong passwords with MFA.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure AD, Azure AD configuration, Azure Blob Storage are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Passwordless Authentication requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure AD
+    tier: Standard
+    purpose: Required for Azure AD functionality
+    alternatives: []
+  - service: Azure AD configuration
+    tier: Standard
+    purpose: Required for Azure AD configuration functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-IAM-02
+    requirement_name: Passwordless Authentication
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of iam.rbac.azure_rbac_assignment
+    code_sample: "// Bicep compliant configuration for iam.rbac.azure_rbac_assignment\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating iam.rbac.azure_rbac_assignment
+    code_sample: '# Non-compliant code missing iam.rbac.azure_rbac_assignment requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: iam.rbac.wildcard_permissions
+name: Wildcard Permission Assignment
+description: Detects overly broad wildcard permissions
+family: IAM
+severity: HIGH
+pattern_type: configuration
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.Authorization/roleDefinitions
+      property_path: properties.permissions[*].actions
+      contains: '*'
+    regex_fallback: actions.*\*
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_role_definition
+      attribute_path: permissions.actions
+      contains: '*'
+    regex_fallback: actions.*=.*\[.*\*
+finding:
+  title_template: Wildcard permission detected
+  description_template: Role definition uses wildcard (*) permissions, violating least privilege principle (KSI-IAM-02).
+  remediation_template: 'Replace wildcard with specific actions: [''Microsoft.Storage/storageAccounts/read'', ...]'
+tags:
+- rbac
+- least-privilege
+- security-gap
+nist_controls:
+- ac-6
+- ac-6.1
+related_ksis:
+- KSI-IAM-02
+- KSI-IAM-03
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'Resources
+
+      | where type == ''microsoft.authorization/roledefinitions''
+
+      | extend permissions = parse_json(properties.permissions)
+
+      | mv-expand permission = permissions
+
+      | extend actions = permission.actions
+
+      | where actions contains ''*''
+
+      | project name, id, actions, properties.roleName
+
+      | order by name asc
+
+      '
+    description: Query custom role definitions with wildcard permissions
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az role definition list --custom-role-only true \\\n  --query \"[?contains(to_string(permissions[0].actions), '*')].{name:roleName, actions:permissions[0].actions}\" \\\n  --output json\n"
+    description: List custom roles with wildcard actions
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.rbac.wildcard_permissions \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.rbac.wildcard_permissions Validation'\n  inputs:\n    script: |\n      # Validate iam.rbac.wildcard_permissions compliance\n      python validate.py --pattern iam.rbac.wildcard_permissions"
+    azure_services: &id001
+    - Azure AD
+    - Azure AD configuration
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Azure RBAC
+    - Conditional Access
+    - Log Analytics
+    - Microsoft Entra ID
+    - Privileged Identity Management
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.rbac.wildcard_permissions \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.rbac.wildcard_permissions Validation'\n  inputs:\n    script: |\n      # Validate iam.rbac.wildcard_permissions compliance\n      python validate.py --pattern iam.rbac.wildcard_permissions"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.rbac.wildcard_permissions \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.rbac.wildcard_permissions Validation'\n  inputs:\n    script: |\n      # Validate iam.rbac.wildcard_permissions compliance\n      python validate.py --pattern iam.rbac.wildcard_permissions"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Enable Microsoft Entra ID Premium P2
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure Conditional Access policies
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up phishing-resistant MFA (FIDO2, certificate-based)
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Configure Privileged Identity Management (PIM)
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Enable Identity Protection
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Set up Azure RBAC with least privilege
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Test MFA enforcement for all user types
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: AC - Access Control
+  control_numbers:
+  - AC-6
+  - AC-6.1
+  ssp_sections:
+  - section: 'AC-6: Passwordless Authentication'
+    description_template: The system implements Passwordless Authentication controls in accordance with FedRAMP 20x requirements. Use secure passwordless methods for user authentication and authorization when feasible, otherwise enforce strong passwords with MFA.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure AD, Azure AD configuration, Azure Blob Storage are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Passwordless Authentication requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure AD
+    tier: Standard
+    purpose: Required for Azure AD functionality
+    alternatives: []
+  - service: Azure AD configuration
+    tier: Standard
+    purpose: Required for Azure AD configuration functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-IAM-02
+    requirement_name: Passwordless Authentication
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of iam.rbac.wildcard_permissions
+    code_sample: "// Bicep compliant configuration for iam.rbac.wildcard_permissions\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating iam.rbac.wildcard_permissions
+    code_sample: '# Non-compliant code missing iam.rbac.wildcard_permissions requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: iam.session.timeout_missing
+name: Missing Session Timeout
+description: Detects missing or excessive session timeout configuration
+family: IAM
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  python:
+    ast_queries:
+    - query_type: assignment
+      target: PERMANENT_SESSION_LIFETIME
+      conditions:
+      - value_type:timedelta
+      - value_greater_than:minutes=30
+    regex_fallback: PERMANENT_SESSION_LIFETIME.*timedelta
+  csharp:
+    ast_queries:
+    - query_type: property_assignment
+      target: ExpireTimeSpan
+      conditions:
+      - value_greater_than:minutes:30
+    regex_fallback: ExpireTimeSpan\s*=\s*TimeSpan
+  java:
+    ast_queries:
+    - query_type: method_call
+      target: setMaxInactiveInterval
+    regex_fallback: setMaxInactiveInterval\s*\(
+  typescript:
+    ast_queries:
+    - query_type: property_assignment
+      target: maxAge
+    regex_fallback: maxAge\s*:\s*
+finding:
+  title_template: Session timeout exceeds 30 minutes or not configured
+  description_template: Session timeout missing or exceeds FedRAMP guidance of 30 minutes for non-privileged users.
+  remediation_template: 'Configure session timeout:
+
+    Python (Flask): app.config[''PERMANENT_SESSION_LIFETIME''] = timedelta(minutes=30)
+
+    C# (ASP.NET): options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+
+    '
+tags:
+- session
+- timeout
+- security-gap
+nist_controls:
+- sc-23
+- ac-12
+related_ksis:
+- KSI-IAM-05
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppServiceHTTPLogs
+
+      | where TimeGenerated > ago(7d)
+
+      | where CsUriStem contains "login" or CsUriStem contains "auth"
+
+      | summarize SessionCount=count(), AvgDuration=avg(TimeTaken) by UserAgent
+
+      | where AvgDuration > 1800000  // Sessions longer than 30 minutes
+
+      | order by AvgDuration desc
+
+      '
+    description: Detect potentially long-running sessions exceeding recommended timeout
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az webapp config show \\\n  --resource-group <RESOURCE_GROUP> \\\n  --name <APP_NAME> \\\n  --query \"{sessionTimeout: properties.sessionTimeout, idleTimeout: properties.idleTimeout}\" \\\n  --output json\n"
+    description: Check web app session timeout configuration
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.session.timeout_missing \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.session.timeout_missing Validation'\n  inputs:\n    script: |\n      # Validate iam.session.timeout_missing compliance\n      python validate.py --pattern iam.session.timeout_missing"
+    azure_services: &id001
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Azure RBAC
+    - Conditional Access
+    - Log Analytics
+    - Microsoft Entra ID
+    - Privileged Identity Management
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.session.timeout_missing \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.session.timeout_missing Validation'\n  inputs:\n    script: |\n      # Validate iam.session.timeout_missing compliance\n      python validate.py --pattern iam.session.timeout_missing"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.session.timeout_missing \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.session.timeout_missing Validation'\n  inputs:\n    script: |\n      # Validate iam.session.timeout_missing compliance\n      python validate.py --pattern iam.session.timeout_missing"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Enable Microsoft Entra ID Premium P2
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure Conditional Access policies
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up phishing-resistant MFA (FIDO2, certificate-based)
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Configure Privileged Identity Management (PIM)
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Enable Identity Protection
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Set up Azure RBAC with least privilege
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Test MFA enforcement for all user types
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: SC - System and Communications Protection
+  control_numbers:
+  - SC-23
+  - AC-12
+  ssp_sections:
+  - section: 'SC-23: Least Privilege'
+    description_template: The system implements Least Privilege controls in accordance with FedRAMP 20x requirements. Configure identity and access management with measures that always verify each user or device can only access the resources they need.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Blob Storage, Azure Monitor, Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Least Privilege requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  - service: Azure RBAC
+    tier: Standard
+    purpose: Required for Azure RBAC functionality
+    alternatives: []
+  - service: Conditional Access
+    tier: Standard
+    purpose: Required for Conditional Access functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-IAM-05
+    requirement_name: Least Privilege
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python implementation of iam.session.timeout_missing
+    code_sample: "# Python compliant code for iam.session.timeout_missing\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements iam.session.timeout_missing requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code violating iam.session.timeout_missing
+    code_sample: "# Python non-compliant code for iam.session.timeout_missing\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: iam.identity.missing_managed_identity
+name: Missing Managed Identity
+description: 'Detects Azure resources without managed identity configured (KSI-IAM-06: Service Account Security)'
+family: IAM
+severity: CRITICAL
+pattern_type: resource_configuration
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.Compute/virtualMachines|Microsoft.Web/sites|Microsoft.ContainerInstance/containerGroups|Microsoft.Kubernetes/connectedClusters
+      conditions:
+      - not_has_property:identity
+    - resource_type: Microsoft.Compute/virtualMachines|Microsoft.Web/sites
+      property_path: identity.type
+      conditions:
+      - value_not_in:['SystemAssigned', 'UserAssigned', 'SystemAssigned,UserAssigned']
+    regex_fallback: (Microsoft\.Compute/virtualMachines|Microsoft\.Web/sites|Microsoft\.ContainerInstance/containerGroups)(?!.*identity\s*:)
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_virtual_machine|azurerm_linux_virtual_machine|azurerm_windows_virtual_machine|azurerm_app_service|azurerm_function_app|azurerm_kubernetes_cluster
+      conditions:
+      - not_has_block:identity
+    - resource_type: azurerm_virtual_machine|azurerm_app_service
+      property_path: identity.type
+      conditions:
+      - value_not_in:['SystemAssigned', 'UserAssigned']
+    regex_fallback: resource\s+"azurerm_(virtual_machine|app_service|function_app|kubernetes_cluster)"(?!.*identity\s*\{)
+  python:
+    ast_queries:
+    - query_type: variable_assignment
+      pattern: connection_string|password|access_key|account_key
+      conditions:
+      - not_has_nearby:DefaultAzureCredential|ManagedIdentityCredential
+    regex_fallback: (connection_string|password|access_key|account_key)\s*=\s*['"][^'"]+['"](?!.*DefaultAzureCredential|.*ManagedIdentityCredential)
+  csharp:
+    ast_queries:
+    - query_type: variable_declaration
+      pattern: ConnectionString|Password|AccessKey|AccountKey
+      conditions:
+      - not_has_nearby:DefaultAzureCredential|ManagedIdentityCredential
+    regex_fallback: (ConnectionString|Password|AccessKey|AccountKey)\s*=\s*"[^"]+"(?!.*DefaultAzureCredential|.*ManagedIdentityCredential)
+  java:
+    ast_queries:
+    - query_type: variable_declaration
+      pattern: connectionString|password|accessKey|accountKey
+      conditions:
+      - not_has_nearby:DefaultAzureCredential|ManagedIdentityCredential
+    regex_fallback: (connectionString|password|accessKey|accountKey)\s*=\s*"[^"]+"(?!.*DefaultAzureCredential|.*ManagedIdentityCredential)
+  typescript:
+    ast_queries:
+    - query_type: variable_declaration
+      pattern: connectionString|password|accessKey|accountKey
+      conditions:
+      - not_has_nearby:DefaultAzureCredential|ManagedIdentityCredential
+    regex_fallback: (connectionString|password|accessKey|accountKey)\s*=\s*['"][^'"]+['"](?!.*DefaultAzureCredential|.*ManagedIdentityCredential)
+finding:
+  title_template: Resource missing managed identity configuration
+  description_template: '{resource_type} does not have managed identity enabled. KSI-IAM-06 requires service accounts to use managed identities instead of embedded credentials.'
+  remediation_template: "Enable managed identity:\n\nBicep (System-Assigned):\nresource vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {\n  name: vmName\n  location: location\n  identity: {\n    type: 'SystemAssigned'\n  }\n  // ... other properties\n}\n\nBicep (User-Assigned):\nresource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {\n  name: 'myIdentity'\n  location: location\n}\n\nresource vm 'Microsoft.Compute/virtualMachines@2023-03-01' = {\n  name: vmName\n  location: location\n  identity: {\n    type: 'UserAssigned'\n    userAssignedIdentities: {\n      '${managedIdentity.id}': {}\n    }\n  }\n}\n\nTerraform:\nresource \"azurerm_virtual_machine\" \"example\" {\n  # ... other config\n  identity {\n    type = \"SystemAssigned\"\n  }\n}\n\nPython (Azure SDK):\nfrom azure.identity import DefaultAzureCredential, ManagedIdentityCredential\n\n# Use DefaultAzureCredential (works with managed identity)\ncredential = DefaultAzureCredential()\n\n# Or explicitly\
+    \ use managed identity\ncredential = ManagedIdentityCredential()\n\n# Use with Azure SDK clients\nfrom azure.storage.blob import BlobServiceClient\nblob_service = BlobServiceClient(\n    account_url=\"https://mystorageaccount.blob.core.windows.net\",\n    credential=credential\n)\n\nC# (Azure SDK):\nusing Azure.Identity;\nusing Azure.Storage.Blobs;\n\nvar credential = new DefaultAzureCredential();\nvar blobService = new BlobServiceClient(\n    new Uri(\"https://mystorageaccount.blob.core.windows.net\"),\n    credential\n);\n"
+  evidence_collection:
+  - Managed identity configuration for each resource
+  - RBAC role assignments for managed identities
+  - Application code using DefaultAzureCredential
+  - Documentation showing service accounts use managed identities
+  azure_services:
+  - Azure Managed Identity
+  - Azure RBAC
+  - Azure Key Vault
+requires_absence:
+- svc.secrets.key_vault_missing
+tags:
+- identity
+- managed-identity
+- service-accounts
+- critical-gap
+nist_controls:
+- ia-5
+- ia-5.2
+- sc-12
+- sc-13
+related_ksis:
+- KSI-IAM-06
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'Resources
+
+      | where type in~ (''microsoft.web/sites'', ''microsoft.compute/virtualmachines'', ''microsoft.containerservice/managedclusters'')
+
+      | extend identityType = tostring(identity.type)
+
+      | where isnull(identityType) or identityType == ''None''
+
+      | project name, type, resourceGroup, location
+
+      | order by name asc
+
+      '
+    description: Query Azure resources without managed identity configured
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az resource list \\\n  --query \"[?type=='Microsoft.Web/sites' || type=='Microsoft.Compute/virtualMachines'].{name:name, type:type, identity:identity}\" \\\n  | jq '[.[] | select(.identity == null or .identity.type == \\\"None\\\")]' \\\n  --output json\n"
+    description: List resources missing managed identity
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.identity.missing_managed_identity \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.identity.missing_managed_identity Validation'\n  inputs:\n    script: |\n      # Validate iam.identity.missing_managed_identity compliance\n      python validate.py --pattern iam.identity.missing_managed_identity"
+    azure_services: &id001
+    - Azure AD
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure RBAC
+    - Conditional Access
+    - Entra ID lockout policies
+    - Log Analytics
+    - Microsoft Entra ID
+    - Privileged Identity Management
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.identity.missing_managed_identity \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.identity.missing_managed_identity Validation'\n  inputs:\n    script: |\n      # Validate iam.identity.missing_managed_identity compliance\n      python validate.py --pattern iam.identity.missing_managed_identity"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: IAM Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.identity.missing_managed_identity \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'iam.identity.missing_managed_identity Validation'\n  inputs:\n    script: |\n      # Validate iam.identity.missing_managed_identity compliance\n      python validate.py --pattern iam.identity.missing_managed_identity"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Enable Microsoft Entra ID Premium P2
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure Conditional Access policies
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up phishing-resistant MFA (FIDO2, certificate-based)
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Configure Privileged Identity Management (PIM)
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Enable Identity Protection
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Set up Azure RBAC with least privilege
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Test MFA enforcement for all user types
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Create Standard Operating Procedures (SOPs)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Get policy documentation approved by stakeholders
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Train staff on new procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up periodic compliance reviews
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Document evidence collection process
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: IA - Identification and Authentication
+  control_numbers:
+  - IA-5
+  - IA-5.2
+  - SC-12
+  - SC-13
+  ssp_sections:
+  - section: 'IA-5: Suspicious Activity'
+    description_template: The system implements Suspicious Activity controls in accordance with FedRAMP 20x requirements. Automatically disable or otherwise secure accounts with privileged access in response to suspicious activity... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure AD, Azure Blob Storage, Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Suspicious Activity requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure AD
+    tier: Standard
+    purpose: Required for Azure AD functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure RBAC
+    tier: Standard
+    purpose: Required for Azure RBAC functionality
+    alternatives: []
+  - service: Conditional Access
+    tier: Standard
+    purpose: Required for Conditional Access functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-IAM-06
+    requirement_name: Suspicious Activity
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of iam.identity.missing_managed_identity
+    code_sample: "// Bicep compliant configuration for iam.identity.missing_managed_identity\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating iam.identity.missing_managed_identity
+    code_sample: '# Non-compliant code missing iam.identity.missing_managed_identity requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: iam.compliance.ksi_iam_04
+name: Just-in-Time Authorization Detection
+description: Detects compliance indicators for KSI-IAM-04 - Just-in-Time Authorization
+family: IAM
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: Just-in-Time Authorization compliance check
+  description_template: Configuration may not fully implement KSI-IAM-04 - Just-in-Time Authorization
+  remediation_template: Review and implement KSI-IAM-04 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- iam
+- compliance
+- ksi-iam-04
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-IAM-04
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-IAM-04 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-IAM-04 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-IAM-04 compliance enforcement
+    implementation: "# Azure Policy for KSI-IAM-04 compliance\n# GitHub Actions\n- name: KSI-IAM-04 Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.compliance.ksi_iam_04 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'KSI-IAM-04 Validation'\n  inputs:\n    script: |\n      # Validate KSI-IAM-04 compliance\n      python validate.py --pattern iam.compliance.ksi_iam_04\n"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-IAM-04
+    implementation: '# Azure Monitor for KSI-IAM-04 continuous monitoring
+
+      # Log Analytics Query
+
+      AzureActivity
+
+      | where CategoryValue == "Policy"
+
+      | where OperationNameValue contains "KSI-IAM-04"
+
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+
+      '
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels:
+- Low
+- Moderate
+---
+pattern_id: iam.compliance.ksi_iam_07
+name: Automated Account Management Detection
+description: Detects compliance indicators for KSI-IAM-07 - Automated Account Management
+family: IAM
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: Automated Account Management compliance check
+  description_template: Configuration may not fully implement KSI-IAM-07 - Automated Account Management
+  remediation_template: Review and implement KSI-IAM-07 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- iam
+- compliance
+- ksi-iam-07
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-IAM-07
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-IAM-07 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-IAM-07 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-IAM-07 compliance enforcement
+    implementation: "# Azure Policy for KSI-IAM-07 compliance\n# GitHub Actions\n- name: KSI-IAM-07 Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern iam.compliance.ksi_iam_07 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'KSI-IAM-07 Validation'\n  inputs:\n    script: |\n      # Validate KSI-IAM-07 compliance\n      python validate.py --pattern iam.compliance.ksi_iam_07\n"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-IAM-07
+    implementation: '# Azure Monitor for KSI-IAM-07 continuous monitoring
+
+      # Log Analytics Query
+
+      AzureActivity
+
+      | where CategoryValue == "Policy"
+
+      | where OperationNameValue contains "KSI-IAM-07"
+
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+
+      '
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels:
+- Low
+- Moderate

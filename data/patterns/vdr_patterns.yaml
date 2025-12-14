@@ -1,0 +1,4654 @@
+pattern_id: vdr.scanning.defender_for_cloud
+name: Microsoft Defender for Cloud
+description: Detects Defender for Cloud enablement in IaC
+family: VDR
+severity: INFO
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.Security/pricings
+      property_path: properties.pricingTier
+      value: Standard
+    regex_fallback: Microsoft\.Security/pricings
+    positive_indicators:
+    - Microsoft.Security/pricings
+    - Standard
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_security_center_subscription_pricing
+      attribute: tier
+      value: Standard
+    regex_fallback: azurerm_security_center_subscription_pricing
+finding:
+  title_template: Microsoft Defender for Cloud enabled
+  description_template: Defender for Cloud configured at Standard tier. Verify all workload protection plans are enabled.
+  remediation_template: 'Required Defender plans for FedRAMP:
+
+    - Virtual Machines
+
+    - Storage
+
+    - SQL Databases
+
+    - App Services
+
+    - Key Vault
+
+    - Resource Manager
+
+    - DNS
+
+    - Containers
+
+    '
+tags:
+- vulnerability-scanning
+- defender
+- positive
+nist_controls:
+- ra-5
+- si-2
+related_ksis:
+- KSI-VDR-01
+- KSI-VDR-02
+azure_services:
+- Microsoft Defender for Cloud
+ssp_mapping:
+  control_family: RA - Risk Assessment
+  control_numbers:
+  - RA-5
+  - SI-2
+  ssp_sections:
+  - section: 'RA-5: Unknown'
+    description_template: The system implements Unknown Requirement controls in accordance with FedRAMP 20x requirements. Requirement statement not available... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Unknown Requirement requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-AFR-04
+    requirement_name: Vulnerability Detection and Response
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of vdr.scanning.defender_for_cloud
+    code_sample: "// Bicep compliant configuration for vdr.scanning.defender_for_cloud\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating vdr.scanning.defender_for_cloud
+    code_sample: '# Non-compliant code missing vdr.scanning.defender_for_cloud requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy enforcement\n# GitHub Actions\n- name: Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.scanning.defender_for_cloud \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'Compliance Validation'\n  inputs:\n    script: |\n      # Validate compliance\n      python validate.py --pattern vdr.scanning.defender_for_cloud\n"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring and alerting
+    implementation: '# Azure Monitor continuous monitoring
+
+      # Log Analytics Query
+
+      AzureActivity
+
+      | where CategoryValue == "Policy" or CategoryValue == "Security"
+
+      | where ResourceId contains "vdr.scanning.defender_for_cloud"
+
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+
+      '
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+    - Azure Alerts
+---
+pattern_id: vdr.scanning.ci_cd_scanning
+name: CI/CD Security Scanning
+description: Detects security scanning in CI/CD pipelines
+family: VDR
+severity: HIGH
+pattern_type: pipeline
+languages:
+  github_actions:
+    ast_queries:
+    - workflow_step: uses
+      actions:
+      - github/codeql-action
+      - anchore/scan-action
+      - aquasecurity/trivy-action
+      - snyk/actions
+    regex_fallback: uses:.*codeql|uses:.*trivy|uses:.*snyk
+    positive_indicators:
+    - codeql
+    - trivy
+    - snyk
+    - aquasec
+  azure_pipelines:
+    ast_queries:
+    - task_type: Snyk@1|WhiteSource@21|SonarQube@5
+    regex_fallback: task:\s*(Snyk|WhiteSource|SonarQube)
+  gitlab_ci:
+    ast_queries:
+    - job_name: sast|dependency_scanning|container_scanning
+    regex_fallback: 'sast:|dependency_scanning:|container_scanning:'
+finding:
+  title_template: Security scanning in CI/CD pipeline
+  description_template: Automated vulnerability scanning detected in pipeline. Verify scans run on every commit.
+  remediation_template: N/A - Positive finding. Ensure scan results fail builds for HIGH/CRITICAL vulnerabilities.
+tags:
+- ci-cd
+- vulnerability-scanning
+- positive
+nist_controls:
+- ra-5
+- si-2
+related_ksis:
+- KSI-VDR-01
+ssp_mapping:
+  control_family: RA - Risk Assessment
+  control_numbers:
+  - RA-5
+  - SI-2
+  ssp_sections:
+  - section: 'RA-5: Unknown'
+    description_template: The system implements Unknown Requirement controls in accordance with FedRAMP 20x requirements. Requirement statement not available... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Unknown Requirement requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-AFR-04
+    requirement_name: Vulnerability Detection and Response
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions implementation of vdr.scanning.ci_cd_scanning
+    code_sample: "# GitHub Actions workflow with security scanning\nname: Security Scan\non: [push, pull_request]\njobs:\n  security:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - name: Initialize CodeQL\n        uses: github/codeql-action/init@v2\n        with:\n          languages: python, javascript\n      - name: Run Trivy vulnerability scanner\n        uses: aquasecurity/trivy-action@master\n        with:\n          scan-type: 'fs'\n          severity: 'CRITICAL,HIGH'\n"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code violating vdr.scanning.ci_cd_scanning
+    code_sample: '# Non-compliant code missing vdr.scanning.ci_cd_scanning requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy enforcement\n# GitHub Actions\n- name: Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.scanning.ci_cd_scanning \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'Compliance Validation'\n  inputs:\n    script: |\n      # Validate compliance\n      python validate.py --pattern vdr.scanning.ci_cd_scanning\n"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring and alerting
+    implementation: '# Azure Monitor continuous monitoring
+
+      # Log Analytics Query
+
+      AzureActivity
+
+      | where CategoryValue == "Policy" or CategoryValue == "Security"
+
+      | where ResourceId contains "vdr.scanning.ci_cd_scanning"
+
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+
+      '
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+    - Azure Alerts
+---
+pattern_id: vdr.scanning.missing_sast
+name: Missing SAST Scanning
+description: Detects CI/CD pipelines without SAST
+family: VDR
+severity: CRITICAL
+pattern_type: pipeline
+languages:
+  github_actions:
+    ast_queries:
+    - workflow_file: '*.yml'
+      conditions:
+      - has_job:build|test
+      - not_contains:codeql|semgrep|snyk
+    regex_fallback: on:\s*(push|pull_request)
+    negative_indicators:
+    - codeql
+    - semgrep
+    - snyk
+    - sonarqube
+  azure_pipelines:
+    ast_queries:
+    - pipeline_file: azure-pipelines.yml
+      conditions:
+      - has_stage:Build
+      - not_contains_task:Snyk|SonarQube|WhiteSource
+    regex_fallback: 'stages:|jobs:'
+finding:
+  title_template: No SAST scanning in CI/CD pipeline
+  description_template: Pipeline lacks Static Application Security Testing. KSI-VDR-01 requires automated code scanning.
+  remediation_template: "Add SAST to pipeline:\n\nGitHub Actions:\n- name: Initialize CodeQL\n  uses: github/codeql-action/init@v2\n  with:\n    languages: python, javascript\n\n- name: Perform CodeQL Analysis\n  uses: github/codeql-action/analyze@v2\n\nAzure Pipelines:\n- task: Snyk@1\n  inputs:\n    serviceConnectionEndpoint: 'Snyk'\n    testType: 'code'\n    failOnIssues: true\n"
+requires_absence:
+- vdr.scanning.ci_cd_scanning
+tags:
+- ci-cd
+- sast
+- critical-gap
+nist_controls:
+- ra-5
+- si-2
+related_ksis:
+- KSI-VDR-01
+ssp_mapping:
+  control_family: RA - Risk Assessment
+  control_numbers:
+  - RA-5
+  - SI-2
+  ssp_sections:
+  - section: 'RA-5: Unknown'
+    description_template: The system implements Unknown Requirement controls in accordance with FedRAMP 20x requirements. Requirement statement not available... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Unknown Requirement requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-AFR-04
+    requirement_name: Vulnerability Detection and Response
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions implementation of vdr.scanning.missing_sast
+    code_sample: "# GitHub Actions workflow WITH SAST (compliant - no missing SAST)\nname: Build and Test\non: [push, pull_request]\njobs:\n  sast:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - name: Initialize CodeQL\n        uses: github/codeql-action/init@v2\n        with:\n          languages: python\n      - name: Perform CodeQL Analysis\n        uses: github/codeql-action/analyze@v2\n"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code violating vdr.scanning.missing_sast
+    code_sample: '# Non-compliant code missing vdr.scanning.missing_sast requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy enforcement\n# GitHub Actions\n- name: Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.scanning.missing_sast \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'Compliance Validation'\n  inputs:\n    script: |\n      # Validate compliance\n      python validate.py --pattern vdr.scanning.missing_sast\n"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring and alerting
+    implementation: '# Azure Monitor continuous monitoring
+
+      # Log Analytics Query
+
+      AzureActivity
+
+      | where CategoryValue == "Policy" or CategoryValue == "Security"
+
+      | where ResourceId contains "vdr.scanning.missing_sast"
+
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+
+      '
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+    - Azure Alerts
+---
+pattern_id: vdr.scanning.missing_container_scan
+name: Missing Container Image Scanning
+description: Detects container builds without vulnerability scanning
+family: VDR
+severity: CRITICAL
+pattern_type: pipeline
+languages:
+  github_actions:
+    ast_queries:
+    - workflow_step: uses
+      action: docker/build-push-action
+      conditions:
+      - not_followed_by:aquasecurity/trivy-action|anchore/scan-action
+    regex_fallback: docker/build-push-action
+    negative_indicators:
+    - trivy
+    - anchore
+    - snyk container
+  azure_pipelines:
+    ast_queries:
+    - task_type: Docker@2
+      conditions:
+      - command:buildAndPush
+      - not_followed_by:AquaScan|Snyk
+    regex_fallback: Docker@2.*buildAndPush
+finding:
+  title_template: Container image built without vulnerability scan
+  description_template: Docker image built without scanning. KSI-VDR-02 requires container vulnerability scanning before deployment.
+  remediation_template: "Add container scanning:\n\nGitHub Actions:\n- name: Run Trivy vulnerability scanner\n  uses: aquasecurity/trivy-action@master\n  with:\n    image-ref: 'myapp:${{ github.sha }}'\n    format: 'sarif'\n    output: 'trivy-results.sarif'\n    severity: 'CRITICAL,HIGH'\n    exit-code: '1'  # Fail on vulnerabilities\n"
+tags:
+- container
+- vulnerability-scanning
+- critical-gap
+nist_controls:
+- ra-5
+- si-2
+related_ksis:
+- KSI-VDR-02
+ssp_mapping:
+  control_family: RA - Risk Assessment
+  control_numbers:
+  - RA-5
+  - SI-2
+  ssp_sections:
+  - section: 'RA-5: Unknown'
+    description_template: The system implements Unknown Requirement controls in accordance with FedRAMP 20x requirements. Requirement statement not available... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Unknown Requirement requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-AFR-04
+    requirement_name: Vulnerability Detection and Response
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions implementation of vdr.scanning.missing_container_scan
+    code_sample: "# GitHub Actions workflow WITH container scanning (compliant)\nname: Build Container\non: [push]\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - name: Build Docker image\n        uses: docker/build-push-action@v5\n        with:\n          context: .\n          tags: myapp:${{ github.sha }}\n          push: false\n      - name: Run Trivy vulnerability scanner\n        uses: aquasecurity/trivy-action@master\n        with:\n          image-ref: 'myapp:${{ github.sha }}'\n          format: 'sarif'\n          severity: 'CRITICAL,HIGH'\n          exit-code: '1'\n"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code violating vdr.scanning.missing_container_scan
+    code_sample: '# Non-compliant code missing vdr.scanning.missing_container_scan requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy enforcement\n# GitHub Actions\n- name: Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.scanning.missing_container_scan \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'Compliance Validation'\n  inputs:\n    script: |\n      # Validate compliance\n      python validate.py --pattern vdr.scanning.missing_container_scan\n"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring and alerting
+    implementation: '# Azure Monitor continuous monitoring
+
+      # Log Analytics Query
+
+      AzureActivity
+
+      | where CategoryValue == "Policy" or CategoryValue == "Security"
+
+      | where ResourceId contains "vdr.scanning.missing_container_scan"
+
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+
+      '
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+    - Azure Alerts
+---
+pattern_id: vdr.patching.update_management
+name: Azure Update Management
+description: Detects Update Management configuration
+family: VDR
+severity: INFO
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.Automation/automationAccounts
+      child_resources:
+      - Microsoft.Automation/automationAccounts/softwareUpdateConfigurations
+    regex_fallback: softwareUpdateConfigurations
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_automation_software_update_configuration
+    regex_fallback: azurerm_automation_software_update_configuration
+finding:
+  title_template: Azure Update Management configured
+  description_template: Automated patching detected. Verify schedules meet FedRAMP timelines (30 days for HIGH, 90 days for MODERATE).
+  remediation_template: N/A - Positive finding
+tags:
+- patching
+- update-management
+- positive
+nist_controls:
+- si-2
+related_ksis:
+- KSI-VDR-03
+ssp_mapping:
+  control_family: SI - System and Information Integrity
+  control_numbers:
+  - SI-2
+  ssp_sections:
+  - section: 'SI-2: Unknown'
+    description_template: The system implements Unknown Requirement controls in accordance with FedRAMP 20x requirements. Requirement statement not available... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Unknown Requirement requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-AFR-04
+    requirement_name: Vulnerability Detection and Response
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of vdr.patching.update_management
+    code_sample: "// Bicep compliant configuration for vdr.patching.update_management\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating vdr.patching.update_management
+    code_sample: '# Non-compliant code missing vdr.patching.update_management requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy enforcement\n# GitHub Actions\n- name: Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.patching.update_management \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'Compliance Validation'\n  inputs:\n    script: |\n      # Validate compliance\n      python validate.py --pattern vdr.patching.update_management\n"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring and alerting
+    implementation: '# Azure Monitor continuous monitoring
+
+      # Log Analytics Query
+
+      AzureActivity
+
+      | where CategoryValue == "Policy" or CategoryValue == "Security"
+
+      | where ResourceId contains "vdr.patching.update_management"
+
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+
+      '
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+    - Azure Alerts
+---
+pattern_id: vdr.patching.outdated_base_image
+name: Outdated Container Base Image
+description: Detects old base images in Dockerfiles
+family: VDR
+severity: HIGH
+pattern_type: configuration
+languages:
+  dockerfile:
+    ast_queries:
+    - instruction: FROM
+      conditions:
+      - not_contains:latest
+      - not_contains:@sha256
+      - tag_older_than:90_days
+    regex_fallback: FROM\s+[^:]+:[^@\s]+
+    negative_indicators:
+    - latest
+    - '@sha256'
+finding:
+  title_template: Outdated container base image
+  description_template: Base image may contain known vulnerabilities. KSI-VDR-03 requires regular patching (90 days max).
+  remediation_template: 'Update base image:
+
+    - Use specific version tags, not ''latest''
+
+    - Pin with SHA256 digest for reproducibility
+
+    - Automate base image updates in CI/CD
+
+    - Example: FROM python:3.11-slim@sha256:abc123...
+
+    '
+tags:
+- container
+- patching
+- security-gap
+nist_controls:
+- si-2
+related_ksis:
+- KSI-VDR-03
+ssp_mapping:
+  control_family: SI - System and Information Integrity
+  control_numbers:
+  - SI-2
+  ssp_sections:
+  - section: 'SI-2: Unknown'
+    description_template: The system implements Unknown Requirement controls in accordance with FedRAMP 20x requirements. Requirement statement not available... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Unknown Requirement requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-AFR-04
+    requirement_name: Vulnerability Detection and Response
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant dockerfile implementation of vdr.patching.outdated_base_image
+    code_sample: '# Dockerfile with pinned base image using SHA256 digest
+
+      FROM python:3.12-slim@sha256:2be8daddbb82756f7d1f2c7ece706aadcb284bf6ab6d769ea695cc3ed6016743
+
+
+      WORKDIR /app
+
+      COPY requirements.txt .
+
+      RUN pip install --no-cache-dir -r requirements.txt
+
+      COPY . .
+
+
+      CMD ["python", "app.py"]
+
+      '
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant dockerfile code violating vdr.patching.outdated_base_image
+    code_sample: '# Non-compliant code missing vdr.patching.outdated_base_image requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy enforcement\n# GitHub Actions\n- name: Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.patching.outdated_base_image \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'Compliance Validation'\n  inputs:\n    script: |\n      # Validate compliance\n      python validate.py --pattern vdr.patching.outdated_base_image\n"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring and alerting
+    implementation: '# Azure Monitor continuous monitoring
+
+      # Log Analytics Query
+
+      AzureActivity
+
+      | where CategoryValue == "Policy" or CategoryValue == "Security"
+
+      | where ResourceId contains "vdr.patching.outdated_base_image"
+
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+
+      '
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+    - Azure Alerts
+---
+pattern_id: vdr.dependencies.dependabot
+name: Dependabot Configuration
+description: Detects Dependabot for automated dependency updates
+family: VDR
+severity: INFO
+pattern_type: configuration
+languages:
+  yaml:
+    file_path: .github/dependabot.yml
+    ast_queries:
+    - yaml_path: updates[*].package-ecosystem
+    regex_fallback: version:\s*2
+    positive_indicators:
+    - dependabot
+    - package-ecosystem
+finding:
+  title_template: Dependabot enabled
+  description_template: Automated dependency updates configured. Verify security updates are enabled.
+  remediation_template: N/A - Positive finding
+tags:
+- dependencies
+- automation
+- positive
+nist_controls:
+- si-2
+related_ksis:
+- KSI-VDR-04
+ssp_mapping:
+  control_family: SI - System and Information Integrity
+  control_numbers:
+  - SI-2
+  ssp_sections:
+  - section: 'SI-2: Unknown'
+    description_template: The system implements Unknown Requirement controls in accordance with FedRAMP 20x requirements. Requirement statement not available... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Unknown Requirement requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-AFR-04
+    requirement_name: Vulnerability Detection and Response
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant yaml implementation of vdr.dependencies.dependabot
+    code_sample: "# .github/dependabot.yml - Automated dependency updates\nversion: 2\nupdates:\n  - package-ecosystem: \"pip\"\n    directory: \"/\"\n    schedule:\n      interval: \"weekly\"\n    open-pull-requests-limit: 10\n    labels:\n      - \"dependencies\"\n      - \"security\"\n  - package-ecosystem: \"npm\"\n    directory: \"/\"\n    schedule:\n      interval: \"weekly\"\n    open-pull-requests-limit: 10\n  - package-ecosystem: \"docker\"\n    directory: \"/\"\n    schedule:\n      interval: \"weekly\"\n"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant yaml code violating vdr.dependencies.dependabot
+    code_sample: '# Non-compliant code missing vdr.dependencies.dependabot requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy enforcement\n# GitHub Actions\n- name: Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.dependencies.dependabot \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'Compliance Validation'\n  inputs:\n    script: |\n      # Validate compliance\n      python validate.py --pattern vdr.dependencies.dependabot\n"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring and alerting
+    implementation: '# Azure Monitor continuous monitoring
+
+      # Log Analytics Query
+
+      AzureActivity
+
+      | where CategoryValue == "Policy" or CategoryValue == "Security"
+
+      | where ResourceId contains "vdr.dependencies.dependabot"
+
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+
+      '
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+    - Azure Alerts
+---
+pattern_id: vdr.dependencies.outdated_packages
+name: Outdated Dependencies
+description: Detects outdated dependencies with known CVEs
+family: VDR
+severity: VARIES
+pattern_type: configuration
+languages:
+  python:
+    file_path: requirements.txt|Pipfile|pyproject.toml
+    ast_queries:
+    - package_with_cve: true
+    - package_age: '>6_months'
+    regex_fallback: ^[a-zA-Z0-9_-]+==.*$
+  javascript:
+    file_path: package.json
+    ast_queries:
+    - json_path: dependencies.*
+      conditions:
+      - has_known_cve
+    regex_fallback: '"dependencies":\s*\{'
+  csharp:
+    file_path: '*.csproj|packages.config'
+    ast_queries:
+    - xml_path: PackageReference[@Include]
+      conditions:
+      - has_known_cve
+    regex_fallback: <PackageReference
+  java:
+    file_path: pom.xml|build.gradle
+    ast_queries:
+    - xml_path: dependencies/dependency
+      conditions:
+      - has_known_cve
+    regex_fallback: <dependency>|dependencies \{
+finding:
+  title_template: 'Dependency with known vulnerabilities: {package_name} {version}'
+  description_template: Package {package_name} version {version} has {cve_count} known CVE(s). KSI-VDR-04 requires patching within 30 days.
+  remediation_template: 'Update to version {fixed_version} or later: pip install {package_name}>={fixed_version}'
+tags:
+- dependencies
+- cve
+- security-gap
+nist_controls:
+- si-2
+- ra-5
+related_ksis:
+- KSI-VDR-04
+ssp_mapping:
+  control_family: SI - System and Information Integrity
+  control_numbers:
+  - SI-2
+  - RA-5
+  ssp_sections:
+  - section: 'SI-2: Unknown'
+    description_template: The system implements Unknown Requirement controls in accordance with FedRAMP 20x requirements. Requirement statement not available... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Unknown Requirement requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-AFR-04
+    requirement_name: Vulnerability Detection and Response
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python implementation of vdr.dependencies.outdated_packages
+    code_sample: "# Python compliant code for vdr.dependencies.outdated_packages\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements vdr.dependencies.outdated_packages requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code violating vdr.dependencies.outdated_packages
+    code_sample: "# Python non-compliant code for vdr.dependencies.outdated_packages\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy enforcement\n# GitHub Actions\n- name: Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.dependencies.outdated_packages \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'Compliance Validation'\n  inputs:\n    script: |\n      # Validate compliance\n      python validate.py --pattern vdr.dependencies.outdated_packages\n"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring and alerting
+    implementation: '# Azure Monitor continuous monitoring
+
+      # Log Analytics Query
+
+      AzureActivity
+
+      | where CategoryValue == "Policy" or CategoryValue == "Security"
+
+      | where ResourceId contains "vdr.dependencies.outdated_packages"
+
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+
+      '
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+    - Azure Alerts
+---
+pattern_id: vdr.secure_dev.pre_commit_hooks
+name: Pre-Commit Hooks
+description: Detects pre-commit hooks for security checks
+family: VDR
+severity: INFO
+pattern_type: configuration
+languages:
+  yaml:
+    file_path: .pre-commit-config.yaml
+    ast_queries:
+    - yaml_path: repos[*].hooks[*].id
+      contains: detect-secrets|bandit|safety
+    regex_fallback: 'repos:|hooks:'
+    positive_indicators:
+    - detect-secrets
+    - bandit
+    - safety
+    - gitleaks
+finding:
+  title_template: Pre-commit security hooks detected
+  description_template: Security checks run before commits. Verify secret detection and SAST are enabled.
+  remediation_template: N/A - Positive finding
+tags:
+- secure-development
+- pre-commit
+- positive
+nist_controls:
+- sa-11
+- si-2
+related_ksis:
+- KSI-VDR-05
+ssp_mapping:
+  control_family: SA - System and Services Acquisition
+  control_numbers:
+  - SA-11
+  - SI-2
+  ssp_sections:
+  - section: 'SA-11: Unknown'
+    description_template: The system implements Unknown Requirement controls in accordance with FedRAMP 20x requirements. Requirement statement not available... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Unknown Requirement requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-AFR-04
+    requirement_name: Vulnerability Detection and Response
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant yaml implementation of vdr.secure_dev.pre_commit_hooks
+    code_sample: "# .pre-commit-config.yaml - Security checks before commits\nrepos:\n  - repo: https://github.com/Yelp/detect-secrets\n    rev: v1.4.0\n    hooks:\n      - id: detect-secrets\n        args: ['--baseline', '.secrets.baseline']\n  - repo: https://github.com/PyCQA/bandit\n    rev: 1.7.5\n    hooks:\n      - id: bandit\n        args: ['-r', 'src/']\n  - repo: https://github.com/gitleaks/gitleaks\n    rev: v8.18.0\n    hooks:\n      - id: gitleaks\n"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant yaml code violating vdr.secure_dev.pre_commit_hooks
+    code_sample: '# Non-compliant code missing vdr.secure_dev.pre_commit_hooks requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy enforcement\n# GitHub Actions\n- name: Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.secure_dev.pre_commit_hooks \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'Compliance Validation'\n  inputs:\n    script: |\n      # Validate compliance\n      python validate.py --pattern vdr.secure_dev.pre_commit_hooks\n"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring and alerting
+    implementation: '# Azure Monitor continuous monitoring
+
+      # Log Analytics Query
+
+      AzureActivity
+
+      | where CategoryValue == "Policy" or CategoryValue == "Security"
+
+      | where ResourceId contains "vdr.secure_dev.pre_commit_hooks"
+
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+
+      '
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+    - Azure Alerts
+---
+pattern_id: vdr.secure_dev.code_review_required
+name: Code Review Required
+description: Detects branch protection requiring code reviews
+family: VDR
+severity: HIGH
+pattern_type: configuration
+languages:
+  github:
+    api_check: branch_protection
+    conditions:
+    - required_approving_review_count:>=1
+    - dismiss_stale_reviews:true
+    positive_indicators:
+    - required_pull_request_reviews
+finding:
+  title_template: Branch protection with code review detected
+  description_template: Main branch requires code review. Verify at least 1 approval and security-focused reviewers.
+  remediation_template: N/A - Positive finding
+tags:
+- secure-development
+- code-review
+- positive
+nist_controls:
+- sa-11
+related_ksis:
+- KSI-VDR-05
+ssp_mapping:
+  control_family: SA - System and Services Acquisition
+  control_numbers:
+  - SA-11
+  ssp_sections:
+  - section: 'SA-11: Unknown'
+    description_template: The system implements Unknown Requirement controls in accordance with FedRAMP 20x requirements. Requirement statement not available... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Unknown Requirement requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-AFR-04
+    requirement_name: Vulnerability Detection and Response
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github implementation of vdr.secure_dev.code_review_required
+    code_sample: "# GitHub branch protection configuration (API response)\n{\n  \"required_pull_request_reviews\": {\n    \"dismiss_stale_reviews\": true,\n    \"require_code_owner_reviews\": true,\n    \"required_approving_review_count\": 2,\n    \"require_last_push_approval\": true\n  },\n  \"required_status_checks\": {\n    \"strict\": true,\n    \"contexts\": [\"security-scan\", \"tests\"]\n  },\n  \"enforce_admins\": true,\n  \"required_linear_history\": true,\n  \"allow_force_pushes\": false,\n  \"allow_deletions\": false\n}\n"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github code violating vdr.secure_dev.code_review_required
+    code_sample: '# Non-compliant code missing vdr.secure_dev.code_review_required requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy enforcement\n# GitHub Actions\n- name: Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.secure_dev.code_review_required \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'Compliance Validation'\n  inputs:\n    script: |\n      # Validate compliance\n      python validate.py --pattern vdr.secure_dev.code_review_required\n"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring and alerting
+    implementation: '# Azure Monitor continuous monitoring
+
+      # Log Analytics Query
+
+      AzureActivity
+
+      | where CategoryValue == "Policy" or CategoryValue == "Security"
+
+      | where ResourceId contains "vdr.secure_dev.code_review_required"
+
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+
+      '
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+    - Azure Alerts
+---
+pattern_id: vdr.frr.frr_vdr_01
+name: Vulnerability Detection Compliance
+description: Validates compliance with FRR-VDR-01 - Vulnerability Detection
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-01 - Vulnerability Detection compliance check
+  description_template: Configuration requires validation for FRR-VDR-01 compliance
+  remediation_template: Implement FRR-VDR-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-01 compliance validation
+    implementation: "# FRR-VDR-01 compliance automation\n# GitHub Actions\n- name: FRR-VDR-01 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_01 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-01 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-01 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-01'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-01
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-01\"\n  RequirementName = \"Vulnerability Detection\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-01.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_02
+name: Vulnerability Response Compliance
+description: Validates compliance with FRR-VDR-02 - Vulnerability Response
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-02 - Vulnerability Response compliance check
+  description_template: Configuration requires validation for FRR-VDR-02 compliance
+  remediation_template: Implement FRR-VDR-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-02 compliance validation
+    implementation: "# FRR-VDR-02 compliance automation\n# GitHub Actions\n- name: FRR-VDR-02 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_02 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-02 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-02 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-02'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-02
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-02\"\n  RequirementName = \"Vulnerability Response\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-02.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_03
+name: Timeframe Requirements Compliance
+description: Validates compliance with FRR-VDR-03 - Timeframe Requirements
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-03 - Timeframe Requirements compliance check
+  description_template: Configuration requires validation for FRR-VDR-03 compliance
+  remediation_template: Implement FRR-VDR-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-03 compliance validation
+    implementation: "# FRR-VDR-03 compliance automation\n# GitHub Actions\n- name: FRR-VDR-03 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_03 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-03 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-03 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-03'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-03
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-03\"\n  RequirementName = \"Timeframe Requirements\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-03.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_04
+name: Sampling Identical Resources Compliance
+description: Validates compliance with FRR-VDR-04 - Sampling Identical Resources
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-04 - Sampling Identical Resources compliance check
+  description_template: Configuration requires validation for FRR-VDR-04 compliance
+  remediation_template: Implement FRR-VDR-04 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-04
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-04 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-04 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-04 compliance validation
+    implementation: "# FRR-VDR-04 compliance automation\n# GitHub Actions\n- name: FRR-VDR-04 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_04 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-04 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-04 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-04'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-04
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-04\"\n  RequirementName = \"Sampling Identical Resources\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-04.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_05
+name: Grouping Vulnerabilities Compliance
+description: Validates compliance with FRR-VDR-05 - Grouping Vulnerabilities
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-05 - Grouping Vulnerabilities compliance check
+  description_template: Configuration requires validation for FRR-VDR-05 compliance
+  remediation_template: Implement FRR-VDR-05 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-05
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-05 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-05 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-05 compliance validation
+    implementation: "# FRR-VDR-05 compliance automation\n# GitHub Actions\n- name: FRR-VDR-05 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_05 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-05 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-05 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-05'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-05
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-05\"\n  RequirementName = \"Grouping Vulnerabilities\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-05.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_06
+name: Evaluate False Positives Compliance
+description: Validates compliance with FRR-VDR-06 - Evaluate False Positives
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-06 - Evaluate False Positives compliance check
+  description_template: Configuration requires validation for FRR-VDR-06 compliance
+  remediation_template: Implement FRR-VDR-06 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-06
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-06 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-06 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-06 compliance validation
+    implementation: "# FRR-VDR-06 compliance automation\n# GitHub Actions\n- name: FRR-VDR-06 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_06 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-06 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-06 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-06'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-06
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-06\"\n  RequirementName = \"Evaluate False Positives\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-06.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_07
+name: Evaluate Exploitability Compliance
+description: Validates compliance with FRR-VDR-07 - Evaluate Exploitability
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-07 - Evaluate Exploitability compliance check
+  description_template: Configuration requires validation for FRR-VDR-07 compliance
+  remediation_template: Implement FRR-VDR-07 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-07
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-07 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-07 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-07 compliance validation
+    implementation: "# FRR-VDR-07 compliance automation\n# GitHub Actions\n- name: FRR-VDR-07 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_07 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-07 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-07 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-07'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-07
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-07\"\n  RequirementName = \"Evaluate Exploitability\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-07.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_08
+name: Evaluate Internet-Reachability Compliance
+description: Validates compliance with FRR-VDR-08 - Evaluate Internet-Reachability
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-08 - Evaluate Internet-Reachability compliance check
+  description_template: Configuration requires validation for FRR-VDR-08 compliance
+  remediation_template: Implement FRR-VDR-08 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-08
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-08 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-08 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-08 compliance validation
+    implementation: "# FRR-VDR-08 compliance automation\n# GitHub Actions\n- name: FRR-VDR-08 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_08 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-08 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-08 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-08'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-08
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-08\"\n  RequirementName = \"Evaluate Internet-Reachability\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-08.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_09
+name: Estimate Potential Adverse Impact Compliance
+description: Validates compliance with FRR-VDR-09 - Estimate Potential Adverse Impact
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-09 - Estimate Potential Adverse Impact compliance check
+  description_template: Configuration requires validation for FRR-VDR-09 compliance
+  remediation_template: Implement FRR-VDR-09 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-09
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-09 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-09 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-09 compliance validation
+    implementation: "# FRR-VDR-09 compliance automation\n# GitHub Actions\n- name: FRR-VDR-09 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_09 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-09 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-09 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-09'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-09
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-09\"\n  RequirementName = \"Estimate Potential Adverse Impact\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-09.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_10
+name: Evaluation Factors Compliance
+description: Validates compliance with FRR-VDR-10 - Evaluation Factors
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-10 - Evaluation Factors compliance check
+  description_template: Configuration requires validation for FRR-VDR-10 compliance
+  remediation_template: Implement FRR-VDR-10 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-10
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-10 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-10 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-10 compliance validation
+    implementation: "# FRR-VDR-10 compliance automation\n# GitHub Actions\n- name: FRR-VDR-10 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_10 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-10 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-10 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-10'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-10
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-10\"\n  RequirementName = \"Evaluation Factors\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-10.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_11
+name: Documenting Reasons Compliance
+description: Validates compliance with FRR-VDR-11 - Documenting Reasons
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-11 - Documenting Reasons compliance check
+  description_template: Configuration requires validation for FRR-VDR-11 compliance
+  remediation_template: Implement FRR-VDR-11 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-11
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-11 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-11 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-11 compliance validation
+    implementation: "# FRR-VDR-11 compliance automation\n# GitHub Actions\n- name: FRR-VDR-11 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_11 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-11 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-11 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-11'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-11
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-11\"\n  RequirementName = \"Documenting Reasons\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-11.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_ag_01
+name: Review Vulnerability Reports Compliance
+description: Validates compliance with FRR-VDR-AG-01 - Review Vulnerability Reports
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-AG-01 - Review Vulnerability Reports compliance check
+  description_template: Configuration requires validation for FRR-VDR-AG-01 compliance
+  remediation_template: Implement FRR-VDR-AG-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-AG-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-AG-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-AG-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-AG-01 compliance validation
+    implementation: "# FRR-VDR-AG-01 compliance automation\n# GitHub Actions\n- name: FRR-VDR-AG-01 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_ag_01 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-AG-01 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-AG-01 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-AG-01'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-AG-01
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-AG-01\"\n  RequirementName = \"Review Vulnerability Reports\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-AG-01.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_ag_02
+name: Maintain Agency POA&M Compliance
+description: Validates compliance with FRR-VDR-AG-02 - Maintain Agency POA&M
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-AG-02 - Maintain Agency POA&M compliance check
+  description_template: Configuration requires validation for FRR-VDR-AG-02 compliance
+  remediation_template: Implement FRR-VDR-AG-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-AG-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-AG-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-AG-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-AG-02 compliance validation
+    implementation: "# FRR-VDR-AG-02 compliance automation\n# GitHub Actions\n- name: FRR-VDR-AG-02 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_ag_02 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-AG-02 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-AG-02 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-AG-02'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-AG-02
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-AG-02\"\n  RequirementName = \"Maintain Agency POA&M\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-AG-02.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_ag_03
+name: Do Not Request Extra Info Compliance
+description: Validates compliance with FRR-VDR-AG-03 - Do Not Request Extra Info
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-AG-03 - Do Not Request Extra Info compliance check
+  description_template: Configuration requires validation for FRR-VDR-AG-03 compliance
+  remediation_template: Implement FRR-VDR-AG-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-AG-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-AG-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-AG-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-AG-03 compliance validation
+    implementation: "# FRR-VDR-AG-03 compliance automation\n# GitHub Actions\n- name: FRR-VDR-AG-03 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_ag_03 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-AG-03 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-AG-03 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-AG-03'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-AG-03
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-AG-03\"\n  RequirementName = \"Do Not Request Extra Info\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-AG-03.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_ag_04
+name: Notify FedRAMP Compliance
+description: Validates compliance with FRR-VDR-AG-04 - Notify FedRAMP
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-AG-04 - Notify FedRAMP compliance check
+  description_template: Configuration requires validation for FRR-VDR-AG-04 compliance
+  remediation_template: Implement FRR-VDR-AG-04 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-AG-04
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-AG-04 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-AG-04 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-AG-04 compliance validation
+    implementation: "# FRR-VDR-AG-04 compliance automation\n# GitHub Actions\n- name: FRR-VDR-AG-04 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_ag_04 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-AG-04 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-AG-04 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-AG-04'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-AG-04
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-AG-04\"\n  RequirementName = \"Notify FedRAMP\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-AG-04.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_ay_01
+name: Partial Mitigation Compliance
+description: Validates compliance with FRR-VDR-AY-01 - Partial Mitigation
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-AY-01 - Partial Mitigation compliance check
+  description_template: Configuration requires validation for FRR-VDR-AY-01 compliance
+  remediation_template: Implement FRR-VDR-AY-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-AY-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-AY-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-AY-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-AY-01 compliance validation
+    implementation: "# FRR-VDR-AY-01 compliance automation\n# GitHub Actions\n- name: FRR-VDR-AY-01 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_ay_01 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-AY-01 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-AY-01 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-AY-01'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-AY-01
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-AY-01\"\n  RequirementName = \"Partial Mitigation\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-AY-01.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_ay_02
+name: Design For Resilience Compliance
+description: Validates compliance with FRR-VDR-AY-02 - Design For Resilience
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-AY-02 - Design For Resilience compliance check
+  description_template: Configuration requires validation for FRR-VDR-AY-02 compliance
+  remediation_template: Implement FRR-VDR-AY-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-AY-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-AY-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-AY-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-AY-02 compliance validation
+    implementation: "# FRR-VDR-AY-02 compliance automation\n# GitHub Actions\n- name: FRR-VDR-AY-02 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_ay_02 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-AY-02 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-AY-02 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-AY-02'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-AY-02
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-AY-02\"\n  RequirementName = \"Design For Resilience\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-AY-02.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_ay_03
+name: Automate Detection Compliance
+description: Validates compliance with FRR-VDR-AY-03 - Automate Detection
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-AY-03 - Automate Detection compliance check
+  description_template: Configuration requires validation for FRR-VDR-AY-03 compliance
+  remediation_template: Implement FRR-VDR-AY-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-AY-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-AY-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-AY-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-AY-03 compliance validation
+    implementation: "# FRR-VDR-AY-03 compliance automation\n# GitHub Actions\n- name: FRR-VDR-AY-03 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_ay_03 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-AY-03 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-AY-03 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-AY-03'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-AY-03
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-AY-03\"\n  RequirementName = \"Automate Detection\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-AY-03.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_ay_04
+name: Detection on Changes Compliance
+description: Validates compliance with FRR-VDR-AY-04 - Detection on Changes
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-AY-04 - Detection on Changes compliance check
+  description_template: Configuration requires validation for FRR-VDR-AY-04 compliance
+  remediation_template: Implement FRR-VDR-AY-04 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-AY-04
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-AY-04 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-AY-04 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-AY-04 compliance validation
+    implementation: "# FRR-VDR-AY-04 compliance automation\n# GitHub Actions\n- name: FRR-VDR-AY-04 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_ay_04 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-AY-04 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-AY-04 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-AY-04'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-AY-04
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-AY-04\"\n  RequirementName = \"Detection on Changes\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-AY-04.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_ay_05
+name: Maintain Security Postures Compliance
+description: Validates compliance with FRR-VDR-AY-05 - Maintain Security Postures
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-AY-05 - Maintain Security Postures compliance check
+  description_template: Configuration requires validation for FRR-VDR-AY-05 compliance
+  remediation_template: Implement FRR-VDR-AY-05 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-AY-05
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-AY-05 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-AY-05 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-AY-05 compliance validation
+    implementation: "# FRR-VDR-AY-05 compliance automation\n# GitHub Actions\n- name: FRR-VDR-AY-05 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_ay_05 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-AY-05 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-AY-05 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-AY-05'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-AY-05
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-AY-05\"\n  RequirementName = \"Maintain Security Postures\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-AY-05.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_ay_06
+name: Avoid Known Exploited Vulnerabilities Compliance
+description: Validates compliance with FRR-VDR-AY-06 - Avoid Known Exploited Vulnerabilities
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-AY-06 - Avoid Known Exploited Vulnerabilities compliance check
+  description_template: Configuration requires validation for FRR-VDR-AY-06 compliance
+  remediation_template: Implement FRR-VDR-AY-06 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-AY-06
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-AY-06 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-AY-06 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-AY-06 compliance validation
+    implementation: "# FRR-VDR-AY-06 compliance automation\n# GitHub Actions\n- name: FRR-VDR-AY-06 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_ay_06 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-AY-06 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-AY-06 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-AY-06'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-AY-06
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-AY-06\"\n  RequirementName = \"Avoid Known Exploited Vulnerabilities\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-AY-06.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_ex_01
+name: Additional Reporting Requirements Compliance
+description: Validates compliance with FRR-VDR-EX-01 - Additional Reporting Requirements
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-EX-01 - Additional Reporting Requirements compliance check
+  description_template: Configuration requires validation for FRR-VDR-EX-01 compliance
+  remediation_template: Implement FRR-VDR-EX-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-EX-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-EX-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-EX-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-EX-01 compliance validation
+    implementation: "# FRR-VDR-EX-01 compliance automation\n# GitHub Actions\n- name: FRR-VDR-EX-01 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_ex_01 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-EX-01 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-EX-01 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-EX-01'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-EX-01
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-EX-01\"\n  RequirementName = \"Additional Reporting Requirements\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-EX-01.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_ex_02
+name: Additional Details Compliance
+description: Validates compliance with FRR-VDR-EX-02 - Additional Details
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-EX-02 - Additional Details compliance check
+  description_template: Configuration requires validation for FRR-VDR-EX-02 compliance
+  remediation_template: Implement FRR-VDR-EX-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-EX-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-EX-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-EX-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-EX-02 compliance validation
+    implementation: "# FRR-VDR-EX-02 compliance automation\n# GitHub Actions\n- name: FRR-VDR-EX-02 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_ex_02 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-EX-02 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-EX-02 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-EX-02'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-EX-02
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-EX-02\"\n  RequirementName = \"Additional Details\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-EX-02.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_ex_03
+name: Do Not Reject Requests Compliance
+description: Validates compliance with FRR-VDR-EX-03 - Do Not Reject Requests
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-EX-03 - Do Not Reject Requests compliance check
+  description_template: Configuration requires validation for FRR-VDR-EX-03 compliance
+  remediation_template: Implement FRR-VDR-EX-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-EX-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-EX-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-EX-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-EX-03 compliance validation
+    implementation: "# FRR-VDR-EX-03 compliance automation\n# GitHub Actions\n- name: FRR-VDR-EX-03 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_ex_03 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-EX-03 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-EX-03 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-EX-03'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-EX-03
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-EX-03\"\n  RequirementName = \"Do Not Reject Requests\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-EX-03.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_rp_01
+name: Monthly Reporting Compliance
+description: Validates compliance with FRR-VDR-RP-01 - Monthly Reporting
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-RP-01 - Monthly Reporting compliance check
+  description_template: Configuration requires validation for FRR-VDR-RP-01 compliance
+  remediation_template: Implement FRR-VDR-RP-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-RP-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-RP-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-RP-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-RP-01 compliance validation
+    implementation: "# FRR-VDR-RP-01 compliance automation\n# GitHub Actions\n- name: FRR-VDR-RP-01 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_rp_01 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-RP-01 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-RP-01 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-RP-01'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-RP-01
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-RP-01\"\n  RequirementName = \"Monthly Reporting\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-RP-01.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_rp_02
+name: High-Level Overviews Compliance
+description: Validates compliance with FRR-VDR-RP-02 - High-Level Overviews
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-RP-02 - High-Level Overviews compliance check
+  description_template: Configuration requires validation for FRR-VDR-RP-02 compliance
+  remediation_template: Implement FRR-VDR-RP-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-RP-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-RP-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-RP-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-RP-02 compliance validation
+    implementation: "# FRR-VDR-RP-02 compliance automation\n# GitHub Actions\n- name: FRR-VDR-RP-02 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_rp_02 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-RP-02 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-RP-02 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-RP-02'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-RP-02
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-RP-02\"\n  RequirementName = \"High-Level Overviews\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-RP-02.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_rp_03
+name: No Irresponsible Disclosure Compliance
+description: Validates compliance with FRR-VDR-RP-03 - No Irresponsible Disclosure
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-RP-03 - No Irresponsible Disclosure compliance check
+  description_template: Configuration requires validation for FRR-VDR-RP-03 compliance
+  remediation_template: Implement FRR-VDR-RP-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-RP-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-RP-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-RP-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-RP-03 compliance validation
+    implementation: "# FRR-VDR-RP-03 compliance automation\n# GitHub Actions\n- name: FRR-VDR-RP-03 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_rp_03 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-RP-03 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-RP-03 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-RP-03'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-RP-03
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-RP-03\"\n  RequirementName = \"No Irresponsible Disclosure\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-RP-03.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_rp_04
+name: Responsible Public Disclosure Compliance
+description: Validates compliance with FRR-VDR-RP-04 - Responsible Public Disclosure
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-RP-04 - Responsible Public Disclosure compliance check
+  description_template: Configuration requires validation for FRR-VDR-RP-04 compliance
+  remediation_template: Implement FRR-VDR-RP-04 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-RP-04
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-RP-04 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-RP-04 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-RP-04 compliance validation
+    implementation: "# FRR-VDR-RP-04 compliance automation\n# GitHub Actions\n- name: FRR-VDR-RP-04 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_rp_04 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-RP-04 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-RP-04 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-RP-04'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-RP-04
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-RP-04\"\n  RequirementName = \"Responsible Public Disclosure\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-RP-04.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_rp_05
+name: Vulnerability Details Compliance
+description: Validates compliance with FRR-VDR-RP-05 - Vulnerability Details
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-RP-05 - Vulnerability Details compliance check
+  description_template: Configuration requires validation for FRR-VDR-RP-05 compliance
+  remediation_template: Implement FRR-VDR-RP-05 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-RP-05
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-RP-05 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-RP-05 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-RP-05 compliance validation
+    implementation: "# FRR-VDR-RP-05 compliance automation\n# GitHub Actions\n- name: FRR-VDR-RP-05 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_rp_05 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-RP-05 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-RP-05 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-RP-05'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-RP-05
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-RP-05\"\n  RequirementName = \"Vulnerability Details\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-RP-05.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_rp_06
+name: Accepted Vulnerability Info Compliance
+description: Validates compliance with FRR-VDR-RP-06 - Accepted Vulnerability Info
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-RP-06 - Accepted Vulnerability Info compliance check
+  description_template: Configuration requires validation for FRR-VDR-RP-06 compliance
+  remediation_template: Implement FRR-VDR-RP-06 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-RP-06
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-RP-06 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-RP-06 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-RP-06 compliance validation
+    implementation: "# FRR-VDR-RP-06 compliance automation\n# GitHub Actions\n- name: FRR-VDR-RP-06 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_rp_06 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-RP-06 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-RP-06 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-RP-06'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-RP-06
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-RP-06\"\n  RequirementName = \"Accepted Vulnerability Info\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-RP-06.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_tf_01
+name: Monthly Human-Readable Compliance
+description: Validates compliance with FRR-VDR-TF-01 - Monthly Human-Readable
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-01 - Monthly Human-Readable compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-01 compliance
+  remediation_template: Implement FRR-VDR-TF-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-01 compliance validation
+    implementation: "# FRR-VDR-TF-01 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-01 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_01 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-01 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-01 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-01'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-01
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-01\"\n  RequirementName = \"Monthly Human-Readable\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-01.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_tf_02
+name: Remediate KEVs Compliance
+description: Validates compliance with FRR-VDR-TF-02 - Remediate KEVs
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-02 - Remediate KEVs compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-02 compliance
+  remediation_template: Implement FRR-VDR-TF-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-02 compliance validation
+    implementation: "# FRR-VDR-TF-02 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-02 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_02 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-02 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-02 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-02'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-02
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-02\"\n  RequirementName = \"Remediate KEVs\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-02.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_tf_03
+name: Mark Accepted Vulnerabilities Compliance
+description: Validates compliance with FRR-VDR-TF-03 - Mark Accepted Vulnerabilities
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-03 - Mark Accepted Vulnerabilities compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-03 compliance
+  remediation_template: Implement FRR-VDR-TF-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-03 compliance validation
+    implementation: "# FRR-VDR-TF-03 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-03 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_03 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-03 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-03 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-03'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-03
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-03\"\n  RequirementName = \"Mark Accepted Vulnerabilities\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-03.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+- Moderate
+- High
+---
+pattern_id: vdr.frr.frr_vdr_tf_hi_01
+name: 7-Day History Compliance
+description: Validates compliance with FRR-VDR-TF-HI-01 - 7-Day History
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-HI-01 - 7-Day History compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-HI-01 compliance
+  remediation_template: Implement FRR-VDR-TF-HI-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-HI-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-HI-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-HI-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-HI-01 compliance validation
+    implementation: "# FRR-VDR-TF-HI-01 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-HI-01 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_hi_01 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-HI-01 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-HI-01 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-HI-01'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-HI-01
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-HI-01\"\n  RequirementName = \"7-Day History\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-HI-01.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- High
+---
+pattern_id: vdr.frr.frr_vdr_tf_hi_02
+name: Daily Sampling Compliance
+description: Validates compliance with FRR-VDR-TF-HI-02 - Daily Sampling
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-HI-02 - Daily Sampling compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-HI-02 compliance
+  remediation_template: Implement FRR-VDR-TF-HI-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-HI-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-HI-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-HI-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-HI-02 compliance validation
+    implementation: "# FRR-VDR-TF-HI-02 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-HI-02 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_hi_02 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-HI-02 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-HI-02 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-HI-02'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-HI-02
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-HI-02\"\n  RequirementName = \"Daily Sampling\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-HI-02.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- High
+---
+pattern_id: vdr.frr.frr_vdr_tf_hi_03
+name: 7-Day Drift Detection Compliance
+description: Validates compliance with FRR-VDR-TF-HI-03 - 7-Day Drift Detection
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-HI-03 - 7-Day Drift Detection compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-HI-03 compliance
+  remediation_template: Implement FRR-VDR-TF-HI-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-HI-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-HI-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-HI-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-HI-03 compliance validation
+    implementation: "# FRR-VDR-TF-HI-03 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-HI-03 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_hi_03 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-HI-03 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-HI-03 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-HI-03'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-HI-03
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-HI-03\"\n  RequirementName = \"7-Day Drift Detection\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-HI-03.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- High
+---
+pattern_id: vdr.frr.frr_vdr_tf_hi_04
+name: Monthly Detection Compliance
+description: Validates compliance with FRR-VDR-TF-HI-04 - Monthly Detection
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-HI-04 - Monthly Detection compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-HI-04 compliance
+  remediation_template: Implement FRR-VDR-TF-HI-04 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-HI-04
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-HI-04 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-HI-04 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-HI-04 compliance validation
+    implementation: "# FRR-VDR-TF-HI-04 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-HI-04 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_hi_04 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-HI-04 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-HI-04 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-HI-04'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-HI-04
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-HI-04\"\n  RequirementName = \"Monthly Detection\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-HI-04.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- High
+---
+pattern_id: vdr.frr.frr_vdr_tf_hi_05
+name: Evaluate Within 2 Days Compliance
+description: Validates compliance with FRR-VDR-TF-HI-05 - Evaluate Within 2 Days
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-HI-05 - Evaluate Within 2 Days compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-HI-05 compliance
+  remediation_template: Implement FRR-VDR-TF-HI-05 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-HI-05
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-HI-05 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-HI-05 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-HI-05 compliance validation
+    implementation: "# FRR-VDR-TF-HI-05 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-HI-05 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_hi_05 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-HI-05 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-HI-05 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-HI-05'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-HI-05
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-HI-05\"\n  RequirementName = \"Evaluate Within 2 Days\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-HI-05.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- High
+---
+pattern_id: vdr.frr.frr_vdr_tf_hi_06
+name: Treat N4/N5 As Incident Compliance
+description: Validates compliance with FRR-VDR-TF-HI-06 - Treat N4/N5 As Incident
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-HI-06 - Treat N4/N5 As Incident compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-HI-06 compliance
+  remediation_template: Implement FRR-VDR-TF-HI-06 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-HI-06
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-HI-06 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-HI-06 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-HI-06 compliance validation
+    implementation: "# FRR-VDR-TF-HI-06 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-HI-06 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_hi_06 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-HI-06 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-HI-06 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-HI-06'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-HI-06
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-HI-06\"\n  RequirementName = \"Treat N4/N5 As Incident\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-HI-06.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- High
+---
+pattern_id: vdr.frr.frr_vdr_tf_hi_07
+name: Treat N5 Non-Internet as Incident Compliance
+description: Validates compliance with FRR-VDR-TF-HI-07 - Treat N5 Non-Internet as Incident
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-HI-07 - Treat N5 Non-Internet as Incident compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-HI-07 compliance
+  remediation_template: Implement FRR-VDR-TF-HI-07 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-HI-07
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-HI-07 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-HI-07 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-HI-07 compliance validation
+    implementation: "# FRR-VDR-TF-HI-07 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-HI-07 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_hi_07 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-HI-07 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-HI-07 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-HI-07'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-HI-07
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-HI-07\"\n  RequirementName = \"Treat N5 Non-Internet as Incident\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-HI-07.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- High
+---
+pattern_id: vdr.frr.frr_vdr_tf_hi_08
+name: Partial Mitigation Timeframes Compliance
+description: Validates compliance with FRR-VDR-TF-HI-08 - Partial Mitigation Timeframes
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-HI-08 - Partial Mitigation Timeframes compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-HI-08 compliance
+  remediation_template: Implement FRR-VDR-TF-HI-08 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-HI-08
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-HI-08 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-HI-08 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-HI-08 compliance validation
+    implementation: "# FRR-VDR-TF-HI-08 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-HI-08 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_hi_08 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-HI-08 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-HI-08 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-HI-08'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-HI-08
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-HI-08\"\n  RequirementName = \"Partial Mitigation Timeframes\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-HI-08.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- High
+---
+pattern_id: vdr.frr.frr_vdr_tf_hi_09
+name: Mitigate During Operations Compliance
+description: Validates compliance with FRR-VDR-TF-HI-09 - Mitigate During Operations
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-HI-09 - Mitigate During Operations compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-HI-09 compliance
+  remediation_template: Implement FRR-VDR-TF-HI-09 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-HI-09
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-HI-09 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-HI-09 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-HI-09 compliance validation
+    implementation: "# FRR-VDR-TF-HI-09 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-HI-09 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_hi_09 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-HI-09 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-HI-09 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-HI-09'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-HI-09
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-HI-09\"\n  RequirementName = \"Mitigate During Operations\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-HI-09.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- High
+---
+pattern_id: vdr.frr.frr_vdr_tf_lo_01
+name: Machine-Readable History Compliance
+description: Validates compliance with FRR-VDR-TF-LO-01 - Machine-Readable History
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-LO-01 - Machine-Readable History compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-LO-01 compliance
+  remediation_template: Implement FRR-VDR-TF-LO-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-LO-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-LO-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-LO-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-LO-01 compliance validation
+    implementation: "# FRR-VDR-TF-LO-01 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-LO-01 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_lo_01 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-LO-01 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-LO-01 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-LO-01'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-LO-01
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-LO-01\"\n  RequirementName = \"Machine-Readable History\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-LO-01.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+---
+pattern_id: vdr.frr.frr_vdr_tf_lo_02
+name: Weekly Sample Detection Compliance
+description: Validates compliance with FRR-VDR-TF-LO-02 - Weekly Sample Detection
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-LO-02 - Weekly Sample Detection compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-LO-02 compliance
+  remediation_template: Implement FRR-VDR-TF-LO-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-LO-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-LO-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-LO-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-LO-02 compliance validation
+    implementation: "# FRR-VDR-TF-LO-02 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-LO-02 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_lo_02 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-LO-02 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-LO-02 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-LO-02'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-LO-02
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-LO-02\"\n  RequirementName = \"Weekly Sample Detection\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-LO-02.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+---
+pattern_id: vdr.frr.frr_vdr_tf_lo_03
+name: Monthly Drift Detection Compliance
+description: Validates compliance with FRR-VDR-TF-LO-03 - Monthly Drift Detection
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-LO-03 - Monthly Drift Detection compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-LO-03 compliance
+  remediation_template: Implement FRR-VDR-TF-LO-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-LO-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-LO-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-LO-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-LO-03 compliance validation
+    implementation: "# FRR-VDR-TF-LO-03 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-LO-03 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_lo_03 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-LO-03 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-LO-03 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-LO-03'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-LO-03
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-LO-03\"\n  RequirementName = \"Monthly Drift Detection\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-LO-03.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+---
+pattern_id: vdr.frr.frr_vdr_tf_lo_04
+name: Six-Month Detection Compliance
+description: Validates compliance with FRR-VDR-TF-LO-04 - Six-Month Detection
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-LO-04 - Six-Month Detection compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-LO-04 compliance
+  remediation_template: Implement FRR-VDR-TF-LO-04 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-LO-04
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-LO-04 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-LO-04 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-LO-04 compliance validation
+    implementation: "# FRR-VDR-TF-LO-04 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-LO-04 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_lo_04 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-LO-04 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-LO-04 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-LO-04'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-LO-04
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-LO-04\"\n  RequirementName = \"Six-Month Detection\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-LO-04.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+---
+pattern_id: vdr.frr.frr_vdr_tf_lo_05
+name: Evaluate Within 7 Days Compliance
+description: Validates compliance with FRR-VDR-TF-LO-05 - Evaluate Within 7 Days
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-LO-05 - Evaluate Within 7 Days compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-LO-05 compliance
+  remediation_template: Implement FRR-VDR-TF-LO-05 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-LO-05
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-LO-05 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-LO-05 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-LO-05 compliance validation
+    implementation: "# FRR-VDR-TF-LO-05 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-LO-05 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_lo_05 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-LO-05 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-LO-05 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-LO-05'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-LO-05
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-LO-05\"\n  RequirementName = \"Evaluate Within 7 Days\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-LO-05.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+---
+pattern_id: vdr.frr.frr_vdr_tf_lo_06
+name: Mitigate Per Timeframes Compliance
+description: Validates compliance with FRR-VDR-TF-LO-06 - Mitigate Per Timeframes
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-LO-06 - Mitigate Per Timeframes compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-LO-06 compliance
+  remediation_template: Implement FRR-VDR-TF-LO-06 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-LO-06
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-LO-06 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-LO-06 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-LO-06 compliance validation
+    implementation: "# FRR-VDR-TF-LO-06 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-LO-06 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_lo_06 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-LO-06 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-LO-06 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-LO-06'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-LO-06
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-LO-06\"\n  RequirementName = \"Mitigate Per Timeframes\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-LO-06.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+---
+pattern_id: vdr.frr.frr_vdr_tf_lo_07
+name: Mitigate During Operations Compliance
+description: Validates compliance with FRR-VDR-TF-LO-07 - Mitigate During Operations
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-LO-07 - Mitigate During Operations compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-LO-07 compliance
+  remediation_template: Implement FRR-VDR-TF-LO-07 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-LO-07
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-LO-07 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-LO-07 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-LO-07 compliance validation
+    implementation: "# FRR-VDR-TF-LO-07 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-LO-07 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_lo_07 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-LO-07 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-LO-07 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-LO-07'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-LO-07
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-LO-07\"\n  RequirementName = \"Mitigate During Operations\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-LO-07.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Low
+---
+pattern_id: vdr.frr.frr_vdr_tf_mo_01
+name: 14-Day History Compliance
+description: Validates compliance with FRR-VDR-TF-MO-01 - 14-Day History
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-MO-01 - 14-Day History compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-MO-01 compliance
+  remediation_template: Implement FRR-VDR-TF-MO-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-MO-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-MO-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-MO-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-MO-01 compliance validation
+    implementation: "# FRR-VDR-TF-MO-01 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-MO-01 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_mo_01 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-MO-01 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-MO-01 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-MO-01'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-MO-01
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-MO-01\"\n  RequirementName = \"14-Day History\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-MO-01.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Moderate
+---
+pattern_id: vdr.frr.frr_vdr_tf_mo_02
+name: 3-Day Sampling Compliance
+description: Validates compliance with FRR-VDR-TF-MO-02 - 3-Day Sampling
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-MO-02 - 3-Day Sampling compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-MO-02 compliance
+  remediation_template: Implement FRR-VDR-TF-MO-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-MO-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-MO-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-MO-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-MO-02 compliance validation
+    implementation: "# FRR-VDR-TF-MO-02 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-MO-02 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_mo_02 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-MO-02 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-MO-02 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-MO-02'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-MO-02
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-MO-02\"\n  RequirementName = \"3-Day Sampling\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-MO-02.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Moderate
+---
+pattern_id: vdr.frr.frr_vdr_tf_mo_03
+name: 14-Day Drift Detection Compliance
+description: Validates compliance with FRR-VDR-TF-MO-03 - 14-Day Drift Detection
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-MO-03 - 14-Day Drift Detection compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-MO-03 compliance
+  remediation_template: Implement FRR-VDR-TF-MO-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-MO-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-MO-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-MO-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-MO-03 compliance validation
+    implementation: "# FRR-VDR-TF-MO-03 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-MO-03 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_mo_03 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-MO-03 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-MO-03 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-MO-03'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-MO-03
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-MO-03\"\n  RequirementName = \"14-Day Drift Detection\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-MO-03.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Moderate
+---
+pattern_id: vdr.frr.frr_vdr_tf_mo_04
+name: Monthly Detection Compliance
+description: Validates compliance with FRR-VDR-TF-MO-04 - Monthly Detection
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-MO-04 - Monthly Detection compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-MO-04 compliance
+  remediation_template: Implement FRR-VDR-TF-MO-04 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-MO-04
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-MO-04 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-MO-04 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-MO-04 compliance validation
+    implementation: "# FRR-VDR-TF-MO-04 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-MO-04 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_mo_04 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-MO-04 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-MO-04 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-MO-04'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-MO-04
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-MO-04\"\n  RequirementName = \"Monthly Detection\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-MO-04.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Moderate
+---
+pattern_id: vdr.frr.frr_vdr_tf_mo_05
+name: Evaluate Within 5 Days Compliance
+description: Validates compliance with FRR-VDR-TF-MO-05 - Evaluate Within 5 Days
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-MO-05 - Evaluate Within 5 Days compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-MO-05 compliance
+  remediation_template: Implement FRR-VDR-TF-MO-05 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-MO-05
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-MO-05 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-MO-05 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-MO-05 compliance validation
+    implementation: "# FRR-VDR-TF-MO-05 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-MO-05 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_mo_05 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-MO-05 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-MO-05 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-MO-05'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-MO-05
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-MO-05\"\n  RequirementName = \"Evaluate Within 5 Days\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-MO-05.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Moderate
+---
+pattern_id: vdr.frr.frr_vdr_tf_mo_06
+name: Incidents Compliance
+description: Validates compliance with FRR-VDR-TF-MO-06 - Incidents
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-MO-06 - Incidents compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-MO-06 compliance
+  remediation_template: Implement FRR-VDR-TF-MO-06 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-MO-06
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-MO-06 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-MO-06 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-MO-06 compliance validation
+    implementation: "# FRR-VDR-TF-MO-06 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-MO-06 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_mo_06 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-MO-06 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-MO-06 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-MO-06'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-MO-06
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-MO-06\"\n  RequirementName = \"Incidents\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-MO-06.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Moderate
+---
+pattern_id: vdr.frr.frr_vdr_tf_mo_07
+name: Mitigate Per Timeframes Compliance
+description: Validates compliance with FRR-VDR-TF-MO-07 - Mitigate Per Timeframes
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-MO-07 - Mitigate Per Timeframes compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-MO-07 compliance
+  remediation_template: Implement FRR-VDR-TF-MO-07 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-MO-07
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-MO-07 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-MO-07 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-MO-07 compliance validation
+    implementation: "# FRR-VDR-TF-MO-07 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-MO-07 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_mo_07 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-MO-07 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-MO-07 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-MO-07'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-MO-07
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-MO-07\"\n  RequirementName = \"Mitigate Per Timeframes\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-MO-07.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Moderate
+---
+pattern_id: vdr.frr.frr_vdr_tf_mo_08
+name: Mitigate During Operations Compliance
+description: Validates compliance with FRR-VDR-TF-MO-08 - Mitigate During Operations
+family: VDR
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: FRR-VDR-TF-MO-08 - Mitigate During Operations compliance check
+  description_template: Configuration requires validation for FRR-VDR-TF-MO-08 compliance
+  remediation_template: Implement FRR-VDR-TF-MO-08 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- vdr
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-VDR-TF-MO-08
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-VDR-TF-MO-08 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-VDR-TF-MO-08 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-VDR-TF-MO-08 compliance validation
+    implementation: "# FRR-VDR-TF-MO-08 compliance automation\n# GitHub Actions\n- name: FRR-VDR-TF-MO-08 Validation\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern vdr.frr.frr_vdr_tf_mo_08 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: AzureCLI@2\n  displayName: 'FRR-VDR-TF-MO-08 Check'\n  inputs:\n    azureSubscription: 'AzureConnection'\n    scriptType: 'bash'\n    scriptLocation: 'inlineScript'\n    inlineScript: |\n      # Validate FRR-VDR-TF-MO-08 compliance\n      az policy state list --filter \"policyDefinitionName eq 'FRR-VDR-TF-MO-08'\"\n"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-VDR-TF-MO-08
+    implementation: "# Automated evidence collection\n# PowerShell script\n$evidence = @{\n  RequirementId = \"FRR-VDR-TF-MO-08\"\n  RequirementName = \"Mitigate During Operations\"\n  CollectionDate = Get-Date -Format \"yyyy-MM-dd\"\n  ComplianceStatus = \"To Be Determined\"\n}\n$evidence | ConvertTo-Json | Out-File -FilePath \"evidence_FRR-VDR-TF-MO-08.json\"\n"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels:
+- Moderate

@@ -61,63 +61,66 @@ async def list_ksi_impl(data_loader) -> str:
         Complete list of all Key Security Indicators with status
     """
     try:
-        # Get all KSI analyzers from factory
-        factory = get_factory()
+        # Get all KSI metadata from data loader
+        ksis = data_loader.list_all_ksi()
         
-        # Sync with authoritative data to ensure RETIRED status is current
-        await factory.sync_with_authoritative_data(data_loader)
-        
-        analyzers = factory._analyzers
-        
-        if not analyzers:
+        if not ksis:
             return "No Key Security Indicators found."
         
         # Sort by KSI ID
-        sorted_analyzers = sorted(analyzers.items(), key=lambda x: x[0])
+        sorted_ksis = sorted(ksis, key=lambda x: x.get('id', ''))
         
         # Group by family
         families = {}
-        for ksi_id, analyzer in sorted_analyzers:
-            family = analyzer.FAMILY
+        for ksi in sorted_ksis:
+            ksi_id = ksi.get('id')
+            family = ksi.get('family', 'UNKNOWN')
             if family not in families:
                 families[family] = []
-            families[family].append((ksi_id, analyzer))
+            families[family].append(ksi)
         
         # Format the results
         result = f"# Key Security Indicators\n\n"
-        result += f"**Total:** {len(analyzers)} KSIs\n\n"
+        result += f"**Total:** {len(ksis)} KSIs\n\n"
         
         # Count by status
-        implemented = sum(1 for a in analyzers.values() if a.IMPLEMENTATION_STATUS == "IMPLEMENTED")
-        not_implemented = sum(1 for a in analyzers.values() if a.IMPLEMENTATION_STATUS == "NOT_IMPLEMENTED")
-        retired = sum(1 for a in analyzers.values() if a.RETIRED)
-        code_detectable = sum(1 for a in analyzers.values() if a.CODE_DETECTABLE and not a.RETIRED)
+        implemented = sum(1 for k in ksis if k.get('implementation_status') == 'IMPLEMENTED')
+        not_implemented = sum(1 for k in ksis if k.get('implementation_status') == 'NOT_IMPLEMENTED')
+        retired = sum(1 for k in ksis if k.get('retired', False))
+        code_detectable = sum(1 for k in ksis if k.get('code_detectable', False) and not k.get('retired', False))
+        active = len(ksis) - retired
         
         result += f"**Status Summary:**\n"
         result += f"- ✅ Implemented: {implemented}\n"
         result += f"- ⏳ Not Implemented: {not_implemented}\n"
         result += f"- 🔄 Retired: {retired}\n"
         result += f"- 💻 Code-Detectable: {code_detectable}\n"
-        result += f"- 📄 Process-Based: {len(analyzers) - code_detectable - retired}\n\n"
+        result += f"- 📄 Process-Based: {active - code_detectable}\n\n"
         
         # List by family
         for family in sorted(families.keys()):
-            family_analyzers = families[family]
-            family_name = family_analyzers[0][1].FAMILY_NAME
-            result += f"## {family} - {family_name} ({len(family_analyzers)} KSIs)\n\n"
+            family_ksis = families[family]
+            family_name = family_ksis[0].get('family_name', family)
+            result += f"## {family} - {family_name} ({len(family_ksis)} KSIs)\n\n"
             
-            for ksi_id, analyzer in family_analyzers:
-                status_icon = "✅" if analyzer.IMPLEMENTATION_STATUS == "IMPLEMENTED" else "⏳"
-                if analyzer.RETIRED:
+            for ksi in family_ksis:
+                ksi_id = ksi.get('id')
+                ksi_name = ksi.get('name', ksi_id)
+                status = ksi.get('implementation_status', 'NOT_IMPLEMENTED')
+                is_retired = ksi.get('retired', False)
+                is_code_detectable = ksi.get('code_detectable', False)
+                
+                status_icon = "✅" if status == "IMPLEMENTED" else "⏳"
+                if is_retired:
                     status_icon = "🔄"
                 
-                code_icon = "💻" if analyzer.CODE_DETECTABLE else "📄"
+                code_icon = "💻" if is_code_detectable else "📄"
                 
-                result += f"- {status_icon} {code_icon} **{ksi_id}**: {analyzer.KSI_NAME}"
+                result += f"- {status_icon} {code_icon} **{ksi_id}**: {ksi_name}"
                 
-                if analyzer.RETIRED:
+                if is_retired:
                     result += " (RETIRED)"
-                elif not analyzer.CODE_DETECTABLE:
+                elif not is_code_detectable:
                     result += " (Process/Documentation)"
                     
                 result += "\n"
@@ -146,18 +149,17 @@ async def get_ksi_implementation_summary_impl(data_loader) -> str:
         Summary statistics and breakdown by family
     """
     try:
-        # Get all KSI analyzers from factory
-        factory = get_factory()
-        analyzers = factory._analyzers
+        # Get all KSI metadata from data loader
+        ksis = data_loader.list_all_ksi()
         
-        if not analyzers:
+        if not ksis:
             return "No Key Security Indicators found."
         
         # Calculate statistics
-        total_ksis = len(analyzers)
-        active_ksis = sum(1 for a in analyzers.values() if not a.RETIRED)
-        implemented = sum(1 for a in analyzers.values() if a.IMPLEMENTATION_STATUS == "IMPLEMENTED" and not a.RETIRED)
-        code_detectable = sum(1 for a in analyzers.values() if a.CODE_DETECTABLE and not a.RETIRED)
+        total_ksis = len(ksis)
+        active_ksis = sum(1 for k in ksis if not k.get('retired', False))
+        implemented = sum(1 for k in ksis if k.get('implementation_status') == 'IMPLEMENTED' and not k.get('retired', False))
+        code_detectable = sum(1 for k in ksis if k.get('code_detectable', False) and not k.get('retired', False))
         process_based = active_ksis - code_detectable
         retired = total_ksis - active_ksis
         
@@ -169,11 +171,12 @@ async def get_ksi_implementation_summary_impl(data_loader) -> str:
         
         # Group by family
         families = {}
-        for ksi_id, analyzer in analyzers.items():
-            family = analyzer.FAMILY
+        for ksi in ksis:
+            ksi_id = ksi.get('id')
+            family = ksi.get('family', 'UNKNOWN')
             if family not in families:
                 families[family] = {
-                    "name": analyzer.FAMILY_NAME,
+                    "name": ksi.get('family_name', family),
                     "total": 0,
                     "implemented": 0,
                     "code_detectable": 0,
@@ -181,11 +184,11 @@ async def get_ksi_implementation_summary_impl(data_loader) -> str:
                 }
             
             families[family]["total"] += 1
-            if analyzer.IMPLEMENTATION_STATUS == "IMPLEMENTED" and not analyzer.RETIRED:
+            if ksi.get('implementation_status') == "IMPLEMENTED" and not ksi.get('retired', False):
                 families[family]["implemented"] += 1
-            if analyzer.CODE_DETECTABLE and not analyzer.RETIRED:
+            if ksi.get('code_detectable', False) and not ksi.get('retired', False):
                 families[family]["code_detectable"] += 1
-            if analyzer.RETIRED:
+            if ksi.get('retired', False):
                 families[family]["retired"] += 1
         
         # Format the results

@@ -1,0 +1,2340 @@
+pattern_id: mla.logging.local_file
+name: Local File Logging
+description: Detects logging to local files instead of centralized SIEM
+family: MLA
+severity: HIGH
+pattern_type: function_call
+languages:
+  python:
+    ast_queries:
+    - query_type: function_call
+      target: FileHandler
+      module: logging
+    - query_type: function_call
+      target: basicConfig
+      conditions:
+      - has_keyword_arg:filename
+    - query_type: function_call
+      target: open
+      conditions:
+      - arg_contains:.log
+    regex_fallback: FileHandler\(|basicConfig\(.*filename|open\(['"][^'"]*\.log
+    negative_indicators:
+    - FileHandler
+    - basicConfig(filename=
+    - .log
+  csharp:
+    ast_queries:
+    - query_type: object_creation
+      target: FileLoggerProvider
+    - query_type: method_call
+      target: AddFile
+      context: logging
+    regex_fallback: new\s+FileLoggerProvider|AddFile\(
+  java:
+    ast_queries:
+    - query_type: object_creation
+      target: FileAppender
+    - query_type: object_creation
+      target: RollingFileAppender
+    regex_fallback: FileAppender|RollingFileAppender
+  typescript:
+    ast_queries:
+    - query_type: function_call
+      target: createWriteStream
+    - query_type: import_statement
+      target: winston-daily-rotate-file
+    regex_fallback: createWriteStream\(|winston-daily-rotate-file
+finding:
+  title_template: Local file logging detected
+  description_template: Application logs to local files. KSI-MLA-01 requires centralized logging to SIEM (Azure Monitor, Sentinel, Splunk).
+  remediation_template: 'Migrate to centralized logging:
+
+
+    Python (Azure Monitor):
+
+    from opencensus.ext.azure.log_exporter import AzureLogHandler
+
+    logger.addHandler(AzureLogHandler(connection_string=''InstrumentationKey=...''))
+
+
+    C# (Application Insights):
+
+    services.AddApplicationInsightsTelemetry();
+
+
+    Configuration:
+
+    - Send logs to Azure Log Analytics workspace
+
+    - Configure log retention (90+ days for FedRAMP)
+
+    - Set up alerts for security events
+
+    '
+  evidence_collection:
+  - Azure Monitor workspace configuration
+  - Log retention policy documentation
+  - SIEM integration architecture diagram
+  azure_services:
+  - Azure Monitor
+  - Azure Log Analytics
+  - Microsoft Sentinel
+requires_absence:
+- mla.logging.azure_monitor
+- mla.logging.siem_integration
+tags:
+- logging
+- siem
+- critical-gap
+nist_controls:
+- au-3
+- au-6
+- au-12
+related_ksis:
+- KSI-MLA-01
+evidence_artifacts:
+- artifact_type: logs
+  name: Authentication logs with MFA details
+  source: Azure Monitor - SigninLogs
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: Conditional Access policies export
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Authentication methods compliance report
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: CSV
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.logging.local_file \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.logging.local_file Validation'\n  inputs:\n    script: |\n      # Validate mla.logging.local_file compliance\n      python validate.py --pattern mla.logging.local_file"
+    azure_services: &id001
+    - Application Insights
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Microsoft Sentinel
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.logging.local_file \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.logging.local_file Validation'\n  inputs:\n    script: |\n      # Validate mla.logging.local_file compliance\n      python validate.py --pattern mla.logging.local_file"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.logging.local_file \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.logging.local_file Validation'\n  inputs:\n    script: |\n      # Validate mla.logging.local_file compliance\n      python validate.py --pattern mla.logging.local_file"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Enable diagnostic settings for all resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Configure log retention (1 year minimum for FedRAMP)
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Set up Azure Monitor alerts
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Deploy Microsoft Sentinel (if required)
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Create dashboards for compliance monitoring
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Test log collection and alerting
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: AU - Audit and Accountability
+  control_numbers:
+  - AU-3
+  - AU-6
+  - AU-12
+  ssp_sections:
+  - section: 'AU-3: Security Information and Event Management (SIEM)'
+    description_template: The system implements Security Information and Event Management (SIEM) controls in accordance with FedRAMP 20x requirements. Operate a Security Information and Event Management (SIEM) or similar system(s) for centralized, tamper-resistant logging of events, activities, and changes.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Application Insights, Azure Blob Storage, Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Security Information and Event Management (SIEM) requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Application Insights
+    tier: Standard
+    purpose: Required for Application Insights functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Log Analytics functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-01
+    requirement_name: Security Information and Event Management (SIEM)
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python implementation of mla.logging.local_file
+    code_sample: "# Python compliant code for mla.logging.local_file\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements mla.logging.local_file requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code violating mla.logging.local_file
+    code_sample: "# Python non-compliant code for mla.logging.local_file\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+---
+pattern_id: mla.logging.azure_monitor
+name: Azure Monitor Integration
+description: Detects Azure Monitor logging integration
+family: MLA
+severity: INFO
+pattern_type: import
+languages:
+  python:
+    ast_queries:
+    - query_type: import_statement
+      target: opencensus.ext.azure
+    - query_type: import_statement
+      target: azure.monitor
+    regex_fallback: from\s+opencensus\.ext\.azure|from\s+azure\.monitor
+    positive_indicators:
+    - opencensus.ext.azure
+    - azure.monitor
+  csharp:
+    ast_queries:
+    - query_type: using_directive
+      target: Microsoft.ApplicationInsights
+    - query_type: using_directive
+      target: Microsoft.Extensions.Logging.ApplicationInsights
+    regex_fallback: using\s+Microsoft\.ApplicationInsights
+    positive_indicators:
+    - ApplicationInsights
+  java:
+    ast_queries:
+    - query_type: import_declaration
+      target: com.microsoft.applicationinsights
+    regex_fallback: import\s+com\.microsoft\.applicationinsights
+  typescript:
+    ast_queries:
+    - query_type: import_statement
+      target: '@azure/monitor'
+    - query_type: import_statement
+      target: applicationinsights
+    regex_fallback: import.*@azure/monitor|import.*applicationinsights
+finding:
+  title_template: Azure Monitor integration detected
+  description_template: Application uses Azure Monitor for centralized logging. Verify Log Analytics workspace configuration.
+  remediation_template: N/A - Positive finding. Ensure logs are sent to long-term retention (90+ days).
+tags:
+- logging
+- azure-monitor
+- positive
+nist_controls:
+- au-3
+- au-6
+- au-12
+related_ksis:
+- KSI-MLA-01
+evidence_artifacts:
+- artifact_type: logs
+  name: Authentication logs with MFA details
+  source: Azure Monitor - SigninLogs
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: Conditional Access policies export
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Authentication methods compliance report
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: CSV
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.logging.azure_monitor \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.logging.azure_monitor Validation'\n  inputs:\n    script: |\n      # Validate mla.logging.azure_monitor compliance\n      python validate.py --pattern mla.logging.azure_monitor"
+    azure_services: &id001
+    - Application Insights
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Microsoft Sentinel
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.logging.azure_monitor \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.logging.azure_monitor Validation'\n  inputs:\n    script: |\n      # Validate mla.logging.azure_monitor compliance\n      python validate.py --pattern mla.logging.azure_monitor"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.logging.azure_monitor \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.logging.azure_monitor Validation'\n  inputs:\n    script: |\n      # Validate mla.logging.azure_monitor compliance\n      python validate.py --pattern mla.logging.azure_monitor"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Enable diagnostic settings for all resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Configure log retention (1 year minimum for FedRAMP)
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Set up Azure Monitor alerts
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Deploy Microsoft Sentinel (if required)
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Create dashboards for compliance monitoring
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Test log collection and alerting
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: AU - Audit and Accountability
+  control_numbers:
+  - AU-3
+  - AU-6
+  - AU-12
+  ssp_sections:
+  - section: 'AU-3: Security Information and Event Management (SIEM)'
+    description_template: The system implements Security Information and Event Management (SIEM) controls in accordance with FedRAMP 20x requirements. Operate a Security Information and Event Management (SIEM) or similar system(s) for centralized, tamper-resistant logging of events, activities, and changes.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Application Insights, Azure Blob Storage, Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Security Information and Event Management (SIEM) requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Application Insights
+    tier: Standard
+    purpose: Required for Application Insights functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Log Analytics functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-01
+    requirement_name: Security Information and Event Management (SIEM)
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python implementation of mla.logging.azure_monitor
+    code_sample: "# Python compliant code for mla.logging.azure_monitor\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements mla.logging.azure_monitor requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code violating mla.logging.azure_monitor
+    code_sample: "# Python non-compliant code for mla.logging.azure_monitor\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+---
+pattern_id: mla.logging.siem_integration
+name: SIEM Integration
+description: Detects SIEM integrations (Splunk, Sentinel, etc.)
+family: MLA
+severity: INFO
+pattern_type: import
+languages:
+  python:
+    ast_queries:
+    - query_type: import_statement
+      target: splunk
+    - query_type: import_statement
+      target: azure.mgmt.securityinsight
+    regex_fallback: import\s+splunk|from\s+azure\.mgmt\.securityinsight
+    positive_indicators:
+    - splunk
+    - securityinsight
+    - sentinel
+  csharp:
+    ast_queries:
+    - query_type: using_directive
+      target: Microsoft.Azure.SecurityInsights
+    regex_fallback: using\s+.*SecurityInsights
+  java:
+    ast_queries:
+    - query_type: import_declaration
+      target: com.splunk
+    regex_fallback: import\s+com\.splunk
+  typescript:
+    ast_queries:
+    - query_type: import_statement
+      target: splunk-logging
+    regex_fallback: import.*splunk-logging
+finding:
+  title_template: SIEM integration detected
+  description_template: SIEM integration found. Centralized logging requirement satisfied.
+  remediation_template: N/A - Positive finding
+tags:
+- logging
+- siem
+- positive
+nist_controls:
+- au-6
+- si-4
+related_ksis:
+- KSI-MLA-01
+evidence_artifacts:
+- artifact_type: logs
+  name: Authentication logs with MFA details
+  source: Azure Monitor - SigninLogs
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: Conditional Access policies export
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Authentication methods compliance report
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: CSV
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.logging.siem_integration \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.logging.siem_integration Validation'\n  inputs:\n    script: |\n      # Validate mla.logging.siem_integration compliance\n      python validate.py --pattern mla.logging.siem_integration"
+    azure_services: &id001
+    - Application Insights
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Microsoft Sentinel
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.logging.siem_integration \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.logging.siem_integration Validation'\n  inputs:\n    script: |\n      # Validate mla.logging.siem_integration compliance\n      python validate.py --pattern mla.logging.siem_integration"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.logging.siem_integration \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.logging.siem_integration Validation'\n  inputs:\n    script: |\n      # Validate mla.logging.siem_integration compliance\n      python validate.py --pattern mla.logging.siem_integration"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Enable diagnostic settings for all resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Configure log retention (1 year minimum for FedRAMP)
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Set up Azure Monitor alerts
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Deploy Microsoft Sentinel (if required)
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Create dashboards for compliance monitoring
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Test log collection and alerting
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: AU - Audit and Accountability
+  control_numbers:
+  - AU-6
+  - SI-4
+  ssp_sections:
+  - section: 'AU-6: Security Information and Event Management (SIEM)'
+    description_template: The system implements Security Information and Event Management (SIEM) controls in accordance with FedRAMP 20x requirements. Operate a Security Information and Event Management (SIEM) or similar system(s) for centralized, tamper-resistant logging of events, activities, and changes.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Application Insights, Azure Blob Storage, Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Security Information and Event Management (SIEM) requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Application Insights
+    tier: Standard
+    purpose: Required for Application Insights functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Log Analytics functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-01
+    requirement_name: Security Information and Event Management (SIEM)
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python implementation of mla.logging.siem_integration
+    code_sample: "# Python compliant code for mla.logging.siem_integration\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements mla.logging.siem_integration requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code violating mla.logging.siem_integration
+    code_sample: "# Python non-compliant code for mla.logging.siem_integration\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+---
+pattern_id: mla.retention.log_analytics_workspace
+name: Log Analytics Workspace Retention
+description: Detects Log Analytics workspace retention configuration
+family: MLA
+severity: MEDIUM
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.OperationalInsights/workspaces
+      property_path: properties.retentionInDays
+      conditions:
+      - value_less_than:90
+    regex_fallback: Microsoft\.OperationalInsights/workspaces
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_log_analytics_workspace
+      attribute: retention_in_days
+      conditions:
+      - value_less_than:90
+    regex_fallback: azurerm_log_analytics_workspace
+finding:
+  title_template: Log retention less than 90 days
+  description_template: Log Analytics workspace retention is {value} days. FedRAMP 20x requires 90+ days retention (KSI-MLA-02).
+  remediation_template: "Update retention:\n\nBicep:\nproperties: {\n  retentionInDays: 90  // Minimum for FedRAMP\n}\n\nTerraform:\nretention_in_days = 90\n"
+tags:
+- logging
+- retention
+- security-gap
+nist_controls:
+- au-11
+related_ksis:
+- KSI-MLA-02
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'Resources
+
+      | where type == ''microsoft.operationalinsights/workspaces''
+
+      | extend retentionDays = tostring(properties.retentionInDays)
+
+      | project name, resourceGroup, retentionDays, location
+
+      | where toint(retentionDays) < 90
+
+      | order by name asc
+
+      '
+    description: Query Log Analytics workspaces with retention less than 90 days
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az monitor log-analytics workspace list \\\n  --query \"[?properties.retentionInDays<\\`90\\`].{name:name, retention:properties.retentionInDays, resourceGroup:resourceGroup}\" \\\n  --output json\n"
+    description: List workspaces with insufficient retention
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.retention.log_analytics_workspace \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.retention.log_analytics_workspace Validation'\n  inputs:\n    script: |\n      # Validate mla.retention.log_analytics_workspace compliance\n      python validate.py --pattern mla.retention.log_analytics_workspace"
+    azure_services: &id001
+    - Application Insights
+    - Azure Blob Storage
+    - Azure Monitor
+    - Log Analytics
+    - Microsoft Sentinel
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.retention.log_analytics_workspace \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.retention.log_analytics_workspace Validation'\n  inputs:\n    script: |\n      # Validate mla.retention.log_analytics_workspace compliance\n      python validate.py --pattern mla.retention.log_analytics_workspace"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.retention.log_analytics_workspace \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.retention.log_analytics_workspace Validation'\n  inputs:\n    script: |\n      # Validate mla.retention.log_analytics_workspace compliance\n      python validate.py --pattern mla.retention.log_analytics_workspace"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Enable diagnostic settings for all resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Configure log retention (1 year minimum for FedRAMP)
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Set up Azure Monitor alerts
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Deploy Microsoft Sentinel (if required)
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Create dashboards for compliance monitoring
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Test log collection and alerting
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: AU - Audit and Accountability
+  control_numbers:
+  - AU-11
+  ssp_sections:
+  - section: 'AU-11: Audit Logging'
+    description_template: The system implements Audit Logging controls in accordance with FedRAMP 20x requirements. Regularly review and audit logs.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Application Insights, Azure Blob Storage, Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Audit Logging requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Application Insights
+    tier: Standard
+    purpose: Required for Application Insights functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Log Analytics functionality
+    alternatives: []
+  - service: Microsoft Sentinel
+    tier: Standard
+    purpose: Required for Microsoft Sentinel functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-02
+    requirement_name: Audit Logging
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of mla.retention.log_analytics_workspace
+    code_sample: "// Bicep compliant configuration for mla.retention.log_analytics_workspace\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating mla.retention.log_analytics_workspace
+    code_sample: '# Non-compliant code missing mla.retention.log_analytics_workspace requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: mla.monitoring.failed_login_tracking
+name: Failed Login Monitoring
+description: Detects tracking of failed login attempts
+family: MLA
+severity: INFO
+pattern_type: function_call
+languages:
+  python:
+    ast_queries:
+    - query_type: function_call
+      target: log
+      conditions:
+      - in_except_block:true
+      - context_contains:login|authentication
+      - arg_contains:failed|invalid|unauthorized
+    regex_fallback: logger\.(error|warning).*login.*fail
+    positive_indicators:
+    - logger.error
+    - authentication failed
+  csharp:
+    ast_queries:
+    - query_type: method_call
+      target: LogWarning
+      conditions:
+      - in_catch_block:true
+      - arg_contains:authentication|login
+    regex_fallback: LogWarning.*[Aa]uthentication.*fail
+  java:
+    ast_queries:
+    - query_type: method_call
+      target: error
+      conditions:
+      - in_catch_block:true
+      - arg_contains:authentication|login
+    regex_fallback: log\.error.*authentication.*fail
+  typescript:
+    ast_queries:
+    - query_type: function_call
+      target: error
+      conditions:
+      - in_catch_block:true
+      - arg_contains:authentication|login
+    regex_fallback: logger\.error.*authentication.*fail
+finding:
+  title_template: Failed login monitoring detected
+  description_template: Application logs failed login attempts. Verify alerts are configured for brute-force detection.
+  remediation_template: "Configure alerting:\n1. Create Azure Monitor alert rule for failed logins\n2. Set threshold: 5 failures within 5 minutes\n3. Action group: Email security team, trigger incident response\n4. Query example:\n   AppTraces\n   | where Message contains \"authentication failed\"\n   | summarize FailCount=count() by UserId, bin(TimeGenerated, 5m)\n   | where FailCount >= 5\n"
+tags:
+- monitoring
+- authentication
+- positive
+nist_controls:
+- au-6
+- si-4
+related_ksis:
+- KSI-MLA-05
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'SigninLogs
+
+      | where TimeGenerated > ago(24h)
+
+      | where ResultType != "0"
+
+      | summarize FailedAttempts=count() by UserPrincipalName, IPAddress, bin(TimeGenerated, 5m)
+
+      | where FailedAttempts >= 5
+
+      | order by FailedAttempts desc
+
+      '
+    description: Detect potential brute-force attacks with 5+ failed logins in 5 minutes
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az monitor metrics alert list \\\n  --query \"[?contains(name, 'failed') || contains(name, 'login')].{name:name, enabled:enabled, criteria:criteria}\" \\\n  --output json\n"
+    description: List alerts configured for failed login monitoring
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.monitoring.failed_login_tracking \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.monitoring.failed_login_tracking Validation'\n  inputs:\n    script: |\n      # Validate mla.monitoring.failed_login_tracking compliance\n      python validate.py --pattern mla.monitoring.failed_login_tracking"
+    azure_services: &id001
+    - Application Insights
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Microsoft Sentinel
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.monitoring.failed_login_tracking \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.monitoring.failed_login_tracking Validation'\n  inputs:\n    script: |\n      # Validate mla.monitoring.failed_login_tracking compliance\n      python validate.py --pattern mla.monitoring.failed_login_tracking"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.monitoring.failed_login_tracking \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.monitoring.failed_login_tracking Validation'\n  inputs:\n    script: |\n      # Validate mla.monitoring.failed_login_tracking compliance\n      python validate.py --pattern mla.monitoring.failed_login_tracking"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Enable diagnostic settings for all resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Configure log retention (1 year minimum for FedRAMP)
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Set up Azure Monitor alerts
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Deploy Microsoft Sentinel (if required)
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Create dashboards for compliance monitoring
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Test log collection and alerting
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Create Standard Operating Procedures (SOPs)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Get policy documentation approved by stakeholders
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Train staff on new procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up periodic compliance reviews
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Document evidence collection process
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: AU - Audit and Accountability
+  control_numbers:
+  - AU-6
+  - SI-4
+  ssp_sections:
+  - section: 'AU-6: Infrastructure as Code'
+    description_template: The system implements Infrastructure as Code controls in accordance with FedRAMP 20x requirements. Perform Infrastructure as Code and configuration evaluation and testing... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Application Insights, Azure Blob Storage, Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Infrastructure as Code requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Application Insights
+    tier: Standard
+    purpose: Required for Application Insights functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Log Analytics functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-05
+    requirement_name: Infrastructure as Code
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python implementation of mla.monitoring.failed_login_tracking
+    code_sample: "# Python compliant code for mla.monitoring.failed_login_tracking\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements mla.monitoring.failed_login_tracking requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code violating mla.monitoring.failed_login_tracking
+    code_sample: "# Python non-compliant code for mla.monitoring.failed_login_tracking\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: mla.monitoring.azure_sentinel_analytics
+name: Azure Sentinel Analytics Rule
+description: Detects Sentinel analytics rule configuration
+family: MLA
+severity: INFO
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.SecurityInsights/alertRules
+      property_path: properties.query
+    regex_fallback: Microsoft\.SecurityInsights/alertRules
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_sentinel_alert_rule
+    regex_fallback: azurerm_sentinel_alert_rule
+finding:
+  title_template: Sentinel analytics rule detected
+  description_template: Security analytics rule configured. Verify coverage for all FedRAMP required events.
+  remediation_template: 'Required analytics rules for FedRAMP:
+
+    - Failed login attempts (5+ within 5 minutes)
+
+    - Privileged account usage
+
+    - Security group changes
+
+    - Firewall rule modifications
+
+    - Data exfiltration indicators
+
+    - Malware detection
+
+    - Anomalous user behavior
+
+    '
+tags:
+- monitoring
+- sentinel
+- positive
+nist_controls:
+- si-4
+- au-6
+- ir-4
+related_ksis:
+- KSI-MLA-05
+- KSI-MLA-07
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'Resources
+
+      | where type == ''microsoft.securityinsights/alertrules''
+
+      | extend enabled = tostring(properties.enabled)
+
+      | extend severity = tostring(properties.severity)
+
+      | project name, resourceGroup, enabled, severity, kind
+
+      | order by name asc
+
+      '
+    description: Query enabled Sentinel analytic rules
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az sentinel alert-rule list \\\n  --resource-group <RESOURCE_GROUP> \\\n  --workspace-name <WORKSPACE_NAME> \\\n  --query \"[].{name:name, enabled:enabled, severity:severity, kind:kind}\" \\\n  --output json\n"
+    description: List Sentinel analytics rules
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.monitoring.azure_sentinel_analytics \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.monitoring.azure_sentinel_analytics Validation'\n  inputs:\n    script: |\n      # Validate mla.monitoring.azure_sentinel_analytics compliance\n      python validate.py --pattern mla.monitoring.azure_sentinel_analytics"
+    azure_services: &id001
+    - Application Insights
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Microsoft Sentinel
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.monitoring.azure_sentinel_analytics \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.monitoring.azure_sentinel_analytics Validation'\n  inputs:\n    script: |\n      # Validate mla.monitoring.azure_sentinel_analytics compliance\n      python validate.py --pattern mla.monitoring.azure_sentinel_analytics"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.monitoring.azure_sentinel_analytics \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.monitoring.azure_sentinel_analytics Validation'\n  inputs:\n    script: |\n      # Validate mla.monitoring.azure_sentinel_analytics compliance\n      python validate.py --pattern mla.monitoring.azure_sentinel_analytics"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Enable diagnostic settings for all resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Configure log retention (1 year minimum for FedRAMP)
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Set up Azure Monitor alerts
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Deploy Microsoft Sentinel (if required)
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Create dashboards for compliance monitoring
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Test log collection and alerting
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Create Standard Operating Procedures (SOPs)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Get policy documentation approved by stakeholders
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Train staff on new procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up periodic compliance reviews
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Document evidence collection process
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: SI - System and Information Integrity
+  control_numbers:
+  - SI-4
+  - AU-6
+  - IR-4
+  ssp_sections:
+  - section: 'SI-4: Infrastructure as Code'
+    description_template: The system implements Infrastructure as Code controls in accordance with FedRAMP 20x requirements. Perform Infrastructure as Code and configuration evaluation and testing... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Application Insights, Azure Blob Storage, Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Infrastructure as Code requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Application Insights
+    tier: Standard
+    purpose: Required for Application Insights functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Log Analytics functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-05
+    requirement_name: Infrastructure as Code
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of mla.monitoring.azure_sentinel_analytics
+    code_sample: "// Bicep compliant configuration for mla.monitoring.azure_sentinel_analytics\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating mla.monitoring.azure_sentinel_analytics
+    code_sample: '# Non-compliant code missing mla.monitoring.azure_sentinel_analytics requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: mla.alerting.action_group
+name: Azure Monitor Action Group
+description: Detects action group for alerting
+family: MLA
+severity: INFO
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.Insights/actionGroups
+      property_path: properties.emailReceivers
+    regex_fallback: Microsoft\.Insights/actionGroups
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_monitor_action_group
+    regex_fallback: azurerm_monitor_action_group
+finding:
+  title_template: Alert action group detected
+  description_template: Action group configured. Verify incident response team is notified.
+  remediation_template: N/A - Positive finding. Ensure 24/7 coverage for critical alerts.
+tags:
+- alerting
+- incident-response
+- positive
+nist_controls:
+- ir-4
+- ir-6
+related_ksis:
+- KSI-MLA-07
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'Resources
+
+      | where type == ''microsoft.insights/actiongroups''
+
+      | extend enabled = tostring(properties.enabled)
+
+      | extend emailReceivers = properties.emailReceivers
+
+      | extend smsReceivers = properties.smsReceivers
+
+      | project name, resourceGroup, enabled, emailReceivers, smsReceivers, location
+
+      | order by name asc
+
+      '
+    description: Query configured action groups for alerting
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az monitor action-group list \\\n  --query \"[].{name:name, enabled:enabled, emailReceivers:emailReceivers, resourceGroup:resourceGroup}\" \\\n  --output json\n"
+    description: List all action groups with receiver configuration
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.alerting.action_group \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.alerting.action_group Validation'\n  inputs:\n    script: |\n      # Validate mla.alerting.action_group compliance\n      python validate.py --pattern mla.alerting.action_group"
+    azure_services: &id001
+    - Application Insights
+    - Azure Blob Storage
+    - Azure Monitor
+    - Log Analytics
+    - Microsoft Sentinel
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.alerting.action_group \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.alerting.action_group Validation'\n  inputs:\n    script: |\n      # Validate mla.alerting.action_group compliance\n      python validate.py --pattern mla.alerting.action_group"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.alerting.action_group \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.alerting.action_group Validation'\n  inputs:\n    script: |\n      # Validate mla.alerting.action_group compliance\n      python validate.py --pattern mla.alerting.action_group"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Enable diagnostic settings for all resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Configure log retention (1 year minimum for FedRAMP)
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Set up Azure Monitor alerts
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Deploy Microsoft Sentinel (if required)
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Create dashboards for compliance monitoring
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Test log collection and alerting
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: IR - Incident Response
+  control_numbers:
+  - IR-4
+  - IR-6
+  ssp_sections:
+  - section: 'IR-4: Event Types'
+    description_template: The system implements Event Types controls in accordance with FedRAMP 20x requirements. Maintain a list of information resources and event types that will be monitored, logged, and audited, then do so.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Application Insights, Azure Blob Storage, Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Event Types requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Application Insights
+    tier: Standard
+    purpose: Required for Application Insights functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Log Analytics functionality
+    alternatives: []
+  - service: Microsoft Sentinel
+    tier: Standard
+    purpose: Required for Microsoft Sentinel functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-07
+    requirement_name: Event Types
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of mla.alerting.action_group
+    code_sample: "// Bicep compliant configuration for mla.alerting.action_group\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating mla.alerting.action_group
+    code_sample: '# Non-compliant code missing mla.alerting.action_group requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: mla.alerting.metric_alert
+name: Azure Monitor Metric Alert
+description: Detects metric alert rules
+family: MLA
+severity: INFO
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.Insights/metricAlerts
+      property_path: properties.criteria
+    regex_fallback: Microsoft\.Insights/metricAlerts
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_monitor_metric_alert
+    regex_fallback: azurerm_monitor_metric_alert
+finding:
+  title_template: Metric alert detected
+  description_template: Metric alert configured. Verify thresholds align with FedRAMP requirements.
+  remediation_template: 'Required alerts for FedRAMP:
+
+    - CPU > 80% (availability)
+
+    - Memory > 85% (availability)
+
+    - Disk > 90% (capacity management)
+
+    - Failed requests > 10/min (security)
+
+    - Response time > 5s (performance)
+
+    '
+tags:
+- alerting
+- monitoring
+- positive
+nist_controls:
+- si-4
+- cp-2
+related_ksis:
+- KSI-MLA-07
+- KSI-RPL-01
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'Resources
+
+      | where type == ''microsoft.insights/metricalerts''
+
+      | extend enabled = tostring(properties.enabled)
+
+      | extend severity = tostring(properties.severity)
+
+      | extend targetResourceType = tostring(properties.targetResourceType)
+
+      | project name, resourceGroup, enabled, severity, targetResourceType
+
+      | order by name asc
+
+      '
+    description: Query all metric alert rules and their configuration
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az monitor metrics alert list \\\n  --query \"[].{name:name, enabled:enabled, severity:severity, targetResourceType:targetResourceType}\" \\\n  --output json\n"
+    description: List all metric alert rules
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.alerting.metric_alert \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.alerting.metric_alert Validation'\n  inputs:\n    script: |\n      # Validate mla.alerting.metric_alert compliance\n      python validate.py --pattern mla.alerting.metric_alert"
+    azure_services: &id001
+    - Application Insights
+    - Azure Blob Storage
+    - Azure Monitor
+    - Log Analytics
+    - Microsoft Sentinel
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.alerting.metric_alert \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.alerting.metric_alert Validation'\n  inputs:\n    script: |\n      # Validate mla.alerting.metric_alert compliance\n      python validate.py --pattern mla.alerting.metric_alert"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.alerting.metric_alert \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.alerting.metric_alert Validation'\n  inputs:\n    script: |\n      # Validate mla.alerting.metric_alert compliance\n      python validate.py --pattern mla.alerting.metric_alert"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Enable diagnostic settings for all resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Configure log retention (1 year minimum for FedRAMP)
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Set up Azure Monitor alerts
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Deploy Microsoft Sentinel (if required)
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Create dashboards for compliance monitoring
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Test log collection and alerting
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: SI - System and Information Integrity
+  control_numbers:
+  - SI-4
+  - CP-2
+  ssp_sections:
+  - section: 'SI-4: Event Types'
+    description_template: The system implements Event Types controls in accordance with FedRAMP 20x requirements. Maintain a list of information resources and event types that will be monitored, logged, and audited, then do so.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Application Insights, Azure Blob Storage, Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Event Types requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Application Insights
+    tier: Standard
+    purpose: Required for Application Insights functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Log Analytics functionality
+    alternatives: []
+  - service: Microsoft Sentinel
+    tier: Standard
+    purpose: Required for Microsoft Sentinel functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-07
+    requirement_name: Event Types
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of mla.alerting.metric_alert
+    code_sample: "// Bicep compliant configuration for mla.alerting.metric_alert\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating mla.alerting.metric_alert
+    code_sample: '# Non-compliant code missing mla.alerting.metric_alert requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: mla.apm.application_insights
+name: Application Insights SDK
+description: Detects Application Insights integration
+family: MLA
+severity: INFO
+pattern_type: import
+languages:
+  python:
+    ast_queries:
+    - query_type: import_statement
+      target: applicationinsights
+    regex_fallback: from\s+applicationinsights
+    positive_indicators:
+    - applicationinsights
+  csharp:
+    ast_queries:
+    - query_type: using_directive
+      target: Microsoft.ApplicationInsights
+    regex_fallback: using\s+Microsoft\.ApplicationInsights
+  java:
+    ast_queries:
+    - query_type: import_declaration
+      target: com.microsoft.applicationinsights
+    regex_fallback: import\s+com\.microsoft\.applicationinsights
+  typescript:
+    ast_queries:
+    - query_type: import_statement
+      target: applicationinsights
+    regex_fallback: import.*applicationinsights
+finding:
+  title_template: Application Insights APM detected
+  description_template: APM integration found. Verify distributed tracing and dependency tracking are enabled.
+  remediation_template: N/A - Positive finding
+tags:
+- apm
+- monitoring
+- positive
+nist_controls:
+- si-2
+- si-4
+related_ksis:
+- KSI-MLA-08
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'Resources
+
+      | where type == ''microsoft.insights/components''
+
+      | extend applicationType = tostring(properties.Application_Type)
+
+      | extend ingestionMode = tostring(properties.IngestionMode)
+
+      | project name, resourceGroup, applicationType, ingestionMode, location
+
+      | order by name asc
+
+      '
+    description: Query Application Insights components configuration
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az monitor app-insights component show \\\n  --resource-group <RESOURCE_GROUP> \\\n  --app <APP_NAME> \\\n  --query \"{name:name, applicationType:applicationType, kind:kind, ingestionMode:ingestionMode}\" \\\n  --output json\n"
+    description: Show Application Insights configuration and telemetry settings
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.apm.application_insights \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.apm.application_insights Validation'\n  inputs:\n    script: |\n      # Validate mla.apm.application_insights compliance\n      python validate.py --pattern mla.apm.application_insights"
+    azure_services: &id001
+    - Application Insights
+    - Azure Blob Storage
+    - Azure Monitor
+    - Log Analytics
+    - Microsoft Sentinel
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.apm.application_insights \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.apm.application_insights Validation'\n  inputs:\n    script: |\n      # Validate mla.apm.application_insights compliance\n      python validate.py --pattern mla.apm.application_insights"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: MLA Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.apm.application_insights \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'mla.apm.application_insights Validation'\n  inputs:\n    script: |\n      # Validate mla.apm.application_insights compliance\n      python validate.py --pattern mla.apm.application_insights"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Enable diagnostic settings for all resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Configure log retention (1 year minimum for FedRAMP)
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Set up Azure Monitor alerts
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Deploy Microsoft Sentinel (if required)
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Create dashboards for compliance monitoring
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Test log collection and alerting
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: SI - System and Information Integrity
+  control_numbers:
+  - SI-2
+  - SI-4
+  ssp_sections:
+  - section: 'SI-2: Log Data Access'
+    description_template: The system implements Log Data Access controls in accordance with FedRAMP 20x requirements. Use a least-privileged, role and attribute-based, and just-in-time access authorization model for access to log data based on organizationally defined data sensitivity.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Application Insights, Azure Blob Storage, Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Log Data Access requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Application Insights
+    tier: Standard
+    purpose: Required for Application Insights functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Log Analytics functionality
+    alternatives: []
+  - service: Microsoft Sentinel
+    tier: Standard
+    purpose: Required for Microsoft Sentinel functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-08
+    requirement_name: Log Data Access
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python implementation of mla.apm.application_insights
+    code_sample: "# Python compliant code for mla.apm.application_insights\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements mla.apm.application_insights requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code violating mla.apm.application_insights
+    code_sample: "# Python non-compliant code for mla.apm.application_insights\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: mla.audit.activity_log
+name: Azure Activity Log Export
+description: Detects Activity Log diagnostic settings
+family: MLA
+severity: MEDIUM
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.Insights/diagnosticSettings
+      scope: subscription
+      property_path: properties.logs
+      conditions:
+      - category:Administrative
+      - category:Security
+      - enabled:true
+    regex_fallback: Microsoft\.Insights/diagnosticSettings
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_monitor_diagnostic_setting
+      attribute: log.category
+      contains: Administrative
+    regex_fallback: azurerm_monitor_diagnostic_setting
+finding:
+  title_template: Activity log export configured
+  description_template: Azure Activity Log is exported to Log Analytics. Verify all audit categories are enabled.
+  remediation_template: 'Required log categories for FedRAMP:
+
+    - Administrative (resource changes)
+
+    - Security (security events)
+
+    - ServiceHealth (outages)
+
+    - Alert (fired alerts)
+
+    - Recommendation (Azure Advisor)
+
+    '
+tags:
+- audit
+- compliance
+- positive
+nist_controls:
+- au-2
+- au-3
+- au-12
+related_ksis:
+- KSI-MLA-08
+ssp_mapping:
+  control_family: AU - Audit and Accountability
+  control_numbers:
+  - AU-2
+  - AU-3
+  - AU-12
+  ssp_sections:
+  - section: 'AU-2: Unknown'
+    description_template: The system implements Unknown Requirement controls in accordance with FedRAMP 20x requirements. Requirement statement not available... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Unknown Requirement requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-08
+    requirement_name: Security Monitoring and Analytics
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of mla.audit.activity_log
+    code_sample: "// Bicep compliant configuration for mla.audit.activity_log\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating mla.audit.activity_log
+    code_sample: '# Non-compliant code missing mla.audit.activity_log requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy enforcement\n# GitHub Actions\n- name: Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.audit.activity_log \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'Compliance Validation'\n  inputs:\n    script: |\n      # Validate compliance\n      python validate.py --pattern mla.audit.activity_log\n"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring and alerting
+    implementation: '# Azure Monitor continuous monitoring
+
+      # Log Analytics Query
+
+      AzureActivity
+
+      | where CategoryValue == "Policy" or CategoryValue == "Security"
+
+      | where ResourceId contains "mla.audit.activity_log"
+
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+
+      '
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+    - Azure Alerts
+---
+pattern_id: mla.audit.resource_logs_missing
+name: Missing Resource Diagnostic Logs
+description: Detects resources without diagnostic log export
+family: MLA
+severity: HIGH
+pattern_type: configuration
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.Storage/storageAccounts|Microsoft.Sql/servers|Microsoft.KeyVault/vaults
+      conditions:
+      - not_has_child_resource:Microsoft.Insights/diagnosticSettings
+    regex_fallback: resource\s+\w+.*'Microsoft\.(Storage|Sql|KeyVault)
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_storage_account|azurerm_sql_server|azurerm_key_vault
+      conditions:
+      - not_has_companion_resource:azurerm_monitor_diagnostic_setting
+    regex_fallback: resource\s+"azurerm_(storage_account|sql_server|key_vault)"
+finding:
+  title_template: Resource logs not exported to SIEM
+  description_template: '{resource_type} does not have diagnostic settings configured. KSI-MLA-08 requires all audit logs to be exported.'
+  remediation_template: "Enable diagnostic settings:\n\nBicep:\nresource diagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {\n  scope: storageAccount\n  name: 'logs-to-workspace'\n  properties: {\n    workspaceId: logAnalyticsWorkspace.id\n    logs: [\n      {\n        category: 'StorageRead'\n        enabled: true\n      }\n      {\n        category: 'StorageWrite'\n        enabled: true\n      }\n    ]\n  }\n}\n"
+tags:
+- audit
+- logging
+- critical-gap
+nist_controls:
+- au-2
+- au-12
+related_ksis:
+- KSI-MLA-08
+ssp_mapping:
+  control_family: AU - Audit and Accountability
+  control_numbers:
+  - AU-2
+  - AU-12
+  ssp_sections:
+  - section: 'AU-2: Unknown'
+    description_template: The system implements Unknown Requirement controls in accordance with FedRAMP 20x requirements. Requirement statement not available... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Monitor are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Unknown Requirement requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-MLA-08
+    requirement_name: Security Monitoring and Analytics
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of mla.audit.resource_logs_missing
+    code_sample: "// Bicep compliant configuration for mla.audit.resource_logs_missing\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating mla.audit.resource_logs_missing
+    code_sample: '# Non-compliant code missing mla.audit.resource_logs_missing requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy enforcement\n# GitHub Actions\n- name: Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern mla.audit.resource_logs_missing \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'Compliance Validation'\n  inputs:\n    script: |\n      # Validate compliance\n      python validate.py --pattern mla.audit.resource_logs_missing\n"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring and alerting
+    implementation: '# Azure Monitor continuous monitoring
+
+      # Log Analytics Query
+
+      AzureActivity
+
+      | where CategoryValue == "Policy" or CategoryValue == "Security"
+
+      | where ResourceId contains "mla.audit.resource_logs_missing"
+
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+
+      '
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+    - Azure Alerts

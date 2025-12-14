@@ -1,0 +1,1032 @@
+---
+pattern_id: mas.frr.frr_mas_01
+name: Cloud Service Offering Identification Compliance
+description: Validates compliance with FRR-MAS-01 - Cloud Service Offering Identification
+family: MAS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-MAS-01 - Cloud Service Offering Identification compliance check
+  description_template: Configuration requires validation for FRR-MAS-01 compliance
+  remediation_template: Implement FRR-MAS-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- mas
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-MAS-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-MAS-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-MAS-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-MAS-01 compliance validation
+    implementation: |
+      # FRR-MAS-01 compliance automation
+      # GitHub Actions
+      - name: FRR-MAS-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern mas.frr.frr_mas_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-MAS-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-MAS-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-MAS-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-MAS-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-MAS-01"
+        RequirementName = "Cloud Service Offering Identification"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-MAS-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: mas.frr.frr_mas_02
+name: Third-Party Information Resources Compliance
+description: Validates compliance with FRR-MAS-02 - Third-Party Information Resources
+family: MAS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-MAS-02 - Third-Party Information Resources compliance check
+  description_template: Configuration requires validation for FRR-MAS-02 compliance
+  remediation_template: Implement FRR-MAS-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- mas
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-MAS-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-MAS-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-MAS-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-MAS-02 compliance validation
+    implementation: |
+      # FRR-MAS-02 compliance automation
+      # GitHub Actions
+      - name: FRR-MAS-02 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern mas.frr.frr_mas_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-MAS-02 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-MAS-02 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-MAS-02'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-MAS-02
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-MAS-02"
+        RequirementName = "Third-Party Information Resources"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-MAS-02.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: mas.frr.frr_mas_03
+name: Non-FedRAMP Authorized Third-Party Information Resources Compliance
+description: Validates compliance with FRR-MAS-03 - Non-FedRAMP Authorized Third-Party Information Resources
+family: MAS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-MAS-03 - Non-FedRAMP Authorized Third-Party Information Resources compliance check
+  description_template: Configuration requires validation for FRR-MAS-03 compliance
+  remediation_template: Implement FRR-MAS-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- mas
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-MAS-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-MAS-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-MAS-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-MAS-03 compliance validation
+    implementation: |
+      # FRR-MAS-03 compliance automation
+      # GitHub Actions
+      - name: FRR-MAS-03 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern mas.frr.frr_mas_03 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-MAS-03 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-MAS-03 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-MAS-03'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-MAS-03
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-MAS-03"
+        RequirementName = "Non-FedRAMP Authorized Third-Party Information Resources"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-MAS-03.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: mas.frr.frr_mas_04
+name: Metadata Inclusion Compliance
+description: Validates compliance with FRR-MAS-04 - Metadata Inclusion
+family: MAS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-MAS-04 - Metadata Inclusion compliance check
+  description_template: Configuration requires validation for FRR-MAS-04 compliance
+  remediation_template: Implement FRR-MAS-04 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- mas
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-MAS-04
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-MAS-04 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-MAS-04 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-MAS-04 compliance validation
+    implementation: |
+      # FRR-MAS-04 compliance automation
+      # GitHub Actions
+      - name: FRR-MAS-04 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern mas.frr.frr_mas_04 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-MAS-04 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-MAS-04 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-MAS-04'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-MAS-04
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-MAS-04"
+        RequirementName = "Metadata Inclusion"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-MAS-04.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: mas.frr.frr_mas_05
+name: Information Flows and Impact Levels Compliance
+description: Validates compliance with FRR-MAS-05 - Information Flows and Impact Levels
+family: MAS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-MAS-05 - Information Flows and Impact Levels compliance check
+  description_template: Configuration requires validation for FRR-MAS-05 compliance
+  remediation_template: Implement FRR-MAS-05 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- mas
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-MAS-05
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-MAS-05 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-MAS-05 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-MAS-05 compliance validation
+    implementation: |
+      # FRR-MAS-05 compliance automation
+      # GitHub Actions
+      - name: FRR-MAS-05 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern mas.frr.frr_mas_05 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-MAS-05 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-MAS-05 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-MAS-05'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-MAS-05
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-MAS-05"
+        RequirementName = "Information Flows and Impact Levels"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-MAS-05.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: mas.frr.frr_mas_ay_01
+name: Scope of FedRAMP Compliance
+description: Validates compliance with FRR-MAS-AY-01 - Scope of FedRAMP
+family: MAS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-MAS-AY-01 - Scope of FedRAMP compliance check
+  description_template: Configuration requires validation for FRR-MAS-AY-01 compliance
+  remediation_template: Implement FRR-MAS-AY-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- mas
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-MAS-AY-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-MAS-AY-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-MAS-AY-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-MAS-AY-01 compliance validation
+    implementation: |
+      # FRR-MAS-AY-01 compliance automation
+      # GitHub Actions
+      - name: FRR-MAS-AY-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern mas.frr.frr_mas_ay_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-MAS-AY-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-MAS-AY-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-MAS-AY-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-MAS-AY-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-MAS-AY-01"
+        RequirementName = "Scope of FedRAMP"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-MAS-AY-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: mas.frr.frr_mas_ay_02
+name: Non-Cloud-Based Software Compliance
+description: Validates compliance with FRR-MAS-AY-02 - Non-Cloud-Based Software
+family: MAS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-MAS-AY-02 - Non-Cloud-Based Software compliance check
+  description_template: Configuration requires validation for FRR-MAS-AY-02 compliance
+  remediation_template: Implement FRR-MAS-AY-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- mas
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-MAS-AY-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-MAS-AY-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-MAS-AY-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-MAS-AY-02 compliance validation
+    implementation: |
+      # FRR-MAS-AY-02 compliance automation
+      # GitHub Actions
+      - name: FRR-MAS-AY-02 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern mas.frr.frr_mas_ay_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-MAS-AY-02 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-MAS-AY-02 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-MAS-AY-02'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-MAS-AY-02
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-MAS-AY-02"
+        RequirementName = "Non-Cloud-Based Software"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-MAS-AY-02.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: mas.frr.frr_mas_ay_03
+name: Exclusion of Non-Impacting Information Resources Compliance
+description: Validates compliance with FRR-MAS-AY-03 - Exclusion of Non-Impacting Information Resources
+family: MAS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-MAS-AY-03 - Exclusion of Non-Impacting Information Resources compliance check
+  description_template: Configuration requires validation for FRR-MAS-AY-03 compliance
+  remediation_template: Implement FRR-MAS-AY-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- mas
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-MAS-AY-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-MAS-AY-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-MAS-AY-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-MAS-AY-03 compliance validation
+    implementation: |
+      # FRR-MAS-AY-03 compliance automation
+      # GitHub Actions
+      - name: FRR-MAS-AY-03 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern mas.frr.frr_mas_ay_03 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-MAS-AY-03 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-MAS-AY-03 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-MAS-AY-03'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-MAS-AY-03
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-MAS-AY-03"
+        RequirementName = "Exclusion of Non-Impacting Information Resources"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-MAS-AY-03.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: mas.frr.frr_mas_ay_04
+name: Impact Level Variations Compliance
+description: Validates compliance with FRR-MAS-AY-04 - Impact Level Variations
+family: MAS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-MAS-AY-04 - Impact Level Variations compliance check
+  description_template: Configuration requires validation for FRR-MAS-AY-04 compliance
+  remediation_template: Implement FRR-MAS-AY-04 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- mas
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-MAS-AY-04
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-MAS-AY-04 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-MAS-AY-04 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-MAS-AY-04 compliance validation
+    implementation: |
+      # FRR-MAS-AY-04 compliance automation
+      # GitHub Actions
+      - name: FRR-MAS-AY-04 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern mas.frr.frr_mas_ay_04 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-MAS-AY-04 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-MAS-AY-04 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-MAS-AY-04'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-MAS-AY-04
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-MAS-AY-04"
+        RequirementName = "Impact Level Variations"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-MAS-AY-04.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: mas.frr.frr_mas_ay_05
+name: Review of Best Practices Compliance
+description: Validates compliance with FRR-MAS-AY-05 - Review of Best Practices
+family: MAS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-MAS-AY-05 - Review of Best Practices compliance check
+  description_template: Configuration requires validation for FRR-MAS-AY-05 compliance
+  remediation_template: Implement FRR-MAS-AY-05 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- mas
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-MAS-AY-05
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-MAS-AY-05 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-MAS-AY-05 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-MAS-AY-05 compliance validation
+    implementation: |
+      # FRR-MAS-AY-05 compliance automation
+      # GitHub Actions
+      - name: FRR-MAS-AY-05 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern mas.frr.frr_mas_ay_05 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-MAS-AY-05 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-MAS-AY-05 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-MAS-AY-05'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-MAS-AY-05
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-MAS-AY-05"
+        RequirementName = "Review of Best Practices"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-MAS-AY-05.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: mas.frr.frr_mas_ay_06
+name: Cloud Service Offering Determination Compliance
+description: Validates compliance with FRR-MAS-AY-06 - Cloud Service Offering Determination
+family: MAS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-MAS-AY-06 - Cloud Service Offering Determination compliance check
+  description_template: Configuration requires validation for FRR-MAS-AY-06 compliance
+  remediation_template: Implement FRR-MAS-AY-06 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- mas
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-MAS-AY-06
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-MAS-AY-06 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-MAS-AY-06 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-MAS-AY-06 compliance validation
+    implementation: |
+      # FRR-MAS-AY-06 compliance automation
+      # GitHub Actions
+      - name: FRR-MAS-AY-06 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern mas.frr.frr_mas_ay_06 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-MAS-AY-06 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-MAS-AY-06 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-MAS-AY-06'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-MAS-AY-06
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-MAS-AY-06"
+        RequirementName = "Cloud Service Offering Determination"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-MAS-AY-06.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: mas.frr.frr_mas_ex_01
+name: Supplemental Information Compliance
+description: Validates compliance with FRR-MAS-EX-01 - Supplemental Information
+family: MAS
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-MAS-EX-01 - Supplemental Information compliance check
+  description_template: Configuration requires validation for FRR-MAS-EX-01 compliance
+  remediation_template: Implement FRR-MAS-EX-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- mas
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-MAS-EX-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-MAS-EX-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-MAS-EX-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-MAS-EX-01 compliance validation
+    implementation: |
+      # FRR-MAS-EX-01 compliance automation
+      # GitHub Actions
+      - name: FRR-MAS-EX-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern mas.frr.frr_mas_ex_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-MAS-EX-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-MAS-EX-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-MAS-EX-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-MAS-EX-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-MAS-EX-01"
+        RequirementName = "Supplemental Information"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-MAS-EX-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']

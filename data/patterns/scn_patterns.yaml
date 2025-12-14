@@ -1,0 +1,4414 @@
+pattern_id: scn.sast.tool_integration
+name: SAST Tool Integration
+family: SCN
+severity: critical
+description: 'Detects Static Application Security Testing (SAST) tool integration.
+
+  FRR-SCN requires regular security scanning including SAST.
+
+  '
+pattern_type: pipeline
+languages:
+  github_actions:
+    regex_fallback: (codeql|sonarqube|snyk.*code|checkmarx)|(semgrep|bandit|brakeman|spotbugs)|(security.*code.*analysis)
+  azure_pipelines:
+    regex_fallback: (codeql|sonarqube|snyk.*code|checkmarx)|(semgrep|bandit|brakeman|spotbugs)|(security.*code.*analysis)
+  gitlab_ci:
+    regex_fallback: (codeql|sonarqube|snyk.*code|checkmarx)|(semgrep|bandit|brakeman|spotbugs)|(security.*code.*analysis)
+finding:
+  title: SAST tool integration detected
+  description: CI/CD pipeline includes SAST scanning
+  recommendation: Configure SAST to run on every commit per FRR-SCN-01
+  references:
+  - FRR-SCN-01
+  - KSI-VDR-01
+evidence_artifacts:
+- artifact_type: logs
+  name: SCN operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: SCN configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: SCN compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "scn"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track SCN related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'scn' | take 100"
+    description: Query recent SCN events
+    output_format: json
+  powershell:
+  - script: '# Query SCN configuration
+
+      Get-AzSCNResource | Select-Object Name, Location, Properties'
+    description: Get SCN resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for SCN compliance enforcement
+    implementation: "# Azure Policy definition for SCN\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'scn.sast.tool_integration-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'SCN Compliance Policy'\n    description:\
+      \ 'Enforces SCN compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for SCN violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'scn.sast.tool_integration-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on SCN compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for SCN
+    implementation: "# GitHub Actions\n- name: Validate SCN Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/scn_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'SCN Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_scn.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - SCN requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review SCN FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design SCN implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement SCN controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for SCN
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/scn/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'SCN')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: SCN - SCN
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements SCN controls in accordance with FedRAMP
+      20x requirements. SCN Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce SCN compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      SCN requirements.
+    evidence_references:
+    - SCN configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for SCN compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: SCN implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement SCN controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-SCN-01
+    requirement_name: Notifications
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions code sample
+    code_sample: '# github_actions code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code
+    code_sample: '# github_actions code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_scn_patterns.py::test_scn_sast_tool_integration
+---
+pattern_id: scn.sca.dependency_scanning
+name: Software Composition Analysis (SCA)
+family: SCN
+severity: critical
+description: Detects dependency/vulnerability scanning for third-party libraries
+pattern_type: pipeline
+languages:
+  github_actions:
+    regex_fallback: (dependabot|snyk.*test|owasp.*dependency.*check)|(npm audit|pip.*safety|dotnet.*list.*vulnerable)|(trivy.*fs|grype)
+  azure_pipelines:
+    regex_fallback: (dependabot|snyk.*test|owasp.*dependency.*check)|(npm audit|pip.*safety|dotnet.*list.*vulnerable)|(trivy.*fs|grype)
+  gitlab_ci:
+    regex_fallback: (dependabot|snyk.*test|owasp.*dependency.*check)|(npm audit|pip.*safety|dotnet.*list.*vulnerable)|(trivy.*fs|grype)
+finding:
+  title: Dependency scanning detected
+  description: CI/CD scans dependencies for known vulnerabilities
+  recommendation: Block builds with high/critical vulnerabilities per FRR-SCN-02
+  references:
+  - FRR-SCN-02
+  - KSI-VDR-02
+evidence_artifacts:
+- artifact_type: logs
+  name: SCN operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: SCN configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: SCN compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "scn"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track SCN related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'scn' | take 100"
+    description: Query recent SCN events
+    output_format: json
+  powershell:
+  - script: '# Query SCN configuration
+
+      Get-AzSCNResource | Select-Object Name, Location, Properties'
+    description: Get SCN resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for SCN compliance enforcement
+    implementation: "# Azure Policy definition for SCN\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'scn.sca.dependency_scanning-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'SCN Compliance Policy'\n    description:\
+      \ 'Enforces SCN compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for SCN violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'scn.sca.dependency_scanning-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on SCN compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for SCN
+    implementation: "# GitHub Actions\n- name: Validate SCN Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/scn_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'SCN Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_scn.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - SCN requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review SCN FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design SCN implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement SCN controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for SCN
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/scn/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'SCN')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: SCN - SCN
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements SCN controls in accordance with FedRAMP
+      20x requirements. SCN Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce SCN compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      SCN requirements.
+    evidence_references:
+    - SCN configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for SCN compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: SCN implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement SCN controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-SCN-01
+    requirement_name: Notifications
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions code sample
+    code_sample: '# github_actions code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code
+    code_sample: '# github_actions code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_scn_patterns.py::test_scn_sca_dependency_scanning
+---
+pattern_id: scn.container.image_scanning
+name: Container Image Scanning
+family: SCN
+severity: critical
+description: Detects container image vulnerability scanning
+pattern_type: pipeline
+languages:
+  github_actions:
+    regex_fallback: (trivy.*image|aqua.*scan|clair|anchore)|(docker.*scan|snyk.*container)|(az
+      acr.*check-health|defender.*for.*containers)
+  azure_pipelines:
+    regex_fallback: (trivy.*image|aqua.*scan|clair|anchore)|(docker.*scan|snyk.*container)|(az
+      acr.*check-health|defender.*for.*containers)
+  gitlab_ci:
+    regex_fallback: (trivy.*image|aqua.*scan|clair|anchore)|(docker.*scan|snyk.*container)|(az
+      acr.*check-health|defender.*for.*containers)
+finding:
+  title: Container image scanning detected
+  description: Pipeline scans container images for vulnerabilities
+  recommendation: Scan images before pushing to registry per FRR-SCN-03
+  references:
+  - FRR-SCN-03
+  - KSI-VDR-01
+evidence_artifacts:
+- artifact_type: logs
+  name: SCN operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: SCN configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: SCN compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "scn"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track SCN related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'scn' | take 100"
+    description: Query recent SCN events
+    output_format: json
+  powershell:
+  - script: '# Query SCN configuration
+
+      Get-AzSCNResource | Select-Object Name, Location, Properties'
+    description: Get SCN resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for SCN compliance enforcement
+    implementation: "# Azure Policy definition for SCN\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'scn.container.image_scanning-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'SCN Compliance Policy'\n    description:\
+      \ 'Enforces SCN compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for SCN violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'scn.container.image_scanning-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on SCN compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for SCN
+    implementation: "# GitHub Actions\n- name: Validate SCN Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/scn_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'SCN Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_scn.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - SCN requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review SCN FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design SCN implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement SCN controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for SCN
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/scn/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'SCN')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: SCN - SCN
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements SCN controls in accordance with FedRAMP
+      20x requirements. SCN Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce SCN compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      SCN requirements.
+    evidence_references:
+    - SCN configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for SCN compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: SCN implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement SCN controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-SCN-01
+    requirement_name: Notifications
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions code sample
+    code_sample: '# github_actions code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code
+    code_sample: '# github_actions code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_scn_patterns.py::test_scn_container_image_scanning
+---
+pattern_id: scn.iac.security_scanning
+name: IaC Security Scanning
+family: SCN
+severity: high
+description: Detects Infrastructure as Code security scanning
+pattern_type: pipeline
+languages:
+  github_actions:
+    regex_fallback: (checkov|tfsec|terrascan|kics)|(az.*policy.*compliance|bicep.*lint)
+  azure_pipelines:
+    regex_fallback: (checkov|tfsec|terrascan|kics)|(az.*policy.*compliance|bicep.*lint)
+  gitlab_ci:
+    regex_fallback: (checkov|tfsec|terrascan|kics)|(az.*policy.*compliance|bicep.*lint)
+finding:
+  title: IaC security scanning detected
+  description: Pipeline scans IaC for security misconfigurations
+  recommendation: Enforce Azure Policy or equivalent per KSI-CNA-07
+  references:
+  - FRR-SCN-04
+  - KSI-CNA-07
+evidence_artifacts:
+- artifact_type: logs
+  name: SCN operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: SCN configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: SCN compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "scn"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track SCN related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'scn' | take 100"
+    description: Query recent SCN events
+    output_format: json
+  powershell:
+  - script: '# Query SCN configuration
+
+      Get-AzSCNResource | Select-Object Name, Location, Properties'
+    description: Get SCN resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for SCN compliance enforcement
+    implementation: "# Azure Policy definition for SCN\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'scn.iac.security_scanning-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'SCN Compliance Policy'\n    description:\
+      \ 'Enforces SCN compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for SCN violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'scn.iac.security_scanning-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on SCN compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for SCN
+    implementation: "# GitHub Actions\n- name: Validate SCN Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/scn_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'SCN Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_scn.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - SCN requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review SCN FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design SCN implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement SCN controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for SCN
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/scn/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'SCN')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: SCN - SCN
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements SCN controls in accordance with FedRAMP
+      20x requirements. SCN Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce SCN compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      SCN requirements.
+    evidence_references:
+    - SCN configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for SCN compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: SCN implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement SCN controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-SCN-01
+    requirement_name: Notifications
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions code sample
+    code_sample: '# github_actions code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code
+    code_sample: '# github_actions code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_scn_patterns.py::test_scn_iac_security_scanning
+---
+pattern_id: scn.secrets.scanning
+name: Secrets Scanning
+family: SCN
+severity: critical
+description: Detects secrets scanning to prevent credential leaks
+pattern_type: pipeline
+languages:
+  github_actions:
+    regex_fallback: (gitleaks|trufflehog|detect-secrets|secret.*scan)|(credential.*scan|token.*scan)
+  azure_pipelines:
+    regex_fallback: (gitleaks|trufflehog|detect-secrets|secret.*scan)|(credential.*scan|token.*scan)
+  gitlab_ci:
+    regex_fallback: (gitleaks|trufflehog|detect-secrets|secret.*scan)|(credential.*scan|token.*scan)
+finding:
+  title: Secrets scanning detected
+  description: Pipeline scans for hardcoded secrets and credentials
+  recommendation: Block commits containing secrets per KSI-SVC-01
+  references:
+  - FRR-SCN-05 - KSI-SVC-01
+evidence_artifacts:
+- artifact_type: logs
+  name: SCN operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: SCN configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: SCN compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "scn"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track SCN related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'scn' | take 100"
+    description: Query recent SCN events
+    output_format: json
+  powershell:
+  - script: '# Query SCN configuration
+
+      Get-AzSCNResource | Select-Object Name, Location, Properties'
+    description: Get SCN resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for SCN compliance enforcement
+    implementation: "# Azure Policy definition for SCN\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'scn.secrets.scanning-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'SCN Compliance Policy'\n    description:\
+      \ 'Enforces SCN compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for SCN violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'scn.secrets.scanning-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on SCN compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for SCN
+    implementation: "# GitHub Actions\n- name: Validate SCN Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/scn_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'SCN Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_scn.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - SCN requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review SCN FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design SCN implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement SCN controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for SCN
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/scn/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'SCN')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: SCN - SCN
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements SCN controls in accordance with FedRAMP
+      20x requirements. SCN Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce SCN compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      SCN requirements.
+    evidence_references:
+    - SCN configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for SCN compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: SCN implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement SCN controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-SCN-01
+    requirement_name: Notifications
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions code sample
+    code_sample: '# github_actions code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code
+    code_sample: '# github_actions code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_scn_patterns.py::test_scn_secrets_scanning
+---
+pattern_id: scn.dast.dynamic_testing
+name: DAST Tool Integration
+family: SCN
+severity: high
+description: Detects Dynamic Application Security Testing (DAST) integration
+pattern_type: pipeline
+languages:
+  github_actions:
+    regex_fallback: (owasp.*zap|burp.*suite|w3af|arachni)|(dast|dynamic.*security.*test)
+  azure_pipelines:
+    regex_fallback: (owasp.*zap|burp.*suite|w3af|arachni)|(dast|dynamic.*security.*test)
+  gitlab_ci:
+    regex_fallback: (owasp.*zap|burp.*suite|w3af|arachni)|(dast|dynamic.*security.*test)
+finding:
+  title: DAST tool integration detected
+  description: CI/CD includes dynamic security testing
+  recommendation: Run DAST against staging environment per FRR-SCN-06
+  references:
+  - FRR-SCN-06
+evidence_artifacts:
+- artifact_type: logs
+  name: SCN operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: SCN configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: SCN compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "scn"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track SCN related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'scn' | take 100"
+    description: Query recent SCN events
+    output_format: json
+  powershell:
+  - script: '# Query SCN configuration
+
+      Get-AzSCNResource | Select-Object Name, Location, Properties'
+    description: Get SCN resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for SCN compliance enforcement
+    implementation: "# Azure Policy definition for SCN\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'scn.dast.dynamic_testing-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'SCN Compliance Policy'\n    description:\
+      \ 'Enforces SCN compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for SCN violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'scn.dast.dynamic_testing-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on SCN compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for SCN
+    implementation: "# GitHub Actions\n- name: Validate SCN Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/scn_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'SCN Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_scn.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - SCN requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review SCN FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design SCN implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement SCN controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for SCN
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/scn/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'SCN')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: SCN - SCN
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements SCN controls in accordance with FedRAMP
+      20x requirements. SCN Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce SCN compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      SCN requirements.
+    evidence_references:
+    - SCN configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for SCN compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: SCN implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement SCN controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-SCN-01
+    requirement_name: Notifications
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions code sample
+    code_sample: '# github_actions code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code
+    code_sample: '# github_actions code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_scn_patterns.py::test_scn_dast_dynamic_testing
+---
+pattern_id: scn.code.security_library
+name: Security Library Integration
+family: SCN
+severity: medium
+description: Detects use of security analysis libraries in code
+pattern_type: import
+languages:
+  python:
+    ast_queries: &id001
+    - query_type: import_statement
+      target: bandit
+    - query_type: import_statement
+      target: safety
+    - query_type: import_statement
+      target: SecurityCodeScan
+    regex_fallback: (import bandit|from bandit)|(import.*security|from.*security)
+  csharp:
+    ast_queries: *id001
+    regex_fallback: (import bandit|from bandit)|(import.*security|from.*security)
+  java:
+    ast_queries: *id001
+    regex_fallback: (import bandit|from bandit)|(import.*security|from.*security)
+  typescript:
+    ast_queries: *id001
+    regex_fallback: (import bandit|from bandit)|(import.*security|from.*security)
+finding:
+  title: Security analysis library detected
+  description: Code imports security analysis library
+  recommendation: Integrate with CI/CD for automated scanning per FRR-SCN-01
+  references:
+  - FRR-SCN-01
+evidence_artifacts:
+- artifact_type: logs
+  name: SCN operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: SCN configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: SCN compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "scn"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track SCN related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'scn' | take 100"
+    description: Query recent SCN events
+    output_format: json
+  powershell:
+  - script: '# Query SCN configuration
+
+      Get-AzSCNResource | Select-Object Name, Location, Properties'
+    description: Get SCN resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for SCN compliance enforcement
+    implementation: "# Azure Policy definition for SCN\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'scn.code.security_library-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'SCN Compliance Policy'\n    description:\
+      \ 'Enforces SCN compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for SCN violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'scn.code.security_library-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on SCN compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for SCN
+    implementation: "# GitHub Actions\n- name: Validate SCN Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/scn_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'SCN Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_scn.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - SCN requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review SCN FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design SCN implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement SCN controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for SCN
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/scn/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'SCN')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: SCN - SCN
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements SCN controls in accordance with FedRAMP
+      20x requirements. SCN Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce SCN compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      SCN requirements.
+    evidence_references:
+    - SCN configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for SCN compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: SCN implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement SCN controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-SCN-01
+    requirement_name: Notifications
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_scn_patterns.py::test_scn_code_security_library
+---
+pattern_id: scn.policy.enforcement
+name: Security Policy Enforcement
+family: SCN
+severity: high
+description: Detects security policy enforcement in deployments
+pattern_type: configuration
+languages:
+  yaml:
+    regex_fallback: (PodSecurityPolicy|SecurityContext|securityContext)|(runAsNonRoot|allowPrivilegeEscalation.*false)
+finding:
+  title: Security policy enforcement detected
+  description: Configuration enforces security policies
+  recommendation: Use Pod Security Standards (restricted profile) per KSI-CNA-02
+  references:
+  - FRR-SCN-07
+  - KSI-CNA-02
+evidence_artifacts:
+- artifact_type: logs
+  name: SCN operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: SCN configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: SCN compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "scn"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track SCN related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'scn' | take 100"
+    description: Query recent SCN events
+    output_format: json
+  powershell:
+  - script: '# Query SCN configuration
+
+      Get-AzSCNResource | Select-Object Name, Location, Properties'
+    description: Get SCN resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for SCN compliance enforcement
+    implementation: "# Azure Policy definition for SCN\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'scn.policy.enforcement-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'SCN Compliance Policy'\n    description:\
+      \ 'Enforces SCN compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for SCN violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'scn.policy.enforcement-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on SCN compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for SCN
+    implementation: "# GitHub Actions\n- name: Validate SCN Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/scn_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'SCN Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_scn.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - SCN requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review SCN FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design SCN implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement SCN controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for SCN
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/scn/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'SCN')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: SCN - SCN
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements SCN controls in accordance with FedRAMP
+      20x requirements. SCN Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce SCN compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      SCN requirements.
+    evidence_references:
+    - SCN configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for SCN compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: SCN implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement SCN controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-SCN-01
+    requirement_name: Notifications
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant yaml code sample
+    code_sample: '# yaml code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant yaml code
+    code_sample: '# yaml code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_scn_patterns.py::test_scn_policy_enforcement
+---
+pattern_id: scn.iac.defender_for_cloud
+name: Microsoft Defender for Cloud
+family: SCN
+severity: high
+description: Detects Microsoft Defender for Cloud configuration for continuous scanning
+pattern_type: resource
+languages:
+  bicep:
+    regex_fallback: (Microsoft\.Security/pricings)|(azurerm_security_center_subscription_pricing)|(defender.*plan|security.*center.*plan)
+  terraform:
+    regex_fallback: (Microsoft\.Security/pricings)|(azurerm_security_center_subscription_pricing)|(defender.*plan|security.*center.*plan)
+finding:
+  title: Microsoft Defender for Cloud configured
+  description: IaC enables Defender for Cloud for continuous security monitoring
+  recommendation: Enable all Defender plans (Servers, Containers, Storage, etc.) per
+    FRR-SCN-08
+  references:
+  - FRR-SCN-08
+evidence_artifacts:
+- artifact_type: logs
+  name: SCN operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: SCN configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: SCN compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "scn"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track SCN related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'scn' | take 100"
+    description: Query recent SCN events
+    output_format: json
+  powershell:
+  - script: '# Query SCN configuration
+
+      Get-AzSCNResource | Select-Object Name, Location, Properties'
+    description: Get SCN resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for SCN compliance enforcement
+    implementation: "# Azure Policy definition for SCN\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'scn.iac.defender_for_cloud-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'SCN Compliance Policy'\n    description:\
+      \ 'Enforces SCN compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for SCN violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'scn.iac.defender_for_cloud-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on SCN compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for SCN
+    implementation: "# GitHub Actions\n- name: Validate SCN Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/scn_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'SCN Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_scn.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - SCN requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review SCN FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design SCN implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement SCN controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for SCN
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/scn/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'SCN')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: SCN - SCN
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements SCN controls in accordance with FedRAMP
+      20x requirements. SCN Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce SCN compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      SCN requirements.
+    evidence_references:
+    - SCN configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for SCN compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: SCN implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement SCN controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-SCN-01
+    requirement_name: Notifications
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep code sample
+    code_sample: '# bicep code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code
+    code_sample: '# bicep code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_scn_patterns.py::test_scn_iac_defender_for_cloud
+---
+pattern_id: scn.iac.policy_assignment
+name: Azure Policy Assignment
+family: SCN
+severity: high
+description: Detects Azure Policy assignment for compliance scanning
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries: &id001
+    - query_type: resource_type
+      target: Microsoft.Authorization/policyAssignments
+    - query_type: resource_type
+      target: azurerm_policy_assignment
+    regex_fallback: (Microsoft\.Authorization/policyAssignments)|(resource.*azurerm_policy_assignment)
+  terraform:
+    ast_queries: *id001
+    regex_fallback: (Microsoft\.Authorization/policyAssignments)|(resource.*azurerm_policy_assignment)
+finding:
+  title: Azure Policy assignment configured
+  description: IaC assigns Azure Policy for compliance enforcement
+  recommendation: Assign built-in FedRAMP policies or Azure Security Benchmark per
+    FRR-SCN-09
+  references:
+  - FRR-SCN-09
+  - KSI-CNA-07
+evidence_artifacts:
+- artifact_type: logs
+  name: SCN operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: SCN configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: SCN compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "scn"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track SCN related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'scn' | take 100"
+    description: Query recent SCN events
+    output_format: json
+  powershell:
+  - script: '# Query SCN configuration
+
+      Get-AzSCNResource | Select-Object Name, Location, Properties'
+    description: Get SCN resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for SCN compliance enforcement
+    implementation: "# Azure Policy definition for SCN\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'scn.iac.policy_assignment-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'SCN Compliance Policy'\n    description:\
+      \ 'Enforces SCN compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for SCN violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'scn.iac.policy_assignment-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on SCN compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for SCN
+    implementation: "# GitHub Actions\n- name: Validate SCN Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/scn_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'SCN Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_scn.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - SCN requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review SCN FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design SCN implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement SCN controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for SCN
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/scn/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'SCN')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: SCN - SCN
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements SCN controls in accordance with FedRAMP
+      20x requirements. SCN Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce SCN compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      SCN requirements.
+    evidence_references:
+    - SCN configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for SCN compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: SCN implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement SCN controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-SCN-01
+    requirement_name: Notifications
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep code sample
+    code_sample: '# bicep code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code
+    code_sample: '# bicep code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_scn_patterns.py::test_scn_iac_policy_assignment
+---
+pattern_id: scn.cicd.scan_gate
+name: Security Scan Gate
+family: SCN
+severity: critical
+description: Detects security scan gate that blocks deployments on findings
+pattern_type: pipeline
+languages:
+  github_actions:
+    regex_fallback: (break.*build|fail.*on.*high|severity.*threshold)|(if.*vulnerabilities.*exit|continue-on-error.*false)
+  azure_pipelines:
+    regex_fallback: (break.*build|fail.*on.*high|severity.*threshold)|(if.*vulnerabilities.*exit|continue-on-error.*false)
+  gitlab_ci:
+    regex_fallback: (break.*build|fail.*on.*high|severity.*threshold)|(if.*vulnerabilities.*exit|continue-on-error.*false)
+finding:
+  title: Security scan gate configured
+  description: Pipeline blocks deployment when security issues found
+  recommendation: Set threshold to block on high/critical findings per FRR-SCN-10
+  references:
+  - FRR-SCN-10
+evidence_artifacts:
+- artifact_type: logs
+  name: SCN operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: SCN configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: SCN compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "scn"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track SCN related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'scn' | take 100"
+    description: Query recent SCN events
+    output_format: json
+  powershell:
+  - script: '# Query SCN configuration
+
+      Get-AzSCNResource | Select-Object Name, Location, Properties'
+    description: Get SCN resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for SCN compliance enforcement
+    implementation: "# Azure Policy definition for SCN\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'scn.cicd.scan_gate-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'SCN Compliance Policy'\n    description:\
+      \ 'Enforces SCN compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for SCN violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'scn.cicd.scan_gate-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on SCN compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for SCN
+    implementation: "# GitHub Actions\n- name: Validate SCN Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/scn_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'SCN Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_scn.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - SCN requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review SCN FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design SCN implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement SCN controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for SCN
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/scn/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'SCN')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: SCN - SCN
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements SCN controls in accordance with FedRAMP
+      20x requirements. SCN Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce SCN compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      SCN requirements.
+    evidence_references:
+    - SCN configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for SCN compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: SCN implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement SCN controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-SCN-01
+    requirement_name: Notifications
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions code sample
+    code_sample: '# github_actions code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code
+    code_sample: '# github_actions code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_scn_patterns.py::test_scn_cicd_scan_gate
+---
+pattern_id: scn.missing_sast
+name: Missing SAST Scanning
+family: SCN
+severity: critical
+description: Detects absence of SAST scanning in pipeline
+pattern_type: pipeline
+languages:
+  github_actions: {}
+  azure_pipelines: {}
+  gitlab_ci: {}
+requires_absence:
+- scn.sast.tool_integration
+finding:
+  title: No SAST scanning detected in pipeline
+  description: CI/CD pipeline lacks SAST security scanning
+  severity: critical
+  recommendation: Add CodeQL, SonarQube, or equivalent SAST tool per FRR-SCN-01
+  references:
+  - FRR-SCN-01
+  - KSI-VDR-01
+evidence_artifacts:
+- artifact_type: logs
+  name: SCN operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: SCN configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: SCN compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "scn"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track SCN related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'scn' | take 100"
+    description: Query recent SCN events
+    output_format: json
+  powershell:
+  - script: '# Query SCN configuration
+
+      Get-AzSCNResource | Select-Object Name, Location, Properties'
+    description: Get SCN resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for SCN compliance enforcement
+    implementation: "# Azure Policy definition for SCN\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'scn.missing_sast-policy'\n  properties: {\n    policyType: 'Custom'\n\
+      \    mode: 'All'\n    displayName: 'SCN Compliance Policy'\n    description:\
+      \ 'Enforces SCN compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for SCN violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'scn.missing_sast-alert'\n  location: 'global'\n  properties: {\n\
+      \    description: 'Alert on SCN compliance violations'\n    severity: 2\n  \
+      \  enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for SCN
+    implementation: "# GitHub Actions\n- name: Validate SCN Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/scn_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'SCN Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_scn.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - SCN requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review SCN FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design SCN implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement SCN controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for SCN
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/scn/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'SCN')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: SCN - SCN
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements SCN controls in accordance with FedRAMP
+      20x requirements. SCN Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce SCN compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      SCN requirements.
+    evidence_references:
+    - SCN configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for SCN compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: SCN implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement SCN controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-SCN-01
+    requirement_name: Notifications
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions code sample
+    code_sample: '# github_actions code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code
+    code_sample: '# github_actions code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_scn_patterns.py::test_scn_missing_sast
+---
+pattern_id: scn.missing_dependency_scan
+name: Missing Dependency Scanning
+family: SCN
+severity: critical
+description: Detects absence of dependency/vulnerability scanning
+pattern_type: pipeline
+languages:
+  github_actions: {}
+  azure_pipelines: {}
+  gitlab_ci: {}
+requires_absence:
+- scn.sca.dependency_scanning
+finding:
+  title: No dependency scanning detected
+  description: Pipeline lacks SCA/dependency vulnerability scanning
+  severity: critical
+  recommendation: Add Dependabot, Snyk, or OWASP Dependency Check per FRR-SCN-02
+  references:
+  - FRR-SCN-02
+  - KSI-VDR-02
+evidence_artifacts:
+- artifact_type: logs
+  name: SCN operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: SCN configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: SCN compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "scn"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track SCN related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'scn' | take 100"
+    description: Query recent SCN events
+    output_format: json
+  powershell:
+  - script: '# Query SCN configuration
+
+      Get-AzSCNResource | Select-Object Name, Location, Properties'
+    description: Get SCN resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for SCN compliance enforcement
+    implementation: "# Azure Policy definition for SCN\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'scn.missing_dependency_scan-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'SCN Compliance Policy'\n    description:\
+      \ 'Enforces SCN compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for SCN violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'scn.missing_dependency_scan-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on SCN compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for SCN
+    implementation: "# GitHub Actions\n- name: Validate SCN Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/scn_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'SCN Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_scn.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - SCN requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review SCN FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design SCN implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement SCN controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for SCN
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/scn/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'SCN')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: SCN - SCN
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements SCN controls in accordance with FedRAMP
+      20x requirements. SCN Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce SCN compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      SCN requirements.
+    evidence_references:
+    - SCN configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for SCN compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: SCN implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement SCN controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-SCN-01
+    requirement_name: Notifications
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions code sample
+    code_sample: '# github_actions code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code
+    code_sample: '# github_actions code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_scn_patterns.py::test_scn_missing_dependency_scan
+---
+pattern_id: scn.frr.frr_scn_01
+name: Notifications Compliance
+description: Validates compliance with FRR-SCN-01 - Notifications
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-01 - Notifications compliance check
+  description_template: Configuration requires validation for FRR-SCN-01 compliance
+  remediation_template: Implement FRR-SCN-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-01 compliance validation
+    implementation: |
+      # FRR-SCN-01 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-01"
+        RequirementName = "Notifications"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_02
+name: Procedures and Documentation Compliance
+description: Validates compliance with FRR-SCN-02 - Procedures and Documentation
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-02 - Procedures and Documentation compliance check
+  description_template: Configuration requires validation for FRR-SCN-02 compliance
+  remediation_template: Implement FRR-SCN-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-02 compliance validation
+    implementation: |
+      # FRR-SCN-02 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-02 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-02 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-02 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-02'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-02
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-02"
+        RequirementName = "Procedures and Documentation"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-02.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_03
+name: Evaluate Changes Compliance
+description: Validates compliance with FRR-SCN-03 - Evaluate Changes
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-03 - Evaluate Changes compliance check
+  description_template: Configuration requires validation for FRR-SCN-03 compliance
+  remediation_template: Implement FRR-SCN-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-03 compliance validation
+    implementation: |
+      # FRR-SCN-03 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-03 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_03 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-03 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-03 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-03'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-03
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-03"
+        RequirementName = "Evaluate Changes"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-03.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_04
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-04 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-04 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-04 compliance
+  remediation_template: Implement FRR-SCN-04 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-04
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-04 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-04 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-04 compliance validation
+    implementation: |
+      # FRR-SCN-04 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-04 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_04 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-04 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-04 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-04'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-04
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-04"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-04.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_05
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-05 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-05 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-05 compliance
+  remediation_template: Implement FRR-SCN-05 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-05
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-05 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-05 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-05 compliance validation
+    implementation: |
+      # FRR-SCN-05 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-05 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_05 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-05 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-05 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-05'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-05
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-05"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-05.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_06
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-06 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-06 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-06 compliance
+  remediation_template: Implement FRR-SCN-06 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-06
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-06 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-06 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-06 compliance validation
+    implementation: |
+      # FRR-SCN-06 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-06 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_06 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-06 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-06 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-06'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-06
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-06"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-06.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_07
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-07 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-07 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-07 compliance
+  remediation_template: Implement FRR-SCN-07 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-07
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-07 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-07 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-07 compliance validation
+    implementation: |
+      # FRR-SCN-07 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-07 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_07 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-07 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-07 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-07'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-07
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-07"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-07.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_08
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-08 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-08 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-08 compliance
+  remediation_template: Implement FRR-SCN-08 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-08
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-08 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-08 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-08 compliance validation
+    implementation: |
+      # FRR-SCN-08 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-08 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_08 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-08 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-08 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-08'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-08
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-08"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-08.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_09
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-09 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-09 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-09 compliance
+  remediation_template: Implement FRR-SCN-09 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-09
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-09 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-09 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-09 compliance validation
+    implementation: |
+      # FRR-SCN-09 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-09 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_09 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-09 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-09 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-09'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-09
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-09"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-09.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_10
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-10 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-10 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-10 compliance
+  remediation_template: Implement FRR-SCN-10 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-10
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-10 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-10 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-10 compliance validation
+    implementation: |
+      # FRR-SCN-10 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-10 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_10 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-10 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-10 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-10'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-10
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-10"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-10.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_ad_01
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-AD-01 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-AD-01 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-AD-01 compliance
+  remediation_template: Implement FRR-SCN-AD-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-AD-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-AD-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-AD-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-AD-01 compliance validation
+    implementation: |
+      # FRR-SCN-AD-01 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-AD-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_ad_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-AD-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-AD-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-AD-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-AD-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-AD-01"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-AD-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_ex_01
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-EX-01 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-EX-01 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-EX-01 compliance
+  remediation_template: Implement FRR-SCN-EX-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-EX-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-EX-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-EX-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-EX-01 compliance validation
+    implementation: |
+      # FRR-SCN-EX-01 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-EX-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_ex_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-EX-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-EX-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-EX-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-EX-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-EX-01"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-EX-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_ex_02
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-EX-02 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-EX-02 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-EX-02 compliance
+  remediation_template: Implement FRR-SCN-EX-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-EX-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-EX-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-EX-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-EX-02 compliance validation
+    implementation: |
+      # FRR-SCN-EX-02 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-EX-02 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_ex_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-EX-02 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-EX-02 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-EX-02'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-EX-02
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-EX-02"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-EX-02.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_im_01
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-IM-01 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-IM-01 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-IM-01 compliance
+  remediation_template: Implement FRR-SCN-IM-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-IM-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-IM-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-IM-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-IM-01 compliance validation
+    implementation: |
+      # FRR-SCN-IM-01 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-IM-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_im_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-IM-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-IM-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-IM-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-IM-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-IM-01"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-IM-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_rr_01
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-RR-01 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-RR-01 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-RR-01 compliance
+  remediation_template: Implement FRR-SCN-RR-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-RR-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-RR-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-RR-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-RR-01 compliance validation
+    implementation: |
+      # FRR-SCN-RR-01 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-RR-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_rr_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-RR-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-RR-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-RR-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-RR-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-RR-01"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-RR-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_tr_01
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-TR-01 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-TR-01 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-TR-01 compliance
+  remediation_template: Implement FRR-SCN-TR-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-TR-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-TR-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-TR-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-TR-01 compliance validation
+    implementation: |
+      # FRR-SCN-TR-01 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-TR-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_tr_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-TR-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-TR-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-TR-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-TR-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-TR-01"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-TR-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_tr_02
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-TR-02 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-TR-02 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-TR-02 compliance
+  remediation_template: Implement FRR-SCN-TR-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-TR-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-TR-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-TR-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-TR-02 compliance validation
+    implementation: |
+      # FRR-SCN-TR-02 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-TR-02 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_tr_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-TR-02 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-TR-02 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-TR-02'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-TR-02
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-TR-02"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-TR-02.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_tr_03
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-TR-03 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-TR-03 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-TR-03 compliance
+  remediation_template: Implement FRR-SCN-TR-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-TR-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-TR-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-TR-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-TR-03 compliance validation
+    implementation: |
+      # FRR-SCN-TR-03 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-TR-03 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_tr_03 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-TR-03 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-TR-03 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-TR-03'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-TR-03
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-TR-03"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-TR-03.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_tr_04
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-TR-04 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-TR-04 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-TR-04 compliance
+  remediation_template: Implement FRR-SCN-TR-04 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-TR-04
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-TR-04 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-TR-04 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-TR-04 compliance validation
+    implementation: |
+      # FRR-SCN-TR-04 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-TR-04 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_tr_04 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-TR-04 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-TR-04 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-TR-04'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-TR-04
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-TR-04"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-TR-04.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_tr_05
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-TR-05 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-TR-05 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-TR-05 compliance
+  remediation_template: Implement FRR-SCN-TR-05 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-TR-05
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-TR-05 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-TR-05 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-TR-05 compliance validation
+    implementation: |
+      # FRR-SCN-TR-05 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-TR-05 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_tr_05 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-TR-05 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-TR-05 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-TR-05'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-TR-05
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-TR-05"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-TR-05.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_tr_06
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-TR-06 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-TR-06 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-TR-06 compliance
+  remediation_template: Implement FRR-SCN-TR-06 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-TR-06
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-TR-06 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-TR-06 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-TR-06 compliance validation
+    implementation: |
+      # FRR-SCN-TR-06 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-TR-06 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_tr_06 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-TR-06 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-TR-06 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-TR-06'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-TR-06
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-TR-06"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-TR-06.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: scn.frr.frr_scn_tr_07
+name: Unknown Compliance
+description: Validates compliance with FRR-SCN-TR-07 - Unknown
+family: SCN
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-SCN-TR-07 - Unknown compliance check
+  description_template: Configuration requires validation for FRR-SCN-TR-07 compliance
+  remediation_template: Implement FRR-SCN-TR-07 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- scn
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-SCN-TR-07
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-SCN-TR-07 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-SCN-TR-07 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-SCN-TR-07 compliance validation
+    implementation: |
+      # FRR-SCN-TR-07 compliance automation
+      # GitHub Actions
+      - name: FRR-SCN-TR-07 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern scn.frr.frr_scn_tr_07 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-SCN-TR-07 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-SCN-TR-07 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-SCN-TR-07'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-SCN-TR-07
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-SCN-TR-07"
+        RequirementName = "Unknown"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-SCN-TR-07.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']

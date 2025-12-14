@@ -1,0 +1,774 @@
+---
+pattern_id: icp.frr.frr_icp_01
+name: Incident Reporting to FedRAMP Compliance
+description: Validates compliance with FRR-ICP-01 - Incident Reporting to FedRAMP
+family: ICP
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ICP-01 - Incident Reporting to FedRAMP compliance check
+  description_template: Configuration requires validation for FRR-ICP-01 compliance
+  remediation_template: Implement FRR-ICP-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- icp
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ICP-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ICP-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ICP-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ICP-01 compliance validation
+    implementation: |
+      # FRR-ICP-01 compliance automation
+      # GitHub Actions
+      - name: FRR-ICP-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern icp.frr.frr_icp_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ICP-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ICP-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ICP-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ICP-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ICP-01"
+        RequirementName = "Incident Reporting to FedRAMP"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ICP-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: icp.frr.frr_icp_02
+name: Incident Reporting to Agencies Compliance
+description: Validates compliance with FRR-ICP-02 - Incident Reporting to Agencies
+family: ICP
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ICP-02 - Incident Reporting to Agencies compliance check
+  description_template: Configuration requires validation for FRR-ICP-02 compliance
+  remediation_template: Implement FRR-ICP-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- icp
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ICP-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ICP-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ICP-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ICP-02 compliance validation
+    implementation: |
+      # FRR-ICP-02 compliance automation
+      # GitHub Actions
+      - name: FRR-ICP-02 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern icp.frr.frr_icp_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ICP-02 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ICP-02 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ICP-02'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ICP-02
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ICP-02"
+        RequirementName = "Incident Reporting to Agencies"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ICP-02.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: icp.frr.frr_icp_03
+name: Incident Reporting to CISA Compliance
+description: Validates compliance with FRR-ICP-03 - Incident Reporting to CISA
+family: ICP
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ICP-03 - Incident Reporting to CISA compliance check
+  description_template: Configuration requires validation for FRR-ICP-03 compliance
+  remediation_template: Implement FRR-ICP-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- icp
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ICP-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ICP-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ICP-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ICP-03 compliance validation
+    implementation: |
+      # FRR-ICP-03 compliance automation
+      # GitHub Actions
+      - name: FRR-ICP-03 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern icp.frr.frr_icp_03 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ICP-03 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ICP-03 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ICP-03'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ICP-03
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ICP-03"
+        RequirementName = "Incident Reporting to CISA"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ICP-03.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: icp.frr.frr_icp_04
+name: Incident Updates Compliance
+description: Validates compliance with FRR-ICP-04 - Incident Updates
+family: ICP
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ICP-04 - Incident Updates compliance check
+  description_template: Configuration requires validation for FRR-ICP-04 compliance
+  remediation_template: Implement FRR-ICP-04 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- icp
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ICP-04
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ICP-04 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ICP-04 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ICP-04 compliance validation
+    implementation: |
+      # FRR-ICP-04 compliance automation
+      # GitHub Actions
+      - name: FRR-ICP-04 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern icp.frr.frr_icp_04 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ICP-04 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ICP-04 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ICP-04'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ICP-04
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ICP-04"
+        RequirementName = "Incident Updates"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ICP-04.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: icp.frr.frr_icp_05
+name: Incident Report Availability Compliance
+description: Validates compliance with FRR-ICP-05 - Incident Report Availability
+family: ICP
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ICP-05 - Incident Report Availability compliance check
+  description_template: Configuration requires validation for FRR-ICP-05 compliance
+  remediation_template: Implement FRR-ICP-05 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- icp
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ICP-05
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ICP-05 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ICP-05 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ICP-05 compliance validation
+    implementation: |
+      # FRR-ICP-05 compliance automation
+      # GitHub Actions
+      - name: FRR-ICP-05 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern icp.frr.frr_icp_05 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ICP-05 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ICP-05 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ICP-05'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ICP-05
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ICP-05"
+        RequirementName = "Incident Report Availability"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ICP-05.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: icp.frr.frr_icp_06
+name: Responsible Disclosure Compliance
+description: Validates compliance with FRR-ICP-06 - Responsible Disclosure
+family: ICP
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ICP-06 - Responsible Disclosure compliance check
+  description_template: Configuration requires validation for FRR-ICP-06 compliance
+  remediation_template: Implement FRR-ICP-06 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- icp
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ICP-06
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ICP-06 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ICP-06 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ICP-06 compliance validation
+    implementation: |
+      # FRR-ICP-06 compliance automation
+      # GitHub Actions
+      - name: FRR-ICP-06 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern icp.frr.frr_icp_06 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ICP-06 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ICP-06 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ICP-06'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ICP-06
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ICP-06"
+        RequirementName = "Responsible Disclosure"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ICP-06.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: icp.frr.frr_icp_07
+name: Final Incident Report Compliance
+description: Validates compliance with FRR-ICP-07 - Final Incident Report
+family: ICP
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ICP-07 - Final Incident Report compliance check
+  description_template: Configuration requires validation for FRR-ICP-07 compliance
+  remediation_template: Implement FRR-ICP-07 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- icp
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ICP-07
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ICP-07 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ICP-07 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ICP-07 compliance validation
+    implementation: |
+      # FRR-ICP-07 compliance automation
+      # GitHub Actions
+      - name: FRR-ICP-07 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern icp.frr.frr_icp_07 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ICP-07 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ICP-07 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ICP-07'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ICP-07
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ICP-07"
+        RequirementName = "Final Incident Report"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ICP-07.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: icp.frr.frr_icp_08
+name: Automated Reporting Compliance
+description: Validates compliance with FRR-ICP-08 - Automated Reporting
+family: ICP
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ICP-08 - Automated Reporting compliance check
+  description_template: Configuration requires validation for FRR-ICP-08 compliance
+  remediation_template: Implement FRR-ICP-08 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- icp
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ICP-08
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ICP-08 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ICP-08 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ICP-08 compliance validation
+    implementation: |
+      # FRR-ICP-08 compliance automation
+      # GitHub Actions
+      - name: FRR-ICP-08 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern icp.frr.frr_icp_08 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ICP-08 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ICP-08 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ICP-08'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ICP-08
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ICP-08"
+        RequirementName = "Automated Reporting"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ICP-08.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: icp.frr.frr_icp_09
+name: Human-Readable and Machine-Readable Formats Compliance
+description: Validates compliance with FRR-ICP-09 - Human-Readable and Machine-Readable Formats
+family: ICP
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-ICP-09 - Human-Readable and Machine-Readable Formats compliance check
+  description_template: Configuration requires validation for FRR-ICP-09 compliance
+  remediation_template: Implement FRR-ICP-09 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- icp
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-ICP-09
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-ICP-09 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-ICP-09 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-ICP-09 compliance validation
+    implementation: |
+      # FRR-ICP-09 compliance automation
+      # GitHub Actions
+      - name: FRR-ICP-09 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern icp.frr.frr_icp_09 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-ICP-09 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-ICP-09 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-ICP-09'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-ICP-09
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-ICP-09"
+        RequirementName = "Human-Readable and Machine-Readable Formats"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-ICP-09.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']

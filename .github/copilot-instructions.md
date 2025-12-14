@@ -1,16 +1,45 @@
 # Copilot Instructions for FedRAMP 20x MCP Server
 
+## CRITICAL: USER INSTRUCTION COMPLIANCE (READ FIRST)
+
+**ABSOLUTE REQUIREMENTS - NO EXCEPTIONS:**
+
+1. **Follow User Instructions Literally**
+   - When user says "ALL FRRs and KSIs must be covered" - that means EVERY SINGLE ONE, not "most" or "majority"
+   - When user says "evaluate pattern by pattern" - do NOT create automation scripts instead
+   - When user specifies an approach, use EXACTLY that approach - do not substitute with "better ideas"
+   - User has domain expertise on FedRAMP requirements - trust their judgment over apparent efficiency gains
+
+2. **Verify Before Claiming**
+   - NEVER report coverage percentages, completeness, or implementation status without ACTUALLY checking the data
+   - Run verification commands to COUNT actual patterns/implementations before stating numbers
+   - If unsure, say "I need to verify" rather than making inaccurate claims
+   - Show the verification commands and results when reporting status
+
+3. **Manual Work When Requested**
+   - If user asks for pattern-by-pattern review, do that - no bulk processing
+   - If user asks for file-by-file evaluation, do that - no shortcuts
+   - Manual review ensures accuracy; automation can miss edge cases user knows about
+
+4. **User Knows Requirements, You Know Code**
+   - User has authoritative knowledge of what needs to be built
+   - You have access to existing code and patterns
+   - When user says something is required, it IS required - implement as specified
+   - Ask clarifying questions ONLY if requirements are genuinely ambiguous, not to suggest alternatives
+
+**FAILURE TO FOLLOW THESE RULES IS UNACCEPTABLE**
+
 ## Project Overview
-MCP server that loads FedRAMP 20x requirements from JSON files and official documentation markdown files, provides 35 MCP tools for querying requirements, and includes KSI-centric code analyzers for compliance checking across multiple languages.
+MCP server that loads FedRAMP 20x requirements from JSON files and official documentation markdown files, provides 48 MCP tools for querying requirements, and includes KSI-centric code analyzers for compliance checking across multiple languages.
 
 ## Critical: OSCAL Format Requirements
 FedRAMP 20x requires **machine-readable** formats (JSON/XML/structured data) for FRR-ADS. **OSCAL is NOT mentioned in FedRAMP 20x requirements** - it's one optional NIST-based implementation approach. Source: FRR-ADS-01 specifies "machine-readable" only.
 
 ## Data & Capabilities
-- **329 requirements** from 12 FedRAMP 20x families (ADS, AFR, CCM, CNA, CMT, FSI, IAM, ICP, MAS, MLA, PIY, PVA, RPL, RSC, SCN, SVC, TPR, UCM, VDR)
+- **199 FedRAMP Requirements (FRRs)** from 11 families (ADS, CCM, FSI, ICP, KSI, MAS, PVA, RSC, SCN, UCM, VDR)
 - **50 FedRAMP Definitions** (FRD family)
-- **72 Key Security Indicators** (KSI family)
-- **35 MCP tools** organized in 11 modules
+- **72 Key Security Indicators (KSIs)** from 11 families (AFR, CED, CMT, CNA, IAM, INR, MLA, PIY, RPL, SVC, TPR)
+- **48 MCP tools** organized in 13 modules
 - **Multi-language code analyzers**: Python, C#/.NET, Java, TypeScript/JavaScript, Bicep, Terraform, CI/CD pipelines
 - **1-hour caching** with automatic refresh
 
@@ -42,7 +71,7 @@ FedRAMP 20x requires **machine-readable** formats (JSON/XML/structured data) for
 - Infrastructure templates in `templates/bicep/` and `templates/terraform/`
 - Code templates in `templates/code/` (Python, C#, PowerShell, Java, TypeScript)
 - Prompt templates in `prompts/` directory (15 files)
-- Tool modules in `tools/` directory (11 modules, 35 tools)
+- Tool modules in `tools/` directory (13 modules, 48 tools)
 - Code analyzers in `analyzers/ksi/` directory (72 KSI analyzer files + factory + base)
 - CVE fetcher module: `cve_fetcher.py` - Live vulnerability data from GitHub Advisory Database / NVD
 
@@ -203,9 +232,10 @@ FedRAMP 20x requires **machine-readable** formats (JSON/XML/structured data) for
 - Infrastructure templates: `templates/{bicep,terraform}/`
 - Code templates: `templates/code/`
 - Prompt templates: `prompts/` (15 prompts)
-- Tool modules: `tools/` (11 modules, 35 tools)
+- Tool modules: `tools/` (13 modules, 48 tools)
 - Tests: `tests/` (70+ test files)
 - Analyzers: `analyzers/ksi/` (72 KSI analyzer files + factory + base)
+- FRR Analyzers: `analyzers/frr/` (199 FRR analyzer files + factory + base)
 
 ### Template & Prompt Management
 - Use `get_infrastructure_template(family, type)` to load infrastructure templates

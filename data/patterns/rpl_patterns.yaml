@@ -1,0 +1,637 @@
+pattern_id: rpl.storage.geo_redundancy
+name: Geo-Redundant Storage Configuration
+description: Detects geo-redundant storage configuration for disaster recovery (KSI-RPL-02)
+family: RPL
+severity: HIGH
+pattern_type: resource_configuration
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.Storage/storageAccounts
+      property_path: sku.name
+      conditions:
+      - value_not_in:['Standard_GRS', 'Standard_RAGRS', 'Standard_GZRS', 'Standard_RAGZRS']
+    - resource_type: Microsoft.Storage/storageAccounts
+      conditions:
+      - not_has_property:sku.name
+    regex_fallback: (Microsoft\.Storage/storageAccounts)(?!.*sku.*name.*('Standard_GRS'|'Standard_RAGRS'|'Standard_GZRS'|'Standard_RAGZRS'))
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_storage_account
+      property_path: account_replication_type
+      conditions:
+      - value_not_in:['GRS', 'RAGRS', 'GZRS', 'RAGZRS']
+    regex_fallback: resource\s+"azurerm_storage_account"(?!.*account_replication_type\s*=\s*("GRS"|"RAGRS"|"GZRS"|"RAGZRS"))
+finding:
+  title_template: Storage account lacks geo-redundant replication
+  description_template: '{resource_type} uses locally-redundant storage. KSI-RPL-02
+    requires geo-redundant replication for disaster recovery.'
+  remediation_template: "Enable geo-redundant storage:\n\nBicep:\nresource storageAccount\
+    \ 'Microsoft.Storage/storageAccounts@2023-01-01' = {\n  name: storageAccountName\n\
+    \  location: location\n  sku: {\n    name: 'Standard_GRS'  // Geo-redundant storage\n\
+    \    // OR\n    // name: 'Standard_RAGRS'  // Read-access geo-redundant\n    //\
+    \ name: 'Standard_GZRS'   // Geo-zone-redundant\n    // name: 'Standard_RAGZRS'\
+    \ // Read-access geo-zone-redundant\n  }\n  kind: 'StorageV2'\n  properties: {\n\
+    \    // ... other properties\n  }\n}\n\nTerraform:\nresource \"azurerm_storage_account\"\
+    \ \"main\" {\n  name                     = \"mystorageaccount\"\n  resource_group_name\
+    \      = azurerm_resource_group.main.name\n  location                 = azurerm_resource_group.main.location\n\
+    \  account_tier             = \"Standard\"\n  account_replication_type = \"GRS\"\
+    \  # Geo-redundant storage\n  # OR\n  # account_replication_type = \"RAGRS\" \
+    \ # Read-access geo-redundant\n  # account_replication_type = \"GZRS\"   # Geo-zone-redundant\n\
+    \  # account_replication_type = \"RAGZRS\" # Read-access geo-zone-redundant\n\
+    }\n\nReplication Options:\n- **GRS** (Geo-Redundant Storage): Replicates data\
+    \ to secondary region (3 copies in primary + 3 in secondary)\n- **RAGRS** (Read-Access\
+    \ GRS): Same as GRS + read access to secondary region\n- **GZRS** (Geo-Zone-Redundant):\
+    \ Zone-redundant in primary + geo-redundant to secondary\n- **RAGZRS** (Read-Access\
+    \ GZRS): Same as GZRS + read access to secondary\n\nFedRAMP Guidance:\n- Use GRS/RAGRS\
+    \ for standard disaster recovery (RPO ~15 minutes)\n- Use GZRS/RAGZRS for zone\
+    \ + geo redundancy (higher availability)\n- Verify secondary region is in different\
+    \ geographic area\n"
+  evidence_collection:
+  - Storage account SKU configuration showing GRS/RAGRS/GZRS/RAGZRS
+  - Disaster recovery plan documenting replication
+  - Recovery Point Objective (RPO) and Recovery Time Objective (RTO) documentation
+  - Failover testing results
+  azure_services:
+  - Azure Storage
+  - Azure Site Recovery
+tags:
+- replication
+- disaster-recovery
+- geo-redundancy
+- security-gap
+nist_controls:
+- cp-6
+- cp-7
+- cp-9
+related_ksis:
+- KSI-RPL-02
+evidence_artifacts:
+- artifact_type: logs
+  name: Storage replication status logs
+  source: Azure Monitor - Activity Logs
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: Conditional Access policies export
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Authentication methods compliance report
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: CSV
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n\
+      - name: RPL Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
+      \ \\\n      --pattern rpl.storage.geo_redundancy \\\n      --code-path ./src\n\
+      \    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'rpl.storage.geo_redundancy\
+      \ Validation'\n  inputs:\n    script: |\n      # Validate rpl.storage.geo_redundancy\
+      \ compliance\n      python validate.py --pattern rpl.storage.geo_redundancy"
+    azure_services: &id001
+    - Availability Zones
+    - Azure Backup
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Azure Site Recovery
+    - Log Analytics
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
+      - name: RPL Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
+      \ \\\n      --pattern rpl.storage.geo_redundancy \\\n      --code-path ./src\n\
+      \    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'rpl.storage.geo_redundancy\
+      \ Validation'\n  inputs:\n    script: |\n      # Validate rpl.storage.geo_redundancy\
+      \ compliance\n      python validate.py --pattern rpl.storage.geo_redundancy"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
+      - name: RPL Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
+      \ \\\n      --pattern rpl.storage.geo_redundancy \\\n      --code-path ./src\n\
+      \    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'rpl.storage.geo_redundancy\
+      \ Validation'\n  inputs:\n    script: |\n      # Validate rpl.storage.geo_redundancy\
+      \ compliance\n      python validate.py --pattern rpl.storage.geo_redundancy"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Define Recovery Time Objective (RTO) and Recovery Point Objective (RPO)
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Document disaster recovery procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Configure Azure Site Recovery or Azure Backup
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Set up geo-redundant storage
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Deploy across availability zones
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Test disaster recovery procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Document test results and lessons learned
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Create Standard Operating Procedures (SOPs)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Get policy documentation approved by stakeholders
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Train staff on new procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up periodic compliance reviews
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Document evidence collection process
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: CP - Contingency Planning
+  control_numbers:
+  - CP-6
+  - CP-7
+  - CP-9
+  ssp_sections:
+  - section: 'CP-6: Recovery Plan'
+    description_template: The system implements Recovery Plan controls in accordance
+      with FedRAMP 20x requirements. Develop and maintain a recovery plan that aligns
+      with the defined recovery objectives.... Implementation leverages Azure native
+      services combined with application-level controls and automated monitoring to
+      ensure continuous compliance.
+    implementation_details: Azure services including Availability Zones, Azure Backup,
+      Azure Blob Storage are configured to enforce compliance requirements. Infrastructure-as-code
+      (Bicep/Terraform) templates ensure consistent deployment across environments.
+      Automated compliance checking in CI/CD pipelines validates all changes against
+      Recovery Plan requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Availability Zones
+    tier: Standard
+    purpose: Required for Availability Zones functionality
+    alternatives: []
+  - service: Azure Backup
+    tier: Standard
+    purpose: Required for Azure Backup functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-RPL-02
+    requirement_name: Recovery Plan
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of rpl.storage.geo_redundancy
+    code_sample: "// Bicep compliant configuration for rpl.storage.geo_redundancy\n\
+      resource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name:\
+      \ 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n\
+      }"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating rpl.storage.geo_redundancy
+    code_sample: '# Non-compliant code missing rpl.storage.geo_redundancy requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+---
+pattern_id: rpl.backup.missing_policy
+name: Missing Backup Policy
+description: Detects resources without backup configuration (KSI-RPL-03)
+family: RPL
+severity: CRITICAL
+pattern_type: resource_configuration
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.Compute/virtualMachines|Microsoft.Sql/servers|Microsoft.DBforPostgreSQL/servers|Microsoft.DBforMySQL/servers
+      conditions:
+      - not_has_companion_resource:Microsoft.RecoveryServices/vaults/backupFabrics/protectionContainers/protectedItems
+      - not_has_companion_resource:Microsoft.DataProtection/backupVaults/backupInstances
+    regex_fallback: (Microsoft\.Compute/virtualMachines|Microsoft\.Sql/servers|Microsoft\.DBforPostgreSQL/servers)(?!.*Microsoft\.RecoveryServices/vaults|.*Microsoft\.DataProtection/backupVaults)
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_virtual_machine|azurerm_linux_virtual_machine|azurerm_windows_virtual_machine|azurerm_sql_server|azurerm_postgresql_server|azurerm_mysql_server
+      conditions:
+      - not_has_companion_resource:azurerm_backup_protected_vm|azurerm_backup_policy_vm
+    regex_fallback: resource\s+"azurerm_(virtual_machine|sql_server|postgresql_server|mysql_server)"(?!.*azurerm_backup_)
+finding:
+  title_template: Resource lacks backup configuration
+  description_template: '{resource_type} does not have backup policy configured. KSI-RPL-03
+    requires automated backups for data protection.'
+  remediation_template: "Configure backup policy:\n\nBicep (VM Backup):\n// Recovery\
+    \ Services Vault\nresource recoveryVault 'Microsoft.RecoveryServices/vaults@2023-01-01'\
+    \ = {\n  name: 'myRecoveryVault'\n  location: location\n  sku: {\n    name: 'RS0'\n\
+    \    tier: 'Standard'\n  }\n  properties: {}\n}\n\n// Backup Policy\nresource\
+    \ backupPolicy 'Microsoft.RecoveryServices/vaults/backupPolicies@2023-01-01' =\
+    \ {\n  parent: recoveryVault\n  name: 'DefaultPolicy'\n  properties: {\n    backupManagementType:\
+    \ 'AzureIaasVM'\n    schedulePolicy: {\n      schedulePolicyType: 'SimpleSchedulePolicy'\n\
+    \      scheduleRunFrequency: 'Daily'\n      scheduleRunTimes: [\n        '2023-01-01T02:00:00Z'\n\
+    \      ]\n    }\n    retentionPolicy: {\n      retentionPolicyType: 'LongTermRetentionPolicy'\n\
+    \      dailySchedule: {\n        retentionTimes: [\n          '2023-01-01T02:00:00Z'\n\
+    \        ]\n        retentionDuration: {\n          count: 30  // 30 days retention\
+    \ (FedRAMP minimum)\n          durationType: 'Days'\n        }\n      }\n    \
+    \  weeklySchedule: {\n        daysOfTheWeek: ['Sunday']\n        retentionTimes:\
+    \ ['2023-01-01T02:00:00Z']\n        retentionDuration: {\n          count: 12\
+    \  // 12 weeks\n          durationType: 'Weeks'\n        }\n      }\n      monthlySchedule:\
+    \ {\n        retentionScheduleFormatType: 'Weekly'\n        retentionScheduleWeekly:\
+    \ {\n          daysOfTheWeek: ['Sunday']\n          weeksOfTheMonth: ['First']\n\
+    \        }\n        retentionTimes: ['2023-01-01T02:00:00Z']\n        retentionDuration:\
+    \ {\n          count: 12  // 12 months\n          durationType: 'Months'\n   \
+    \     }\n      }\n      yearlySchedule: {\n        retentionScheduleFormatType:\
+    \ 'Weekly'\n        monthsOfYear: ['January']\n        retentionScheduleWeekly:\
+    \ {\n          daysOfTheWeek: ['Sunday']\n          weeksOfTheMonth: ['First']\n\
+    \        }\n        retentionTimes: ['2023-01-01T02:00:00Z']\n        retentionDuration:\
+    \ {\n          count: 7  // 7 years (FedRAMP requirement)\n          durationType:\
+    \ 'Years'\n        }\n      }\n    }\n  }\n}\n\n// Protected VM\nresource backupProtectedItem\
+    \ 'Microsoft.RecoveryServices/vaults/backupFabrics/protectionContainers/protectedItems@2023-01-01'\
+    \ = {\n  name: '${recoveryVault.name}/Azure/iaasvmcontainer;iaasvmcontainerv2;${resourceGroup().name};${vmName}/vm;iaasvmcontainerv2;${resourceGroup().name};${vmName}'\n\
+    \  properties: {\n    protectedItemType: 'Microsoft.Compute/virtualMachines'\n\
+    \    policyId: backupPolicy.id\n    sourceResourceId: vm.id\n  }\n}\n\nTerraform:\n\
+    resource \"azurerm_recovery_services_vault\" \"main\" {\n  name              \
+    \  = \"myrecoveryvault\"\n  location            = azurerm_resource_group.main.location\n\
+    \  resource_group_name = azurerm_resource_group.main.name\n  sku             \
+    \    = \"Standard\"\n}\n\nresource \"azurerm_backup_policy_vm\" \"main\" {\n \
+    \ name                = \"vm-backup-policy\"\n  resource_group_name = azurerm_resource_group.main.name\n\
+    \  recovery_vault_name = azurerm_recovery_services_vault.main.name\n  \n  backup\
+    \ {\n    frequency = \"Daily\"\n    time      = \"02:00\"\n  }\n  \n  retention_daily\
+    \ {\n    count = 30  # 30 days (FedRAMP minimum)\n  }\n  \n  retention_weekly\
+    \ {\n    count    = 12  # 12 weeks\n    weekdays = [\"Sunday\"]\n  }\n  \n  retention_monthly\
+    \ {\n    count    = 12  # 12 months\n    weekdays = [\"Sunday\"]\n    weeks  \
+    \  = [\"First\"]\n  }\n  \n  retention_yearly {\n    count    = 7   # 7 years\
+    \ (FedRAMP requirement)\n    weekdays = [\"Sunday\"]\n    weeks    = [\"First\"\
+    ]\n    months   = [\"January\"]\n  }\n}\n\nresource \"azurerm_backup_protected_vm\"\
+    \ \"main\" {\n  resource_group_name = azurerm_resource_group.main.name\n  recovery_vault_name\
+    \ = azurerm_recovery_services_vault.main.name\n  source_vm_id        = azurerm_virtual_machine.main.id\n\
+    \  backup_policy_id    = azurerm_backup_policy_vm.main.id\n}\n\nFedRAMP Backup\
+    \ Requirements:\n- **Daily backups**: Minimum requirement\n- **30-day retention**:\
+    \ Short-term recovery\n- **Weekly backups**: 12 weeks retention\n- **Monthly backups**:\
+    \ 12 months retention\n- **Yearly backups**: 7 years retention (audit/compliance)\n\
+    - **Encryption**: All backups must be encrypted\n- **Testing**: Regular restore\
+    \ testing required\n"
+  evidence_collection:
+  - Backup policy configuration with retention settings
+  - Backup job logs showing successful backups
+  - Restore testing documentation
+  - Encryption configuration for backups
+  azure_services:
+  - Azure Backup
+  - Azure Recovery Services
+  - Azure Site Recovery
+tags:
+- backup
+- disaster-recovery
+- data-protection
+- critical-gap
+nist_controls:
+- cp-9
+- cp-9.1
+- cp-9.2
+- cp-10
+related_ksis:
+- KSI-RPL-03
+evidence_artifacts:
+- artifact_type: logs
+  name: Backup job execution logs
+  source: Azure Monitor - Activity Logs
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: Conditional Access policies export
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Authentication methods compliance report
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: CSV
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n\
+      - name: RPL Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
+      \ \\\n      --pattern rpl.backup.missing_policy \\\n      --code-path ./src\n\
+      \    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'rpl.backup.missing_policy\
+      \ Validation'\n  inputs:\n    script: |\n      # Validate rpl.backup.missing_policy\
+      \ compliance\n      python validate.py --pattern rpl.backup.missing_policy"
+    azure_services: &id001
+    - Availability Zones
+    - Azure Backup
+    - Azure Backup SDK
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Site Recovery
+    - Azure WAF Reliability
+    - Log Analytics
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n\
+      - name: RPL Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
+      \ \\\n      --pattern rpl.backup.missing_policy \\\n      --code-path ./src\n\
+      \    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'rpl.backup.missing_policy\
+      \ Validation'\n  inputs:\n    script: |\n      # Validate rpl.backup.missing_policy\
+      \ compliance\n      python validate.py --pattern rpl.backup.missing_policy"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n\
+      - name: RPL Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer\
+      \ \\\n      --pattern rpl.backup.missing_policy \\\n      --code-path ./src\n\
+      \    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'rpl.backup.missing_policy\
+      \ Validation'\n  inputs:\n    script: |\n      # Validate rpl.backup.missing_policy\
+      \ compliance\n      python validate.py --pattern rpl.backup.missing_policy"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Define Recovery Time Objective (RTO) and Recovery Point Objective (RPO)
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Document disaster recovery procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Configure Azure Site Recovery or Azure Backup
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Set up geo-redundant storage
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Deploy across availability zones
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Test disaster recovery procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Document test results and lessons learned
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: CP - Contingency Planning
+  control_numbers:
+  - CP-9
+  - CP-9.1
+  - CP-9.2
+  - CP-10
+  ssp_sections:
+  - section: 'CP-9: System Backups'
+    description_template: The system implements System Backups controls in accordance
+      with FedRAMP 20x requirements. Perform system backups aligned with recovery
+      objectives... Implementation leverages Azure native services combined with application-level
+      controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Availability Zones, Azure Backup,
+      Azure Backup SDK are configured to enforce compliance requirements. Infrastructure-as-code
+      (Bicep/Terraform) templates ensure consistent deployment across environments.
+      Automated compliance checking in CI/CD pipelines validates all changes against
+      System Backups requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Availability Zones
+    tier: Standard
+    purpose: Required for Availability Zones functionality
+    alternatives: []
+  - service: Azure Backup
+    tier: Standard
+    purpose: Required for Azure Backup functionality
+    alternatives: []
+  - service: Azure Backup SDK
+    tier: Standard
+    purpose: Required for Azure Backup SDK functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-RPL-03
+    requirement_name: System Backups
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of rpl.backup.missing_policy
+    code_sample: "// Bicep compliant configuration for rpl.backup.missing_policy\n\
+      resource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name:\
+      \ 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n\
+      }"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating rpl.backup.missing_policy
+    code_sample: '# Non-compliant code missing rpl.backup.missing_policy requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+---
+pattern_id: rpl.compliance.ksi_rpl_04
+name: Recovery Testing Detection
+description: Detects compliance indicators for KSI-RPL-04 - Recovery Testing
+family: RPL
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: Recovery Testing compliance check
+  description_template: Configuration may not fully implement KSI-RPL-04 - Recovery Testing
+  remediation_template: Review and implement KSI-RPL-04 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- rpl
+- compliance
+- ksi-rpl-04
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-RPL-04
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-RPL-04 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-RPL-04 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-RPL-04 compliance enforcement
+    implementation: |
+      # Azure Policy for KSI-RPL-04 compliance
+      # GitHub Actions
+      - name: KSI-RPL-04 Compliance Check
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rpl.compliance.ksi_rpl_04 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: PowerShell@2
+        displayName: 'KSI-RPL-04 Validation'
+        inputs:
+          script: |
+            # Validate KSI-RPL-04 compliance
+            python validate.py --pattern rpl.compliance.ksi_rpl_04
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-RPL-04
+    implementation: |
+      # Azure Monitor for KSI-RPL-04 continuous monitoring
+      # Log Analytics Query
+      AzureActivity
+      | where CategoryValue == "Policy"
+      | where OperationNameValue contains "KSI-RPL-04"
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels: ['Low', 'Moderate']

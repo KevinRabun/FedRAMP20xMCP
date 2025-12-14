@@ -1,0 +1,902 @@
+pattern_id: cmt.vcs.repository_integration
+name: Version Control Integration
+description: Detects version control integration in CI/CD pipelines (KSI-CMT-01)
+family: CMT
+severity: HIGH
+pattern_type: pipeline_check
+languages:
+  github_actions:
+    ast_queries:
+    - query_type: workflow_trigger
+      conditions:
+      - has_trigger:push|pull_request
+    - query_type: workflow_checkout
+      conditions:
+      - has_step:actions/checkout
+    regex_fallback: on:\s*(push|pull_request)|uses:\s*actions/checkout
+    positive_indicators:
+    - actions/checkout
+    - 'on: push'
+    - 'on: pull_request'
+  azure_pipelines:
+    ast_queries:
+    - query_type: pipeline_trigger
+      conditions:
+      - has_trigger:trigger|pr
+    - query_type: pipeline_checkout
+      conditions:
+      - has_checkout:self
+    regex_fallback: trigger:|pr:|checkout:\s*self
+    positive_indicators:
+    - 'trigger:'
+    - 'pr:'
+    - 'checkout: self'
+  gitlab_ci:
+    ast_queries:
+    - query_type: job_rules
+      conditions:
+      - has_rules:if|changes
+    regex_fallback: rules:.*\$CI_COMMIT|GIT_STRATEGY
+    positive_indicators:
+    - $CI_COMMIT_BRANCH
+    - GIT_STRATEGY
+finding:
+  title_template: Version control integration detected (positive finding)
+  description_template: Pipeline has proper version control integration. KSI-CMT-01 requires all changes to be tracked in VCS.
+  remediation_template: N/A - Positive finding indicating compliance
+  evidence_collection:
+  - Git repository configuration
+  - Branch protection rules
+  - Commit history showing tracked changes
+  - Pull request approval workflows
+  azure_services:
+  - Azure Repos
+  - Azure Pipelines
+  - GitHub
+tags:
+- version-control
+- git
+- positive
+nist_controls:
+- cm-3
+- cm-3.1
+- cm-5
+related_ksis:
+- KSI-CMT-01
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AzureActivity
+
+      | where OperationNameValue contains "Microsoft.Resources/deployments"
+
+      | where ActivityStatusValue == "Success"
+
+      | extend DeploymentName = tostring(Properties_d.deploymentName)
+
+      | extend SourceControl = tostring(Properties_d.parameters.sourceControlUrl)
+
+      | where isnotempty(SourceControl)
+
+      | project TimeGenerated, ResourceGroup, DeploymentName, SourceControl, Caller
+
+      | order by TimeGenerated desc
+
+      '
+    description: Query deployments with source control tracking
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az deployment group list \\\n  --resource-group <RESOURCE_GROUP> \\\n  --query \"[?properties.provisioningState=='Succeeded'].{name:name, timestamp:properties.timestamp, templateLink:properties.templateLink.uri}\" \\\n  --output json\n"
+    description: List deployments with template source URLs
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: CMT Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern cmt.vcs.repository_integration \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'cmt.vcs.repository_integration Validation'\n  inputs:\n    script: |\n      # Validate cmt.vcs.repository_integration compliance\n      python validate.py --pattern cmt.vcs.repository_integration"
+    azure_services: &id001
+    - Azure Blob Storage
+    - Azure Monitor
+    - Log Analytics
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: CMT Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern cmt.vcs.repository_integration \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'cmt.vcs.repository_integration Validation'\n  inputs:\n    script: |\n      # Validate cmt.vcs.repository_integration compliance\n      python validate.py --pattern cmt.vcs.repository_integration"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: CMT Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern cmt.vcs.repository_integration \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'cmt.vcs.repository_integration Validation'\n  inputs:\n    script: |\n      # Validate cmt.vcs.repository_integration compliance\n      python validate.py --pattern cmt.vcs.repository_integration"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: CM - Configuration Management
+  control_numbers:
+  - CM-3
+  - CM-3.1
+  - CM-5
+  ssp_sections:
+  - section: 'CM-3: Version Control and Change Logging'
+    description_template: The system implements Version Control and Change Logging controls in accordance with FedRAMP 20x requirements. Log and monitor modifications to the cloud service offering.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Blob Storage, Azure Monitor, Log Analytics are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Version Control and Change Logging requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Log Analytics functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-CMT-01
+    requirement_name: Log and Monitor Changes
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions implementation of cmt.vcs.repository_integration
+    code_sample: "name: Deploy with Version Control Tracking\n\non:\n  push:\n    branches: [main]\n\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n    - uses: actions/checkout@v4\n      with:\n        fetch-depth: 0\n    \n    - name: Log deployment metadata\n      run: |\n        echo \"Commit SHA: ${{ github.sha }}\"\n        echo \"Repository: ${{ github.repository }}\"\n        echo \"Branch: ${{ github.ref_name }}\"\n        echo \"Triggered by: ${{ github.actor }}\"\n    \n    - name: Deploy to Azure\n      run: |\n        az deployment group create \\\n          --resource-group prod-rg \\\n          --template-file infrastructure/main.bicep \\\n          --parameters sourceControlUrl=${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }} \\\n                       commitSha=${{ github.sha }} \\\n                       deployedBy=${{ github.actor }}\n"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code violating cmt.vcs.repository_integration
+    code_sample: '# Non-compliant code missing cmt.vcs.repository_integration requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: cmt.vcs.missing_integration
+name: Missing Version Control
+description: Detects deployment without version control tracking (KSI-CMT-01)
+family: CMT
+severity: CRITICAL
+pattern_type: pipeline_check
+languages:
+  github_actions:
+    ast_queries:
+    - query_type: workflow_job
+      conditions:
+      - has_step_type:azure/webapps-deploy|azure/functions-action
+      - not_has_step:actions/checkout
+    regex_fallback: uses:\s*azure/(webapps-deploy|functions-action)(?!.*actions/checkout)
+  azure_pipelines:
+    ast_queries:
+    - query_type: pipeline_deployment
+      conditions:
+      - has_task:AzureWebApp|AzureFunctionApp
+      - not_has_checkout
+    regex_fallback: (AzureWebApp|AzureFunctionApp)(?!.*checkout:)
+  powershell:
+    ast_queries:
+    - query_type: function_call
+      target: Publish-AzWebApp|Publish-AzFunctionApp
+      conditions:
+      - not_has_nearby:git
+    regex_fallback: Publish-Az(WebApp|FunctionApp)(?!.*git)
+finding:
+  title_template: Deployment without version control tracking
+  description_template: Deployment pipeline does not verify source is from version control. KSI-CMT-01 requires all changes to be tracked in VCS before deployment.
+  remediation_template: "Add version control verification:\n\nGitHub Actions:\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      # REQUIRED: Checkout source from VCS\n      - uses: actions/checkout@v4\n        with:\n          fetch-depth: 0  # Full history for audit trail\n      \n      # Verify clean working directory\n      - name: Check for uncommitted changes\n        run: |\n          if [ -n \"$(git status --porcelain)\" ]; then\n            echo \"ERROR: Uncommitted changes detected\"\n            exit 1\n          fi\n      \n      # Record deployment metadata\n      - name: Record deployment metadata\n        run: |\n          git log -1 --format=\"%H|%an|%ae|%ad|%s\" > deployment-metadata.txt\n          echo \"COMMIT_SHA=${GITHUB_SHA}\" >> $GITHUB_ENV\n      \n      # Deploy\n      - uses: azure/webapps-deploy@v2\n        with:\n          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}\n          package: .\n\nAzure Pipelines:\nstages:\n  - stage: Deploy\n    jobs:\n\
+    \      - job: DeployWebApp\n        steps:\n          # REQUIRED: Checkout with full history\n          - checkout: self\n            fetchDepth: 0\n            clean: true\n          \n          # Verify source integrity\n          - script: |\n              git status\n              if [ -n \"$(git status --porcelain)\" ]; then\n                echo \"##vso[task.logissue type=error]Uncommitted changes detected\"\n                exit 1\n              fi\n            displayName: 'Verify clean working directory'\n          \n          # Record deployment metadata\n          - script: |\n              echo \"$(Build.SourceVersion)|$(Build.RequestedFor)|$(Build.RequestedForEmail)|$(Build.SourceVersionMessage)\" > deployment-metadata.txt\n            displayName: 'Record deployment metadata'\n          \n          # Deploy\n          - task: AzureWebApp@1\n            inputs:\n              appName: $(webAppName)\n\nRequired Version Control Evidence:\n- Git commit SHA\n- Committer name\
+    \ and email\n- Commit timestamp\n- Commit message\n- Branch name\n- Pull request ID (if applicable)\n"
+  evidence_collection:
+  - Git commit history for all deployments
+  - Pipeline logs showing checkout step
+  - Deployment metadata files with commit info
+  - Branch protection rules requiring PR approval
+  azure_services:
+  - Azure Repos
+  - Azure Pipelines
+  - GitHub
+tags:
+- version-control
+- deployment
+- critical-gap
+nist_controls:
+- cm-3
+- cm-3.1
+- cm-5
+related_ksis:
+- KSI-CMT-01
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AzureActivity
+
+      | where OperationNameValue contains "Microsoft.Resources/deployments"
+
+      | where ActivityStatusValue == "Success"
+
+      | extend SourceControl = tostring(Properties_d.parameters.sourceControlUrl)
+
+      | where isempty(SourceControl) or SourceControl == ""
+
+      | project TimeGenerated, ResourceGroup, ResourceId, Caller
+
+      | summarize MissingVCSCount=count() by bin(TimeGenerated, 1d)
+
+      | order by TimeGenerated desc
+
+      '
+    description: Query deployments missing source control tracking
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az deployment group list \\\n  --resource-group <RESOURCE_GROUP> \\\n  --query \"[?properties.provisioningState=='Succeeded' && (properties.parameters.sourceControlUrl==null || properties.parameters.sourceControlUrl=='')].{name:name, timestamp:properties.timestamp}\" \\\n  --output json\n"
+    description: List deployments without source control URLs
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: CMT Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern cmt.vcs.missing_integration \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'cmt.vcs.missing_integration Validation'\n  inputs:\n    script: |\n      # Validate cmt.vcs.missing_integration compliance\n      python validate.py --pattern cmt.vcs.missing_integration"
+    azure_services: &id001
+    - Azure Blob Storage
+    - Azure Monitor
+    - Log Analytics
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: CMT Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern cmt.vcs.missing_integration \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'cmt.vcs.missing_integration Validation'\n  inputs:\n    script: |\n      # Validate cmt.vcs.missing_integration compliance\n      python validate.py --pattern cmt.vcs.missing_integration"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: CMT Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern cmt.vcs.missing_integration \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'cmt.vcs.missing_integration Validation'\n  inputs:\n    script: |\n      # Validate cmt.vcs.missing_integration compliance\n      python validate.py --pattern cmt.vcs.missing_integration"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: CM - Configuration Management
+  control_numbers:
+  - CM-3
+  - CM-3.1
+  - CM-5
+  ssp_sections:
+  - section: 'CM-3: Version Control and Change Logging'
+    description_template: The system implements Version Control and Change Logging controls in accordance with FedRAMP 20x requirements. Log and monitor modifications to the cloud service offering.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Blob Storage, Azure Monitor, Log Analytics are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Version Control and Change Logging requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Log Analytics functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-CMT-01
+    requirement_name: Log and Monitor Changes
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions implementation of cmt.vcs.missing_integration
+    code_sample: "name: Deploy with VCS Integration\n\non:\n  push:\n    branches: [main]\n\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n    - uses: actions/checkout@v4\n    \n    - name: Deploy with source control metadata\n      run: |\n        az deployment group create \\\n          --resource-group prod-rg \\\n          --template-file infrastructure/main.bicep \\\n          --parameters sourceControlUrl=${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }} \\\n                       commitSha=${{ github.sha }} \\\n                       branch=${{ github.ref_name }}\n"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code violating cmt.vcs.missing_integration
+    code_sample: '# Non-compliant code missing cmt.vcs.missing_integration requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: cmt.testing.pre_deploy_gates
+name: Pre-Deployment Testing Gates
+description: Detects pre-deployment testing gates in CI/CD (KSI-CMT-03)
+family: CMT
+severity: CRITICAL
+pattern_type: pipeline_check
+languages:
+  github_actions:
+    ast_queries:
+    - query_type: workflow_job_dependency
+      conditions:
+      - deploy_job_needs:test|build
+    regex_fallback: deploy:.*needs:\s*\[(test|build)
+  azure_pipelines:
+    ast_queries:
+    - query_type: stage_dependency
+      conditions:
+      - deploy_stage_depends_on:Test|Build
+    regex_fallback: stage:\s*Deploy.*dependsOn:\s*(Test|Build)
+  gitlab_ci:
+    ast_queries:
+    - query_type: job_needs
+      conditions:
+      - deploy_job_needs:test
+    regex_fallback: deploy:.*needs:.*test
+finding:
+  title_template: Deployment without pre-deployment testing gates
+  description_template: Deployment job does not depend on testing stages. KSI-CMT-03 requires testing gates before production deployment.
+  remediation_template: "Add pre-deployment testing gates:\n\nGitHub Actions:\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - name: Run unit tests\n        run: npm test\n      - name: Run security tests\n        run: npm run security-scan\n      - name: Run integration tests\n        run: npm run integration-test\n  \n  staging_deploy:\n    needs: test  # REQUIRED: Deploy only if tests pass\n    runs-on: ubuntu-latest\n    environment: staging\n    steps:\n      - uses: azure/webapps-deploy@v2\n        with:\n          app-name: myapp-staging\n  \n  production_deploy:\n    needs: staging_deploy  # REQUIRED: Deploy only if staging succeeds\n    runs-on: ubuntu-latest\n    environment:\n      name: production\n      url: https://myapp.com\n    steps:\n      - uses: azure/webapps-deploy@v2\n        with:\n          app-name: myapp-production\n\nAzure Pipelines:\nstages:\n  - stage: Test\n    jobs:\n      - job: RunTests\n        steps:\n\
+    \          - script: dotnet test --collect:\"XPlat Code Coverage\"\n            displayName: 'Run unit tests'\n          - script: dotnet run --project SecurityScanner\n            displayName: 'Run security tests'\n  \n  - stage: DeployStaging\n    dependsOn: Test  # REQUIRED: Deploy only if tests pass\n    condition: succeeded()\n    jobs:\n      - deployment: DeployWebApp\n        environment: staging\n        strategy:\n          runOnce:\n            deploy:\n              steps:\n                - task: AzureWebApp@1\n  \n  - stage: DeployProduction\n    dependsOn: DeployStaging  # REQUIRED: Deploy only if staging succeeds\n    condition: succeeded()\n    jobs:\n      - deployment: DeployWebApp\n        environment: production\n        strategy:\n          runOnce:\n            deploy:\n              steps:\n                - task: AzureWebApp@1\n\nRequired Testing Gates:\n1. Unit tests (code coverage >= 80%)\n2. Integration tests\n3. Security scans (SAST, dependency checks)\n\
+    4. Configuration validation\n5. Staging environment verification\n6. Manual approval for production (optional but recommended)\n"
+  evidence_collection:
+  - Pipeline configuration showing job dependencies
+  - Test results for each deployment
+  - Gate approval logs
+  - Failed deployment logs showing gates blocked deployment
+  azure_services:
+  - Azure Pipelines
+  - Azure Test Plans
+  - GitHub Actions
+tags:
+- testing
+- deployment-gates
+- critical-gap
+nist_controls:
+- cm-3
+- cm-4
+- sa-11
+related_ksis:
+- KSI-CMT-03
+evidence_artifacts:
+- artifact_type: logs
+  name: Authentication logs with MFA details
+  source: Azure Monitor - SigninLogs
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: Conditional Access policies export
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Authentication methods compliance report
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: CSV
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: CMT Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern cmt.testing.pre_deploy_gates \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'cmt.testing.pre_deploy_gates Validation'\n  inputs:\n    script: |\n      # Validate cmt.testing.pre_deploy_gates compliance\n      python validate.py --pattern cmt.testing.pre_deploy_gates"
+    azure_services: &id001
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: CMT Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern cmt.testing.pre_deploy_gates \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'cmt.testing.pre_deploy_gates Validation'\n  inputs:\n    script: |\n      # Validate cmt.testing.pre_deploy_gates compliance\n      python validate.py --pattern cmt.testing.pre_deploy_gates"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: CMT Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern cmt.testing.pre_deploy_gates \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'cmt.testing.pre_deploy_gates Validation'\n  inputs:\n    script: |\n      # Validate cmt.testing.pre_deploy_gates compliance\n      python validate.py --pattern cmt.testing.pre_deploy_gates"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: CM - Configuration Management
+  control_numbers:
+  - CM-3
+  - CM-4
+  - SA-11
+  ssp_sections:
+  - section: 'CM-3: Automated Testing and Validation'
+    description_template: The system implements Automated Testing and Validation controls in accordance with FedRAMP 20x requirements. Automate persistent testing and validation of changes throughout deployment.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Blob Storage, Azure Monitor, Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Automated Testing and Validation requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Log Analytics functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-CMT-03
+    requirement_name: Automated Testing and Validation
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions implementation of cmt.testing.pre_deploy_gates
+    code_sample: "name: Deploy with Testing Gates\n\non:\n  push:\n    branches: [main]\n\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n    - uses: actions/checkout@v4\n    \n    - name: Run unit tests\n      run: pytest tests/unit --cov --cov-fail-under=80\n    \n    - name: Run integration tests\n      run: pytest tests/integration\n    \n    - name: Security scan\n      run: |\n        bandit -r src/ -f json -o security-report.json\n        trivy fs --severity HIGH,CRITICAL .\n    \n    - name: Performance tests\n      run: pytest tests/performance --benchmark-only\n  \n  deploy:\n    needs: test\n    runs-on: ubuntu-latest\n    steps:\n    - uses: actions/checkout@v4\n    \n    - name: Deploy to staging\n      run: az deployment group create --resource-group staging-rg --template-file main.bicep\n    \n    - name: Smoke tests\n      run: pytest tests/smoke --base-url https://staging.example.com\n    \n    - name: Deploy to production\n      if: success()\n      run: az deployment\
+      \ group create --resource-group prod-rg --template-file main.bicep\n"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code violating cmt.testing.pre_deploy_gates
+    code_sample: '# Non-compliant code missing cmt.testing.pre_deploy_gates requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+---
+pattern_id: cmt.rollback.deployment_strategy
+name: Rollback Capability
+description: Detects rollback/blue-green deployment strategy (KSI-CMT-04)
+family: CMT
+severity: HIGH
+pattern_type: deployment_strategy
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.Web/sites/slots
+      conditions:
+      - has_property:name
+    - resource_type: Microsoft.Web/sites
+      conditions:
+      - has_companion_resource:Microsoft.Web/sites/slots
+    regex_fallback: Microsoft\.Web/sites/slots|deployment.*slot
+    positive_indicators:
+    - slots
+    - staging
+    - blue-green
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_app_service_slot|azurerm_function_app_slot
+    regex_fallback: azurerm_(app_service|function_app)_slot
+    positive_indicators:
+    - app_service_slot
+    - function_app_slot
+  github_actions:
+    ast_queries:
+    - query_type: workflow_step
+      conditions:
+      - has_action:azure/appservice-settings|azure/webapps-deploy
+      - has_parameter:slot-name
+    regex_fallback: slot-name:|deployment.*slot
+  azure_pipelines:
+    ast_queries:
+    - query_type: deployment_strategy
+      conditions:
+      - has_strategy:canary|rolling|runOnce
+    - query_type: task
+      target: AzureAppServiceManage
+      conditions:
+      - has_input:Action=Swap Slots
+    regex_fallback: strategy:\s*(canary|rolling)|Action:\s*Swap\s*Slots
+finding:
+  title_template: Deployment without rollback capability
+  description_template: '{resource_type} does not have rollback mechanism. KSI-CMT-04 requires ability to rollback failed deployments.'
+  remediation_template: "Implement rollback capability:\n\nBicep (Deployment Slots):\nresource webApp 'Microsoft.Web/sites@2022-09-01' = {\n  name: appName\n  location: location\n  properties: {\n    // ... config\n  }\n}\n\n// Create staging slot for blue-green deployments\nresource stagingSlot 'Microsoft.Web/sites/slots@2022-09-01' = {\n  name: '${webApp.name}/staging'\n  location: location\n  properties: {\n    // Same config as production\n  }\n}\n\nTerraform:\nresource \"azurerm_app_service\" \"main\" {\n  name                = \"myapp\"\n  location            = azurerm_resource_group.main.location\n  resource_group_name = azurerm_resource_group.main.name\n  app_service_plan_id = azurerm_app_service_plan.main.id\n}\n\nresource \"azurerm_app_service_slot\" \"staging\" {\n  name                = \"staging\"\n  app_service_name    = azurerm_app_service.main.name\n  location            = azurerm_resource_group.main.location\n  resource_group_name = azurerm_resource_group.main.name\n  app_service_plan_id\
+    \ = azurerm_app_service_plan.main.id\n}\n\nGitHub Actions (Deployment with Rollback):\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      # Deploy to staging slot\n      - uses: azure/webapps-deploy@v2\n        id: deploy_staging\n        with:\n          app-name: myapp\n          slot-name: staging\n          package: .\n      \n      # Smoke test staging slot\n      - name: Smoke test\n        id: smoke_test\n        run: |\n          curl -f https://myapp-staging.azurewebsites.net/health || exit 1\n      \n      # Swap slots (production ← staging)\n      - uses: azure/appservice-settings@v1\n        id: swap_slots\n        with:\n          app-name: myapp\n          slot-name: staging\n          action: swap\n      \n      # Monitor production\n      - name: Monitor production\n        id: monitor\n        run: sleep 60 && curl -f https://myapp.azurewebsites.net/health\n      \n      # ROLLBACK: Swap back if monitoring fails\n      - name: Rollback on failure\n     \
+    \   if: failure() && steps.swap_slots.outcome == 'success'\n        uses: azure/appservice-settings@v1\n        with:\n          app-name: myapp\n          slot-name: staging\n          action: swap  # Swap back to original state\n\nAzure Pipelines (Deployment with Rollback):\nstages:\n  - stage: Deploy\n    jobs:\n      - deployment: DeployWebApp\n        environment: production\n        strategy:\n          runOnce:\n            deploy:\n              steps:\n                # Deploy to staging slot\n                - task: AzureWebApp@1\n                  name: DeployStaging\n                  inputs:\n                    appName: myapp\n                    slotName: staging\n                    package: $(Pipeline.Workspace)/drop\n                \n                # Smoke test\n                - script: curl -f https://myapp-staging.azurewebsites.net/health\n                  name: SmokeTest\n                \n                # Swap slots\n                - task: AzureAppServiceManage@0\n\
+    \                  name: SwapSlots\n                  inputs:\n                    Action: 'Swap Slots'\n                    WebAppName: myapp\n                    SourceSlot: staging\n                    SwapWithProduction: true\n            \n            on:\n              failure:\n                steps:\n                  # ROLLBACK: Swap back to previous version\n                  - task: AzureAppServiceManage@0\n                    condition: eq(variables['SwapSlots.status'], 'Succeeded')\n                    inputs:\n                      Action: 'Swap Slots'\n                      WebAppName: myapp\n                      SourceSlot: staging\n                      SwapWithProduction: true\n\nRollback Strategies:\n1. **Deployment Slots** (Azure App Service, Functions): Zero-downtime swap, instant rollback\n2. **Container Versions** (AKS, ACI): Keep previous images, redeploy on failure\n3. **Blue-Green Deployment**: Maintain parallel environments, switch traffic routing\n4. **Canary\
+    \ Deployment**: Gradual rollout, quick rollback if metrics degrade\n"
+  evidence_collection:
+  - Deployment slot configuration
+  - Rollback procedure documentation
+  - Deployment history showing successful rollbacks
+  - Post-deployment monitoring and alerting
+  azure_services:
+  - Azure App Service
+  - Azure Functions
+  - Azure Container Registry
+  - Azure Traffic Manager
+tags:
+- rollback
+- deployment-slots
+- blue-green
+- security-gap
+nist_controls:
+- cm-3
+- cm-5
+- si-12
+related_ksis:
+- KSI-CMT-04
+evidence_artifacts:
+- artifact_type: logs
+  name: Authentication logs with MFA details
+  source: Azure Monitor - SigninLogs
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: Conditional Access policies export
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Authentication methods compliance report
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: CSV
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: CMT Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern cmt.rollback.deployment_strategy \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'cmt.rollback.deployment_strategy Validation'\n  inputs:\n    script: |\n      # Validate cmt.rollback.deployment_strategy compliance\n      python validate.py --pattern cmt.rollback.deployment_strategy"
+    azure_services: &id001
+    - Azure Blob Storage
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: CMT Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern cmt.rollback.deployment_strategy \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'cmt.rollback.deployment_strategy Validation'\n  inputs:\n    script: |\n      # Validate cmt.rollback.deployment_strategy compliance\n      python validate.py --pattern cmt.rollback.deployment_strategy"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: CMT Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern cmt.rollback.deployment_strategy \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'cmt.rollback.deployment_strategy Validation'\n  inputs:\n    script: |\n      # Validate cmt.rollback.deployment_strategy compliance\n      python validate.py --pattern cmt.rollback.deployment_strategy"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: CM - Configuration Management
+  control_numbers:
+  - CM-3
+  - CM-5
+  - SI-12
+  ssp_sections:
+  - section: 'CM-3: Change Management Procedure'
+    description_template: The system implements Change Management Procedure controls in accordance with FedRAMP 20x requirements. Always follow a documented change management procedure.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Blob Storage, Azure Monitor, Azure Pipelines are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Change Management Procedure requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  - service: Log Analytics
+    tier: Standard
+    purpose: Required for Log Analytics functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-CMT-04
+    requirement_name: Change Management Procedure
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of cmt.rollback.deployment_strategy
+    code_sample: "// Bicep compliant configuration for cmt.rollback.deployment_strategy\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating cmt.rollback.deployment_strategy
+    code_sample: '# Non-compliant code missing cmt.rollback.deployment_strategy requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+---
+pattern_id: cmt.compliance.ksi_cmt_02
+name: Redeployment Detection
+description: Detects compliance indicators for KSI-CMT-02 - Redeployment
+family: CMT
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: Redeployment compliance check
+  description_template: Configuration may not fully implement KSI-CMT-02 - Redeployment
+  remediation_template: Review and implement KSI-CMT-02 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- cmt
+- compliance
+- ksi-cmt-02
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-CMT-02
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-CMT-02 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-CMT-02 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-CMT-02 compliance enforcement
+    implementation: "# Azure Policy for KSI-CMT-02 compliance\n# GitHub Actions\n- name: KSI-CMT-02 Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern cmt.compliance.ksi_cmt_02 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'KSI-CMT-02 Validation'\n  inputs:\n    script: |\n      # Validate KSI-CMT-02 compliance\n      python validate.py --pattern cmt.compliance.ksi_cmt_02\n"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-CMT-02
+    implementation: '# Azure Monitor for KSI-CMT-02 continuous monitoring
+
+      # Log Analytics Query
+
+      AzureActivity
+
+      | where CategoryValue == "Policy"
+
+      | where OperationNameValue contains "KSI-CMT-02"
+
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+
+      '
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels:
+- Low
+- Moderate

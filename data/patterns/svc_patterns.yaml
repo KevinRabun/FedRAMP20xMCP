@@ -1,0 +1,4040 @@
+pattern_id: svc.security.flask_security_headers
+name: Flask Security Headers
+description: Detects Flask security header configuration
+family: SVC
+severity: INFO
+pattern_type: import
+languages:
+  python:
+    ast_queries:
+    - query_type: import_statement
+      target: flask_talisman
+    - query_type: import_statement
+      target: flask_seasurf
+    regex_fallback: from\s+flask_talisman|from\s+flask_seasurf
+    positive_indicators:
+    - flask_talisman
+    - flask_seasurf
+    - SecureCookieSessionInterface
+  csharp:
+    ast_queries:
+    - query_type: using_directive
+      target: Microsoft.AspNetCore.Mvc.Filters
+    regex_fallback: using.*AspNetCore.*Filters
+  java:
+    ast_queries:
+    - query_type: import_declaration
+      target: org.springframework.security
+    regex_fallback: import.*springframework\.security
+  typescript:
+    ast_queries:
+    - query_type: import_statement
+      target: helmet
+    regex_fallback: import.*helmet
+finding:
+  title_template: Flask security middleware detected
+  description_template: Flask security library found (Talisman or SeaSurf). Verify HSTS, CSP, and CSRF protection.
+  remediation_template: N/A - Positive finding. Ensure strict CSP and HSTS with preload.
+tags:
+- security-headers
+- flask
+- positive
+nist_controls:
+- sc-8
+- sc-28
+related_ksis:
+- KSI-SVC-01
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppServiceHTTPLogs
+
+      | where TimeGenerated > ago(7d)
+
+      | extend SecurityHeaders = extract_all(@"(Strict-Transport-Security|Content-Security-Policy|X-Frame-Options|X-Content-Type-Options)", dynamic([1]), CsHeaders)
+
+      | where array_length(SecurityHeaders) > 0
+
+      | summarize count() by SecurityHeaders
+
+      '
+    description: Query HTTP logs to verify security headers are present
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az webapp config show \\\n  --resource-group <RESOURCE_GROUP> \\\n  --name <APP_NAME> \\\n  --query \"{httpLoggingEnabled:httpLoggingEnabled, detailedErrorLoggingEnabled:detailedErrorLoggingEnabled}\" \\\n  --output json\n"
+    description: Verify web app logging configuration for security header validation
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.security.flask_security_headers \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.security.flask_security_headers Validation'\n  inputs:\n    script: |\n      # Validate svc.security.flask_security_headers compliance\n      python validate.py --pattern svc.security.flask_security_headers"
+    azure_services: &id001
+    - Azure Automation
+    - Azure Blob Storage
+    - Azure Key Vault
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Managed Identity
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.security.flask_security_headers \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.security.flask_security_headers Validation'\n  inputs:\n    script: |\n      # Validate svc.security.flask_security_headers compliance\n      python validate.py --pattern svc.security.flask_security_headers"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.security.flask_security_headers \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.security.flask_security_headers Validation'\n  inputs:\n    script: |\n      # Validate svc.security.flask_security_headers compliance\n      python validate.py --pattern svc.security.flask_security_headers"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Azure Key Vault with soft delete
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure access policies or RBAC
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up Managed Identities for applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Implement secret rotation automation
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Configure diagnostic logging for Key Vault
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Test secret retrieval from applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Document secret management procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: SC - System and Communications Protection
+  control_numbers:
+  - SC-8
+  - SC-28
+  ssp_sections:
+  - section: 'SC-8: Continuous Improvement'
+    description_template: The system implements Continuous Improvement controls in accordance with FedRAMP 20x requirements. Implement improvements based on persistent evaluation of information resources for opportunities to improve security.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Automation, Azure Blob Storage, Azure Key Vault are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Continuous Improvement requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Automation
+    tier: Standard
+    purpose: Required for Azure Automation functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Key Vault
+    tier: Standard
+    purpose: Required for Azure Key Vault functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-SVC-01
+    requirement_name: Continuous Improvement
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python implementation of svc.security.flask_security_headers
+    code_sample: "# Python compliant code for svc.security.flask_security_headers\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements svc.security.flask_security_headers requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code violating svc.security.flask_security_headers
+    code_sample: "# Python non-compliant code for svc.security.flask_security_headers\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: svc.security.aspnet_hsts
+name: ASP.NET Core HSTS
+description: Detects HSTS configuration in ASP.NET Core
+family: SVC
+severity: INFO
+pattern_type: function_call
+languages:
+  python:
+    ast_queries:
+    - query_type: function_call
+      target: Talisman
+    regex_fallback: Talisman\(.*force_https
+  csharp:
+    ast_queries:
+    - query_type: method_call
+      target: UseHsts
+      context: IApplicationBuilder
+    - query_type: method_call
+      target: AddHsts
+      context: IServiceCollection
+    regex_fallback: \.UseHsts\(\)|\.AddHsts\(
+    positive_indicators:
+    - UseHsts
+    - AddHsts
+  java:
+    ast_queries:
+    - query_type: annotation
+      target: EnableWebSecurity
+    regex_fallback: '@EnableWebSecurity'
+  typescript:
+    ast_queries:
+    - query_type: function_call
+      target: helmet.hsts
+    regex_fallback: helmet\.hsts
+finding:
+  title_template: HSTS enabled in ASP.NET Core
+  description_template: HTTP Strict Transport Security detected. Verify max-age >= 31536000 (1 year).
+  remediation_template: "Verify HSTS configuration:\nservices.AddHsts(options => {\n    options.MaxAge = TimeSpan.FromDays(365);\n    options.IncludeSubDomains = true;\n    options.Preload = true;\n});\n"
+tags:
+- hsts
+- security-headers
+- positive
+nist_controls:
+- sc-8
+- sc-13
+related_ksis:
+- KSI-SVC-01
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppServiceHTTPLogs
+
+      | where TimeGenerated > ago(7d)
+
+      | extend HstsHeader = extract(@"Strict-Transport-Security:\s*([^;]+)", 1, ScHeaders)
+
+      | where isnotempty(HstsHeader)
+
+      | summarize count() by HstsHeader
+
+      '
+    description: Verify HSTS header is present and check max-age value
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az webapp show \\\n  --resource-group <RESOURCE_GROUP> \\\n  --name <APP_NAME> \\\n  --query \"{httpsOnly:httpsOnly, clientAffinityEnabled:clientAffinityEnabled}\" \\\n  --output json\n"
+    description: Check web app HTTPS enforcement
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.security.aspnet_hsts \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.security.aspnet_hsts Validation'\n  inputs:\n    script: |\n      # Validate svc.security.aspnet_hsts compliance\n      python validate.py --pattern svc.security.aspnet_hsts"
+    azure_services: &id001
+    - Azure Automation
+    - Azure Blob Storage
+    - Azure Key Vault
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Managed Identity
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.security.aspnet_hsts \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.security.aspnet_hsts Validation'\n  inputs:\n    script: |\n      # Validate svc.security.aspnet_hsts compliance\n      python validate.py --pattern svc.security.aspnet_hsts"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.security.aspnet_hsts \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.security.aspnet_hsts Validation'\n  inputs:\n    script: |\n      # Validate svc.security.aspnet_hsts compliance\n      python validate.py --pattern svc.security.aspnet_hsts"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Azure Key Vault with soft delete
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure access policies or RBAC
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up Managed Identities for applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Implement secret rotation automation
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Configure diagnostic logging for Key Vault
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Test secret retrieval from applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Document secret management procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: SC - System and Communications Protection
+  control_numbers:
+  - SC-8
+  - SC-13
+  ssp_sections:
+  - section: 'SC-8: Continuous Improvement'
+    description_template: The system implements Continuous Improvement controls in accordance with FedRAMP 20x requirements. Implement improvements based on persistent evaluation of information resources for opportunities to improve security.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Automation, Azure Blob Storage, Azure Key Vault are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Continuous Improvement requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Automation
+    tier: Standard
+    purpose: Required for Azure Automation functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Key Vault
+    tier: Standard
+    purpose: Required for Azure Key Vault functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-SVC-01
+    requirement_name: Continuous Improvement
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python implementation of svc.security.aspnet_hsts
+    code_sample: "# Python compliant code for svc.security.aspnet_hsts\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements svc.security.aspnet_hsts requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code violating svc.security.aspnet_hsts
+    code_sample: "# Python non-compliant code for svc.security.aspnet_hsts\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: svc.security.missing_hsts
+name: Missing HSTS Configuration
+description: Detects web applications without HSTS
+family: SVC
+severity: HIGH
+pattern_type: configuration
+languages:
+  python:
+    ast_queries:
+    - query_type: class_definition
+      target: Flask|FastAPI|Django
+      conditions:
+      - not_contains_in_body:Talisman
+      - not_contains_in_body:SECURE_HSTS
+    regex_fallback: Flask\(|FastAPI\(|class.*Config
+    negative_indicators:
+    - Talisman
+    - SECURE_HSTS_SECONDS
+    - secure_headers
+  csharp:
+    ast_queries:
+    - query_type: method_definition
+      target: ConfigureServices|Configure
+      conditions:
+      - not_contains_in_body:UseHsts
+      - not_contains_in_body:AddHsts
+    regex_fallback: public void Configure
+  java:
+    ast_queries:
+    - query_type: class_definition
+      target: SecurityConfig
+      conditions:
+      - not_contains:requiresSecure
+    regex_fallback: class.*SecurityConfig
+  typescript:
+    ast_queries:
+    - query_type: function_call
+      target: express
+      conditions:
+      - not_contains_in_body:helmet
+    regex_fallback: express\(
+finding:
+  title_template: HSTS not configured
+  description_template: Web application does not enforce HTTPS via HSTS. KSI-SVC-01 requires HSTS with preload.
+  remediation_template: "Enable HSTS:\n\nPython (Flask):\nfrom flask_talisman import Talisman\nTalisman(app, force_https=True, \n         strict_transport_security=True,\n         strict_transport_security_max_age=31536000,\n         strict_transport_security_include_subdomains=True)\n\nC# (ASP.NET Core):\napp.UseHsts();\nservices.AddHsts(options => {\n    options.MaxAge = TimeSpan.FromDays(365);\n    options.IncludeSubDomains = true;\n    options.Preload = true;\n});\n"
+requires_absence:
+- svc.security.flask_security_headers
+- svc.security.aspnet_hsts
+tags:
+- hsts
+- security-gap
+- critical
+nist_controls:
+- sc-8
+- sc-13
+related_ksis:
+- KSI-SVC-01
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppServiceHTTPLogs
+
+      | where TimeGenerated > ago(7d)
+
+      | extend HstsHeader = extract(@"Strict-Transport-Security", 1, ScHeaders)
+
+      | where isempty(HstsHeader)
+
+      | summarize MissingHstsCount=count() by CsHost
+
+      | order by MissingHstsCount desc
+
+      '
+    description: Detect responses missing HSTS header
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az webapp list \\\n  --query \"[?httpsOnly==\\`false\\`].{name:name, resourceGroup:resourceGroup, httpsOnly:httpsOnly}\" \\\n  --output json\n"
+    description: List web apps not enforcing HTTPS
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.security.missing_hsts \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.security.missing_hsts Validation'\n  inputs:\n    script: |\n      # Validate svc.security.missing_hsts compliance\n      python validate.py --pattern svc.security.missing_hsts"
+    azure_services: &id001
+    - Azure Automation
+    - Azure Blob Storage
+    - Azure Key Vault
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Managed Identity
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.security.missing_hsts \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.security.missing_hsts Validation'\n  inputs:\n    script: |\n      # Validate svc.security.missing_hsts compliance\n      python validate.py --pattern svc.security.missing_hsts"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.security.missing_hsts \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.security.missing_hsts Validation'\n  inputs:\n    script: |\n      # Validate svc.security.missing_hsts compliance\n      python validate.py --pattern svc.security.missing_hsts"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Azure Key Vault with soft delete
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure access policies or RBAC
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up Managed Identities for applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Implement secret rotation automation
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Configure diagnostic logging for Key Vault
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Test secret retrieval from applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Document secret management procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: SC - System and Communications Protection
+  control_numbers:
+  - SC-8
+  - SC-13
+  ssp_sections:
+  - section: 'SC-8: Continuous Improvement'
+    description_template: The system implements Continuous Improvement controls in accordance with FedRAMP 20x requirements. Implement improvements based on persistent evaluation of information resources for opportunities to improve security.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Automation, Azure Blob Storage, Azure Key Vault are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Continuous Improvement requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Automation
+    tier: Standard
+    purpose: Required for Azure Automation functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Key Vault
+    tier: Standard
+    purpose: Required for Azure Key Vault functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-SVC-01
+    requirement_name: Continuous Improvement
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python implementation of svc.security.missing_hsts
+    code_sample: "# Python compliant code for svc.security.missing_hsts\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements svc.security.missing_hsts requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code violating svc.security.missing_hsts
+    code_sample: "# Python non-compliant code for svc.security.missing_hsts\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: svc.security.csp_header
+name: Content Security Policy
+description: Detects CSP header configuration
+family: SVC
+severity: INFO
+pattern_type: configuration
+languages:
+  python:
+    ast_queries:
+    - query_type: assignment
+      target: content_security_policy
+    - query_type: function_call
+      target: SecureHeaders
+    regex_fallback: content_security_policy|Content-Security-Policy
+    positive_indicators:
+    - content_security_policy
+    - CSP
+  csharp:
+    ast_queries:
+    - query_type: method_call
+      target: AddContentSecurityPolicy
+    regex_fallback: AddContentSecurityPolicy
+  java:
+    ast_queries:
+    - query_type: method_call
+      target: contentSecurityPolicy
+    regex_fallback: contentSecurityPolicy
+  typescript:
+    ast_queries:
+    - query_type: function_call
+      target: helmet.contentSecurityPolicy
+    regex_fallback: helmet\.contentSecurityPolicy
+finding:
+  title_template: Content Security Policy detected
+  description_template: CSP header configuration found. Verify no 'unsafe-inline' or 'unsafe-eval' in production.
+  remediation_template: "Recommended CSP for FedRAMP:\nContent-Security-Policy: \n  default-src 'self'; \n  script-src 'self'; \n  style-src 'self'; \n  img-src 'self' data: https:; \n  font-src 'self'; \n  connect-src 'self' https://api.yourdomain.com;\n"
+tags:
+- csp
+- security-headers
+- positive
+nist_controls:
+- si-10
+- si-15
+related_ksis:
+- KSI-SVC-01
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppServiceHTTPLogs
+
+      | where TimeGenerated > ago(7d)
+
+      | extend CspHeader = extract(@"Content-Security-Policy:\s*(.+?)\r?", 1, ScHeaders)
+
+      | where isnotempty(CspHeader)
+
+      | extend HasUnsafeInline = CspHeader contains "unsafe-inline"
+
+      | extend HasUnsafeEval = CspHeader contains "unsafe-eval"
+
+      | summarize count() by CspHeader, HasUnsafeInline, HasUnsafeEval
+
+      '
+    description: Analyze CSP headers for unsafe directives
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az webapp config appsettings list \\\n  --resource-group <RESOURCE_GROUP> \\\n  --name <APP_NAME> \\\n  --query \"[?name=='CSP_HEADER'].value\" \\\n  --output json\n"
+    description: Check for CSP configuration in app settings
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.security.csp_header \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.security.csp_header Validation'\n  inputs:\n    script: |\n      # Validate svc.security.csp_header compliance\n      python validate.py --pattern svc.security.csp_header"
+    azure_services: &id001
+    - Azure Automation
+    - Azure Blob Storage
+    - Azure Key Vault
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Managed Identity
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.security.csp_header \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.security.csp_header Validation'\n  inputs:\n    script: |\n      # Validate svc.security.csp_header compliance\n      python validate.py --pattern svc.security.csp_header"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.security.csp_header \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.security.csp_header Validation'\n  inputs:\n    script: |\n      # Validate svc.security.csp_header compliance\n      python validate.py --pattern svc.security.csp_header"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Azure Key Vault with soft delete
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure access policies or RBAC
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up Managed Identities for applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Implement secret rotation automation
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Configure diagnostic logging for Key Vault
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Test secret retrieval from applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Document secret management procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: SI - System and Information Integrity
+  control_numbers:
+  - SI-10
+  - SI-15
+  ssp_sections:
+  - section: 'SI-10: Continuous Improvement'
+    description_template: The system implements Continuous Improvement controls in accordance with FedRAMP 20x requirements. Implement improvements based on persistent evaluation of information resources for opportunities to improve security.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Automation, Azure Blob Storage, Azure Key Vault are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Continuous Improvement requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Automation
+    tier: Standard
+    purpose: Required for Azure Automation functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Key Vault
+    tier: Standard
+    purpose: Required for Azure Key Vault functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-SVC-01
+    requirement_name: Continuous Improvement
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python implementation of svc.security.csp_header
+    code_sample: "# Python compliant code for svc.security.csp_header\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements svc.security.csp_header requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code violating svc.security.csp_header
+    code_sample: "# Python non-compliant code for svc.security.csp_header\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: svc.secrets.keyvault_reference
+name: Azure Key Vault Reference
+description: Detects Key Vault secret references
+family: SVC
+severity: INFO
+pattern_type: configuration
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.KeyVault/vaults
+    - property_path: properties.secretUri
+      contains: vault.azure.net
+    regex_fallback: Microsoft\.KeyVault/vaults|vault\.azure\.net
+    positive_indicators:
+    - KeyVault
+    - vault.azure.net
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_key_vault
+    - data_type: azurerm_key_vault_secret
+    regex_fallback: azurerm_key_vault
+finding:
+  title_template: Key Vault integration detected
+  description_template: Azure Key Vault used for secret management. Verify soft-delete and purge protection enabled.
+  remediation_template: N/A - Positive finding
+tags:
+- secrets
+- key-vault
+- positive
+nist_controls:
+- sc-12
+- sc-13
+related_ksis:
+- KSI-SVC-02
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AzureDiagnostics
+
+      | where ResourceType == "VAULTS"
+
+      | where OperationName == "SecretGet" or OperationName == "SecretList"
+
+      | summarize AccessCount=count() by CallerIPAddress, identity_claim_appid_g
+
+      | order by AccessCount desc
+
+      '
+    description: Track Key Vault secret access patterns
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az keyvault list \\\n  --query \"[].{name:name, resourceGroup:resourceGroup, enableSoftDelete:properties.enableSoftDelete, enablePurgeProtection:properties.enablePurgeProtection}\" \\\n  --output json\n"
+    description: List Key Vaults and their protection settings
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.secrets.keyvault_reference \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.secrets.keyvault_reference Validation'\n  inputs:\n    script: |\n      # Validate svc.secrets.keyvault_reference compliance\n      python validate.py --pattern svc.secrets.keyvault_reference"
+    azure_services: &id001
+    - Azure Automation
+    - Azure Blob Storage
+    - Azure Key Vault
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Managed Identity
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.secrets.keyvault_reference \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.secrets.keyvault_reference Validation'\n  inputs:\n    script: |\n      # Validate svc.secrets.keyvault_reference compliance\n      python validate.py --pattern svc.secrets.keyvault_reference"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.secrets.keyvault_reference \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.secrets.keyvault_reference Validation'\n  inputs:\n    script: |\n      # Validate svc.secrets.keyvault_reference compliance\n      python validate.py --pattern svc.secrets.keyvault_reference"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Azure Key Vault with soft delete
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure access policies or RBAC
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up Managed Identities for applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Implement secret rotation automation
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Configure diagnostic logging for Key Vault
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Test secret retrieval from applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Document secret management procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: SC - System and Communications Protection
+  control_numbers:
+  - SC-12
+  - SC-13
+  ssp_sections:
+  - section: 'SC-12: Network Encryption'
+    description_template: The system implements Network Encryption controls in accordance with FedRAMP 20x requirements. Encrypt or otherwise secure network traffic.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Automation, Azure Blob Storage, Azure Key Vault are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Network Encryption requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Automation
+    tier: Standard
+    purpose: Required for Azure Automation functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Key Vault
+    tier: Standard
+    purpose: Required for Azure Key Vault functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-SVC-02
+    requirement_name: Network Encryption
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of svc.secrets.keyvault_reference
+    code_sample: "// Bicep compliant configuration for svc.secrets.keyvault_reference\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating svc.secrets.keyvault_reference
+    code_sample: '# Non-compliant code missing svc.secrets.keyvault_reference requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: svc.secrets.keyvault_soft_delete
+name: Key Vault Soft Delete
+description: Detects Key Vault soft-delete configuration
+family: SVC
+severity: HIGH
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.KeyVault/vaults
+      property_path: properties.enableSoftDelete
+      value: false
+    - resource_type: Microsoft.KeyVault/vaults
+      property_path: properties.enablePurgeProtection
+      value: false
+    regex_fallback: enableSoftDelete.*false|enablePurgeProtection.*false
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_key_vault
+      attribute: soft_delete_enabled
+      value: false
+    - resource_type: azurerm_key_vault
+      attribute: purge_protection_enabled
+      value: false
+    regex_fallback: soft_delete_enabled.*=.*false|purge_protection_enabled.*=.*false
+finding:
+  title_template: Key Vault soft-delete or purge protection disabled
+  description_template: Key Vault does not have soft-delete and purge protection enabled. KSI-SVC-02 requires both for FedRAMP.
+  remediation_template: "Enable protections:\n\nBicep:\nproperties: {\n  enableSoftDelete: true\n  enablePurgeProtection: true\n  softDeleteRetentionInDays: 90\n}\n\nTerraform:\nsoft_delete_enabled = true\npurge_protection_enabled = true\nsoft_delete_retention_days = 90\n"
+tags:
+- secrets
+- key-vault
+- security-gap
+nist_controls:
+- sc-12
+- au-11
+related_ksis:
+- KSI-SVC-02
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'Resources
+
+      | where type == "microsoft.keyvault/vaults"
+
+      | extend softDelete = tostring(properties.enableSoftDelete)
+
+      | extend purgeProtection = tostring(properties.enablePurgeProtection)
+
+      | where softDelete != "true" or purgeProtection != "true"
+
+      | project name, resourceGroup, softDelete, purgeProtection, location
+
+      '
+    description: Query Key Vaults missing soft-delete or purge protection
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az keyvault list \\\n  --query \"[?properties.enableSoftDelete!=\\`true\\` || properties.enablePurgeProtection!=\\`true\\`].{name:name, softDelete:properties.enableSoftDelete, purgeProtection:properties.enablePurgeProtection}\" \\\n  --output json\n"
+    description: List Key Vaults without required protections
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.secrets.keyvault_soft_delete \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.secrets.keyvault_soft_delete Validation'\n  inputs:\n    script: |\n      # Validate svc.secrets.keyvault_soft_delete compliance\n      python validate.py --pattern svc.secrets.keyvault_soft_delete"
+    azure_services: &id001
+    - Azure Automation
+    - Azure Blob Storage
+    - Azure Key Vault
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Managed Identity
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.secrets.keyvault_soft_delete \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.secrets.keyvault_soft_delete Validation'\n  inputs:\n    script: |\n      # Validate svc.secrets.keyvault_soft_delete compliance\n      python validate.py --pattern svc.secrets.keyvault_soft_delete"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.secrets.keyvault_soft_delete \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.secrets.keyvault_soft_delete Validation'\n  inputs:\n    script: |\n      # Validate svc.secrets.keyvault_soft_delete compliance\n      python validate.py --pattern svc.secrets.keyvault_soft_delete"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Azure Key Vault with soft delete
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure access policies or RBAC
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up Managed Identities for applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Implement secret rotation automation
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Configure diagnostic logging for Key Vault
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Test secret retrieval from applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Document secret management procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: SC - System and Communications Protection
+  control_numbers:
+  - SC-12
+  - AU-11
+  ssp_sections:
+  - section: 'SC-12: Network Encryption'
+    description_template: The system implements Network Encryption controls in accordance with FedRAMP 20x requirements. Encrypt or otherwise secure network traffic.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Automation, Azure Blob Storage, Azure Key Vault are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Network Encryption requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Automation
+    tier: Standard
+    purpose: Required for Azure Automation functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Key Vault
+    tier: Standard
+    purpose: Required for Azure Key Vault functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-SVC-02
+    requirement_name: Network Encryption
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of svc.secrets.keyvault_soft_delete
+    code_sample: "// Bicep compliant configuration for svc.secrets.keyvault_soft_delete\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating svc.secrets.keyvault_soft_delete
+    code_sample: '# Non-compliant code missing svc.secrets.keyvault_soft_delete requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: svc.secrets.hardcoded_secret
+name: Hardcoded Secret
+description: Detects potential hardcoded secrets in code
+family: SVC
+severity: CRITICAL
+pattern_type: configuration
+languages:
+  python:
+    ast_queries:
+    - query_type: assignment
+      target: password|secret|api_key|token
+      conditions:
+      - value_type:string_literal
+      - value_not_empty
+      - not_contains:os.environ|getenv|KeyVault
+    regex_fallback: (password|secret|api_key|token)\s*=\s*['"][^'"]+['"]
+    negative_indicators:
+    - password =
+    - secret =
+    - api_key =
+  csharp:
+    ast_queries:
+    - query_type: variable_declaration
+      target: password|secret|apiKey|token
+      conditions:
+      - initializer_type:string_literal
+    regex_fallback: (password|secret|apiKey|token)\s*=\s*"[^"]+"
+  java:
+    ast_queries:
+    - query_type: variable_declarator
+      target: password|secret|apiKey|token
+    regex_fallback: String\s+(password|secret|apiKey|token)\s*=\s*"[^"]+"
+  typescript:
+    ast_queries:
+    - query_type: variable_declaration
+      target: password|secret|apiKey|token
+      conditions:
+      - initializer_type:string_literal
+    regex_fallback: (password|secret|apiKey|token)\s*[=:]\s*['"][^'"]+['"]
+finding:
+  title_template: Hardcoded secret detected
+  description_template: Secrets are hardcoded in source code. KSI-SVC-02 requires all secrets in Key Vault or managed identity.
+  remediation_template: 'Use Key Vault:
+
+
+    Python:
+
+    from azure.identity import DefaultAzureCredential
+
+    from azure.keyvault.secrets import SecretClient
+
+    credential = DefaultAzureCredential()
+
+    client = SecretClient(vault_url="https://myvault.vault.azure.net/", credential=credential)
+
+    secret = client.get_secret("api-key")
+
+
+    C#:
+
+    var client = new SecretClient(new Uri("https://myvault.vault.azure.net/"), new DefaultAzureCredential());
+
+    var secret = await client.GetSecretAsync("api-key");
+
+    '
+tags:
+- secrets
+- critical-gap
+- hardcoded
+nist_controls:
+- ia-5
+- sc-12
+related_ksis:
+- KSI-SVC-02
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AzureDiagnostics
+
+      | where Category == ''AuditEvent''
+
+      | where OperationName contains ''SecretGet'' or OperationName contains ''KeyGet''
+
+      | where ResultSignature == ''Unauthorized''
+
+      | summarize UnauthorizedAccess=count() by CallerIPAddress, Resource
+
+      | order by UnauthorizedAccess desc
+
+      '
+    description: Detect potential hardcoded secret usage via unauthorized Key Vault access
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az keyvault list \\\n  --query \"[].{name:name, resourceGroup:resourceGroup, vaultUri:properties.vaultUri}\" \\\n  --output json\n"
+    description: List Key Vaults for secret reference validation
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.secrets.hardcoded_secret \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.secrets.hardcoded_secret Validation'\n  inputs:\n    script: |\n      # Validate svc.secrets.hardcoded_secret compliance\n      python validate.py --pattern svc.secrets.hardcoded_secret"
+    azure_services: &id001
+    - Azure Automation
+    - Azure Blob Storage
+    - Azure Key Vault
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Managed Identity
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.secrets.hardcoded_secret \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.secrets.hardcoded_secret Validation'\n  inputs:\n    script: |\n      # Validate svc.secrets.hardcoded_secret compliance\n      python validate.py --pattern svc.secrets.hardcoded_secret"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.secrets.hardcoded_secret \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.secrets.hardcoded_secret Validation'\n  inputs:\n    script: |\n      # Validate svc.secrets.hardcoded_secret compliance\n      python validate.py --pattern svc.secrets.hardcoded_secret"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Azure Key Vault with soft delete
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure access policies or RBAC
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up Managed Identities for applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Implement secret rotation automation
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Configure diagnostic logging for Key Vault
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Test secret retrieval from applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Document secret management procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: IA - Identification and Authentication
+  control_numbers:
+  - IA-5
+  - SC-12
+  ssp_sections:
+  - section: 'IA-5: Network Encryption'
+    description_template: The system implements Network Encryption controls in accordance with FedRAMP 20x requirements. Encrypt or otherwise secure network traffic.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Automation, Azure Blob Storage, Azure Key Vault are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Network Encryption requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Automation
+    tier: Standard
+    purpose: Required for Azure Automation functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Key Vault
+    tier: Standard
+    purpose: Required for Azure Key Vault functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-SVC-02
+    requirement_name: Network Encryption
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python implementation of svc.secrets.hardcoded_secret
+    code_sample: "# Python compliant code for svc.secrets.hardcoded_secret\nimport logging\n\ndef compliant_function():\n    \"\"\"Implements svc.secrets.hardcoded_secret requirements.\"\"\"\n    logging.info(\"Compliant implementation\")\n    return True"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code violating svc.secrets.hardcoded_secret
+    code_sample: "# Python non-compliant code for svc.secrets.hardcoded_secret\ndef non_compliant_function():\n    # Missing required implementation\n    pass"
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: svc.encryption.storage_encryption
+name: Storage Account Encryption
+description: Detects Azure Storage encryption configuration
+family: SVC
+severity: CRITICAL
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.Storage/storageAccounts
+      property_path: properties.encryption.services.blob.enabled
+      value: false
+    - resource_type: Microsoft.Storage/storageAccounts
+      property_path: properties.encryption.keySource
+      value: Microsoft.Storage
+    regex_fallback: Microsoft\.Storage/storageAccounts
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_storage_account
+      conditions:
+      - not_has_block:customer_managed_key
+    regex_fallback: azurerm_storage_account
+finding:
+  title_template: Storage encryption not using customer-managed keys
+  description_template: Storage account uses Microsoft-managed keys. KSI-SVC-04 recommends customer-managed keys (CMK) for FedRAMP High.
+  remediation_template: "Enable CMK:\n\nBicep:\nproperties: {\n  encryption: {\n    keySource: 'Microsoft.KeyVault'\n    keyvaultproperties: {\n      keyname: 'storage-key'\n      keyvaulturi: 'https://myvault.vault.azure.net'\n    }\n  }\n}\n"
+tags:
+- encryption
+- storage
+- cmk
+nist_controls:
+- sc-13
+- sc-28
+related_ksis:
+- KSI-SVC-04
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'Resources
+
+      | where type == ''microsoft.storage/storageaccounts''
+
+      | extend EncryptionEnabled = properties.encryption.services.blob.enabled
+
+      | where EncryptionEnabled != true
+
+      | project name, resourceGroup, location, EncryptionEnabled
+
+      '
+    description: Detect storage accounts without blob encryption
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az storage account list \\\n  --query \"[?encryption.services.blob.enabled!=\\`true\\`].{name:name, resourceGroup:resourceGroup, encryption:encryption}\" \\\n  --output json\n"
+    description: List storage accounts with disabled encryption
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.encryption.storage_encryption \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.encryption.storage_encryption Validation'\n  inputs:\n    script: |\n      # Validate svc.encryption.storage_encryption compliance\n      python validate.py --pattern svc.encryption.storage_encryption"
+    azure_services: &id001
+    - Azure Automation
+    - Azure Blob Storage
+    - Azure Key Vault
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Managed Identity
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.encryption.storage_encryption \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.encryption.storage_encryption Validation'\n  inputs:\n    script: |\n      # Validate svc.encryption.storage_encryption compliance\n      python validate.py --pattern svc.encryption.storage_encryption"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.encryption.storage_encryption \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.encryption.storage_encryption Validation'\n  inputs:\n    script: |\n      # Validate svc.encryption.storage_encryption compliance\n      python validate.py --pattern svc.encryption.storage_encryption"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Azure Key Vault with soft delete
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure access policies or RBAC
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up Managed Identities for applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Implement secret rotation automation
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Configure diagnostic logging for Key Vault
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Test secret retrieval from applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Document secret management procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: SC - System and Communications Protection
+  control_numbers:
+  - SC-13
+  - SC-28
+  ssp_sections:
+  - section: 'SC-13: Configuration Automation'
+    description_template: The system implements Configuration Automation controls in accordance with FedRAMP 20x requirements. Manage configuration of machine-based information resources using automation.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Automation, Azure Blob Storage, Azure Key Vault are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Configuration Automation requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Automation
+    tier: Standard
+    purpose: Required for Azure Automation functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Key Vault
+    tier: Standard
+    purpose: Required for Azure Key Vault functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-SVC-04
+    requirement_name: Configuration Automation
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of svc.encryption.storage_encryption
+    code_sample: "// Bicep compliant configuration for svc.encryption.storage_encryption\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating svc.encryption.storage_encryption
+    code_sample: '# Non-compliant code missing svc.encryption.storage_encryption requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: svc.encryption.sql_tde
+name: SQL Transparent Data Encryption
+description: Detects SQL TDE configuration
+family: SVC
+severity: CRITICAL
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.Sql/servers/databases/transparentDataEncryption
+      property_path: properties.state
+      value: Disabled
+    regex_fallback: transparentDataEncryption
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_mssql_database
+      conditions:
+      - not_has_companion_resource:azurerm_mssql_database_transparent_data_encryption
+    regex_fallback: azurerm_mssql_database
+finding:
+  title_template: SQL Transparent Data Encryption disabled
+  description_template: SQL database does not have TDE enabled. KSI-SVC-04 requires encryption at rest for all databases.
+  remediation_template: "Enable TDE:\n\nBicep:\nresource tde 'Microsoft.Sql/servers/databases/transparentDataEncryption@2021-11-01' = {\n  parent: database\n  name: 'current'\n  properties: {\n    state: 'Enabled'\n  }\n}\n"
+tags:
+- encryption
+- sql
+- critical-gap
+nist_controls:
+- sc-13
+- sc-28
+related_ksis:
+- KSI-SVC-04
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'Resources
+
+      | where type == ''microsoft.sql/servers/databases''
+
+      | extend TdeStatus = properties.transparentDataEncryption
+
+      | where TdeStatus != ''Enabled''
+
+      | project name, resourceGroup, serverName = split(id, ''/'')[8], TdeStatus
+
+      '
+    description: Detect SQL databases without Transparent Data Encryption
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az sql db list --ids $(az sql server list --query \"[].id\" -o tsv) \\\n  --query \"[?transparentDataEncryption!='Enabled'].{database:name, server:serverName, resourceGroup:resourceGroup, tde:transparentDataEncryption}\" \\\n  --output json\n"
+    description: List SQL databases with TDE disabled
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.encryption.sql_tde \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.encryption.sql_tde Validation'\n  inputs:\n    script: |\n      # Validate svc.encryption.sql_tde compliance\n      python validate.py --pattern svc.encryption.sql_tde"
+    azure_services: &id001
+    - Azure Automation
+    - Azure Blob Storage
+    - Azure Key Vault
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Managed Identity
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.encryption.sql_tde \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.encryption.sql_tde Validation'\n  inputs:\n    script: |\n      # Validate svc.encryption.sql_tde compliance\n      python validate.py --pattern svc.encryption.sql_tde"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.encryption.sql_tde \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.encryption.sql_tde Validation'\n  inputs:\n    script: |\n      # Validate svc.encryption.sql_tde compliance\n      python validate.py --pattern svc.encryption.sql_tde"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Azure Key Vault with soft delete
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure access policies or RBAC
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up Managed Identities for applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Implement secret rotation automation
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Configure diagnostic logging for Key Vault
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Test secret retrieval from applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Document secret management procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: SC - System and Communications Protection
+  control_numbers:
+  - SC-13
+  - SC-28
+  ssp_sections:
+  - section: 'SC-13: Configuration Automation'
+    description_template: The system implements Configuration Automation controls in accordance with FedRAMP 20x requirements. Manage configuration of machine-based information resources using automation.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Automation, Azure Blob Storage, Azure Key Vault are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Configuration Automation requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Automation
+    tier: Standard
+    purpose: Required for Azure Automation functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Key Vault
+    tier: Standard
+    purpose: Required for Azure Key Vault functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-SVC-04
+    requirement_name: Configuration Automation
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of svc.encryption.sql_tde
+    code_sample: "// Bicep compliant configuration for svc.encryption.sql_tde\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating svc.encryption.sql_tde
+    code_sample: '# Non-compliant code missing svc.encryption.sql_tde requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: svc.network.nsg_allow_all
+name: Network Security Group Allow All
+description: Detects overly permissive NSG rules
+family: SVC
+severity: CRITICAL
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.Network/networkSecurityGroups/securityRules
+      property_path: properties.sourceAddressPrefix
+      value: '*'
+      conditions:
+      - properties.access:Allow
+      - properties.direction:Inbound
+    regex_fallback: sourceAddressPrefix.*\*.*Allow.*Inbound
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_network_security_rule
+      conditions:
+      - source_address_prefix:*
+      - access:Allow
+      - direction:Inbound
+    regex_fallback: source_address_prefix.*=.*"\*"
+finding:
+  title_template: NSG rule allows traffic from any source
+  description_template: Network Security Group allows inbound traffic from 0.0.0.0/0 (Internet). KSI-SVC-06 requires least privilege network access.
+  remediation_template: 'Restrict source:
+
+    - Use specific IP ranges or service tags
+
+    - Example: sourceAddressPrefix: ''VirtualNetwork''
+
+    - Example: sourceAddressPrefix: ''10.0.0.0/16''
+
+    - Never use ''*'' for production resources
+
+    '
+tags:
+- network
+- nsg
+- critical-gap
+nist_controls:
+- ac-4
+- sc-7
+related_ksis:
+- KSI-SVC-06
+evidence_collection:
+  azure_monitor_kql:
+  - query: "Resources\n| where type == 'microsoft.network/networksecuritygroups'\n| extend AllowAllRules = properties.securityRules\n| mvexpand AllowAllRules\n| where AllowAllRules.properties.access == 'Allow'\n  and (AllowAllRules.properties.sourceAddressPrefix == '*' or AllowAllRules.properties.sourceAddressPrefix == '0.0.0.0/0')\n  and (AllowAllRules.properties.destinationPortRange == '*' or AllowAllRules.properties.destinationPortRanges contains '*')\n| project name, resourceGroup, ruleName=AllowAllRules.name, source=AllowAllRules.properties.sourceAddressPrefix, ports=AllowAllRules.properties.destinationPortRange\n"
+    description: Detect NSG rules allowing all traffic from any source
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az network nsg list \\\n  --query \"[].{name:name, resourceGroup:resourceGroup, rules:securityRules[?access=='Allow' && sourceAddressPrefix=='*']}\" \\\n  --output json\n"
+    description: List NSGs with overly permissive allow rules
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.network.nsg_allow_all \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.network.nsg_allow_all Validation'\n  inputs:\n    script: |\n      # Validate svc.network.nsg_allow_all compliance\n      python validate.py --pattern svc.network.nsg_allow_all"
+    azure_services: &id001
+    - Azure Automation
+    - Azure Blob Storage
+    - Azure Key Vault
+    - Azure Key Vault integration
+    - Azure Key Vault usage
+    - Azure Monitor
+    - Log Analytics
+    - Managed Identity
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.network.nsg_allow_all \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.network.nsg_allow_all Validation'\n  inputs:\n    script: |\n      # Validate svc.network.nsg_allow_all compliance\n      python validate.py --pattern svc.network.nsg_allow_all"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.network.nsg_allow_all \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.network.nsg_allow_all Validation'\n  inputs:\n    script: |\n      # Validate svc.network.nsg_allow_all compliance\n      python validate.py --pattern svc.network.nsg_allow_all"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Azure Key Vault with soft delete
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure access policies or RBAC
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up Managed Identities for applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Implement secret rotation automation
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Configure diagnostic logging for Key Vault
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Test secret retrieval from applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Document secret management procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Create Standard Operating Procedures (SOPs)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Get policy documentation approved by stakeholders
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Train staff on new procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up periodic compliance reviews
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Document evidence collection process
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: AC - Access Control
+  control_numbers:
+  - AC-4
+  - SC-7
+  ssp_sections:
+  - section: 'AC-4: Secret Management'
+    description_template: The system implements Secret Management controls in accordance with FedRAMP 20x requirements. Implement secure secret management using Azure Key Vault or equivalent... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Automation, Azure Blob Storage, Azure Key Vault are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Secret Management requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Automation
+    tier: Standard
+    purpose: Required for Azure Automation functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Key Vault
+    tier: Standard
+    purpose: Required for Azure Key Vault functionality
+    alternatives: []
+  - service: Azure Key Vault integration
+    tier: Standard
+    purpose: Required for Azure Key Vault integration functionality
+    alternatives: []
+  - service: Azure Key Vault usage
+    tier: Standard
+    purpose: Required for Azure Key Vault usage functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-SVC-06
+    requirement_name: Secret Management
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of svc.network.nsg_allow_all
+    code_sample: "// Bicep compliant configuration for svc.network.nsg_allow_all\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating svc.network.nsg_allow_all
+    code_sample: '# Non-compliant code missing svc.network.nsg_allow_all requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: svc.network.private_endpoint
+name: Private Endpoint
+description: Detects private endpoint configuration
+family: SVC
+severity: INFO
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.Network/privateEndpoints
+    regex_fallback: Microsoft\.Network/privateEndpoints
+    positive_indicators:
+    - privateEndpoints
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_private_endpoint
+    regex_fallback: azurerm_private_endpoint
+finding:
+  title_template: Private endpoint detected
+  description_template: Resource uses private endpoint for network isolation. Verify public access is disabled.
+  remediation_template: N/A - Positive finding
+tags:
+- network
+- private-endpoint
+- positive
+nist_controls:
+- sc-7
+- ac-4
+related_ksis:
+- KSI-SVC-06
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'Resources
+
+      | where type == ''microsoft.network/privateendpoints''
+
+      | extend ConnectionState = properties.manualPrivateLinkServiceConnections[0].properties.privateLinkServiceConnectionState.status
+
+      | project name, resourceGroup, subnet=properties.subnet.id, ConnectionState
+
+      '
+    description: Detect private endpoints and their connection states
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az network private-endpoint list \\\n  --query \"[].{name:name, resourceGroup:resourceGroup, subnet:subnet.id, connections:manualPrivateLinkServiceConnections}\" \\\n  --output json\n"
+    description: List private endpoints for network isolation validation
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.network.private_endpoint \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.network.private_endpoint Validation'\n  inputs:\n    script: |\n      # Validate svc.network.private_endpoint compliance\n      python validate.py --pattern svc.network.private_endpoint"
+    azure_services: &id001
+    - Azure Automation
+    - Azure Blob Storage
+    - Azure Key Vault
+    - Azure Key Vault integration
+    - Azure Key Vault usage
+    - Azure Monitor
+    - Log Analytics
+    - Managed Identity
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.network.private_endpoint \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.network.private_endpoint Validation'\n  inputs:\n    script: |\n      # Validate svc.network.private_endpoint compliance\n      python validate.py --pattern svc.network.private_endpoint"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.network.private_endpoint \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.network.private_endpoint Validation'\n  inputs:\n    script: |\n      # Validate svc.network.private_endpoint compliance\n      python validate.py --pattern svc.network.private_endpoint"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Azure Key Vault with soft delete
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure access policies or RBAC
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up Managed Identities for applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Implement secret rotation automation
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Configure diagnostic logging for Key Vault
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Test secret retrieval from applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Document secret management procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Create Standard Operating Procedures (SOPs)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Get policy documentation approved by stakeholders
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Train staff on new procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up periodic compliance reviews
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Document evidence collection process
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: SC - System and Communications Protection
+  control_numbers:
+  - SC-7
+  - AC-4
+  ssp_sections:
+  - section: 'SC-7: Secret Management'
+    description_template: The system implements Secret Management controls in accordance with FedRAMP 20x requirements. Implement secure secret management using Azure Key Vault or equivalent... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Automation, Azure Blob Storage, Azure Key Vault are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Secret Management requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Automation
+    tier: Standard
+    purpose: Required for Azure Automation functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Key Vault
+    tier: Standard
+    purpose: Required for Azure Key Vault functionality
+    alternatives: []
+  - service: Azure Key Vault integration
+    tier: Standard
+    purpose: Required for Azure Key Vault integration functionality
+    alternatives: []
+  - service: Azure Key Vault usage
+    tier: Standard
+    purpose: Required for Azure Key Vault usage functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-SVC-06
+    requirement_name: Secret Management
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of svc.network.private_endpoint
+    code_sample: "// Bicep compliant configuration for svc.network.private_endpoint\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating svc.network.private_endpoint
+    code_sample: '# Non-compliant code missing svc.network.private_endpoint requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: svc.tls.minimum_version
+name: TLS Minimum Version
+description: Detects TLS version configuration
+family: SVC
+severity: HIGH
+pattern_type: configuration
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.Storage/storageAccounts|Microsoft.Web/sites|Microsoft.Sql/servers
+      property_path: properties.minimumTlsVersion
+      conditions:
+      - value_not_equals:TLS1_2
+    regex_fallback: minimumTlsVersion
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_storage_account|azurerm_app_service|azurerm_sql_server
+      attribute: min_tls_version
+      conditions:
+      - value_not_equals:1.2
+    regex_fallback: min_tls_version
+finding:
+  title_template: TLS version less than 1.2
+  description_template: Resource allows TLS {version}. KSI-SVC-07 requires TLS 1.2 minimum (TLS 1.3 recommended).
+  remediation_template: "Set minimum TLS version:\n\nBicep:\nproperties: {\n  minimumTlsVersion: 'TLS1_2'  // Use TLS1_3 when available\n}\n\nTerraform:\nmin_tls_version = \"1.2\"\n"
+tags:
+- tls
+- encryption
+- security-gap
+nist_controls:
+- sc-8
+- sc-13
+related_ksis:
+- KSI-SVC-07
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'Resources
+
+      | where type in (''microsoft.storage/storageaccounts'', ''microsoft.web/sites'', ''microsoft.sql/servers'')
+
+      | extend TlsVersion = coalesce(properties.minimumTlsVersion, properties.minTlsVersion, ''Not Set'')
+
+      | where TlsVersion !in (''TLS1_2'', ''TLS1_3'', ''1.2'', ''1.3'')
+
+      | project name, resourceGroup, type, TlsVersion
+
+      '
+    description: Detect resources with TLS version less than 1.2
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az resource list \\\n  --resource-type \"Microsoft.Storage/storageAccounts\" \"Microsoft.Web/sites\" \"Microsoft.Sql/servers\" \\\n  --query \"[?properties.minimumTlsVersion!='TLS1_2' && properties.minimumTlsVersion!='TLS1_3'].{name:name, resourceGroup:resourceGroup, tlsVersion:properties.minimumTlsVersion}\" \\\n  --output json\n"
+    description: List resources with insufficient TLS versions
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.tls.minimum_version \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.tls.minimum_version Validation'\n  inputs:\n    script: |\n      # Validate svc.tls.minimum_version compliance\n      python validate.py --pattern svc.tls.minimum_version"
+    azure_services: &id001
+    - Azure Automation
+    - Azure Blob Storage
+    - Azure Key Vault
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Managed Identity
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.tls.minimum_version \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.tls.minimum_version Validation'\n  inputs:\n    script: |\n      # Validate svc.tls.minimum_version compliance\n      python validate.py --pattern svc.tls.minimum_version"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.tls.minimum_version \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.tls.minimum_version Validation'\n  inputs:\n    script: |\n      # Validate svc.tls.minimum_version compliance\n      python validate.py --pattern svc.tls.minimum_version"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Azure Key Vault with soft delete
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure access policies or RBAC
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up Managed Identities for applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Implement secret rotation automation
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Configure diagnostic logging for Key Vault
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Test secret retrieval from applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Document secret management procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Create Standard Operating Procedures (SOPs)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Get policy documentation approved by stakeholders
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Train staff on new procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up periodic compliance reviews
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Document evidence collection process
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: SC - System and Communications Protection
+  control_numbers:
+  - SC-8
+  - SC-13
+  ssp_sections:
+  - section: 'SC-8: Patching'
+    description_template: The system implements Patching controls in accordance with FedRAMP 20x requirements. Use a consistent, risk-informed approach for applying security patches.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Automation, Azure Blob Storage, Azure Key Vault are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Patching requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Automation
+    tier: Standard
+    purpose: Required for Azure Automation functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Key Vault
+    tier: Standard
+    purpose: Required for Azure Key Vault functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-SVC-07
+    requirement_name: Patching
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of svc.tls.minimum_version
+    code_sample: "// Bicep compliant configuration for svc.tls.minimum_version\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating svc.tls.minimum_version
+    code_sample: '# Non-compliant code missing svc.tls.minimum_version requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: svc.waf.application_gateway
+name: Application Gateway with WAF
+description: Detects Application Gateway with WAF enabled
+family: SVC
+severity: INFO
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.Network/applicationGateways
+      property_path: properties.webApplicationFirewallConfiguration.enabled
+      value: true
+    regex_fallback: Microsoft\.Network/applicationGateways
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_application_gateway
+      attribute: waf_configuration.enabled
+      value: true
+    regex_fallback: azurerm_application_gateway
+finding:
+  title_template: Web Application Firewall detected
+  description_template: Application Gateway with WAF enabled. Verify OWASP ruleset is active and in prevention mode.
+  remediation_template: 'WAF best practices:
+
+    - Use OWASP Core Rule Set 3.2+
+
+    - Set firewall_mode: ''Prevention''
+
+    - Enable request/response logging
+
+    - Configure custom rules for application-specific threats
+
+    '
+tags:
+- waf
+- application-gateway
+- positive
+nist_controls:
+- si-3
+- si-4
+related_ksis:
+- KSI-SVC-09
+evidence_artifacts:
+- artifact_type: logs
+  name: Authentication logs with MFA details
+  source: Azure Monitor - SigninLogs
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: Conditional Access policies export
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Authentication methods compliance report
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: CSV
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.waf.application_gateway \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.waf.application_gateway Validation'\n  inputs:\n    script: |\n      # Validate svc.waf.application_gateway compliance\n      python validate.py --pattern svc.waf.application_gateway"
+    azure_services: &id001
+    - Azure Automation
+    - Azure Blob Storage
+    - Azure Key Vault
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Managed Identity
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.waf.application_gateway \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.waf.application_gateway Validation'\n  inputs:\n    script: |\n      # Validate svc.waf.application_gateway compliance\n      python validate.py --pattern svc.waf.application_gateway"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.waf.application_gateway \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.waf.application_gateway Validation'\n  inputs:\n    script: |\n      # Validate svc.waf.application_gateway compliance\n      python validate.py --pattern svc.waf.application_gateway"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Azure Key Vault with soft delete
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure access policies or RBAC
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up Managed Identities for applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Implement secret rotation automation
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Configure diagnostic logging for Key Vault
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Test secret retrieval from applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Document secret management procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: SI - System and Information Integrity
+  control_numbers:
+  - SI-3
+  - SI-4
+  ssp_sections:
+  - section: 'SI-3: Communication Integrity'
+    description_template: The system implements Communication Integrity controls in accordance with FedRAMP 20x requirements. Persistently validate the authenticity and integrity of communications between machine-based information resources using automation.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Automation, Azure Blob Storage, Azure Key Vault are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Communication Integrity requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Automation
+    tier: Standard
+    purpose: Required for Azure Automation functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Key Vault
+    tier: Standard
+    purpose: Required for Azure Key Vault functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-SVC-09
+    requirement_name: Communication Integrity
+    impact_levels:
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of svc.waf.application_gateway
+    code_sample: "// Bicep compliant configuration for svc.waf.application_gateway\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating svc.waf.application_gateway
+    code_sample: '# Non-compliant code missing svc.waf.application_gateway requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+---
+pattern_id: svc.secrets.key_vault_missing
+name: Missing Key Vault for Secret Management
+description: Detects resources that should use Key Vault for secret management but don't reference it
+family: SVC
+severity: CRITICAL
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: (Microsoft\.Storage|Microsoft\.Web|Microsoft\.Sql|Microsoft\.DBforPostgreSQL|Microsoft\.DBforMySQL|Microsoft\.Cache).*(?!.*keyVaultProperties)(?!.*@Microsoft\.KeyVault)
+  terraform:
+    regex_fallback: (azurerm_storage_account|azurerm_app_service|azurerm_sql_server|azurerm_postgresql_server|azurerm_mysql_server|azurerm_redis_cache).*(?!.*key_vault)
+  python:
+    regex_fallback: (password|secret|api_key|connection_string)\s*=\s*['"][^'"]+['"]
+  csharp:
+    regex_fallback: (Password|Secret|ApiKey|ConnectionString)\s*=\s*"[^"]+"
+  java:
+    regex_fallback: (password|secret|apiKey|connectionString)\s*=\s*"[^"]+"
+  typescript:
+    regex_fallback: (password|secret|apiKey|connectionString)\s*=\s*['"][^'"]+['"]
+finding:
+  title_template: Secrets not managed via Key Vault
+  description_template: Resource or code contains secrets that should be managed via Azure Key Vault. KSI-SVC-01 requires secure secret management with rotation capabilities.
+  remediation_template: "Use Azure Key Vault for secret management:\n\nBicep:\nresource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {\n  name: 'myKeyVault'\n}\nsecret: keyVault.getSecret('secretName')\n\nPython:\nfrom azure.identity import DefaultAzureCredential\nfrom azure.keyvault.secrets import SecretClient\ncredential = DefaultAzureCredential()\nclient = SecretClient(vault_url='https://myvault.vault.azure.net/', credential=credential)\nsecret = client.get_secret('secretName').value\n"
+tags:
+- secrets
+- key-vault
+- ksi
+nist_controls:
+- cm-7.1
+- sc-12
+- sc-13
+related_ksis:
+- KSI-SVC-01
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'Resources
+
+      | where type in (''microsoft.web/sites'', ''microsoft.storage/storageaccounts'', ''microsoft.sql/servers'')
+
+      | extend HasKeyVaultReference = isnotnull(properties.siteConfig.appSettings) or isnotnull(properties.keyVaultProperties)
+
+      | where not(HasKeyVaultReference)
+
+      | project name, resourceGroup, type, HasKeyVaultReference
+
+      '
+    description: Detect resources not using Key Vault for secret management
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az webapp config appsettings list --ids $(az webapp list --query \"[].id\" -o tsv) \\\n  --query \"[?!contains(value, '@Microsoft.KeyVault')].{app:id, setting:name, hasKeyVault:contains(value, 'KeyVault')}\" \\\n  --output json\n"
+    description: List app settings not referencing Key Vault
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.secrets.key_vault_missing \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.secrets.key_vault_missing Validation'\n  inputs:\n    script: |\n      # Validate svc.secrets.key_vault_missing compliance\n      python validate.py --pattern svc.secrets.key_vault_missing"
+    azure_services: &id001
+    - Azure Automation
+    - Azure Blob Storage
+    - Azure Key Vault
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Managed Identity
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.secrets.key_vault_missing \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.secrets.key_vault_missing Validation'\n  inputs:\n    script: |\n      # Validate svc.secrets.key_vault_missing compliance\n      python validate.py --pattern svc.secrets.key_vault_missing"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.secrets.key_vault_missing \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.secrets.key_vault_missing Validation'\n  inputs:\n    script: |\n      # Validate svc.secrets.key_vault_missing compliance\n      python validate.py --pattern svc.secrets.key_vault_missing"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Azure Key Vault with soft delete
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure access policies or RBAC
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up Managed Identities for applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Implement secret rotation automation
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Configure diagnostic logging for Key Vault
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Test secret retrieval from applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Document secret management procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: CM - Configuration Management
+  control_numbers:
+  - CM-7.1
+  - SC-12
+  - SC-13
+  ssp_sections:
+  - section: 'CM-7.1: Continuous Improvement'
+    description_template: The system implements Continuous Improvement controls in accordance with FedRAMP 20x requirements. Implement improvements based on persistent evaluation of information resources for opportunities to improve security.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Automation, Azure Blob Storage, Azure Key Vault are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Continuous Improvement requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Automation
+    tier: Standard
+    purpose: Required for Azure Automation functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Key Vault
+    tier: Standard
+    purpose: Required for Azure Key Vault functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-SVC-01
+    requirement_name: Continuous Improvement
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of svc.secrets.key_vault_missing
+    code_sample: "// Bicep compliant configuration for svc.secrets.key_vault_missing\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating svc.secrets.key_vault_missing
+    code_sample: '# Non-compliant code missing svc.secrets.key_vault_missing requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: svc.encryption.storage_https_only
+name: Storage Account HTTPS Enforcement
+description: Detects storage accounts without HTTPS-only enforcement
+family: SVC
+severity: CRITICAL
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.Storage/storageAccounts
+      property_path: properties.supportsHttpsTrafficOnly
+      value: false
+    regex_fallback: (Microsoft\.Storage/storageAccounts)(?!.*supportsHttpsTrafficOnly.*true)
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_storage_account
+      attribute: enable_https_traffic_only
+      value: false
+    regex_fallback: (azurerm_storage_account)(?!.*enable_https_traffic_only.*=.*true)
+finding:
+  title_template: Storage account allows unencrypted HTTP traffic
+  description_template: Storage account does not enforce HTTPS-only traffic. KSI-SVC-02 requires all network traffic to be encrypted.
+  remediation_template: "Enable HTTPS-only traffic:\n\nBicep:\nproperties: {\n  supportsHttpsTrafficOnly: true\n  minimumTlsVersion: 'TLS1_2'\n}\n\nTerraform:\nenable_https_traffic_only = true\nmin_tls_version          = \"TLS1_2\"\n"
+tags:
+- encryption
+- https
+- ksi
+nist_controls:
+- sc-8
+- sc-8.1
+- sc-13
+related_ksis:
+- KSI-SVC-02
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'Resources
+
+      | where type == ''microsoft.storage/storageaccounts''
+
+      | extend HttpsOnly = properties.supportsHttpsTrafficOnly
+
+      | where HttpsOnly != true
+
+      | project name, resourceGroup, location, HttpsOnly
+
+      '
+    description: Detect storage accounts allowing unencrypted HTTP traffic
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az storage account list \\\n  --query \"[?enableHttpsTrafficOnly!=\\`true\\`].{name:name, resourceGroup:resourceGroup, httpsOnly:enableHttpsTrafficOnly}\" \\\n  --output json\n"
+    description: List storage accounts without HTTPS-only enforcement
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.encryption.storage_https_only \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.encryption.storage_https_only Validation'\n  inputs:\n    script: |\n      # Validate svc.encryption.storage_https_only compliance\n      python validate.py --pattern svc.encryption.storage_https_only"
+    azure_services: &id001
+    - Azure Automation
+    - Azure Blob Storage
+    - Azure Key Vault
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Managed Identity
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.encryption.storage_https_only \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.encryption.storage_https_only Validation'\n  inputs:\n    script: |\n      # Validate svc.encryption.storage_https_only compliance\n      python validate.py --pattern svc.encryption.storage_https_only"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.encryption.storage_https_only \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.encryption.storage_https_only Validation'\n  inputs:\n    script: |\n      # Validate svc.encryption.storage_https_only compliance\n      python validate.py --pattern svc.encryption.storage_https_only"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Azure Key Vault with soft delete
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure access policies or RBAC
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up Managed Identities for applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Implement secret rotation automation
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Configure diagnostic logging for Key Vault
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Test secret retrieval from applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Document secret management procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: SC - System and Communications Protection
+  control_numbers:
+  - SC-8
+  - SC-8.1
+  - SC-13
+  ssp_sections:
+  - section: 'SC-8: Network Encryption'
+    description_template: The system implements Network Encryption controls in accordance with FedRAMP 20x requirements. Encrypt or otherwise secure network traffic.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Automation, Azure Blob Storage, Azure Key Vault are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Network Encryption requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Automation
+    tier: Standard
+    purpose: Required for Azure Automation functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Key Vault
+    tier: Standard
+    purpose: Required for Azure Key Vault functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-SVC-02
+    requirement_name: Network Encryption
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of svc.encryption.storage_https_only
+    code_sample: "// Bicep compliant configuration for svc.encryption.storage_https_only\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating svc.encryption.storage_https_only
+    code_sample: '# Non-compliant code missing svc.encryption.storage_https_only requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: svc.encryption.sql_tls_version
+name: SQL Database Minimum TLS Version
+description: Detects SQL databases without minimum TLS 1.2 enforcement
+family: SVC
+severity: HIGH
+pattern_type: resource
+languages:
+  bicep:
+    regex_fallback: (Microsoft\.Sql/servers)(?!.*minimalTlsVersion.*1\.2)
+  terraform:
+    regex_fallback: (azurerm_mssql_server|azurerm_mysql_server|azurerm_postgresql_server)(?!.*minimum_tls_version.*1\.2)
+  python:
+    regex_fallback: (ssl_version|tls_version).*=.*(TLSv1_0|TLSv1_1|SSLv)
+  csharp:
+    regex_fallback: (SslProtocols\.(Ssl2|Ssl3|Tls10|Tls11))
+finding:
+  title_template: Database server does not enforce minimum TLS 1.2
+  description_template: Database server allows older TLS versions. KSI-SVC-02 requires TLS 1.2 or higher for all network encryption.
+  remediation_template: "Set minimum TLS version to 1.2:\n\nBicep:\nproperties: {\n  minimalTlsVersion: '1.2'\n}\n\nTerraform:\nminimum_tls_version = \"1.2\"\n"
+tags:
+- encryption
+- tls
+- database
+- ksi
+nist_controls:
+- sc-8
+- sc-8.1
+- sc-13
+related_ksis:
+- KSI-SVC-02
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'Resources
+
+      | where type in (''microsoft.sql/servers'', ''microsoft.dbformysql/servers'', ''microsoft.dbforpostgresql/servers'')
+
+      | extend MinTlsVersion = properties.minimalTlsVersion
+
+      | where MinTlsVersion != ''1.2'' and MinTlsVersion != ''1.3''
+
+      | project name, resourceGroup, type, MinTlsVersion
+
+      '
+    description: Detect database servers without minimum TLS 1.2
+    retention_days: 90
+    schedule: daily
+  azure_cli:
+  - command: "az sql server list \\\n  --query \"[?minimalTlsVersion!='1.2' && minimalTlsVersion!='1.3'].{name:name, resourceGroup:resourceGroup, tlsVersion:minimalTlsVersion}\" \\\n  --output json\n"
+    description: List SQL servers with insufficient TLS versions
+    output_format: json
+    frequency: weekly
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.encryption.sql_tls_version \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.encryption.sql_tls_version Validation'\n  inputs:\n    script: |\n      # Validate svc.encryption.sql_tls_version compliance\n      python validate.py --pattern svc.encryption.sql_tls_version"
+    azure_services: &id001
+    - Azure Automation
+    - Azure Blob Storage
+    - Azure Key Vault
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Managed Identity
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.encryption.sql_tls_version \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.encryption.sql_tls_version Validation'\n  inputs:\n    script: |\n      # Validate svc.encryption.sql_tls_version compliance\n      python validate.py --pattern svc.encryption.sql_tls_version"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.encryption.sql_tls_version \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.encryption.sql_tls_version Validation'\n  inputs:\n    script: |\n      # Validate svc.encryption.sql_tls_version compliance\n      python validate.py --pattern svc.encryption.sql_tls_version"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Azure Key Vault with soft delete
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure access policies or RBAC
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up Managed Identities for applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Implement secret rotation automation
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Configure diagnostic logging for Key Vault
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Test secret retrieval from applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Document secret management procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: SC - System and Communications Protection
+  control_numbers:
+  - SC-8
+  - SC-8.1
+  - SC-13
+  ssp_sections:
+  - section: 'SC-8: Network Encryption'
+    description_template: The system implements Network Encryption controls in accordance with FedRAMP 20x requirements. Encrypt or otherwise secure network traffic.... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Automation, Azure Blob Storage, Azure Key Vault are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Network Encryption requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Automation
+    tier: Standard
+    purpose: Required for Azure Automation functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Key Vault
+    tier: Standard
+    purpose: Required for Azure Key Vault functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-SVC-02
+    requirement_name: Network Encryption
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of svc.encryption.sql_tls_version
+    code_sample: "// Bicep compliant configuration for svc.encryption.sql_tls_version\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating svc.encryption.sql_tls_version
+    code_sample: '# Non-compliant code missing svc.encryption.sql_tls_version requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+evidence_artifacts:
+- artifact_type: configuration
+  name: Configuration compliance evidence
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: logs
+  name: Compliance audit logs
+  source: Azure Monitor
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Compliance assessment report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+---
+pattern_id: svc.network.storage_public_access
+name: Storage Account Public Network Access
+description: Detects storage accounts without network ACLs restricting public access
+family: SVC
+severity: CRITICAL
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.Storage/storageAccounts
+      property_path: properties.networkAcls.defaultAction
+      value: Allow
+    regex_fallback: (Microsoft\.Storage/storageAccounts)(?!.*networkAcls)|(networkAcls.*defaultAction.*Allow)
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_storage_account
+      attribute: network_rules.default_action
+      value: Allow
+    regex_fallback: (azurerm_storage_account)(?!.*network_rules)|(network_rules.*default_action.*Allow)
+finding:
+  title_template: Storage account allows public network access
+  description_template: Storage account does not restrict network access via ACLs. KSI-SVC-10 requires network isolation for sensitive resources.
+  remediation_template: "Configure network ACLs with default deny:\n\nBicep:\nproperties: {\n  networkAcls: {\n    defaultAction: 'Deny'\n    virtualNetworkRules: [\n      {\n        id: subnet.id\n        action: 'Allow'\n      }\n    ]\n    ipRules: []\n  }\n}\n\nTerraform:\nnetwork_rules {\n  default_action             = \"Deny\"\n  virtual_network_subnet_ids = [azurerm_subnet.example.id]\n  ip_rules                   = []\n}\n"
+tags:
+- network
+- isolation
+- acl
+- ksi
+nist_controls:
+- sc-7
+- sc-7.5
+related_ksis:
+- KSI-SVC-10
+evidence_artifacts:
+- artifact_type: logs
+  name: Authentication logs with MFA details
+  source: Azure Monitor - SigninLogs
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: Conditional Access policies export
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: Authentication methods compliance report
+  source: Microsoft Graph API
+  frequency: weekly
+  retention_months: 36
+  format: CSV
+automation:
+  automation_1:
+    description: Azure Policy for compliance enforcement
+    implementation: "# Azure Policy for compliance enforcement\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.network.storage_public_access \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.network.storage_public_access Validation'\n  inputs:\n    script: |\n      # Validate svc.network.storage_public_access compliance\n      python validate.py --pattern svc.network.storage_public_access"
+    azure_services: &id001
+    - Azure Automation
+    - Azure Blob Storage
+    - Azure Key Vault
+    - Azure Monitor
+    - Azure Pipelines
+    - Log Analytics
+    - Managed Identity
+  automation_2:
+    description: Azure Monitor for continuous monitoring
+    implementation: "# Azure Monitor for continuous monitoring\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.network.storage_public_access \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.network.storage_public_access Validation'\n  inputs:\n    script: |\n      # Validate svc.network.storage_public_access compliance\n      python validate.py --pattern svc.network.storage_public_access"
+    azure_services: *id001
+  automation_3:
+    description: Log Analytics queries for compliance validation
+    implementation: "# Log Analytics queries for compliance validation\n# GitHub Actions\n- name: SVC Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.network.storage_public_access \\\n      --code-path ./src\n    \n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'svc.network.storage_public_access Validation'\n  inputs:\n    script: |\n      # Validate svc.network.storage_public_access compliance\n      python validate.py --pattern svc.network.storage_public_access"
+    azure_services: *id001
+implementation:
+  prerequisites:
+  - Azure subscription with required permissions
+  - Microsoft Entra ID tenant configured
+  steps:
+  - step: 1
+    action: Review FedRAMP 20x requirement documentation
+    azure_service: null
+    validation: Manual verification required
+  - step: 2
+    action: Identify systems and resources in scope
+    azure_service: null
+    validation: Manual verification required
+  - step: 3
+    action: Create resource group for FedRAMP resources
+    azure_service: null
+    validation: Manual verification required
+  - step: 4
+    action: Set up Azure Key Vault for secrets management
+    azure_service: null
+    validation: Manual verification required
+  - step: 5
+    action: Configure Log Analytics workspace
+    azure_service: null
+    validation: Manual verification required
+  - step: 6
+    action: Deploy Azure Key Vault with soft delete
+    azure_service: null
+    validation: Manual verification required
+  - step: 7
+    action: Configure access policies or RBAC
+    azure_service: null
+    validation: Manual verification required
+  - step: 8
+    action: Set up Managed Identities for applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 9
+    action: Implement secret rotation automation
+    azure_service: null
+    validation: Manual verification required
+  - step: 10
+    action: Configure diagnostic logging for Key Vault
+    azure_service: null
+    validation: Manual verification required
+  - step: 11
+    action: Test secret retrieval from applications
+    azure_service: null
+    validation: Manual verification required
+  - step: 12
+    action: Document secret management procedures
+    azure_service: null
+    validation: Manual verification required
+  - step: 13
+    action: Generate infrastructure-as-code templates (Bicep/Terraform)
+    azure_service: null
+    validation: Manual verification required
+  - step: 14
+    action: Deploy infrastructure via CI/CD pipeline
+    azure_service: null
+    validation: Manual verification required
+  - step: 15
+    action: Implement automated compliance checking
+    azure_service: null
+    validation: Manual verification required
+  - step: 16
+    action: Set up automated evidence collection
+    azure_service: null
+    validation: Manual verification required
+  - step: 17
+    action: Test detection logic against sample code
+    azure_service: null
+    validation: Manual verification required
+ssp_mapping:
+  control_family: SC - System and Communications Protection
+  control_numbers:
+  - SC-7
+  - SC-7.5
+  ssp_sections:
+  - section: 'SC-7: Data Destruction'
+    description_template: The system implements Data Destruction controls in accordance with FedRAMP 20x requirements. Remove unwanted federal customer data promptly when requested by an agency in alignment with customer agreements, including from backups if appropriate; this typically applies when a customer spills i... Implementation leverages Azure native services combined with application-level controls and automated monitoring to ensure continuous compliance.
+    implementation_details: Azure services including Azure Automation, Azure Blob Storage, Azure Key Vault are configured to enforce compliance requirements. Infrastructure-as-code (Bicep/Terraform) templates ensure consistent deployment across environments. Automated compliance checking in CI/CD pipelines validates all changes against Data Destruction requirements before deployment.
+    evidence_references:
+    - Configuration exports
+    - Compliance reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Automation
+    tier: Standard
+    purpose: Required for Azure Automation functionality
+    alternatives: []
+  - service: Azure Blob Storage
+    tier: Standard
+    purpose: Required for Azure Blob Storage functionality
+    alternatives: []
+  - service: Azure Key Vault
+    tier: Standard
+    purpose: Required for Azure Key Vault functionality
+    alternatives: []
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Required for Azure Monitor functionality
+    alternatives: []
+  - service: Azure Pipelines
+    tier: Standard
+    purpose: Required for Azure Pipelines functionality
+    alternatives: []
+  well_architected_framework:
+    pillar: Security
+    design_area: Identity and Access Management
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-SVC-10
+    requirement_name: Data Destruction
+    impact_levels:
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep implementation of svc.network.storage_public_access
+    code_sample: "// Bicep compliant configuration for svc.network.storage_public_access\nresource compliantResource 'Microsoft.Resources/example@2021-01-01' = {\n  name: 'compliant-resource'\n  properties: {\n    // Compliant configuration\n  }\n}"
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code violating svc.network.storage_public_access
+    code_sample: '# Non-compliant code missing svc.network.storage_public_access requirements'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts: []
+---
+pattern_id: svc.compliance.ksi_svc_05
+name: Resource Integrity Detection
+description: Detects compliance indicators for KSI-SVC-05 - Resource Integrity
+family: SVC
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: Resource Integrity compliance check
+  description_template: Configuration may not fully implement KSI-SVC-05 - Resource Integrity
+  remediation_template: Review and implement KSI-SVC-05 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- svc
+- compliance
+- ksi-svc-05
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-SVC-05
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-SVC-05 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-SVC-05 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-SVC-05 compliance enforcement
+    implementation: "# Azure Policy for KSI-SVC-05 compliance\n# GitHub Actions\n- name: KSI-SVC-05 Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.compliance.ksi_svc_05 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'KSI-SVC-05 Validation'\n  inputs:\n    script: |\n      # Validate KSI-SVC-05 compliance\n      python validate.py --pattern svc.compliance.ksi_svc_05\n"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-SVC-05
+    implementation: '# Azure Monitor for KSI-SVC-05 continuous monitoring
+
+      # Log Analytics Query
+
+      AzureActivity
+
+      | where CategoryValue == "Policy"
+
+      | where OperationNameValue contains "KSI-SVC-05"
+
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+
+      '
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels:
+- Low
+- Moderate
+---
+pattern_id: svc.compliance.ksi_svc_08
+name: Shared Resources Detection
+description: Detects compliance indicators for KSI-SVC-08 - Shared Resources
+family: SVC
+severity: MEDIUM
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: .*
+  terraform:
+    regex_fallback: .*
+finding:
+  title_template: Shared Resources compliance check
+  description_template: Configuration may not fully implement KSI-SVC-08 - Shared Resources
+  remediation_template: Review and implement KSI-SVC-08 requirements per FedRAMP 20x guidance
+  evidence_collection:
+  - Configuration exports from Azure resources
+  - Policy compliance reports
+  - Automated scanning results
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- svc
+- compliance
+- ksi-svc-08
+nist_controls:
+- fedramp-20x
+related_ksis:
+- KSI-SVC-08
+evidence_artifacts:
+- artifact_type: configuration
+  name: KSI-SVC-08 compliance configuration
+  source: Azure Resource Graph
+  frequency: daily
+  retention_months: 36
+  format: JSON
+- artifact_type: report
+  name: KSI-SVC-08 compliance report
+  source: Microsoft Defender for Cloud
+  frequency: weekly
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Azure Policy for KSI-SVC-08 compliance enforcement
+    implementation: "# Azure Policy for KSI-SVC-08 compliance\n# GitHub Actions\n- name: KSI-SVC-08 Compliance Check\n  run: |\n    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern svc.compliance.ksi_svc_08 \\\n      --code-path ./src\n\n# Azure Pipelines\n- task: PowerShell@2\n  displayName: 'KSI-SVC-08 Validation'\n  inputs:\n    script: |\n      # Validate KSI-SVC-08 compliance\n      python validate.py --pattern svc.compliance.ksi_svc_08\n"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+    - Microsoft Defender for Cloud
+  automation_2:
+    description: Continuous monitoring for KSI-SVC-08
+    implementation: '# Azure Monitor for KSI-SVC-08 continuous monitoring
+
+      # Log Analytics Query
+
+      AzureActivity
+
+      | where CategoryValue == "Policy"
+
+      | where OperationNameValue contains "KSI-SVC-08"
+
+      | project TimeGenerated, ResourceId, OperationName, ActivityStatusValue
+
+      '
+    azure_services:
+    - Azure Monitor
+    - Log Analytics
+impact_levels:
+- Moderate

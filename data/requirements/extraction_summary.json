@@ -1,0 +1,38 @@
+{
+  "extraction_date": "2024-12-12",
+  "total_ksis": 72,
+  "total_frrs": 199,
+  "ksi_families": {
+    "AFR": 11,
+    "CED": 4,
+    "CMT": 5,
+    "CNA": 8,
+    "IAM": 7,
+    "INR": 3,
+    "MLA": 8,
+    "PIY": 8,
+    "RPL": 4,
+    "SVC": 10,
+    "TPR": 4
+  },
+  "frr_families": {
+    "ADS": 20,
+    "CCM": 25,
+    "FSI": 16,
+    "ICP": 9,
+    "KSI": 2,
+    "MAS": 12,
+    "PVA": 22,
+    "RSC": 10,
+    "SCN": 22,
+    "UCM": 4,
+    "VDR": 57
+  },
+  "ksi_implemented": 38,
+  "frr_implemented": 199,
+  "ksi_retired": 7,
+  "ksi_process_based": 34,
+  "frr_process_based": 0,
+  "ksi_code_detectable": 38,
+  "frr_code_detectable": 199
+}

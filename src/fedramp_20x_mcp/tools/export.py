@@ -5,13 +5,19 @@ This module contains tool implementation functions for export.
 """
 import json
 import logging
+import os
+from pathlib import Path
+from datetime import datetime
 from typing import Any, Optional
+
+from ..data_loader import FedRAMPDataLoader
 
 logger = logging.getLogger(__name__)
 
 async def export_to_excel(
     export_type: str,
-    output_path: Optional[str] = None
+    output_path: Optional[str] = None,
+    data_loader: Optional[FedRAMPDataLoader] = None
 ) -> str:
     """
     Export FedRAMP 20x data to an Excel file.
@@ -22,6 +28,7 @@ async def export_to_excel(
             - "all_requirements" - All 329 requirements across all families
             - "definitions" - All FedRAMP definitions
         output_path: Optional custom output path. If not provided, saves to Downloads folder
+        data_loader: FedRAMPDataLoader instance (created if not provided)
         
     Returns:
         Path to the generated Excel file
@@ -33,14 +40,19 @@ async def export_to_excel(
     except ImportError:
         return "Error: openpyxl package is required for Excel export. Install with: pip install openpyxl"
     
+    # Create data_loader if not provided
+    if data_loader is None:
+        data_loader = FedRAMPDataLoader()
+    
     await data_loader.load_data()
     
     # Determine output path
     if output_path is None:
-        downloads_folder = str(Path.home() / "Downloads")
+        downloads_folder = Path.home() / "Downloads"
+        downloads_folder.mkdir(parents=True, exist_ok=True)  # Create if doesn't exist
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"FedRAMP_20x_{export_type}_{timestamp}.xlsx"
-        output_path = os.path.join(downloads_folder, filename)
+        output_path = str(downloads_folder / filename)
     
     # Create workbook
     wb = Workbook()
@@ -191,6 +203,12 @@ async def export_to_excel(
             definition = defn.get('definition', '')
             notes = defn.get('notes', '')
             references = defn.get('references', '')
+            
+            # Convert lists to strings for Excel compatibility
+            if isinstance(notes, list):
+                notes = '\n'.join(str(n) for n in notes)
+            if isinstance(references, list):
+                references = '\n'.join(str(r) for r in references)
             
             row = [term, definition, notes, references]
             ws.append(row)

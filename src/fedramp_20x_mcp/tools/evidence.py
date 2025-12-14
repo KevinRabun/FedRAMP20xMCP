@@ -6,6 +6,12 @@ This module contains tool implementation functions for evidence.
 import json
 import logging
 from typing import Any
+from .code_enrichment import (
+    get_requirement_header,
+    enrich_bicep_template,
+    enrich_csharp_code,
+    add_requirement_tags
+)
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +40,7 @@ async def get_infrastructure_code_for_ksi_impl(ksi_id: str, data_loader, get_inf
     
     ksi_name = ksi.get("name", ksi_id)
     ksi_description = ksi.get("description", "")
+    related_frrs = ksi.get("related_frrs", [])
     
     # Build the response based on KSI family
     family = ksi_id.split("-")[1] if "-" in ksi_id else ""
@@ -42,7 +49,13 @@ async def get_infrastructure_code_for_ksi_impl(ksi_id: str, data_loader, get_inf
 
 **Requirement:** {ksi_description}
 
-## Evidence Collection Strategy
+"""
+    
+    # Add related FRRs if available
+    if related_frrs:
+        result += f"**Related FRR Requirements:** {', '.join(related_frrs)}\n\n"
+    
+    result += f"""## Evidence Collection Strategy
 
 This infrastructure automates evidence collection for {ksi_id} by:
 1. Deploying necessary Azure resources for monitoring/logging
@@ -53,20 +66,38 @@ This infrastructure automates evidence collection for {ksi_id} by:
 """
 
     # Add specific IaC templates based on KSI family
+    template_content = ""
     if family == "IAM":
-        result += _get_iam_infrastructure(ksi_id, infrastructure_type, get_infrastructure_template)
+        template_content = _get_iam_infrastructure(ksi_id, infrastructure_type, get_infrastructure_template)
     elif family == "MLA":
-        result += _get_mla_infrastructure(ksi_id, infrastructure_type, get_infrastructure_template)
+        template_content = _get_mla_infrastructure(ksi_id, infrastructure_type, get_infrastructure_template)
     elif family == "AFR":
-        result += _get_afr_infrastructure(ksi_id, infrastructure_type, get_infrastructure_template)
+        template_content = _get_afr_infrastructure(ksi_id, infrastructure_type, get_infrastructure_template)
     elif family == "CNA":
-        result += _get_cna_infrastructure(ksi_id, infrastructure_type, get_infrastructure_template)
+        template_content = _get_cna_infrastructure(ksi_id, infrastructure_type, get_infrastructure_template)
     elif family == "RPL":
-        result += _get_rpl_infrastructure(ksi_id, infrastructure_type, get_infrastructure_template)
+        template_content = _get_rpl_infrastructure(ksi_id, infrastructure_type, get_infrastructure_template)
     elif family == "SVC":
-        result += _get_svc_infrastructure(ksi_id, infrastructure_type, get_infrastructure_template)
+        template_content = _get_svc_infrastructure(ksi_id, infrastructure_type, get_infrastructure_template)
     else:
-        result += _get_generic_infrastructure(ksi_id, infrastructure_type, get_infrastructure_template)
+        template_content = _get_generic_infrastructure(ksi_id, infrastructure_type, get_infrastructure_template)
+    
+    # Enrich template with requirement metadata
+    if infrastructure_type == "bicep":
+        template_content = enrich_bicep_template(
+            template_content,
+            ksi_ids=[ksi_id],
+            frr_ids=related_frrs,
+            data_loader=data_loader
+        )
+        template_content = add_requirement_tags(
+            template_content,
+            ksi_ids=[ksi_id],
+            frr_ids=related_frrs,
+            language="bicep"
+        )
+    
+    result += template_content
     
     result += """
 
@@ -181,6 +212,7 @@ async def get_evidence_collection_code_impl(ksi_id: str, data_loader, get_code_t
     
     ksi_name = ksi.get("name", ksi_id)
     ksi_description = ksi.get("description", "")
+    related_frrs = ksi.get("related_frrs", [])
     
     result = f"""# Evidence Collection Code for {ksi_id}: {ksi_name}
 
@@ -188,7 +220,13 @@ async def get_evidence_collection_code_impl(ksi_id: str, data_loader, get_code_t
 
 **Language:** {language.title()}
 
-## Overview
+"""
+    
+    # Add related FRRs if available
+    if related_frrs:
+        result += f"**Related FRR Requirements:** {', '.join(related_frrs)}\n\n"
+    
+    result += f"""## Overview
 
 This code automates evidence collection for {ksi_id} by:
 1. Querying Azure resources for compliance data
@@ -201,16 +239,26 @@ This code automates evidence collection for {ksi_id} by:
     # Generate language-specific code based on KSI family
     family = ksi_id.split("-")[1] if "-" in ksi_id else ""
     
+    code_content = ""
     if language == "python":
-        result += _get_python_evidence_code(ksi_id, family, get_code_template)
+        code_content = _get_python_evidence_code(ksi_id, family, get_code_template)
     elif language == "csharp":
-        result += _get_csharp_evidence_code(ksi_id, family, get_code_template)
+        code_content = _get_csharp_evidence_code(ksi_id, family, get_code_template)
+        # Enrich C# code with requirement headers
+        code_content = enrich_csharp_code(
+            code_content,
+            ksi_ids=[ksi_id],
+            frr_ids=related_frrs,
+            data_loader=data_loader
+        )
     elif language == "powershell":
-        result += _get_powershell_evidence_code(ksi_id, family, get_code_template)
+        code_content = _get_powershell_evidence_code(ksi_id, family, get_code_template)
     elif language == "java":
-        result += _get_java_evidence_code(ksi_id, family, get_code_template)
+        code_content = _get_java_evidence_code(ksi_id, family, get_code_template)
     elif language == "typescript":
-        result += _get_typescript_evidence_code(ksi_id, family, get_code_template)
+        code_content = _get_typescript_evidence_code(ksi_id, family, get_code_template)
+    
+    result += code_content
     
     result += """
 

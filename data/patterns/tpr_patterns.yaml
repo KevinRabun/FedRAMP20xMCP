@@ -1,0 +1,1029 @@
+pattern_id: tpr.dependencies.unverified
+name: Unverified Third-Party Dependencies
+description: Detects usage of third-party dependencies without verification, integrity
+  checks, or security scanning. KSI-TPR-03 requires supply chain risk management for
+  all external components.
+severity: HIGH
+family: TPR
+ksi_id: KSI-TPR-03
+nist_controls: &id001
+- sa-12
+- sr-3
+- sr-4
+category: supply_chain_security
+pattern_type: configuration
+finding:
+  title_template: 'Unverified dependency installation detected: {file_path}'
+  description_template: Third-party dependencies are being installed without cryptographic
+    integrity verification. KSI-TPR-03 requires verified supply chain components.
+  remediation_template: Use package lock files with hash verification (requirements.txt
+    with hashes, package-lock.json, Pipfile.lock) and verify signatures before installation.
+languages:
+  python:
+    regex_fallback: (pip install|requirements\.txt|poetry add|pipenv install)
+    positive_indicators:
+    - install
+    - dependency
+    - package
+    negative_indicators:
+    - hash
+    - verify
+    - checksum
+    - --require-hashes
+  typescript:
+    regex_fallback: (npm install|yarn add|package\.json)
+    positive_indicators:
+    - dependencies
+    - install
+    negative_indicators:
+    - integrity
+    - lockfile
+    - audit
+  github_actions:
+    regex_fallback: (uses:\s*[^@]+@(?!sha256)[^\s]+|uses:\s*[^@]+$)
+remediation: "Implement secure dependency management with verification:\n\n**Python\
+  \ (Requirements with Hash Verification):**\n```txt\n# requirements.txt with hash\
+  \ verification (CRITICAL for supply chain security)\n# Use: pip install --require-hashes\
+  \ -r requirements.txt\n\n# Generate hashes: pip hash <package>==<version>\nflask==3.0.0\
+  \ \\\n    --hash=sha256:93e803cdbe326a61ebd5c5d353959397c85f829bec7b03239a7705b9c5f7e15a\
+  \ \\\n    --hash=sha256:7ce7a7c09fc3cf89c8d3eb15e643c4cb0c9c7c99f1cf7f3d0c94d99e8dfb35d0\n\
+  \ncryptography==41.0.7 \\\n    --hash=sha256:3c78451b78313fa81607fa1b3f0a9a1c1e8a0b1e5c0f6f5d0c4e7d5c7f9e3f3a\
+  \ \\\n    --hash=sha256:2c4e3f0d7c8f0c3e2f6f7f9f8f9f8f9f8f9f8f9f8f9f8f9f8f9f8f9f8f9f8f9\n\
+  \nrequests==2.31.0 \\\n    --hash=sha256:942c5a758f98d0e1c0a5d6e7e8c6c6d8e9f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3\
+  \ \\\n    --hash=sha256:64299f4909223da73bc5c2f69e02a8e4f4d0e4e4e4e4e4e4e4e4e4e4e4e4e4e4\n\
+  ```\n\n**Python (Dependency Scanning in Code):**\n```python\nimport hashlib\nimport\
+  \ subprocess\nimport json\nfrom typing import Dict, List\n\nclass DependencySecurityScanner:\n\
+  \    \"\"\"Scan and verify third-party dependencies\"\"\"\n    \n    def verify_package_integrity(self,\
+  \ package_name: str, expected_hash: str) -> bool:\n        \"\"\"Verify package\
+  \ integrity against expected hash\"\"\"\n        try:\n            # Download package\
+  \ and compute hash\n            result = subprocess.run(\n                [\"pip\"\
+  , \"download\", \"--no-deps\", package_name],\n                capture_output=True,\n\
+  \                text=True\n            )\n            \n            if result.returncode\
+  \ != 0:\n                return False\n            \n            # Extract filename\
+  \ from output\n            filename = result.stdout.strip().split()[-1]\n      \
+  \      \n            # Compute hash\n            with open(filename, 'rb') as f:\n\
+  \                computed_hash = hashlib.sha256(f.read()).hexdigest()\n        \
+  \    \n            return computed_hash == expected_hash\n        except Exception\
+  \ as e:\n            print(f\"Integrity check failed: {e}\")\n            return\
+  \ False\n    \n    def scan_for_vulnerabilities(self) -> Dict[str, List[str]]:\n\
+  \        \"\"\"Scan dependencies for known vulnerabilities using pip-audit\"\"\"\
+  \n        try:\n            result = subprocess.run(\n                [\"pip-audit\"\
+  , \"--format=json\"],\n                capture_output=True,\n                text=True\n\
+  \            )\n            \n            if result.returncode == 0:\n         \
+  \       return json.loads(result.stdout)\n            \n            return {\"error\"\
+  : \"Scan failed\"}\n        except Exception as e:\n            return {\"error\"\
+  : str(e)}\n    \n    def verify_sbom(self, sbom_file: str) -> bool:\n        \"\"\
+  \"Verify Software Bill of Materials (SBOM) for compliance\"\"\"\n        # Load\
+  \ and verify SBOM in CycloneDX or SPDX format\n        try:\n            with open(sbom_file,\
+  \ 'r') as f:\n                sbom = json.load(f)\n            \n            # Verify\
+  \ all components have:\n            # 1. Name and version\n            # 2. License\
+  \ information\n            # 3. Supplier/author\n            # 4. Hash values\n\
+  \            \n            required_fields = ['name', 'version', 'licenses', 'hashes']\n\
+  \            for component in sbom.get('components', []):\n                if not\
+  \ all(field in component for field in required_fields):\n                    return\
+  \ False\n            \n            return True\n        except Exception as e:\n\
+  \            print(f\"SBOM verification failed: {e}\")\n            return False\n\
+  \nscanner = DependencySecurityScanner()\n\n# Verify package integrity before use\n\
+  if not scanner.verify_package_integrity(\"flask==3.0.0\", \"expected_sha256_hash\"\
+  ):\n    raise SecurityError(\"Package integrity verification failed\")\n\n# Scan\
+  \ for vulnerabilities\nvulns = scanner.scan_for_vulnerabilities()\nif vulns and\
+  \ 'dependencies' in vulns:\n    for vuln in vulns['dependencies']:\n        print(f\"\
+  VULNERABILITY: {vuln}\")\n```\n\n**GitHub Actions (Dependency Security):**\n```yaml\n\
+  name: Dependency Security\n\non: [push, pull_request]\n\njobs:\n  dependency-review:\n\
+  \    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n   \
+  \   \n      # CRITICAL: Pin actions to SHA256 (not tags)\n      - uses: actions/dependency-review-action@4901385134134e04cec5fbe5ddfe3b2c5bd5d976\
+  \  # v4.0.0\n        with:\n          fail-on-severity: moderate\n      \n     \
+  \ # Scan Python dependencies\n      - uses: pypa/gh-action-pip-audit@v1.0.8\n  \
+  \      with:\n          inputs: requirements.txt\n      \n      # Generate SBOM\n\
+  \      - uses: anchore/sbom-action@v0.15.0\n        with:\n          format: cyclonedx-json\n\
+  \          output-file: sbom.json\n      \n      # Verify dependency hashes\n  \
+  \    - run: |\n          pip install --require-hashes -r requirements.txt\n```\n\
+  \n**NPM (Package Lock with Integrity):**\n```json\n{\n  \"name\": \"secure-app\"\
+  ,\n  \"version\": \"1.0.0\",\n  \"dependencies\": {\n    \"express\": \"^4.18.2\"\
+  \n  },\n  \"devDependencies\": {\n    \"npm-audit-resolver\": \"^3.0.0\"\n  },\n\
+  \  \"scripts\": {\n    \"audit\": \"npm audit --production\",\n    \"audit-fix\"\
+  : \"npm audit fix\",\n    \"verify\": \"npm ci --prefer-offline --no-audit\"\n \
+  \ }\n}\n```\n\n**Terraform (Verified Module Sources):**\n```hcl\n# SECURE: Use verified\
+  \ module registry with version pinning\nmodule \"network\" {\n  source  = \"Azure/network/azurerm\"\
+  \n  version = \"5.3.0\"  # Pin to specific version\n  \n  # Verify module hash (optional\
+  \ but recommended)\n  # Use: terraform init -upgrade\n}\n\n# INSECURE: Avoid Git\
+  \ sources without commit hash\n# module \"insecure\" {\n#   source = \"github.com/someuser/somerepo\"\
+  \  # DON'T DO THIS\n# }\n\n# SECURE: Git source with commit hash\nmodule \"secure_git\"\
+  \ {\n  source = \"git::https://github.com/organization/terraform-modules.git//network?ref=abc123def456\"\
+  \n}\n```\n\n**Compliance Requirements:**\n- Verify all dependencies with hashes\
+  \ (SA-12)\n- Maintain SBOM for all components (SR-4.2)\n- Scan for vulnerabilities\
+  \ weekly (RA-5)\n- Track dependency licenses (SA-12)\n- Monitor supply chain alerts\
+  \ (SR-11)\n"
+evidence_artifacts:
+- artifact_type: logs
+  name: TPR operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: TPR configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: TPR compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "tpr"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track TPR related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'tpr' | take 100"
+    description: Query recent TPR events
+    output_format: json
+  powershell:
+  - script: '# Query TPR configuration
+
+      Get-AzTPRResource | Select-Object Name, Location, Properties'
+    description: Get TPR resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for TPR compliance enforcement
+    implementation: "# Azure Policy definition for TPR\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'tpr.dependencies.unverified-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'TPR Compliance Policy'\n    description:\
+      \ 'Enforces TPR compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for TPR violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'tpr.dependencies.unverified-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on TPR compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for TPR
+    implementation: "# GitHub Actions\n- name: Validate TPR Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/tpr_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'TPR Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_tpr.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - TPR requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review TPR FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design TPR implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement TPR controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for TPR
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/tpr/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'TPR')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: TPR - TPR
+  control_numbers: *id001
+  ssp_sections:
+  - section: 'sa-12: Implementation'
+    description_template: The system implements TPR controls in accordance with FedRAMP
+      20x requirements. TPR Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce TPR compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      TPR requirements.
+    evidence_references:
+    - TPR configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for TPR compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: TPR implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement TPR controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-TPR-03
+    requirement_name: Supply Chain Risk Management
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_tpr_patterns.py::test_tpr_dependencies_unverified
+---
+pattern_id: tpr.monitoring.supply_chain_missing
+name: Missing Supply Chain Security Monitoring
+description: Detects absence of supply chain monitoring, vulnerability alerts, or
+  dependency update tracking. KSI-TPR-04 requires continuous supply chain risk monitoring.
+severity: HIGH
+family: TPR
+ksi_id: KSI-TPR-04
+nist_controls: &id001
+- sr-11
+- ra-5
+category: supply_chain_monitoring
+pattern_type: configuration
+finding:
+  title_template: 'Missing supply chain security monitoring: {file_path}'
+  description_template: No supply chain security monitoring tools (Dependabot, Renovate,
+    Snyk, etc.) detected in CI/CD configuration. KSI-TPR-04 requires continuous monitoring
+    for dependency vulnerabilities and updates.
+  remediation_template: Implement automated supply chain monitoring using Dependabot,
+    Renovate, or similar tools to track vulnerabilities and dependency updates continuously.
+languages:
+  github_actions:
+    regex_fallback: (dependabot|renovate|snyk|whitesource)
+    positive_indicators:
+    - dependabot
+    - dependency-review
+    - security-scan
+    negative_indicators:
+    - enabled
+    - configured
+  python:
+    regex_fallback: (safety check|pip-audit|bandit|snyk)
+remediation: "Implement continuous supply chain security monitoring:\n\n**1. Dependabot\
+  \ Configuration (.github/dependabot.yml):**\n```yaml\nversion: 2\nupdates:\n  #\
+  \ Python dependencies\n  - package-ecosystem: \"pip\"\n    directory: \"/\"\n  \
+  \  schedule:\n      interval: \"weekly\"\n      day: \"monday\"\n    open-pull-requests-limit:\
+  \ 10\n    reviewers:\n      - \"security-team\"\n    labels:\n      - \"dependencies\"\
+  \n      - \"security\"\n    # Security updates only (high priority)\n    versioning-strategy:\
+  \ increase-if-necessary\n    \n  # GitHub Actions\n  - package-ecosystem: \"github-actions\"\
+  \n    directory: \"/\"\n    schedule:\n      interval: \"weekly\"\n    reviewers:\n\
+  \      - \"devops-team\"\n    \n  # NPM dependencies\n  - package-ecosystem: \"\
+  npm\"\n    directory: \"/\"\n    schedule:\n      interval: \"weekly\"\n    versioning-strategy:\
+  \ increase-if-necessary\n    \n  # Docker images\n  - package-ecosystem: \"docker\"\
+  \n    directory: \"/\"\n    schedule:\n      interval: \"weekly\"\n```\n\n**2. Continuous\
+  \ Vulnerability Scanning (GitHub Actions):**\n```yaml\nname: Supply Chain Security\
+  \ Monitoring\n\non:\n  schedule:\n    # Run daily at 2 AM UTC\n    - cron: '0 2\
+  \ * * *'\n  push:\n    branches: [main]\n  pull_request:\n\njobs:\n  dependency-audit:\n\
+  \    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n   \
+  \   \n      # Python vulnerability scanning\n      - name: Scan Python Dependencies\n\
+  \        uses: pypa/gh-action-pip-audit@v1.0.8\n        with:\n          inputs:\
+  \ requirements.txt\n          \n      # NPM vulnerability scanning\n      - name:\
+  \ NPM Audit\n        run: npm audit --production --audit-level=moderate\n      \
+  \  \n      # Container image scanning\n      - name: Scan Container Images\n   \
+  \     uses: aquasecurity/trivy-action@master\n        with:\n          scan-type:\
+  \ 'fs'\n          scan-ref: '.'\n          format: 'sarif'\n          output: 'trivy-results.sarif'\n\
+  \          \n      # Upload results to GitHub Security\n      - name: Upload Trivy\
+  \ Results\n        uses: github/codeql-action/upload-sarif@v3\n        with:\n \
+  \         sarif_file: 'trivy-results.sarif'\n          \n      # License compliance\
+  \ check\n      - name: License Compliance\n        uses: fossas/fossa-action@main\n\
+  \        with:\n          api-key: ${{ secrets.FOSSA_API_KEY }}\n\n  sbom-generation:\n\
+  \    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n   \
+  \   \n      # Generate SBOM (Software Bill of Materials)\n      - name: Generate\
+  \ SBOM\n        uses: anchore/sbom-action@v0.15.0\n        with:\n          format:\
+  \ cyclonedx-json\n          output-file: sbom.json\n          \n      # Upload SBOM\
+  \ as artifact\n      - name: Upload SBOM\n        uses: actions/upload-artifact@v4\n\
+  \        with:\n          name: sbom\n          path: sbom.json\n          retention-days:\
+  \ 90\n\n  supply-chain-alerts:\n    runs-on: ubuntu-latest\n    steps:\n      -\
+  \ uses: actions/checkout@v4\n      \n      # Check for security advisories\n   \
+  \   - name: Security Advisory Check\n        run: |\n          # Query GitHub Advisory\
+  \ Database\n          curl -H \"Authorization: token ${{ secrets.GITHUB_TOKEN }}\"\
+  \ \\\n            https://api.github.com/advisories?severity=high,critical\n```\n\
+  \n**3. Python Monitoring Script:**\n```python\nimport subprocess\nimport json\n\
+  from datetime import datetime\nfrom typing import Dict, List\n\nclass SupplyChainMonitor:\n\
+  \    \"\"\"Monitor supply chain security continuously\"\"\"\n    \n    def check_outdated_dependencies(self)\
+  \ -> List[Dict]:\n        \"\"\"Identify outdated packages\"\"\"\n        result\
+  \ = subprocess.run(\n            [\"pip\", \"list\", \"--outdated\", \"--format=json\"\
+  ],\n            capture_output=True,\n            text=True\n        )\n       \
+  \ \n        if result.returncode == 0:\n            return json.loads(result.stdout)\n\
+  \        return []\n    \n    def scan_vulnerabilities(self) -> Dict:\n        \"\
+  \"\"Scan for known vulnerabilities\"\"\"\n        result = subprocess.run(\n   \
+  \         [\"pip-audit\", \"--format=json\"],\n            capture_output=True,\n\
+  \            text=True\n        )\n        \n        if result.returncode == 0:\n\
+  \            return json.loads(result.stdout)\n        return {}\n    \n    def\
+  \ generate_security_report(self) -> Dict:\n        \"\"\"Generate comprehensive\
+  \ security report\"\"\"\n        outdated = self.check_outdated_dependencies()\n\
+  \        vulnerabilities = self.scan_vulnerabilities()\n        \n        report\
+  \ = {\n            'timestamp': datetime.now().isoformat(),\n            'outdated_count':\
+  \ len(outdated),\n            'vulnerability_count': len(vulnerabilities.get('dependencies',\
+  \ [])),\n            'critical_count': sum(\n                1 for v in vulnerabilities.get('dependencies',\
+  \ [])\n                if v.get('severity') == 'CRITICAL'\n            ),\n    \
+  \        'high_count': sum(\n                1 for v in vulnerabilities.get('dependencies',\
+  \ [])\n                if v.get('severity') == 'HIGH'\n            ),\n        \
+  \    'outdated_packages': outdated,\n            'vulnerabilities': vulnerabilities\n\
+  \        }\n        \n        return report\n    \n    def alert_if_critical(self,\
+  \ report: Dict):\n        \"\"\"Alert security team if critical issues found\"\"\
+  \"\n        if report['critical_count'] > 0 or report['high_count'] >= 5:\n    \
+  \        # Send alert to security team\n            print(f\"CRITICAL: {report['critical_count']}\
+  \ critical vulnerabilities found\")\n            print(f\"HIGH: {report['high_count']}\
+  \ high-severity vulnerabilities found\")\n            # Integrate with alerting\
+  \ system (PagerDuty, Slack, email, etc.)\n\nmonitor = SupplyChainMonitor()\nreport\
+  \ = monitor.generate_security_report()\nmonitor.alert_if_critical(report)\n```\n\
+  \n**4. Azure DevOps Pipeline:**\n```yaml\ntrigger:\n  - main\n\nschedules:\n  -\
+  \ cron: \"0 2 * * *\"  # Daily at 2 AM\n    displayName: Daily Supply Chain Scan\n\
+  \    branches:\n      include:\n        - main\n\njobs:\n  - job: SupplyChainSecurity\n\
+  \    displayName: 'Supply Chain Security Monitoring'\n    pool:\n      vmImage:\
+  \ 'ubuntu-latest'\n    \n    steps:\n      - task: UsePythonVersion@0\n        inputs:\n\
+  \          versionSpec: '3.11'\n      \n      - script: |\n          pip install\
+  \ pip-audit safety\n          pip-audit --format json > vulnerability-report.json\n\
+  \          safety check --json > safety-report.json\n        displayName: 'Vulnerability\
+  \ Scanning'\n      \n      - task: WhiteSource@21\n        inputs:\n          cwd:\
+  \ '$(System.DefaultWorkingDirectory)'\n          projectName: '$(Build.Repository.Name)'\n\
+  \        displayName: 'WhiteSource Scan'\n      \n      - task: PublishBuildArtifacts@1\n\
+  \        inputs:\n          PathtoPublish: 'vulnerability-report.json'\n       \
+  \   ArtifactName: 'security-reports'\n```\n\n**Monitoring Requirements:**\n- Daily\
+  \ vulnerability scans (RA-5)\n- Weekly dependency updates review (SA-12)\n- Monthly\
+  \ SBOM generation (SR-4.2)\n- Real-time security alerts (SR-11)\n- Quarterly supply\
+  \ chain audit (SA-12)\n"
+evidence_artifacts:
+- artifact_type: logs
+  name: TPR operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: TPR configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: TPR compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "tpr"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track TPR related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'tpr' | take 100"
+    description: Query recent TPR events
+    output_format: json
+  powershell:
+  - script: '# Query TPR configuration
+
+      Get-AzTPRResource | Select-Object Name, Location, Properties'
+    description: Get TPR resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for TPR compliance enforcement
+    implementation: "# Azure Policy definition for TPR\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'tpr.monitoring.supply_chain_missing-policy'\n  properties: {\n\
+      \    policyType: 'Custom'\n    mode: 'All'\n    displayName: 'TPR Compliance\
+      \ Policy'\n    description: 'Enforces TPR compliance requirements'\n    policyRule:\
+      \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
+      \        effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for TPR violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'tpr.monitoring.supply_chain_missing-alert'\n  location: 'global'\n\
+      \  properties: {\n    description: 'Alert on TPR compliance violations'\n  \
+      \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for TPR
+    implementation: "# GitHub Actions\n- name: Validate TPR Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/tpr_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'TPR Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_tpr.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - TPR requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review TPR FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design TPR implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement TPR controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for TPR
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/tpr/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'TPR')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: TPR - TPR
+  control_numbers: *id001
+  ssp_sections:
+  - section: 'sr-11: Implementation'
+    description_template: The system implements TPR controls in accordance with FedRAMP
+      20x requirements. TPR Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce TPR compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      TPR requirements.
+    evidence_references:
+    - TPR configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for TPR compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: TPR implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement TPR controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-TPR-04
+    requirement_name: Supply Chain Risk Monitoring
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions code sample
+    code_sample: '# github_actions code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code
+    code_sample: '# github_actions code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_tpr_patterns.py::test_tpr_monitoring_supply_chain_missing
+---
+pattern_id: tpr.sources.insecure
+name: Insecure Third-Party Package Sources
+description: Detects usage of untrusted or insecure package sources (HTTP instead
+  of HTTPS, unofficial repositories). KSI-TPR-03 requires verified sources for all
+  dependencies.
+severity: CRITICAL
+family: TPR
+ksi_id: KSI-TPR-03
+nist_controls: &id001
+- sa-12
+- sc-8
+category: package_source_security
+pattern_type: configuration
+finding:
+  title_template: 'Insecure package source detected: {file_path}'
+  description_template: Third-party packages are being sourced from untrusted or insecure
+    sources (HTTP instead of HTTPS, or unofficial repositories). KSI-TPR-03 requires
+    all dependencies to be obtained from verified, trusted sources.
+  remediation_template: Configure package managers to use only HTTPS sources (pypi.org,
+    npmjs.org, etc.) and remove --trusted-host or HTTP registry configurations.
+languages:
+  python:
+    regex_fallback: (--index-url\s+http:|--extra-index-url\s+http:|pip install.*--trusted-host)
+  typescript:
+    regex_fallback: (registry.*http:|"http://)
+  docker:
+    regex_fallback: (FROM\s+[^:]+(?!:sha256))
+remediation: "Use only trusted, verified package sources with HTTPS:\n\n**Python (Secure\
+  \ Package Sources):**\n```ini\n# pip.conf or .pypirc - Use HTTPS only\n[global]\n\
+  index-url = https://pypi.org/simple\ntrusted-host =   # NEVER trust HTTP hosts\n\
+  \n# For private repository (Azure Artifacts example)\n[global]\nextra-index-url\
+  \ = https://pkgs.dev.azure.com/organization/project/_packaging/feed/pypi/simple/\n\
+  \n[distutils]\nindex-servers =\n    pypi\n    private\n\n[pypi]\nrepository = https://upload.pypi.org/legacy/\n\
+  \n[private]\nrepository = https://pkgs.dev.azure.com/organization/project/_packaging/feed/pypi/upload/\n\
+  ```\n\n**NPM (Secure Registry):**\n```ini\n# .npmrc - Use HTTPS registry only\n\
+  registry=https://registry.npmjs.org/\n\n# For private registry (Azure Artifacts)\n\
+  @organization:registry=https://pkgs.dev.azure.com/organization/project/_packaging/feed/npm/registry/\n\
+  \n# Always authenticate\nalways-auth=true\n```\n\n**Docker (Verified Base Images):**\n\
+  ```dockerfile\n# INSECURE: No hash verification\n# FROM python:3.11-slim\n\n# SECURE:\
+  \ Pin to SHA256 hash\nFROM python:3.11-slim@sha256:abc123def456...\n\n# Use official,\
+  \ verified images only\n# Scan with: docker scan <image>\n```\n\n**NuGet (C# - Secure\
+  \ Sources):**\n```xml\n<!-- nuget.config -->\n<?xml version=\"1.0\" encoding=\"\
+  utf-8\"?>\n<configuration>\n  <packageSources>\n    <clear />\n    <!-- Only HTTPS\
+  \ sources -->\n    <add key=\"nuget.org\" value=\"https://api.nuget.org/v3/index.json\"\
+  \ protocolVersion=\"3\" />\n    <add key=\"private\" value=\"https://pkgs.dev.azure.com/org/project/_packaging/feed/nuget/v3/index.json\"\
+  \ />\n  </packageSources>\n  <packageSourceCredentials>\n    <private>\n      <add\
+  \ key=\"Username\" value=\"token\" />\n      <add key=\"ClearTextPassword\" value=\"\
+  %AZURE_ARTIFACTS_TOKEN%\" />\n    </private>\n  </packageSourceCredentials>\n</configuration>\n\
+  ```\n"
+evidence_artifacts:
+- artifact_type: logs
+  name: TPR operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: TPR configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: TPR compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "tpr"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track TPR related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'tpr' | take 100"
+    description: Query recent TPR events
+    output_format: json
+  powershell:
+  - script: '# Query TPR configuration
+
+      Get-AzTPRResource | Select-Object Name, Location, Properties'
+    description: Get TPR resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for TPR compliance enforcement
+    implementation: "# Azure Policy definition for TPR\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'tpr.sources.insecure-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'TPR Compliance Policy'\n    description:\
+      \ 'Enforces TPR compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for TPR violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'tpr.sources.insecure-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on TPR compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for TPR
+    implementation: "# GitHub Actions\n- name: Validate TPR Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/tpr_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'TPR Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_tpr.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - TPR requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review TPR FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design TPR implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement TPR controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for TPR
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/tpr/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'TPR')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: TPR - TPR
+  control_numbers: *id001
+  ssp_sections:
+  - section: 'sa-12: Implementation'
+    description_template: The system implements TPR controls in accordance with FedRAMP
+      20x requirements. TPR Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce TPR compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      TPR requirements.
+    evidence_references:
+    - TPR configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for TPR compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: TPR implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement TPR controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-TPR-03
+    requirement_name: Supply Chain Risk Management
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_tpr_patterns.py::test_tpr_sources_insecure
+---
+pattern_id: tpr.sbom.missing
+name: Missing Software Bill of Materials (SBOM)
+description: Detects absence of SBOM generation or maintenance. KSI-TPR-03 requires
+  documented inventory of all third-party components.
+severity: MEDIUM
+family: TPR
+ksi_id: KSI-TPR-03
+nist_controls: &id001
+- sa-12
+- cm-8
+- sr-4
+category: sbom
+pattern_type: configuration
+finding:
+  title_template: 'Missing SBOM generation: {file_path}'
+  description_template: No Software Bill of Materials (SBOM) generation detected in
+    CI/CD configuration. KSI-TPR-03 requires documented inventory of all third-party
+    components using CycloneDX or SPDX format.
+  remediation_template: Implement automated SBOM generation in CI/CD pipeline using
+    tools like Syft, CycloneDX, or SPDX generators to maintain current component inventory.
+languages:
+  github_actions:
+    regex_fallback: (sbom|cyclonedx|spdx|syft)
+    positive_indicators:
+    - sbom
+    - bill-of-materials
+    negative_indicators:
+    - generate
+    - create
+    - upload
+remediation: "Implement automated SBOM generation and maintenance:\n\n**1. GitHub\
+  \ Actions SBOM Workflow:**\n```yaml\nname: Generate SBOM\n\non:\n  push:\n    branches:\
+  \ [main]\n  release:\n    types: [published]\n  schedule:\n    - cron: '0 0 1 *\
+  \ *'  # Monthly\n\njobs:\n  sbom:\n    runs-on: ubuntu-latest\n    steps:\n    \
+  \  - uses: actions/checkout@v4\n      \n      # Generate SBOM with Syft\n      -\
+  \ name: Generate SBOM (CycloneDX)\n        uses: anchore/sbom-action@v0.15.0\n \
+  \       with:\n          format: cyclonedx-json\n          output-file: sbom-cyclonedx.json\n\
+  \          \n      - name: Generate SBOM (SPDX)\n        uses: anchore/sbom-action@v0.15.0\n\
+  \        with:\n          format: spdx-json\n          output-file: sbom-spdx.json\n\
+  \      \n      # Validate SBOM\n      - name: Validate SBOM\n        run: |\n  \
+  \        # Verify SBOM has required fields\n          jq -e '.components | length\
+  \ > 0' sbom-cyclonedx.json\n          jq -e '.metadata.component.name' sbom-cyclonedx.json\n\
+  \      \n      # Upload SBOM to release\n      - name: Upload SBOM to Release\n\
+  \        if: github.event_name == 'release'\n        uses: actions/upload-release-asset@v1\n\
+  \        env:\n          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}\n        with:\n\
+  \          upload_url: ${{ github.event.release.upload_url }}\n          asset_path:\
+  \ sbom-cyclonedx.json\n          asset_name: sbom.json\n          asset_content_type:\
+  \ application/json\n      \n      # Store SBOM as artifact\n      - name: Upload\
+  \ SBOM Artifact\n        uses: actions/upload-artifact@v4\n        with:\n     \
+  \     name: sbom\n          path: |\n            sbom-cyclonedx.json\n         \
+  \   sbom-spdx.json\n          retention-days: 365  # Keep for 1 year\n```\n\n**2.\
+  \ Python SBOM Generation:**\n```python\nimport subprocess\nimport json\nfrom datetime\
+  \ import datetime\n\ndef generate_python_sbom():\n    \"\"\"Generate SBOM for Python\
+  \ project\"\"\"\n    # Use CycloneDX for Python\n    subprocess.run([\n        \"\
+  cyclonedx-py\",\n        \"--format\", \"json\",\n        \"--output\", \"sbom.json\"\
+  \n    ])\n    \n    # Enhance with metadata\n    with open('sbom.json', 'r') as\
+  \ f:\n        sbom = json.load(f)\n    \n    sbom['metadata']['timestamp'] = datetime.now().isoformat()\n\
+  \    sbom['metadata']['supplier'] = {\n        'name': 'Organization Name',\n  \
+  \      'url': ['https://organization.com']\n    }\n    \n    with open('sbom.json',\
+  \ 'w') as f:\n        json.dump(sbom, f, indent=2)\n```\n\n**Required SBOM Content\
+  \ (FedRAMP):**\n- Component name and version\n- Supplier/author information\n- License\
+  \ information (SPDX identifiers)\n- Hash values (SHA-256 minimum)\n- Dependencies\
+  \ and relationships\n- Known vulnerabilities (CVEs)\n- Timestamps and tooling metadata\n\
+  \n**SBOM Formats:**\n- CycloneDX (recommended for FedRAMP)\n- SPDX (ISO/IEC 5962:2021)\n\
+  - SWID Tags (ISO/IEC 19770-2:2015)\n"
+evidence_artifacts:
+- artifact_type: logs
+  name: TPR operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: TPR configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: TPR compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "tpr"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track TPR related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'tpr' | take 100"
+    description: Query recent TPR events
+    output_format: json
+  powershell:
+  - script: '# Query TPR configuration
+
+      Get-AzTPRResource | Select-Object Name, Location, Properties'
+    description: Get TPR resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for TPR compliance enforcement
+    implementation: "# Azure Policy definition for TPR\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'tpr.sbom.missing-policy'\n  properties: {\n    policyType: 'Custom'\n\
+      \    mode: 'All'\n    displayName: 'TPR Compliance Policy'\n    description:\
+      \ 'Enforces TPR compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for TPR violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'tpr.sbom.missing-alert'\n  location: 'global'\n  properties: {\n\
+      \    description: 'Alert on TPR compliance violations'\n    severity: 2\n  \
+      \  enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for TPR
+    implementation: "# GitHub Actions\n- name: Validate TPR Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/tpr_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'TPR Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_tpr.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - TPR requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review TPR FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design TPR implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement TPR controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for TPR
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/tpr/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'TPR')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: TPR - TPR
+  control_numbers: *id001
+  ssp_sections:
+  - section: 'sa-12: Implementation'
+    description_template: The system implements TPR controls in accordance with FedRAMP
+      20x requirements. TPR Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce TPR compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      TPR requirements.
+    evidence_references:
+    - TPR configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for TPR compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: TPR implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement TPR controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-TPR-03
+    requirement_name: Supply Chain Risk Management
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions code sample
+    code_sample: '# github_actions code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code
+    code_sample: '# github_actions code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_tpr_patterns.py::test_tpr_sbom_missing

@@ -2,12 +2,60 @@
 Code analysis tools for FedRAMP 20x compliance checking.
 
 Provides MCP tools for analyzing Infrastructure as Code, application code, and CI/CD pipelines.
+
+Architecture:
+- Hybrid analysis: Combines pattern engine (YAML-driven) with traditional analyzers
+- Pattern engine provides fast, declarative detection across all requirements
+- Traditional analyzers provide deep, specialized analysis for complex scenarios
+- Results are merged and deduplicated for comprehensive coverage
 """
 
+import logging
 from typing import Optional
 from ..analyzers.ksi.factory import get_factory as get_ksi_factory
 from ..analyzers.frr.factory import get_factory as get_frr_factory
 from ..analyzers import AnalysisResult, Finding, Severity
+from ..analyzers.pattern_tool_adapter import analyze_with_patterns, get_pattern_coverage
+
+logger = logging.getLogger(__name__)
+
+
+def _merge_findings(pattern_findings: list[Finding], traditional_findings: list[Finding]) -> list[Finding]:
+    """
+    Merge and deduplicate findings from pattern engine and traditional analyzers.
+    
+    Deduplication strategy:
+    - Same requirement_id + similar message = duplicate (keep pattern finding)
+    - Same requirement_id + different message = both kept (different issues)
+    - Pattern findings preferred when duplicate (faster, clearer source)
+    
+    Args:
+        pattern_findings: Findings from pattern engine
+        traditional_findings: Findings from traditional analyzers
+        
+    Returns:
+        Merged list of unique findings
+    """
+    # Start with all pattern findings (pattern engine is primary)
+    merged = list(pattern_findings)
+    
+    # Track what we've seen for deduplication
+    seen_keys = set()
+    for finding in pattern_findings:
+        # Create deduplication key: req_id + first 50 chars of description
+        desc = finding.description or ""
+        key = (finding.requirement_id, desc[:50].strip().lower())
+        seen_keys.add(key)
+    
+    # Add traditional findings that aren't duplicates
+    for finding in traditional_findings:
+        desc = finding.description or ""
+        key = (finding.requirement_id, desc[:50].strip().lower())
+        if key not in seen_keys:
+            merged.append(finding)
+            seen_keys.add(key)
+    
+    return merged
 
 
 async def analyze_infrastructure_code_impl(
@@ -42,31 +90,57 @@ async def analyze_infrastructure_code_impl(
     if file_type_lower == "tf":
         file_type_lower = "terraform"
     
-    # Get factories and run all KSI and FRR analyzers for this language
+    logger.info(f"Analyzing {file_type_lower} infrastructure code with hybrid approach")
+    
+    # STEP 1: Pattern-based analysis (fast, comprehensive)
+    pattern_findings = []
+    try:
+        pattern_result = await analyze_with_patterns(
+            code=code,
+            language=file_type_lower,
+            file_path=file_path
+        )
+        pattern_findings = pattern_result.findings
+        logger.info(f"Pattern engine found {len(pattern_findings)} issues")
+    except Exception as e:
+        logger.warning(f"Pattern analysis failed, falling back to traditional analyzers only: {e}")
+    
+    # STEP 2: Traditional analyzer-based analysis (deep, specialized)
     ksi_factory = get_ksi_factory()
     frr_factory = get_frr_factory()
-    all_findings = []
+    traditional_findings = []
     
     # Run KSI analyzers
     for ksi_id in ksi_factory.list_ksis():
-        result = ksi_factory.analyze(ksi_id, code, file_type_lower, file_path)
+        result = await ksi_factory.analyze(ksi_id, code, file_type_lower, file_path)
         if result and result.findings:
-            all_findings.extend(result.findings)
+            traditional_findings.extend(result.findings)
     
     # Run FRR analyzers
     for frr_id in frr_factory.list_frrs():
-        result = frr_factory.analyze(frr_id, code, file_type_lower, file_path)
+        result = await frr_factory.analyze(frr_id, code, file_type_lower, file_path)
         if result and result.findings:
-            all_findings.extend(result.findings)
+            traditional_findings.extend(result.findings)
     
-    # Create aggregated result
+    logger.info(f"Traditional analyzers found {len(traditional_findings)} issues")
+    
+    # STEP 3: Merge and deduplicate findings
+    all_findings = _merge_findings(pattern_findings, traditional_findings)
+    logger.info(f"Total unique findings after deduplication: {len(all_findings)}")
+    
+    # Create aggregated result with hybrid metadata
     combined_result = AnalysisResult(
         findings=all_findings
     )
     
-    # Format output
+    # Format output with hybrid analysis metadata
     output = combined_result.to_dict()
     output["file_path"] = file_path
+    output["analysis_mode"] = "hybrid"
+    output["pattern_findings_count"] = len(pattern_findings)
+    output["traditional_findings_count"] = len(traditional_findings)
+    output["total_findings"] = len(all_findings)
+    output["pattern_coverage"] = get_pattern_coverage()
     
     # Add context if provided
     if context:
@@ -117,31 +191,57 @@ async def analyze_application_code_impl(
             "error": f"Unsupported language: {language}. Supported languages: python, csharp, java, typescript, javascript"
         }
     
-    # Get factories and run all KSI and FRR analyzers for this language
+    logger.info(f"Analyzing {language_normalized} application code with hybrid approach")
+    
+    # STEP 1: Pattern-based analysis (fast, comprehensive)
+    pattern_findings = []
+    try:
+        pattern_result = await analyze_with_patterns(
+            code=code,
+            language=language_normalized,
+            file_path=file_path
+        )
+        pattern_findings = pattern_result.findings
+        logger.info(f"Pattern engine found {len(pattern_findings)} issues")
+    except Exception as e:
+        logger.warning(f"Pattern analysis failed, falling back to traditional analyzers only: {e}")
+    
+    # STEP 2: Traditional analyzer-based analysis (deep, specialized)
     ksi_factory = get_ksi_factory()
     frr_factory = get_frr_factory()
-    all_findings = []
+    traditional_findings = []
     
     # Run KSI analyzers
     for ksi_id in ksi_factory.list_ksis():
-        result = ksi_factory.analyze(ksi_id, code, language_normalized, file_path)
+        result = await ksi_factory.analyze(ksi_id, code, language_normalized, file_path)
         if result and result.findings:
-            all_findings.extend(result.findings)
+            traditional_findings.extend(result.findings)
     
     # Run FRR analyzers
     for frr_id in frr_factory.list_frrs():
-        result = frr_factory.analyze(frr_id, code, language_normalized, file_path)
+        result = await frr_factory.analyze(frr_id, code, language_normalized, file_path)
         if result and result.findings:
-            all_findings.extend(result.findings)
+            traditional_findings.extend(result.findings)
     
-    # Create aggregated result
+    logger.info(f"Traditional analyzers found {len(traditional_findings)} issues")
+    
+    # STEP 3: Merge and deduplicate findings
+    all_findings = _merge_findings(pattern_findings, traditional_findings)
+    logger.info(f"Total unique findings after deduplication: {len(all_findings)}")
+    
+    # Create aggregated result with hybrid metadata
     combined_result = AnalysisResult(
         findings=all_findings
     )
     
-    # Format output
+    # Format output with hybrid analysis metadata
     output = combined_result.to_dict()
     output["file_path"] = file_path
+    output["analysis_mode"] = "hybrid"
+    output["pattern_findings_count"] = len(pattern_findings)
+    output["traditional_findings_count"] = len(traditional_findings)
+    output["total_findings"] = len(all_findings)
+    output["pattern_coverage"] = get_pattern_coverage()
     
     # Add dependencies info if provided
     if dependencies:
@@ -188,32 +288,58 @@ async def analyze_cicd_pipeline_impl(
     }
     language_normalized = pipeline_map.get(pipeline_type.lower(), pipeline_type.lower())
     
-    # Get factories and run all KSI and FRR analyzers for this pipeline type
+    logger.info(f"Analyzing {pipeline_type} CI/CD pipeline with hybrid approach")
+    
+    # STEP 1: Pattern-based analysis (fast, comprehensive)
+    pattern_findings = []
+    try:
+        pattern_result = await analyze_with_patterns(
+            code=code,
+            language=language_normalized,
+            file_path=file_path
+        )
+        pattern_findings = pattern_result.findings
+        logger.info(f"Pattern engine found {len(pattern_findings)} issues")
+    except Exception as e:
+        logger.warning(f"Pattern analysis failed, falling back to traditional analyzers only: {e}")
+    
+    # STEP 2: Traditional analyzer-based analysis (deep, specialized)
     ksi_factory = get_ksi_factory()
     frr_factory = get_frr_factory()
-    all_findings = []
+    traditional_findings = []
     
     # Run KSI analyzers
     for ksi_id in ksi_factory.list_ksis():
-        result = ksi_factory.analyze(ksi_id, code, language_normalized, file_path)
+        result = await ksi_factory.analyze(ksi_id, code, language_normalized, file_path)
         if result and result.findings:
-            all_findings.extend(result.findings)
+            traditional_findings.extend(result.findings)
     
     # Run FRR analyzers
     for frr_id in frr_factory.list_frrs():
-        result = frr_factory.analyze(frr_id, code, language_normalized, file_path)
+        result = await frr_factory.analyze(frr_id, code, language_normalized, file_path)
         if result and result.findings:
-            all_findings.extend(result.findings)
+            traditional_findings.extend(result.findings)
     
-    # Create aggregated result
+    logger.info(f"Traditional analyzers found {len(traditional_findings)} issues")
+    
+    # STEP 3: Merge and deduplicate findings
+    all_findings = _merge_findings(pattern_findings, traditional_findings)
+    logger.info(f"Total unique findings after deduplication: {len(all_findings)}")
+    
+    # Create aggregated result with hybrid metadata
     combined_result = AnalysisResult(
         findings=all_findings
     )
     
-    # Format output
+    # Format output with hybrid analysis metadata
     output = combined_result.to_dict()
     output["file_path"] = file_path
     output["pipeline_type"] = pipeline_type
+    output["analysis_mode"] = "hybrid"
+    output["pattern_findings_count"] = len(pattern_findings)
+    output["traditional_findings_count"] = len(traditional_findings)
+    output["total_findings"] = len(all_findings)
+    output["pattern_coverage"] = get_pattern_coverage()
     
     # Add formatted recommendations
     if combined_result.findings:

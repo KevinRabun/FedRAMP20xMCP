@@ -1,0 +1,2966 @@
+pattern_id: rsc.allocation.resource_limits
+name: Resource Limits Configuration
+family: RSC
+severity: high
+description: 'Detects resource limit configuration (CPU, memory) for workloads.
+
+  FRR-RSC requires proper resource allocation and limits.
+
+  '
+pattern_type: configuration
+languages:
+  yaml:
+    regex_fallback: (resources:.*limits:|resources:.*requests:)|(cpu:.*memory:|limits.*cpu|limits.*memory)|(MAX_MEMORY|MAX_CPU|RESOURCE_LIMIT)
+  python:
+    regex_fallback: (resources:.*limits:|resources:.*requests:)|(cpu:.*memory:|limits.*cpu|limits.*memory)|(MAX_MEMORY|MAX_CPU|RESOURCE_LIMIT)
+  csharp:
+    regex_fallback: (resources:.*limits:|resources:.*requests:)|(cpu:.*memory:|limits.*cpu|limits.*memory)|(MAX_MEMORY|MAX_CPU|RESOURCE_LIMIT)
+  java:
+    regex_fallback: (resources:.*limits:|resources:.*requests:)|(cpu:.*memory:|limits.*cpu|limits.*memory)|(MAX_MEMORY|MAX_CPU|RESOURCE_LIMIT)
+  typescript:
+    regex_fallback: (resources:.*limits:|resources:.*requests:)|(cpu:.*memory:|limits.*cpu|limits.*memory)|(MAX_MEMORY|MAX_CPU|RESOURCE_LIMIT)
+finding:
+  title: Resource limits configured
+  description: Configuration specifies resource limits for workloads
+  recommendation: Ensure limits prevent resource exhaustion per FRR-RSC-01
+  references:
+  - FRR-RSC-01
+evidence_artifacts:
+- artifact_type: logs
+  name: RSC operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: RSC configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: RSC compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "rsc"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track RSC related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'rsc' | take 100"
+    description: Query recent RSC events
+    output_format: json
+  powershell:
+  - script: '# Query RSC configuration
+
+      Get-AzRSCResource | Select-Object Name, Location, Properties'
+    description: Get RSC resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for RSC compliance enforcement
+    implementation: "# Azure Policy definition for RSC\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'rsc.allocation.resource_limits-policy'\n  properties: {\n  \
+      \  policyType: 'Custom'\n    mode: 'All'\n    displayName: 'RSC Compliance Policy'\n\
+      \    description: 'Enforces RSC compliance requirements'\n    policyRule: {\n\
+      \      if: {\n        // Add specific conditions\n      }\n      then: {\n \
+      \       effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for RSC violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'rsc.allocation.resource_limits-alert'\n  location: 'global'\n\
+      \  properties: {\n    description: 'Alert on RSC compliance violations'\n  \
+      \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for RSC
+    implementation: "# GitHub Actions\n- name: Validate RSC Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/rsc_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'RSC Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_rsc.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - RSC requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review RSC FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design RSC implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement RSC controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for RSC
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/rsc/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'RSC')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: RSC - RSC
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements RSC controls in accordance with FedRAMP
+      20x requirements. RSC Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce RSC compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      RSC requirements.
+    evidence_references:
+    - RSC configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for RSC compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: RSC implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement RSC controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-RSC-01
+    requirement_name: Top-Level Administrative Accounts Guidance
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant yaml code sample
+    code_sample: '# yaml code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant yaml code
+    code_sample: '# yaml code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_rsc_patterns.py::test_rsc_allocation_resource_limits
+---
+pattern_id: rsc.monitoring.resource_metrics
+name: Resource Metrics Monitoring
+family: RSC
+severity: high
+description: Detects resource metrics collection and monitoring
+pattern_type: function_call
+languages:
+  python:
+    regex_fallback: (cpu.*usage|memory.*usage|disk.*usage)|(metrics.*cpu|metrics.*memory|resource.*monitor)|(psutil|performance.*counter)
+  csharp:
+    regex_fallback: (cpu.*usage|memory.*usage|disk.*usage)|(metrics.*cpu|metrics.*memory|resource.*monitor)|(psutil|performance.*counter)
+  java:
+    regex_fallback: (cpu.*usage|memory.*usage|disk.*usage)|(metrics.*cpu|metrics.*memory|resource.*monitor)|(psutil|performance.*counter)
+  typescript:
+    regex_fallback: (cpu.*usage|memory.*usage|disk.*usage)|(metrics.*cpu|metrics.*memory|resource.*monitor)|(psutil|performance.*counter)
+finding:
+  title: Resource metrics monitoring detected
+  description: Code monitors CPU, memory, or disk usage
+  recommendation: Export metrics to centralized monitoring per KSI-MLA-01
+  references:
+  - FRR-RSC-02
+  - KSI-MLA-01
+evidence_artifacts:
+- artifact_type: logs
+  name: RSC operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: RSC configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: RSC compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "rsc"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track RSC related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'rsc' | take 100"
+    description: Query recent RSC events
+    output_format: json
+  powershell:
+  - script: '# Query RSC configuration
+
+      Get-AzRSCResource | Select-Object Name, Location, Properties'
+    description: Get RSC resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for RSC compliance enforcement
+    implementation: "# Azure Policy definition for RSC\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'rsc.monitoring.resource_metrics-policy'\n  properties: {\n \
+      \   policyType: 'Custom'\n    mode: 'All'\n    displayName: 'RSC Compliance\
+      \ Policy'\n    description: 'Enforces RSC compliance requirements'\n    policyRule:\
+      \ {\n      if: {\n        // Add specific conditions\n      }\n      then: {\n\
+      \        effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for RSC violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'rsc.monitoring.resource_metrics-alert'\n  location: 'global'\n\
+      \  properties: {\n    description: 'Alert on RSC compliance violations'\n  \
+      \  severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for RSC
+    implementation: "# GitHub Actions\n- name: Validate RSC Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/rsc_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'RSC Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_rsc.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - RSC requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review RSC FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design RSC implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement RSC controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for RSC
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/rsc/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'RSC')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: RSC - RSC
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements RSC controls in accordance with FedRAMP
+      20x requirements. RSC Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce RSC compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      RSC requirements.
+    evidence_references:
+    - RSC configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for RSC compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: RSC implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement RSC controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-RSC-01
+    requirement_name: Top-Level Administrative Accounts Guidance
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant python code sample
+    code_sample: '# python code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant python code
+    code_sample: '# python code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_rsc_patterns.py::test_rsc_monitoring_resource_metrics
+---
+pattern_id: rsc.scaling.autoscaling
+name: Autoscaling Configuration
+family: RSC
+severity: medium
+description: Detects autoscaling configuration for dynamic resource allocation
+pattern_type: configuration
+languages:
+  yaml:
+    regex_fallback: (kind:.*HorizontalPodAutoscaler|apiVersion:.*autoscaling)|(minReplicas|maxReplicas|targetCPUUtilizationPercentage)|(autoscale|auto_scale|autoScaling)
+finding:
+  title: Autoscaling configured
+  description: Configuration includes autoscaling for dynamic resource allocation
+  recommendation: Set appropriate min/max replicas and thresholds per FRR-RSC-03
+  references:
+  - FRR-RSC-03
+evidence_artifacts:
+- artifact_type: logs
+  name: RSC operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: RSC configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: RSC compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "rsc"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track RSC related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'rsc' | take 100"
+    description: Query recent RSC events
+    output_format: json
+  powershell:
+  - script: '# Query RSC configuration
+
+      Get-AzRSCResource | Select-Object Name, Location, Properties'
+    description: Get RSC resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for RSC compliance enforcement
+    implementation: "# Azure Policy definition for RSC\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'rsc.scaling.autoscaling-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'RSC Compliance Policy'\n    description:\
+      \ 'Enforces RSC compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for RSC violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'rsc.scaling.autoscaling-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on RSC compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for RSC
+    implementation: "# GitHub Actions\n- name: Validate RSC Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/rsc_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'RSC Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_rsc.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - RSC requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review RSC FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design RSC implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement RSC controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for RSC
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/rsc/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'RSC')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: RSC - RSC
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements RSC controls in accordance with FedRAMP
+      20x requirements. RSC Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce RSC compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      RSC requirements.
+    evidence_references:
+    - RSC configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for RSC compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: RSC implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement RSC controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-RSC-01
+    requirement_name: Top-Level Administrative Accounts Guidance
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant yaml code sample
+    code_sample: '# yaml code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant yaml code
+    code_sample: '# yaml code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_rsc_patterns.py::test_rsc_scaling_autoscaling
+---
+pattern_id: rsc.quota.namespace_quota
+name: Namespace Resource Quota
+family: RSC
+severity: high
+description: Detects resource quota configuration at namespace level
+pattern_type: configuration
+languages:
+  yaml:
+    regex_fallback: (kind:.*ResourceQuota)|(hard:.*requests\.cpu|hard:.*limits\.memory)
+finding:
+  title: Namespace resource quota configured
+  description: Configuration sets resource quotas for namespace
+  recommendation: Enforce quotas per team/project per FRR-RSC-01
+  references:
+  - FRR-RSC-01
+evidence_artifacts:
+- artifact_type: logs
+  name: RSC operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: RSC configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: RSC compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "rsc"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track RSC related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'rsc' | take 100"
+    description: Query recent RSC events
+    output_format: json
+  powershell:
+  - script: '# Query RSC configuration
+
+      Get-AzRSCResource | Select-Object Name, Location, Properties'
+    description: Get RSC resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for RSC compliance enforcement
+    implementation: "# Azure Policy definition for RSC\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'rsc.quota.namespace_quota-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'RSC Compliance Policy'\n    description:\
+      \ 'Enforces RSC compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for RSC violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'rsc.quota.namespace_quota-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on RSC compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for RSC
+    implementation: "# GitHub Actions\n- name: Validate RSC Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/rsc_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'RSC Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_rsc.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - RSC requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review RSC FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design RSC implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement RSC controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for RSC
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/rsc/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'RSC')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: RSC - RSC
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements RSC controls in accordance with FedRAMP
+      20x requirements. RSC Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce RSC compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      RSC requirements.
+    evidence_references:
+    - RSC configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for RSC compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: RSC implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement RSC controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-RSC-01
+    requirement_name: Top-Level Administrative Accounts Guidance
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant yaml code sample
+    code_sample: '# yaml code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant yaml code
+    code_sample: '# yaml code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_rsc_patterns.py::test_rsc_quota_namespace_quota
+---
+pattern_id: rsc.allocation.priority_class
+name: Priority Class for Resource Allocation
+family: RSC
+severity: medium
+description: Detects priority class usage for workload prioritization
+pattern_type: configuration
+languages:
+  yaml:
+    regex_fallback: (priorityClassName|priority_class_name)|(kind:.*PriorityClass)
+finding:
+  title: Priority class for resource allocation
+  description: Configuration uses priority classes for workload scheduling
+  recommendation: Define priority classes for critical vs non-critical workloads
+  references:
+  - FRR-RSC-03
+evidence_artifacts:
+- artifact_type: logs
+  name: RSC operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: RSC configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: RSC compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "rsc"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track RSC related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'rsc' | take 100"
+    description: Query recent RSC events
+    output_format: json
+  powershell:
+  - script: '# Query RSC configuration
+
+      Get-AzRSCResource | Select-Object Name, Location, Properties'
+    description: Get RSC resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for RSC compliance enforcement
+    implementation: "# Azure Policy definition for RSC\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'rsc.allocation.priority_class-policy'\n  properties: {\n   \
+      \ policyType: 'Custom'\n    mode: 'All'\n    displayName: 'RSC Compliance Policy'\n\
+      \    description: 'Enforces RSC compliance requirements'\n    policyRule: {\n\
+      \      if: {\n        // Add specific conditions\n      }\n      then: {\n \
+      \       effect: 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for RSC violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'rsc.allocation.priority_class-alert'\n  location: 'global'\n \
+      \ properties: {\n    description: 'Alert on RSC compliance violations'\n   \
+      \ severity: 2\n    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize:\
+      \ 'PT15M'\n  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for RSC
+    implementation: "# GitHub Actions\n- name: Validate RSC Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/rsc_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'RSC Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_rsc.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - RSC requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review RSC FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design RSC implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement RSC controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for RSC
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/rsc/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'RSC')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: RSC - RSC
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements RSC controls in accordance with FedRAMP
+      20x requirements. RSC Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce RSC compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      RSC requirements.
+    evidence_references:
+    - RSC configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for RSC compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: RSC implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement RSC controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-RSC-01
+    requirement_name: Top-Level Administrative Accounts Guidance
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant yaml code sample
+    code_sample: '# yaml code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant yaml code
+    code_sample: '# yaml code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_rsc_patterns.py::test_rsc_allocation_priority_class
+---
+pattern_id: rsc.cost.budget_alert
+name: Cost Budget Alerts
+family: RSC
+severity: medium
+description: Detects cost budget alert configuration for resource management
+pattern_type: resource
+languages:
+  bicep:
+    regex_fallback: (Microsoft\.Consumption/budgets)|(azurerm_consumption_budget)|(budget.*alert|cost.*threshold)
+  terraform:
+    regex_fallback: (Microsoft\.Consumption/budgets)|(azurerm_consumption_budget)|(budget.*alert|cost.*threshold)
+finding:
+  title: Cost budget alerts configured
+  description: IaC configures budget alerts for resource cost management
+  recommendation: Set alerts at 50%, 80%, 100% of budget per FRR-RSC-04
+  references:
+  - FRR-RSC-04
+evidence_artifacts:
+- artifact_type: logs
+  name: RSC operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: RSC configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: RSC compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "rsc"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track RSC related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'rsc' | take 100"
+    description: Query recent RSC events
+    output_format: json
+  powershell:
+  - script: '# Query RSC configuration
+
+      Get-AzRSCResource | Select-Object Name, Location, Properties'
+    description: Get RSC resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for RSC compliance enforcement
+    implementation: "# Azure Policy definition for RSC\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'rsc.cost.budget_alert-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'RSC Compliance Policy'\n    description:\
+      \ 'Enforces RSC compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for RSC violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'rsc.cost.budget_alert-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on RSC compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for RSC
+    implementation: "# GitHub Actions\n- name: Validate RSC Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/rsc_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'RSC Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_rsc.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - RSC requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review RSC FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design RSC implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement RSC controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for RSC
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/rsc/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'RSC')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: RSC - RSC
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements RSC controls in accordance with FedRAMP
+      20x requirements. RSC Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce RSC compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      RSC requirements.
+    evidence_references:
+    - RSC configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for RSC compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: RSC implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement RSC controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-RSC-01
+    requirement_name: Top-Level Administrative Accounts Guidance
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep code sample
+    code_sample: '# bicep code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code
+    code_sample: '# bicep code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_rsc_patterns.py::test_rsc_cost_budget_alert
+---
+pattern_id: rsc.iac.app_service_plan
+name: Azure App Service Plan Configuration
+family: RSC
+severity: high
+description: Detects App Service Plan configuration for resource allocation
+pattern_type: resource
+languages:
+  bicep:
+    ast_queries: &id001
+    - query_type: resource_type
+      target: Microsoft.Web/serverfarms
+    - query_type: resource_type
+      target: azurerm_app_service_plan
+    regex_fallback: (Microsoft\.Web/serverfarms)|(resource.*azurerm_app_service_plan|resource.*azurerm_service_plan)|(sku.*name.*P1V3|tier.*PremiumV3)
+  terraform:
+    ast_queries: *id001
+    regex_fallback: (Microsoft\.Web/serverfarms)|(resource.*azurerm_app_service_plan|resource.*azurerm_service_plan)|(sku.*name.*P1V3|tier.*PremiumV3)
+finding:
+  title: App Service Plan configured
+  description: IaC provisions App Service Plan with defined SKU
+  recommendation: Choose appropriate SKU based on workload requirements per FRR-RSC-01
+  references:
+  - FRR-RSC-01
+evidence_artifacts:
+- artifact_type: logs
+  name: RSC operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: RSC configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: RSC compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "rsc"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track RSC related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'rsc' | take 100"
+    description: Query recent RSC events
+    output_format: json
+  powershell:
+  - script: '# Query RSC configuration
+
+      Get-AzRSCResource | Select-Object Name, Location, Properties'
+    description: Get RSC resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for RSC compliance enforcement
+    implementation: "# Azure Policy definition for RSC\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'rsc.iac.app_service_plan-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'RSC Compliance Policy'\n    description:\
+      \ 'Enforces RSC compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for RSC violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'rsc.iac.app_service_plan-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on RSC compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for RSC
+    implementation: "# GitHub Actions\n- name: Validate RSC Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/rsc_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'RSC Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_rsc.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - RSC requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review RSC FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design RSC implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement RSC controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for RSC
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/rsc/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'RSC')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: RSC - RSC
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements RSC controls in accordance with FedRAMP
+      20x requirements. RSC Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce RSC compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      RSC requirements.
+    evidence_references:
+    - RSC configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for RSC compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: RSC implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement RSC controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-RSC-01
+    requirement_name: Top-Level Administrative Accounts Guidance
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep code sample
+    code_sample: '# bicep code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code
+    code_sample: '# bicep code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_rsc_patterns.py::test_rsc_iac_app_service_plan
+---
+pattern_id: rsc.iac.vm_size
+name: Virtual Machine Size Configuration
+family: RSC
+severity: high
+description: Detects VM size configuration for resource allocation
+pattern_type: resource
+languages:
+  bicep:
+    regex_fallback: (vmSize|vm_size)|(Standard_D|Standard_E|Standard_F)
+  terraform:
+    regex_fallback: (vmSize|vm_size)|(Standard_D|Standard_E|Standard_F)
+finding:
+  title: VM size configured
+  description: IaC specifies VM size for resource allocation
+  recommendation: Right-size VMs based on actual usage metrics per FRR-RSC-03
+  references:
+  - FRR-RSC-01
+evidence_artifacts:
+- artifact_type: logs
+  name: RSC operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: RSC configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: RSC compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "rsc"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track RSC related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'rsc' | take 100"
+    description: Query recent RSC events
+    output_format: json
+  powershell:
+  - script: '# Query RSC configuration
+
+      Get-AzRSCResource | Select-Object Name, Location, Properties'
+    description: Get RSC resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for RSC compliance enforcement
+    implementation: "# Azure Policy definition for RSC\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'rsc.iac.vm_size-policy'\n  properties: {\n    policyType: 'Custom'\n\
+      \    mode: 'All'\n    displayName: 'RSC Compliance Policy'\n    description:\
+      \ 'Enforces RSC compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for RSC violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'rsc.iac.vm_size-alert'\n  location: 'global'\n  properties: {\n\
+      \    description: 'Alert on RSC compliance violations'\n    severity: 2\n  \
+      \  enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for RSC
+    implementation: "# GitHub Actions\n- name: Validate RSC Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/rsc_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'RSC Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_rsc.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - RSC requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review RSC FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design RSC implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement RSC controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for RSC
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/rsc/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'RSC')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: RSC - RSC
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements RSC controls in accordance with FedRAMP
+      20x requirements. RSC Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce RSC compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      RSC requirements.
+    evidence_references:
+    - RSC configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for RSC compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: RSC implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement RSC controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-RSC-01
+    requirement_name: Top-Level Administrative Accounts Guidance
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep code sample
+    code_sample: '# bicep code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code
+    code_sample: '# bicep code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_rsc_patterns.py::test_rsc_iac_vm_size
+---
+pattern_id: rsc.iac.reserved_instances
+name: Reserved Instance Usage
+family: RSC
+severity: low
+description: Detects reserved instance or savings plan configuration
+pattern_type: configuration
+languages:
+  bicep:
+    regex_fallback: (reserved.*instance|reservation|savings.*plan)
+  terraform:
+    regex_fallback: (reserved.*instance|reservation|savings.*plan)
+finding:
+  title: Reserved instance or savings plan detected
+  description: Configuration uses reserved instances for cost optimization
+  recommendation: Analyze usage patterns and purchase reservations per FRR-RSC-04
+  references:
+  - FRR-RSC-04
+evidence_artifacts:
+- artifact_type: logs
+  name: RSC operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: RSC configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: RSC compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "rsc"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track RSC related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'rsc' | take 100"
+    description: Query recent RSC events
+    output_format: json
+  powershell:
+  - script: '# Query RSC configuration
+
+      Get-AzRSCResource | Select-Object Name, Location, Properties'
+    description: Get RSC resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for RSC compliance enforcement
+    implementation: "# Azure Policy definition for RSC\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'rsc.iac.reserved_instances-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'RSC Compliance Policy'\n    description:\
+      \ 'Enforces RSC compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for RSC violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'rsc.iac.reserved_instances-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on RSC compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for RSC
+    implementation: "# GitHub Actions\n- name: Validate RSC Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/rsc_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'RSC Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_rsc.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - RSC requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review RSC FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design RSC implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement RSC controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for RSC
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/rsc/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'RSC')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: RSC - RSC
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements RSC controls in accordance with FedRAMP
+      20x requirements. RSC Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce RSC compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      RSC requirements.
+    evidence_references:
+    - RSC configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for RSC compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: RSC implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement RSC controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-RSC-01
+    requirement_name: Top-Level Administrative Accounts Guidance
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant bicep code sample
+    code_sample: '# bicep code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant bicep code
+    code_sample: '# bicep code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_rsc_patterns.py::test_rsc_iac_reserved_instances
+---
+pattern_id: rsc.cicd.resource_validation
+name: Resource Configuration Validation
+family: RSC
+severity: high
+description: Detects resource configuration validation in CI/CD
+pattern_type: pipeline
+languages:
+  github_actions:
+    regex_fallback: (validate.*resources|check.*limits|verify.*quotas)|(kubectl.*dry-run|terraform.*plan)
+  azure_pipelines:
+    regex_fallback: (validate.*resources|check.*limits|verify.*quotas)|(kubectl.*dry-run|terraform.*plan)
+  gitlab_ci:
+    regex_fallback: (validate.*resources|check.*limits|verify.*quotas)|(kubectl.*dry-run|terraform.*plan)
+finding:
+  title: Resource configuration validation in CI/CD
+  description: Pipeline validates resource configurations before deployment
+  recommendation: Include checks for resource limits and quotas per FRR-RSC-01
+  references:
+  - FRR-RSC-01
+evidence_artifacts:
+- artifact_type: logs
+  name: RSC operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: RSC configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: RSC compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "rsc"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track RSC related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'rsc' | take 100"
+    description: Query recent RSC events
+    output_format: json
+  powershell:
+  - script: '# Query RSC configuration
+
+      Get-AzRSCResource | Select-Object Name, Location, Properties'
+    description: Get RSC resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for RSC compliance enforcement
+    implementation: "# Azure Policy definition for RSC\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'rsc.cicd.resource_validation-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'RSC Compliance Policy'\n    description:\
+      \ 'Enforces RSC compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for RSC violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'rsc.cicd.resource_validation-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on RSC compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for RSC
+    implementation: "# GitHub Actions\n- name: Validate RSC Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/rsc_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'RSC Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_rsc.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - RSC requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review RSC FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design RSC implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement RSC controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for RSC
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/rsc/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'RSC')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: RSC - RSC
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements RSC controls in accordance with FedRAMP
+      20x requirements. RSC Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce RSC compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      RSC requirements.
+    evidence_references:
+    - RSC configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for RSC compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: RSC implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement RSC controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-RSC-01
+    requirement_name: Top-Level Administrative Accounts Guidance
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant github_actions code sample
+    code_sample: '# github_actions code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant github_actions code
+    code_sample: '# github_actions code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_rsc_patterns.py::test_rsc_cicd_resource_validation
+---
+pattern_id: rsc.missing_resource_limits
+name: Missing Resource Limits
+family: RSC
+severity: critical
+description: Detects absence of resource limit configuration
+pattern_type: configuration
+languages:
+  yaml: {}
+requires_absence:
+- rsc.allocation.resource_limits
+finding:
+  title: No resource limits configured
+  description: Configuration lacks resource limits (CPU, memory)
+  severity: critical
+  recommendation: Add resource limits to prevent resource exhaustion per FRR-RSC-01
+  references:
+  - FRR-RSC-01
+evidence_artifacts:
+- artifact_type: logs
+  name: RSC operational logs
+  source: Azure Monitor - Application/Resource Logs
+  frequency: continuous
+  retention_months: 36
+  format: JSON
+- artifact_type: configuration
+  name: RSC configuration export
+  source: Azure Portal or IaC templates
+  frequency: weekly
+  retention_months: 36
+  format: JSON/Bicep/Terraform
+- artifact_type: report
+  name: RSC compliance validation report
+  source: Automated testing pipeline
+  frequency: daily
+  retention_months: 12
+  format: HTML/PDF
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AppTraces
+
+      | where TimeGenerated > ago(30d)
+
+      | where Message contains "rsc"
+
+      | summarize count() by bin(TimeGenerated, 1d), SeverityLevel
+
+      | order by TimeGenerated desc'
+    description: Track RSC related operations over last 30 days
+    retention_days: 730
+  azure_cli:
+  - command: az monitor log-analytics query --workspace $WORKSPACE_ID --analytics-query
+      "AppTraces | where Message contains 'rsc' | take 100"
+    description: Query recent RSC events
+    output_format: json
+  powershell:
+  - script: '# Query RSC configuration
+
+      Get-AzRSCResource | Select-Object Name, Location, Properties'
+    description: Get RSC resource configuration
+automation:
+  policy_enforcement:
+    description: Azure Policy for RSC compliance enforcement
+    implementation: "# Azure Policy definition for RSC\nresource policyDef 'Microsoft.Authorization/policyDefinitions@2021-06-01'\
+      \ = {\n  name: 'rsc.missing_resource_limits-policy'\n  properties: {\n    policyType:\
+      \ 'Custom'\n    mode: 'All'\n    displayName: 'RSC Compliance Policy'\n    description:\
+      \ 'Enforces RSC compliance requirements'\n    policyRule: {\n      if: {\n \
+      \       // Add specific conditions\n      }\n      then: {\n        effect:\
+      \ 'audit'\n      }\n    }\n  }\n}"
+    azure_services:
+    - Azure Policy
+    - Azure Monitor
+  continuous_monitoring:
+    description: Azure Monitor alerts for RSC violations
+    implementation: "resource alert 'Microsoft.Insights/metricAlerts@2018-03-01' =\
+      \ {\n  name: 'rsc.missing_resource_limits-alert'\n  location: 'global'\n  properties:\
+      \ {\n    description: 'Alert on RSC compliance violations'\n    severity: 2\n\
+      \    enabled: true\n    evaluationFrequency: 'PT5M'\n    windowSize: 'PT15M'\n\
+      \  }\n}"
+    azure_services:
+    - Azure Monitor
+    - Application Insights
+  cicd_validation:
+    description: CI/CD pipeline validation for RSC
+    implementation: "# GitHub Actions\n- name: Validate RSC Compliance\n  run: |\n\
+      \    python -m fedramp_20x_mcp.analyzers.generic_analyzer \\\n      --pattern-file\
+      \ data/patterns/rsc_patterns.yaml \\\n      --code-path ./src\n      \n# Azure\
+      \ Pipelines  \n- task: PowerShell@2\n  displayName: 'RSC Compliance Check'\n\
+      \  inputs:\n    script: |\n      # Run compliance validation\n      python validate_rsc.py"
+    azure_services:
+    - Azure Pipelines
+    - GitHub Actions
+implementation:
+  prerequisites:
+  - Azure subscription with Contributor access
+  - Required Azure services provisioned
+  - RSC requirements documented and approved
+  - Development and testing environment configured
+  steps:
+  - step: 1
+    action: Review RSC FedRAMP requirements
+    azure_service: null
+    validation: Requirements documented and team trained
+  - step: 2
+    action: Design RSC implementation architecture
+    azure_service: null
+    validation: Architecture review completed and approved
+  - step: 3
+    action: Implement RSC controls in code/IaC
+    azure_service: Application code and IaC
+    validation: Code review completed, unit tests pass
+  - step: 4
+    action: Configure Azure services for RSC
+    azure_service: Azure Portal
+    validation: Services configured per requirements
+    bicep_template: templates/bicep/rsc/main.bicep
+  - step: 5
+    action: Set up monitoring and alerting
+    azure_service: Azure Monitor
+    validation: Alerts configured and tested
+  - step: 6
+    action: Implement automated compliance checking
+    azure_service: Azure Pipelines
+    validation: CI/CD pipeline validates compliance
+  - step: 7
+    action: Document implementation and evidence collection
+    azure_service: null
+    validation: Documentation complete and reviewed
+  validation_queries:
+  - az resource list --resource-group $RG --query "[?contains(type, 'RSC')]"
+  - az monitor metrics list --resource $RESOURCE_ID
+ssp_mapping:
+  control_family: RSC - RSC
+  control_numbers:
+  - AU-2
+  - AU-3
+  ssp_sections:
+  - section: 'AU-2: Implementation'
+    description_template: The system implements RSC controls in accordance with FedRAMP
+      20x requirements. RSC Requirements is addressed through a combination of Azure
+      native services, application-level controls, and automated monitoring.
+    implementation_details: Azure services are configured to enforce RSC compliance
+      requirements. Infrastructure-as-code (Bicep/Terraform) ensures consistent deployment.
+      Automated compliance checking in CI/CD pipeline validates all deployments against
+      RSC requirements.
+    evidence_references:
+    - RSC configuration exports from Azure Portal
+    - Azure Monitor logs showing compliance status
+    - CI/CD pipeline validation results
+    - Automated compliance scan reports
+azure_guidance:
+  recommended_services:
+  - service: Azure Monitor
+    tier: Standard
+    purpose: Primary service for RSC compliance
+    alternatives:
+    - Alternative Azure services or third-party tools
+  well_architected_framework:
+    pillar: Security
+    design_area: RSC implementation
+    recommendation_id: SEC-01
+    reference_url: https://learn.microsoft.com/azure/well-architected/security/
+  cloud_adoption_framework:
+    stage: Secure
+    guidance: Implement RSC controls as part of secure baseline
+    reference_url: https://learn.microsoft.com/azure/cloud-adoption-framework/secure/
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: FRR-RSC-01
+    requirement_name: Top-Level Administrative Accounts Guidance
+    impact_levels:
+    - Low
+    - Moderate
+testing:
+  positive_test_cases:
+  - description: Compliant yaml code sample
+    code_sample: '# yaml code that meets requirements
+
+      # Add specific example'
+    expected_severity: INFO
+    expected_finding: true
+  negative_test_cases:
+  - description: Non-compliant yaml code
+    code_sample: '# yaml code that violates requirements
+
+      # Add specific example'
+    expected_severity: HIGH
+    expected_finding: true
+  validation_scripts:
+  - tests/test_rsc_patterns.py::test_rsc_missing_resource_limits
+---
+pattern_id: rsc.frr.frr_rsc_01
+name: Top-Level Administrative Accounts Guidance Compliance
+description: Validates compliance with FRR-RSC-01 - Top-Level Administrative Accounts Guidance
+family: RSC
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-RSC-01 - Top-Level Administrative Accounts Guidance compliance check
+  description_template: Configuration requires validation for FRR-RSC-01 compliance
+  remediation_template: Implement FRR-RSC-01 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- rsc
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-RSC-01
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-RSC-01 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-RSC-01 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-RSC-01 compliance validation
+    implementation: |
+      # FRR-RSC-01 compliance automation
+      # GitHub Actions
+      - name: FRR-RSC-01 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_01 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-RSC-01 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-RSC-01 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-RSC-01'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-RSC-01
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-RSC-01"
+        RequirementName = "Top-Level Administrative Accounts Guidance"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-RSC-01.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_02
+name: Top-Level Administrative Accounts Security Settings Guidance Compliance
+description: Validates compliance with FRR-RSC-02 - Top-Level Administrative Accounts Security Settings Guidance
+family: RSC
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-RSC-02 - Top-Level Administrative Accounts Security Settings Guidance compliance check
+  description_template: Configuration requires validation for FRR-RSC-02 compliance
+  remediation_template: Implement FRR-RSC-02 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- rsc
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-RSC-02
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-RSC-02 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-RSC-02 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-RSC-02 compliance validation
+    implementation: |
+      # FRR-RSC-02 compliance automation
+      # GitHub Actions
+      - name: FRR-RSC-02 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_02 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-RSC-02 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-RSC-02 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-RSC-02'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-RSC-02
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-RSC-02"
+        RequirementName = "Top-Level Administrative Accounts Security Settings Guidance"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-RSC-02.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_03
+name: Privileged Accounts Security Settings Guidance Compliance
+description: Validates compliance with FRR-RSC-03 - Privileged Accounts Security Settings Guidance
+family: RSC
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-RSC-03 - Privileged Accounts Security Settings Guidance compliance check
+  description_template: Configuration requires validation for FRR-RSC-03 compliance
+  remediation_template: Implement FRR-RSC-03 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- rsc
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-RSC-03
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-RSC-03 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-RSC-03 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-RSC-03 compliance validation
+    implementation: |
+      # FRR-RSC-03 compliance automation
+      # GitHub Actions
+      - name: FRR-RSC-03 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_03 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-RSC-03 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-RSC-03 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-RSC-03'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-RSC-03
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-RSC-03"
+        RequirementName = "Privileged Accounts Security Settings Guidance"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-RSC-03.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_04
+name: Secure Defaults on Provisioning Compliance
+description: Validates compliance with FRR-RSC-04 - Secure Defaults on Provisioning
+family: RSC
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-RSC-04 - Secure Defaults on Provisioning compliance check
+  description_template: Configuration requires validation for FRR-RSC-04 compliance
+  remediation_template: Implement FRR-RSC-04 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- rsc
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-RSC-04
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-RSC-04 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-RSC-04 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-RSC-04 compliance validation
+    implementation: |
+      # FRR-RSC-04 compliance automation
+      # GitHub Actions
+      - name: FRR-RSC-04 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_04 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-RSC-04 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-RSC-04 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-RSC-04'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-RSC-04
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-RSC-04"
+        RequirementName = "Secure Defaults on Provisioning"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-RSC-04.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_05
+name: Comparison Capability Compliance
+description: Validates compliance with FRR-RSC-05 - Comparison Capability
+family: RSC
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-RSC-05 - Comparison Capability compliance check
+  description_template: Configuration requires validation for FRR-RSC-05 compliance
+  remediation_template: Implement FRR-RSC-05 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- rsc
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-RSC-05
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-RSC-05 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-RSC-05 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-RSC-05 compliance validation
+    implementation: |
+      # FRR-RSC-05 compliance automation
+      # GitHub Actions
+      - name: FRR-RSC-05 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_05 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-RSC-05 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-RSC-05 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-RSC-05'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-RSC-05
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-RSC-05"
+        RequirementName = "Comparison Capability"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-RSC-05.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_06
+name: Export Capability Compliance
+description: Validates compliance with FRR-RSC-06 - Export Capability
+family: RSC
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-RSC-06 - Export Capability compliance check
+  description_template: Configuration requires validation for FRR-RSC-06 compliance
+  remediation_template: Implement FRR-RSC-06 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- rsc
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-RSC-06
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-RSC-06 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-RSC-06 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-RSC-06 compliance validation
+    implementation: |
+      # FRR-RSC-06 compliance automation
+      # GitHub Actions
+      - name: FRR-RSC-06 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_06 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-RSC-06 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-RSC-06 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-RSC-06'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-RSC-06
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-RSC-06"
+        RequirementName = "Export Capability"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-RSC-06.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_07
+name: API Capability Compliance
+description: Validates compliance with FRR-RSC-07 - API Capability
+family: RSC
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-RSC-07 - API Capability compliance check
+  description_template: Configuration requires validation for FRR-RSC-07 compliance
+  remediation_template: Implement FRR-RSC-07 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- rsc
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-RSC-07
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-RSC-07 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-RSC-07 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-RSC-07 compliance validation
+    implementation: |
+      # FRR-RSC-07 compliance automation
+      # GitHub Actions
+      - name: FRR-RSC-07 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_07 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-RSC-07 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-RSC-07 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-RSC-07'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-RSC-07
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-RSC-07"
+        RequirementName = "API Capability"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-RSC-07.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_08
+name: Machine-Readable Guidance Compliance
+description: Validates compliance with FRR-RSC-08 - Machine-Readable Guidance
+family: RSC
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-RSC-08 - Machine-Readable Guidance compliance check
+  description_template: Configuration requires validation for FRR-RSC-08 compliance
+  remediation_template: Implement FRR-RSC-08 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- rsc
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-RSC-08
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-RSC-08 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-RSC-08 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-RSC-08 compliance validation
+    implementation: |
+      # FRR-RSC-08 compliance automation
+      # GitHub Actions
+      - name: FRR-RSC-08 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_08 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-RSC-08 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-RSC-08 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-RSC-08'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-RSC-08
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-RSC-08"
+        RequirementName = "Machine-Readable Guidance"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-RSC-08.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_09
+name: Publish Guidance Compliance
+description: Validates compliance with FRR-RSC-09 - Publish Guidance
+family: RSC
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-RSC-09 - Publish Guidance compliance check
+  description_template: Configuration requires validation for FRR-RSC-09 compliance
+  remediation_template: Implement FRR-RSC-09 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- rsc
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-RSC-09
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-RSC-09 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-RSC-09 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-RSC-09 compliance validation
+    implementation: |
+      # FRR-RSC-09 compliance automation
+      # GitHub Actions
+      - name: FRR-RSC-09 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_09 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-RSC-09 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-RSC-09 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-RSC-09'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-RSC-09
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-RSC-09"
+        RequirementName = "Publish Guidance"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-RSC-09.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']
+---
+pattern_id: rsc.frr.frr_rsc_10
+name: Versioning and Release History Compliance
+description: Validates compliance with FRR-RSC-10 - Versioning and Release History
+family: RSC
+severity: MEDIUM
+pattern_type: compliance
+languages:
+  bicep:
+    regex_fallback: ".*"
+  terraform:
+    regex_fallback: ".*"
+finding:
+  title_template: FRR-RSC-10 - Versioning and Release History compliance check
+  description_template: Configuration requires validation for FRR-RSC-10 compliance
+  remediation_template: Implement FRR-RSC-10 requirements per FedRAMP 20x documentation
+  evidence_collection:
+  - Compliance documentation
+  - Policy artifacts
+  - Configuration evidence
+  azure_services:
+  - Azure Policy
+  - Microsoft Defender for Cloud
+tags:
+- rsc
+- frr
+- compliance
+nist_controls:
+- fedramp-20x
+related_frrs:
+- FRR-RSC-10
+evidence_artifacts:
+- artifact_type: policy
+  name: FRR-RSC-10 policy documentation
+  source: Azure DevOps
+  frequency: monthly
+  retention_months: 84
+  format: PDF
+- artifact_type: configuration
+  name: FRR-RSC-10 configuration evidence
+  source: Azure Resource Manager
+  frequency: daily
+  retention_months: 36
+  format: JSON
+automation:
+  automation_1:
+    description: Automated FRR-RSC-10 compliance validation
+    implementation: |
+      # FRR-RSC-10 compliance automation
+      # GitHub Actions
+      - name: FRR-RSC-10 Validation
+        run: |
+          python -m fedramp_20x_mcp.analyzers.generic_analyzer \
+            --pattern rsc.frr.frr_rsc_10 \
+            --code-path ./src
+      
+      # Azure Pipelines
+      - task: AzureCLI@2
+        displayName: 'FRR-RSC-10 Check'
+        inputs:
+          azureSubscription: 'AzureConnection'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Validate FRR-RSC-10 compliance
+            az policy state list --filter "policyDefinitionName eq 'FRR-RSC-10'"
+    azure_services:
+    - Azure Policy
+    - Azure CLI
+    - Azure DevOps
+  automation_2:
+    description: Evidence collection for FRR-RSC-10
+    implementation: |
+      # Automated evidence collection
+      # PowerShell script
+      $evidence = @{
+        RequirementId = "FRR-RSC-10"
+        RequirementName = "Versioning and Release History"
+        CollectionDate = Get-Date -Format "yyyy-MM-dd"
+        ComplianceStatus = "To Be Determined"
+      }
+      $evidence | ConvertTo-Json | Out-File -FilePath "evidence_FRR-RSC-10.json"
+    azure_services:
+    - Azure Automation
+    - Azure Storage
+impact_levels: ['Low', 'Moderate', 'High']

@@ -1,15 +1,15 @@
 """
-KSI-centric analyzers for FedRAMP 20x compliance.
+KSI-centric analyzers for FedRAMP 20x compliance - Pattern-Based Architecture.
 
-Each KSI analyzer is self-contained with:
-- Official FedRAMP 20x metadata embedded
+Uses GenericPatternAnalyzer for all KSI detection with:
+- Official FedRAMP 20x metadata embedded in patterns
 - All language implementations (Python, C#, Java, TypeScript, Bicep, Terraform)
 - CI/CD pipeline analysis (GitHub Actions, Azure Pipelines, GitLab CI)
 
 Architecture:
-- One file per KSI (e.g., ksi_iam_06.py)
-- Each file contains all language-specific detection logic
-- Factory pattern for dynamic discovery and analysis
+- Pattern-based detection (248 patterns loaded from YAML files)
+- Factory provides backward-compatible API
+- All analysis delegated to GenericPatternAnalyzer
 """
 
 from .base import BaseKSIAnalyzer

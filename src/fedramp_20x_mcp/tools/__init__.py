@@ -24,7 +24,7 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         data_loader: The data loader instance for accessing FedRAMP data
     """
     # Import all tool modules
-    from . import requirements, definitions, ksi, frr, documentation, export, enhancements, evidence, analyzer, audit, security, ksi_status, validation
+    from . import requirements, definitions, ksi, frr, documentation, export, enhancements, evidence, analyzer, audit, security, ksi_status, validation, code_enrichment
     from ..templates import get_infrastructure_template, get_code_template
     
     # Requirements tools
@@ -593,4 +593,91 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         result = await ksi_status.get_ksi_family_status_impl(family, data_loader)
         return json.dumps(result, indent=2)
     
-    logger.info("Registered 36 tools across 12 modules")
+    @mcp.tool()
+    async def add_requirement_comments(
+        code: str,
+        ksi_ids: Optional[str] = None,
+        frr_ids: Optional[str] = None,
+        language: str = "bicep"
+    ) -> str:
+        """
+        Add FedRAMP requirement comments to code or IaC templates.
+        
+        Enriches generated code with detailed KSI and FRR requirement information
+        in comments, ensuring traceability to specific compliance requirements.
+        
+        Args:
+            code: The code or template to enrich
+            ksi_ids: Comma-separated KSI IDs (e.g., "KSI-IAM-01,KSI-MLA-01")
+            frr_ids: Comma-separated FRR IDs (e.g., "FRR-VDR-01,FRR-ADS-01")
+            language: Programming language for comment syntax
+                Options: bicep, terraform, python, csharp, java, typescript, powershell
+        
+        Returns:
+            Enriched code with requirement header comments and inline annotations
+        
+        Example:
+            ```bicep
+            // Original code:
+            resource kv 'Microsoft.KeyVault/vaults@2023-07-01' = {
+              name: 'mykeyvault'
+            }
+            
+            // After enrichment with add_requirement_comments(code, "KSI-SVC-01", "FRR-RSC-01", "bicep"):
+            // ==========================================
+            // FedRAMP 20x Compliance Requirements
+            // ==========================================
+            //
+            // Key Security Indicators (KSI):
+            //
+            // KSI-SVC-01: Secrets Management
+            //   All secrets must be stored in Azure Key Vault with
+            //   soft delete and purge protection enabled.
+            //
+            // FedRAMP Requirements (FRR):
+            //
+            // FRR-RSC-01: Recommended Secure Configuration
+            //   Apply security baselines and hardening standards.
+            // ==========================================
+            
+            resource kv 'Microsoft.KeyVault/vaults@2023-07-01' = {
+              name: 'mykeyvault'
+              tags: {
+                Compliance: 'FedRAMP 20x'
+                Requirements: 'KSI-SVC-01, FRR-RSC-01'
+              }
+            }
+            ```
+        
+        Use this tool when:
+        - Generating Bicep/Terraform infrastructure code
+        - Writing C#/Python/Java application code for FedRAMP compliance
+        - Need to document which requirements a code block addresses
+        - Creating templates or examples for teams
+        """
+        # Parse comma-separated IDs
+        ksi_list = [k.strip() for k in ksi_ids.split(",")] if ksi_ids else None
+        frr_list = [f.strip() for f in frr_ids.split(",")] if frr_ids else None
+        
+        # Generate enriched code
+        if language.lower() == "bicep":
+            enriched = code_enrichment.enrich_bicep_template(
+                code, ksi_list, frr_list, data_loader
+            )
+            enriched = code_enrichment.add_requirement_tags(
+                enriched, ksi_list, frr_list, "bicep"
+            )
+        elif language.lower() == "csharp":
+            enriched = code_enrichment.enrich_csharp_code(
+                code, ksi_list, frr_list, data_loader
+            )
+        else:
+            # For other languages, just add header
+            header = code_enrichment.get_requirement_header(
+                ksi_list, frr_list, data_loader, language
+            )
+            enriched = f"{header}\n\n{code}"
+        
+        return enriched
+    
+    logger.info("Registered 37 tools across 13 modules")
