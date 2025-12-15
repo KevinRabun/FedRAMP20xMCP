@@ -21,7 +21,7 @@ GITHUB_API_BASE = "https://api.github.com"
 GITHUB_RAW_BASE = "https://raw.githubusercontent.com"
 FEDRAMP_REPO = "FedRAMP/docs"
 FEDRAMP_BRANCH = "main"
-DATA_PATH = "data"
+DATA_PATH = ""  # Files are now in root directory
 DOCS_PATH = "docs"
 
 # Cache configuration
@@ -85,7 +85,8 @@ class FedRAMPDataLoader:
 
     async def _fetch_file_list(self) -> List[Dict[str, Any]]:
         """Fetch the list of JSON files from the GitHub repository."""
-        url = f"{GITHUB_API_BASE}/repos/{FEDRAMP_REPO}/contents/{DATA_PATH}"
+        # Construct URL with proper path handling (empty path = root)
+        url = f"{GITHUB_API_BASE}/repos/{FEDRAMP_REPO}/contents/{DATA_PATH}" if DATA_PATH else f"{GITHUB_API_BASE}/repos/{FEDRAMP_REPO}/contents"
         
         # Use GITHUB_TOKEN if available to avoid rate limits
         headers = {}
@@ -113,7 +114,9 @@ class FedRAMPDataLoader:
 
     async def _fetch_json_file(self, filename: str) -> Optional[Dict[str, Any]]:
         """Fetch a single JSON file from the repository."""
-        url = f"{GITHUB_RAW_BASE}/{FEDRAMP_REPO}/{FEDRAMP_BRANCH}/{DATA_PATH}/{filename}"
+        # Construct URL with proper path handling
+        path = f"{DATA_PATH}/{filename}" if DATA_PATH else filename
+        url = f"{GITHUB_RAW_BASE}/{FEDRAMP_REPO}/{FEDRAMP_BRANCH}/{path}"
         
         async with httpx.AsyncClient() as client:
             try:
