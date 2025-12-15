@@ -13,7 +13,7 @@ An MCP (Model Context Protocol) server that provides access to FedRAMP 20x secur
 This server loads FedRAMP 20x data from the official [FedRAMP documentation repository](https://github.com/FedRAMP/docs) and provides tools for querying requirements by control, family, or keyword.
 
 **Data Sources:**
-- **Requirements Data:** JSON files from [github.com/FedRAMP/docs/tree/main/data](https://github.com/FedRAMP/docs/tree/main/data)
+- **Requirements Data:** JSON files from [github.com/FedRAMP/docs](https://github.com/FedRAMP/docs) (root directory)
 - **Documentation:** Markdown files from [github.com/FedRAMP/docs/tree/main/docs](https://github.com/FedRAMP/docs/tree/main/docs)
 
 **Azure Focus:** All implementation examples, architecture patterns, and vendor recommendations prioritize Microsoft Azure services (Azure Government, Microsoft Entra ID, Azure Key Vault, AKS, Azure Functions, Bicep, etc.) while remaining cloud-agnostic where appropriate.

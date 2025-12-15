@@ -93,7 +93,7 @@ The MCP server:
 
 The server makes HTTPS requests only to:
 - `https://api.github.com/repos/FedRAMP/docs` - Discover documentation files
-- `https://raw.githubusercontent.com/FedRAMP/docs/main/data/*.json` - Fetch requirements
+- `https://raw.githubusercontent.com/FedRAMP/docs/main/*.json` - Fetch requirements (from root)
 - `https://raw.githubusercontent.com/FedRAMP/docs/main/docs/**/*.md` - Fetch documentation
 
 All connections use TLS 1.2+ via the `httpx` library.

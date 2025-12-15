@@ -75,7 +75,7 @@ FedRAMP 20x requires **machine-readable** formats (JSON/XML/structured data) for
 - Called automatically by `list_ksi` and `get_ksi_implementation_status` tools
 - Compares analyzer RETIRED flags against GitHub FedRAMP/docs JSON data
 - Dynamically updates analyzer metadata at runtime when discrepancies detected
-- Source: https://github.com/FedRAMP/docs/blob/main/data/FRMR.KSI.key-security-indicators.json
+- Source: https://github.com/FedRAMP/docs/blob/main/FRMR.KSI.key-security-indicators.json
 
 ## Code Organization
 - Infrastructure templates in `templates/bicep/` and `templates/terraform/`

@@ -335,7 +335,7 @@ When adding a new comprehensive prompt:
 ## Data Updates
 
 The server fetches FedRAMP 20x data from:
-https://github.com/FedRAMP/docs/tree/main/data
+https://github.com/FedRAMP/docs
 
 If FedRAMP updates their data format:
 1. Update `data_loader.py` to handle new structure
