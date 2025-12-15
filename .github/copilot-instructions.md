@@ -57,8 +57,18 @@ FedRAMP 20x requires **machine-readable** formats (JSON/XML/structured data) for
 - KSI-SVC-03 (superseded by KSI-AFR-11 UCM)
 - KSI-TPR-01, KSI-TPR-02 (superseded by KSI-AFR-01 MAS)
 
-**Complete Families (5/10):** IAM, SVC, CNA, TPR, CMT
-**Significantly Complete:** MLA (5/8 active), PIY (2/2 code-detectable), AFR (active), INR (1/1 code-detectable)
+**Pattern Coverage:** 100% of all 65 active KSIs across all 11 families (AFR, CED, CMT, CNA, IAM, INR, MLA, PIY, RPL, SVC, TPR)
+- AFR: 11/11 active ✓
+- CED: 4/4 active ✓
+- CMT: 4/4 active ✓ (1 retired)
+- CNA: 8/8 active ✓
+- IAM: 7/7 active ✓
+- INR: 3/3 active ✓
+- MLA: 5/5 active ✓ (3 retired)
+- PIY: 8/8 active ✓
+- RPL: 4/4 active ✓
+- SVC: 9/9 active ✓ (1 retired)
+- TPR: 2/2 active ✓ (2 retired)
 
 **Authoritative Data Sync:**
 - The factory's `sync_with_authoritative_data(data_loader)` method ensures RETIRED status stays current
