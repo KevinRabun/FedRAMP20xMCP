@@ -20,9 +20,9 @@ This server loads FedRAMP 20x data from the official [FedRAMP documentation repo
 
 ### Complete Data Coverage
 
-The server provides access to **271 requirements** (199 FRRs + 72 KSIs) plus **50 definitions** (FRDs) across FedRAMP 20x documents:
+The server provides access to **401 requirements** (329 FRRs + 72 KSIs) plus **50 definitions** (FRDs) across FedRAMP 20x documents:
 
-**FedRAMP Requirements (FRR) - 199 requirements across 10 families:**
+**FedRAMP Requirements (FRR) - 329 requirements across 11 families:**
 - **ADS** - Authorization Data Sharing (20 requirements)
 - **CCM** - Collaborative Continuous Monitoring (25 requirements)
 - **FSI** - FedRAMP Security Inbox (16 requirements)
@@ -63,7 +63,7 @@ The server provides access to **271 requirements** (199 FRRs + 72 KSIs) plus **5
 - **Implementation Planning**: Generate strategic interview questions to help product managers and engineers think through FedRAMP 20x implementation considerations
 - **AST-Powered Code Analysis**: Advanced Abstract Syntax Tree parsing using tree-sitter for accurate, context-aware security analysis across Python, C#, Java, TypeScript/JavaScript, Bicep, and Terraform
 - **Semantic Analysis**: Deep code understanding with symbol resolution, control flow analysis, and interprocedural analysis capabilities
-- **🚀 Hybrid Analysis (NEW)**: Combines fast pattern-based detection (120 YAML patterns) with deep traditional analyzers (72 KSIs + 199 FRRs) for comprehensive, performant compliance checking
+- **🚀 Hybrid Analysis (NEW)**: Combines fast pattern-based detection (381 YAML patterns) with deep traditional analyzers (72 KSIs + 329 FRRs) for comprehensive, performant compliance checking
 - **Pattern Engine**: Declarative YAML-driven detection across 14 languages with intelligent deduplication and coverage metadata
 
 ### Hybrid Analysis Architecture
@@ -79,7 +79,7 @@ The server uses a **hybrid analysis approach** combining two complementary analy
 
 2. **Traditional Analyzers** (Deep, Specialized)
    - **72 KSI analyzers** for Key Security Indicators
-   - **199 FRR analyzers** for specific FedRAMP requirements
+   - **329 FRR analyzers** for specific FedRAMP requirements
    - Context-aware, interprocedural analysis
    - Complex security logic and data flow tracking
 
@@ -256,7 +256,7 @@ For CI/CD integration, multi-server setup with Azure and GitHub, or detailed tro
 The server provides **48 tools** organized into the following categories:
 
 **Core Tools (11):** Query requirements, definitions, KSIs, and KSI evidence automation
-**FRR Analysis Tools (7):** Analyze code against FedRAMP Requirements (FRR) with comprehensive compliance checking across all 199 requirements
+**FRR Analysis Tools (7):** Analyze code against FedRAMP Requirements (FRR) with comprehensive compliance checking across all 329 requirements
 **Documentation Tools (3):** Search and retrieve FedRAMP documentation
 **Enhancement Tools (7):** Implementation examples, dependencies, effort estimation, architecture validation
 **Export Tools (3):** Excel/CSV export and KSI specification generation
@@ -432,7 +432,7 @@ result = analyze_frr_code(
 ```
 
 ### analyze_all_frrs
-Analyze code against all 199 FedRAMP requirements for comprehensive compliance checking.
+Analyze code against all 329 FedRAMP requirements for comprehensive compliance checking.
 
 **Parameters:**
 - `code` (string): Code to analyze
@@ -464,7 +464,7 @@ result = analyze_all_frrs(
 # Returns findings across all 10 FRR families
 ```
 
-**Performance:** Analyzes all 199 FRRs in 2-5 seconds using parallel processing and AST caching.
+**Performance:** Analyzes all 329 FRRs in 2-5 seconds using parallel processing and AST caching.
 
 ### analyze_frr_family
 Analyze code against all requirements in a specific FRR family.
@@ -622,7 +622,7 @@ Get implementation status summary across all FRR analyzers.
 **Parameters:** None
 
 **Returns:** Implementation status summary including:
-- **Total FRRs**: 199 requirements across 10 families
+- **Total FRRs**: 329 requirements across 11 families
 - **Implementation by Family**: VDR (59), RSC (10), UCM (4), SCN (26), ADS (22), CCM (25), MAS (12), ICP (9), FSI (16), PVA (22)
 - **Status Breakdown**: Implemented vs. Not Implemented counts
 - **Code-Detectable**: Requirements that can be validated through code analysis
@@ -648,7 +648,7 @@ FRR Implementation Status:
 - VDR Family: 59/59 implemented (100%)
 - RSC Family: 10/10 implemented (100%)
 - ADS Family: 22/22 implemented (100%)
-- Total: 199/199 implemented (100%)
+- Total: 329/329 implemented (100%)
 
 Code-Detectable: 145 FRRs (73%)
 Process-Based: 54 FRRs (27%)
@@ -1171,9 +1171,9 @@ The server provides **18 prompts** for FedRAMP compliance workflows:
 
 **frr_code_review** - Guide for reviewing code against FedRAMP Requirements (FRR) using AST-powered semantic analysis across all 10 FRR families (VDR, ADS, RSC, UCM, CCM, SCN, MAS, ICP, FSI, PVA) with PR workflow integration
 
-**frr_family_assessment** - Comprehensive family-specific assessment guide for all 199 FRR requirements with detailed checklists, assessment questions, and evidence planning for each of the 10 FRR families
+**frr_family_assessment** - Comprehensive family-specific assessment guide for all 329 FRR requirements with detailed checklists, assessment questions, and evidence planning for each of the 11 FRR families
 
-**frr_implementation_roadmap** - Strategic 16-week, 4-phase roadmap for implementing all 199 FRR requirements with prioritization framework, Azure service recommendations, and KSI integration strategies
+**frr_implementation_roadmap** - Strategic 16-week, 4-phase roadmap for implementing all 329 FRR requirements with prioritization framework, Azure service recommendations, and KSI integration strategies
 
 ## Combined KSI + FRR Analysis Examples
 
@@ -1465,8 +1465,8 @@ print(f"  Compliant: {ksi_summary['compliant']}")
 print(f"  Non-compliant: {ksi_summary['non_compliant']}")
 print(f"  High-severity findings: {ksi_summary['high_severity']}")
 
-# Step 2: Analyze against all 199 FRRs
-print("\nFRR Analysis (199 requirements):")
+# Step 2: Analyze against all 329 FRRs
+print("\nFRR Analysis (329 requirements):")
 all_frr_results = analyze_all_frrs(
     code=terraform_infra,
     language="terraform",
@@ -1513,8 +1513,8 @@ print(f"  Combined Score: {(ksi_status['implementation_percentage'] + frr_status
 #   Non-compliant: 14
 #   High-severity findings: 5
 #
-# FRR Analysis (199 requirements):
-#   Total FRRs analyzed: 199
+# FRR Analysis (329 requirements):
+#   Total FRRs analyzed: 329
 #   Compliant: 167
 #   Non-compliant: 18
 #   Not applicable: 14
@@ -1539,7 +1539,7 @@ print(f"  Combined Score: {(ksi_status['implementation_percentage'] + frr_status
 ```
 
 **Integration Benefits:**
-- Comprehensive scan across all 72 KSIs and 199 FRRs
+- Comprehensive scan across all 72 KSIs and 329 FRRs
 - Single command provides full compliance posture
 - Family-specific analysis highlights priority areas
 - Automated checklist for deployment approval
