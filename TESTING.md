@@ -68,7 +68,7 @@ The test suite is organized into 7 primary test files plus 18 pattern-specific t
 - Multi-language support (Python, C#, Java, TypeScript, Bicep, Terraform)
 - CI/CD pipeline analysis
 
-**`test_frr_analyzers.py`** - FRR Analyzers (329 Total)
+**`test_frr_analyzers.py`** - FRR Analyzers (199 Total)
 - FRR factory pattern functionality
 - Family-based organization (VDR, IAM, SCN, RSC, ADS, CNA, PIY)
 - Infrastructure-as-Code analysis
