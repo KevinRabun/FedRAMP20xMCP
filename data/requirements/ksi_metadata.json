@@ -15,7 +15,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_01.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_afr_01.py",
     "class_name": "KSI_AFR_01_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -91,7 +91,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_02.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_afr_02.py",
     "class_name": "KSI_AFR_02_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -204,7 +204,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_03.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_afr_03.py",
     "class_name": "KSI_AFR_03_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -441,7 +441,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_04.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_afr_04.py",
     "class_name": "KSI_AFR_04_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -586,7 +586,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_05.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_afr_05.py",
     "class_name": "KSI_AFR_05_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -662,7 +662,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_06.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_afr_06.py",
     "class_name": "KSI_AFR_06_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -738,7 +738,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_07.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_afr_07.py",
     "class_name": "KSI_AFR_07_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -814,7 +814,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_08.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_afr_08.py",
     "class_name": "KSI_AFR_08_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -890,7 +890,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_09.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_afr_09.py",
     "class_name": "KSI_AFR_09_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -966,7 +966,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_10.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_afr_10.py",
     "class_name": "KSI_AFR_10_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -1039,7 +1039,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_afr_11.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_afr_11.py",
     "class_name": "KSI_AFR_11_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -1141,7 +1141,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_ced_01.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_ced_01.py",
     "class_name": "KSI_CED_01_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -1232,7 +1232,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_ced_02.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_ced_02.py",
     "class_name": "KSI_CED_02_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -1319,7 +1319,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_ced_03.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_ced_03.py",
     "class_name": "KSI_CED_03_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -1393,7 +1393,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_ced_04.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_ced_04.py",
     "class_name": "KSI_CED_04_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -1496,7 +1496,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cmt_01.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_cmt_01.py",
     "class_name": "KSI_CMT_01_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -1581,7 +1581,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cmt_02.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_cmt_02.py",
     "class_name": "KSI_CMT_02_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -1654,7 +1654,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cmt_03.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_cmt_03.py",
     "class_name": "KSI_CMT_03_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -1736,7 +1736,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cmt_04.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_cmt_04.py",
     "class_name": "KSI_CMT_04_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -1790,7 +1790,7 @@
     "retired": true,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cmt_05.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_cmt_05.py",
     "class_name": "KSI_CMT_05_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -1868,7 +1868,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cna_01.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_cna_01.py",
     "class_name": "KSI_CNA_01_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -2002,7 +2002,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cna_02.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_cna_02.py",
     "class_name": "KSI_CNA_02_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -2111,7 +2111,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cna_03.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_cna_03.py",
     "class_name": "KSI_CNA_03_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -2197,7 +2197,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cna_04.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_cna_04.py",
     "class_name": "KSI_CNA_04_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -2287,7 +2287,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cna_05.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_cna_05.py",
     "class_name": "KSI_CNA_05_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -2364,7 +2364,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cna_06.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_cna_06.py",
     "class_name": "KSI_CNA_06_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -2454,7 +2454,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cna_07.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_cna_07.py",
     "class_name": "KSI_CNA_07_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -2539,7 +2539,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_cna_08.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_cna_08.py",
     "class_name": "KSI_CNA_08_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -2649,7 +2649,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_iam_01.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_iam_01.py",
     "class_name": "KSI_IAM_01_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -2760,7 +2760,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_iam_02.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_iam_02.py",
     "class_name": "KSI_IAM_02_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -2868,7 +2868,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_iam_03.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_iam_03.py",
     "class_name": "KSI_IAM_03_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -3098,7 +3098,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_iam_04.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_iam_04.py",
     "class_name": "KSI_IAM_04_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -3312,7 +3312,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_iam_05.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_iam_05.py",
     "class_name": "KSI_IAM_05_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -3418,7 +3418,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_iam_06.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_iam_06.py",
     "class_name": "KSI_IAM_06_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -3533,7 +3533,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_iam_07.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_iam_07.py",
     "class_name": "KSI_IAM_07_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -3651,7 +3651,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_inr_01.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_inr_01.py",
     "class_name": "KSI_INR_01_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -3742,7 +3742,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_inr_02.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_inr_02.py",
     "class_name": "KSI_INR_02_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -3829,7 +3829,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_inr_03.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_inr_03.py",
     "class_name": "KSI_INR_03_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -3972,7 +3972,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_mla_01.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_mla_01.py",
     "class_name": "KSI_MLA_01_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -4073,7 +4073,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_mla_02.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_mla_02.py",
     "class_name": "KSI_MLA_02_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -4144,7 +4144,7 @@
     "retired": true,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_mla_03.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_mla_03.py",
     "class_name": "KSI_MLA_03_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -4216,7 +4216,7 @@
     "retired": true,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_mla_04.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_mla_04.py",
     "class_name": "KSI_MLA_04_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -4308,7 +4308,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_mla_05.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_mla_05.py",
     "class_name": "KSI_MLA_05_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -4380,7 +4380,7 @@
     "retired": true,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_mla_06.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_mla_06.py",
     "class_name": "KSI_MLA_06_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -4496,7 +4496,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_mla_07.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_mla_07.py",
     "class_name": "KSI_MLA_07_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -4575,7 +4575,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_mla_08.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_mla_08.py",
     "class_name": "KSI_MLA_08_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -4678,7 +4678,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_piy_01.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_piy_01.py",
     "class_name": "KSI_PIY_01_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -4860,7 +4860,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_piy_02.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_piy_02.py",
     "class_name": "KSI_PIY_02_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -4928,7 +4928,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_piy_03.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_piy_03.py",
     "class_name": "KSI_PIY_03_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -5041,7 +5041,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_piy_04.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_piy_04.py",
     "class_name": "KSI_PIY_04_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -5105,7 +5105,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_piy_05.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_piy_05.py",
     "class_name": "KSI_PIY_05_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -5206,7 +5206,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_piy_06.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_piy_06.py",
     "class_name": "KSI_PIY_06_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -5279,7 +5279,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_piy_07.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_piy_07.py",
     "class_name": "KSI_PIY_07_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -5343,7 +5343,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_piy_08.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_piy_08.py",
     "class_name": "KSI_PIY_08_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -5416,7 +5416,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_rpl_01.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_rpl_01.py",
     "class_name": "KSI_RPL_01_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -5553,7 +5553,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_rpl_02.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_rpl_02.py",
     "class_name": "KSI_RPL_02_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -5650,7 +5650,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_rpl_03.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_rpl_03.py",
     "class_name": "KSI_RPL_03_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -5764,7 +5764,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_rpl_04.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_rpl_04.py",
     "class_name": "KSI_RPL_04_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -5873,7 +5873,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_01.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_svc_01.py",
     "class_name": "KSI_SVC_01_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -5990,7 +5990,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_02.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_svc_02.py",
     "class_name": "KSI_SVC_02_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -6063,7 +6063,7 @@
     "retired": true,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_03.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_svc_03.py",
     "class_name": "KSI_SVC_03_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -6184,7 +6184,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_04.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_svc_04.py",
     "class_name": "KSI_SVC_04_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -6289,7 +6289,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_05.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_svc_05.py",
     "class_name": "KSI_SVC_05_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -6386,7 +6386,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_06.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_svc_06.py",
     "class_name": "KSI_SVC_06_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -6476,7 +6476,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_07.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_svc_07.py",
     "class_name": "KSI_SVC_07_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -6556,7 +6556,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_08.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_svc_08.py",
     "class_name": "KSI_SVC_08_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -6640,7 +6640,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_09.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_svc_09.py",
     "class_name": "KSI_SVC_09_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -6724,7 +6724,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_svc_10.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_svc_10.py",
     "class_name": "KSI_SVC_10_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -6797,7 +6797,7 @@
     "retired": true,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_tpr_01.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_tpr_01.py",
     "class_name": "KSI_TPR_01_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -6851,7 +6851,7 @@
     "retired": true,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_tpr_02.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_tpr_02.py",
     "class_name": "KSI_TPR_02_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -6949,7 +6949,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_tpr_03.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_tpr_03.py",
     "class_name": "KSI_TPR_03_Analyzer",
     "guidance": {
       "evidence_collection": [
@@ -7044,7 +7044,7 @@
     "retired": false,
     "related_ksis": [],
     "related_frrs": [],
-    "source_file": "C:\\Source\\FedRAMP20xMCP\\src\\fedramp_20x_mcp\\analyzers\\ksi\\ksi_tpr_04.py",
+    "source_file": "src/fedramp_20x_mcp/analyzers/ksi/ksi_tpr_04.py",
     "class_name": "KSI_TPR_04_Analyzer",
     "guidance": {
       "evidence_collection": [
