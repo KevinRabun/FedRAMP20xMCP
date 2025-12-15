@@ -337,6 +337,14 @@ languages:
     - configured
   python:
     regex_fallback: (safety check|pip-audit|bandit|snyk)
+    positive_indicators:
+    - requirements.txt
+    - dependencies
+    - package
+    negative_indicators:
+    - pip-audit
+    - safety
+    - snyk
   csharp:
     regex_fallback: (PackageReference|packages\.config|NuGet)
     positive_indicators:
@@ -644,6 +652,13 @@ finding:
 languages:
   python:
     regex_fallback: (--index-url\s+http:|--extra-index-url\s+http:|pip install.*--trusted-host)
+    positive_indicators:
+    - http://
+    - --trusted-host
+    - index-url
+    negative_indicators:
+    - https://
+    - pypi.org
   csharp:
     regex_fallback: (http://[^\s"']+\.nuget|packageSource.*http://)
     positive_indicators:

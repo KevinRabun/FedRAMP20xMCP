@@ -19,10 +19,22 @@ languages:
       message: Weak hash algorithm detected - use SHA-256 or stronger
     regex_fallback: (hashlib\.(md5|sha1|md4)|Crypto\.Cipher\.(DES|RC4|ARC4)|ssl\.PROTOCOL_(TLSv1|SSLv[23]))
   csharp:
+    ast_queries:
+    - node_type: method_call
+      pattern: (MD5|SHA1)\.(Create|ComputeHash)
+      message: Weak hash algorithm detected - use SHA-256 or stronger
     regex_fallback: (MD5\.(Create|ComputeHash)|SHA1\.(Create|ComputeHash)|DESCryptoServiceProvider|RC2CryptoServiceProvider|TripleDESCryptoServiceProvider)
   java:
+    ast_queries:
+    - node_type: method_invocation
+      pattern: MessageDigest\.getInstance.*["'](MD5|SHA-1|MD4)["']
+      message: Weak hash algorithm detected - use SHA-256 or stronger
     regex_fallback: (MessageDigest\.getInstance\(["'](MD5|SHA-1|MD4)["']\)|Cipher\.getInstance\(["'](DES|DESede|RC4)["']\))
   typescript:
+    ast_queries:
+    - node_type: call_expression
+      pattern: crypto\.createHash\(["'](md5|sha1)["']\)
+      message: Weak hash algorithm detected - use SHA-256 or stronger
     regex_fallback: (crypto\.createHash\(["'](md5|sha1)["']\)|crypto\.createCipher\(["'](des|rc4)["']\))
   bicep:
     ast_queries:

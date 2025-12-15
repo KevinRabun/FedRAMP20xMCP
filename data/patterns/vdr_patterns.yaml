@@ -843,6 +843,14 @@ languages:
     - package_with_cve: true
     - package_age: '>6_months'
     regex_fallback: ^[a-zA-Z0-9_-]+==.*$
+    positive_indicators:
+    - dependencies
+    - version
+    - requirements.txt
+    negative_indicators:
+    - pip-audit
+    - renovate
+    - dependabot
   typescript:
     file_path: package.json
     ast_queries:
@@ -872,6 +880,14 @@ languages:
       conditions:
       - has_known_cve
     regex_fallback: <PackageReference
+    positive_indicators:
+    - PackageReference
+    - Version=
+    - packages
+    negative_indicators:
+    - DependencyCheck
+    - renovate
+    - dependabot
   java:
     file_path: pom.xml|build.gradle
     ast_queries:
@@ -879,6 +895,14 @@ languages:
       conditions:
       - has_known_cve
     regex_fallback: <dependency>|dependencies \{
+    positive_indicators:
+    - dependency
+    - version
+    - pom.xml
+    negative_indicators:
+    - owasp-dependency-check
+    - renovate
+    - dependabot
 finding:
   title_template: 'Dependency with known vulnerabilities: {package_name} {version}'
   description_template: Package {package_name} version {version} has {cve_count} known CVE(s). KSI-VDR-04 requires patching within 30 days.

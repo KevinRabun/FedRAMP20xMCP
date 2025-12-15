@@ -31,6 +31,9 @@ languages:
       target: AddFile
       context: logging
     regex_fallback: new\s+FileLoggerProvider|AddFile\(
+    negative_indicators:
+    - FileLoggerProvider
+    - AddFile
   java:
     ast_queries:
     - query_type: object_creation
@@ -38,6 +41,9 @@ languages:
     - query_type: object_creation
       target: RollingFileAppender
     regex_fallback: FileAppender|RollingFileAppender
+    negative_indicators:
+    - FileAppender
+    - RollingFileAppender
   typescript:
     ast_queries:
     - query_type: function_call
@@ -45,6 +51,9 @@ languages:
     - query_type: import_statement
       target: winston-daily-rotate-file
     regex_fallback: createWriteStream\(|winston-daily-rotate-file
+    negative_indicators:
+    - createWriteStream
+    - winston-daily-rotate-file
 finding:
   title_template: Local file logging detected
   description_template: Application logs to local files. KSI-MLA-01 requires centralized logging to SIEM (Azure Monitor, Sentinel, Splunk).
@@ -294,6 +303,8 @@ languages:
     - query_type: import_declaration
       target: com.microsoft.applicationinsights
     regex_fallback: import\s+com\.microsoft\.applicationinsights
+    positive_indicators:
+    - com.microsoft.applicationinsights
   typescript:
     ast_queries:
     - query_type: import_statement
@@ -301,6 +312,9 @@ languages:
     - query_type: import_statement
       target: applicationinsights
     regex_fallback: import.*@azure/monitor|import.*applicationinsights
+    positive_indicators:
+    - '@azure/monitor'
+    - applicationinsights
 finding:
   title_template: Azure Monitor integration detected
   description_template: Application uses Azure Monitor for centralized logging. Verify Log Analytics workspace configuration.
@@ -508,16 +522,24 @@ languages:
     - query_type: using_directive
       target: Microsoft.Azure.SecurityInsights
     regex_fallback: using\s+.*SecurityInsights
+    positive_indicators:
+    - Microsoft.Azure.SecurityInsights
+    - SecurityInsights
   java:
     ast_queries:
     - query_type: import_declaration
       target: com.splunk
     regex_fallback: import\s+com\.splunk
+    positive_indicators:
+    - com.splunk
+    - splunk
   typescript:
     ast_queries:
     - query_type: import_statement
       target: splunk-logging
     regex_fallback: import.*splunk-logging
+    positive_indicators:
+    - splunk-logging
 finding:
   title_template: SIEM integration detected
   description_template: SIEM integration found. Centralized logging requirement satisfied.
@@ -950,6 +972,10 @@ languages:
       - in_catch_block:true
       - arg_contains:authentication|login
     regex_fallback: LogWarning.*[Aa]uthentication.*fail
+    positive_indicators:
+    - LogWarning
+    - authentication
+    - login
   java:
     ast_queries:
     - query_type: method_call
@@ -958,6 +984,10 @@ languages:
       - in_catch_block:true
       - arg_contains:authentication|login
     regex_fallback: log\.error.*authentication.*fail
+    positive_indicators:
+    - log.error
+    - authentication
+    - login
   typescript:
     ast_queries:
     - query_type: function_call
@@ -966,6 +996,10 @@ languages:
       - in_catch_block:true
       - arg_contains:authentication|login
     regex_fallback: logger\.error.*authentication.*fail
+    positive_indicators:
+    - logger.error
+    - authentication
+    - login
 finding:
   title_template: Failed login monitoring detected
   description_template: Application logs failed login attempts. Verify alerts are configured for brute-force detection.
@@ -1887,16 +1921,24 @@ languages:
     - query_type: using_directive
       target: Microsoft.ApplicationInsights
     regex_fallback: using\s+Microsoft\.ApplicationInsights
+    positive_indicators:
+    - Microsoft.ApplicationInsights
+    - ApplicationInsights
   java:
     ast_queries:
     - query_type: import_declaration
       target: com.microsoft.applicationinsights
     regex_fallback: import\s+com\.microsoft\.applicationinsights
+    positive_indicators:
+    - com.microsoft.applicationinsights
+    - applicationinsights
   typescript:
     ast_queries:
     - query_type: import_statement
       target: applicationinsights
     regex_fallback: import.*applicationinsights
+    positive_indicators:
+    - applicationinsights
 finding:
   title_template: Application Insights APM detected
   description_template: APM integration found. Verify distributed tracing and dependency tracking are enabled.

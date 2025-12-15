@@ -874,10 +874,43 @@ languages:
     - '# nosec'
   java:
     regex_fallback: (?i)(hardcoded.*password|SecretKey\s*=|Password\s*=\s*["']|Runtime\.exec|Statement.*\+)
+    positive_indicators:
+    - hardcoded
+    - password
+    - SecretKey =
+    - Password =
+    - Runtime.exec
+    - Statement
+    negative_indicators:
+    - System.getenv
+    - Properties.getProperty
+    - KeyStore
   csharp:
     regex_fallback: (?i)(hardcoded.*password|SecretKey\s*=|Password\s*=\s*["']|Process\.Start|SqlCommand.*\+)
+    positive_indicators:
+    - hardcoded
+    - password
+    - SecretKey =
+    - Password =
+    - Process.Start
+    - SqlCommand
+    negative_indicators:
+    - Environment.GetEnvironmentVariable
+    - ConfigurationManager
+    - SecureString
   typescript:
     regex_fallback: (?i)(hardcoded.*password|apiKey:\s*["']|eval\(|innerHTML\s*=|dangerouslySetInnerHTML)
+    positive_indicators:
+    - hardcoded
+    - password
+    - apiKey:
+    - eval(
+    - innerHTML =
+    - dangerouslySetInnerHTML
+    negative_indicators:
+    - process.env
+    - dotenv
+    - config
   bicep:
     regex_fallback: (?i)(password\s*:\s*["']|adminPassword\s*:|@secure\(\)\s*param.*=)
     positive_indicators:
@@ -1904,8 +1937,28 @@ languages:
     - approved
   typescript:
     regex_fallback: (package\.json|package-lock\.json|yarn\.lock)
+    positive_indicators:
+    - package.json
+    - package-lock.json
+    - yarn.lock
+    - dependencies
+    negative_indicators:
+    - vetted
+    - approved
+    - sbom
+    - scanned
   csharp:
     regex_fallback: (\.csproj|packages\.config|paket\.dependencies)
+    positive_indicators:
+    - .csproj
+    - packages.config
+    - paket.dependencies
+    - PackageReference
+    negative_indicators:
+    - vetted
+    - approved
+    - scanned
+    - verified
 finding:
   title_template: Unvetted supply chain dependencies detected
   description_template: Dependencies lack supply chain security vetting. KSI-PIY-07

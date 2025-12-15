@@ -25,11 +25,15 @@ languages:
     - query_type: import_declaration
       target: com.yubico.webauthn
     regex_fallback: import\s+com\.yubico\.webauthn
+    positive_indicators:
+    - com.yubico.webauthn
   typescript:
     ast_queries:
     - query_type: import_statement
       target: '@simplewebauthn'
     regex_fallback: import.*@simplewebauthn
+    positive_indicators:
+    - '@simplewebauthn'
 finding:
   title_template: Phishing-resistant MFA library detected (FIDO2)
   description_template: FIDO2/WebAuthn library import found, indicating phishing-resistant MFA capability.
@@ -243,16 +247,22 @@ languages:
     - query_type: using_directive
       target: Fido2NetLib
     regex_fallback: using\s+Fido2NetLib
+    positive_indicators:
+    - Fido2NetLib
   java:
     ast_queries:
     - query_type: import_declaration
       target: com.yubico.webauthn
     regex_fallback: import\s+com\.yubico\.webauthn
+    positive_indicators:
+    - com.yubico.webauthn
   typescript:
     ast_queries:
     - query_type: import_statement
       target: webauthn
     regex_fallback: import.*['"].*webauthn
+    positive_indicators:
+    - webauthn
 finding:
   title_template: Phishing-resistant MFA library detected (WebAuthn)
   description_template: WebAuthn library import found, indicating phishing-resistant MFA capability.
@@ -465,16 +475,23 @@ languages:
     - query_type: using_directive
       target: Microsoft.Authentication
     regex_fallback: using\s+Microsoft\.(Identity|Authentication)
+    positive_indicators:
+    - Microsoft.Identity
+    - Microsoft.Authentication
   java:
     ast_queries:
     - query_type: import_declaration
       target: com.microsoft.aad
     regex_fallback: import\s+com\.microsoft\.aad
+    positive_indicators:
+    - com.microsoft.aad
   typescript:
     ast_queries:
     - query_type: import_statement
       target: '@azure/msal'
     regex_fallback: import.*@azure/msal
+    positive_indicators:
+    - '@azure/msal'
 finding:
   title_template: Azure AD authentication detected
   description_template: Azure AD/MSAL library found. Verify Conditional Access policies enforce phishing-resistant MFA.
@@ -678,16 +695,22 @@ languages:
     - query_type: using_directive
       target: OtpNet
     regex_fallback: using\s+OtpNet
+    negative_indicators:
+    - OtpNet
   java:
     ast_queries:
     - query_type: import_declaration
       target: org.jboss.aerogear.security.otp
     regex_fallback: import\s+.*\.otp
+    negative_indicators:
+    - otp
   typescript:
     ast_queries:
     - query_type: import_statement
       target: otplib
     regex_fallback: import.*['"]otplib
+    negative_indicators:
+    - otplib
 finding:
   title_template: TOTP-based MFA detected (not phishing-resistant)
   description_template: TOTP library found. Time-based One-Time Passwords are vulnerable to phishing. FedRAMP 20x requires phishing-resistant MFA.
@@ -906,16 +929,22 @@ languages:
     - query_type: using_directive
       target: Twilio
     regex_fallback: using\s+Twilio
+    negative_indicators:
+    - Twilio
   java:
     ast_queries:
     - query_type: import_declaration
       target: com.twilio
     regex_fallback: import\s+com\.twilio
+    negative_indicators:
+    - com.twilio
   typescript:
     ast_queries:
     - query_type: import_statement
       target: twilio
     regex_fallback: import.*['"]twilio
+    negative_indicators:
+    - twilio
 finding:
   title_template: SMS-based MFA detected (not phishing-resistant)
   description_template: SMS MFA library found. SMS is vulnerable to SIM swapping and phishing attacks. FedRAMP 20x prohibits SMS-only MFA.
@@ -1394,6 +1423,8 @@ languages:
       conditions:
       - not_has_attribute:RequireTwoFactor
     regex_fallback: \[Authorize\]
+    negative_indicators:
+    - RequireTwoFactor
   java:
     ast_queries:
     - query_type: annotation
@@ -1401,6 +1432,8 @@ languages:
       conditions:
       - not_contains:mfa
     regex_fallback: '@PreAuthorize'
+    negative_indicators:
+    - mfa
   typescript:
     ast_queries:
     - query_type: decorator
@@ -1408,6 +1441,8 @@ languages:
       conditions:
       - not_has_decorator:RequireMfa
     regex_fallback: '@RequireAuth'
+    negative_indicators:
+    - RequireMfa
 finding:
   title_template: Authentication decorator without MFA
   description_template: '@login_required used without MFA enforcement. Password-only auth does not meet KSI-IAM-01.'

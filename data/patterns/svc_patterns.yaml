@@ -21,16 +21,22 @@ languages:
     - query_type: using_directive
       target: Microsoft.AspNetCore.Mvc.Filters
     regex_fallback: using.*AspNetCore.*Filters
+    positive_indicators:
+    - AspNetCore.Mvc.Filters
   java:
     ast_queries:
     - query_type: import_declaration
       target: org.springframework.security
     regex_fallback: import.*springframework\.security
+    positive_indicators:
+    - springframework.security
   typescript:
     ast_queries:
     - query_type: import_statement
       target: helmet
     regex_fallback: import.*helmet
+    positive_indicators:
+    - helmet
 finding:
   title_template: Flask security middleware detected
   description_template: Flask security library found (Talisman or SeaSurf). Verify HSTS, CSP, and CSRF protection.
@@ -247,6 +253,9 @@ languages:
     - query_type: function_call
       target: Talisman
     regex_fallback: Talisman\(.*force_https
+    positive_indicators:
+    - Talisman
+    - force_https
   csharp:
     ast_queries:
     - query_type: method_call
@@ -264,11 +273,15 @@ languages:
     - query_type: annotation
       target: EnableWebSecurity
     regex_fallback: '@EnableWebSecurity'
+    positive_indicators:
+    - EnableWebSecurity
   typescript:
     ast_queries:
     - query_type: function_call
       target: helmet.hsts
     regex_fallback: helmet\.hsts
+    positive_indicators:
+    - helmet.hsts
 finding:
   title_template: HSTS enabled in ASP.NET Core
   description_template: HTTP Strict Transport Security detected. Verify max-age >= 31536000 (1 year).
@@ -500,6 +513,9 @@ languages:
       - not_contains_in_body:UseHsts
       - not_contains_in_body:AddHsts
     regex_fallback: public void Configure
+    negative_indicators:
+    - UseHsts
+    - AddHsts
   java:
     ast_queries:
     - query_type: class_definition
@@ -507,11 +523,15 @@ languages:
       conditions:
       - not_contains:requiresSecure
     regex_fallback: class.*SecurityConfig
+    negative_indicators:
+    - requiresSecure
   typescript:
     ast_queries:
     - query_type: function_call
       target: express
       conditions:
+    negative_indicators:
+    - helmet
       - not_contains_in_body:helmet
     regex_fallback: express\(
 finding:
@@ -745,16 +765,22 @@ languages:
     - query_type: method_call
       target: AddContentSecurityPolicy
     regex_fallback: AddContentSecurityPolicy
+    positive_indicators:
+    - AddContentSecurityPolicy
   java:
     ast_queries:
     - query_type: method_call
       target: contentSecurityPolicy
     regex_fallback: contentSecurityPolicy
+    positive_indicators:
+    - contentSecurityPolicy
   typescript:
     ast_queries:
     - query_type: function_call
       target: helmet.contentSecurityPolicy
     regex_fallback: helmet\.contentSecurityPolicy
+    positive_indicators:
+    - helmet.contentSecurityPolicy
 finding:
   title_template: Content Security Policy detected
   description_template: CSP header configuration found. Verify no 'unsafe-inline' or 'unsafe-eval' in production.
@@ -1446,18 +1472,30 @@ languages:
       conditions:
       - initializer_type:string_literal
     regex_fallback: (password|secret|apiKey|token)\s*=\s*"[^"]+"
+    negative_indicators:
+    - password =
+    - secret =
+    - apiKey =
   java:
     ast_queries:
     - query_type: variable_declarator
       target: password|secret|apiKey|token
     regex_fallback: String\s+(password|secret|apiKey|token)\s*=\s*"[^"]+"
+    negative_indicators:
+    - password =
+    - secret =
+    - apiKey =
   typescript:
     ast_queries:
     - query_type: variable_declaration
       target: password|secret|apiKey|token
       conditions:
       - initializer_type:string_literal
-    regex_fallback: (password|secret|apiKey|token)\s*[=:]\s*['"][^'"]+['"]
+    regex_fallback: (password|secret|apiKey|token)\s*[=:]\s*['"][^'"]+['"] 
+    negative_indicators:
+    - password =
+    - secret =
+    - apiKey =
 finding:
   title_template: Hardcoded secret detected
   description_template: Secrets are hardcoded in source code. KSI-SVC-02 requires all secrets in Key Vault or managed identity.
@@ -3483,6 +3521,12 @@ languages:
     regex_fallback: (azurerm_mssql_server|azurerm_mysql_server|azurerm_postgresql_server)(?!.*minimum_tls_version.*1\.2)
   python:
     regex_fallback: (ssl_version|tls_version).*=.*(TLSv1_0|TLSv1_1|SSLv)
+    positive_indicators:
+    - ssl_version
+    - tls_version
+    negative_indicators:
+    - TLSv1_2
+    - TLSv1_3
   java:
     regex_fallback: (DriverManager\.getConnection|DataSource|sslMode|requireSSL)
     positive_indicators:
@@ -3505,6 +3549,11 @@ languages:
     - 'trustServerCertificate: false'
   csharp:
     regex_fallback: (SslProtocols\.(Ssl2|Ssl3|Tls10|Tls11))
+    positive_indicators:
+    - SslProtocols
+    negative_indicators:
+    - Tls12
+    - Tls13
 finding:
   title_template: Database server does not enforce minimum TLS 1.2
   description_template: Database server allows older TLS versions. KSI-SVC-02 requires TLS 1.2 or higher for all network encryption.
