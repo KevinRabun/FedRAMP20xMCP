@@ -77,7 +77,7 @@ The test suite is organized into 6 comprehensive test files:
 
 ### Tool Tests
 
-**`test_mcp_tools.py`** - MCP Tools (35 Tools Across 11 Modules)
+**`test_mcp_tools.py`** - MCP Tools (48 Tools Across 13 Modules)
 - Requirements tools (get_control, list_family_controls, search_requirements)
 - Definitions tools (get_definition, list_definitions, search_definitions)
 - KSI tools (get_ksi, list_ksi, evidence automation, queries, artifacts)
@@ -187,7 +187,7 @@ pytest tests/test_data_loader.py --tb=long
 | Pattern Engine | test_pattern_engine.py | 3 | Pattern loading, validation, detection |
 | KSI Analyzers | test_ksi_analyzers.py | 3 | All 72 KSI analyzers via factory |
 | FRR Analyzers | test_frr_analyzers.py | 8 | All FRR families |
-| MCP Tools | test_mcp_tools.py | 13 | All 35 tools across 11 modules |
+| MCP Tools | test_mcp_tools.py | 14 | All 48 tools across 13 modules |
 
 ### KSI Family Coverage
 

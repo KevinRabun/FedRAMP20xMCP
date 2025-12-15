@@ -680,4 +680,4 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         
         return enriched
     
-    logger.info("Registered 37 tools across 13 modules")
+    logger.info("Registered 48 tools across 13 modules")
