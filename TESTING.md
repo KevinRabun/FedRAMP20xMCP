@@ -499,7 +499,7 @@ git commit -m "Your changes"
 - **Pattern Engine**: ~12 tests
 - **KSI Analyzers**: ~15 tests (covering all families)
 - **FRR Analyzers**: ~15 tests (covering all families)
-- **MCP Tools**: ~30 tests (covering all 35 tools)
+- **MCP Tools**: ~48 tests (covering all 48 tools)
 
 **Total**: ~87 tests
 

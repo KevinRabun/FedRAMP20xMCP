@@ -422,12 +422,13 @@ See `data/patterns/iam_patterns_v2_example.yaml` for a fully-populated example d
 
 ## Validation
 
-Pattern validation script: `scripts/validate_pattern_schema.py`
+Pattern validation is performed automatically by the pattern engine during loading:
 
 Validates:
-- Required fields present
-- Field types correct
-- NIST control IDs valid
+- Required fields present (pattern_id, name, family, languages)
+- Field types correct (YAML schema compliance)
+- Pattern syntax valid (AST queries, regex patterns)
+- NIST control IDs valid (when specified)
 - Azure service names correct
 - Test cases executable
 - Evidence queries syntactically valid

@@ -72,7 +72,9 @@ FedRAMP 20x requires **machine-readable** formats (JSON/XML/structured data) for
 - Code templates in `templates/code/` (Python, C#, PowerShell, Java, TypeScript)
 - Prompt templates in `prompts/` directory (15 files)
 - Tool modules in `tools/` directory (13 modules, 48 tools)
-- Code analyzers in `analyzers/ksi/` directory (72 KSI analyzer files + factory + base)
+- Pattern-based analyzers via `analyzers/pattern_engine.py` - 381 YAML patterns across 23 files
+- KSI factory: `analyzers/ksi/factory.py` - Dynamic analyzer creation from patterns
+- FRR factory: `analyzers/frr/factory.py` - Dynamic analyzer creation from patterns
 - CVE fetcher module: `cve_fetcher.py` - Live vulnerability data from GitHub Advisory Database / NVD
 
 ## Azure Service Recommendations
@@ -82,12 +84,13 @@ FedRAMP 20x requires **machine-readable** formats (JSON/XML/structured data) for
 - **Alternatives:** Qualys, Tenable (vulnerability scanning); Azure Policy (compliance); Azure Resource Graph + custom scripts (inventory)
 - **Guidance:** Use Defender for Cloud unless you have existing security tooling or specific requirements for alternative solutions
 
-**Analyzer Architecture (KSI-Centric):**
+**Analyzer Architecture (Pattern-Based):**
 - `analyzers/base.py` - Base classes (Finding, AnalysisResult, Severity)
-- `analyzers/ksi/base.py` - BaseKSIAnalyzer class for all KSI analyzers
-- `analyzers/ksi/factory.py` - KSIAnalyzerFactory for unified KSI analysis
-- `analyzers/ksi/ksi_*.py` - 72 individual KSI analyzer files
-- Each KSI analyzer supports: Application code (Python, C#, Java, TypeScript/JavaScript), IaC (Bicep, Terraform), CI/CD (GitHub Actions, Azure Pipelines, GitLab CI)
+- `analyzers/pattern_engine.py` - Core pattern matching engine with AST support
+- `analyzers/ksi/factory.py` - KSIAnalyzerFactory for unified KSI analysis (pattern-driven)
+- `analyzers/frr/factory.py` - FRRAnalyzerFactory for unified FRR analysis (pattern-driven)
+- `data/patterns/*.yaml` - 23 pattern files with 381 patterns across 14 languages
+- Supports: Python, C#, Java, TypeScript/JavaScript, Bicep, Terraform, YAML, JSON, Dockerfile, CI/CD pipelines
 
 **Factory Pattern Usage:**
 - `get_factory()` - Get singleton factory instance

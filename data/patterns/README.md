@@ -346,5 +346,6 @@ Phase 2 continuation:
 - Pattern schema: `docs/PATTERN_SCHEMA_V2.md`
 - Pattern authoring guide: `docs/PATTERN_AUTHORING_GUIDE.md`
 - AST utilities: `src/fedramp_20x_mcp/analyzers/ast_utils.py`
-- Existing analyzers: `src/fedramp_20x_mcp/analyzers/ksi/`
-- Metadata: `data/requirements/ksi_metadata.json`, `data/requirements/frr_metadata.json`
+- Pattern engine: `src/fedramp_20x_mcp/analyzers/pattern_engine.py`
+- KSI factory: `src/fedramp_20x_mcp/analyzers/ksi/factory.py`
+- FRR factory: `src/fedramp_20x_mcp/analyzers/frr/factory.py`
