@@ -31,37 +31,15 @@ def load_all_patterns() -> List[Tuple[str, dict]]:
     
     for pattern_file in patterns_dir.glob('*_patterns.yaml'):
         with open(pattern_file, 'r', encoding='utf-8') as f:
-            content = f.read()
-        
-        # Split by pattern delimiter
-        pattern_docs = []
-        current_doc = []
-        
-        for line in content.split('\n'):
-            if line.startswith('pattern_id:') and current_doc:
-                # Save previous pattern
-                doc_text = '\n'.join(current_doc)
-                try:
-                    pattern = yaml.safe_load(doc_text)
-                    if pattern:
-                        pattern_docs.append((pattern_file.name, pattern))
-                except yaml.YAMLError:
-                    pass
-                current_doc = [line]
-            else:
-                current_doc.append(line)
-        
-        # Don't forget last pattern
-        if current_doc:
-            doc_text = '\n'.join(current_doc)
+            # Use safe_load_all to handle multiple documents separated by ---
             try:
-                pattern = yaml.safe_load(doc_text)
-                if pattern:
-                    pattern_docs.append((pattern_file.name, pattern))
-            except yaml.YAMLError:
-                pass
-        
-        all_patterns.extend(pattern_docs)
+                pattern_docs = list(yaml.safe_load_all(f))
+                for pattern in pattern_docs:
+                    if pattern and isinstance(pattern, dict):
+                        all_patterns.append((pattern_file.name, pattern))
+            except yaml.YAMLError as e:
+                print(f"Warning: Error loading {pattern_file.name}: {e}")
+                continue
     
     return all_patterns
 
