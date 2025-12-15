@@ -341,6 +341,16 @@ languages:
     - query_type: import_statement
       target: azure.identity.DefaultAzureCredential
     regex_fallback: from\s+azure\.identity\s+import\s+DefaultAzureCredential
+  java:
+    ast_queries:
+    - query_type: import_statement
+      target: com.azure.identity.DefaultAzureCredential
+    regex_fallback: import\s+com\.azure\.identity\.DefaultAzureCredential
+  typescript:
+    ast_queries:
+    - query_type: import_statement
+      target: '@azure/identity'
+    regex_fallback: from\s+['"]@azure/identity['"]
   csharp:
     ast_queries:
     - query_type: using_directive

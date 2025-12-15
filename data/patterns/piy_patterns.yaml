@@ -872,6 +872,8 @@ languages:
     - getenv
     - yaml.safe_load
     - '# nosec'
+  java:
+    regex_fallback: (?i)(hardcoded.*password|SecretKey\s*=|Password\s*=\s*["']|Runtime\.exec|Statement.*\+)
   csharp:
     regex_fallback: (?i)(hardcoded.*password|SecretKey\s*=|Password\s*=\s*["']|Process\.Start|SqlCommand.*\+)
   typescript:
@@ -1889,6 +1891,17 @@ languages:
     - '# vetted'
     - '# approved'
     - '# sbom'
+  java:
+    regex_fallback: (pom\.xml|build\.gradle|dependency>)
+    positive_indicators:
+    - dependency
+    - groupId
+    - artifactId
+    - version
+    negative_indicators:
+    - verified
+    - scanned
+    - approved
   typescript:
     regex_fallback: (package\.json|package-lock\.json|yarn\.lock)
   csharp:

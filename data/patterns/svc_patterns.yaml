@@ -3483,6 +3483,26 @@ languages:
     regex_fallback: (azurerm_mssql_server|azurerm_mysql_server|azurerm_postgresql_server)(?!.*minimum_tls_version.*1\.2)
   python:
     regex_fallback: (ssl_version|tls_version).*=.*(TLSv1_0|TLSv1_1|SSLv)
+  java:
+    regex_fallback: (DriverManager\.getConnection|DataSource|sslMode|requireSSL)
+    positive_indicators:
+    - 'jdbc:'
+    - connection
+    - ssl
+    negative_indicators:
+    - sslMode=require
+    - requireSSL=true
+    - encrypt=true
+  typescript:
+    regex_fallback: (createConnection|tedious|mssql|ssl:)
+    positive_indicators:
+    - connectionString
+    - ssl
+    - encrypt
+    negative_indicators:
+    - 'encrypt: true'
+    - 'ssl: true'
+    - 'trustServerCertificate: false'
   csharp:
     regex_fallback: (SslProtocols\.(Ssl2|Ssl3|Tls10|Tls11))
 finding:

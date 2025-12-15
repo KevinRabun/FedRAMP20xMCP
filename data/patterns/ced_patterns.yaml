@@ -34,6 +34,30 @@ languages:
     - Completed
     - Verified
     - Tracked
+  java:
+    regex_fallback: (class.*Training|interface.*Training|TrainingModule)
+    positive_indicators:
+    - training
+    - certification
+    - course
+    - module
+    negative_indicators:
+    - completed
+    - verified
+    - tracked
+    - documented
+  typescript:
+    regex_fallback: (class.*Training|interface.*Training|TrainingModule)
+    positive_indicators:
+    - training
+    - certification
+    - course
+    - module
+    negative_indicators:
+    - completed
+    - verified
+    - tracked
+    - documented
   bicep:
     regex_fallback: (Microsoft\.OperationalInsights.*training|Microsoft\.Insights.*training)
     positive_indicators:
@@ -328,6 +352,39 @@ languages:
     - training
     - certified
     - authorized
+  csharp:
+    regex_fallback: (role.*admin|privilege.*user|developer.*access|RBAC)
+    positive_indicators:
+    - role
+    - permission
+    - privilege
+    - admin
+    negative_indicators:
+    - training
+    - certified
+    - authorized
+  java:
+    regex_fallback: (role.*admin|privilege.*user|developer.*access|RBAC)
+    positive_indicators:
+    - role
+    - permission
+    - privilege
+    - admin
+    negative_indicators:
+    - training
+    - certified
+    - authorized
+  typescript:
+    regex_fallback: (role.*admin|privilege.*user|developer.*access|RBAC)
+    positive_indicators:
+    - role
+    - permission
+    - privilege
+    - admin
+    negative_indicators:
+    - training
+    - certified
+    - authorized
   bicep:
     regex_fallback: (Microsoft\.Authorization/roleAssignments|Microsoft\.Authorization/roleDefinitions)
     ast_queries:
@@ -568,6 +625,8 @@ category: developer_training
 languages:
   python:
     regex_fallback: (eval\(|exec\(|__import__|pickle\.loads|yaml\.load\(|input\()
+  java:
+    regex_fallback: (Runtime\.getRuntime\(|ProcessBuilder|Class\.forName|ScriptEngine)
   typescript:
     regex_fallback: (eval\(|Function\(|setTimeout\([^,]+\)|setInterval\([^,]+\)|innerHTML\s*=|outerHTML\s*=)
   csharp:
@@ -780,6 +839,42 @@ nist_controls: &id001
 category: incident_response_training
 languages:
   python:
+    regex_fallback: (incident|alert|exception|error|failure)
+    positive_indicators:
+    - incident
+    - response
+    - recovery
+    - disaster
+    negative_indicators:
+    - plan
+    - training
+    - drilled
+    - tested
+  csharp:
+    regex_fallback: (incident|alert|exception|error|failure)
+    positive_indicators:
+    - incident
+    - response
+    - recovery
+    - disaster
+    negative_indicators:
+    - plan
+    - training
+    - drilled
+    - tested
+  java:
+    regex_fallback: (incident|alert|exception|error|failure)
+    positive_indicators:
+    - incident
+    - response
+    - recovery
+    - disaster
+    negative_indicators:
+    - plan
+    - training
+    - drilled
+    - tested
+  typescript:
     regex_fallback: (incident|alert|exception|error|failure)
     positive_indicators:
     - incident

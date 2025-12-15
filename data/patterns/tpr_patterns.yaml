@@ -30,6 +30,27 @@ languages:
     - verify
     - checksum
     - --require-hashes
+  csharp:
+    regex_fallback: (<PackageReference|packages\.config|Install-Package)
+    positive_indicators:
+    - PackageReference
+    - Include=
+    - Version=
+    negative_indicators:
+    - <Verified>
+    - <!-- Approved -->
+    - <SecurityScan>
+  java:
+    regex_fallback: (pom\.xml|<dependency>|build\.gradle|implementation\s+['"])
+    positive_indicators:
+    - dependency
+    - groupId
+    - artifactId
+    - implementation
+    negative_indicators:
+    - <!-- verified -->
+    - '// approved'
+    - 'verified: true'
   typescript:
     regex_fallback: (npm install|yarn add|package\.json)
     positive_indicators:
@@ -316,6 +337,34 @@ languages:
     - configured
   python:
     regex_fallback: (safety check|pip-audit|bandit|snyk)
+  csharp:
+    regex_fallback: (PackageReference|packages\.config|NuGet)
+    positive_indicators:
+    - PackageReference
+    - packages
+    negative_indicators:
+    - SecurityMonitoring
+    - DependencyCheck
+    - audit
+  java:
+    regex_fallback: (dependency>|implementation\s+|compile\s+)
+    positive_indicators:
+    - dependency
+    - implementation
+    - compile
+    negative_indicators:
+    - DependencyCheck
+    - audit
+    - owasp
+  typescript:
+    regex_fallback: (dependencies|devDependencies|npm|yarn)
+    positive_indicators:
+    - dependencies
+    - package
+    negative_indicators:
+    - audit
+    - snyk
+    - dependabot
 remediation: "Implement continuous supply chain security monitoring:\n\n**1. Dependabot\
   \ Configuration (.github/dependabot.yml):**\n```yaml\nversion: 2\nupdates:\n  #\
   \ Python dependencies\n  - package-ecosystem: \"pip\"\n    directory: \"/\"\n  \
@@ -595,8 +644,32 @@ finding:
 languages:
   python:
     regex_fallback: (--index-url\s+http:|--extra-index-url\s+http:|pip install.*--trusted-host)
+  csharp:
+    regex_fallback: (http://[^\s"']+\.nuget|packageSource.*http://)
+    positive_indicators:
+    - http://
+    - packageSource
+    negative_indicators:
+    - https://
+    - nuget.org
+  java:
+    regex_fallback: (http://[^\s"']+/(maven|gradle|repository)|repository>.*http://)
+    positive_indicators:
+    - http://
+    - repository
+    negative_indicators:
+    - https://
+    - maven.org
+    - gradle.org
   typescript:
     regex_fallback: (registry.*http:|"http://)
+    positive_indicators:
+    - http://
+    - registry
+    negative_indicators:
+    - https://
+    - npmjs.org
+    - registry.npmjs.org
   docker:
     regex_fallback: (FROM\s+[^:]+(?!:sha256))
 remediation: "Use only trusted, verified package sources with HTTPS:\n\n**Python (Secure\

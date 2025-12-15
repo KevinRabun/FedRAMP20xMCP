@@ -843,6 +843,21 @@ languages:
     - package_with_cve: true
     - package_age: '>6_months'
     regex_fallback: ^[a-zA-Z0-9_-]+==.*$
+  typescript:
+    file_path: package.json
+    ast_queries:
+    - json_path: dependencies.*
+      conditions:
+      - has_known_cve
+    regex_fallback: '"dependencies":\s*\{'
+    positive_indicators:
+    - dependencies
+    - version
+    - package.json
+    negative_indicators:
+    - npm-check-updates
+    - renovate
+    - dependabot
   javascript:
     file_path: package.json
     ast_queries:
