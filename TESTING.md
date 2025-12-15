@@ -35,7 +35,7 @@ python tests/run_all_tests.py
 
 ## Test Organization
 
-The test suite is organized into 6 comprehensive test files:
+The test suite is organized into 7 primary test files plus 18 pattern-specific test files:
 
 ### Core Module Tests
 
@@ -92,6 +92,21 @@ The test suite is organized into 6 comprehensive test files:
 - KSI status tools (implementation status, coverage summary)
 - Validation tools (validate_fedramp_config)
 
+**`test_code_enrichment.py`** - Code Enrichment
+- Python code enrichment with FedRAMP requirements
+- C# code enrichment with compliance headers
+- Requirement header generation
+
+### Pattern Tests (18 Files)
+
+**Family-Specific Pattern Tests** - Each pattern file has corresponding tests:
+- test_ads_patterns.py, test_afr_patterns.py, test_ccm_patterns.py
+- test_ced_patterns.py, test_cmt_patterns.py, test_cna_patterns.py
+- test_iam_patterns.py, test_inr_patterns.py, test_mla_patterns.py
+- test_piy_patterns.py, test_rpl_patterns.py, test_rsc_patterns.py
+- test_scn_patterns.py, test_svc_patterns.py, test_tpr_patterns.py
+- test_ucm_patterns.py, test_vdr_patterns.py, test_common_patterns.py
+
 ## Prerequisites
 
 ### Required
@@ -141,6 +156,13 @@ python tests/test_frr_analyzers.py
 
 # MCP tools tests
 python tests/test_mcp_tools.py
+
+# Code enrichment tests
+python tests/test_code_enrichment.py
+
+# Pattern tests (any family)
+python tests/test_iam_patterns.py
+python tests/test_vdr_patterns.py
 ```
 
 ### Run Specific Test Classes
@@ -540,17 +562,20 @@ data/patterns/
 
 ```
 tests/
-├── run_all_tests.py          # Main test runner
+├── run_all_tests.py           # Main test runner
+├── conftest.py                # Pytest configuration
 ├── test_data_loader.py        # Data loader tests
 ├── test_cve_fetcher.py        # CVE fetcher tests
 ├── test_pattern_engine.py     # Pattern engine tests
 ├── test_ksi_analyzers.py      # KSI analyzer tests
 ├── test_frr_analyzers.py      # FRR analyzer tests
-└── test_mcp_tools.py          # MCP tools tests
+├── test_mcp_tools.py          # MCP tools tests
+├── test_code_enrichment.py    # Code enrichment tests
+└── test_*_patterns.py         # 18 pattern-specific test files
 ```
 
 ---
 
-**Last Updated**: December 12, 2024  
+**Last Updated**: December 15, 2025  
 **Version**: 1.0.0  
-**Test Coverage**: Core modules, patterns, KSI/FRR analyzers, all 35 MCP tools
+**Test Coverage**: Core modules, patterns, KSI/FRR analyzers, all 48 MCP tools
