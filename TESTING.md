@@ -35,7 +35,15 @@ python tests/run_all_tests.py
 
 ## Test Organization
 
-The test suite is organized into 7 primary test files plus 18 pattern-specific test files:
+The test suite is organized into 7 primary test files plus pattern-specific test files:
+
+### Critical Tests
+
+**`test_pattern_language_parity.py`** - **NEW: Pattern Language Parity Validation**
+- Validates 100% parity across Python, C#, Java, TypeScript
+- Prevents incomplete language implementations
+- Ensures consistent compliance checking across all technology stacks
+- **MUST PASS before merging pattern changes**
 
 ### Core Module Tests
 

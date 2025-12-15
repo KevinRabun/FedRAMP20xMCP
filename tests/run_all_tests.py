@@ -14,6 +14,7 @@ TEST_FILES = [
     "test_data_loader.py",
     "test_cve_fetcher.py",
     "test_pattern_engine.py",
+    "test_pattern_language_parity.py",  # CRITICAL: Must pass before merging pattern changes
     "test_ksi_analyzers.py",
     "test_frr_analyzers.py",
     "test_mcp_tools.py",
