@@ -63,33 +63,37 @@ The server provides access to **271 requirements** (199 FRRs + 72 KSIs) plus **5
 - **Implementation Planning**: Generate strategic interview questions to help product managers and engineers think through FedRAMP 20x implementation considerations
 - **AST-Powered Code Analysis**: Advanced Abstract Syntax Tree parsing using tree-sitter for accurate, context-aware security analysis across Python, C#, Java, TypeScript/JavaScript, Bicep, and Terraform
 - **Semantic Analysis**: Deep code understanding with symbol resolution, control flow analysis, and interprocedural analysis capabilities
-- **🚀 Hybrid Analysis (NEW)**: Combines fast pattern-based detection (120 YAML patterns) with deep traditional analyzers (72 KSIs + 199 FRRs) for comprehensive, performant compliance checking
-- **Pattern Engine**: Declarative YAML-driven detection across 14 languages with intelligent deduplication and coverage metadata
+- **🚀 Pattern-Based Architecture**: Unified analysis engine with 381 YAML patterns across 23 requirement families, providing comprehensive compliance checking for all KSIs and FRRs
+- **Pattern Engine**: Declarative YAML-driven detection across 14 languages with AST-first analysis and intelligent finding categorization
 
-### Hybrid Analysis Architecture
+### Pattern-Based Analysis Architecture
 
-The server uses a **hybrid analysis approach** combining two complementary analysis methods:
+The server uses a **unified pattern-based architecture** for all FedRAMP 20x compliance analysis:
 
-1. **Pattern Engine** (Fast, Broad Coverage)
-   - **120 YAML-defined patterns** across 11 requirement families
-   - **14 languages**: Python, C#, Java, TypeScript, JavaScript, Bicep, Terraform, GitHub Actions, Azure Pipelines, GitLab CI, YAML, JSON, Dockerfile, GitHub
-   - AST-first detection with regex fallback for accuracy
-   - Declarative, easy-to-maintain pattern definitions
-   - Coverage: ADS, CCM, CNA, COMMON, IAM, MLA, RSC, SCN, SVC, UCM, VDR
+**Architecture Overview:**
+- **381 YAML patterns** across **23 requirement families**
+- **Single analysis engine** (`GenericPatternAnalyzer`) replaces 271 traditional analyzers
+- **14 languages supported**: Python, C#, Java, TypeScript, JavaScript, Bicep, Terraform, GitHub Actions, Azure Pipelines, GitLab CI, YAML, JSON, Dockerfile, GitHub
+- **AST-first detection** with tree-sitter for accuracy, regex fallback when needed
+- **Declarative patterns** that are easy to maintain and extend
 
-2. **Traditional Analyzers** (Deep, Specialized)
-   - **72 KSI analyzers** for Key Security Indicators
-   - **199 FRR analyzers** for specific FedRAMP requirements
-   - Context-aware, interprocedural analysis
-   - Complex security logic and data flow tracking
+**Pattern Coverage by Family:**
+- **Application Families**: ADS, AFR, CCM, CED, CMT, CNA, IAM, INR, MLA, PIY, RPL, RSC, SCN, SVC, TPR, UCM, VDR (17 families)
+- **Infrastructure Families**: COMMON, FSI, ICP, KSI, MAS, PVA (6 families)
+- **Complete KSI & FRR Mapping**: All 72 KSIs and 199 FRRs are covered through pattern definitions
 
-3. **Intelligent Deduplication**
-   - Merges findings from both engines
-   - Removes duplicates (same requirement + similar description)
-   - Prefers pattern findings when duplicate (faster, clearer source)
-   - Preserves unique insights from both approaches
+**How It Works:**
+1. **Pattern Loading**: YAML patterns loaded from `data/patterns/` directory
+2. **Analysis Execution**: Code analyzed using tree-sitter AST parsing with pattern matching
+3. **Finding Generation**: Patterns generate findings with severity, description, and remediation
+4. **Result Aggregation**: Findings grouped by requirement family with deduplication
 
-**Performance**: Pattern engine provides comparable speed to traditional analyzers with broader language coverage. First-run initialization overhead is amortized across multiple analyses.
+**Benefits:**
+- ✅ **Consistency**: Same detection logic across all languages
+- ✅ **Maintainability**: Update patterns in YAML instead of Python code
+- ✅ **Performance**: Pattern compilation and caching optimize analysis speed
+- ✅ **Extensibility**: Add new patterns without code changes
+- ✅ **Accuracy**: AST-based detection reduces false positives
 
 **Important Clarification: OSCAL Format**
 FedRAMP 20x requires **machine-readable** formats (JSON, XML, or structured data) for Authorization Data Sharing. **OSCAL is NOT mentioned in FedRAMP 20x requirements** - it's a NIST standard that can be used as one potential implementation approach. The actual requirement is simply "machine-readable" - you can use custom JSON/XML or OSCAL based on your implementation needs.
