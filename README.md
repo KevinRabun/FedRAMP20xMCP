@@ -1005,7 +1005,7 @@ API_KEY = "sk-1234567890abcdef"  # KSI-SVC-06: Hardcoded secret
 @app.route('/api/users')  # KSI-IAM-01: Missing authentication
 def get_users():
     users = [
-        {'name': 'Alice', 'ssn': '123-45-6789'},  # KSI-PIY-02: Unencrypted PII
+        {'name': 'Alice', 'ssn': '123-45-6789'},  # PII in logs - see NIST SI-12
     ]
     return {'users': users}
 ```
