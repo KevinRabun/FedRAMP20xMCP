@@ -203,6 +203,14 @@ The cached FedRAMP data is **CORRECT** and aligned with authoritative source:
 25. [x] Fix data/patterns/cna_patterns.yaml: Remove invalid FRR-CNA-01/02 references ✅ FIXED
 26. [x] Fix tests/test_data_loader.py: Change FRR-IAM-01 → FRR-RSC-01 (IAM is KSI-only) ✅ FIXED
 27. [x] Fix tests/test_mcp_tools.py: Change FRR-IAM-01 → FRR-RSC-01 (IAM is KSI-only) ✅ FIXED
+28. [x] Fix data/patterns/piy_patterns.yaml: Remove incorrect KSI-PIY-01 from PII logging pattern ✅ FIXED
+
+### Priority 7: Invalid FRR Family References (Session 3b)
+
+29. [x] Fix data/patterns/afr_patterns.yaml: Replace FRR-AFR-07 → FRR-RSC-01 (AFR has no FRR family) ✅ FIXED
+30. [x] Fix src/fedramp_20x_mcp/tools/evidence.py: Replace FRR-AFR-09 → KSI-AFR-07 ✅ FIXED
+31. [x] Fix docs/PATTERN_AUTHORING_GUIDE.md: Replace FRR-SVC-01 → FRR-RSC-01 (SVC is KSI-only) ✅ FIXED
+32. [x] Fix docs/PATTERN_AUTHORING_GUIDE.md: Replace FRR-MLA-01 → FRR-CCM-01 (MLA is KSI-only) ✅ FIXED
 
 ---
 
@@ -228,12 +236,14 @@ The cached FedRAMP data is **CORRECT** and aligned with authoritative source:
 - test_ksi_requirement_validation.py: Added skip markers for SVC-01 tests (patterns not implemented)
 
 **Session 3 Additional Fixes:**
-- PATTERN_AUTHORING_GUIDE.md: 3 fixes (KSI-SVC-01→SVC-06, FRR-CNA→KSI-SVC-02)
-- piy_patterns.yaml: 2 fixes (KSI-PIY-02 "Data Retention" → NIST SI-12)
+- PATTERN_AUTHORING_GUIDE.md: 7 fixes (KSI-SVC-01→SVC-06, FRR-CNA/SVC/MLA→valid FRR families)
+- piy_patterns.yaml: 3 fixes (KSI-PIY-02 "Data Retention" → NIST SI-12, removed KSI-PIY-01 from PII pattern)
 - test_code_enrichment.py: 4 fixes (KSI-SVC-01→SVC-06 for Key Vault tests)
 - defender.txt templates: 4 fixes each (KSI-PIY-01 description corrected)
 - svc_patterns.yaml: 2 additional fixes (swapped KSI-SVC-02/SVC-06)
 - cna_patterns.yaml: 2 fixes (removed invalid FRR-CNA references)
+- afr_patterns.yaml: 2 fixes (removed invalid FRR-AFR-07 references)
+- evidence.py: 1 fix (FRR-AFR-09→KSI-AFR-07)
 - test_data_loader.py: 1 fix (FRR-IAM-01→FRR-RSC-01)
 - test_mcp_tools.py: 2 fixes (FRR-IAM-01→FRR-RSC-01)
 

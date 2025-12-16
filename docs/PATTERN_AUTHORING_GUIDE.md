@@ -208,7 +208,7 @@ family: SVC
 severity: critical
 description: |
   Detects hardcoded secrets in source code.
-  FRR-SVC requires secrets to be stored in secure vaults (Azure Key Vault).
+  KSI-SVC-06 requires secrets to be stored in secure vaults (Azure Key Vault).
 pattern_type: configuration
 languages:
   python:
@@ -220,7 +220,7 @@ finding:
   description: Code contains hardcoded credentials
   recommendation: Store secrets in Azure Key Vault per KSI-SVC-06 (Secret Management)
   references:
-    - FRR-SVC-01
+    - FRR-RSC-01
     - KSI-SVC-06
 ```
 
@@ -376,7 +376,7 @@ finding:
   description: Application uses centralized logging service
   recommendation: Ensure all logs are exported to Azure Log Analytics per KSI-MLA-01
   references:
-    - FRR-MLA-01
+    - FRR-CCM-01
     - KSI-MLA-01
 ```
 
@@ -655,7 +655,7 @@ def test_no_false_positives():
 ```yaml
 finding:
   references:
-    - FRR-SVC-01  # Primary requirement
+    - FRR-RSC-01  # Primary requirement (RSC = Recommended Secure Configuration)
     - KSI-SVC-06  # Related KSI (Secret Management)
 ```
 

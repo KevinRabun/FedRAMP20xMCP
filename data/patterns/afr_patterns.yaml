@@ -313,14 +313,14 @@ remediation: "Disable debug mode in production environments:\n\n**Python (Flask)
   ```yaml\n- task: DotNetCoreCLI@2\n  inputs:\n    command: 'build'\n    arguments:\
   \ '--configuration Release'  # Use Release, not Debug\n```\n\n**References:**\n\
   - OWASP: https://owasp.org/www-community/vulnerabilities/Information_exposure_through_debug_information\n\
-  - FRR-AFR-07: Recommended Secure Configuration\n"
+  - NIST SC-7: Boundary Protection\n"
 finding:
   title: Debug mode enabled in production
   description: Application has debug mode enabled which may expose sensitive information
   recommendation: Disable debug mode in production environments
   references:
   - KSI-AFR-07
-  - FRR-AFR-07
+  - FRR-RSC-01
 evidence_artifacts:
 - artifact_type: logs
   name: AFR operational logs
@@ -822,7 +822,7 @@ remediation: "Configure secure defaults for all Azure resources:\n\n**Bicep (Sto
   \    bypass         = [\"AzureServices\"]\n  }\n}\n```\n\n**References:**\n- Azure\
   \ Security Baseline: https://learn.microsoft.com/en-us/security/benchmark/azure/\n\
   - CIS Azure Foundations Benchmark: https://www.cisecurity.org/benchmark/azure\n\
-  - FRR-AFR-07: Recommended Secure Configuration\n"
+  - NIST SC-7: Boundary Protection\n"
 finding:
   title: Insecure default configuration detected
   description: Resource configured with insecure defaults (public access, HTTP allowed,
@@ -830,7 +830,7 @@ finding:
   recommendation: Enable secure defaults per Azure Security Baseline
   references:
   - KSI-AFR-07
-  - FRR-AFR-07
+  - FRR-RSC-01
 evidence_artifacts:
 - artifact_type: logs
   name: AFR operational logs
