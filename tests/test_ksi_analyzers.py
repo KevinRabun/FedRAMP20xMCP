@@ -260,10 +260,10 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
         result = await factory.analyze("KSI-ADS-01", code, "bicep")
         assert result is not None
     
-    # PIY Family Tests
+    # PIY Family Tests (Policy and Inventory)
     @pytest.mark.asyncio
-    async def test_ksi_piy_01_data_encryption_at_rest(self, factory):
-        """Test KSI-PIY-01: Data Encryption at Rest"""
+    async def test_ksi_piy_01_automated_inventory(self, factory):
+        """Test KSI-PIY-01: Automated Inventory - Use authoritative sources to automatically maintain real-time inventories"""
         code = """
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   name: 'mystorageaccount'
@@ -295,8 +295,8 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
         assert result is not None
     
     @pytest.mark.asyncio
-    async def test_ksi_piy_02_data_encryption_in_transit(self, factory):
-        """Test KSI-PIY-02: Data Encryption in Transit"""
+    async def test_ksi_piy_02_security_objectives(self, factory):
+        """Test KSI-PIY-02: Security Objectives and Requirements - Document security objectives for each information resource"""
         code = """
 resource appService 'Microsoft.Web/sites@2022-09-01' = {
   name: 'myApp'

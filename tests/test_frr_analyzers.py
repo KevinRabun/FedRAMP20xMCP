@@ -383,7 +383,11 @@ resource "azurerm_network_security_group" "frontend_nsg" {
 
 
 class TestFRRAnalysisPIY:
-    """Test PIY (Privacy) Family"""
+    """Test PIY-related patterns (Policy and Inventory) - Note: PIY is a KSI theme, not FRR family
+    
+    These tests validate patterns that relate to KSI-PIY requirements which may be
+    referenced in FRR implementations. There is no FRR-PIY family.
+    """
     
     @pytest.fixture
     def factory(self):
@@ -391,8 +395,8 @@ class TestFRRAnalysisPIY:
         return get_factory()
     
     @pytest.mark.asyncio
-    async def test_frr_piy_01_encryption_at_rest(self, factory):
-        """Test FRR-PIY-01: Encryption at rest"""
+    async def test_ksi_piy_encryption_patterns(self, factory):
+        """Test encryption patterns that support KSI-PIY-01 (Automated Inventory) and KSI-SVC-06 (Secret Management)"""
         code = """
 using Azure.Security.KeyVault.Keys;
 using Azure.Identity;

@@ -14,8 +14,9 @@
  * Related KSIs:
  * - KSI-IAM-01: Identity and access management
  * - KSI-CNA-01: Network security controls
- * - KSI-PIY-01: Encryption at rest
- * - KSI-PIY-02: Encryption in transit
+ * - KSI-PIY-01: Automated inventory (asset tracking)
+ * - KSI-SVC-02: Network encryption (TLS/secure transmission)
+ * - KSI-SVC-06: Secret management (key lifecycle)
  * 
  * Usage:
  *   CryptoService cryptoService = new CryptoService(keyVaultUri, managedIdentityClientId);

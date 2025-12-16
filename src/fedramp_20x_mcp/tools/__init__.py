@@ -623,16 +623,16 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
               name: 'mykeyvault'
             }
             
-            // After enrichment with add_requirement_comments(code, "KSI-SVC-01", "FRR-RSC-01", "bicep"):
+            // After enrichment with add_requirement_comments(code, "KSI-SVC-06", "FRR-RSC-01", "bicep"):
             // ==========================================
             // FedRAMP 20x Compliance Requirements
             // ==========================================
             //
             // Key Security Indicators (KSI):
             //
-            // KSI-SVC-01: Secrets Management
-            //   All secrets must be stored in Azure Key Vault with
-            //   soft delete and purge protection enabled.
+            // KSI-SVC-06: Secret Management
+            //   Automate management, protection, and regular rotation of
+            //   digital keys, certificates, and other secrets.
             //
             // FedRAMP Requirements (FRR):
             //
@@ -644,7 +644,7 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
               name: 'mykeyvault'
               tags: {
                 Compliance: 'FedRAMP 20x'
-                Requirements: 'KSI-SVC-01, FRR-RSC-01'
+                Requirements: 'KSI-SVC-06, FRR-RSC-01'
               }
             }
             ```

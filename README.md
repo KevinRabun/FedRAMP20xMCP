@@ -928,9 +928,9 @@ Analyze application code for FedRAMP 20x security compliance issues.
 
 **Phase 1 - Foundation:**
 - **KSI-IAM-01**: API authentication and authorization
-- **KSI-SVC-06**: Secrets management (hardcoded passwords, API keys)
-- **KSI-SVC-08**: Dependency security (vulnerable libraries, unsafe functions)
-- **KSI-PIY-02**: PII handling and encryption (SSN, email, phone, DOB, address)
+- **KSI-SVC-06**: Secret management (hardcoded passwords, API keys, certificates)
+- **KSI-SVC-05**: Resource integrity (vulnerable libraries, unsafe functions)
+- **KSI-PIY-02**: Security objectives and requirements documentation
 - **KSI-MLA-05**: Diagnostic logging configuration
 
 **Phase 2 - Application Security:**
@@ -938,11 +938,11 @@ Analyze application code for FedRAMP 20x security compliance issues.
 - **KSI-CNA-03**: Microservices security (service-to-service auth, mTLS, rate limiting)
 
 **Phase 3 - Secure Coding Practices:**
-- **KSI-SVC-01**: Error handling and logging
-- **KSI-SVC-02**: Input validation (SQL/command injection prevention)
-- **KSI-SVC-07**: Secure coding (no eval/exec, secure random)
-- **KSI-PIY-01**: Data classification and tagging
-- **KSI-PIY-03**: Privacy controls (retention, deletion, export)
+- **KSI-SVC-01**: Continuous improvement (security evaluation and improvements)
+- **KSI-SVC-02**: Network encryption (TLS, secure transmission)
+- **KSI-SVC-07**: Patching (security updates, vulnerability remediation)
+- **KSI-PIY-01**: Automated inventory (real-time asset tracking)
+- **KSI-PIY-03**: Documentation requirements
 - **KSI-CNA-07**: Service mesh security (Istio/Linkerd)
 - **KSI-IAM-04**: Least privilege access
 - **KSI-IAM-07**: Session management and token security
