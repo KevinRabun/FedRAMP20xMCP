@@ -266,8 +266,7 @@ nist_controls:
 - pt-2
 - pt-3
 - si-12
-related_ksis:
-- KSI-PIY-01
+# Note: No direct KSI mapping for PII logging - covered by NIST controls above
 evidence_artifacts:
 - artifact_type: logs
   name: Authentication logs with MFA details
