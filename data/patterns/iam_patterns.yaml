@@ -1638,7 +1638,7 @@ languages:
       properties:
       - roleDefinitionId
       - principalId
-    regex_fallback: resource.*Microsoft\\.Authorization/roleAssignments
+    regex_fallback: resource.*Microsoft\.Authorization/roleAssignments
   terraform:
     ast_queries:
     - resource_type: azurerm_role_assignment

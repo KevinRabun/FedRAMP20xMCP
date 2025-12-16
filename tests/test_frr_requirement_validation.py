@@ -179,34 +179,52 @@ FAMILY_NEGATIVE_PATTERNS = {
     
     "FSI": ("""
 # NON-COMPLIANT: {frr_id} violation
-# Using regular email for critical communications
-# No secure inbox
-# No encryption
-""", "python"),
+# Using regular email for critical communications  
+# No secure inbox, no encryption
+resource "azurerm_storage_queue" "insecure_inbox" {{
+  name = "regular-email-inbox"
+  # Missing FedRAMP secure inbox configuration
+}}
+""", "terraform"),
     
     "ICP": ("""
 # NON-COMPLIANT: {frr_id} violation
 # Internal incident response only
 # No FedRAMP notification integration
-""", "python"),
+resource "azurerm_monitor_action_group" "internal_only" {{
+  name = "internal-incidents"
+  # Missing FedRAMP PMO notification
+}}
+""", "terraform"),
     
     "KSI": ("""
 # NON-COMPLIANT: {frr_id} violation
-# No KSI tracking
-# No automated validation
-""", "python"),
+# No KSI tracking, no automated validation
+resource "azurerm_application_insights" "no_ksi" {{
+  name = "basic-monitoring"
+  # Missing KSI compliance tracking
+}}
+""", "terraform"),
     
     "MAS": ("""
 # NON-COMPLIANT: {frr_id} violation
 # Unclear scope boundaries
 # Services not documented
-""", "python"),
+resource "azurerm_resource_group" "undefined_scope" {{
+  name = "undefined-services"
+  # Missing assessment scope documentation
+}}
+""", "terraform"),
     
     "PVA": ("""
 # NON-COMPLIANT: {frr_id} violation
 # Point-in-time assessments only
 # No continuous validation
-""", "python"),
+resource "azurerm_security_center_assessment" "manual_only" {{
+  name = "annual-assessment"
+  # Missing continuous validation configuration
+}}
+""", "terraform"),
     
     "RSC": ("""
 # NON-COMPLIANT: {frr_id} violation
