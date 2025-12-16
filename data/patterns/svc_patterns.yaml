@@ -49,7 +49,7 @@ nist_controls:
 - sc-8
 - sc-28
 related_ksis:
-- KSI-SVC-01
+- KSI-SVC-02
 evidence_collection:
   azure_monitor_kql:
   - query: 'AppServiceHTTPLogs
@@ -204,8 +204,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-SVC-01
-    requirement_name: Continuous Improvement
+    requirement_id: KSI-SVC-02
+    requirement_name: Network Encryption
     impact_levels:
     - Low
     - Moderate
@@ -294,7 +294,7 @@ nist_controls:
 - sc-8
 - sc-13
 related_ksis:
-- KSI-SVC-01
+- KSI-SVC-02
 evidence_collection:
   azure_monitor_kql:
   - query: 'AppServiceHTTPLogs
@@ -449,8 +449,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-SVC-01
-    requirement_name: Continuous Improvement
+    requirement_id: KSI-SVC-02
+    requirement_name: Network Encryption
     impact_levels:
     - Low
     - Moderate
@@ -536,7 +536,7 @@ languages:
     regex_fallback: express\(
 finding:
   title_template: HSTS not configured
-  description_template: Web application does not enforce HTTPS via HSTS. KSI-SVC-01 requires HSTS with preload.
+  description_template: Web application does not enforce HTTPS via HSTS. KSI-SVC-02 (Network Encryption) requires HSTS with preload.
   remediation_template: "Enable HSTS:\n\nPython (Flask):\nfrom flask_talisman import Talisman\nTalisman(app, force_https=True, \n         strict_transport_security=True,\n         strict_transport_security_max_age=31536000,\n         strict_transport_security_include_subdomains=True)\n\nC# (ASP.NET Core):\napp.UseHsts();\nservices.AddHsts(options => {\n    options.MaxAge = TimeSpan.FromDays(365);\n    options.IncludeSubDomains = true;\n    options.Preload = true;\n});\n"
 requires_absence:
 - svc.security.flask_security_headers
@@ -549,7 +549,7 @@ nist_controls:
 - sc-8
 - sc-13
 related_ksis:
-- KSI-SVC-01
+- KSI-SVC-02
 evidence_collection:
   azure_monitor_kql:
   - query: 'AppServiceHTTPLogs
@@ -706,8 +706,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-SVC-01
-    requirement_name: Continuous Improvement
+    requirement_id: KSI-SVC-02
+    requirement_name: Network Encryption
     impact_levels:
     - Low
     - Moderate
@@ -793,7 +793,7 @@ nist_controls:
 - si-10
 - si-15
 related_ksis:
-- KSI-SVC-01
+- KSI-SVC-02
 evidence_collection:
   azure_monitor_kql:
   - query: 'AppServiceHTTPLogs
@@ -952,8 +952,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-SVC-01
-    requirement_name: Continuous Improvement
+    requirement_id: KSI-SVC-02
+    requirement_name: Network Encryption
     impact_levels:
     - Low
     - Moderate
@@ -3174,7 +3174,7 @@ languages:
     regex_fallback: (password|secret|apiKey|connectionString)\s*=\s*['"][^'"]+['"]
 finding:
   title_template: Secrets not managed via Key Vault
-  description_template: Resource or code contains secrets that should be managed via Azure Key Vault. KSI-SVC-01 requires secure secret management with rotation capabilities.
+  description_template: Resource or code contains secrets that should be managed via Azure Key Vault. KSI-SVC-06 (Secret Management) requires secure secret management with rotation capabilities.
   remediation_template: "Use Azure Key Vault for secret management:\n\nBicep:\nresource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {\n  name: 'myKeyVault'\n}\nsecret: keyVault.getSecret('secretName')\n\nPython:\nfrom azure.identity import DefaultAzureCredential\nfrom azure.keyvault.secrets import SecretClient\ncredential = DefaultAzureCredential()\nclient = SecretClient(vault_url='https://myvault.vault.azure.net/', credential=credential)\nsecret = client.get_secret('secretName').value\n"
 tags:
 - secrets
@@ -3185,7 +3185,7 @@ nist_controls:
 - sc-12
 - sc-13
 related_ksis:
-- KSI-SVC-01
+- KSI-SVC-06
 evidence_collection:
   azure_monitor_kql:
   - query: 'Resources
@@ -3341,8 +3341,8 @@ azure_guidance:
     reference_url: https://learn.microsoft.com/azure/well-architected/security/
 compliance_frameworks:
   fedramp_20x:
-    requirement_id: KSI-SVC-01
-    requirement_name: Continuous Improvement
+    requirement_id: KSI-SVC-06
+    requirement_name: Secret Management
     impact_levels:
     - Low
     - Moderate

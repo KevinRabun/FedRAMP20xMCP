@@ -793,9 +793,9 @@ languages:
 finding:
   title: Secrets scanning detected
   description: Pipeline scans for hardcoded secrets and credentials
-  recommendation: Block commits containing secrets per KSI-SVC-01
+  recommendation: Block commits containing secrets per KSI-SVC-06 (Secret Management)
   references:
-  - FRR-SCN-05 - KSI-SVC-01
+  - FRR-SCN-05 - KSI-SVC-06
 evidence_artifacts:
 - artifact_type: logs
   name: SCN operational logs

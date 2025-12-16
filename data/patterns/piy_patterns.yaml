@@ -178,7 +178,7 @@ related_ksis:
 ---
 pattern_id: piy.pii.logging_detection
 name: PII in Logging Statements
-description: 'Detects potential PII being logged (KSI-PIY-01: Privacy Protection)'
+description: 'Detects potential PII being logged - security best practice per NIST AR/PT/SI controls'
 family: PIY
 severity: CRITICAL
 pattern_type: code_pattern
@@ -216,7 +216,7 @@ languages:
 finding:
   title_template: Potential PII in logging statement
   description_template: Logging statement may contain Personally Identifiable Information
-    (PII). KSI-PIY-01 requires PII to be masked or excluded from logs.
+    (PII). NIST controls AR-4, PT-2, SI-12 require PII to be masked or excluded from logs.
   remediation_template: "Remove or mask PII in logs:\n\nPython (Masking PII):\nimport\
     \ re\n\ndef mask_pii(text: str) -> str:\n    \"\"\"Mask PII in log messages\"\"\
     \"\n    # Mask SSN (XXX-XX-1234)\n    text = re.sub(r'\\b\\d{3}-\\d{2}-(\\d{4})\\\
