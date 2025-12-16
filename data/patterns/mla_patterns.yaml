@@ -2380,3 +2380,217 @@ automation:
     - Azure Monitor
     - Log Analytics
     - Azure Alerts
+---
+pattern_id: mla.monitoring.real_time_alerts
+name: Real-Time Monitoring with Alerts
+description: Detects real-time monitoring configuration using Azure Monitor or Application Insights
+family: MLA
+severity: INFO
+pattern_type: resource
+languages:
+  terraform:
+    ast_queries: []
+    regex_fallback: "azurerm_monitor_metric_alert|azurerm_application_insights|frequency.*=.*\"PT1M\"|window_size.*PT|action_group_id"
+    positive_indicators:
+    - azurerm_monitor_metric_alert
+    - azurerm_application_insights
+    - frequency = "PT1M"
+  bicep:
+    regex_fallback: "(?i)(Microsoft\\.Insights/metricAlerts|Microsoft\\.Insights/components|evaluationFrequency.*PT1M|windowSize.*PT)"
+    positive_indicators:
+    - Microsoft.Insights/metricAlerts
+    - evaluationFrequency
+finding:
+  title_template: Real-Time Monitoring Detected
+  description_template: "Real-time monitoring configured with automated alerts using Azure Monitor or Application Insights, compliant with KSI-MLA-05"
+  remediation_template: "N/A - Positive finding"
+tags:
+- monitoring
+- positive
+related_ksis:
+- KSI-MLA-05
+---
+pattern_id: mla.monitoring.no_monitoring
+name: No Monitoring Configuration
+description: Detects production resources deployed without monitoring
+family: MLA
+severity: HIGH
+pattern_type: resource
+languages:
+  terraform:
+    ast_queries: []
+    regex_fallback: "azurerm_virtual_machine.*[^a]monitor|[Nn]o monitoring|[Nn]o alerts|[Nn]o visibility|may go undetected"
+    negative_indicators:
+    - No monitoring
+    - No alerts
+    - may go undetected
+  bicep:
+    regex_fallback: "(?i)(Microsoft\\.Compute/virtualMachines.*(?!.*insights)|[Nn]o monitoring|[Nn]o alerts|may go undetected)"
+    negative_indicators:
+    - No monitoring
+    - No alerts
+finding:
+  title_template: No Monitoring Configuration
+  description_template: "Production resources deployed without real-time monitoring or alerts - critical issues may go undetected"
+  remediation_template: "Configure Azure Monitor metric alerts, Application Insights, or equivalent monitoring with automated alerting"
+tags:
+- monitoring
+- negative
+related_ksis:
+- KSI-MLA-05
+---
+pattern_id: mla.audit_logging.comprehensive
+name: Comprehensive Audit Logging
+description: Detects comprehensive audit logging with decorators/wrappers for sensitive operations
+family: MLA
+severity: INFO
+pattern_type: security_control
+languages:
+  python:
+    ast_queries: []
+    regex_fallback: "audit_log.*operation|AUDIT.*json\\.dumps|compliance_framework.*FedRAMP|timestamp.*user.*ip_address|@audit_log"
+    positive_indicators:
+    - "@audit_log"
+    - AUDIT
+    - compliance_framework
+  csharp:
+    regex_fallback: "(?i)(\\[AuditLog\\]|ILogger.*Audit|compliance.*FedRAMP|timestamp.*userId.*ipAddress)"
+    positive_indicators:
+    - "[AuditLog]"
+    - ILogger
+  java:
+    regex_fallback: "(?i)(@AuditLog|logger.*audit|compliance.*FedRAMP|timestamp.*userId.*ipAddress)"
+    positive_indicators:
+    - "@AuditLog"
+    - logger
+  typescript:
+    regex_fallback: "(?i)(@auditLog|logger.*audit|compliance.*FedRAMP|timestamp.*userId.*ipAddress)"
+    positive_indicators:
+    - "@auditLog"
+    - logger
+finding:
+  title_template: Comprehensive Audit Logging Detected
+  description_template: "Comprehensive audit logging for sensitive operations with timestamps, user, IP, and compliance framework, compliant with KSI-MLA-07"
+  remediation_template: "N/A - Positive finding"
+tags:
+- audit_logging
+- positive
+related_ksis:
+- KSI-MLA-07
+---
+pattern_id: mla.audit_logging.no_audit
+name: No Audit Logging
+description: Detects sensitive operations without audit trail
+family: MLA
+severity: CRITICAL
+pattern_type: security_control
+languages:
+  python:
+    ast_queries: []
+    regex_fallback: "delete.*user.*data|grant.*admin.*access|[Nn]o audit|[Nn]o logging|[Cc]ritical operation with no|[Pp]ermission change with no"
+    negative_indicators:
+    - delete_user_data
+    - grant_admin_access
+    - No audit
+  csharp:
+    regex_fallback: "(?i)(DeleteUserData|GrantAdminAccess|[Nn]o audit|[Nn]o logging|[Cc]ritical operation with no)"
+    negative_indicators:
+    - DeleteUserData
+    - GrantAdminAccess
+  java:
+    regex_fallback: "(?i)(deleteUserData|grantAdminAccess|[Nn]o audit|[Nn]o logging|[Cc]ritical operation with no)"
+    negative_indicators:
+    - deleteUserData
+    - grantAdminAccess
+  typescript:
+    regex_fallback: "(?i)(deleteUserData|grantAdminAccess|[Nn]o audit|[Nn]o logging|[Cc]ritical operation with no)"
+    negative_indicators:
+    - deleteUserData
+    - grantAdminAccess
+finding:
+  title_template: No Audit Logging for Sensitive Operations
+  description_template: "Sensitive operations (data deletion, permission changes) performed without audit trail"
+  remediation_template: "Implement comprehensive audit logging for all sensitive operations using decorators or middleware with timestamps, user identity, IP address, and operation details"
+tags:
+- audit_logging
+- negative
+related_ksis:
+- KSI-MLA-07
+---
+pattern_id: mla.log_integrity.tamper_evident
+name: Tamper-Evident Logging
+description: Detects cryptographic log integrity with hash chains
+family: MLA
+severity: INFO
+pattern_type: security_control
+languages:
+  python:
+    ast_queries: []
+    regex_fallback: "TamperEvidentLogger|hmac\\.new.*sha256|previous_hash|hash.*chain|immutable.*storage|verify_log_chain"
+    positive_indicators:
+    - TamperEvidentLogger
+    - previous_hash
+    - hash chain
+  csharp:
+    regex_fallback: "(?i)(TamperEvidentLogger|HMACSHA256|previousHash|hash.*chain|immutable.*storage|VerifyLogChain)"
+    positive_indicators:
+    - TamperEvidentLogger
+    - previousHash
+  java:
+    regex_fallback: "(?i)(TamperEvidentLogger|HmacSHA256|previousHash|hash.*chain|immutable.*storage|verifyLogChain)"
+    positive_indicators:
+    - TamperEvidentLogger
+    - previousHash
+  typescript:
+    regex_fallback: "(?i)(TamperEvidentLogger|createHmac.*sha256|previousHash|hash.*chain|immutable.*storage|verifyLogChain)"
+    positive_indicators:
+    - TamperEvidentLogger
+    - previousHash
+finding:
+  title_template: Tamper-Evident Logging Detected
+  description_template: "Cryptographic log integrity protection using hash chains and immutable storage, compliant with KSI-MLA-08"
+  remediation_template: "N/A - Positive finding"
+tags:
+- log_integrity
+- positive
+related_ksis:
+- KSI-MLA-08
+---
+pattern_id: mla.log_integrity.no_protection
+name: No Log Integrity Protection
+description: Detects plain text logging without tamper protection
+family: MLA
+severity: HIGH
+pattern_type: security_control
+languages:
+  python:
+    ast_queries: []
+    regex_fallback: "logging\\.basicConfig.*filename|[Nn]o tamper protection|[Ll]ogs can be modified|[Nn]o integrity|[Ss]imple logging with no"
+    negative_indicators:
+    - No tamper protection
+    - Logs can be modified
+    - No integrity
+  csharp:
+    regex_fallback: "(?i)(File\\.AppendAllText|[Nn]o tamper protection|[Ll]ogs can be modified|[Nn]o integrity)"
+    negative_indicators:
+    - No tamper protection
+    - Logs can be modified
+  java:
+    regex_fallback: "(?i)(FileWriter|PrintWriter.*log|[Nn]o tamper protection|[Ll]ogs can be modified|[Nn]o integrity)"
+    negative_indicators:
+    - No tamper protection
+    - Logs can be modified
+  typescript:
+    regex_fallback: "(?i)(fs\\.appendFile|[Nn]o tamper protection|[Ll]ogs can be modified|[Nn]o integrity)"
+    negative_indicators:
+    - No tamper protection
+    - Logs can be modified
+finding:
+  title_template: No Log Integrity Protection
+  description_template: "Logs stored as plain text without cryptographic integrity protection - can be modified or deleted without detection"
+  remediation_template: "Implement tamper-evident logging using cryptographic hash chains, HMAC, or immutable storage (Azure Confidential Ledger, blockchain)"
+tags:
+- log_integrity
+- negative
+related_ksis:
+- KSI-MLA-08

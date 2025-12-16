@@ -247,6 +247,10 @@ Test the server using the MCP Inspector:
 ```bash
 npx @modelcontextprotocol/inspector python -m fedramp_20x_mcp
 ```
+### ⚠️ Copilot Execution Policy
+This repository uses strict instructions for all AI‑assisted coding.
+
+See: [Copilot Instructions](./.github/copilot-instructions.md)
 
 ## Advanced Configuration
 

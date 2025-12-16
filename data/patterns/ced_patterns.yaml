@@ -1435,3 +1435,143 @@ automation:
     - Azure Monitor
     - Log Analytics
 impact_levels: ['Low', 'Moderate']
+---
+pattern_id: ced.key_management.azure_keyvault_hsm
+name: Azure Key Vault with HSM Protection
+description: Detects hardware-backed key management using Azure Key Vault Premium/HSM
+family: CED
+severity: INFO
+pattern_type: resource
+languages:
+  terraform:
+    ast_queries: []
+    regex_fallback: "sku_name.*=.*\"premium\"|key_type.*=.*\"RSM-HSM\"|rotation_policy"
+    positive_indicators:
+    - sku_name = "premium"
+    - key_type = "RSA-HSM"
+    - rotation_policy
+finding:
+  title_template: Azure Key Vault with HSM Protection Detected
+  description_template: "Hardware-backed key management configured using Azure Key Vault Premium SKU, compliant with KSI-CED-03"
+  remediation_template: "N/A - Positive finding"
+tags:
+- key_management
+- positive
+related_ksis:
+- KSI-CED-03
+---
+pattern_id: ced.key_management.hardcoded_key
+name: Hardcoded Encryption Key
+description: Detects hardcoded encryption keys in source code
+family: CED
+severity: CRITICAL
+pattern_type: security_control
+languages:
+  python:
+    ast_queries: []
+    regex_fallback: "ENCRYPTION_KEY\\s*=\\s*b'[0-9a-f]+|Fernet\\([^)]*ENCRYPTION_KEY|hardcoded.*key"
+    negative_indicators:
+    - ENCRYPTION_KEY =
+    - hardcoded
+  csharp:
+    regex_fallback: "(?i)(string.*key\\s*=\\s*\"[0-9a-f]+|byte\\[\\].*key.*=.*new.*byte|hardcoded.*key|static.*readonly.*key\\s*=)"
+    negative_indicators:
+    - "= \"hard"
+    - "hardcoded"
+  java:
+    regex_fallback: "(?i)(String.*KEY\\s*=\\s*\"[0-9a-f]+|byte\\[\\].*key.*=.*new byte|hardcoded.*key|static.*final.*KEY\\s*=)"
+    negative_indicators:
+    - "= \"hard"
+    - "hardcoded"
+  typescript:
+    regex_fallback: "(?i)(const.*key.*=.*'[0-9a-f]+|const.*key.*=.*Buffer\\.from|hardcoded.*key)"
+    negative_indicators:
+    - "= 'hard"
+    - "hardcoded"
+finding:
+  title_template: Hardcoded Encryption Key Detected
+  description_template: "Critical security violation: Encryption keys hardcoded in source code instead of using secure key management"
+  remediation_template: "Use Azure Key Vault, HashiCorp Vault, or similar secure key management system. Never hardcode encryption keys in source code"
+tags:
+- key_management
+- negative
+related_ksis:
+- KSI-CED-03
+---
+pattern_id: ced.sanitization.secure_deletion
+name: Secure Data Sanitization
+description: Detects secure multi-pass data sanitization (DOD 5220.22-M compliant)
+family: CED
+severity: INFO
+pattern_type: security_control
+languages:
+  python:
+    ast_queries: []
+    regex_fallback: "SecureDataSanitizer|DOD 5220\\.22-M|secrets\\.token_bytes|multiple pass|overwrite.*random"
+    positive_indicators:
+    - SecureDataSanitizer
+    - DOD 5220.22-M
+    - secrets.token_bytes
+  csharp:
+    regex_fallback: "(?i)(SecureDataSanitizer|DOD 5220\\.22-M|RandomNumberGenerator|multiple.*pass|overwrite.*random)"
+    positive_indicators:
+    - SecureDataSanitizer
+    - RandomNumberGenerator
+  java:
+    regex_fallback: "(?i)(SecureDataSanitizer|DOD 5220\\.22-M|SecureRandom|multiple.*pass|overwrite.*random)"
+    positive_indicators:
+    - SecureDataSanitizer
+    - SecureRandom
+  typescript:
+    regex_fallback: "(?i)(SecureDataSanitizer|DOD 5220\\.22-M|crypto\\.randomBytes|multiple.*pass|overwrite.*random)"
+    positive_indicators:
+    - SecureDataSanitizer
+    - crypto.randomBytes
+finding:
+  title_template: Secure Data Sanitization Detected
+  description_template: "Multi-pass secure data sanitization implemented, compliant with KSI-CED-04"
+  remediation_template: "N/A - Positive finding"
+tags:
+- data_sanitization
+- positive
+related_ksis:
+- KSI-CED-04
+---
+pattern_id: ced.sanitization.insecure_deletion
+name: Insecure Data Deletion
+description: Detects simple file deletion without secure sanitization
+family: CED
+severity: HIGH
+pattern_type: security_control
+languages:
+  python:
+    ast_queries: []
+    regex_fallback: "os\\.remove\\(|[Jj]ust delete|[Nn]o overwriting|[Nn]o secure erasure|data may be recoverable"
+    negative_indicators:
+    - os.remove
+    - No overwriting
+    - data may be recoverable
+  csharp:
+    regex_fallback: "(?i)(File\\.Delete\\(|[Jj]ust delete|[Nn]o overwriting|[Nn]o secure erasure|data may be recoverable)"
+    negative_indicators:
+    - File.Delete
+    - No overwriting
+  java:
+    regex_fallback: "(?i)(file\\.delete\\(|Files\\.delete\\(|[Jj]ust delete|[Nn]o overwriting|[Nn]o secure erasure|data may be recoverable)"
+    negative_indicators:
+    - .delete(
+    - No overwriting
+  typescript:
+    regex_fallback: "(?i)(fs\\.unlink\\(|fs\\.rmSync\\(|[Jj]ust delete|[Nn]o overwriting|[Nn]o secure erasure|data may be recoverable)"
+    negative_indicators:
+    - fs.unlink
+    - No overwriting
+finding:
+  title_template: Insecure Data Deletion Detected
+  description_template: "Data deletion without secure sanitization - deleted data may be recoverable from disk"
+  remediation_template: "Implement DOD 5220.22-M compliant multi-pass overwrite before file deletion, or use cryptographic erasure"
+tags:
+- data_sanitization
+- negative
+related_ksis:
+- KSI-CED-04

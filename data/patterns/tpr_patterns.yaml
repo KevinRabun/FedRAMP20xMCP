@@ -1113,5 +1113,145 @@ testing:
       # Add specific example'
     expected_severity: HIGH
     expected_finding: true
-  validation_scripts:
   - tests/test_tpr_patterns.py::test_tpr_sbom_missing
+---
+pattern_id: tpr.dependency.scanning_cicd
+name: Dependency Scanning in CI/CD
+description: Detects dependency scanning tools in CI/CD pipelines
+family: TPR
+ksi_id: KSI-TPR-03
+category: cicd_scanning
+severity: INFO
+pattern_type: security_control
+languages:
+  yaml:
+    regex_fallback: "(?i)(OWASP.*dependency.*check|CodeQL|dependency-review|uses:.*dependency-review-action|Snyk|snyk|trivy)"
+    positive_indicators:
+    - OWASP Dependency Check
+    - CodeQL
+    - dependency-review
+  bicep:
+    regex_fallback: "(?i)(OWASP|CodeQL|dependency.*review|Snyk|trivy)"
+    positive_indicators:
+    - CodeQL
+    - Snyk
+finding:
+  title_template: Dependency Scanning Detected
+  description_template: "CI/CD pipeline includes dependency scanning tools, compliant with KSI-TPR-03"
+  remediation_template: "N/A - Positive finding"
+tags:
+- dependency_scanning
+- positive
+related_ksis:
+- KSI-TPR-03
+---
+pattern_id: tpr.dependency.no_scanning
+name: Missing Dependency Scanning
+description: Detects CI/CD pipelines that deploy without dependency scanning
+family: TPR
+ksi_id: KSI-TPR-03
+category: cicd_scanning
+severity: HIGH
+pattern_type: security_control
+languages:
+  yaml:
+    regex_fallback: "(?i)(npm.install.*deploy|pip.install.*deploy|maven.install.*deploy)"
+    negative_indicators:
+    - npm install
+    - deploy
+  python:
+    regex_fallback: "(?i)(no.*scanning|no.*check|skip.*scan|unvetted.*dependenc)"
+    negative_indicators:
+    - no scanning
+    - unvetted dependencies
+  csharp:
+    regex_fallback: "(?i)(no.*scanning|no.*check|skip.*scan|unvetted.*dependenc)"
+    negative_indicators:
+    - no scanning
+  java:
+    regex_fallback: "(?i)(no.*scanning|no.*check|skip.*scan|unvetted.*dependenc)"
+    negative_indicators:
+    - no scanning
+  typescript:
+    regex_fallback: "(?i)(no.*scanning|no.*check|skip.*scan|unvetted.*dependenc)"
+    negative_indicators:
+    - no scanning
+finding:
+  title_template: Missing Dependency Scanning
+  description_template: "Deployment occurs without dependency vulnerability scanning"
+  remediation_template: "Implement dependency scanning tools like OWASP Dependency Check, CodeQL, Snyk, or GitHub Dependency Review in CI/CD pipelines"
+tags:
+- dependency_scanning
+- negative
+related_ksis:
+- KSI-TPR-03
+---
+pattern_id: tpr.monitoring.vulnerability_tracking
+name: Third-Party Vulnerability Monitoring
+description: Detects automated monitoring of third-party software vulnerabilities
+family: TPR
+ksi_id: KSI-TPR-04
+category: vulnerability_monitoring
+severity: INFO
+pattern_type: security_control
+languages:
+  yaml:
+    regex_fallback: "(?i)(dependabot|SBOM|software.bill.of.materials|CVE.*monitoring|vulnerability.*detect|vuln.*scan|schedule.*cron)"
+    positive_indicators:
+    - Dependabot
+    - SBOM
+    - CVE Monitoring
+  bicep:
+    regex_fallback: "(?i)(Dependabot|SBOM|CVE.*monitoring|vulnerability.*detect)"
+    positive_indicators:
+    - SBOM
+    - CVE
+finding:
+  title_template: Third-Party Vulnerability Monitoring Detected
+  description_template: "Automated monitoring for third-party vulnerabilities configured, compliant with KSI-TPR-04"
+  remediation_template: "N/A - Positive finding"
+tags:
+- vulnerability_monitoring
+- positive
+related_ksis:
+- KSI-TPR-04
+---
+pattern_id: tpr.monitoring.no_tracking
+name: No Vulnerability Monitoring
+description: Detects lack of third-party vulnerability monitoring
+family: TPR
+ksi_id: KSI-TPR-04
+category: vulnerability_monitoring
+severity: CRITICAL
+pattern_type: security_control
+languages:
+  python:
+    regex_fallback: "(?i)(ancient.*library|deprecated.*package|no.CVE.monitoring|no.update.process|no.vulnerability.scanning|unmonitored.*dependenc|last.updated.*years?.ago)"
+    negative_indicators:
+    - ancient library
+    - No CVE monitoring
+    - No vulnerability scanning
+  csharp:
+    regex_fallback: "(?i)(ancient.*library|deprecated.*package|[Nn]o CVE monitoring|[Nn]o update process|unmonitored.*dependenc)"
+    negative_indicators:
+    - ancient library
+    - No CVE monitoring
+  java:
+    regex_fallback: "(?i)(ancient.*library|deprecated.*package|[Nn]o CVE monitoring|[Nn]o update process|unmonitored.*dependenc)"
+    negative_indicators:
+    - ancient library
+    - No CVE monitoring
+  typescript:
+    regex_fallback: "(?i)(ancient.*library|deprecated.*package|[Nn]o CVE monitoring|[Nn]o update process|unmonitored.*dependenc)"
+    negative_indicators:
+    - ancient library
+    - No CVE monitoring
+finding:
+  title_template: Missing Third-Party Vulnerability Monitoring
+  description_template: "No automated monitoring for vulnerabilities in third-party dependencies"
+  remediation_template: "Implement automated vulnerability monitoring using Dependabot, SBOM generation, and CVE tracking for all third-party libraries"
+tags:
+- vulnerability_monitoring
+- negative
+related_ksis:
+- KSI-TPR-04

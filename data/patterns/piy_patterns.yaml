@@ -1,3 +1,151 @@
+pattern_id: piy.inventory.automated_discovery
+name: Automated Resource Inventory
+description: Detects automated resource inventory using Azure Resource Graph or similar tools
+family: PIY
+severity: INFO
+pattern_type: resource
+languages:
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_log_analytics_query_pack_query
+      conditions:
+      - property_contains:body:Resources
+    - resource_type: azurerm_resource_group_policy_assignment
+    regex_fallback: azurerm_log_analytics_query_pack_query|Resources\s*\|
+    positive_indicators:
+    - azurerm_log_analytics_query_pack_query
+    - "Resources |"
+    - resource inventory
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.OperationalInsights/queryPacks/queries
+    regex_fallback: Microsoft\.OperationalInsights/queryPacks
+    positive_indicators:
+    - queryPacks/queries
+  python:
+    ast_queries:
+    - query_type: import_statement
+      target: azure.mgmt.resourcegraph
+    regex_fallback: from\s+azure\.mgmt\.resourcegraph|import\s+azure\.mgmt\.resourcegraph
+    positive_indicators:
+    - azure.mgmt.resourcegraph
+    - ResourceGraphClient
+  csharp:
+    regex_fallback: "(?i)(Azure\\.ResourceManager\\.ResourceGraph|ResourceGraphClient|using.*ResourceGraph)"
+    positive_indicators:
+    - ResourceGraphClient
+  java:
+    regex_fallback: "(?i)(azure\\.resourcemanager\\.resourcegraph|ResourceGraphClient|import.*resourcegraph)"
+    positive_indicators:
+    - ResourceGraphClient
+  typescript:
+    regex_fallback: "(?i)(@azure/arm-resourcegraph|ResourceGraphClient|import.*resourcegraph)"
+    positive_indicators:
+    - ResourceGraphClient
+finding:
+  title_template: Automated resource inventory detected
+  description_template: Code implements automated resource inventory using Azure Resource Graph or similar authoritative sources, compliant with KSI-PIY-01.
+  remediation_template: N/A - Positive finding
+tags:
+- inventory
+- automation
+- positive
+nist_controls:
+- cm-8
+related_ksis:
+- KSI-PIY-01
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-PIY-01
+    requirement_name: Automated Inventory
+    impact_levels:
+    - Low
+    - Moderate
+    - High
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'Resources
+      | where type !~ "microsoft.resources/deployments"
+      | summarize ResourceCount=count() by type, location
+      | order by ResourceCount desc
+      '
+    description: Query all resources for inventory tracking
+    retention_days: 90
+    schedule: daily
+---
+pattern_id: piy.inventory.manual_tracking
+name: Manual Inventory Tracking
+description: Detects manual inventory tracking instead of automated discovery from authoritative sources
+family: PIY
+severity: MEDIUM
+pattern_type: code_pattern
+languages:
+  python:
+    ast_queries:
+    - query_type: function_definition
+      target: manual_inventory|inventory_check
+      conditions:
+      - contains:inventory_list
+      - not_contains:azure.mgmt.resourcegraph
+    regex_fallback: def\s+(manual_inventory|inventory_check).*:\s*.*inventory_list\s*=\s*\[
+    negative_indicators:
+    - manual_inventory
+    - inventory_list =
+  csharp:
+    regex_fallback: "(?i)(ManualInventory|inventory.*=.*new List|inventoryList.*=.*new)"
+    negative_indicators:
+    - ManualInventory
+    - inventoryList
+  java:
+    regex_fallback: "(?i)(manualInventory|inventory.*=.*new ArrayList|inventoryList.*=.*new)"
+    negative_indicators:
+    - manualInventory
+    - inventoryList
+  typescript:
+    regex_fallback: "(?i)(manualInventory|inventory.*=.*\\[|inventoryList.*=.*\\[)"
+    negative_indicators:
+    - manualInventory
+    - inventoryList
+finding:
+  title_template: Manual inventory tracking detected
+  description_template: Code uses manual inventory tracking. KSI-PIY-01 requires automated inventory from authoritative sources like Azure Resource Graph.
+  remediation_template: 'Implement automated inventory using Azure Resource Graph:
+
+    Python:
+
+    from azure.mgmt.resourcegraph import ResourceGraphClient
+
+    from azure.identity import DefaultAzureCredential
+
+
+    credential = DefaultAzureCredential()
+
+    client = ResourceGraphClient(credential)
+
+
+    query = """
+
+    Resources
+
+    | where type !~ "microsoft.resources/deployments"
+
+    | project name, type, location, resourceGroup
+
+    """
+
+
+    result = client.resources(query={"query": query, "subscriptions": [subscription_id]})
+
+    '
+tags:
+- inventory
+- manual
+- gap
+nist_controls:
+- cm-8
+related_ksis:
+- KSI-PIY-01
+---
 pattern_id: piy.pii.logging_detection
 name: PII in Logging Statements
 description: 'Detects potential PII being logged (KSI-PIY-01: Privacy Protection)'
@@ -2579,3 +2727,363 @@ testing:
     expected_severity: HIGH
     expected_finding: true
   validation_scripts: []
+---
+pattern_id: piy.disclosure.no_policy
+name: Missing Vulnerability Disclosure
+description: Detects absence of vulnerability disclosure policy
+family: PIY
+severity: HIGH
+pattern_type: documentation
+languages:
+  python:
+    regex_fallback: (no|missing|absence).*disclosure
+    negative_indicators:
+    - "No vulnerability disclosure"
+    - "No reporting mechanism"
+  csharp:
+    regex_fallback: "(?i)((no|missing|absence).*disclosure)"
+    negative_indicators:
+    - "No vulnerability disclosure"
+  java:
+    regex_fallback: "(?i)((no|missing|absence).*disclosure)"
+    negative_indicators:
+    - "No vulnerability disclosure"
+  typescript:
+    regex_fallback: "(?i)((no|missing|absence).*disclosure)"
+    negative_indicators:
+    - "No vulnerability disclosure"
+finding:
+  title_template: Missing vulnerability disclosure policy
+  description_template: No vulnerability disclosure mechanism detected. KSI-PIY-03 requires public vulnerability disclosure program.
+  remediation_template: Create SECURITY.md with vulnerability reporting process and coordinated disclosure timeline.
+tags:
+- disclosure
+- gap
+nist_controls:
+- ir-9
+related_ksis:
+- KSI-PIY-03
+---
+pattern_id: piy.sdlc.security_integration
+name: Security in SDLC
+description: Detects security integration in development lifecycle
+family: PIY
+severity: INFO
+pattern_type: configuration
+languages:
+  yaml:
+    regex_fallback: (SAST|security.*scan|threat.*model|dependency.*scan)
+    positive_indicators:
+    - SAST Scanning
+    - Dependency Scanning
+    - Threat Modeling
+  bicep:
+    regex_fallback: "(?i)(SAST|security.*scan|threat.*model|dependency.*scan)"
+    positive_indicators:
+    - SAST
+    - Dependency
+finding:
+  title_template: Security integrated in SDLC
+  description_template: Development workflow includes security checks, compliant with KSI-PIY-04.
+  remediation_template: N/A - Positive finding
+tags:
+- sdlc
+- positive
+nist_controls:
+- sa-3
+- sa-8
+- sa-11
+related_ksis:
+- KSI-PIY-04
+---
+pattern_id: piy.evaluation.methodology
+name: Evaluation Methodology Documentation
+description: Detects documented evaluation methodology
+family: PIY
+severity: INFO
+pattern_type: documentation
+languages:
+  markdown:
+    regex_fallback: (evaluation|assessment).*method
+    positive_indicators:
+    - Evaluation
+    - methodology
+finding:
+  title_template: Evaluation methodology documented
+  description_template: Evaluation methods are documented, compliant with KSI-PIY-05.
+  remediation_template: N/A - Positive finding
+tags:
+- evaluation
+- positive
+nist_controls:
+- ca-2
+related_ksis:
+- KSI-PIY-05
+---
+pattern_id: piy.investment.security_metrics
+name: Security Investment Monitoring
+description: Detects security investment effectiveness monitoring
+family: PIY
+severity: INFO
+pattern_type: resource
+languages:
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_application_insights
+      conditions:
+      - property_contains:tags.Purpose:Security
+    - resource_type: azurerm_monitor_scheduled_query_rules_alert
+      conditions:
+      - property_contains:tags.Purpose:Security
+    regex_fallback: security.*investment|security.*metrics
+    positive_indicators:
+    - Security Investment
+    - security-investment-metrics
+finding:
+  title_template: Security investment monitoring detected
+  description_template: Security investment effectiveness is monitored, compliant with KSI-PIY-06.
+  remediation_template: N/A - Positive finding
+tags:
+- investment
+- metrics
+- positive
+nist_controls:
+- pm-14
+related_ksis:
+- KSI-PIY-06
+---
+pattern_id: piy.supply_chain.documentation
+name: Supply Chain Risk Documentation
+description: Detects supply chain security documentation
+family: PIY
+severity: INFO
+pattern_type: documentation
+languages:
+  markdown:
+    regex_fallback: supply.*chain|SBOM|provenance
+    positive_indicators:
+    - Supply Chain
+    - SBOM
+    - provenance
+finding:
+  title_template: Supply chain security documented
+  description_template: Supply chain risk decisions are documented, compliant with KSI-PIY-07.
+  remediation_template: N/A - Positive finding
+tags:
+- supply-chain
+- positive
+nist_controls:
+- sr-3
+- sr-6
+related_ksis:
+- KSI-PIY-07
+---
+pattern_id: piy.executive.support_metrics
+name: Executive Security Support Measurement
+description: Detects executive security support measurement
+family: PIY
+severity: INFO
+pattern_type: resource
+languages:
+  terraform:
+    regex_fallback: executive.*security|executive.*support
+    positive_indicators:
+    - Executive
+    - ExecutiveSupport
+finding:
+  title_template: Executive security support measured
+  description_template: Executive support for security is measured, compliant with KSI-PIY-08.
+  remediation_template: N/A - Positive finding
+tags:
+- executive
+- metrics
+- positive
+nist_controls:
+- pm-1
+- pm-2
+related_ksis:
+- KSI-PIY-08
+---
+pattern_id: piy.sdlc.no_security
+name: No Security in SDLC
+description: Detects absence of security integration in development
+family: PIY
+severity: HIGH
+pattern_type: code_pattern
+languages:
+  python:
+    regex_fallback: no.*security|ship.*without.*review
+    negative_indicators:
+    - "No security"
+    - "No threat modeling"
+  csharp:
+    regex_fallback: "(?i)(no.*security|ship.*without.*review|no.*threat.*model)"
+    negative_indicators:
+    - "No security"
+  java:
+    regex_fallback: "(?i)(no.*security|ship.*without.*review|no.*threat.*model)"
+    negative_indicators:
+    - "No security"
+  typescript:
+    regex_fallback: "(?i)(no.*security|ship.*without.*review|no.*threat.*model)"
+    negative_indicators:
+    - "No security"
+finding:
+  title_template: Security not integrated in SDLC
+  description_template: Development workflow lacks security integration. KSI-PIY-04 requires security in SDLC.
+  remediation_template: Integrate SAST, dependency scanning, and threat modeling into CI/CD pipeline.
+tags:
+- sdlc
+- gap
+nist_controls:
+- sa-3
+related_ksis:
+- KSI-PIY-04
+---
+pattern_id: piy.evaluation.no_methodology
+name: No Evaluation Methodology
+description: Detects absence of evaluation methodology
+family: PIY
+severity: HIGH
+pattern_type: code_pattern
+languages:
+  python:
+    regex_fallback: no.*evaluation|ad.?hoc
+    negative_indicators:
+    - "No evaluation"
+    - "Ad-hoc"
+  csharp:
+    regex_fallback: "(?i)(no.*evaluation|ad.?hoc)"
+    negative_indicators:
+    - "No evaluation"
+  java:
+    regex_fallback: "(?i)(no.*evaluation|ad.?hoc)"
+    negative_indicators:
+    - "No evaluation"
+  typescript:
+    regex_fallback: "(?i)(no.*evaluation|ad.?hoc)"
+    negative_indicators:
+    - "No evaluation"
+finding:
+  title_template: No evaluation methodology
+  description_template: No documented evaluation methodology. KSI-PIY-05 requires documented evaluation methods.
+  remediation_template: Document evaluation methodology including scanning tools, testing frequency, and compliance validation.
+tags:
+- evaluation
+- gap
+nist_controls:
+- ca-2
+related_ksis:
+- KSI-PIY-05
+---
+pattern_id: piy.supply_chain.no_documentation
+name: No Supply Chain Documentation
+description: Detects absence of supply chain security documentation
+family: PIY
+severity: HIGH
+pattern_type: code_pattern
+languages:
+  python:
+    regex_fallback: no.*SBOM|no.*provenance|undocumented.*dependency
+    negative_indicators:
+    - "No SBOM"
+    - "No provenance"
+    - "No risk assessment"
+  csharp:
+    regex_fallback: "(?i)(no.*SBOM|no.*provenance|undocumented.*dependency)"
+    negative_indicators:
+    - "No SBOM"
+    - "No provenance"
+  java:
+    regex_fallback: "(?i)(no.*SBOM|no.*provenance|undocumented.*dependency)"
+    negative_indicators:
+    - "No SBOM"
+    - "No provenance"
+  typescript:
+    regex_fallback: "(?i)(no.*SBOM|no.*provenance|undocumented.*dependency)"
+    negative_indicators:
+    - "No SBOM"
+    - "No provenance"
+finding:
+  title_template: Supply chain risks undocumented
+  description_template: Supply chain security decisions not documented. KSI-PIY-07 requires documented supply chain risk management.
+  remediation_template: Document approved dependency sources, SBOM generation, provenance requirements, and risk decisions.
+tags:
+- supply-chain
+- gap
+nist_controls:
+- sr-3
+related_ksis:
+- KSI-PIY-07
+---
+pattern_id: piy.executive.no_measurement
+name: No Executive Support Measurement
+description: Detects absence of executive security support measurement
+family: PIY
+severity: MEDIUM
+pattern_type: code_pattern
+languages:
+  python:
+    regex_fallback: no.*executive|no.*accountability|security.*IT.*issue
+    negative_indicators:
+    - "No executive"
+    - "No accountability"
+  csharp:
+    regex_fallback: "(?i)(no.*executive|no.*accountability|security.*IT.*issue)"
+    negative_indicators:
+    - "No executive"
+  java:
+    regex_fallback: "(?i)(no.*executive|no.*accountability|security.*IT.*issue)"
+    negative_indicators:
+    - "No executive"
+  typescript:
+    regex_fallback: "(?i)(no.*executive|no.*accountability|security.*IT.*issue)"
+    negative_indicators:
+    - "No executive"
+finding:
+  title_template: Executive support not measured
+  description_template: Executive security support not measured. KSI-PIY-08 requires measurement of executive engagement.
+  remediation_template: Implement executive security metrics including budget allocation, training hours, and policy approvals.
+tags:
+- executive
+- gap
+nist_controls:
+- pm-1
+related_ksis:
+- KSI-PIY-08
+---
+pattern_id: piy.investment.no_monitoring
+name: No Security Investment Monitoring
+description: Detects absence of security investment monitoring
+family: PIY
+severity: MEDIUM
+pattern_type: code_pattern
+languages:
+  python:
+    regex_fallback: no.*metrics|no.*ROI|no.*effectiveness
+    negative_indicators:
+    - "No metrics"
+    - "No ROI"
+  csharp:
+    regex_fallback: "(?i)(no.*metrics|no.*ROI|no.*effectiveness)"
+    negative_indicators:
+    - "No metrics"
+  java:
+    regex_fallback: "(?i)(no.*metrics|no.*ROI|no.*effectiveness)"
+    negative_indicators:
+    - "No metrics"
+  typescript:
+    regex_fallback: "(?i)(no.*metrics|no.*ROI|no.*effectiveness)"
+    negative_indicators:
+    - "No metrics"
+finding:
+  title_template: Security investment not monitored
+  description_template: Security investment effectiveness not measured. KSI-PIY-06 requires monitoring security investment ROI.
+  remediation_template: Implement security metrics dashboards tracking vulnerability reduction, incident response times, and compliance rates.
+tags:
+- investment
+- gap
+nist_controls:
+- pm-14
+related_ksis:
+- KSI-PIY-06

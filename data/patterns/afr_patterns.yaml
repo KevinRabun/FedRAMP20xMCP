@@ -256,6 +256,12 @@ testing:
     expected_finding: true
   validation_scripts:
   - tests/test_afr_patterns.py::test_afr_crypto_weak_algorithms
+tags:
+  - cryptography
+  - fips
+  - security
+related_ksis:
+  - KSI-AFR-11
 ---
 pattern_id: afr.config.debug_mode
 name: Debug Mode Enabled in Production
@@ -1875,3 +1881,234 @@ automation:
     - Azure Monitor
     - Log Analytics
 impact_levels: ['Low', 'Moderate']
+---
+pattern_id: afr.security_goals.no_validation
+name: No Automated Security Goals Validation
+description: Detects lack of automated monitoring/validation of security goals (AFR-02 violation)
+family: AFR
+severity: HIGH
+pattern_type: code_smell
+languages:
+  python:
+    regex_fallback: "(?i)(no.*automat.*monitor|manual.*track.*only|no.*alert|no.*progress.*dashboard|security.*goal.*exist.*no.*validation)"
+  csharp:
+    regex_fallback: "(?i)(no.*automat.*monitor|manual.*track.*only|no.*alert|no.*progress.*dashboard|security.*goal.*exist.*no.*validation)"
+  java:
+    regex_fallback: "(?i)(no.*automat.*monitor|manual.*track.*only|no.*alert|no.*progress.*dashboard|security.*goal.*exist.*no.*validation)"
+  typescript:
+    regex_fallback: "(?i)(no.*automat.*monitor|manual.*track.*only|no.*alert|no.*progress.*dashboard|security.*goal.*exist.*no.*validation)"
+  yaml:
+    regex_fallback: "(?i)(no.*automat.*monitor|manual.*track.*only|no.*alert|no.*dashboard)"
+finding:
+  title: Missing Automated Security Goals Validation
+  description: Code lacks automated monitoring and validation mechanisms for security goals. FedRAMP requires automated tracking and alerting.
+  recommendation: Implement automated monitoring dashboards and alerting for security goal progress validation.
+tags:
+  - authorization
+  - monitoring
+  - automation
+related_ksis:
+  - KSI-AFR-02
+
+---
+pattern_id: afr.data_sharing.no_process
+name: No Authorization Data Sharing Process
+description: Detects lack of authorization data sharing infrastructure/process (AFR-03 violation)
+family: AFR
+severity: HIGH
+pattern_type: code_smell
+languages:
+  python:
+    regex_fallback: "(?i)(no.*data.*shar.*mechanism|no.*trust.*center|no.*document.*process|no.*version|no.*access.*control)"
+  csharp:
+    regex_fallback: "(?i)(no.*data.*shar.*mechanism|no.*trust.*center|no.*document.*process|no.*version|no.*access.*control)"
+  java:
+    regex_fallback: "(?i)(no.*data.*shar.*mechanism|no.*trust.*center|no.*document.*process|no.*version|no.*access.*control)"
+  typescript:
+    regex_fallback: "(?i)(no.*data.*shar.*mechanism|no.*trust.*center|no.*document.*process|no.*version|no.*access.*control)"
+  yaml:
+    regex_fallback: "(?i)(no.*data.*shar|no.*trust.*center|no.*process)"
+finding:
+  title: Missing Authorization Data Sharing Process
+  description: Code lacks documented authorization data sharing mechanism. FedRAMP requires versioned, controlled data sharing process.
+  recommendation: Implement Azure Storage with versioning and access controls for FedRAMP authorization data sharing.
+tags:
+  - authorization
+  - data-sharing
+  - documentation
+related_ksis:
+  - KSI-AFR-03
+
+---
+pattern_id: afr.vulnerability.no_scanning
+name: No Vulnerability Detection
+description: Detects lack of vulnerability scanning and response process (AFR-04 violation)
+family: AFR
+severity: CRITICAL
+pattern_type: code_smell
+languages:
+  python:
+    regex_fallback: "(?i)(no.*vulnerab.*detect|no.*scan.*tool|no.*automat.*alert|no.*response.*process|no.*documentation)"
+  csharp:
+    regex_fallback: "(?i)(no.*vulnerab.*detect|no.*scan.*tool|no.*automat.*alert|no.*response.*process|no.*documentation)"
+  java:
+    regex_fallback: "(?i)(no.*vulnerab.*detect|no.*scan.*tool|no.*automat.*alert|no.*response.*process|no.*documentation)"
+  typescript:
+    regex_fallback: "(?i)(no.*vulnerab.*detect|no.*scan.*tool|no.*automat.*alert|no.*response.*process|no.*documentation)"
+  yaml:
+    regex_fallback: "(?i)(no.*scan|no.*vulnerab.*detect|no.*alert)"
+finding:
+  title: Missing Vulnerability Detection and Response
+  description: Code lacks vulnerability scanning infrastructure and automated response. FedRAMP requires continuous vulnerability detection.
+  recommendation: Implement Azure Security Center vulnerability scanning with automated alerting and response workflows.
+tags:
+  - vulnerability
+  - scanning
+  - security
+related_ksis:
+  - KSI-AFR-04
+
+---
+pattern_id: afr.change_tracking.no_notification
+name: No Change Tracking and Notification
+description: Detects lack of significant change tracking and FedRAMP notification (AFR-05 violation)
+family: AFR
+severity: HIGH
+pattern_type: code_smell
+languages:
+  python:
+    regex_fallback: "(?i)(no.*change.*notif.*process|change.*without.*track|no.*notif.*fedramp|no.*documentation|no.*approval.*workflow)"
+  csharp:
+    regex_fallback: "(?i)(no.*change.*notif.*process|change.*without.*track|no.*notif.*fedramp|no.*documentation|no.*approval.*workflow)"
+  java:
+    regex_fallback: "(?i)(no.*change.*notif.*process|change.*without.*track|no.*notif.*fedramp|no.*documentation|no.*approval.*workflow)"
+  typescript:
+    regex_fallback: "(?i)(no.*change.*notif.*process|change.*without.*track|no.*notif.*fedramp|no.*documentation|no.*approval.*workflow)"
+  yaml:
+    regex_fallback: "(?i)(no.*change.*track|no.*notif|no.*approval)"
+finding:
+  title: Missing Change Tracking and Notification
+  description: Code lacks change tracking and FedRAMP notification process. Significant changes must be tracked and reported.
+  recommendation: Implement Azure Monitor activity log alerts with action groups for FedRAMP PMO notifications on significant changes.
+tags:
+  - change-management
+  - notification
+  - compliance
+related_ksis:
+  - KSI-AFR-05
+
+---
+pattern_id: afr.ongoing_auth.no_reporting
+name: No Ongoing Authorization Reporting
+description: Detects lack of quarterly FedRAMP ongoing authorization reports (AFR-06 violation)
+family: AFR
+severity: HIGH
+pattern_type: code_smell
+languages:
+  python:
+    regex_fallback: "(?i)(no.*quarterly.*report|no.*automat.*report|no.*ccm.*process|missing.*required.*documentation)"
+  csharp:
+    regex_fallback: "(?i)(no.*quarterly.*report|no.*automat.*report|no.*ccm.*process|missing.*required.*documentation)"
+  java:
+    regex_fallback: "(?i)(no.*quarterly.*report|no.*automat.*report|no.*ccm.*process|missing.*required.*documentation)"
+  typescript:
+    regex_fallback: "(?i)(no.*quarterly.*report|no.*automat.*report|no.*ccm.*process|missing.*required.*documentation)"
+  yaml:
+    regex_fallback: "(?i)(no.*quarterly|no.*report|no.*automat.*report)"
+finding:
+  title: Missing Ongoing Authorization Reporting
+  description: Code lacks automated quarterly reporting infrastructure. FedRAMP requires ongoing authorization reports via CCM process.
+  recommendation: Implement Azure Automation schedules for quarterly report generation and submission to FedRAMP.
+tags:
+  - authorization
+  - reporting
+  - compliance
+related_ksis:
+  - KSI-AFR-06
+
+---
+pattern_id: afr.secure_inbox.missing
+name: No Secure Inbox for FedRAMP Communications
+description: Detects lack of secure inbox for critical FedRAMP communications (AFR-08 violation)
+family: AFR
+severity: HIGH
+pattern_type: code_smell
+languages:
+  python:
+    regex_fallback: "(?i)(no.*secure.*inbox|using.*regular.*email|no.*encrypt|no.*monitor|no.*document.*process)"
+  csharp:
+    regex_fallback: "(?i)(no.*secure.*inbox|using.*regular.*email|no.*encrypt|no.*monitor|no.*document.*process)"
+  java:
+    regex_fallback: "(?i)(no.*secure.*inbox|using.*regular.*email|no.*encrypt|no.*monitor|no.*document.*process)"
+  typescript:
+    regex_fallback: "(?i)(no.*secure.*inbox|using.*regular.*email|no.*encrypt|no.*monitor|no.*document.*process)"
+  yaml:
+    regex_fallback: "(?i)(no.*secure.*inbox|regular.*email|no.*encrypt)"
+finding:
+  title: Missing Secure Inbox for FedRAMP Communications
+  description: Code lacks secure inbox infrastructure for critical FedRAMP communications. Using regular email is non-compliant.
+  recommendation: Implement Azure Storage Queue or secure messaging with encryption and monitoring for FedRAMP communications.
+tags:
+  - communication
+  - encryption
+  - security
+related_ksis:
+  - KSI-AFR-08
+
+---
+pattern_id: afr.continuous_validation.missing
+name: No Persistent Validation and Assessment
+description: Detects lack of continuous validation and assessment automation (AFR-09 violation)
+family: AFR
+severity: HIGH
+pattern_type: code_smell
+languages:
+  python:
+    regex_fallback: "(?i)(no.*persist.*valid|manual.*assess.*only|no.*automat|no.*continuous.*monitor|no.*report)"
+  csharp:
+    regex_fallback: "(?i)(no.*persist.*valid|manual.*assess.*only|no.*automat|no.*continuous.*monitor|no.*report)"
+  java:
+    regex_fallback: "(?i)(no.*persist.*valid|manual.*assess.*only|no.*automat|no.*continuous.*monitor|no.*report)"
+  typescript:
+    regex_fallback: "(?i)(no.*persist.*valid|manual.*assess.*only|no.*automat|no.*continuous.*monitor|no.*report)"
+  yaml:
+    regex_fallback: "(?i)(no.*continuous|no.*persist.*valid|manual.*only)"
+finding:
+  title: Missing Persistent Validation and Assessment
+  description: Code lacks continuous validation infrastructure. FedRAMP requires persistent automated assessment of security controls.
+  recommendation: Implement Azure Policy assignments with continuous compliance assessment and automated reporting.
+tags:
+  - validation
+  - assessment
+  - automation
+related_ksis:
+  - KSI-AFR-09
+
+---
+pattern_id: afr.incident_comms.no_integration
+name: No FedRAMP Incident Communications Integration
+description: Detects lack of FedRAMP ICP integration for incident communications (AFR-10 violation)
+family: AFR
+severity: HIGH
+pattern_type: code_smell
+languages:
+  python:
+    regex_fallback: "(?i)(no.*fedramp.*icp.*integrat|internal.*incident.*only|no.*fedramp.*notif|no.*document.*integrat)"
+  csharp:
+    regex_fallback: "(?i)(no.*fedramp.*icp.*integrat|internal.*incident.*only|no.*fedramp.*notif|no.*document.*integrat)"
+  java:
+    regex_fallback: "(?i)(no.*fedramp.*icp.*integrat|internal.*incident.*only|no.*fedramp.*notif|no.*document.*integrat)"
+  typescript:
+    regex_fallback: "(?i)(no.*fedramp.*icp.*integrat|internal.*incident.*only|no.*fedramp.*notif|no.*document.*integrat)"
+  yaml:
+    regex_fallback: "(?i)(no.*fedramp.*icp|internal.*only|no.*integrat)"
+finding:
+  title: Missing FedRAMP Incident Communications Integration
+  description: Code lacks integration with FedRAMP Incident Communications Procedures. Internal-only incident response is non-compliant.
+  recommendation: Implement Azure Monitor action groups with FedRAMP PMO email receivers and webhook integration for incident notifications.
+tags:
+  - incident-response
+  - communication
+  - integration
+related_ksis:
+  - KSI-AFR-10

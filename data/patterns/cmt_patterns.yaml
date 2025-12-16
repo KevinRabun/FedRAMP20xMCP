@@ -900,3 +900,195 @@ automation:
 impact_levels:
 - Low
 - Moderate
+---
+pattern_id: cmt.baseline.azure_policy
+name: Configuration Baseline with Azure Policy
+description: Detects Azure Policy assignment for security baseline enforcement
+family: CMT
+severity: INFO
+pattern_type: resource
+languages:
+  terraform:
+    ast_queries: []
+    regex_fallback: "azurerm_policy_assignment.*security.*baseline|policy_definition_id.*nist-sp-800-53|config.*drift|enforcement_mode"
+    positive_indicators:
+    - azurerm_policy_assignment
+    - security-baseline
+    - nist-sp-800-53
+finding:
+  title_template: Configuration Baseline Enforcement Detected
+  description_template: "Azure Policy configured for security baseline enforcement and configuration drift detection, compliant with KSI-CMT-01"
+  remediation_template: "N/A - Positive finding"
+tags:
+- configuration_baseline
+- positive
+related_ksis:
+- KSI-CMT-01
+---
+pattern_id: cmt.baseline.no_enforcement
+name: No Configuration Baseline Enforcement
+description: Detects resources deployed without configuration baseline validation
+family: CMT
+severity: HIGH
+pattern_type: resource
+languages:
+  terraform:
+    ast_queries: []
+    regex_fallback: "[Nn]o policy enforcement|[Nn]o baseline|[Cc]onfiguration can drift|[Nn]o security baseline validation"
+    negative_indicators:
+    - No policy enforcement
+    - Configuration can drift
+    - No security baseline
+finding:
+  title_template: No Configuration Baseline Enforcement
+  description_template: "Resources deployed without configuration baseline enforcement - configuration can drift without detection"
+  remediation_template: "Implement Azure Policy assignments for security baseline enforcement (NIST SP 800-53, CIS benchmarks) with drift detection"
+tags:
+- configuration_baseline
+- negative
+related_ksis:
+- KSI-CMT-01
+---
+pattern_id: cmt.immutable.versioned_images
+name: Immutable Infrastructure with Versioned Images
+description: Detects immutable infrastructure deployment using versioned container images
+family: CMT
+severity: INFO
+pattern_type: resource
+languages:
+  terraform:
+    ast_queries: []
+    regex_fallback: "azurerm_container_group|image.*:v[0-9]+\\.[0-9]+|ImmutableInfrastructure|restart_policy.*Never"
+    positive_indicators:
+    - azurerm_container_group
+    - ":v"
+    - ImmutableInfrastructure
+finding:
+  title_template: Immutable Infrastructure Detected
+  description_template: "Immutable infrastructure deployment using versioned container images, compliant with KSI-CMT-02"
+  remediation_template: "N/A - Positive finding"
+tags:
+- immutable_infrastructure
+- positive
+related_ksis:
+- KSI-CMT-02
+---
+pattern_id: cmt.immutable.direct_modification
+name: Direct Modification of Production Resources
+description: Detects direct modification of live resources (SSH, manual edits)
+family: CMT
+severity: CRITICAL
+pattern_type: security_control
+languages:
+  bash:
+    ast_queries: []
+    regex_fallback: "ssh.*@.*sudo|vim /etc|systemctl restart|[Nn]o version control|[Dd]irect modification|[Nn]o redeployment"
+    negative_indicators:
+    - ssh
+    - sudo vim
+    - No version control
+finding:
+  title_template: Direct Production Modification Detected
+  description_template: "Direct modification of production resources without version control or redeployment process"
+  remediation_template: "Use immutable infrastructure patterns: deploy new versions instead of modifying existing resources. All changes through version-controlled IaC"
+tags:
+- immutable_infrastructure
+- negative
+related_ksis:
+- KSI-CMT-02
+---
+pattern_id: cmt.testing.automated_pipeline
+name: Automated Testing in CI/CD Pipeline
+description: Detects automated security testing, compliance validation, and vulnerability scanning in CI/CD
+family: CMT
+severity: INFO
+pattern_type: security_control
+languages:
+  yaml:
+    ast_queries: []
+    regex_fallback: "pytest.*security|validate.*fedramp|tfsec|checkov|bandit.*report|safety check"
+    positive_indicators:
+    - pytest
+    - tfsec
+    - bandit
+finding:
+  title_template: Automated Testing Pipeline Detected
+  description_template: "CI/CD pipeline includes automated security testing, compliance validation, and vulnerability scanning, compliant with KSI-CMT-03"
+  remediation_template: "N/A - Positive finding"
+tags:
+- automated_testing
+- positive
+related_ksis:
+- KSI-CMT-03
+---
+pattern_id: cmt.testing.no_automation
+name: No Automated Testing
+description: Detects manual deployment without automated testing or validation
+family: CMT
+severity: HIGH
+pattern_type: security_control
+languages:
+  yaml:
+    ast_queries: []
+    regex_fallback: "terraform apply -auto-approve|[Nn]o testing|[Nn]o validation|direct to production|workflow_dispatch"
+    negative_indicators:
+    - No testing
+    - No validation
+    - direct to production
+finding:
+  title_template: No Automated Testing
+  description_template: "Deployment to production without automated testing or validation"
+  remediation_template: "Implement automated testing in CI/CD pipeline: unit tests, security scans (SAST, dependency check), infrastructure validation (tfsec, checkov), compliance checks"
+tags:
+- automated_testing
+- negative
+related_ksis:
+- KSI-CMT-03
+---
+pattern_id: cmt.change_management.documented_process
+name: Documented Change Management Process
+description: Detects formal change management with approvals, security review, and compliance checks
+family: CMT
+severity: INFO
+pattern_type: security_control
+languages:
+  yaml:
+    ast_queries: []
+    regex_fallback: "Change Management|change.*approval|Security Review|Compliance Check|approvals from security|testing evidence"
+    positive_indicators:
+    - Change Management
+    - Security Review
+    - Compliance Check
+finding:
+  title_template: Documented Change Management Process Detected
+  description_template: "Formal change management process with approvals, security review, and compliance validation, compliant with KSI-CMT-04"
+  remediation_template: "N/A - Positive finding"
+tags:
+- change_management
+- positive
+related_ksis:
+- KSI-CMT-04
+---
+pattern_id: cmt.change_management.no_process
+name: No Change Management Process
+description: Detects ad-hoc changes without approval or documentation
+family: CMT
+severity: CRITICAL
+pattern_type: security_control
+languages:
+  bash:
+    ast_queries: []
+    regex_fallback: "git push origin main|quick fix|[Nn]o approvals|[Nn]o documentation|[Nn]o testing|[Aa]d-hoc"
+    negative_indicators:
+    - No approvals
+    - No documentation
+    - No testing
+finding:
+  title_template: No Change Management Process
+  description_template: "Ad-hoc changes with no approval, documentation, or testing requirements"
+  remediation_template: "Implement formal change management: pull request workflow, security team approvals, automated testing, compliance validation, change documentation"
+tags:
+- change_management
+- negative
+related_ksis:
+- KSI-CMT-04
