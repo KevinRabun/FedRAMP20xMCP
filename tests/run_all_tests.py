@@ -13,6 +13,8 @@ from datetime import datetime
 TEST_FILES = [
     "test_data_loader.py",
     "test_cve_fetcher.py",
+    "test_mcp_server_understanding.py",  # Verify MCP server understanding of requirements
+    "test_ksi_requirement_validation.py",  # Validate patterns match requirement intent (30 tests)
     "test_pattern_engine.py",
     "test_pattern_language_parity.py",  # CRITICAL: Must pass before merging pattern changes
     "test_ksi_analyzers.py",

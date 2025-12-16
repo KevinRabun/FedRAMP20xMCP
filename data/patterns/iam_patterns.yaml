@@ -24,7 +24,7 @@ languages:
     ast_queries:
     - query_type: import_declaration
       target: com.yubico.webauthn
-    regex_fallback: import\s+com\.yubico\.webauthn
+    regex_fallback: import\s+com\\.yubico\\.webauthn
     positive_indicators:
     - com.yubico.webauthn
   typescript:
@@ -253,7 +253,7 @@ languages:
     ast_queries:
     - query_type: import_declaration
       target: com.yubico.webauthn
-    regex_fallback: import\s+com\.yubico\.webauthn
+    regex_fallback: import\s+com\\.yubico\\.webauthn
     positive_indicators:
     - com.yubico.webauthn
   typescript:
@@ -464,7 +464,7 @@ languages:
       target: msal
     - query_type: import_statement
       target: azure.identity
-    regex_fallback: import\s+msal|from\s+msal|from\s+azure\.identity
+    regex_fallback: import\s+msal|from\s+msal|from\s+azure\\.identity
     positive_indicators:
     - msal
     - azure.identity
@@ -474,7 +474,7 @@ languages:
       target: Microsoft.Identity
     - query_type: using_directive
       target: Microsoft.Authentication
-    regex_fallback: using\s+Microsoft\.(Identity|Authentication)
+    regex_fallback: using\s+Microsoft\\.(Identity|Authentication)
     positive_indicators:
     - Microsoft.Identity
     - Microsoft.Authentication
@@ -482,7 +482,7 @@ languages:
     ast_queries:
     - query_type: import_declaration
       target: com.microsoft.aad
-    regex_fallback: import\s+com\.microsoft\.aad
+    regex_fallback: import\s+com\\.microsoft\\.aad
     positive_indicators:
     - com.microsoft.aad
   typescript:
@@ -701,7 +701,7 @@ languages:
     ast_queries:
     - query_type: import_declaration
       target: org.jboss.aerogear.security.otp
-    regex_fallback: import\s+.*\.otp
+    regex_fallback: import\s+.*\\.otp
     negative_indicators:
     - otp
   typescript:
@@ -935,7 +935,7 @@ languages:
     ast_queries:
     - query_type: import_declaration
       target: com.twilio
-    regex_fallback: import\s+com\.twilio
+    regex_fallback: import\s+com\\.twilio
     negative_indicators:
     - com.twilio
   typescript:
@@ -1155,7 +1155,7 @@ languages:
       - not_contains_in_body:mfa
       - not_contains_in_body:two_factor
       - not_contains_in_body:fido2
-    regex_fallback: 'def\s+\w*login\w*\([^)]*\):'
+    regex_fallback: 'def\s+\w*login\w*\\([^)]*\\):'
     negative_indicators:
     - mfa
     - two_factor
@@ -1170,7 +1170,7 @@ languages:
       - method_name_contains:Login
       - has_attribute:HttpPost
       - not_contains_in_body:TwoFactor
-    regex_fallback: public\s+.*\s+Login\s*\(
+    regex_fallback: public\s+.*\s+Login\s*\\(
     negative_indicators:
     - TwoFactor
     - Mfa
@@ -1182,7 +1182,7 @@ languages:
       conditions:
       - method_name_contains:login
       - not_contains_in_body:mfa
-    regex_fallback: public\s+.*\s+login\s*\(
+    regex_fallback: public\s+.*\s+login\s*\\(
     negative_indicators:
     - mfa
     - twoFactor
@@ -1193,7 +1193,7 @@ languages:
       conditions:
       - function_name_contains:login
       - not_contains_in_body:mfa
-    regex_fallback: function\s+\w*login\w*\(
+    regex_fallback: function\s+\w*login\w*\\(
     negative_indicators:
     - mfa
     - twoFactor
@@ -1638,7 +1638,7 @@ languages:
       properties:
       - roleDefinitionId
       - principalId
-    regex_fallback: resource.*Microsoft\.Authorization/roleAssignments
+    regex_fallback: resource.*Microsoft\\.Authorization/roleAssignments
   terraform:
     ast_queries:
     - resource_type: azurerm_role_assignment
@@ -2113,7 +2113,7 @@ languages:
     ast_queries:
     - query_type: method_call
       target: setMaxInactiveInterval
-    regex_fallback: setMaxInactiveInterval\s*\(
+    regex_fallback: setMaxInactiveInterval\s*\\(
   typescript:
     ast_queries:
     - query_type: property_assignment
@@ -2348,7 +2348,7 @@ languages:
       property_path: identity.type
       conditions:
       - value_not_in:['SystemAssigned', 'UserAssigned', 'SystemAssigned,UserAssigned']
-    regex_fallback: (Microsoft\.Compute/virtualMachines|Microsoft\.Web/sites|Microsoft\.ContainerInstance/containerGroups)(?!.*identity\s*:)
+    regex_fallback: (Microsoft\\.Compute/virtualMachines|Microsoft\\.Web/sites|Microsoft\\.ContainerInstance/containerGroups)(?!.*identity\s*:)
   terraform:
     ast_queries:
     - resource_type: azurerm_virtual_machine|azurerm_linux_virtual_machine|azurerm_windows_virtual_machine|azurerm_app_service|azurerm_function_app|azurerm_kubernetes_cluster
@@ -2757,3 +2757,346 @@ automation:
 impact_levels:
 - Low
 - Moderate
+---
+pattern_id: iam.mfa.conditional_access
+name: MFA Enforcement via Conditional Access
+description: Detects MFA enforcement using Azure AD Conditional Access Policy
+family: IAM
+severity: INFO
+pattern_type: security_control
+languages:
+  terraform:
+    ast_queries: []
+    regex_fallback: "azuread_conditional_access_policy|built_in_controls.*mfa|Require MFA|grant_controls"
+    positive_indicators:
+    - azuread_conditional_access_policy
+    - mfa
+    - grant_controls
+finding:
+  title_template: MFA Enforcement Detected
+  description_template: "Multi-factor authentication enforced via Azure AD Conditional Access Policy, compliant with KSI-IAM-02"
+  remediation_template: "N/A - Positive finding"
+tags:
+- mfa
+- positive
+related_ksis:
+- KSI-IAM-02
+---
+pattern_id: iam.mfa.password_only
+name: Password-Only Authentication
+description: Detects authentication without MFA or second factor
+family: IAM
+severity: CRITICAL
+pattern_type: security_control
+languages:
+  python:
+    ast_queries: []
+    regex_fallback: "check_password.*session|hashlib.*sha256.*password|[Oo]nly checks password|no second factor"
+    negative_indicators:
+    - Only checks password
+    - no second factor
+  csharp:
+    regex_fallback: "(?i)(PasswordHasher.*VerifyHashedPassword|CheckPassword.*return|[Oo]nly checks password|no second factor)"
+    negative_indicators:
+    - Only checks password
+    - no second factor
+  java:
+    regex_fallback: "(?i)(BCrypt\\.checkpw|password\\.equals|[Oo]nly checks password|no second factor)"
+    negative_indicators:
+    - Only checks password
+    - no second factor
+  typescript:
+    regex_fallback: "(?i)(bcrypt\\.compare|password.*===|[Oo]nly checks password|no second factor)"
+    negative_indicators:
+    - Only checks password
+    - no second factor
+finding:
+  title_template: Password-Only Authentication Detected
+  description_template: "Authentication relies on password only without multi-factor authentication"
+  remediation_template: "Implement MFA using Azure AD Conditional Access, TOTP, SMS, or hardware tokens. Never rely on password-only authentication for FedRAMP systems"
+tags:
+- mfa
+- negative
+related_ksis:
+- KSI-IAM-02
+---
+pattern_id: iam.least_privilege.custom_role
+name: Least Privilege RBAC
+description: Detects custom RBAC roles with minimal specific permissions
+family: IAM
+severity: INFO
+pattern_type: security_control
+languages:
+  terraform:
+    ast_queries: []
+    regex_fallback: "azurerm_role_definition|permissions.*actions.*read|assignable_scopes|minimal permissions"
+    positive_indicators:
+    - azurerm_role_definition
+    - permissions
+    - actions
+finding:
+  title_template: Least Privilege RBAC Detected
+  description_template: "Custom RBAC role defined with minimal specific permissions (read-only), compliant with KSI-IAM-03"
+  remediation_template: "N/A - Positive finding"
+tags:
+- least_privilege
+- positive
+related_ksis:
+- KSI-IAM-03
+---
+pattern_id: iam.least_privilege.excessive
+name: Excessive Permissions
+description: Detects assignment of Owner or Contributor roles (violates least privilege)
+family: IAM
+severity: CRITICAL
+pattern_type: security_control
+languages:
+  terraform:
+    ast_queries: []
+    regex_fallback: "role_definition_name.*\"Owner\"|role_definition_name.*\"Contributor\"|[Ff]ull admin access|violates least privilege"
+    negative_indicators:
+    - Owner
+    - Contributor
+    - Full admin access
+finding:
+  title_template: Excessive Permissions Granted
+  description_template: "Owner or Contributor role assigned - violates least privilege principle by granting excessive permissions"
+  remediation_template: "Create custom RBAC roles with minimal required permissions. Avoid built-in Owner/Contributor roles. Use Reader, specific data plane roles, or custom definitions"
+tags:
+- least_privilege
+- negative
+related_ksis:
+- KSI-IAM-03
+---
+pattern_id: iam.session.secure_configuration
+name: Secure Session Management
+description: Detects secure session configuration with timeout and security flags
+family: IAM
+severity: INFO
+pattern_type: security_control
+languages:
+  csharp:
+    ast_queries: []
+    regex_fallback: "HttpOnly.*true|SecurePolicy.*Always|SameSite.*Strict|ExpireTimeSpan|SlidingExpiration"
+    positive_indicators:
+    - HttpOnly
+    - SecurePolicy
+    - ExpireTimeSpan
+  python:
+    regex_fallback: "(?i)(session\\.cookie_httponly.*True|secure.*True|samesite.*Strict|permanent_session_lifetime)"
+    positive_indicators:
+    - cookie_httponly
+    - permanent_session_lifetime
+  java:
+    regex_fallback: "(?i)(setHttpOnly\\(true|setSecure\\(true|SameSite.*STRICT|setMaxAge)"
+    positive_indicators:
+    - setHttpOnly
+    - setSecure
+  typescript:
+    regex_fallback: "(?i)(httpOnly.*true|secure.*true|sameSite.*strict|maxAge)"
+    positive_indicators:
+    - httpOnly
+    - secure
+finding:
+  title_template: Secure Session Management Detected
+  description_template: "Session configured with HttpOnly, Secure, SameSite flags and timeout, compliant with KSI-IAM-04"
+  remediation_template: "N/A - Positive finding"
+tags:
+- session_management
+- positive
+related_ksis:
+- KSI-IAM-04
+---
+pattern_id: iam.session.insecure
+name: Insecure Session Configuration
+description: Detects insecure session configuration without timeout or security flags
+family: IAM
+severity: HIGH
+pattern_type: security_control
+languages:
+  python:
+    ast_queries: []
+    regex_fallback: "session\\.permanent.*True|[Nn]o session timeout|[Nn]o secure cookie|[Nn]ever expires"
+    negative_indicators:
+    - No session timeout
+    - No secure cookie
+    - Never expires
+  csharp:
+    regex_fallback: "(?i)([Nn]o.*timeout|[Nn]o.*HttpOnly|[Nn]o.*Secure|[Nn]ever expires|session.*permanent)"
+    negative_indicators:
+    - No timeout
+    - Never expires
+  java:
+    regex_fallback: "(?i)([Nn]o.*timeout|[Nn]o.*setHttpOnly|[Nn]o.*setSecure|[Nn]ever expires|session.*permanent)"
+    negative_indicators:
+    - No timeout
+    - Never expires
+  typescript:
+    regex_fallback: "(?i)([Nn]o.*timeout|[Nn]o.*httpOnly|[Nn]o.*secure|[Nn]ever expires|session.*permanent)"
+    negative_indicators:
+    - No timeout
+    - Never expires
+finding:
+  title_template: Insecure Session Configuration Detected
+  description_template: "Sessions configured without timeout or security flags - sessions never expire, vulnerable to hijacking"
+  remediation_template: "Configure session timeout (15 minutes), HttpOnly, Secure, and SameSite=Strict cookie flags. Use sliding expiration"
+tags:
+- session_management
+- negative
+related_ksis:
+- KSI-IAM-04
+---
+pattern_id: iam.audit.auth_logging
+name: Authentication Audit Logging
+description: Detects comprehensive authentication audit logging to Azure Monitor
+family: IAM
+severity: INFO
+pattern_type: security_control
+languages:
+  python:
+    ast_queries: []
+    regex_fallback: "configure_azure_monitor|AUTH_SUCCESS.*json\\.dumps|auth_event.*username.*timestamp.*ip_address|AUTH_FAILED|AUTH_ERROR"
+    positive_indicators:
+    - configure_azure_monitor
+    - AUTH_SUCCESS
+    - auth_event
+  csharp:
+    regex_fallback: "(?i)(ILogger.*LogInformation|AUTH_SUCCESS|auth.*event|username.*timestamp.*ipAddress)"
+    positive_indicators:
+    - LogInformation
+    - AUTH_SUCCESS
+  java:
+    regex_fallback: "(?i)(logger\\.info|AUTH_SUCCESS|authEvent|username.*timestamp.*ipAddress)"
+    positive_indicators:
+    - logger.info
+    - AUTH_SUCCESS
+  typescript:
+    regex_fallback: "(?i)(logger\\.info|AUTH_SUCCESS|authEvent|username.*timestamp.*ipAddress)"
+    positive_indicators:
+    - logger.info
+    - AUTH_SUCCESS
+finding:
+  title_template: Authentication Audit Logging Detected
+  description_template: "Comprehensive authentication audit logging to Azure Monitor with timestamps, IP, user agent, compliant with KSI-IAM-05"
+  remediation_template: "N/A - Positive finding"
+tags:
+- audit_logging
+- positive
+related_ksis:
+- KSI-IAM-05
+---
+pattern_id: iam.audit.no_logging
+name: No Authentication Audit Logging
+description: Detects authentication without audit trail
+family: IAM
+severity: CRITICAL
+pattern_type: security_control
+languages:
+  python:
+    ast_queries: []
+    regex_fallback: "def login.*return|if.*password.*return|[Nn]o logging|[Nn]o audit trail"
+    negative_indicators:
+    - No logging
+    - No audit trail
+  csharp:
+    regex_fallback: "(?i)(Login.*return|password.*return|[Nn]o logging|[Nn]o audit trail)"
+    negative_indicators:
+    - No logging
+    - No audit trail
+  java:
+    regex_fallback: "(?i)(login.*return|password.*return|[Nn]o logging|[Nn]o audit trail)"
+    negative_indicators:
+    - No logging
+    - No audit trail
+  typescript:
+    regex_fallback: "(?i)(login.*return|password.*return|[Nn]o logging|[Nn]o audit trail)"
+    negative_indicators:
+    - No logging
+    - No audit trail
+finding:
+  title_template: No Authentication Audit Logging
+  description_template: "Authentication performed without audit trail - no logging of attempts, success, or failures"
+  remediation_template: "Implement comprehensive authentication logging to SIEM/Azure Monitor: timestamp, username, IP address, MFA status, success/failure, user agent"
+tags:
+- audit_logging
+- negative
+related_ksis:
+- KSI-IAM-05
+---
+pattern_id: iam.lockout.protection
+name: Account Lockout Protection
+description: Detects account lockout mechanism after failed login attempts
+family: IAM
+severity: INFO
+pattern_type: security_control
+languages:
+  python:
+    ast_queries: []
+    regex_fallback: "lockout_threshold|lockout_duration|record_failed_attempt|lock_account|AccountLockedException"
+    positive_indicators:
+    - lockout_threshold
+    - record_failed_attempt
+    - lock_account
+  csharp:
+    regex_fallback: "(?i)(LockoutThreshold|LockoutDuration|RecordFailedAttempt|LockAccount|UserLockedException)"
+    positive_indicators:
+    - LockoutThreshold
+    - LockAccount
+  java:
+    regex_fallback: "(?i)(lockoutThreshold|lockoutDuration|recordFailedAttempt|lockAccount|AccountLockedException)"
+    positive_indicators:
+    - lockoutThreshold
+    - lockAccount
+  typescript:
+    regex_fallback: "(?i)(lockoutThreshold|lockoutDuration|recordFailedAttempt|lockAccount|AccountLockedException)"
+    positive_indicators:
+    - lockoutThreshold
+    - lockAccount
+finding:
+  title_template: Account Lockout Protection Detected
+  description_template: "Account lockout mechanism implemented after failed login attempts, compliant with KSI-IAM-07"
+  remediation_template: "N/A - Positive finding"
+tags:
+- account_lockout
+- positive
+related_ksis:
+- KSI-IAM-07
+---
+pattern_id: iam.lockout.no_protection
+name: No Account Lockout Protection
+description: Detects authentication vulnerable to brute force attacks
+family: IAM
+severity: CRITICAL
+pattern_type: security_control
+languages:
+  python:
+    ast_queries: []
+    regex_fallback: "[Nn]o tracking|[Nn]o account lockout|[Vv]ulnerable to brute force|unlimited attempts"
+    negative_indicators:
+    - No tracking
+    - No account lockout
+    - Vulnerable to brute force
+  csharp:
+    regex_fallback: "(?i)([Nn]o tracking|[Nn]o.*lockout|[Vv]ulnerable to brute force|unlimited attempts)"
+    negative_indicators:
+    - No tracking
+    - No lockout
+  java:
+    regex_fallback: "(?i)([Nn]o tracking|[Nn]o.*lockout|[Vv]ulnerable to brute force|unlimited attempts)"
+    negative_indicators:
+    - No tracking
+    - No lockout
+  typescript:
+    regex_fallback: "(?i)([Nn]o tracking|[Nn]o.*lockout|[Vv]ulnerable to brute force|unlimited attempts)"
+    negative_indicators:
+    - No tracking
+    - No lockout
+finding:
+  title_template: No Account Lockout Protection
+  description_template: "Authentication allows unlimited attempts - vulnerable to brute force attacks, no failed attempt tracking or account lockout"
+  remediation_template: "Implement account lockout: track failed attempts, lock account after 5 failures for 30 minutes, log lockout events, notify security team"
+tags:
+- account_lockout
+- negative
+related_ksis:
+- KSI-IAM-07

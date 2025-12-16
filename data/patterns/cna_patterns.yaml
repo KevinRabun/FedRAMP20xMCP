@@ -2724,3 +2724,146 @@ automation:
     - Azure Monitor
     - Log Analytics
 impact_levels: ['Moderate']
+---
+pattern_id: cna.container.secure_configuration
+name: Secure Container Configuration
+description: Detects secure Kubernetes container deployment with security context
+family: CNA
+severity: INFO
+pattern_type: security_control
+languages:
+  yaml:
+    ast_queries: []
+    regex_fallback: "runAsNonRoot.*true|allowPrivilegeEscalation.*false|readOnlyRootFilesystem.*true|capabilities.*drop.*ALL|seccompProfile"
+    positive_indicators:
+    - runAsNonRoot
+    - allowPrivilegeEscalation false
+    - capabilities
+finding:
+  title_template: Secure Container Configuration Detected
+  description_template: "Kubernetes container deployed with security context: non-root user, no privilege escalation, read-only filesystem, compliant with KSI-CNA-03"
+  remediation_template: "N/A - Positive finding"
+tags:
+- container_security
+- positive
+related_ksis:
+- KSI-CNA-03
+---
+pattern_id: cna.container.privileged
+name: Privileged Container
+description: Detects privileged containers with root access
+family: CNA
+severity: CRITICAL
+pattern_type: security_control
+languages:
+  yaml:
+    ast_queries: []
+    regex_fallback: "privileged.*true|runAsUser.*0|[Nn]o resource limits|[Nn]o security restrictions"
+    negative_indicators:
+    - privileged true
+    - runAsUser 0
+    - No security restrictions
+finding:
+  title_template: Privileged Container Detected
+  description_template: "Critical security violation: Container running with privileged mode or as root user"
+  remediation_template: "Configure securityContext: runAsNonRoot: true, allowPrivilegeEscalation: false, drop ALL capabilities, use seccompProfile"
+tags:
+- container_security
+- negative
+related_ksis:
+- KSI-CNA-03
+---
+pattern_id: cna.service_mesh.mtls_strict
+name: Service Mesh with Strict mTLS
+description: Detects Istio service mesh with strict mutual TLS enforcement
+family: CNA
+severity: INFO
+pattern_type: security_control
+languages:
+  yaml:
+    ast_queries: []
+    regex_fallback: "PeerAuthentication|mtls.*mode.*STRICT|ISTIO_MUTUAL|DestinationRule"
+    positive_indicators:
+    - PeerAuthentication
+    - mode STRICT
+    - ISTIO_MUTUAL
+finding:
+  title_template: Service Mesh with Strict mTLS Detected
+  description_template: "Istio service mesh configured with strict mutual TLS enforcement for all services, compliant with KSI-CNA-04"
+  remediation_template: "N/A - Positive finding"
+tags:
+- service_mesh
+- positive
+related_ksis:
+- KSI-CNA-04
+---
+pattern_id: cna.service_mesh.permissive_mode
+name: Service Mesh Permissive Mode
+description: Detects service mesh in permissive mode allowing plaintext traffic
+family: CNA
+severity: HIGH
+pattern_type: security_control
+languages:
+  yaml:
+    ast_queries: []
+    regex_fallback: "mode.*PERMISSIVE|[Aa]llows.*plaintext|[Ii]nsecure"
+    negative_indicators:
+    - mode PERMISSIVE
+    - allows both mTLS and plaintext
+finding:
+  title_template: Service Mesh in Permissive Mode
+  description_template: "Service mesh configured in PERMISSIVE mode - allows both mTLS and plaintext traffic, insecure"
+  remediation_template: "Set PeerAuthentication mode to STRICT to enforce mutual TLS for all service-to-service communication"
+tags:
+- service_mesh
+- negative
+related_ksis:
+- KSI-CNA-04
+---
+pattern_id: cna.immutable.infrastructure_as_code
+name: Immutable Infrastructure via IaC
+description: Detects infrastructure deployed through version-controlled IaC with no manual changes
+family: CNA
+severity: INFO
+pattern_type: security_control
+languages:
+  yaml:
+    ast_queries: []
+    regex_fallback: "terraform apply|tfsec|[Nn]o manual SSH|[Aa]ll changes through.*IaC|[Ss]ervers are replaced"
+    positive_indicators:
+    - terraform apply
+    - No manual SSH
+    - All changes through
+finding:
+  title_template: Immutable Infrastructure Deployment Detected
+  description_template: "Infrastructure deployed through version-controlled IaC with immutable deployment pattern, compliant with KSI-CNA-06"
+  remediation_template: "N/A - Positive finding"
+tags:
+- immutable_infrastructure
+- positive
+related_ksis:
+- KSI-CNA-06
+---
+pattern_id: cna.immutable.manual_modification
+name: Manual Infrastructure Modification
+description: Detects manual SSH access and modifications to production servers
+family: CNA
+severity: CRITICAL
+pattern_type: security_control
+languages:
+  yaml:
+    ast_queries: []
+    regex_fallback: "ssh.*@prod|systemctl restart|[Mm]anual changes|[Nn]o version control|[Nn]o audit trail|violates immutability"
+    negative_indicators:
+    - ssh
+    - Manual changes
+    - No version control
+finding:
+  title_template: Manual Infrastructure Modification Detected
+  description_template: "Manual modifications to production servers via SSH - violates immutable infrastructure principle, no version control or audit trail"
+  remediation_template: "Use immutable infrastructure: deploy new versions via IaC instead of modifying existing servers. All changes through version-controlled Terraform/Bicep"
+tags:
+- immutable_infrastructure
+- negative
+related_ksis:
+- KSI-CNA-06

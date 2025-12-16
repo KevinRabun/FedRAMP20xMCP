@@ -568,3 +568,222 @@ automation:
 impact_levels:
 - Low
 - Moderate
+---
+pattern_id: inr.incident_response.automated_workflow
+name: Automated Incident Response Workflow
+description: Detects automated incident response with containment and forensics
+family: INR
+severity: INFO
+pattern_type: security_control
+languages:
+  yaml:
+    ast_queries: []
+    regex_fallback: "repository_dispatch.*security_incident|Isolate Affected Resources|Collect Forensic Data|Create Incident Ticket|vm deallocate"
+    positive_indicators:
+    - security_incident
+    - Isolate Affected Resources
+    - Collect Forensic Data
+finding:
+  title_template: Automated Incident Response Workflow Detected
+  description_template: "Automated incident response workflow with containment and forensics collection, compliant with KSI-INR-01"
+  remediation_template: "N/A - Positive finding"
+tags:
+- incident_response
+- positive
+related_ksis:
+- KSI-INR-01
+---
+pattern_id: inr.incident_response.no_automation
+name: No Automated Incident Response
+description: Detects manual-only incident response without automation
+family: INR
+severity: HIGH
+pattern_type: security_control
+languages:
+  python:
+    ast_queries: []
+    regex_fallback: "manual.*intervention|[Jj]ust send email|[Nn]o automated|[Nn]o containment|[Nn]o forensics"
+    negative_indicators:
+    - manual intervention
+    - Just send email
+    - No automated
+  csharp:
+    regex_fallback: "(?i)(manual.*intervention|[Jj]ust send email|[Nn]o automated|[Nn]o containment|[Nn]o forensics)"
+    negative_indicators:
+    - manual intervention
+    - No automated
+  java:
+    regex_fallback: "(?i)(manual.*intervention|[Jj]ust send email|[Nn]o automated|[Nn]o containment|[Nn]o forensics)"
+    negative_indicators:
+    - manual intervention
+    - No automated
+  typescript:
+    regex_fallback: "(?i)(manual.*intervention|[Jj]ust send email|[Nn]o automated|[Nn]o containment|[Nn]o forensics)"
+    negative_indicators:
+    - manual intervention
+    - No automated
+finding:
+  title_template: No Automated Incident Response
+  description_template: "Incident response relies on manual intervention without automated containment or forensics"
+  remediation_template: "Implement automated incident response workflows with immediate containment, forensic data collection, and ticketing"
+tags:
+- incident_response
+- negative
+related_ksis:
+- KSI-INR-01
+---
+pattern_id: inr.incident_logging.structured
+name: Structured Incident Logging
+description: Detects centralized structured incident logging (Azure Monitor, SIEM)
+family: INR
+severity: INFO
+pattern_type: security_control
+languages:
+  python:
+    ast_queries: []
+    regex_fallback: "configure_azure_monitor|IncidentTracker|incident_id.*severity.*description|track_event.*security_incident|INCIDENT.*json\\.dumps"
+    positive_indicators:
+    - configure_azure_monitor
+    - IncidentTracker
+    - track_event
+  csharp:
+    regex_fallback: "(?i)(ILogger.*Incident|IncidentTracker|incidentId.*severity.*description|TrackEvent.*SecurityIncident)"
+    positive_indicators:
+    - IncidentTracker
+    - TrackEvent
+  java:
+    regex_fallback: "(?i)(logger.*incident|IncidentTracker|incidentId.*severity.*description|trackEvent.*securityIncident)"
+    positive_indicators:
+    - IncidentTracker
+    - trackEvent
+  typescript:
+    regex_fallback: "(?i)(logger.*incident|IncidentTracker|incidentId.*severity.*description|trackEvent.*securityIncident)"
+    positive_indicators:
+    - IncidentTracker
+    - trackEvent
+finding:
+  title_template: Structured Incident Logging Detected
+  description_template: "Centralized structured incident logging to Azure Monitor or SIEM, compliant with KSI-INR-02"
+  remediation_template: "N/A - Positive finding"
+tags:
+- incident_logging
+- positive
+related_ksis:
+- KSI-INR-02
+---
+pattern_id: inr.incident_logging.no_structure
+name: No Structured Incident Logging
+description: Detects absence of structured incident logging
+family: INR
+severity: HIGH
+pattern_type: security_control
+languages:
+  python:
+    ast_queries: []
+    regex_fallback: "print.*Security event|[Nn]o tracking|[Nn]o persistence|[Nn]o audit trail|[Jj]ust print to console"
+    negative_indicators:
+    - print
+    - No tracking
+    - No persistence
+  csharp:
+    regex_fallback: "(?i)(Console\\.WriteLine.*[Ss]ecurity|[Nn]o tracking|[Nn]o persistence|[Nn]o audit trail)"
+    negative_indicators:
+    - Console.WriteLine
+    - No tracking
+  java:
+    regex_fallback: "(?i)(System\\.out\\.println.*[Ss]ecurity|[Nn]o tracking|[Nn]o persistence|[Nn]o audit trail)"
+    negative_indicators:
+    - System.out
+    - No tracking
+  typescript:
+    regex_fallback: "(?i)(console\\.log.*[Ss]ecurity|[Nn]o tracking|[Nn]o persistence|[Nn]o audit trail)"
+    negative_indicators:
+    - console.log
+    - No tracking
+finding:
+  title_template: No Structured Incident Logging
+  description_template: "Security events not logged with structured data or persistence - no audit trail"
+  remediation_template: "Implement centralized incident logging using Azure Monitor, SIEM, or structured logging framework with persistent storage"
+tags:
+- incident_logging
+- negative
+related_ksis:
+- KSI-INR-02
+---
+pattern_id: inr.communication.multi_channel
+name: Multi-Channel Incident Communication
+description: Detects structured multi-channel incident notification system
+family: INR
+severity: INFO
+pattern_type: security_control
+languages:
+  csharp:
+    ast_queries: []
+    regex_fallback: "IncidentCommunicationService|NotificationHubClient|SendEmailNotification|SendSlackAlert|EscalateToExecutiveTeam|SECURITY_INCIDENT"
+    positive_indicators:
+    - IncidentCommunicationService
+    - NotificationHubClient
+    - EscalateToExecutiveTeam
+  python:
+    regex_fallback: "(?i)(IncidentCommunicationService|NotificationHub|send_email_notification|send_slack_alert|escalate_to_executive)"
+    positive_indicators:
+    - IncidentCommunicationService
+    - send_email_notification
+  java:
+    regex_fallback: "(?i)(IncidentCommunicationService|NotificationHub|sendEmailNotification|sendSlackAlert|escalateToExecutive)"
+    positive_indicators:
+    - IncidentCommunicationService
+    - sendEmailNotification
+  typescript:
+    regex_fallback: "(?i)(IncidentCommunicationService|NotificationHub|sendEmailNotification|sendSlackAlert|escalateToExecutive)"
+    positive_indicators:
+    - IncidentCommunicationService
+    - sendEmailNotification
+finding:
+  title_template: Multi-Channel Incident Communication Detected
+  description_template: "Structured incident communication system with multi-channel notifications and escalation, compliant with KSI-INR-03"
+  remediation_template: "N/A - Positive finding"
+tags:
+- incident_communication
+- positive
+related_ksis:
+- KSI-INR-03
+---
+pattern_id: inr.communication.no_structure
+name: No Structured Incident Communication
+description: Detects ad-hoc incident communication without structured notifications
+family: INR
+severity: HIGH
+pattern_type: security_control
+languages:
+  python:
+    ast_queries: []
+    regex_fallback: "print.*Security Alert|[Nn]o escalation|[Nn]o multi-channel|[Nn]o tracking|[Jj]ust print"
+    negative_indicators:
+    - print
+    - No escalation
+    - No multi-channel
+  csharp:
+    regex_fallback: "(?i)(Console\\.WriteLine.*Security|[Nn]o escalation|[Nn]o multi-channel|[Nn]o tracking)"
+    negative_indicators:
+    - Console.WriteLine
+    - No escalation
+  java:
+    regex_fallback: "(?i)(System\\.out\\.println.*Security|[Nn]o escalation|[Nn]o multi-channel|[Nn]o tracking)"
+    negative_indicators:
+    - System.out
+    - No escalation
+  typescript:
+    regex_fallback: "(?i)(console\\.log.*Security|[Nn]o escalation|[Nn]o multi-channel|[Nn]o tracking)"
+    negative_indicators:
+    - console.log
+    - No escalation
+finding:
+  title_template: No Structured Incident Communication
+  description_template: "Ad-hoc incident communication without structured notifications, escalation, or tracking"
+  remediation_template: "Implement multi-channel incident notification system (email, Slack, push notifications) with severity-based escalation and audit trail"
+tags:
+- incident_communication
+- negative
+related_ksis:
+- KSI-INR-03

@@ -635,3 +635,202 @@ automation:
     - Azure Monitor
     - Log Analytics
 impact_levels: ['Low', 'Moderate']
+---
+pattern_id: rpl.recovery.plan_documentation
+name: Recovery Plan Documentation
+description: Detects documented recovery plan aligned with objectives
+family: RPL
+severity: INFO
+pattern_type: documentation
+languages:
+  markdown:
+    regex_fallback: recovery.*(plan|procedure|RTO|RPO)
+    positive_indicators:
+    - Recovery Plan
+    - RTO
+    - RPO
+    - Recovery Procedures
+finding:
+  title_template: Recovery plan documented
+  description_template: Recovery plan aligned with RTO/RPO objectives, compliant with KSI-RPL-02.
+  remediation_template: N/A - Positive finding
+tags:
+- recovery
+- positive
+nist_controls:
+- cp-10
+related_ksis:
+- KSI-RPL-02
+---
+pattern_id: rpl.recovery.no_plan
+name: No Recovery Plan
+description: Detects absence of recovery plan
+family: RPL
+severity: HIGH
+pattern_type: code_pattern
+languages:
+  python:
+    regex_fallback: no.*recovery|no.*runbook|hope.*pray
+    negative_indicators:
+    - "No recovery"
+    - "No runbook"
+  csharp:
+    regex_fallback: "(?i)(no.*recovery|no.*runbook|hope.*pray)"
+    negative_indicators:
+    - "No recovery"
+  java:
+    regex_fallback: "(?i)(no.*recovery|no.*runbook|hope.*pray)"
+    negative_indicators:
+    - "No recovery"
+  typescript:
+    regex_fallback: "(?i)(no.*recovery|no.*runbook|hope.*pray)"
+    negative_indicators:
+    - "No recovery"
+finding:
+  title_template: No recovery plan
+  description_template: No documented recovery procedures. KSI-RPL-02 requires recovery plan aligned with objectives.
+  remediation_template: Document recovery procedures including database, application, and network recovery steps.
+tags:
+- recovery
+- gap
+nist_controls:
+- cp-10
+related_ksis:
+- KSI-RPL-02
+---
+pattern_id: rpl.backup.automated_configuration
+name: Automated Backup Configuration
+description: Detects automated backups meeting RPO objectives
+family: RPL
+severity: INFO
+pattern_type: resource
+languages:
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_backup_policy_vm
+    - resource_type: azurerm_backup_protected_vm
+    regex_fallback: azurerm_backup_policy|backup.*frequency
+    positive_indicators:
+    - azurerm_backup_policy
+    - backup_frequency
+  bicep:
+    regex_fallback: "(?i)(Microsoft\\.RecoveryServices/vaults/backupPolicies|backupManagementType|schedulePolicy)"
+    positive_indicators:
+    - Microsoft.RecoveryServices
+finding:
+  title_template: Automated backups configured
+  description_template: System backups aligned with RPO objectives, compliant with KSI-RPL-03.
+  remediation_template: N/A - Positive finding
+tags:
+- backup
+- positive
+nist_controls:
+- cp-9
+related_ksis:
+- KSI-RPL-03
+---
+pattern_id: rpl.recovery.testing_schedule
+name: Recovery Testing Schedule
+description: Detects regular recovery testing
+family: RPL
+severity: INFO
+pattern_type: configuration
+languages:
+  yaml:
+    regex_fallback: disaster.*recovery.*test|recovery.*validate
+    positive_indicators:
+    - Disaster Recovery Test
+    - recovery-test
+    - Validate Recovery
+finding:
+  title_template: Recovery testing scheduled
+  description_template: Regular disaster recovery testing configured, compliant with KSI-RPL-04.
+  remediation_template: N/A - Positive finding
+tags:
+- recovery
+- testing
+- positive
+nist_controls:
+- cp-4
+related_ksis:
+- KSI-RPL-04
+---
+pattern_id: rpl.recovery.no_testing
+name: No Recovery Testing
+description: Detects absence of recovery testing
+family: RPL
+severity: CRITICAL
+pattern_type: code_pattern
+languages:
+  python:
+    regex_fallback: never.*test|no.*testing.*schedule|first.*test.*disaster
+    negative_indicators:
+    - "Never tested"
+    - "No testing"
+  csharp:
+    regex_fallback: "(?i)(never.*test|no.*testing.*schedule|first.*test.*disaster)"
+    negative_indicators:
+    - "Never tested"
+  java:
+    regex_fallback: "(?i)(never.*test|no.*testing.*schedule|first.*test.*disaster)"
+    negative_indicators:
+    - "Never tested"
+  typescript:
+    regex_fallback: "(?i)(never.*test|no.*testing.*schedule|first.*test.*disaster)"
+    negative_indicators:
+    - "Never tested"
+finding:
+  title_template: Recovery procedures never tested
+  description_template: Recovery procedures not tested. KSI-RPL-04 requires regular recovery testing and validation.
+  remediation_template: Schedule quarterly disaster recovery tests to validate procedures and meet RTO/RPO objectives.
+tags:
+- recovery
+- testing
+- gap
+- critical-gap
+nist_controls:
+- cp-4
+related_ksis:
+- KSI-RPL-04
+---
+pattern_id: rpl.backup.no_configuration
+name: No Backup Configuration
+description: Detects absence of automated backups
+family: RPL
+severity: CRITICAL
+pattern_type: code_pattern
+languages:
+  python:
+    regex_fallback: no.*backup|manual.*backup|backup.*missing
+    negative_indicators:
+    - "No backup"
+    - "Manual backup"
+  bash:
+    regex_fallback: weekly.*manual|no.*automat|infrequent.*backup
+    negative_indicators:
+    - "Weekly manual"
+    - "No automated"
+  csharp:
+    regex_fallback: "(?i)(no.*backup|manual.*backup|backup.*missing)"
+    negative_indicators:
+    - "No backup"
+  java:
+    regex_fallback: "(?i)(no.*backup|manual.*backup|backup.*missing)"
+    negative_indicators:
+    - "No backup"
+  typescript:
+    regex_fallback: "(?i)(no.*backup|manual.*backup|backup.*missing)"
+    negative_indicators:
+    - "No backup"
+finding:
+  title_template: No automated backup configuration
+  description_template: Automated backups not configured. KSI-RPL-03 requires system backups aligned with RPO objectives.
+  remediation_template: Configure automated backups using Azure Backup with appropriate frequency to meet RPO requirements.
+tags:
+- backup
+- gap
+- critical-gap
+nist_controls:
+- cp-9
+related_ksis:
+- KSI-RPL-03

@@ -1445,6 +1445,90 @@ evidence_artifacts:
   retention_months: 36
   format: JSON
 ---
+pattern_id: svc.secrets.key_vault_usage
+name: Key Vault Secret Management
+description: Detects proper secret management using Azure Key Vault
+family: SVC
+severity: INFO
+pattern_type: resource
+languages:
+  terraform:
+    ast_queries:
+    - resource_type: azurerm_key_vault
+      conditions:
+      - property_equals:sku_name:premium
+      - property_equals:purge_protection_enabled:true
+    - resource_type: azurerm_key_vault_secret
+    regex_fallback: resource\s+"azurerm_key_vault"
+    positive_indicators:
+    - azurerm_key_vault
+    - azurerm_key_vault_secret
+  bicep:
+    ast_queries:
+    - resource_type: Microsoft.KeyVault/vaults
+    regex_fallback: Microsoft\.KeyVault/vaults
+    positive_indicators:
+    - Microsoft.KeyVault/vaults
+  python:
+    ast_queries:
+    - query_type: import_statement
+      target: azure.keyvault.secrets
+    regex_fallback: from\s+azure\.keyvault\.secrets|import\s+azure\.keyvault
+    positive_indicators:
+    - azure.keyvault.secrets
+    - SecretClient
+  csharp:
+    ast_queries:
+    - query_type: using_directive
+      target: Azure.Security.KeyVault.Secrets
+    regex_fallback: using\s+Azure\.Security\.KeyVault
+    positive_indicators:
+    - Azure.Security.KeyVault.Secrets
+    - SecretClient
+  java:
+    regex_fallback: "(?i)(import.*azure\\.security\\.keyvault|SecretClient|KeyVaultSecret)"
+    positive_indicators:
+    - azure.security.keyvault
+    - SecretClient
+  typescript:
+    regex_fallback: "(?i)(import.*@azure/keyvault-secrets|SecretClient|KeyVaultSecret)"
+    positive_indicators:
+    - "@azure/keyvault-secrets"
+    - SecretClient
+finding:
+  title_template: Azure Key Vault secret management detected
+  description_template: Code uses Azure Key Vault for secret management, compliant with KSI-SVC-06 requirements.
+  remediation_template: N/A - Positive finding
+tags:
+- secrets
+- key-vault
+- positive
+nist_controls:
+- ia-5
+- sc-12
+related_ksis:
+- KSI-SVC-02
+- KSI-SVC-06
+compliance_frameworks:
+  fedramp_20x:
+    requirement_id: KSI-SVC-06
+    requirement_name: Secret Management
+    impact_levels:
+    - Low
+    - Moderate
+    - High
+evidence_collection:
+  azure_monitor_kql:
+  - query: 'AzureDiagnostics
+      | where ResourceType == "VAULTS"
+      | where Category == "AuditEvent"
+      | summarize SecretOperations=count() by OperationName, CallerIPAddress
+      | order by SecretOperations desc
+      '
+    description: Monitor Key Vault access patterns
+    retention_days: 90
+    schedule: daily
+---
 pattern_id: svc.secrets.hardcoded_secret
 name: Hardcoded Secret
 description: Detects potential hardcoded secrets in code
@@ -1531,6 +1615,7 @@ nist_controls:
 - sc-12
 related_ksis:
 - KSI-SVC-02
+- KSI-SVC-06
 evidence_collection:
   azure_monitor_kql:
   - query: 'AzureDiagnostics
@@ -4107,3 +4192,273 @@ automation:
     - Log Analytics
 impact_levels:
 - Moderate
+---
+pattern_id: svc.change_mgmt.approval_workflow
+name: Change Management with Approval Workflow
+description: Detects change management workflow with approvals and audit trail
+family: SVC
+severity: INFO
+pattern_type: security_control
+languages:
+  yaml:
+    ast_queries: []
+    regex_fallback: "manual-approval|Request Change Approval|approvers.*security|minimum-approvals|Log Change Approval|audit.*changes"
+    positive_indicators:
+    - manual-approval
+    - Request Change Approval
+    - Log Change Approval
+finding:
+  title_template: Change Management Workflow Detected
+  description_template: "Change management with approval workflow and audit trail, compliant with KSI-SVC-02"
+  remediation_template: "N/A - Positive finding"
+tags:
+- change_management
+- positive
+related_ksis:
+- KSI-SVC-02
+---
+pattern_id: svc.change_mgmt.no_approval
+name: No Change Management Approval
+description: Detects direct production deployment without approval process
+family: SVC
+severity: HIGH
+pattern_type: security_control
+languages:
+  yaml:
+    ast_queries: []
+    regex_fallback: "terraform apply -auto-approve|[Nn]o approval|[Nn]o change documentation|[Nn]o audit trail"
+    negative_indicators:
+    - No approval
+    - No change documentation
+    - No audit trail
+finding:
+  title_template: No Change Management Approval
+  description_template: "Direct deployment to production without approval process, change documentation, or audit trail"
+  remediation_template: "Implement change management workflow: require pull requests, security team approvals (minimum 2), automated security scans, change documentation, audit logging"
+tags:
+- change_management
+- negative
+related_ksis:
+- KSI-SVC-02
+---
+pattern_id: svc.sla.monitoring_alerts
+name: SLA Monitoring with Automated Alerts
+description: Detects SLA monitoring with availability tracking and alerting
+family: SVC
+severity: INFO
+pattern_type: security_control
+languages:
+  terraform:
+    ast_queries: []
+    regex_fallback: "azurerm_monitor_scheduled_query_rules_alert|sla.*violation|AvailabilityPercent|SLATracker|sla_target"
+    positive_indicators:
+    - azurerm_monitor_scheduled_query_rules_alert
+    - sla-violation
+    - AvailabilityPercent
+finding:
+  title_template: SLA Monitoring Detected
+  description_template: "SLA monitoring configured with automated availability tracking and alerting, compliant with KSI-SVC-04"
+  remediation_template: "N/A - Positive finding"
+tags:
+- sla_monitoring
+- positive
+related_ksis:
+- KSI-SVC-04
+---
+pattern_id: svc.sla.no_monitoring
+name: No SLA Monitoring
+description: Detects services deployed without SLA monitoring or availability tracking
+family: SVC
+severity: HIGH
+pattern_type: security_control
+languages:
+  terraform:
+    ast_queries: []
+    regex_fallback: "[Nn]o SLA monitoring|[Nn]o availability tracking|[Nn]o performance baselines|[Nn]o alerting"
+    negative_indicators:
+    - No SLA monitoring
+    - No availability tracking
+    - No performance baselines
+finding:
+  title_template: No SLA Monitoring
+  description_template: "Service deployed without SLA monitoring, availability tracking, or performance baselines"
+  remediation_template: "Implement SLA monitoring using Azure Monitor: track availability percentage, response times, define SLA targets (99.9%), alert on violations"
+tags:
+- sla_monitoring
+- negative
+related_ksis:
+- KSI-SVC-04
+---
+pattern_id: svc.disaster_recovery.multi_region
+name: Multi-Region Disaster Recovery
+description: Detects multi-region DR with Traffic Manager and geo-replication
+family: SVC
+severity: INFO
+pattern_type: resource
+languages:
+  terraform:
+    ast_queries: []
+    regex_fallback: "azurerm_traffic_manager|geo_location.*failover_priority|backup.*type.*Continuous|storage_redundancy.*Geo"
+    positive_indicators:
+    - azurerm_traffic_manager
+    - geo_location
+    - failover_priority
+finding:
+  title_template: Multi-Region Disaster Recovery Detected
+  description_template: "Disaster recovery configured with multi-region deployment, Traffic Manager failover, and geo-replication, compliant with KSI-SVC-07"
+  remediation_template: "N/A - Positive finding"
+tags:
+- disaster_recovery
+- positive
+related_ksis:
+- KSI-SVC-07
+---
+pattern_id: svc.disaster_recovery.no_dr
+name: No Disaster Recovery
+description: Detects single-region deployment without DR capability
+family: SVC
+severity: CRITICAL
+pattern_type: resource
+languages:
+  terraform:
+    ast_queries: []
+    regex_fallback: "[Ss]ingle region only|[Nn]o DR region|[Nn]o backup region|[Nn]o failover|complete outage"
+    negative_indicators:
+    - Single region only
+    - No DR region
+    - No failover
+finding:
+  title_template: No Disaster Recovery
+  description_template: "Single-region deployment without DR plan - regional failure would cause complete outage"
+  remediation_template: "Implement multi-region disaster recovery: Traffic Manager for failover, geo-replicated databases, backup region, automated failover testing"
+tags:
+- disaster_recovery
+- negative
+related_ksis:
+- KSI-SVC-07
+---
+pattern_id: svc.performance.monitoring
+name: Application Performance Monitoring
+description: Detects comprehensive performance monitoring with OpenTelemetry/Azure Monitor
+family: SVC
+severity: INFO
+pattern_type: security_control
+languages:
+  python:
+    ast_queries: []
+    regex_fallback: "configure_azure_monitor|opentelemetry.*trace.*metrics|create_histogram.*duration|monitor_performance|set_attribute.*performance"
+    positive_indicators:
+    - configure_azure_monitor
+    - opentelemetry
+    - monitor_performance
+  csharp:
+    regex_fallback: "(?i)(TelemetryClient|Activity\\.StartActivity|Histogram.*Duration|SetAttribute.*performance)"
+    positive_indicators:
+    - TelemetryClient
+    - Activity.StartActivity
+  java:
+    regex_fallback: "(?i)(TelemetryClient|Span\\.startSpan|Histogram.*duration|setAttribute.*performance)"
+    positive_indicators:
+    - TelemetryClient
+    - startSpan
+  typescript:
+    regex_fallback: "(?i)(TelemetryClient|tracer\\.startSpan|histogram.*duration|setAttribute.*performance)"
+    positive_indicators:
+    - TelemetryClient
+    - startSpan
+finding:
+  title_template: Application Performance Monitoring Detected
+  description_template: "Comprehensive performance monitoring with OpenTelemetry tracing and metrics, compliant with KSI-SVC-09"
+  remediation_template: "N/A - Positive finding"
+tags:
+- performance_monitoring
+- positive
+related_ksis:
+- KSI-SVC-09
+---
+pattern_id: svc.performance.no_monitoring
+name: No Performance Monitoring
+description: Detects code without performance tracking or metrics collection
+family: SVC
+severity: HIGH
+pattern_type: security_control
+languages:
+  python:
+    ast_queries: []
+    regex_fallback: "[Nn]o timing|[Nn]o metrics|[Nn]o performance baseline|[Cc]annot detect degradation"
+    negative_indicators:
+    - No timing
+    - No metrics
+    - Cannot detect degradation
+  csharp:
+    regex_fallback: "(?i)([Nn]o timing|[Nn]o metrics|[Nn]o performance baseline|[Cc]annot detect degradation)"
+    negative_indicators:
+    - No timing
+    - No metrics
+  java:
+    regex_fallback: "(?i)([Nn]o timing|[Nn]o metrics|[Nn]o performance baseline|[Cc]annot detect degradation)"
+    negative_indicators:
+    - No timing
+    - No metrics
+  typescript:
+    regex_fallback: "(?i)([Nn]o timing|[Nn]o metrics|[Nn]o performance baseline|[Cc]annot detect degradation)"
+    negative_indicators:
+    - No timing
+    - No metrics
+finding:
+  title_template: No Performance Monitoring
+  description_template: "Code executes without performance monitoring - no timing, metrics, or baseline for detecting degradation"
+  remediation_template: "Implement performance monitoring: OpenTelemetry instrumentation, track request duration, create metrics (histograms, counters), set performance SLAs, alert on slow requests"
+tags:
+- performance_monitoring
+- negative
+related_ksis:
+- KSI-SVC-09
+---
+pattern_id: svc.tagging.comprehensive
+name: Comprehensive Resource Tagging
+description: Detects comprehensive resource tagging strategy for compliance and management
+family: SVC
+severity: INFO
+pattern_type: resource
+languages:
+  terraform:
+    ast_queries: []
+    regex_fallback: "common_tags.*Environment.*Owner.*ComplianceFramework|DataClassification|BackupRequired|azurerm_policy_assignment.*require.*tags"
+    positive_indicators:
+    - common_tags
+    - ComplianceFramework
+    - require-tagging
+finding:
+  title_template: Comprehensive Resource Tagging Detected
+  description_template: "Resources tagged with comprehensive strategy (Environment, Owner, Compliance, DataClassification) with policy enforcement, compliant with KSI-SVC-10"
+  remediation_template: "N/A - Positive finding"
+tags:
+- resource_tagging
+- positive
+related_ksis:
+- KSI-SVC-10
+---
+pattern_id: svc.tagging.no_tags
+name: No Resource Tags
+description: Detects resources deployed without tags
+family: SVC
+severity: MEDIUM
+pattern_type: resource
+languages:
+  terraform:
+    ast_queries: []
+    regex_fallback: "[Nn]o tags|[Cc]annot track ownership|[Cc]annot manage costs|[Cc]annot identify compliance|[Cc]annot automate lifecycle"
+    negative_indicators:
+    - No tags
+    - Cannot track ownership
+    - Cannot manage costs
+finding:
+  title_template: No Resource Tags
+  description_template: "Resources deployed without tags - cannot track ownership, manage costs, or identify compliance requirements"
+  remediation_template: "Implement comprehensive tagging: Environment, Owner, CostCenter, ComplianceFramework, DataClassification, BackupRequired, DisasterRecovery. Enforce with Azure Policy"
+tags:
+- resource_tagging
+- negative
+related_ksis:
+- KSI-SVC-10
