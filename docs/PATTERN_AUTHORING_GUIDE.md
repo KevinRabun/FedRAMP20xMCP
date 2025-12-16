@@ -218,10 +218,10 @@ languages:
 finding:
   title: Hardcoded secret detected
   description: Code contains hardcoded credentials
-  recommendation: Store secrets in Azure Key Vault per KSI-SVC-01
+  recommendation: Store secrets in Azure Key Vault per KSI-SVC-06 (Secret Management)
   references:
     - FRR-SVC-01
-    - KSI-SVC-01
+    - KSI-SVC-06
 ```
 
 ## AST Query Patterns
@@ -561,9 +561,9 @@ regex_fallback: "http"  # Too broad - matches "https", "method", etc.
 ```yaml
 description: |
   Detects storage accounts without HTTPS enforcement.
-  FRR-CNA-01 requires encrypted connections.
+  KSI-SVC-02 requires encrypted network connections.
 finding:
-  recommendation: Set supportsHttpsTrafficOnly to true per FRR-CNA-01
+  recommendation: Set supportsHttpsTrafficOnly to true per KSI-SVC-02
 ```
 
 **DON'T**: Leave descriptions vague
@@ -656,7 +656,7 @@ def test_no_false_positives():
 finding:
   references:
     - FRR-SVC-01  # Primary requirement
-    - KSI-SVC-01  # Related KSI
+    - KSI-SVC-06  # Related KSI (Secret Management)
 ```
 
 ### 6. Duplicate Language Configs

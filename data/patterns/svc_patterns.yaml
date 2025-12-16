@@ -1592,7 +1592,7 @@ languages:
     - apiKey =
 finding:
   title_template: Hardcoded secret detected
-  description_template: Secrets are hardcoded in source code. KSI-SVC-02 requires all secrets in Key Vault or managed identity.
+  description_template: Secrets are hardcoded in source code. KSI-SVC-06 requires all secrets in Key Vault or managed identity.
   remediation_template: 'Use Key Vault:
 
 
@@ -2294,7 +2294,7 @@ languages:
     regex_fallback: source_address_prefix.*=.*"\*"
 finding:
   title_template: NSG rule allows traffic from any source
-  description_template: Network Security Group allows inbound traffic from 0.0.0.0/0 (Internet). KSI-SVC-06 requires least privilege network access.
+  description_template: Network Security Group allows inbound traffic from 0.0.0.0/0 (Internet). KSI-SVC-02 requires least privilege network access.
   remediation_template: 'Restrict source:
 
     - Use specific IP ranges or service tags

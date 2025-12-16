@@ -442,7 +442,7 @@ testing:
 ---
 pattern_id: piy.retention.missing_policy
 name: Missing Data Retention Policy
-description: 'Detects missing data retention configuration (KSI-PIY-02: Data Retention)'
+description: 'Detects missing data retention configuration - aligns with NIST SI-12 (Data Retention)'
 family: PIY
 severity: HIGH
 pattern_type: resource_configuration
@@ -475,7 +475,7 @@ languages:
 finding:
   title_template: Resource lacks data retention policy
   description_template: '{resource_type} does not have data retention policy configured.
-    KSI-PIY-02 requires documented retention periods per data classification.'
+    NIST SI-12 requires documented retention periods per data classification.'
   remediation_template: "Configure data retention policies:\n\nBicep (Storage Account\
     \ Retention):\nresource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01'\
     \ = {\n  name: storageAccountName\n  location: location\n  sku: {\n    name: 'Standard_LRS'\n\

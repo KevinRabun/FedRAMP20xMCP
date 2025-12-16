@@ -79,8 +79,8 @@ class TestDataLoader:
         """Test retrieving specific requirement"""
         await loader.load_data()
         
-        # Test with known FRR IDs
-        for req_id in ["FRR-VDR-01", "FRR-IAM-01", "FRR-SCN-01"]:
+        # Test with known FRR IDs (valid FRR families: ADS, CCM, FSI, ICP, KSI, MAS, PVA, RSC, SCN, UCM, VDR)
+        for req_id in ["FRR-VDR-01", "FRR-RSC-01", "FRR-SCN-01"]:
             req = loader.get_control(req_id)
             # Requirement might not exist in test data
             if req:

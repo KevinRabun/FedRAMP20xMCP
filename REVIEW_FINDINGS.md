@@ -182,7 +182,7 @@ The cached FedRAMP data is **CORRECT** and aligned with authoritative source:
 ### Priority 4 - MCP Tool Code (CRITICAL)
 9. [x] Fix src/fedramp_20x_mcp/tools/__init__.py Line 633: Change "KSI-SVC-01: Secrets Management" to KSI-SVC-06 ✅ FIXED
 
-### Priority 5 - Pattern YAML Files (NEW SESSION FIXES)
+### Priority 5 - Pattern YAML Files (Session 2)
 10. [x] Fix data/patterns/piy_patterns.yaml: Remove incorrect KSI-PIY-01 "Privacy Protection" references ✅ FIXED
 11. [x] Fix data/patterns/svc_patterns.yaml: Change all HSTS/CSP patterns from KSI-SVC-01 to KSI-SVC-02 (Network Encryption) ✅ FIXED
 12. [x] Fix data/patterns/svc_patterns.yaml: Change secrets patterns from KSI-SVC-01 to KSI-SVC-06 (Secret Management) ✅ FIXED
@@ -191,6 +191,18 @@ The cached FedRAMP data is **CORRECT** and aligned with authoritative source:
 15. [x] Fix tests/test_frr_analyzers.py: Rename test classes to clarify KSI vs FRR distinction ✅ FIXED
 16. [x] Fix tests/test_frr_analyzers.py: Update expected_families to only valid FRR families ✅ FIXED
 17. [x] Skip tests/test_ksi_requirement_validation.py SVC-01 tests with documentation (no patterns yet) ✅ FIXED
+
+### Priority 6 - Additional Fixes (Session 3)
+18. [x] Fix docs/PATTERN_AUTHORING_GUIDE.md: Change KSI-SVC-01 → KSI-SVC-06 for secrets example ✅ FIXED
+19. [x] Fix docs/PATTERN_AUTHORING_GUIDE.md: Change FRR-CNA-01 → KSI-SVC-02 (CNA is KSI-only family) ✅ FIXED
+20. [x] Fix data/patterns/piy_patterns.yaml: Fix KSI-PIY-02 "Data Retention" (PIY-02 = Security Objectives) ✅ FIXED
+21. [x] Fix tests/test_code_enrichment.py: Change KSI-SVC-01 → KSI-SVC-06 for Key Vault tests ✅ FIXED
+22. [x] Fix templates/terraform/defender.txt: Correct KSI-PIY-01 description (Automated Inventory) ✅ FIXED
+23. [x] Fix templates/bicep/defender.txt: Correct KSI-PIY-01 description (Automated Inventory) ✅ FIXED
+24. [x] Fix data/patterns/svc_patterns.yaml: Swap KSI-SVC-02/SVC-06 for secrets vs network patterns ✅ FIXED
+25. [x] Fix data/patterns/cna_patterns.yaml: Remove invalid FRR-CNA-01/02 references ✅ FIXED
+26. [x] Fix tests/test_data_loader.py: Change FRR-IAM-01 → FRR-RSC-01 (IAM is KSI-only) ✅ FIXED
+27. [x] Fix tests/test_mcp_tools.py: Change FRR-IAM-01 → FRR-RSC-01 (IAM is KSI-only) ✅ FIXED
 
 ---
 
@@ -214,6 +226,16 @@ The cached FedRAMP data is **CORRECT** and aligned with authoritative source:
 - ucm_patterns.yaml: 1 fix (Key Vault reference)
 - test_frr_analyzers.py: Major refactoring (renamed 3 test classes, updated expected families)
 - test_ksi_requirement_validation.py: Added skip markers for SVC-01 tests (patterns not implemented)
+
+**Session 3 Additional Fixes:**
+- PATTERN_AUTHORING_GUIDE.md: 3 fixes (KSI-SVC-01→SVC-06, FRR-CNA→KSI-SVC-02)
+- piy_patterns.yaml: 2 fixes (KSI-PIY-02 "Data Retention" → NIST SI-12)
+- test_code_enrichment.py: 4 fixes (KSI-SVC-01→SVC-06 for Key Vault tests)
+- defender.txt templates: 4 fixes each (KSI-PIY-01 description corrected)
+- svc_patterns.yaml: 2 additional fixes (swapped KSI-SVC-02/SVC-06)
+- cna_patterns.yaml: 2 fixes (removed invalid FRR-CNA references)
+- test_data_loader.py: 1 fix (FRR-IAM-01→FRR-RSC-01)
+- test_mcp_tools.py: 2 fixes (FRR-IAM-01→FRR-RSC-01)
 
 ---
 
