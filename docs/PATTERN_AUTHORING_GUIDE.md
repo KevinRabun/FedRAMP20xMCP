@@ -208,7 +208,7 @@ family: SVC
 severity: critical
 description: |
   Detects hardcoded secrets in source code.
-  FRR-SVC requires secrets to be stored in secure vaults (Azure Key Vault).
+  KSI-SVC-06 requires secrets to be stored in secure vaults (Azure Key Vault).
 pattern_type: configuration
 languages:
   python:
@@ -218,10 +218,10 @@ languages:
 finding:
   title: Hardcoded secret detected
   description: Code contains hardcoded credentials
-  recommendation: Store secrets in Azure Key Vault per KSI-SVC-01
+  recommendation: Store secrets in Azure Key Vault per KSI-SVC-06 (Secret Management)
   references:
-    - FRR-SVC-01
-    - KSI-SVC-01
+    - FRR-RSC-01
+    - KSI-SVC-06
 ```
 
 ## AST Query Patterns
@@ -376,7 +376,7 @@ finding:
   description: Application uses centralized logging service
   recommendation: Ensure all logs are exported to Azure Log Analytics per KSI-MLA-01
   references:
-    - FRR-MLA-01
+    - FRR-CCM-01
     - KSI-MLA-01
 ```
 
@@ -561,9 +561,9 @@ regex_fallback: "http"  # Too broad - matches "https", "method", etc.
 ```yaml
 description: |
   Detects storage accounts without HTTPS enforcement.
-  FRR-CNA-01 requires encrypted connections.
+  KSI-SVC-02 requires encrypted network connections.
 finding:
-  recommendation: Set supportsHttpsTrafficOnly to true per FRR-CNA-01
+  recommendation: Set supportsHttpsTrafficOnly to true per KSI-SVC-02
 ```
 
 **DON'T**: Leave descriptions vague
@@ -655,8 +655,8 @@ def test_no_false_positives():
 ```yaml
 finding:
   references:
-    - FRR-SVC-01  # Primary requirement
-    - KSI-SVC-01  # Related KSI
+    - FRR-RSC-01  # Primary requirement (RSC = Recommended Secure Configuration)
+    - KSI-SVC-06  # Related KSI (Secret Management)
 ```
 
 ### 6. Duplicate Language Configs

@@ -22,6 +22,7 @@ contract:
     - inventing_FRR_or_KSI_definitions
     - regex_when_AST_available
     - silent_changes_without_diff
+    - prioritize_speed_over_correctness
   required:
     - fix_root_cause_not_tests
     - verify_authoritative_sources_first
@@ -37,7 +38,37 @@ contract:
 
 ---
 
-# 2. ACCOUNTABILITY — **NO SHORTCUTS EVER**
+# 2. PRIORITY HIERARCHY (EXPLICIT GOAL ORDERING)
+
+**When goals conflict, follow this strict priority order:**
+
+1. **CORRECTNESS** - Code must be accurate and comply with requirements
+2. **COMPLETENESS** - All tests must pass, all requirements must be met
+3. **EVIDENCE** - Every claim must be verified with commands/output
+4. **TRANSPARENCY** - Show all work, never hide failures
+5. **SPEED** - Only optimize for speed AFTER 1-4 are satisfied
+
+**CRITICAL RULES:**
+- NEVER sacrifice correctness for speed
+- NEVER commit with failing tests to "fix later"
+- NEVER skip verification steps to save time
+- NEVER assume something works without running it
+- NEVER hide failures hoping CI will pass
+
+**If I am about to violate priority order:**
+- STOP immediately
+- State: "About to prioritize [SPEED] over [CORRECTNESS] - this violates priority hierarchy"
+- Ask: "Should I continue with slower but correct approach?"
+
+**Red Flags That Indicate Wrong Prioritization:**
+- "I'll fix this in the next commit" ← Violates COMPLETENESS
+- "This will probably work" ← Violates EVIDENCE
+- "Tests can wait" ← Violates COMPLETENESS
+- "CI will catch it" ← Violates TRANSPARENCY
+
+---
+
+# 3. ACCOUNTABILITY — **NO SHORTCUTS EVER**
 - Fix **root cause** in analyzers; NEVER weaken assertions to pass tests.  
 - “ALL” = **EVERY SINGLE ITEM** (tests, KSIs, FRRs).  
 - Report **honest numeric progress**:  
@@ -55,7 +86,7 @@ Fix analyzer so findings actually appear.
 
 ---
 
-# 3. NEVER ASSUME — VERIFY FIRST, CODE SECOND
+# 4. NEVER ASSUME — VERIFY FIRST, CODE SECOND
 Always read authoritative sources BEFORE code:
 - **KSI**: `FRMR.KSI.key-security-indicators.json`
 - **FRR Families**: `FRMR.*.json`
@@ -70,7 +101,7 @@ If requirement meaning unclear → **STOP & ask** (do not infer).
 
 ---
 
-# 4. USER INSTRUCTION COMPLIANCE (ABSOLUTE)
+# 5. USER INSTRUCTION COMPLIANCE (ABSOLUTE)
 - Follow **exact** approach, no substitutions.  
 - If user requests **pattern-by-pattern**, do not batch.  
 - If user requests **file-by-file**, do exactly that.  
@@ -79,7 +110,7 @@ If requirement meaning unclear → **STOP & ask** (do not infer).
 
 ---
 
-# 5. PROJECT OVERVIEW (REFERENCE)
+# 6. PROJECT OVERVIEW (REFERENCE)
 - Loads FedRAMP 20x FRRs, KSIs, FRDs from JSON + docs.  
 - 48 MCP tools across 13 modules.  
 - Multi-language analyzers: Python, C#, Java, TS/JS, Bicep, Terraform, CI/CD.  
@@ -88,7 +119,7 @@ If requirement meaning unclear → **STOP & ask** (do not infer).
 
 ---
 
-# 6. DATA & STATUS (REFERENCE)
+# 7. DATA & STATUS (REFERENCE)
 - **199 FRRs** (11 families)  
 - **50 FRDs**  
 - **72 KSIs**  
@@ -103,7 +134,7 @@ Authoritative sync auto-updates RETIRED flags based on upstream JSON.
 
 ---
 
-# 7. ANALYZER ARCHITECTURE & AST-FIRST REQUIREMENT
+# 8. ANALYZER ARCHITECTURE & AST-FIRST REQUIREMENT
 **Absolute rule:** Use **tree‑sitter AST** whenever available.
 
 Supported languages: Python, C#, Java, TS/JS, Bicep, Terraform.
@@ -131,7 +162,7 @@ Checklist (must be true):
 
 ---
 
-# 8. DEVELOPMENT RULES
+# 9. DEVELOPMENT RULES
 - Python 3.10+, MCP Python SDK 1.2+.  
 - Logging → stderr only.  
 - STDIO transport for MCP server.  
@@ -147,7 +178,7 @@ Template management:
 
 ---
 
-# 9. TESTING & COMMIT WORKFLOW (CRITICAL)
+# 10. TESTING & COMMIT WORKFLOW (CRITICAL)
 1. Set GitHub token for CVE tests:
    ```powershell
    $env:GITHUB_TOKEN = (gh auth token)
@@ -167,7 +198,7 @@ Template management:
 
 ---
 
-# 10. VERSION MANAGEMENT — ALL 3 FILES REQUIRED
+# 11. VERSION MANAGEMENT — ALL 3 FILES REQUIRED
 Update version **every release** in:
 1. `pyproject.toml`
 2. `server.json` (top-level + packages[0])
@@ -183,7 +214,7 @@ All 3 versions must match.
 
 ---
 
-# 11. CONTENT SOURCING REQUIREMENTS
+# 12. CONTENT SOURCING REQUIREMENTS
 All recommendations must cite authoritative FedRAMP IDs or Azure Well-Architected/CAF/Security Benchmark.
 
 **Correct:**  
@@ -194,7 +225,7 @@ All recommendations must cite authoritative FedRAMP IDs or Azure Well-Architecte
 
 ---
 
-# 12. PROHIBITED VS REQUIRED ACTIONS TABLE
+# 13. PROHIBITED VS REQUIRED ACTIONS TABLE
 
 | **Prohibited** | **Why** |
 |----------------|---------|
@@ -218,7 +249,7 @@ All recommendations must cite authoritative FedRAMP IDs or Azure Well-Architecte
 
 ---
 
-# 13. COMPLIANCE VALIDATION GATE (SELF‑CHECK BEFORE ANY OUTPUT)
+# 14. COMPLIANCE VALIDATION GATE (SELF‑CHECK BEFORE ANY OUTPUT)
 Assistant must verify:
 
 - No shortcuts taken.  
@@ -234,7 +265,7 @@ If ANY check fails → **stop and ask user**.
 
 ---
 
-# 14. CONTRASTIVE EXAMPLES
+# 15. CONTRASTIVE EXAMPLES
 
 **DO:**
 - Keep tests strict; fix analyzers.  
@@ -250,7 +281,7 @@ If ANY check fails → **stop and ask user**.
 
 ---
 
-# 15. VS CODE INLINE CHAT PROMPT TEMPLATE
+# 16. VS CODE INLINE CHAT PROMPT TEMPLATE
 Paste this when applying fixes:
 
 ```
@@ -270,7 +301,7 @@ Required Evidence:
 
 ---
 
-# 16. APPENDIX — RECENT VIOLATION (DO NOT REPEAT)
+# 17. APPENDIX — RECENT VIOLATION (DO NOT REPEAT)
 - 63 tests originally failing due to missing findings.  
 - Shortcut taken (weakened assertion).  
 - Tests “passed” but validated nothing.  

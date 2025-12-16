@@ -33,8 +33,8 @@ class TestRequirementsTools:
     @pytest.mark.asyncio
     async def test_get_control_impl(self, data_loader):
         """Test get_control implementation"""
-        # Test with known FRR IDs
-        for control_id in ["FRR-VDR-01", "FRR-IAM-01", "FRR-SCN-01"]:
+        # Test with known FRR IDs (valid FRR families: ADS, CCM, FSI, ICP, KSI, MAS, PVA, RSC, SCN, UCM, VDR)
+        for control_id in ["FRR-VDR-01", "FRR-RSC-01", "FRR-SCN-01"]:
             result = await requirements.get_control_impl(control_id, data_loader)
             assert result is not None
             assert isinstance(result, str)
@@ -430,8 +430,8 @@ class TestToolIntegration:
     @pytest.mark.asyncio
     async def test_requirement_to_ksi_workflow(self, data_loader):
         """Test workflow from requirement to KSI"""
-        # 1. Get a requirement
-        req_result = await requirements.get_control_impl("FRR-IAM-01", data_loader)
+        # 1. Get a requirement (using valid FRR-RSC instead of invalid FRR-IAM)
+        req_result = await requirements.get_control_impl("FRR-RSC-01", data_loader)
         assert req_result is not None
         
         # 2. Get related KSI

@@ -26,7 +26,6 @@ finding:
   recommendation: Ensure default deny rules and explicit allow rules per KSI-CNA-01
   references:
   - KSI-CNA-01
-  - FRR-CNA-01
 evidence_artifacts:
 - artifact_type: logs
   name: CNA operational logs
@@ -1417,7 +1416,6 @@ finding:
   recommendation: Configure policies for rate limiting, authentication, and logging
   references:
   - KSI-CNA-01
-  - FRR-CNA-02
 evidence_artifacts:
 - artifact_type: logs
   name: CNA operational logs

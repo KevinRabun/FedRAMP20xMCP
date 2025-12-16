@@ -53,14 +53,14 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     
     enriched = enrich_bicep_template(
         original_bicep,
-        ksi_ids=["KSI-SVC-01"],
+        ksi_ids=["KSI-SVC-06"],
         frr_ids=["FRR-RSC-01"],
         data_loader=data_loader
     )
     
     enriched = add_requirement_tags(
         enriched,
-        ksi_ids=["KSI-SVC-01"],
+        ksi_ids=["KSI-SVC-06"],
         frr_ids=["FRR-RSC-01"],
         language="bicep"
     )
@@ -74,7 +74,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     print(enriched)
     
     # Verify KSI ID appears in comments
-    assert "KSI-SVC-01" in enriched, "KSI ID not found in enriched template"
+    assert "KSI-SVC-06" in enriched, "KSI ID not found in enriched template"
     assert "FRR-RSC-01" in enriched, "FRR ID not found in enriched template"
     print("\n[PASS] Bicep enrichment test passed!")
 
@@ -113,7 +113,7 @@ namespace FedrampCompliance
     
     enriched = enrich_csharp_code(
         original_csharp,
-        ksi_ids=["KSI-SVC-01", "KSI-IAM-01"],
+        ksi_ids=["KSI-SVC-06", "KSI-IAM-01"],
         frr_ids=None,
         data_loader=data_loader
     )
@@ -127,7 +127,7 @@ namespace FedrampCompliance
     print(enriched)
     
     # Verify KSI IDs appear in comments
-    assert "KSI-SVC-01" in enriched, "KSI-SVC-01 not found in enriched code"
+    assert "KSI-SVC-06" in enriched, "KSI-SVC-06 not found in enriched code"
     assert "KSI-IAM-01" in enriched, "KSI-IAM-01 not found in enriched code"
     print("\n[PASS] C# enrichment test passed!")
 

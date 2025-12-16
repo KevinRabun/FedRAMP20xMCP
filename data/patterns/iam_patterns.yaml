@@ -2790,22 +2790,47 @@ severity: CRITICAL
 pattern_type: security_control
 languages:
   python:
-    ast_queries: []
+    ast_queries:
+    - query_type: function_call
+      target: check_password
+    - query_type: function_call
+      target: sha256
+    - query_type: import_statement
+      target: hashlib
     regex_fallback: "check_password.*session|hashlib.*sha256.*password|[Oo]nly checks password|no second factor"
     negative_indicators:
     - Only checks password
     - no second factor
   csharp:
+    ast_queries:
+    - query_type: function_call
+      target: VerifyHashedPassword
+    - query_type: function_call
+      target: CheckPassword
+    - query_type: class_definition
+      target: PasswordHasher
     regex_fallback: "(?i)(PasswordHasher.*VerifyHashedPassword|CheckPassword.*return|[Oo]nly checks password|no second factor)"
     negative_indicators:
     - Only checks password
     - no second factor
   java:
+    ast_queries:
+    - query_type: function_call
+      target: checkpw
+    - query_type: function_call
+      target: equals
+    - query_type: import_statement
+      target: BCrypt
     regex_fallback: "(?i)(BCrypt\\.checkpw|password\\.equals|[Oo]nly checks password|no second factor)"
     negative_indicators:
     - Only checks password
     - no second factor
   typescript:
+    ast_queries:
+    - query_type: function_call
+      target: compare
+    - query_type: import_statement
+      target: bcrypt
     regex_fallback: "(?i)(bcrypt\\.compare|password.*===|[Oo]nly checks password|no second factor)"
     negative_indicators:
     - Only checks password
@@ -2876,23 +2901,54 @@ severity: INFO
 pattern_type: security_control
 languages:
   csharp:
-    ast_queries: []
+    ast_queries:
+    - query_type: assignment
+      target: HttpOnly
+    - query_type: assignment
+      target: SecurePolicy
+    - query_type: assignment
+      target: ExpireTimeSpan
+    - query_type: assignment
+      target: SlidingExpiration
     regex_fallback: "HttpOnly.*true|SecurePolicy.*Always|SameSite.*Strict|ExpireTimeSpan|SlidingExpiration"
     positive_indicators:
     - HttpOnly
     - SecurePolicy
     - ExpireTimeSpan
   python:
+    ast_queries:
+    - query_type: assignment
+      target: cookie_httponly
+    - query_type: assignment
+      target: permanent_session_lifetime
+    - query_type: assignment
+      target: samesite
     regex_fallback: "(?i)(session\\.cookie_httponly.*True|secure.*True|samesite.*Strict|permanent_session_lifetime)"
     positive_indicators:
     - cookie_httponly
     - permanent_session_lifetime
   java:
+    ast_queries:
+    - query_type: function_call
+      target: setHttpOnly
+    - query_type: function_call
+      target: setSecure
+    - query_type: function_call
+      target: setMaxAge
     regex_fallback: "(?i)(setHttpOnly\\(true|setSecure\\(true|SameSite.*STRICT|setMaxAge)"
     positive_indicators:
     - setHttpOnly
     - setSecure
   typescript:
+    ast_queries:
+    - query_type: assignment
+      target: httpOnly
+    - query_type: assignment
+      target: secure
+    - query_type: assignment
+      target: sameSite
+    - query_type: assignment
+      target: maxAge
     regex_fallback: "(?i)(httpOnly.*true|secure.*true|sameSite.*strict|maxAge)"
     positive_indicators:
     - httpOnly
@@ -2915,23 +2971,36 @@ severity: HIGH
 pattern_type: security_control
 languages:
   python:
-    ast_queries: []
+    ast_queries:
+    - query_type: assignment
+      target: permanent
+    - query_type: function_definition
+      target: login
     regex_fallback: "session\\.permanent.*True|[Nn]o session timeout|[Nn]o secure cookie|[Nn]ever expires"
     negative_indicators:
     - No session timeout
     - No secure cookie
     - Never expires
   csharp:
+    ast_queries:
+    - query_type: function_definition
+      target: Login
     regex_fallback: "(?i)([Nn]o.*timeout|[Nn]o.*HttpOnly|[Nn]o.*Secure|[Nn]ever expires|session.*permanent)"
     negative_indicators:
     - No timeout
     - Never expires
   java:
+    ast_queries:
+    - query_type: function_definition
+      target: login
     regex_fallback: "(?i)([Nn]o.*timeout|[Nn]o.*setHttpOnly|[Nn]o.*setSecure|[Nn]ever expires|session.*permanent)"
     negative_indicators:
     - No timeout
     - Never expires
   typescript:
+    ast_queries:
+    - query_type: function_definition
+      target: login
     regex_fallback: "(?i)([Nn]o.*timeout|[Nn]o.*httpOnly|[Nn]o.*secure|[Nn]ever expires|session.*permanent)"
     negative_indicators:
     - No timeout
@@ -2954,23 +3023,44 @@ severity: INFO
 pattern_type: security_control
 languages:
   python:
-    ast_queries: []
+    ast_queries:
+    - query_type: function_call
+      target: configure_azure_monitor
+    - query_type: function_call
+      target: dumps
+    - query_type: import_statement
+      target: json
     regex_fallback: "configure_azure_monitor|AUTH_SUCCESS.*json\\.dumps|auth_event.*username.*timestamp.*ip_address|AUTH_FAILED|AUTH_ERROR"
     positive_indicators:
     - configure_azure_monitor
     - AUTH_SUCCESS
     - auth_event
   csharp:
+    ast_queries:
+    - query_type: function_call
+      target: LogInformation
+    - query_type: class_definition
+      target: ILogger
     regex_fallback: "(?i)(ILogger.*LogInformation|AUTH_SUCCESS|auth.*event|username.*timestamp.*ipAddress)"
     positive_indicators:
     - LogInformation
     - AUTH_SUCCESS
   java:
+    ast_queries:
+    - query_type: function_call
+      target: info
+    - query_type: assignment
+      target: logger
     regex_fallback: "(?i)(logger\\.info|AUTH_SUCCESS|authEvent|username.*timestamp.*ipAddress)"
     positive_indicators:
     - logger.info
     - AUTH_SUCCESS
   typescript:
+    ast_queries:
+    - query_type: function_call
+      target: info
+    - query_type: assignment
+      target: logger
     regex_fallback: "(?i)(logger\\.info|AUTH_SUCCESS|authEvent|username.*timestamp.*ipAddress)"
     positive_indicators:
     - logger.info
@@ -2993,22 +3083,33 @@ severity: CRITICAL
 pattern_type: security_control
 languages:
   python:
-    ast_queries: []
+    ast_queries:
+    - query_type: function_definition
+      target: login
     regex_fallback: "def login.*return|if.*password.*return|[Nn]o logging|[Nn]o audit trail"
     negative_indicators:
     - No logging
     - No audit trail
   csharp:
+    ast_queries:
+    - query_type: function_definition
+      target: Login
     regex_fallback: "(?i)(Login.*return|password.*return|[Nn]o logging|[Nn]o audit trail)"
     negative_indicators:
     - No logging
     - No audit trail
   java:
+    ast_queries:
+    - query_type: function_definition
+      target: login
     regex_fallback: "(?i)(login.*return|password.*return|[Nn]o logging|[Nn]o audit trail)"
     negative_indicators:
     - No logging
     - No audit trail
   typescript:
+    ast_queries:
+    - query_type: function_definition
+      target: login
     regex_fallback: "(?i)(login.*return|password.*return|[Nn]o logging|[Nn]o audit trail)"
     negative_indicators:
     - No logging
@@ -3031,23 +3132,58 @@ severity: INFO
 pattern_type: security_control
 languages:
   python:
-    ast_queries: []
+    ast_queries:
+    - query_type: assignment
+      target: lockout_threshold
+    - query_type: function_definition
+      target: record_failed_attempt
+    - query_type: function_definition
+      target: lock_account
+    - query_type: class_definition
+      target: AccountLockedException
     regex_fallback: "lockout_threshold|lockout_duration|record_failed_attempt|lock_account|AccountLockedException"
     positive_indicators:
     - lockout_threshold
     - record_failed_attempt
     - lock_account
   csharp:
+    ast_queries:
+    - query_type: assignment
+      target: LockoutThreshold
+    - query_type: function_definition
+      target: RecordFailedAttempt
+    - query_type: function_definition
+      target: LockAccount
+    - query_type: class_definition
+      target: UserLockedException
     regex_fallback: "(?i)(LockoutThreshold|LockoutDuration|RecordFailedAttempt|LockAccount|UserLockedException)"
     positive_indicators:
     - LockoutThreshold
     - LockAccount
   java:
+    ast_queries:
+    - query_type: assignment
+      target: lockoutThreshold
+    - query_type: function_definition
+      target: recordFailedAttempt
+    - query_type: function_definition
+      target: lockAccount
+    - query_type: class_definition
+      target: AccountLockedException
     regex_fallback: "(?i)(lockoutThreshold|lockoutDuration|recordFailedAttempt|lockAccount|AccountLockedException)"
     positive_indicators:
     - lockoutThreshold
     - lockAccount
   typescript:
+    ast_queries:
+    - query_type: assignment
+      target: lockoutThreshold
+    - query_type: function_definition
+      target: recordFailedAttempt
+    - query_type: function_definition
+      target: lockAccount
+    - query_type: class_definition
+      target: AccountLockedException
     regex_fallback: "(?i)(lockoutThreshold|lockoutDuration|recordFailedAttempt|lockAccount|AccountLockedException)"
     positive_indicators:
     - lockoutThreshold
@@ -3070,23 +3206,34 @@ severity: CRITICAL
 pattern_type: security_control
 languages:
   python:
-    ast_queries: []
+    ast_queries:
+    - query_type: function_definition
+      target: login
     regex_fallback: "[Nn]o tracking|[Nn]o account lockout|[Vv]ulnerable to brute force|unlimited attempts"
     negative_indicators:
     - No tracking
     - No account lockout
     - Vulnerable to brute force
   csharp:
+    ast_queries:
+    - query_type: function_definition
+      target: Login
     regex_fallback: "(?i)([Nn]o tracking|[Nn]o.*lockout|[Vv]ulnerable to brute force|unlimited attempts)"
     negative_indicators:
     - No tracking
     - No lockout
   java:
+    ast_queries:
+    - query_type: function_definition
+      target: login
     regex_fallback: "(?i)([Nn]o tracking|[Nn]o.*lockout|[Vv]ulnerable to brute force|unlimited attempts)"
     negative_indicators:
     - No tracking
     - No lockout
   typescript:
+    ast_queries:
+    - query_type: function_definition
+      target: login
     regex_fallback: "(?i)([Nn]o tracking|[Nn]o.*lockout|[Vv]ulnerable to brute force|unlimited attempts)"
     negative_indicators:
     - No tracking

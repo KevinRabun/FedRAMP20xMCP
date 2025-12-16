@@ -13,11 +13,11 @@
 # - KSI-AFR-07: Security posture and secure score monitoring
 # - KSI-AFR-09: Compliance dashboard and regulatory mapping
 # - KSI-AFR-11: Cryptographic module recommendations
-# - KSI-PIY-01: Asset inventory and data classification
-# - KSI-PIY-05: Security evaluation for new implementations
+# - KSI-PIY-01: Automated inventory (real-time asset tracking)
+# - KSI-PIY-05: Evaluate implementations (security evaluation)
 # - KSI-PIY-06: Security investment effectiveness metrics
-# - KSI-PIY-07: Supply chain risk assessment
-# - KSI-PIY-08: Executive security engagement metrics
+# - KSI-PIY-07: Supply chain risk management
+# - KSI-PIY-08: Executive support (engagement metrics)
 # - KSI-TPR-04: Supply chain risk monitoring
 
 terraform {
@@ -97,7 +97,7 @@ resource "azurerm_security_center_subscription_pricing" "oss_databases" {
 }
 
 # Enable Defender for Storage
-# Supports: KSI-AFR-01 (asset discovery), KSI-PIY-01 (data classification)
+# Supports: KSI-AFR-01 (asset discovery), KSI-PIY-01 (automated inventory)
 resource "azurerm_security_center_subscription_pricing" "storage_accounts" {
   tier          = "Standard"
   resource_type = "StorageAccounts"

@@ -1468,22 +1468,41 @@ severity: CRITICAL
 pattern_type: security_control
 languages:
   python:
-    ast_queries: []
+    ast_queries:
+    - query_type: assignment
+      target: ENCRYPTION_KEY
+    - query_type: function_call
+      target: Fernet
     regex_fallback: "ENCRYPTION_KEY\\s*=\\s*b'[0-9a-f]+|Fernet\\([^)]*ENCRYPTION_KEY|hardcoded.*key"
     negative_indicators:
     - ENCRYPTION_KEY =
     - hardcoded
   csharp:
+    ast_queries:
+    - query_type: assignment
+      target: key
+    - query_type: assignment
+      target: Key
     regex_fallback: "(?i)(string.*key\\s*=\\s*\"[0-9a-f]+|byte\\[\\].*key.*=.*new.*byte|hardcoded.*key|static.*readonly.*key\\s*=)"
     negative_indicators:
     - "= \"hard"
     - "hardcoded"
   java:
+    ast_queries:
+    - query_type: assignment
+      target: KEY
+    - query_type: assignment
+      target: key
     regex_fallback: "(?i)(String.*KEY\\s*=\\s*\"[0-9a-f]+|byte\\[\\].*key.*=.*new byte|hardcoded.*key|static.*final.*KEY\\s*=)"
     negative_indicators:
     - "= \"hard"
     - "hardcoded"
   typescript:
+    ast_queries:
+    - query_type: assignment
+      target: key
+    - query_type: function_call
+      target: Buffer.from
     regex_fallback: "(?i)(const.*key.*=.*'[0-9a-f]+|const.*key.*=.*Buffer\\.from|hardcoded.*key)"
     negative_indicators:
     - "= 'hard"
@@ -1506,23 +1525,50 @@ severity: INFO
 pattern_type: security_control
 languages:
   python:
-    ast_queries: []
+    ast_queries:
+    - query_type: class_definition
+      target: SecureDataSanitizer
+    - query_type: function_call
+      target: secrets.token_bytes
+    - query_type: import_statement
+      target: secrets
     regex_fallback: "SecureDataSanitizer|DOD 5220\\.22-M|secrets\\.token_bytes|multiple pass|overwrite.*random"
     positive_indicators:
     - SecureDataSanitizer
     - DOD 5220.22-M
     - secrets.token_bytes
   csharp:
+    ast_queries:
+    - query_type: class_definition
+      target: SecureDataSanitizer
+    - query_type: import_statement
+      target: System.Security.Cryptography
+    - query_type: function_call
+      target: RandomNumberGenerator
     regex_fallback: "(?i)(SecureDataSanitizer|DOD 5220\\.22-M|RandomNumberGenerator|multiple.*pass|overwrite.*random)"
     positive_indicators:
     - SecureDataSanitizer
     - RandomNumberGenerator
   java:
+    ast_queries:
+    - query_type: class_definition
+      target: SecureDataSanitizer
+    - query_type: import_statement
+      target: java.security.SecureRandom
+    - query_type: function_call
+      target: SecureRandom
     regex_fallback: "(?i)(SecureDataSanitizer|DOD 5220\\.22-M|SecureRandom|multiple.*pass|overwrite.*random)"
     positive_indicators:
     - SecureDataSanitizer
     - SecureRandom
   typescript:
+    ast_queries:
+    - query_type: class_definition
+      target: SecureDataSanitizer
+    - query_type: import_statement
+      target: crypto
+    - query_type: function_call
+      target: crypto.randomBytes
     regex_fallback: "(?i)(SecureDataSanitizer|DOD 5220\\.22-M|crypto\\.randomBytes|multiple.*pass|overwrite.*random)"
     positive_indicators:
     - SecureDataSanitizer
@@ -1545,23 +1591,48 @@ severity: HIGH
 pattern_type: security_control
 languages:
   python:
-    ast_queries: []
+    ast_queries:
+    - query_type: function_call
+      target: os.remove
+    - query_type: function_call
+      target: os.unlink
+    - query_type: import_statement
+      target: os
     regex_fallback: "os\\.remove\\(|[Jj]ust delete|[Nn]o overwriting|[Nn]o secure erasure|data may be recoverable"
     negative_indicators:
     - os.remove
     - No overwriting
     - data may be recoverable
   csharp:
+    ast_queries:
+    - query_type: function_call
+      target: File.Delete
+    - query_type: import_statement
+      target: System.IO
     regex_fallback: "(?i)(File\\.Delete\\(|[Jj]ust delete|[Nn]o overwriting|[Nn]o secure erasure|data may be recoverable)"
     negative_indicators:
     - File.Delete
     - No overwriting
   java:
+    ast_queries:
+    - query_type: function_call
+      target: delete
+    - query_type: function_call
+      target: Files.delete
+    - query_type: import_statement
+      target: java.io.File
     regex_fallback: "(?i)(file\\.delete\\(|Files\\.delete\\(|[Jj]ust delete|[Nn]o overwriting|[Nn]o secure erasure|data may be recoverable)"
     negative_indicators:
     - .delete(
     - No overwriting
   typescript:
+    ast_queries:
+    - query_type: function_call
+      target: fs.unlink
+    - query_type: function_call
+      target: fs.rmSync
+    - query_type: import_statement
+      target: fs
     regex_fallback: "(?i)(fs\\.unlink\\(|fs\\.rmSync\\(|[Jj]ust delete|[Nn]o overwriting|[Nn]o secure erasure|data may be recoverable)"
     negative_indicators:
     - fs.unlink

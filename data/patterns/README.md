@@ -27,12 +27,12 @@ Pattern libraries enable data-driven code analysis by separating detection logic
    - Security event monitoring (KSI-MLA-05)
    - Real-time alerting (KSI-MLA-07)
 
-3. **svc_patterns.yaml** - Security Vulnerability and Configuration (13 patterns)
-   - Security headers (HSTS, CSP) (KSI-SVC-01)
-   - Key Vault secret management (KSI-SVC-02)
-   - Encryption at rest (KSI-SVC-04)
-   - Network security (NSG, private endpoints) (KSI-SVC-06)
-   - TLS configuration (KSI-SVC-07)
+3. **svc_patterns.yaml** - Service Configuration (13 patterns)
+   - Continuous improvement (KSI-SVC-01)
+   - Network encryption (KSI-SVC-02)
+   - Configuration automation (KSI-SVC-04)
+   - Secret management - Key Vault (KSI-SVC-06)
+   - Patching (KSI-SVC-07)
 
 4. **vdr_patterns.yaml** - Vulnerability Detection and Remediation (10 patterns)
    - Microsoft Defender for Cloud (KSI-VDR-01)

@@ -2447,23 +2447,44 @@ severity: INFO
 pattern_type: security_control
 languages:
   python:
-    ast_queries: []
+    ast_queries:
+    - query_type: decorator
+      target: audit_log
+    - query_type: function_call
+      target: dumps
+    - query_type: import_statement
+      target: json
     regex_fallback: "audit_log.*operation|AUDIT.*json\\.dumps|compliance_framework.*FedRAMP|timestamp.*user.*ip_address|@audit_log"
     positive_indicators:
     - "@audit_log"
     - AUDIT
     - compliance_framework
   csharp:
+    ast_queries:
+    - query_type: decorator
+      target: AuditLog
+    - query_type: class_definition
+      target: ILogger
     regex_fallback: "(?i)(\\[AuditLog\\]|ILogger.*Audit|compliance.*FedRAMP|timestamp.*userId.*ipAddress)"
     positive_indicators:
     - "[AuditLog]"
     - ILogger
   java:
+    ast_queries:
+    - query_type: decorator
+      target: AuditLog
+    - query_type: assignment
+      target: logger
     regex_fallback: "(?i)(@AuditLog|logger.*audit|compliance.*FedRAMP|timestamp.*userId.*ipAddress)"
     positive_indicators:
     - "@AuditLog"
     - logger
   typescript:
+    ast_queries:
+    - query_type: decorator
+      target: auditLog
+    - query_type: assignment
+      target: logger
     regex_fallback: "(?i)(@auditLog|logger.*audit|compliance.*FedRAMP|timestamp.*userId.*ipAddress)"
     positive_indicators:
     - "@auditLog"
@@ -2486,23 +2507,42 @@ severity: CRITICAL
 pattern_type: security_control
 languages:
   python:
-    ast_queries: []
+    ast_queries:
+    - query_type: function_definition
+      target: delete_user_data
+    - query_type: function_definition
+      target: grant_admin_access
     regex_fallback: "delete.*user.*data|grant.*admin.*access|[Nn]o audit|[Nn]o logging|[Cc]ritical operation with no|[Pp]ermission change with no"
     negative_indicators:
     - delete_user_data
     - grant_admin_access
     - No audit
   csharp:
+    ast_queries:
+    - query_type: function_definition
+      target: DeleteUserData
+    - query_type: function_definition
+      target: GrantAdminAccess
     regex_fallback: "(?i)(DeleteUserData|GrantAdminAccess|[Nn]o audit|[Nn]o logging|[Cc]ritical operation with no)"
     negative_indicators:
     - DeleteUserData
     - GrantAdminAccess
   java:
+    ast_queries:
+    - query_type: function_definition
+      target: deleteUserData
+    - query_type: function_definition
+      target: grantAdminAccess
     regex_fallback: "(?i)(deleteUserData|grantAdminAccess|[Nn]o audit|[Nn]o logging|[Cc]ritical operation with no)"
     negative_indicators:
     - deleteUserData
     - grantAdminAccess
   typescript:
+    ast_queries:
+    - query_type: function_definition
+      target: deleteUserData
+    - query_type: function_definition
+      target: grantAdminAccess
     regex_fallback: "(?i)(deleteUserData|grantAdminAccess|[Nn]o audit|[Nn]o logging|[Cc]ritical operation with no)"
     negative_indicators:
     - deleteUserData
@@ -2525,23 +2565,60 @@ severity: INFO
 pattern_type: security_control
 languages:
   python:
-    ast_queries: []
+    ast_queries:
+    - query_type: class_definition
+      target: TamperEvidentLogger
+    - query_type: function_call
+      target: new
+    - query_type: function_call
+      target: verify_log_chain
+    - query_type: assignment
+      target: previous_hash
+    - query_type: import_statement
+      target: hmac
     regex_fallback: "TamperEvidentLogger|hmac\\.new.*sha256|previous_hash|hash.*chain|immutable.*storage|verify_log_chain"
     positive_indicators:
     - TamperEvidentLogger
     - previous_hash
     - hash chain
   csharp:
+    ast_queries:
+    - query_type: class_definition
+      target: TamperEvidentLogger
+    - query_type: class_definition
+      target: HMACSHA256
+    - query_type: function_call
+      target: VerifyLogChain
+    - query_type: assignment
+      target: previousHash
     regex_fallback: "(?i)(TamperEvidentLogger|HMACSHA256|previousHash|hash.*chain|immutable.*storage|VerifyLogChain)"
     positive_indicators:
     - TamperEvidentLogger
     - previousHash
   java:
+    ast_queries:
+    - query_type: class_definition
+      target: TamperEvidentLogger
+    - query_type: class_definition
+      target: HmacSHA256
+    - query_type: function_call
+      target: verifyLogChain
+    - query_type: assignment
+      target: previousHash
     regex_fallback: "(?i)(TamperEvidentLogger|HmacSHA256|previousHash|hash.*chain|immutable.*storage|verifyLogChain)"
     positive_indicators:
     - TamperEvidentLogger
     - previousHash
   typescript:
+    ast_queries:
+    - query_type: class_definition
+      target: TamperEvidentLogger
+    - query_type: function_call
+      target: createHmac
+    - query_type: function_call
+      target: verifyLogChain
+    - query_type: assignment
+      target: previousHash
     regex_fallback: "(?i)(TamperEvidentLogger|createHmac.*sha256|previousHash|hash.*chain|immutable.*storage|verifyLogChain)"
     positive_indicators:
     - TamperEvidentLogger
@@ -2564,23 +2641,42 @@ severity: HIGH
 pattern_type: security_control
 languages:
   python:
-    ast_queries: []
+    ast_queries:
+    - query_type: function_call
+      target: basicConfig
+    - query_type: import_statement
+      target: logging
     regex_fallback: "logging\\.basicConfig.*filename|[Nn]o tamper protection|[Ll]ogs can be modified|[Nn]o integrity|[Ss]imple logging with no"
     negative_indicators:
     - No tamper protection
     - Logs can be modified
     - No integrity
   csharp:
+    ast_queries:
+    - query_type: function_call
+      target: AppendAllText
+    - query_type: class_definition
+      target: File
     regex_fallback: "(?i)(File\\.AppendAllText|[Nn]o tamper protection|[Ll]ogs can be modified|[Nn]o integrity)"
     negative_indicators:
     - No tamper protection
     - Logs can be modified
   java:
+    ast_queries:
+    - query_type: class_definition
+      target: FileWriter
+    - query_type: class_definition
+      target: PrintWriter
     regex_fallback: "(?i)(FileWriter|PrintWriter.*log|[Nn]o tamper protection|[Ll]ogs can be modified|[Nn]o integrity)"
     negative_indicators:
     - No tamper protection
     - Logs can be modified
   typescript:
+    ast_queries:
+    - query_type: function_call
+      target: appendFile
+    - query_type: import_statement
+      target: fs
     regex_fallback: "(?i)(fs\\.appendFile|[Nn]o tamper protection|[Ll]ogs can be modified|[Nn]o integrity)"
     negative_indicators:
     - No tamper protection

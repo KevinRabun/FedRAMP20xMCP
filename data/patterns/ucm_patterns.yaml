@@ -1807,7 +1807,7 @@ finding:
   recommendation: Grant only required permissions (get/list, not all)
   references:
   - FRR-UCM-01
-  - KSI-SVC-01
+  - KSI-SVC-06
 evidence_artifacts:
 - artifact_type: logs
   name: UCM operational logs

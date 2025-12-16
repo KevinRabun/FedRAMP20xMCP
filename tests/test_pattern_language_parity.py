@@ -172,11 +172,6 @@ class TestPatternLanguageParity:
             error_msg += "=" * 70 + "\n"
             pytest.fail(error_msg)
     
-    @pytest.mark.xfail(
-        reason="Known quality improvement: Python has AST queries for 24 patterns where other languages only have regex. "
-               "Functionality is correct, but Python has better detection capabilities for these patterns. "
-               "Future enhancement: add AST queries to C#/Java/TypeScript for these patterns."
-    )
     def test_pattern_language_structure_consistency(self):
         """
         Verify that app languages in the same pattern have similar structure.

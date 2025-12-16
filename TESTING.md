@@ -228,7 +228,7 @@ Tested KSI families:
 - **SCN** (Secure Configuration) - Baseline configuration
 - **RSC** (Resilience) - Backup and recovery
 - **ADS** (Audit Services) - Logging and monitoring
-- **PIY** (Privacy) - Encryption at rest and in transit
+- **PIY** (Policy and Inventory) - Automated inventory, security objectives
 - **AFR** (Additional families as needed)
 
 ### FRR Family Coverage

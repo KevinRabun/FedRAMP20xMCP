@@ -750,7 +750,7 @@ External Consumers (Per-client permissions)
 
 **FedRAMP Requirements Met:**
 - ✅ Automated evidence collection (FRD-ALL-07)
-- ✅ Immutable storage (FRR-AFR-09)
+- ✅ Immutable storage (KSI-AFR-07)
 - ✅ Authorization Data Sharing API (FRR-ADS)
 - ✅ Continuous monitoring (FRR-CCM)
 - ✅ Audit logging (KSI-MLA-02)
