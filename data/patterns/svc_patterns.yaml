@@ -1486,11 +1486,21 @@ languages:
     - Azure.Security.KeyVault.Secrets
     - SecretClient
   java:
+    ast_queries:
+    - query_type: import_statement
+      target: keyvault
+    - query_type: class_definition
+      target: SecretClient
     regex_fallback: "(?i)(import.*azure\\.security\\.keyvault|SecretClient|KeyVaultSecret)"
     positive_indicators:
     - azure.security.keyvault
     - SecretClient
   typescript:
+    ast_queries:
+    - query_type: import_statement
+      target: keyvault-secrets
+    - query_type: class_definition
+      target: SecretClient
     regex_fallback: "(?i)(import.*@azure/keyvault-secrets|SecretClient|KeyVaultSecret)"
     positive_indicators:
     - "@azure/keyvault-secrets"
@@ -4345,23 +4355,60 @@ severity: INFO
 pattern_type: security_control
 languages:
   python:
-    ast_queries: []
+    ast_queries:
+    - query_type: function_call
+      target: configure_azure_monitor
+    - query_type: function_call
+      target: create_histogram
+    - query_type: function_call
+      target: monitor_performance
+    - query_type: function_call
+      target: set_attribute
+    - query_type: import_statement
+      target: opentelemetry
     regex_fallback: "configure_azure_monitor|opentelemetry.*trace.*metrics|create_histogram.*duration|monitor_performance|set_attribute.*performance"
     positive_indicators:
     - configure_azure_monitor
     - opentelemetry
     - monitor_performance
   csharp:
+    ast_queries:
+    - query_type: class_definition
+      target: TelemetryClient
+    - query_type: function_call
+      target: StartActivity
+    - query_type: class_definition
+      target: Activity
+    - query_type: function_call
+      target: SetAttribute
     regex_fallback: "(?i)(TelemetryClient|Activity\\.StartActivity|Histogram.*Duration|SetAttribute.*performance)"
     positive_indicators:
     - TelemetryClient
     - Activity.StartActivity
   java:
+    ast_queries:
+    - query_type: class_definition
+      target: TelemetryClient
+    - query_type: function_call
+      target: startSpan
+    - query_type: class_definition
+      target: Span
+    - query_type: function_call
+      target: setAttribute
     regex_fallback: "(?i)(TelemetryClient|Span\\.startSpan|Histogram.*duration|setAttribute.*performance)"
     positive_indicators:
     - TelemetryClient
     - startSpan
   typescript:
+    ast_queries:
+    - query_type: class_definition
+      target: TelemetryClient
+    - query_type: function_call
+      target: startSpan
+    - query_type: assignment
+      target: tracer
+    - query_type: function_call
+      target: setAttribute
     regex_fallback: "(?i)(TelemetryClient|tracer\\.startSpan|histogram.*duration|setAttribute.*performance)"
     positive_indicators:
     - TelemetryClient
@@ -4384,23 +4431,34 @@ severity: HIGH
 pattern_type: security_control
 languages:
   python:
-    ast_queries: []
+    ast_queries:
+    - query_type: function_definition
+      target: process_request
     regex_fallback: "[Nn]o timing|[Nn]o metrics|[Nn]o performance baseline|[Cc]annot detect degradation"
     negative_indicators:
     - No timing
     - No metrics
     - Cannot detect degradation
   csharp:
+    ast_queries:
+    - query_type: function_definition
+      target: ProcessRequest
     regex_fallback: "(?i)([Nn]o timing|[Nn]o metrics|[Nn]o performance baseline|[Cc]annot detect degradation)"
     negative_indicators:
     - No timing
     - No metrics
   java:
+    ast_queries:
+    - query_type: function_definition
+      target: processRequest
     regex_fallback: "(?i)([Nn]o timing|[Nn]o metrics|[Nn]o performance baseline|[Cc]annot detect degradation)"
     negative_indicators:
     - No timing
     - No metrics
   typescript:
+    ast_queries:
+    - query_type: function_definition
+      target: processRequest
     regex_fallback: "(?i)([Nn]o timing|[Nn]o metrics|[Nn]o performance baseline|[Cc]annot detect degradation)"
     negative_indicators:
     - No timing

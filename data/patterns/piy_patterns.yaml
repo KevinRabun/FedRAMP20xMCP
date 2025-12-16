@@ -31,14 +31,29 @@ languages:
     - azure.mgmt.resourcegraph
     - ResourceGraphClient
   csharp:
+    ast_queries:
+    - query_type: import_statement
+      target: ResourceGraph
+    - query_type: class_definition
+      target: ResourceGraphClient
     regex_fallback: "(?i)(Azure\\.ResourceManager\\.ResourceGraph|ResourceGraphClient|using.*ResourceGraph)"
     positive_indicators:
     - ResourceGraphClient
   java:
+    ast_queries:
+    - query_type: import_statement
+      target: resourcegraph
+    - query_type: class_definition
+      target: ResourceGraphClient
     regex_fallback: "(?i)(azure\\.resourcemanager\\.resourcegraph|ResourceGraphClient|import.*resourcegraph)"
     positive_indicators:
     - ResourceGraphClient
   typescript:
+    ast_queries:
+    - query_type: import_statement
+      target: resourcegraph
+    - query_type: class_definition
+      target: ResourceGraphClient
     regex_fallback: "(?i)(@azure/arm-resourcegraph|ResourceGraphClient|import.*resourcegraph)"
     positive_indicators:
     - ResourceGraphClient
@@ -92,16 +107,31 @@ languages:
     - manual_inventory
     - inventory_list =
   csharp:
+    ast_queries:
+    - query_type: function_definition
+      target: ManualInventory
+    - query_type: assignment
+      target: inventoryList
     regex_fallback: "(?i)(ManualInventory|inventory.*=.*new List|inventoryList.*=.*new)"
     negative_indicators:
     - ManualInventory
     - inventoryList
   java:
+    ast_queries:
+    - query_type: function_definition
+      target: manualInventory
+    - query_type: assignment
+      target: inventoryList
     regex_fallback: "(?i)(manualInventory|inventory.*=.*new ArrayList|inventoryList.*=.*new)"
     negative_indicators:
     - manualInventory
     - inventoryList
   typescript:
+    ast_queries:
+    - query_type: function_definition
+      target: manualInventory
+    - query_type: assignment
+      target: inventoryList
     regex_fallback: "(?i)(manualInventory|inventory.*=.*\\[|inventoryList.*=.*\\[)"
     negative_indicators:
     - manualInventory

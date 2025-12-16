@@ -601,23 +601,34 @@ severity: HIGH
 pattern_type: security_control
 languages:
   python:
-    ast_queries: []
+    ast_queries:
+    - query_type: function_call
+      target: send_email
     regex_fallback: "manual.*intervention|[Jj]ust send email|[Nn]o automated|[Nn]o containment|[Nn]o forensics"
     negative_indicators:
     - manual intervention
     - Just send email
     - No automated
   csharp:
+    ast_queries:
+    - query_type: function_call
+      target: SendEmail
     regex_fallback: "(?i)(manual.*intervention|[Jj]ust send email|[Nn]o automated|[Nn]o containment|[Nn]o forensics)"
     negative_indicators:
     - manual intervention
     - No automated
   java:
+    ast_queries:
+    - query_type: function_call
+      target: sendEmail
     regex_fallback: "(?i)(manual.*intervention|[Jj]ust send email|[Nn]o automated|[Nn]o containment|[Nn]o forensics)"
     negative_indicators:
     - manual intervention
     - No automated
   typescript:
+    ast_queries:
+    - query_type: function_call
+      target: sendEmail
     regex_fallback: "(?i)(manual.*intervention|[Jj]ust send email|[Nn]o automated|[Nn]o containment|[Nn]o forensics)"
     negative_indicators:
     - manual intervention
@@ -640,23 +651,52 @@ severity: INFO
 pattern_type: security_control
 languages:
   python:
-    ast_queries: []
+    ast_queries:
+    - query_type: function_call
+      target: configure_azure_monitor
+    - query_type: class_definition
+      target: IncidentTracker
+    - query_type: function_call
+      target: track_event
+    - query_type: function_call
+      target: dumps
     regex_fallback: "configure_azure_monitor|IncidentTracker|incident_id.*severity.*description|track_event.*security_incident|INCIDENT.*json\\.dumps"
     positive_indicators:
     - configure_azure_monitor
     - IncidentTracker
     - track_event
   csharp:
+    ast_queries:
+    - query_type: class_definition
+      target: ILogger
+    - query_type: class_definition
+      target: IncidentTracker
+    - query_type: function_call
+      target: TrackEvent
     regex_fallback: "(?i)(ILogger.*Incident|IncidentTracker|incidentId.*severity.*description|TrackEvent.*SecurityIncident)"
     positive_indicators:
     - IncidentTracker
     - TrackEvent
   java:
+    ast_queries:
+    - query_type: class_definition
+      target: IncidentTracker
+    - query_type: function_call
+      target: trackEvent
+    - query_type: assignment
+      target: logger
     regex_fallback: "(?i)(logger.*incident|IncidentTracker|incidentId.*severity.*description|trackEvent.*securityIncident)"
     positive_indicators:
     - IncidentTracker
     - trackEvent
   typescript:
+    ast_queries:
+    - query_type: class_definition
+      target: IncidentTracker
+    - query_type: function_call
+      target: trackEvent
+    - query_type: assignment
+      target: logger
     regex_fallback: "(?i)(logger.*incident|IncidentTracker|incidentId.*severity.*description|trackEvent.*securityIncident)"
     positive_indicators:
     - IncidentTracker
@@ -679,23 +719,34 @@ severity: HIGH
 pattern_type: security_control
 languages:
   python:
-    ast_queries: []
+    ast_queries:
+    - query_type: function_call
+      target: print
     regex_fallback: "print.*Security event|[Nn]o tracking|[Nn]o persistence|[Nn]o audit trail|[Jj]ust print to console"
     negative_indicators:
     - print
     - No tracking
     - No persistence
   csharp:
+    ast_queries:
+    - query_type: function_call
+      target: WriteLine
     regex_fallback: "(?i)(Console\\.WriteLine.*[Ss]ecurity|[Nn]o tracking|[Nn]o persistence|[Nn]o audit trail)"
     negative_indicators:
     - Console.WriteLine
     - No tracking
   java:
+    ast_queries:
+    - query_type: function_call
+      target: println
     regex_fallback: "(?i)(System\\.out\\.println.*[Ss]ecurity|[Nn]o tracking|[Nn]o persistence|[Nn]o audit trail)"
     negative_indicators:
     - System.out
     - No tracking
   typescript:
+    ast_queries:
+    - query_type: function_call
+      target: log
     regex_fallback: "(?i)(console\\.log.*[Ss]ecurity|[Nn]o tracking|[Nn]o persistence|[Nn]o audit trail)"
     negative_indicators:
     - console.log
@@ -718,23 +769,66 @@ severity: INFO
 pattern_type: security_control
 languages:
   csharp:
-    ast_queries: []
+    ast_queries:
+    - query_type: class_definition
+      target: IncidentCommunicationService
+    - query_type: class_definition
+      target: NotificationHubClient
+    - query_type: function_call
+      target: SendEmailNotification
+    - query_type: function_call
+      target: SendSlackAlert
+    - query_type: function_call
+      target: EscalateToExecutiveTeam
     regex_fallback: "IncidentCommunicationService|NotificationHubClient|SendEmailNotification|SendSlackAlert|EscalateToExecutiveTeam|SECURITY_INCIDENT"
     positive_indicators:
     - IncidentCommunicationService
     - NotificationHubClient
     - EscalateToExecutiveTeam
   python:
+    ast_queries:
+    - query_type: class_definition
+      target: IncidentCommunicationService
+    - query_type: class_definition
+      target: NotificationHub
+    - query_type: function_call
+      target: send_email_notification
+    - query_type: function_call
+      target: send_slack_alert
+    - query_type: function_call
+      target: escalate_to_executive
     regex_fallback: "(?i)(IncidentCommunicationService|NotificationHub|send_email_notification|send_slack_alert|escalate_to_executive)"
     positive_indicators:
     - IncidentCommunicationService
     - send_email_notification
   java:
+    ast_queries:
+    - query_type: class_definition
+      target: IncidentCommunicationService
+    - query_type: class_definition
+      target: NotificationHub
+    - query_type: function_call
+      target: sendEmailNotification
+    - query_type: function_call
+      target: sendSlackAlert
+    - query_type: function_call
+      target: escalateToExecutive
     regex_fallback: "(?i)(IncidentCommunicationService|NotificationHub|sendEmailNotification|sendSlackAlert|escalateToExecutive)"
     positive_indicators:
     - IncidentCommunicationService
     - sendEmailNotification
   typescript:
+    ast_queries:
+    - query_type: class_definition
+      target: IncidentCommunicationService
+    - query_type: class_definition
+      target: NotificationHub
+    - query_type: function_call
+      target: sendEmailNotification
+    - query_type: function_call
+      target: sendSlackAlert
+    - query_type: function_call
+      target: escalateToExecutive
     regex_fallback: "(?i)(IncidentCommunicationService|NotificationHub|sendEmailNotification|sendSlackAlert|escalateToExecutive)"
     positive_indicators:
     - IncidentCommunicationService
@@ -757,23 +851,34 @@ severity: HIGH
 pattern_type: security_control
 languages:
   python:
-    ast_queries: []
+    ast_queries:
+    - query_type: function_call
+      target: print
     regex_fallback: "print.*Security Alert|[Nn]o escalation|[Nn]o multi-channel|[Nn]o tracking|[Jj]ust print"
     negative_indicators:
     - print
     - No escalation
     - No multi-channel
   csharp:
+    ast_queries:
+    - query_type: function_call
+      target: WriteLine
     regex_fallback: "(?i)(Console\\.WriteLine.*Security|[Nn]o escalation|[Nn]o multi-channel|[Nn]o tracking)"
     negative_indicators:
     - Console.WriteLine
     - No escalation
   java:
+    ast_queries:
+    - query_type: function_call
+      target: println
     regex_fallback: "(?i)(System\\.out\\.println.*Security|[Nn]o escalation|[Nn]o multi-channel|[Nn]o tracking)"
     negative_indicators:
     - System.out
     - No escalation
   typescript:
+    ast_queries:
+    - query_type: function_call
+      target: log
     regex_fallback: "(?i)(console\\.log.*Security|[Nn]o escalation|[Nn]o multi-channel|[Nn]o tracking)"
     negative_indicators:
     - console.log
