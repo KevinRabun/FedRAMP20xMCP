@@ -27,13 +27,23 @@ import asyncio
 import pytest
 from fedramp_20x_mcp.analyzers.base import Severity
 from fedramp_20x_mcp.analyzers.frr.factory import get_factory
-from requirement_statements import FRR_STATEMENTS
+from fedramp_20x_mcp.data_loader import FedRAMPDataLoader
 
 
 @pytest.fixture
 def factory():
     """Get FRR analyzer factory instance"""
     return get_factory()
+
+
+@pytest.fixture
+def frr_ids():
+    """Get all FRR IDs from data loader"""
+    loader = FedRAMPDataLoader()
+    asyncio.run(loader.load_data())
+    all_requirements = loader.search_controls("FRR-")
+    frr_data = [r for r in all_requirements if r.get('id', '').startswith('FRR-')]
+    return sorted([frr['id'] for frr in frr_data])
 
 
 # Generate family-appropriate test code
@@ -230,9 +240,16 @@ hash_value = hashlib.md5(data).hexdigest()  # MD5 not FIPS approved
 
 
 def generate_test_cases():
-    """Generate positive and negative test cases for all 199 FRRs"""
+    """Generate positive and negative test cases for all FRRs"""
+    # Load FRR IDs from data loader
+    loader = FedRAMPDataLoader()
+    asyncio.run(loader.load_data())
+    all_requirements = loader.search_controls("FRR-")
+    frr_data = [r for r in all_requirements if r.get('id', '').startswith('FRR-')]
+    frr_ids = sorted([frr['id'] for frr in frr_data])
+    
     cases = []
-    for frr_id in sorted(FRR_STATEMENTS.keys()):
+    for frr_id in frr_ids:
         family = frr_id.split('-')[1]
         
         # Positive test
@@ -267,11 +284,18 @@ class TestFRRPatternValidation:
 
 def run_tests():
     """Run FRR pattern validation tests"""
+    # Load FRR count dynamically
+    loader = FedRAMPDataLoader()
+    asyncio.run(loader.load_data())
+    all_requirements = loader.search_controls("FRR-")
+    frr_data = [r for r in all_requirements if r.get('id', '').startswith('FRR-')]
+    frr_count = len(frr_data)
+    
     print("\n" + "=" * 80)
     print("FRR REQUIREMENT PATTERN VALIDATION TESTS")
     print("=" * 80)
-    print(f"\nValidating pattern coverage for all {len(FRR_STATEMENTS)} FRRs")
-    print(f"Total tests: {len(FRR_STATEMENTS) * 2} (positive + negative for each FRR)")
+    print(f"\nValidating pattern coverage for all {frr_count} FRRs")
+    print(f"Total tests: {frr_count * 2} (positive + negative for each FRR)")
     print("\nFRR Distribution:")
     print("  ADS: 20 | CCM: 25 | FSI: 16 | ICP:  9 | KSI:  2 | MAS: 12")
     print("  PVA: 22 | RSC: 10 | SCN: 22 | UCM:  4 | VDR: 57")
