@@ -84,6 +84,27 @@ jobs:
         curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
         chmod +x mcp-publisher
     
+    - name: Validate MCP schema before publishing
+      run: |
+        echo "Validating server.json schema version before MCP publish..."
+        SCHEMA_URL=$(jq -r '."$schema"' server.json)
+        SCHEMA_VERSION=$(echo "$SCHEMA_URL" | grep -oP '\d{4}-\d{2}-\d{2}')
+        
+        # Fetch latest version from CHANGELOG
+        CHANGELOG=$(curl -sL "https://raw.githubusercontent.com/modelcontextprotocol/registry/main/docs/reference/server-json/CHANGELOG.md")
+        LATEST_VERSION=$(echo "$CHANGELOG" | grep -oP '## \K\d{4}-\d{2}-\d{2}' | head -1)
+        
+        echo "Current schema: $SCHEMA_VERSION"
+        echo "Latest schema: $LATEST_VERSION"
+        
+        if [ "$SCHEMA_VERSION" != "$LATEST_VERSION" ]; then
+          echo "::error::Schema version $SCHEMA_VERSION is outdated! Latest is $LATEST_VERSION"
+          echo "Update server.json \$schema to: https://static.modelcontextprotocol.io/schemas/$LATEST_VERSION/server.schema.json"
+          echo "See: https://github.com/modelcontextprotocol/registry/blob/main/docs/reference/server-json/CHANGELOG.md"
+          exit 1
+        fi
+        echo "✅ Schema version is current"
+    
     - name: Authenticate to MCP Registry
       run: ./mcp-publisher login github-oidc
     

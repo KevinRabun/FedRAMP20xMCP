@@ -1,0 +1,159 @@
+name: Validate MCP Schema
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'server.json'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'server.json'
+  workflow_dispatch:  # Allow manual trigger
+
+permissions:
+  contents: read
+
+jobs:
+  validate-schema:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Validate server.json schema version
+      run: |
+        echo "Checking server.json schema version..."
+        
+        # Extract schema URL from server.json
+        SCHEMA_URL=$(jq -r '."$schema"' server.json)
+        echo "Current schema URL: $SCHEMA_URL"
+        
+        # Extract version from URL (e.g., 2025-12-11)
+        SCHEMA_VERSION=$(echo "$SCHEMA_URL" | grep -oP '\d{4}-\d{2}-\d{2}')
+        echo "Schema version: $SCHEMA_VERSION"
+        
+        if [ -z "$SCHEMA_VERSION" ]; then
+          echo "::error::Could not extract schema version from server.json"
+          exit 1
+        fi
+        
+        # Fetch the latest schema version from MCP registry
+        echo "Fetching latest schema info from MCP registry..."
+        LATEST_SCHEMA=$(curl -sL "https://raw.githubusercontent.com/modelcontextprotocol/registry/main/docs/reference/server-json/server.schema.json" | jq -r '."$id"')
+        echo "Latest schema URL: $LATEST_SCHEMA"
+        
+        # Check if using draft (which means we need to check CHANGELOG for current version)
+        if echo "$LATEST_SCHEMA" | grep -q "draft"; then
+          echo "Registry is using draft schema, checking CHANGELOG for latest released version..."
+          # Get the CHANGELOG and find the latest dated version
+          CHANGELOG=$(curl -sL "https://raw.githubusercontent.com/modelcontextprotocol/registry/main/docs/reference/server-json/CHANGELOG.md")
+          LATEST_VERSION=$(echo "$CHANGELOG" | grep -oP '## \K\d{4}-\d{2}-\d{2}' | head -1)
+          echo "Latest released schema version from CHANGELOG: $LATEST_VERSION"
+        else
+          LATEST_VERSION=$(echo "$LATEST_SCHEMA" | grep -oP '\d{4}-\d{2}-\d{2}')
+          echo "Latest schema version: $LATEST_VERSION"
+        fi
+        
+        if [ -z "$LATEST_VERSION" ]; then
+          echo "::warning::Could not determine latest schema version, skipping version check"
+          exit 0
+        fi
+        
+        # Compare versions
+        if [ "$SCHEMA_VERSION" != "$LATEST_VERSION" ]; then
+          echo ""
+          echo "::warning::Schema version mismatch detected!"
+          echo "  Current: $SCHEMA_VERSION"
+          echo "  Latest:  $LATEST_VERSION"
+          echo ""
+          echo "Consider updating server.json \$schema to:"
+          echo "  https://static.modelcontextprotocol.io/schemas/$LATEST_VERSION/server.schema.json"
+          echo ""
+          echo "See migration guide: https://github.com/modelcontextprotocol/registry/blob/main/docs/reference/server-json/CHANGELOG.md"
+          
+          # Fail if we're significantly behind (more than one version)
+          # For now, just warn - uncomment below to make it a hard failure
+          # exit 1
+        else
+          echo "✅ Schema version is up to date: $SCHEMA_VERSION"
+        fi
+    
+    - name: Validate server.json structure
+      run: |
+        echo "Validating server.json structure..."
+        
+        # Check required fields
+        ERRORS=""
+        
+        if ! jq -e '.name' server.json > /dev/null 2>&1; then
+          ERRORS="${ERRORS}Missing required field: name\n"
+        fi
+        
+        if ! jq -e '.description' server.json > /dev/null 2>&1; then
+          ERRORS="${ERRORS}Missing required field: description\n"
+        fi
+        
+        if ! jq -e '.version' server.json > /dev/null 2>&1; then
+          ERRORS="${ERRORS}Missing required field: version\n"
+        fi
+        
+        # Check package structure if packages exist
+        if jq -e '.packages' server.json > /dev/null 2>&1; then
+          PACKAGE_COUNT=$(jq '.packages | length' server.json)
+          for i in $(seq 0 $((PACKAGE_COUNT - 1))); do
+            if ! jq -e ".packages[$i].registryType" server.json > /dev/null 2>&1; then
+              ERRORS="${ERRORS}Package $i missing required field: registryType\n"
+            fi
+            if ! jq -e ".packages[$i].identifier" server.json > /dev/null 2>&1; then
+              ERRORS="${ERRORS}Package $i missing required field: identifier\n"
+            fi
+            if ! jq -e ".packages[$i].transport" server.json > /dev/null 2>&1; then
+              ERRORS="${ERRORS}Package $i missing required field: transport\n"
+            fi
+          done
+        fi
+        
+        if [ -n "$ERRORS" ]; then
+          echo "::error::server.json validation failed:"
+          echo -e "$ERRORS"
+          exit 1
+        fi
+        
+        echo "✅ server.json structure is valid"
+    
+    - name: Check version consistency
+      run: |
+        echo "Checking version consistency across files..."
+        
+        SERVER_VERSION=$(jq -r '.version' server.json)
+        PACKAGE_VERSION=$(jq -r '.packages[0].version // empty' server.json)
+        PYPROJECT_VERSION=$(grep -oP 'version = "\K[^"]+' pyproject.toml | head -1)
+        INIT_VERSION=$(grep -oP '__version__ = "\K[^"]+' src/fedramp_20x_mcp/__init__.py)
+        
+        echo "server.json version: $SERVER_VERSION"
+        echo "server.json package version: $PACKAGE_VERSION"
+        echo "pyproject.toml version: $PYPROJECT_VERSION"
+        echo "__init__.py version: $INIT_VERSION"
+        
+        MISMATCH=""
+        
+        if [ "$SERVER_VERSION" != "$PYPROJECT_VERSION" ]; then
+          MISMATCH="${MISMATCH}server.json ($SERVER_VERSION) != pyproject.toml ($PYPROJECT_VERSION)\n"
+        fi
+        
+        if [ "$SERVER_VERSION" != "$INIT_VERSION" ]; then
+          MISMATCH="${MISMATCH}server.json ($SERVER_VERSION) != __init__.py ($INIT_VERSION)\n"
+        fi
+        
+        if [ -n "$PACKAGE_VERSION" ] && [ "$SERVER_VERSION" != "$PACKAGE_VERSION" ]; then
+          MISMATCH="${MISMATCH}server.json version ($SERVER_VERSION) != package version ($PACKAGE_VERSION)\n"
+        fi
+        
+        if [ -n "$MISMATCH" ]; then
+          echo "::error::Version mismatch detected:"
+          echo -e "$MISMATCH"
+          exit 1
+        fi
+        
+        echo "✅ All version numbers are consistent: $SERVER_VERSION"
