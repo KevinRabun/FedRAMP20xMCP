@@ -140,7 +140,7 @@ async def analyze_infrastructure_code_impl(
     output["pattern_findings_count"] = len(pattern_findings)
     output["traditional_findings_count"] = len(traditional_findings)
     output["total_findings"] = len(all_findings)
-    output["pattern_coverage"] = get_pattern_coverage()
+    output["pattern_coverage"] = await get_pattern_coverage()
     
     # Add context if provided
     if context:
@@ -241,7 +241,7 @@ async def analyze_application_code_impl(
     output["pattern_findings_count"] = len(pattern_findings)
     output["traditional_findings_count"] = len(traditional_findings)
     output["total_findings"] = len(all_findings)
-    output["pattern_coverage"] = get_pattern_coverage()
+    output["pattern_coverage"] = await get_pattern_coverage()
     
     # Add dependencies info if provided
     if dependencies:
@@ -339,7 +339,7 @@ async def analyze_cicd_pipeline_impl(
     output["pattern_findings_count"] = len(pattern_findings)
     output["traditional_findings_count"] = len(traditional_findings)
     output["total_findings"] = len(all_findings)
-    output["pattern_coverage"] = get_pattern_coverage()
+    output["pattern_coverage"] = await get_pattern_coverage()
     
     # Add formatted recommendations
     if combined_result.findings:

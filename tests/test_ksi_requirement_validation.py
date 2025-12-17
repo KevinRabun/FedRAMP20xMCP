@@ -138,68 +138,8 @@ def send_sms_code(phone_number, code):
     # ==========================================================================
     # SVC Family Tests (Service Management)
     # ==========================================================================
-    
-    @pytest.mark.skip(reason="KSI-SVC-01 (Continuous Improvement) requires new patterns - operational/process requirement not yet implemented")
-    def test_ksi_svc_01_positive(self, factory):
-        """KSI-SVC-01 Positive: Continuous Improvement - Security assessment automation
-        
-        NOTE: KSI-SVC-01 is about "Implement improvements based on persistent evaluation 
-        of information resources for opportunities to improve security." This is primarily
-        an operational/process requirement. Patterns need to be created to detect:
-        - Security assessment automation (azurerm_security_center_assessment_policy)
-        - Scheduled security reviews (azurerm_monitor_scheduled_query_rules_alert)
-        - Continuous monitoring configurations
-        """
-        code = """
-# Compliant: Automated security posture assessment for continuous improvement
-resource "azurerm_security_center_assessment_policy" "custom" {
-  display_name = "Continuous Security Posture Assessment"
-  severity     = "High"
-  description  = "Automated evaluation for improvement opportunities"
-  
-  implementation_effort = "Moderate"
-  
-  metadata = jsonencode({
-    category = "Continuous Improvement"
-    assessmentType = "CustomPolicy"
-  })
-}
-
-# Regular security review automation
-resource "azurerm_monitor_scheduled_query_rules_alert" "security_review" {
-  name                = "weekly-security-improvement-review"
-  location            = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
-  
-  frequency           = 10080 # Weekly
-  time_window         = 10080
-}
-"""
-        result = asyncio.run(factory.analyze("KSI-SVC-01", code, "terraform"))
-        assert len(result.findings) > 0, "KSI-SVC-01 should detect continuous improvement automation"
-    
-    @pytest.mark.skip(reason="KSI-SVC-01 (Continuous Improvement) requires new patterns - operational/process requirement not yet implemented")
-    def test_ksi_svc_01_negative(self, factory):
-        """KSI-SVC-01 Negative: Continuous Improvement - No improvement tracking"""
-        code = """
-# NON-COMPLIANT: Static configuration with no continuous improvement mechanisms
-resource "azurerm_resource_group" "main" {
-  name     = "static-config"
-  location = "East US"
-}
-
-resource "azurerm_virtual_network" "main" {
-  name                = "vnet"
-  address_space       = ["10.0.0.0/16"]
-  location            = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
-}
-"""
-        result = asyncio.run(factory.analyze("KSI-SVC-01", code, "terraform"))
-        # Should detect lack of continuous improvement mechanisms
-        violations = [f for f in result.findings if f.severity in [Severity.MEDIUM, Severity.HIGH]]
-        violations = [f for f in result.findings if f.severity in [Severity.MEDIUM, Severity.HIGH, Severity.CRITICAL]]
-        assert len(violations) > 0, "KSI-SVC-01 should flag absence of improvement tracking"
+    # NOTE: KSI-SVC-01 (Continuous Improvement) tests removed - operational/process requirement not code-detectable
+    # NOTE: KSI-SVC-03 tests removed - RETIRED per FedRAMP 20x (has empty statement)
     
     def test_ksi_svc_06_positive(self, factory):
         """KSI-SVC-06 Positive: Secret Management - Azure Key Vault with rotation"""
@@ -2426,69 +2366,6 @@ jobs:
         violations = [f for f in result.findings if f.severity in [Severity.MEDIUM, Severity.HIGH]]
         violations = [f for f in result.findings if f.severity in [Severity.MEDIUM, Severity.HIGH, Severity.CRITICAL]]
         assert len(violations) > 0, "KSI-SVC-02 should flag missing change approval"
-
-    @pytest.mark.skip(reason="KSI-SVC-03 is RETIRED - has empty statement")
-    def test_ksi_svc_03_positive(self, factory):
-        """KSI-SVC-03 Positive: Configuration Management - GitOps with version control"""
-        code = """
-# Compliant: GitOps configuration management with Flux
-apiVersion: source.toolkit.fluxcd.io/v1beta2
-kind: GitRepository
-metadata:
-  name: fedramp-config
-  namespace: flux-system
-spec:
-  interval: 1m
-  url: https://github.com/org/fedramp-configs
-  ref:
-    branch: main
-  secretRef:
-    name: git-credentials
-  verify:
-    mode: head
-    secretRef:
-      name: git-pgp-key
-
----
-apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
-kind: Kustomization
-metadata:
-  name: fedramp-apps
-  namespace: flux-system
-spec:
-  interval: 10m
-  sourceRef:
-    kind: GitRepository
-    name: fedramp-config
-  path: ./apps/production
-  prune: true  # Remove resources not in Git
-  wait: true
-  timeout: 5m
-  validation: client  # Validate before apply
-"""
-        result = asyncio.run(factory.analyze("KSI-SVC-03", code, "yaml"))
-        assert len(result.findings) > 0, "KSI-SVC-03 should detect GitOps configuration management"
-
-    @pytest.mark.skip(reason="KSI-SVC-03 is RETIRED - has empty statement")
-    def test_ksi_svc_03_negative(self, factory):
-        """KSI-SVC-03 Negative: Configuration Management - Manual kubectl apply, no GitOps"""
-        code = """
-# NON-COMPLIANT: Manual configuration changes
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: app-config
-data:
-  # Manually applied with kubectl apply -f
-  # No version control
-  # No audit trail of changes
-  # Configuration drift likely
-  database_url: "mongodb://prod-db:27017"
-"""
-        result = asyncio.run(factory.analyze("KSI-SVC-03", code, "yaml"))
-        violations = [f for f in result.findings if f.severity in [Severity.MEDIUM, Severity.HIGH]]
-        violations = [f for f in result.findings if f.severity in [Severity.MEDIUM, Severity.HIGH, Severity.CRITICAL]]
-        assert len(violations) > 0, "KSI-SVC-03 should flag manual configuration management"
 
     def test_ksi_svc_04_positive(self, factory):
         """KSI-SVC-04 Positive: Service Level Monitoring - SLA tracking with alerts"""

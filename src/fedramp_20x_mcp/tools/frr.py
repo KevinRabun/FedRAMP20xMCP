@@ -312,7 +312,7 @@ async def get_frr_metadata_impl(frr_id: str, data_loader: Any = None) -> str:
     """
     try:
         factory = get_factory()
-        metadata = factory.get_frr_metadata(frr_id)
+        metadata = await factory.get_frr_metadata(frr_id)
         
         if not metadata:
             return f"FRR '{frr_id}' not found. Use list_frrs_by_family to see available FRRs."
