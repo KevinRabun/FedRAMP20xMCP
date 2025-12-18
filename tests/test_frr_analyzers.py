@@ -623,6 +623,7 @@ class TestFRREvidenceAutomation:
         )
         
         automation = get_frr_evidence_automation("FRR-VDR-01")
+        assert automation is not None, "Expected automation for FRR-VDR-01"
         markdown = format_evidence_automation_markdown(automation)
         
         assert markdown is not None
@@ -659,6 +660,7 @@ class TestFRREvidenceAutomation:
         from fedramp_20x_mcp.analyzers.frr.evidence_automation import get_frr_evidence_automation
         
         automation = get_frr_evidence_automation("FRR-VDR-01")
+        assert automation is not None, "Expected automation for FRR-VDR-01"
         
         for artifact in automation.artifacts:
             assert artifact.artifact_name is not None
@@ -673,6 +675,7 @@ class TestFRREvidenceAutomation:
         from fedramp_20x_mcp.analyzers.frr.evidence_automation import get_frr_evidence_automation
         
         automation = get_frr_evidence_automation("FRR-VDR-01")
+        assert automation is not None, "Expected automation for FRR-VDR-01"
         
         for query in automation.queries:
             assert query.retention_days >= 730, f"Query {query.query_name} has insufficient retention"

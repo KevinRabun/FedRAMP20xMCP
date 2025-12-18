@@ -291,7 +291,7 @@ class TestAnalyzerTools:
     async def test_analyze_application_code_impl(self, data_loader):
         """Test analyze_application_code implementation"""
         code = "import fido2\nfrom azure.identity import DefaultAzureCredential"
-        result = await analyzer.analyze_application_code_impl(code, "python", "", "")
+        result = await analyzer.analyze_application_code_impl(code, "python", None, None)
         assert result is not None
         assert isinstance(result, dict)
     
@@ -464,7 +464,7 @@ credential = DefaultAzureCredential()
 """
         
         # Analyze application code
-        app_result = await analyzer.analyze_application_code_impl(code, "python", "", "")
+        app_result = await analyzer.analyze_application_code_impl(code, "python", None, None)
         assert app_result is not None
         assert isinstance(app_result, dict)
 
