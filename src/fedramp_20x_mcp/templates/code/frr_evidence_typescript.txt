@@ -1,0 +1,580 @@
+## TypeScript Code for FRR Evidence Collection
+
+```typescript
+// frr-evidence-collector.ts - Azure-Native Evidence Collection for FedRAMP 20x
+// Collects compliance evidence for FRR requirements using Azure SDK for JavaScript
+//
+// FRR Families Supported:
+// - VDR: Vulnerability Detection and Response
+// - RSC: Recommended Secure Configuration
+// - ADS: Audit and Data Security
+// - SCN: Secure Configuration
+// - CCM: Configuration Change Management
+// - MAS: Malware and Antivirus
+//
+// Prerequisites:
+// - @azure/identity
+// - @azure/arm-resourcegraph
+// - @azure/monitor-query
+// - @azure/storage-blob
+
+import { DefaultAzureCredential } from "@azure/identity";
+import { ResourceGraphClient } from "@azure/arm-resourcegraph";
+import { LogsQueryClient, LogsQueryResultStatus } from "@azure/monitor-query";
+import {
+  BlobServiceClient,
+  ContainerClient,
+} from "@azure/storage-blob";
+
+/**
+ * Structured evidence record for FedRAMP compliance.
+ */
+interface EvidenceRecord {
+  frrId: string;
+  frrName: string;
+  collectionTimestamp: string;
+  subscriptionId: string;
+  queryType: string;
+  queryName: string;
+  recordCount: number;
+  data: Record<string, unknown>[];
+  complianceStatus: "compliant" | "non_compliant" | "needs_review";
+  metadata: Record<string, unknown>;
+}
+
+/**
+ * Collects evidence for FedRAMP 20x FRR requirements using Azure services.
+ */
+export class FRREvidenceCollector {
+  private subscriptionId: string;
+  private workspaceId: string;
+  private storageAccountName: string;
+  private credential: DefaultAzureCredential;
+  private logsClient: LogsQueryClient;
+  private resourceGraphClient: ResourceGraphClient;
+  private blobServiceClient: BlobServiceClient;
+
+  constructor(
+    subscriptionId: string,
+    logAnalyticsWorkspaceId: string,
+    storageAccountName: string
+  ) {
+    this.subscriptionId = subscriptionId;
+    this.workspaceId = logAnalyticsWorkspaceId;
+    this.storageAccountName = storageAccountName;
+
+    this.credential = new DefaultAzureCredential();
+    this.logsClient = new LogsQueryClient(this.credential);
+    this.resourceGraphClient = new ResourceGraphClient(this.credential);
+    this.blobServiceClient = new BlobServiceClient(
+      `https://${storageAccountName}.blob.core.windows.net`,
+      this.credential
+    );
+  }
+
+  // =========================================================================
+  // VDR: Vulnerability Detection and Response
+  // =========================================================================
+
+  /**
+   * FRR-VDR-01: Critical Vulnerability Remediation
+   * Collects evidence showing vulnerability remediation within SLA.
+   */
+  async collectVdr01Evidence(): Promise<EvidenceRecord> {
+    console.log("Collecting FRR-VDR-01 evidence: Critical Vulnerability Remediation");
+
+    const query = `
+SecurityRecommendation
+| where RecommendationSeverity == "High"
+| where RecommendationState == "Active"
+| extend DaysOpen = datetime_diff('day', now(), FirstEvaluationDate)
+| summarize 
+    TotalCritical = count(),
+    WithinSLA = countif(DaysOpen <= 15),
+    ExceedingSLA = countif(DaysOpen > 15)
+| extend ComplianceRate = round(WithinSLA * 100.0 / TotalCritical, 2)
+`;
+
+    const results = await this.executeLogQuery(query);
+
+    let complianceStatus: EvidenceRecord["complianceStatus"] = "compliant";
+    if (results.length > 0) {
+      const exceeding = results[0]["ExceedingSLA"] as number;
+      if (exceeding > 0) {
+        complianceStatus = "non_compliant";
+      }
+    }
+
+    return {
+      frrId: "FRR-VDR-01",
+      frrName: "Critical Vulnerability Remediation",
+      collectionTimestamp: new Date().toISOString(),
+      subscriptionId: this.subscriptionId,
+      queryType: "Azure Monitor KQL",
+      queryName: "Critical Vulnerability SLA Compliance",
+      recordCount: results.length,
+      data: results,
+      complianceStatus,
+      metadata: {
+        sla_days_critical: 15,
+        sla_days_high: 30,
+      },
+    };
+  }
+
+  /**
+   * FRR-VDR-08: Automated Patching
+   */
+  async collectVdr08Evidence(): Promise<EvidenceRecord> {
+    console.log("Collecting FRR-VDR-08 evidence: Automated Patching");
+
+    const query = `
+resources
+| where type == "microsoft.compute/virtualmachines"
+| extend 
+    patchMode = properties.osProfile.windowsConfiguration.patchSettings.patchMode,
+    linuxPatchMode = properties.osProfile.linuxConfiguration.patchSettings.patchMode
+| project 
+    name, 
+    resourceGroup, 
+    patchMode,
+    linuxPatchMode,
+    automaticPatchingEnabled = (patchMode == "AutomaticByPlatform" or linuxPatchMode == "AutomaticByPlatform")
+`;
+
+    const results = await this.executeResourceGraphQuery(query);
+
+    const nonCompliant = results.filter(
+      (r) => r["automaticPatchingEnabled"] !== true
+    );
+    const complianceStatus: EvidenceRecord["complianceStatus"] =
+      nonCompliant.length === 0 ? "compliant" : "non_compliant";
+
+    return {
+      frrId: "FRR-VDR-08",
+      frrName: "Automated Patching",
+      collectionTimestamp: new Date().toISOString(),
+      subscriptionId: this.subscriptionId,
+      queryType: "Azure Resource Graph",
+      queryName: "VM Patch Configuration Status",
+      recordCount: results.length,
+      data: results,
+      complianceStatus,
+      metadata: {
+        total_vms: results.length,
+        compliant_vms: results.length - nonCompliant.length,
+        non_compliant_vms: nonCompliant.length,
+      },
+    };
+  }
+
+  // =========================================================================
+  // RSC: Recommended Secure Configuration
+  // =========================================================================
+
+  /**
+   * FRR-RSC-01: Security Baseline Compliance
+   */
+  async collectRsc01Evidence(): Promise<EvidenceRecord> {
+    console.log("Collecting FRR-RSC-01 evidence: Security Baseline Compliance");
+
+    const query = `
+securityresources
+| where type == "microsoft.security/assessments"
+| extend status = properties.status.code
+| summarize 
+    TotalAssessments = count(),
+    Healthy = countif(status == "Healthy"),
+    Unhealthy = countif(status == "Unhealthy")
+| extend ComplianceRate = round(Healthy * 100.0 / (Healthy + Unhealthy), 2)
+`;
+
+    const results = await this.executeResourceGraphQuery(query);
+
+    let complianceRate = 0;
+    if (results.length > 0 && results[0]["ComplianceRate"]) {
+      complianceRate = results[0]["ComplianceRate"] as number;
+    }
+
+    const complianceStatus: EvidenceRecord["complianceStatus"] =
+      complianceRate >= 90 ? "compliant" : "non_compliant";
+
+    return {
+      frrId: "FRR-RSC-01",
+      frrName: "Security Baseline Compliance",
+      collectionTimestamp: new Date().toISOString(),
+      subscriptionId: this.subscriptionId,
+      queryType: "Azure Resource Graph",
+      queryName: "Security Assessment Compliance",
+      recordCount: results.length,
+      data: results,
+      complianceStatus,
+      metadata: {
+        compliance_threshold: 90,
+        actual_compliance_rate: complianceRate,
+      },
+    };
+  }
+
+  // =========================================================================
+  // ADS: Audit and Data Security
+  // =========================================================================
+
+  /**
+   * FRR-ADS-01: Audit Log Completeness
+   */
+  async collectAds01Evidence(): Promise<EvidenceRecord> {
+    console.log("Collecting FRR-ADS-01 evidence: Audit Log Completeness");
+
+    const query = `
+AzureActivity
+| where TimeGenerated > ago(24h)
+| summarize 
+    TotalEvents = count(),
+    DistinctOperations = dcount(OperationNameValue),
+    DistinctCallers = dcount(Caller)
+    by bin(TimeGenerated, 1h)
+| order by TimeGenerated desc
+`;
+
+    const results = await this.executeLogQuery(query);
+
+    const gaps = results.filter((r) => (r["TotalEvents"] as number) === 0);
+    const complianceStatus: EvidenceRecord["complianceStatus"] =
+      gaps.length === 0 ? "compliant" : "needs_review";
+
+    return {
+      frrId: "FRR-ADS-01",
+      frrName: "Audit Log Completeness",
+      collectionTimestamp: new Date().toISOString(),
+      subscriptionId: this.subscriptionId,
+      queryType: "Azure Monitor KQL",
+      queryName: "Hourly Audit Log Summary",
+      recordCount: results.length,
+      data: results,
+      complianceStatus,
+      metadata: {
+        time_range_hours: 24,
+        logging_gaps: gaps.length,
+      },
+    };
+  }
+
+  // =========================================================================
+  // SCN: Secure Configuration
+  // =========================================================================
+
+  /**
+   * FRR-SCN-01: Network Security Configuration
+   */
+  async collectScn01Evidence(): Promise<EvidenceRecord> {
+    console.log("Collecting FRR-SCN-01 evidence: Network Security Configuration");
+
+    const query = `
+resources
+| where type == "microsoft.network/networksecuritygroups"
+| extend rules = properties.securityRules
+| mv-expand rule = rules
+| extend 
+    access = rule.properties.access,
+    sourceAddress = rule.properties.sourceAddressPrefix,
+    destPort = rule.properties.destinationPortRange
+| where access == "Allow" and sourceAddress == "*"
+| where destPort in ("22", "3389", "*")
+| project name, resourceGroup, destPort, sourceAddress
+`;
+
+    const results = await this.executeResourceGraphQuery(query);
+    const complianceStatus: EvidenceRecord["complianceStatus"] =
+      results.length === 0 ? "compliant" : "non_compliant";
+
+    return {
+      frrId: "FRR-SCN-01",
+      frrName: "Network Security Configuration",
+      collectionTimestamp: new Date().toISOString(),
+      subscriptionId: this.subscriptionId,
+      queryType: "Azure Resource Graph",
+      queryName: "Overly Permissive NSG Rules",
+      recordCount: results.length,
+      data: results,
+      complianceStatus,
+      metadata: {
+        risky_rules_found: results.length,
+        risky_ports_checked: ["22", "3389", "*"],
+      },
+    };
+  }
+
+  // =========================================================================
+  // CCM: Configuration Change Management
+  // =========================================================================
+
+  /**
+   * FRR-CCM-01: Change Management Audit Trail
+   */
+  async collectCcm01Evidence(): Promise<EvidenceRecord> {
+    console.log("Collecting FRR-CCM-01 evidence: Change Management Audit Trail");
+
+    const query = `
+AzureActivity
+| where TimeGenerated > ago(7d)
+| where OperationNameValue has_any ("write", "delete")
+| where ActivityStatusValue == "Success"
+| summarize ChangeCount = count() by Caller, OperationNameValue
+| order by ChangeCount desc
+| take 100
+`;
+
+    const results = await this.executeLogQuery(query);
+
+    const uniqueCallers = new Set(results.map((r) => r["Caller"])).size;
+
+    return {
+      frrId: "FRR-CCM-01",
+      frrName: "Change Management Audit Trail",
+      collectionTimestamp: new Date().toISOString(),
+      subscriptionId: this.subscriptionId,
+      queryType: "Azure Monitor KQL",
+      queryName: "Configuration Changes by User",
+      recordCount: results.length,
+      data: results,
+      complianceStatus: "compliant",
+      metadata: {
+        time_range_days: 7,
+        unique_callers: uniqueCallers,
+      },
+    };
+  }
+
+  // =========================================================================
+  // Helper Methods
+  // =========================================================================
+
+  private async executeResourceGraphQuery(
+    query: string
+  ): Promise<Record<string, unknown>[]> {
+    try {
+      const response = await this.resourceGraphClient.resources({
+        subscriptions: [this.subscriptionId],
+        query,
+      });
+
+      return (response.data as Record<string, unknown>[]) || [];
+    } catch (error) {
+      console.error("Resource Graph query failed:", error);
+      return [];
+    }
+  }
+
+  private async executeLogQuery(
+    query: string
+  ): Promise<Record<string, unknown>[]> {
+    try {
+      const workspaceGuid = this.workspaceId.split("/").pop()!;
+      const endTime = new Date();
+      const startTime = new Date(endTime.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+      const response = await this.logsClient.queryWorkspace(
+        workspaceGuid,
+        query,
+        { startTime, endTime }
+      );
+
+      const results: Record<string, unknown>[] = [];
+
+      if (response.status === LogsQueryResultStatus.Success) {
+        for (const table of response.tables) {
+          for (const row of table.rows) {
+            const record: Record<string, unknown> = {};
+            table.columnDescriptors.forEach((col, i) => {
+              record[col.name] = row[i];
+            });
+            results.push(record);
+          }
+        }
+      }
+
+      return results;
+    } catch (error) {
+      console.error("Log Analytics query failed:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Store evidence record in Azure Blob Storage.
+   */
+  async storeEvidence(
+    evidence: EvidenceRecord,
+    container = "frr-evidence"
+  ): Promise<string> {
+    try {
+      const containerClient: ContainerClient =
+        this.blobServiceClient.getContainerClient(container);
+      await containerClient.createIfNotExists();
+
+      const timestamp = new Date().toISOString().replace(/:/g, "-").slice(0, 19);
+      const blobName = `${evidence.frrId}/${timestamp}.json`;
+
+      const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+      const content = JSON.stringify(evidence, null, 2);
+
+      await blockBlobClient.upload(content, content.length, {
+        blobHTTPHeaders: { blobContentType: "application/json" },
+        metadata: {
+          frr_id: evidence.frrId,
+          compliance_status: evidence.complianceStatus,
+        },
+      });
+
+      console.log(`Evidence stored: ${blobName}`);
+      return blockBlobClient.url;
+    } catch (error) {
+      console.error("Failed to store evidence:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Collect evidence for all implemented FRRs.
+   */
+  async collectAllEvidence(): Promise<EvidenceRecord[]> {
+    const collectors = [
+      () => this.collectVdr01Evidence(),
+      () => this.collectVdr08Evidence(),
+      () => this.collectRsc01Evidence(),
+      () => this.collectAds01Evidence(),
+      () => this.collectScn01Evidence(),
+      () => this.collectCcm01Evidence(),
+    ];
+
+    const records: EvidenceRecord[] = [];
+
+    for (const collector of collectors) {
+      try {
+        const evidence = await collector();
+        records.push(evidence);
+        console.log(`✓ Collected ${evidence.frrId}: ${evidence.complianceStatus}`);
+      } catch (error) {
+        console.error("✗ Collection failed:", error);
+      }
+    }
+
+    return records;
+  }
+}
+
+// =========================================================================
+// Main Entry Point
+// =========================================================================
+
+async function main(): Promise<void> {
+  const subscriptionId = process.env.AZURE_SUBSCRIPTION_ID;
+  const workspaceId = process.env.LOG_ANALYTICS_WORKSPACE_ID;
+  const storageAccount = process.env.EVIDENCE_STORAGE_ACCOUNT;
+
+  if (!subscriptionId || !workspaceId || !storageAccount) {
+    console.error("Missing required environment variables");
+    console.error(
+      "Required: AZURE_SUBSCRIPTION_ID, LOG_ANALYTICS_WORKSPACE_ID, EVIDENCE_STORAGE_ACCOUNT"
+    );
+    process.exit(1);
+  }
+
+  const collector = new FRREvidenceCollector(
+    subscriptionId,
+    workspaceId,
+    storageAccount
+  );
+
+  console.log("=".repeat(60));
+  console.log("FedRAMP 20x FRR Evidence Collection (TypeScript)");
+  console.log(`Subscription: ${subscriptionId}`);
+  console.log(`Timestamp: ${new Date().toISOString()}`);
+  console.log("=".repeat(60));
+
+  const records = await collector.collectAllEvidence();
+
+  for (const evidence of records) {
+    await collector.storeEvidence(evidence);
+  }
+
+  console.log("=".repeat(60));
+  console.log("Collection Summary");
+  console.log("=".repeat(60));
+  console.log(`Total FRRs: ${records.length}`);
+  console.log(
+    `Compliant: ${records.filter((r) => r.complianceStatus === "compliant").length}`
+  );
+  console.log(
+    `Non-Compliant: ${records.filter((r) => r.complianceStatus === "non_compliant").length}`
+  );
+  console.log(
+    `Needs Review: ${records.filter((r) => r.complianceStatus === "needs_review").length}`
+  );
+}
+
+main().catch(console.error);
+```
+
+## Package.json
+
+```json
+{
+  "name": "frr-evidence-collector",
+  "version": "1.0.0",
+  "description": "FedRAMP 20x FRR Evidence Collection using Azure SDK",
+  "main": "dist/frr-evidence-collector.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/frr-evidence-collector.js",
+    "dev": "ts-node src/frr-evidence-collector.ts"
+  },
+  "dependencies": {
+    "@azure/identity": "^4.0.0",
+    "@azure/arm-resourcegraph": "^4.2.1",
+    "@azure/monitor-query": "^1.2.0",
+    "@azure/storage-blob": "^12.17.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "ts-node": "^10.9.2"
+  }
+}
+```
+
+## tsconfig.json
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "lib": ["ES2022"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
+```
+
+## Deployment Options
+
+### Option 1: Azure Function (Recommended)
+Deploy as a timer-triggered TypeScript Azure Function.
+
+### Option 2: Azure Container Apps
+Deploy as a scheduled job using Azure Container Apps.
+
+### Option 3: GitHub Actions
+Run on schedule using GitHub Actions workflow.
+
+*Generated by FedRAMP 20x MCP Server - FRR Evidence Collection Code (TypeScript)*

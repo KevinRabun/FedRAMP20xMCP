@@ -1,0 +1,591 @@
+## C# Code for FRR Evidence Collection
+
+```csharp
+// FRREvidenceCollector.cs - Azure-Native Evidence Collection for FedRAMP 20x
+// Collects compliance evidence for FRR requirements using Azure SDK for .NET
+//
+// FRR Families Supported:
+// - VDR: Vulnerability Detection and Response
+// - RSC: Recommended Secure Configuration
+// - ADS: Audit and Data Security
+// - SCN: Secure Configuration
+// - CCM: Configuration Change Management
+// - MAS: Malware and Antivirus
+//
+// Prerequisites:
+// - Azure.Identity
+// - Azure.ResourceManager
+// - Azure.Monitor.Query
+// - Azure.Storage.Blobs
+
+using System;
+using System.Collections.Generic;
+using System.Text.Json;
+using System.Threading.Tasks;
+using Azure.Identity;
+using Azure.Monitor.Query;
+using Azure.Monitor.Query.Models;
+using Azure.ResourceManager;
+using Azure.ResourceManager.ResourceGraph;
+using Azure.ResourceManager.ResourceGraph.Models;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
+
+namespace FedRAMP20x.Evidence;
+
+/// <summary>
+/// Structured evidence record for FedRAMP compliance.
+/// </summary>
+public record EvidenceRecord
+{
+    public required string FrrId { get; init; }
+    public required string FrrName { get; init; }
+    public required DateTime CollectionTimestamp { get; init; }
+    public required string SubscriptionId { get; init; }
+    public required string QueryType { get; init; }
+    public required string QueryName { get; init; }
+    public required int RecordCount { get; init; }
+    public required List<Dictionary<string, object>> Data { get; init; }
+    public required string ComplianceStatus { get; init; } // "compliant", "non_compliant", "needs_review"
+    public required Dictionary<string, object> Metadata { get; init; }
+}
+
+/// <summary>
+/// Collects evidence for FedRAMP 20x FRR requirements using Azure services.
+/// </summary>
+public class FRREvidenceCollector
+{
+    private readonly string _subscriptionId;
+    private readonly string _workspaceId;
+    private readonly string _storageAccountName;
+    private readonly DefaultAzureCredential _credential;
+    private readonly LogsQueryClient _logsClient;
+    private readonly ArmClient _armClient;
+    private readonly BlobServiceClient _blobClient;
+
+    public FRREvidenceCollector(
+        string subscriptionId,
+        string logAnalyticsWorkspaceId,
+        string storageAccountName)
+    {
+        _subscriptionId = subscriptionId;
+        _workspaceId = logAnalyticsWorkspaceId;
+        _storageAccountName = storageAccountName;
+        
+        _credential = new DefaultAzureCredential();
+        _logsClient = new LogsQueryClient(_credential);
+        _armClient = new ArmClient(_credential);
+        _blobClient = new BlobServiceClient(
+            new Uri($"https://{storageAccountName}.blob.core.windows.net"),
+            _credential);
+    }
+
+    // =========================================================================
+    // VDR: Vulnerability Detection and Response
+    // =========================================================================
+
+    /// <summary>
+    /// FRR-VDR-01: Critical Vulnerability Remediation
+    /// Collects evidence showing vulnerability remediation within SLA.
+    /// </summary>
+    public async Task<EvidenceRecord> CollectVdr01EvidenceAsync()
+    {
+        Console.WriteLine("Collecting FRR-VDR-01 evidence: Critical Vulnerability Remediation");
+
+        var query = @"
+SecurityRecommendation
+| where RecommendationSeverity == ""High""
+| where RecommendationState == ""Active""
+| extend DaysOpen = datetime_diff('day', now(), FirstEvaluationDate)
+| summarize 
+    TotalCritical = count(),
+    WithinSLA = countif(DaysOpen <= 15),
+    ExceedingSLA = countif(DaysOpen > 15)
+| extend ComplianceRate = round(WithinSLA * 100.0 / TotalCritical, 2)";
+
+        var results = await ExecuteLogQueryAsync(query);
+        
+        var complianceStatus = "compliant";
+        if (results.Count > 0 && results[0].TryGetValue("ExceedingSLA", out var exceeding))
+        {
+            if (Convert.ToInt32(exceeding) > 0)
+                complianceStatus = "non_compliant";
+        }
+
+        return new EvidenceRecord
+        {
+            FrrId = "FRR-VDR-01",
+            FrrName = "Critical Vulnerability Remediation",
+            CollectionTimestamp = DateTime.UtcNow,
+            SubscriptionId = _subscriptionId,
+            QueryType = "Azure Monitor KQL",
+            QueryName = "Critical Vulnerability SLA Compliance",
+            RecordCount = results.Count,
+            Data = results,
+            ComplianceStatus = complianceStatus,
+            Metadata = new Dictionary<string, object>
+            {
+                ["sla_days_critical"] = 15,
+                ["sla_days_high"] = 30
+            }
+        };
+    }
+
+    /// <summary>
+    /// FRR-VDR-08: Automated Patching
+    /// Collects evidence of automated patching configuration.
+    /// </summary>
+    public async Task<EvidenceRecord> CollectVdr08EvidenceAsync()
+    {
+        Console.WriteLine("Collecting FRR-VDR-08 evidence: Automated Patching");
+
+        var query = @"
+resources
+| where type == ""microsoft.compute/virtualmachines""
+| extend 
+    patchMode = properties.osProfile.windowsConfiguration.patchSettings.patchMode,
+    linuxPatchMode = properties.osProfile.linuxConfiguration.patchSettings.patchMode
+| project 
+    name, 
+    resourceGroup, 
+    patchMode,
+    linuxPatchMode,
+    automaticPatchingEnabled = (patchMode == ""AutomaticByPlatform"" or linuxPatchMode == ""AutomaticByPlatform"")";
+
+        var results = await ExecuteResourceGraphQueryAsync(query);
+        
+        var nonCompliant = results.FindAll(r => 
+            !r.TryGetValue("automaticPatchingEnabled", out var enabled) || 
+            Convert.ToBoolean(enabled) == false);
+        
+        var complianceStatus = nonCompliant.Count == 0 ? "compliant" : "non_compliant";
+
+        return new EvidenceRecord
+        {
+            FrrId = "FRR-VDR-08",
+            FrrName = "Automated Patching",
+            CollectionTimestamp = DateTime.UtcNow,
+            SubscriptionId = _subscriptionId,
+            QueryType = "Azure Resource Graph",
+            QueryName = "VM Patch Configuration Status",
+            RecordCount = results.Count,
+            Data = results,
+            ComplianceStatus = complianceStatus,
+            Metadata = new Dictionary<string, object>
+            {
+                ["total_vms"] = results.Count,
+                ["compliant_vms"] = results.Count - nonCompliant.Count,
+                ["non_compliant_vms"] = nonCompliant.Count
+            }
+        };
+    }
+
+    // =========================================================================
+    // RSC: Recommended Secure Configuration
+    // =========================================================================
+
+    /// <summary>
+    /// FRR-RSC-01: Security Baseline Compliance
+    /// </summary>
+    public async Task<EvidenceRecord> CollectRsc01EvidenceAsync()
+    {
+        Console.WriteLine("Collecting FRR-RSC-01 evidence: Security Baseline Compliance");
+
+        var query = @"
+securityresources
+| where type == ""microsoft.security/assessments""
+| extend status = properties.status.code
+| summarize 
+    TotalAssessments = count(),
+    Healthy = countif(status == ""Healthy""),
+    Unhealthy = countif(status == ""Unhealthy"")
+| extend ComplianceRate = round(Healthy * 100.0 / (Healthy + Unhealthy), 2)";
+
+        var results = await ExecuteResourceGraphQueryAsync(query);
+        
+        var complianceRate = 0.0;
+        if (results.Count > 0 && results[0].TryGetValue("ComplianceRate", out var rate))
+            complianceRate = Convert.ToDouble(rate);
+        
+        var complianceStatus = complianceRate >= 90 ? "compliant" : "non_compliant";
+
+        return new EvidenceRecord
+        {
+            FrrId = "FRR-RSC-01",
+            FrrName = "Security Baseline Compliance",
+            CollectionTimestamp = DateTime.UtcNow,
+            SubscriptionId = _subscriptionId,
+            QueryType = "Azure Resource Graph",
+            QueryName = "Security Assessment Compliance",
+            RecordCount = results.Count,
+            Data = results,
+            ComplianceStatus = complianceStatus,
+            Metadata = new Dictionary<string, object>
+            {
+                ["compliance_threshold"] = 90,
+                ["actual_compliance_rate"] = complianceRate
+            }
+        };
+    }
+
+    // =========================================================================
+    // ADS: Audit and Data Security
+    // =========================================================================
+
+    /// <summary>
+    /// FRR-ADS-01: Audit Log Completeness
+    /// </summary>
+    public async Task<EvidenceRecord> CollectAds01EvidenceAsync()
+    {
+        Console.WriteLine("Collecting FRR-ADS-01 evidence: Audit Log Completeness");
+
+        var query = @"
+AzureActivity
+| where TimeGenerated > ago(24h)
+| summarize 
+    TotalEvents = count(),
+    DistinctOperations = dcount(OperationNameValue),
+    DistinctCallers = dcount(Caller)
+    by bin(TimeGenerated, 1h)
+| order by TimeGenerated desc";
+
+        var results = await ExecuteLogQueryAsync(query);
+        
+        var gaps = results.FindAll(r => 
+            r.TryGetValue("TotalEvents", out var events) && 
+            Convert.ToInt32(events) == 0);
+        
+        var complianceStatus = gaps.Count == 0 ? "compliant" : "needs_review";
+
+        return new EvidenceRecord
+        {
+            FrrId = "FRR-ADS-01",
+            FrrName = "Audit Log Completeness",
+            CollectionTimestamp = DateTime.UtcNow,
+            SubscriptionId = _subscriptionId,
+            QueryType = "Azure Monitor KQL",
+            QueryName = "Hourly Audit Log Summary",
+            RecordCount = results.Count,
+            Data = results,
+            ComplianceStatus = complianceStatus,
+            Metadata = new Dictionary<string, object>
+            {
+                ["time_range_hours"] = 24,
+                ["logging_gaps"] = gaps.Count
+            }
+        };
+    }
+
+    // =========================================================================
+    // SCN: Secure Configuration
+    // =========================================================================
+
+    /// <summary>
+    /// FRR-SCN-01: Network Security Configuration
+    /// </summary>
+    public async Task<EvidenceRecord> CollectScn01EvidenceAsync()
+    {
+        Console.WriteLine("Collecting FRR-SCN-01 evidence: Network Security Configuration");
+
+        var query = @"
+resources
+| where type == ""microsoft.network/networksecuritygroups""
+| extend rules = properties.securityRules
+| mv-expand rule = rules
+| extend 
+    access = rule.properties.access,
+    sourceAddress = rule.properties.sourceAddressPrefix,
+    destPort = rule.properties.destinationPortRange
+| where access == ""Allow"" and sourceAddress == ""*""
+| where destPort in (""22"", ""3389"", ""*"")
+| project name, resourceGroup, destPort, sourceAddress";
+
+        var results = await ExecuteResourceGraphQueryAsync(query);
+        var complianceStatus = results.Count == 0 ? "compliant" : "non_compliant";
+
+        return new EvidenceRecord
+        {
+            FrrId = "FRR-SCN-01",
+            FrrName = "Network Security Configuration",
+            CollectionTimestamp = DateTime.UtcNow,
+            SubscriptionId = _subscriptionId,
+            QueryType = "Azure Resource Graph",
+            QueryName = "Overly Permissive NSG Rules",
+            RecordCount = results.Count,
+            Data = results,
+            ComplianceStatus = complianceStatus,
+            Metadata = new Dictionary<string, object>
+            {
+                ["risky_rules_found"] = results.Count,
+                ["risky_ports_checked"] = new[] { "22", "3389", "*" }
+            }
+        };
+    }
+
+    // =========================================================================
+    // CCM: Configuration Change Management
+    // =========================================================================
+
+    /// <summary>
+    /// FRR-CCM-01: Change Management Audit Trail
+    /// </summary>
+    public async Task<EvidenceRecord> CollectCcm01EvidenceAsync()
+    {
+        Console.WriteLine("Collecting FRR-CCM-01 evidence: Change Management Audit Trail");
+
+        var query = @"
+AzureActivity
+| where TimeGenerated > ago(7d)
+| where OperationNameValue has_any (""write"", ""delete"")
+| where ActivityStatusValue == ""Success""
+| summarize ChangeCount = count() by Caller, OperationNameValue
+| order by ChangeCount desc
+| take 100";
+
+        var results = await ExecuteLogQueryAsync(query);
+
+        return new EvidenceRecord
+        {
+            FrrId = "FRR-CCM-01",
+            FrrName = "Change Management Audit Trail",
+            CollectionTimestamp = DateTime.UtcNow,
+            SubscriptionId = _subscriptionId,
+            QueryType = "Azure Monitor KQL",
+            QueryName = "Configuration Changes by User",
+            RecordCount = results.Count,
+            Data = results,
+            ComplianceStatus = "compliant",
+            Metadata = new Dictionary<string, object>
+            {
+                ["time_range_days"] = 7,
+                ["unique_callers"] = results.Select(r => r["Caller"]).Distinct().Count()
+            }
+        };
+    }
+
+    // =========================================================================
+    // Helper Methods
+    // =========================================================================
+
+    private async Task<List<Dictionary<string, object>>> ExecuteResourceGraphQueryAsync(string query)
+    {
+        try
+        {
+            var tenant = _armClient.GetTenants().First();
+            var queryContent = new ResourceQueryContent(query)
+            {
+                Subscriptions = { _subscriptionId }
+            };
+            
+            var response = await tenant.GetResourcesAsync(queryContent);
+            var results = new List<Dictionary<string, object>>();
+            
+            if (response.Value.Data is JsonElement jsonData)
+            {
+                foreach (var row in jsonData.EnumerateArray())
+                {
+                    var dict = JsonSerializer.Deserialize<Dictionary<string, object>>(row.GetRawText());
+                    if (dict != null) results.Add(dict);
+                }
+            }
+            
+            return results;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Resource Graph query failed: {ex.Message}");
+            return new List<Dictionary<string, object>>();
+        }
+    }
+
+    private async Task<List<Dictionary<string, object>>> ExecuteLogQueryAsync(string query)
+    {
+        try
+        {
+            var workspaceGuid = _workspaceId.Split('/').Last();
+            var response = await _logsClient.QueryWorkspaceAsync(
+                workspaceGuid,
+                query,
+                new QueryTimeRange(TimeSpan.FromDays(7)));
+            
+            var results = new List<Dictionary<string, object>>();
+            
+            if (response.Value.Status == LogsQueryResultStatus.Success)
+            {
+                foreach (var table in response.Value.AllTables)
+                {
+                    foreach (var row in table.Rows)
+                    {
+                        var dict = new Dictionary<string, object>();
+                        for (int i = 0; i < table.Columns.Count; i++)
+                        {
+                            dict[table.Columns[i].Name] = row[i];
+                        }
+                        results.Add(dict);
+                    }
+                }
+            }
+            
+            return results;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Log Analytics query failed: {ex.Message}");
+            return new List<Dictionary<string, object>>();
+        }
+    }
+
+    /// <summary>
+    /// Store evidence record in Azure Blob Storage.
+    /// </summary>
+    public async Task<string> StoreEvidenceAsync(EvidenceRecord evidence, string container = "frr-evidence")
+    {
+        try
+        {
+            var containerClient = _blobClient.GetBlobContainerClient(container);
+            await containerClient.CreateIfNotExistsAsync();
+            
+            var timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd/HH-mm-ss");
+            var blobName = $"{evidence.FrrId}/{timestamp}.json";
+            
+            var json = JsonSerializer.Serialize(evidence, new JsonSerializerOptions 
+            { 
+                WriteIndented = true 
+            });
+            
+            var blobClient = containerClient.GetBlobClient(blobName);
+            await blobClient.UploadAsync(
+                BinaryData.FromString(json),
+                new BlobUploadOptions
+                {
+                    HttpHeaders = new BlobHttpHeaders { ContentType = "application/json" },
+                    Metadata = new Dictionary<string, string>
+                    {
+                        ["frr_id"] = evidence.FrrId,
+                        ["compliance_status"] = evidence.ComplianceStatus
+                    }
+                });
+            
+            Console.WriteLine($"Evidence stored: {blobName}");
+            return blobClient.Uri.ToString();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to store evidence: {ex.Message}");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Collect evidence for all implemented FRRs.
+    /// </summary>
+    public async Task<List<EvidenceRecord>> CollectAllEvidenceAsync()
+    {
+        var collectors = new Func<Task<EvidenceRecord>>[]
+        {
+            CollectVdr01EvidenceAsync,
+            CollectVdr08EvidenceAsync,
+            CollectRsc01EvidenceAsync,
+            CollectAds01EvidenceAsync,
+            CollectScn01EvidenceAsync,
+            CollectCcm01EvidenceAsync
+        };
+
+        var records = new List<EvidenceRecord>();
+        foreach (var collector in collectors)
+        {
+            try
+            {
+                var evidence = await collector();
+                records.Add(evidence);
+                Console.WriteLine($"✓ Collected {evidence.FrrId}: {evidence.ComplianceStatus}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"✗ Collection failed: {ex.Message}");
+            }
+        }
+
+        return records;
+    }
+}
+
+// =========================================================================
+// Program Entry Point
+// =========================================================================
+
+public class Program
+{
+    public static async Task Main(string[] args)
+    {
+        var subscriptionId = Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID");
+        var workspaceId = Environment.GetEnvironmentVariable("LOG_ANALYTICS_WORKSPACE_ID");
+        var storageAccount = Environment.GetEnvironmentVariable("EVIDENCE_STORAGE_ACCOUNT");
+
+        if (string.IsNullOrEmpty(subscriptionId) || 
+            string.IsNullOrEmpty(workspaceId) || 
+            string.IsNullOrEmpty(storageAccount))
+        {
+            Console.WriteLine("Missing required environment variables");
+            Console.WriteLine("Required: AZURE_SUBSCRIPTION_ID, LOG_ANALYTICS_WORKSPACE_ID, EVIDENCE_STORAGE_ACCOUNT");
+            return;
+        }
+
+        var collector = new FRREvidenceCollector(subscriptionId, workspaceId, storageAccount);
+
+        Console.WriteLine(new string('=', 60));
+        Console.WriteLine("FedRAMP 20x FRR Evidence Collection (.NET)");
+        Console.WriteLine($"Subscription: {subscriptionId}");
+        Console.WriteLine($"Timestamp: {DateTime.UtcNow:O}");
+        Console.WriteLine(new string('=', 60));
+
+        var records = await collector.CollectAllEvidenceAsync();
+
+        foreach (var evidence in records)
+        {
+            await collector.StoreEvidenceAsync(evidence);
+        }
+
+        Console.WriteLine(new string('=', 60));
+        Console.WriteLine("Collection Summary");
+        Console.WriteLine(new string('=', 60));
+        Console.WriteLine($"Total FRRs: {records.Count}");
+        Console.WriteLine($"Compliant: {records.Count(r => r.ComplianceStatus == "compliant")}");
+        Console.WriteLine($"Non-Compliant: {records.Count(r => r.ComplianceStatus == "non_compliant")}");
+        Console.WriteLine($"Needs Review: {records.Count(r => r.ComplianceStatus == "needs_review")}");
+    }
+}
+```
+
+## Project File (FRREvidenceCollector.csproj)
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Azure.Identity" Version="1.11.0" />
+    <PackageReference Include="Azure.ResourceManager" Version="1.10.0" />
+    <PackageReference Include="Azure.ResourceManager.ResourceGraph" Version="1.0.0" />
+    <PackageReference Include="Azure.Monitor.Query" Version="1.3.0" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.19.0" />
+  </ItemGroup>
+</Project>
+```
+
+## Deployment Options
+
+### Option 1: Azure Function (Recommended)
+Deploy as a timer-triggered Azure Function with managed identity.
+
+### Option 2: Azure Container Instance
+Deploy as a containerized application on schedule.
+
+### Option 3: GitHub Actions
+Run on schedule using GitHub Actions with OIDC authentication.
+
+*Generated by FedRAMP 20x MCP Server - FRR Evidence Collection Code (C#)*

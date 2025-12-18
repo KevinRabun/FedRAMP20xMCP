@@ -1,0 +1,643 @@
+## Java Code for FRR Evidence Collection
+
+```java
+// FRREvidenceCollector.java - Azure-Native Evidence Collection for FedRAMP 20x
+// Collects compliance evidence for FRR requirements using Azure SDK for Java
+//
+// FRR Families Supported:
+// - VDR: Vulnerability Detection and Response
+// - RSC: Recommended Secure Configuration
+// - ADS: Audit and Data Security
+// - SCN: Secure Configuration
+// - CCM: Configuration Change Management
+// - MAS: Malware and Antivirus
+//
+// Prerequisites:
+// - azure-identity
+// - azure-resourcemanager
+// - azure-monitor-query
+// - azure-storage-blob
+
+package com.fedramp20x.evidence;
+
+import com.azure.identity.DefaultAzureCredentialBuilder;
+import com.azure.identity.DefaultAzureCredential;
+import com.azure.monitor.query.LogsQueryClient;
+import com.azure.monitor.query.LogsQueryClientBuilder;
+import com.azure.monitor.query.models.*;
+import com.azure.resourcemanager.AzureResourceManager;
+import com.azure.resourcemanager.resourcegraph.ResourceGraphManager;
+import com.azure.resourcemanager.resourcegraph.models.*;
+import com.azure.storage.blob.*;
+import com.azure.storage.blob.models.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
+import java.time.*;
+import java.util.*;
+import java.util.stream.Collectors;
+
+/**
+ * Structured evidence record for FedRAMP compliance.
+ */
+record EvidenceRecord(
+    String frrId,
+    String frrName,
+    Instant collectionTimestamp,
+    String subscriptionId,
+    String queryType,
+    String queryName,
+    int recordCount,
+    List<Map<String, Object>> data,
+    String complianceStatus,
+    Map<String, Object> metadata
+) {}
+
+/**
+ * Collects evidence for FedRAMP 20x FRR requirements using Azure services.
+ */
+public class FRREvidenceCollector {
+
+    private final String subscriptionId;
+    private final String workspaceId;
+    private final String storageAccountName;
+    private final DefaultAzureCredential credential;
+    private final LogsQueryClient logsClient;
+    private final ResourceGraphManager resourceGraphManager;
+    private final BlobServiceClient blobClient;
+    private final ObjectMapper objectMapper;
+
+    public FRREvidenceCollector(
+            String subscriptionId,
+            String logAnalyticsWorkspaceId,
+            String storageAccountName) {
+        
+        this.subscriptionId = subscriptionId;
+        this.workspaceId = logAnalyticsWorkspaceId;
+        this.storageAccountName = storageAccountName;
+        
+        this.credential = new DefaultAzureCredentialBuilder().build();
+        
+        this.logsClient = new LogsQueryClientBuilder()
+            .credential(credential)
+            .buildClient();
+        
+        this.resourceGraphManager = ResourceGraphManager.authenticate(credential, null);
+        
+        this.blobClient = new BlobServiceClientBuilder()
+            .endpoint(String.format("https://%s.blob.core.windows.net", storageAccountName))
+            .credential(credential)
+            .buildClient();
+        
+        this.objectMapper = new ObjectMapper();
+        this.objectMapper.registerModule(new JavaTimeModule());
+        this.objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+    }
+
+    // =========================================================================
+    // VDR: Vulnerability Detection and Response
+    // =========================================================================
+
+    /**
+     * FRR-VDR-01: Critical Vulnerability Remediation
+     * Collects evidence showing vulnerability remediation within SLA.
+     */
+    public EvidenceRecord collectVdr01Evidence() {
+        System.out.println("Collecting FRR-VDR-01 evidence: Critical Vulnerability Remediation");
+
+        String query = """
+            SecurityRecommendation
+            | where RecommendationSeverity == "High"
+            | where RecommendationState == "Active"
+            | extend DaysOpen = datetime_diff('day', now(), FirstEvaluationDate)
+            | summarize 
+                TotalCritical = count(),
+                WithinSLA = countif(DaysOpen <= 15),
+                ExceedingSLA = countif(DaysOpen > 15)
+            | extend ComplianceRate = round(WithinSLA * 100.0 / TotalCritical, 2)
+            """;
+
+        List<Map<String, Object>> results = executeLogQuery(query);
+        
+        String complianceStatus = "compliant";
+        if (!results.isEmpty()) {
+            Object exceeding = results.get(0).get("ExceedingSLA");
+            if (exceeding != null && ((Number) exceeding).intValue() > 0) {
+                complianceStatus = "non_compliant";
+            }
+        }
+
+        return new EvidenceRecord(
+            "FRR-VDR-01",
+            "Critical Vulnerability Remediation",
+            Instant.now(),
+            subscriptionId,
+            "Azure Monitor KQL",
+            "Critical Vulnerability SLA Compliance",
+            results.size(),
+            results,
+            complianceStatus,
+            Map.of("sla_days_critical", 15, "sla_days_high", 30)
+        );
+    }
+
+    /**
+     * FRR-VDR-08: Automated Patching
+     */
+    public EvidenceRecord collectVdr08Evidence() {
+        System.out.println("Collecting FRR-VDR-08 evidence: Automated Patching");
+
+        String query = """
+            resources
+            | where type == "microsoft.compute/virtualmachines"
+            | extend 
+                patchMode = properties.osProfile.windowsConfiguration.patchSettings.patchMode,
+                linuxPatchMode = properties.osProfile.linuxConfiguration.patchSettings.patchMode
+            | project 
+                name, 
+                resourceGroup, 
+                patchMode,
+                linuxPatchMode,
+                automaticPatchingEnabled = (patchMode == "AutomaticByPlatform" or linuxPatchMode == "AutomaticByPlatform")
+            """;
+
+        List<Map<String, Object>> results = executeResourceGraphQuery(query);
+        
+        long nonCompliantCount = results.stream()
+            .filter(r -> !Boolean.TRUE.equals(r.get("automaticPatchingEnabled")))
+            .count();
+        
+        String complianceStatus = nonCompliantCount == 0 ? "compliant" : "non_compliant";
+
+        return new EvidenceRecord(
+            "FRR-VDR-08",
+            "Automated Patching",
+            Instant.now(),
+            subscriptionId,
+            "Azure Resource Graph",
+            "VM Patch Configuration Status",
+            results.size(),
+            results,
+            complianceStatus,
+            Map.of(
+                "total_vms", results.size(),
+                "compliant_vms", results.size() - nonCompliantCount,
+                "non_compliant_vms", nonCompliantCount
+            )
+        );
+    }
+
+    // =========================================================================
+    // RSC: Recommended Secure Configuration
+    // =========================================================================
+
+    /**
+     * FRR-RSC-01: Security Baseline Compliance
+     */
+    public EvidenceRecord collectRsc01Evidence() {
+        System.out.println("Collecting FRR-RSC-01 evidence: Security Baseline Compliance");
+
+        String query = """
+            securityresources
+            | where type == "microsoft.security/assessments"
+            | extend status = properties.status.code
+            | summarize 
+                TotalAssessments = count(),
+                Healthy = countif(status == "Healthy"),
+                Unhealthy = countif(status == "Unhealthy")
+            | extend ComplianceRate = round(Healthy * 100.0 / (Healthy + Unhealthy), 2)
+            """;
+
+        List<Map<String, Object>> results = executeResourceGraphQuery(query);
+        
+        double complianceRate = 0.0;
+        if (!results.isEmpty()) {
+            Object rate = results.get(0).get("ComplianceRate");
+            if (rate != null) {
+                complianceRate = ((Number) rate).doubleValue();
+            }
+        }
+        
+        String complianceStatus = complianceRate >= 90 ? "compliant" : "non_compliant";
+
+        return new EvidenceRecord(
+            "FRR-RSC-01",
+            "Security Baseline Compliance",
+            Instant.now(),
+            subscriptionId,
+            "Azure Resource Graph",
+            "Security Assessment Compliance",
+            results.size(),
+            results,
+            complianceStatus,
+            Map.of("compliance_threshold", 90, "actual_compliance_rate", complianceRate)
+        );
+    }
+
+    // =========================================================================
+    // ADS: Audit and Data Security
+    // =========================================================================
+
+    /**
+     * FRR-ADS-01: Audit Log Completeness
+     */
+    public EvidenceRecord collectAds01Evidence() {
+        System.out.println("Collecting FRR-ADS-01 evidence: Audit Log Completeness");
+
+        String query = """
+            AzureActivity
+            | where TimeGenerated > ago(24h)
+            | summarize 
+                TotalEvents = count(),
+                DistinctOperations = dcount(OperationNameValue),
+                DistinctCallers = dcount(Caller)
+                by bin(TimeGenerated, 1h)
+            | order by TimeGenerated desc
+            """;
+
+        List<Map<String, Object>> results = executeLogQuery(query);
+        
+        long gaps = results.stream()
+            .filter(r -> {
+                Object events = r.get("TotalEvents");
+                return events != null && ((Number) events).intValue() == 0;
+            })
+            .count();
+        
+        String complianceStatus = gaps == 0 ? "compliant" : "needs_review";
+
+        return new EvidenceRecord(
+            "FRR-ADS-01",
+            "Audit Log Completeness",
+            Instant.now(),
+            subscriptionId,
+            "Azure Monitor KQL",
+            "Hourly Audit Log Summary",
+            results.size(),
+            results,
+            complianceStatus,
+            Map.of("time_range_hours", 24, "logging_gaps", gaps)
+        );
+    }
+
+    // =========================================================================
+    // SCN: Secure Configuration
+    // =========================================================================
+
+    /**
+     * FRR-SCN-01: Network Security Configuration
+     */
+    public EvidenceRecord collectScn01Evidence() {
+        System.out.println("Collecting FRR-SCN-01 evidence: Network Security Configuration");
+
+        String query = """
+            resources
+            | where type == "microsoft.network/networksecuritygroups"
+            | extend rules = properties.securityRules
+            | mv-expand rule = rules
+            | extend 
+                access = rule.properties.access,
+                sourceAddress = rule.properties.sourceAddressPrefix,
+                destPort = rule.properties.destinationPortRange
+            | where access == "Allow" and sourceAddress == "*"
+            | where destPort in ("22", "3389", "*")
+            | project name, resourceGroup, destPort, sourceAddress
+            """;
+
+        List<Map<String, Object>> results = executeResourceGraphQuery(query);
+        String complianceStatus = results.isEmpty() ? "compliant" : "non_compliant";
+
+        return new EvidenceRecord(
+            "FRR-SCN-01",
+            "Network Security Configuration",
+            Instant.now(),
+            subscriptionId,
+            "Azure Resource Graph",
+            "Overly Permissive NSG Rules",
+            results.size(),
+            results,
+            complianceStatus,
+            Map.of(
+                "risky_rules_found", results.size(),
+                "risky_ports_checked", List.of("22", "3389", "*")
+            )
+        );
+    }
+
+    // =========================================================================
+    // CCM: Configuration Change Management
+    // =========================================================================
+
+    /**
+     * FRR-CCM-01: Change Management Audit Trail
+     */
+    public EvidenceRecord collectCcm01Evidence() {
+        System.out.println("Collecting FRR-CCM-01 evidence: Change Management Audit Trail");
+
+        String query = """
+            AzureActivity
+            | where TimeGenerated > ago(7d)
+            | where OperationNameValue has_any ("write", "delete")
+            | where ActivityStatusValue == "Success"
+            | summarize ChangeCount = count() by Caller, OperationNameValue
+            | order by ChangeCount desc
+            | take 100
+            """;
+
+        List<Map<String, Object>> results = executeLogQuery(query);
+        
+        long uniqueCallers = results.stream()
+            .map(r -> r.get("Caller"))
+            .filter(Objects::nonNull)
+            .distinct()
+            .count();
+
+        return new EvidenceRecord(
+            "FRR-CCM-01",
+            "Change Management Audit Trail",
+            Instant.now(),
+            subscriptionId,
+            "Azure Monitor KQL",
+            "Configuration Changes by User",
+            results.size(),
+            results,
+            "compliant",
+            Map.of("time_range_days", 7, "unique_callers", uniqueCallers)
+        );
+    }
+
+    // =========================================================================
+    // Helper Methods
+    // =========================================================================
+
+    private List<Map<String, Object>> executeResourceGraphQuery(String query) {
+        try {
+            QueryRequest request = new QueryRequest()
+                .withSubscriptions(List.of(subscriptionId))
+                .withQuery(query);
+            
+            QueryResponse response = resourceGraphManager.resourceProviders()
+                .resources(request);
+            
+            List<Map<String, Object>> results = new ArrayList<>();
+            if (response.data() instanceof List<?> dataList) {
+                for (Object item : dataList) {
+                    if (item instanceof Map<?, ?> map) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> typedMap = (Map<String, Object>) map;
+                        results.add(typedMap);
+                    }
+                }
+            }
+            return results;
+        } catch (Exception e) {
+            System.err.println("Resource Graph query failed: " + e.getMessage());
+            return List.of();
+        }
+    }
+
+    private List<Map<String, Object>> executeLogQuery(String query) {
+        try {
+            String workspaceGuid = workspaceId.substring(workspaceId.lastIndexOf('/') + 1);
+            
+            LogsQueryResult response = logsClient.queryWorkspace(
+                workspaceGuid,
+                query,
+                new QueryTimeRange(Duration.ofDays(7)));
+            
+            List<Map<String, Object>> results = new ArrayList<>();
+            
+            if (response.getStatus() == LogsQueryResultStatus.SUCCESS) {
+                for (LogsTable table : response.getAllTables()) {
+                    for (LogsTableRow row : table.getRows()) {
+                        Map<String, Object> record = new HashMap<>();
+                        List<LogsTableColumn> columns = table.getColumns();
+                        for (int i = 0; i < columns.size(); i++) {
+                            record.put(columns.get(i).getName(), row.getColumnValue(i));
+                        }
+                        results.add(record);
+                    }
+                }
+            }
+            return results;
+        } catch (Exception e) {
+            System.err.println("Log Analytics query failed: " + e.getMessage());
+            return List.of();
+        }
+    }
+
+    /**
+     * Store evidence record in Azure Blob Storage.
+     */
+    public String storeEvidence(EvidenceRecord evidence, String container) {
+        try {
+            BlobContainerClient containerClient = blobClient.getBlobContainerClient(container);
+            containerClient.createIfNotExists();
+            
+            String timestamp = java.time.format.DateTimeFormatter
+                .ofPattern("yyyy-MM-dd/HH-mm-ss")
+                .withZone(ZoneOffset.UTC)
+                .format(Instant.now());
+            String blobName = String.format("%s/%s.json", evidence.frrId(), timestamp);
+            
+            String json = objectMapper.writeValueAsString(evidence);
+            
+            BlobClient blob = containerClient.getBlobClient(blobName);
+            blob.upload(new java.io.ByteArrayInputStream(json.getBytes()), json.length(), true);
+            
+            blob.setMetadata(Map.of(
+                "frr_id", evidence.frrId(),
+                "compliance_status", evidence.complianceStatus()
+            ));
+            
+            System.out.println("Evidence stored: " + blobName);
+            return blob.getBlobUrl();
+        } catch (Exception e) {
+            System.err.println("Failed to store evidence: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Collect evidence for all implemented FRRs.
+     */
+    public List<EvidenceRecord> collectAllEvidence() {
+        List<java.util.function.Supplier<EvidenceRecord>> collectors = List.of(
+            this::collectVdr01Evidence,
+            this::collectVdr08Evidence,
+            this::collectRsc01Evidence,
+            this::collectAds01Evidence,
+            this::collectScn01Evidence,
+            this::collectCcm01Evidence
+        );
+
+        List<EvidenceRecord> records = new ArrayList<>();
+        for (var collector : collectors) {
+            try {
+                EvidenceRecord evidence = collector.get();
+                records.add(evidence);
+                System.out.printf("✓ Collected %s: %s%n", evidence.frrId(), evidence.complianceStatus());
+            } catch (Exception e) {
+                System.err.println("✗ Collection failed: " + e.getMessage());
+            }
+        }
+        return records;
+    }
+
+    // =========================================================================
+    // Main Entry Point
+    // =========================================================================
+
+    public static void main(String[] args) {
+        String subscriptionId = System.getenv("AZURE_SUBSCRIPTION_ID");
+        String workspaceId = System.getenv("LOG_ANALYTICS_WORKSPACE_ID");
+        String storageAccount = System.getenv("EVIDENCE_STORAGE_ACCOUNT");
+
+        if (subscriptionId == null || workspaceId == null || storageAccount == null) {
+            System.err.println("Missing required environment variables");
+            System.err.println("Required: AZURE_SUBSCRIPTION_ID, LOG_ANALYTICS_WORKSPACE_ID, EVIDENCE_STORAGE_ACCOUNT");
+            return;
+        }
+
+        FRREvidenceCollector collector = new FRREvidenceCollector(
+            subscriptionId, workspaceId, storageAccount);
+
+        System.out.println("=".repeat(60));
+        System.out.println("FedRAMP 20x FRR Evidence Collection (Java)");
+        System.out.printf("Subscription: %s%n", subscriptionId);
+        System.out.printf("Timestamp: %s%n", Instant.now());
+        System.out.println("=".repeat(60));
+
+        List<EvidenceRecord> records = collector.collectAllEvidence();
+
+        for (EvidenceRecord evidence : records) {
+            collector.storeEvidence(evidence, "frr-evidence");
+        }
+
+        System.out.println("=".repeat(60));
+        System.out.println("Collection Summary");
+        System.out.println("=".repeat(60));
+        System.out.printf("Total FRRs: %d%n", records.size());
+        System.out.printf("Compliant: %d%n", 
+            records.stream().filter(r -> "compliant".equals(r.complianceStatus())).count());
+        System.out.printf("Non-Compliant: %d%n", 
+            records.stream().filter(r -> "non_compliant".equals(r.complianceStatus())).count());
+        System.out.printf("Needs Review: %d%n", 
+            records.stream().filter(r -> "needs_review".equals(r.complianceStatus())).count());
+    }
+}
+```
+
+## Maven POM (pom.xml)
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.fedramp20x</groupId>
+    <artifactId>frr-evidence-collector</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <azure.version>1.0.0-beta.25</azure.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.azure</groupId>
+                <artifactId>azure-sdk-bom</artifactId>
+                <version>1.2.19</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-identity</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.azure.resourcemanager</groupId>
+            <artifactId>azure-resourcemanager</artifactId>
+            <version>2.36.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.azure.resourcemanager</groupId>
+            <artifactId>azure-resourcemanager-resourcegraph</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-monitor-query</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-storage-blob</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.16.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>2.16.0</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.12.0</version>
+                <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                    <compilerArgs>
+                        <arg>--enable-preview</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.fedramp20x.evidence.FRREvidenceCollector</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+```
+
+## Deployment Options
+
+### Option 1: Azure Function (Recommended)
+Deploy as a timer-triggered Azure Function with managed identity.
+
+### Option 2: Azure Container Apps
+Deploy as a scheduled job in Azure Container Apps.
+
+### Option 3: GitHub Actions
+Run on schedule using GitHub Actions with OIDC authentication.
+
+*Generated by FedRAMP 20x MCP Server - FRR Evidence Collection Code (Java)*

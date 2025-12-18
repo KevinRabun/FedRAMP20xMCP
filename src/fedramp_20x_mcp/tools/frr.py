@@ -9,6 +9,11 @@ import json
 import logging
 from typing import Any, Optional
 from ..analyzers.frr.factory import get_factory
+from ..analyzers.frr.evidence_automation import (
+    get_frr_evidence_automation,
+    format_evidence_automation_markdown,
+    get_all_frr_evidence_queries,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -375,13 +380,25 @@ async def get_frr_evidence_automation_impl(frr_id: str, data_loader: Any = None)
         Evidence automation recommendations in structured format
     """
     try:
+        # First try the new evidence automation module with Azure KQL queries
+        automation = get_frr_evidence_automation(frr_id)
+        
+        if automation and automation.queries:
+            # Use the new detailed evidence automation with Azure queries
+            return format_evidence_automation_markdown(automation)
+        
+        # Fall back to the pattern-based analyzer approach
         factory = get_factory()
         analyzer = factory.get_analyzer(frr_id)
         
         if not analyzer:
             return f"FRR '{frr_id}' not found. Use list_frrs_by_family to see available FRRs."
         
-        # Get recommendations
+        # If we have automation but no specific queries, still use the new format
+        if automation:
+            return format_evidence_automation_markdown(automation)
+        
+        # Get recommendations from analyzer (legacy approach)
         recommendations = analyzer.get_evidence_automation_recommendations()
         queries = analyzer.get_evidence_collection_queries()
         artifacts = analyzer.get_evidence_artifacts()

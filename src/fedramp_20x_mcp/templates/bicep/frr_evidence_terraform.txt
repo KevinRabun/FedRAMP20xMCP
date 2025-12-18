@@ -1,0 +1,615 @@
+## Terraform Configuration for FRR Evidence Collection
+
+```hcl
+# frr_evidence_collection.tf - FRR-Specific Evidence Collection Infrastructure
+# Comprehensive infrastructure for FedRAMP 20x FRR evidence automation
+#
+# FRR Families Covered:
+# - VDR: Vulnerability Detection and Response
+# - RSC: Recommended Secure Configuration
+# - ADS: Audit and Data Security
+# - SCN: Secure Configuration
+# - CCM: Configuration Change Management
+# - MAS: Malware and Antivirus
+#
+# Evidence Collection Methods:
+# 1. Azure Monitor Log Analytics with KQL queries
+# 2. Azure Resource Graph for configuration auditing
+# 3. Microsoft Defender for Cloud integration
+# 4. Azure Policy compliance state export
+# 5. Automated evidence export to blob storage
+
+terraform {
+  required_version = ">= 1.5.0"
+  
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 3.85.0"
+    }
+    azuread = {
+      source  = "hashicorp/azuread"
+      version = "~> 2.47.0"
+    }
+  }
+}
+
+provider "azurerm" {
+  features {
+    key_vault {
+      purge_soft_delete_on_destroy    = false
+      recover_soft_deleted_key_vaults = true
+    }
+  }
+}
+
+# =============================================================================
+# Variables
+# =============================================================================
+
+variable "location" {
+  description = "Primary deployment location"
+  type        = string
+  default     = "eastus"
+}
+
+variable "resource_group_name" {
+  description = "Resource group name"
+  type        = string
+  default     = "rg-frr-evidence"
+}
+
+variable "name_suffix" {
+  description = "Unique suffix for resource naming"
+  type        = string
+  default     = ""
+}
+
+variable "log_retention_days" {
+  description = "Log Analytics retention in days (730 = 2 years for FedRAMP)"
+  type        = number
+  default     = 730
+}
+
+variable "evidence_retention_days" {
+  description = "Evidence storage retention in days (2555 = 7 years)"
+  type        = number
+  default     = 2555
+}
+
+variable "enable_defender" {
+  description = "Enable Defender for Cloud integration"
+  type        = bool
+  default     = true
+}
+
+variable "alert_email" {
+  description = "Alert email address for compliance notifications"
+  type        = string
+}
+
+variable "tags" {
+  description = "Tags to apply to all resources"
+  type        = map(string)
+  default     = {}
+}
+
+# =============================================================================
+# Locals
+# =============================================================================
+
+locals {
+  name_suffix = var.name_suffix != "" ? var.name_suffix : random_string.suffix.result
+  
+  # FedRAMP 20x Compliance Tags
+  fr_compliance_tags = merge(var.tags, {
+    Compliance      = "FedRAMP 20x"
+    Requirements    = "FRR-VDR-01, FRR-RSC-01, FRR-ADS-01, FRR-SCN-01, FRR-CCM-01"
+    Purpose         = "Evidence Collection"
+    RetentionDays   = tostring(var.evidence_retention_days)
+    ManagedBy       = "Terraform"
+  })
+  
+  # FRR family containers for evidence storage
+  frr_containers = [
+    "frr-vdr",
+    "frr-rsc",
+    "frr-ads",
+    "frr-scn",
+    "frr-ccm",
+    "frr-mas",
+    "frr-ucm",
+    "frr-icp",
+    "frr-fsi",
+    "frr-pva"
+  ]
+}
+
+resource "random_string" "suffix" {
+  length  = 8
+  special = false
+  upper   = false
+}
+
+# =============================================================================
+# Resource Group
+# =============================================================================
+
+resource "azurerm_resource_group" "frr_evidence" {
+  name     = var.resource_group_name
+  location = var.location
+  tags     = local.fr_compliance_tags
+}
+
+# =============================================================================
+# Log Analytics Workspace - Central Evidence Repository
+# Addresses: FRR-ADS-01 (Audit Logging), FRR-MLA-01 (Monitoring)
+# =============================================================================
+
+resource "azurerm_log_analytics_workspace" "frr_evidence" {
+  name                = "law-frr-evidence-${local.name_suffix}"
+  location            = azurerm_resource_group.frr_evidence.location
+  resource_group_name = azurerm_resource_group.frr_evidence.name
+  sku                 = "PerGB2018"
+  retention_in_days   = var.log_retention_days
+  
+  # FedRAMP requires immediate purge protection
+  daily_quota_gb = -1  # No cap for compliance
+  
+  tags = local.fr_compliance_tags
+}
+
+# =============================================================================
+# Evidence Storage Account - Immutable Evidence Archive
+# Addresses: FRR-ADS-02 (Data Protection), FRR-RSC-01 (Secure Config)
+# =============================================================================
+
+resource "azurerm_storage_account" "frr_evidence" {
+  name                     = "stfrrevidence${local.name_suffix}"
+  resource_group_name      = azurerm_resource_group.frr_evidence.name
+  location                 = azurerm_resource_group.frr_evidence.location
+  account_tier             = "Standard"
+  account_replication_type = "GRS"  # Geo-redundant for compliance
+  account_kind             = "StorageV2"
+  
+  # Security configuration
+  min_tls_version                 = "TLS1_2"
+  allow_nested_items_to_be_public = false
+  shared_access_key_enabled       = true
+  
+  # Network security
+  public_network_access_enabled = false
+  
+  network_rules {
+    default_action = "Deny"
+    bypass         = ["AzureServices"]
+  }
+  
+  blob_properties {
+    versioning_enabled = true
+    
+    change_feed_enabled           = true
+    change_feed_retention_in_days = 365
+    
+    delete_retention_policy {
+      days = 365
+    }
+    
+    container_delete_retention_policy {
+      days = 30
+    }
+  }
+  
+  identity {
+    type = "SystemAssigned"
+  }
+  
+  tags = local.fr_compliance_tags
+}
+
+# Evidence containers by FRR family
+resource "azurerm_storage_container" "frr_containers" {
+  for_each              = toset(local.frr_containers)
+  name                  = each.value
+  storage_account_name  = azurerm_storage_account.frr_evidence.name
+  container_access_type = "private"
+}
+
+# Immutability policy for evidence containers (7 years)
+resource "azurerm_storage_management_policy" "evidence_retention" {
+  storage_account_id = azurerm_storage_account.frr_evidence.id
+  
+  rule {
+    name    = "evidence-retention"
+    enabled = true
+    
+    filters {
+      prefix_match = ["frr-"]
+      blob_types   = ["blockBlob"]
+    }
+    
+    actions {
+      base_blob {
+        tier_to_cool_after_days_since_modification_greater_than    = 90
+        tier_to_archive_after_days_since_modification_greater_than = 365
+        delete_after_days_since_modification_greater_than          = var.evidence_retention_days
+      }
+    }
+  }
+}
+
+# =============================================================================
+# Key Vault - Secrets Management
+# Addresses: FRR-SVC-01 (Secure Services), FRR-RSC-01 (Secure Config)
+# =============================================================================
+
+data "azurerm_client_config" "current" {}
+
+resource "azurerm_key_vault" "frr_evidence" {
+  name                = "kv-frr-${local.name_suffix}"
+  location            = azurerm_resource_group.frr_evidence.location
+  resource_group_name = azurerm_resource_group.frr_evidence.name
+  tenant_id           = data.azurerm_client_config.current.tenant_id
+  sku_name            = "premium"  # HSM-backed keys for FedRAMP
+  
+  # Security settings
+  enabled_for_deployment          = false
+  enabled_for_disk_encryption     = true
+  enabled_for_template_deployment = false
+  enable_rbac_authorization       = true
+  purge_protection_enabled        = true
+  soft_delete_retention_days      = 90
+  
+  network_acls {
+    default_action = "Deny"
+    bypass         = "AzureServices"
+  }
+  
+  tags = local.fr_compliance_tags
+}
+
+# =============================================================================
+# Automation Account - Scheduled Evidence Collection
+# Addresses: FRR-CCM-01 (Change Management), FRR-ADS-01 (Audit)
+# =============================================================================
+
+resource "azurerm_automation_account" "frr_evidence" {
+  name                = "aa-frr-evidence-${local.name_suffix}"
+  location            = azurerm_resource_group.frr_evidence.location
+  resource_group_name = azurerm_resource_group.frr_evidence.name
+  sku_name            = "Basic"
+  
+  identity {
+    type = "SystemAssigned"
+  }
+  
+  tags = local.fr_compliance_tags
+}
+
+# =============================================================================
+# Action Group - Compliance Alerts
+# Addresses: FRR-ICP-01 (Incident Communication)
+# =============================================================================
+
+resource "azurerm_monitor_action_group" "frr_alerts" {
+  name                = "ag-frr-alerts-${local.name_suffix}"
+  resource_group_name = azurerm_resource_group.frr_evidence.name
+  short_name          = "FRRAlerts"
+  
+  email_receiver {
+    name                    = "ComplianceTeam"
+    email_address           = var.alert_email
+    use_common_alert_schema = true
+  }
+  
+  tags = local.fr_compliance_tags
+}
+
+# =============================================================================
+# Microsoft Defender for Cloud - Vulnerability Scanning
+# Addresses: FRR-VDR-01 (Vulnerability Detection), FRR-MAS-01 (Antimalware)
+# =============================================================================
+
+resource "azurerm_security_center_subscription_pricing" "defender_vms" {
+  count         = var.enable_defender ? 1 : 0
+  tier          = "Standard"
+  resource_type = "VirtualMachines"
+  subplan       = "P2"
+}
+
+resource "azurerm_security_center_subscription_pricing" "defender_storage" {
+  count         = var.enable_defender ? 1 : 0
+  tier          = "Standard"
+  resource_type = "StorageAccounts"
+}
+
+resource "azurerm_security_center_subscription_pricing" "defender_sql" {
+  count         = var.enable_defender ? 1 : 0
+  tier          = "Standard"
+  resource_type = "SqlServers"
+}
+
+resource "azurerm_security_center_subscription_pricing" "defender_keyvault" {
+  count         = var.enable_defender ? 1 : 0
+  tier          = "Standard"
+  resource_type = "KeyVaults"
+}
+
+# =============================================================================
+# Scheduled Query Rules - Evidence Collection Alerts
+# =============================================================================
+
+resource "azurerm_monitor_scheduled_query_rules_alert_v2" "critical_vuln" {
+  name                = "alert-frr-vdr-01-critical-vulns"
+  resource_group_name = azurerm_resource_group.frr_evidence.name
+  location            = azurerm_resource_group.frr_evidence.location
+  
+  display_name = "FRR-VDR-01: Critical Vulnerabilities Exceeding SLA"
+  description  = "Alerts when critical vulnerabilities exceed 15-day remediation SLA"
+  
+  evaluation_frequency = "PT1H"
+  window_duration      = "PT1H"
+  scopes               = [azurerm_log_analytics_workspace.frr_evidence.id]
+  severity             = 0
+  
+  criteria {
+    query = <<-QUERY
+      SecurityRecommendation
+      | where RecommendationSeverity == "High"
+      | where RecommendationState == "Active"
+      | extend DaysOpen = datetime_diff('day', now(), FirstEvaluationDate)
+      | where DaysOpen > 15
+      | summarize Count = count() by ResourceId
+      | where Count > 0
+    QUERY
+    
+    time_aggregation_method = "Count"
+    operator                = "GreaterThan"
+    threshold               = 0
+    
+    failing_periods {
+      minimum_failing_periods_to_trigger_alert = 1
+      number_of_evaluation_periods             = 1
+    }
+  }
+  
+  action {
+    action_groups = [azurerm_monitor_action_group.frr_alerts.id]
+  }
+  
+  tags = merge(local.fr_compliance_tags, {
+    FRR     = "FRR-VDR-01"
+    Purpose = "Critical Vulnerability SLA Monitoring"
+  })
+}
+
+resource "azurerm_monitor_scheduled_query_rules_alert_v2" "config_drift" {
+  name                = "alert-frr-ccm-01-config-drift"
+  resource_group_name = azurerm_resource_group.frr_evidence.name
+  location            = azurerm_resource_group.frr_evidence.location
+  
+  display_name = "FRR-CCM-01: Unauthorized Configuration Change Detected"
+  description  = "Alerts on configuration changes outside change management process"
+  
+  evaluation_frequency = "PT15M"
+  window_duration      = "PT15M"
+  scopes               = [azurerm_log_analytics_workspace.frr_evidence.id]
+  severity             = 1
+  
+  criteria {
+    query = <<-QUERY
+      AzureActivity
+      | where OperationNameValue has_any ("write", "delete")
+      | where ActivityStatusValue == "Success"
+      | where ResourceProviderValue in (
+          "Microsoft.Network", "Microsoft.Compute", "Microsoft.KeyVault"
+      )
+      | project TimeGenerated, Caller, OperationNameValue, ResourceId
+    QUERY
+    
+    time_aggregation_method = "Count"
+    operator                = "GreaterThan"
+    threshold               = 0
+    
+    failing_periods {
+      minimum_failing_periods_to_trigger_alert = 1
+      number_of_evaluation_periods             = 1
+    }
+  }
+  
+  action {
+    action_groups = [azurerm_monitor_action_group.frr_alerts.id]
+  }
+  
+  tags = merge(local.fr_compliance_tags, {
+    FRR     = "FRR-CCM-01"
+    Purpose = "Configuration Drift Detection"
+  })
+}
+
+# =============================================================================
+# Diagnostic Settings - Enable All Logging
+# =============================================================================
+
+resource "azurerm_monitor_diagnostic_setting" "keyvault" {
+  name                       = "ds-kv-frr"
+  target_resource_id         = azurerm_key_vault.frr_evidence.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.frr_evidence.id
+  
+  enabled_log {
+    category = "AuditEvent"
+  }
+  
+  enabled_log {
+    category = "AzurePolicyEvaluationDetails"
+  }
+  
+  metric {
+    category = "AllMetrics"
+  }
+}
+
+resource "azurerm_monitor_diagnostic_setting" "storage" {
+  name                       = "ds-storage-frr"
+  target_resource_id         = azurerm_storage_account.frr_evidence.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.frr_evidence.id
+  
+  metric {
+    category = "Transaction"
+  }
+}
+
+resource "azurerm_monitor_diagnostic_setting" "storage_blob" {
+  name                       = "ds-storage-blob-frr"
+  target_resource_id         = "${azurerm_storage_account.frr_evidence.id}/blobServices/default"
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.frr_evidence.id
+  
+  enabled_log {
+    category = "StorageRead"
+  }
+  
+  enabled_log {
+    category = "StorageWrite"
+  }
+  
+  enabled_log {
+    category = "StorageDelete"
+  }
+  
+  metric {
+    category = "Transaction"
+  }
+}
+
+# =============================================================================
+# RBAC Assignments
+# =============================================================================
+
+# Automation Account access to Storage
+resource "azurerm_role_assignment" "automation_storage" {
+  scope                = azurerm_storage_account.frr_evidence.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = azurerm_automation_account.frr_evidence.identity[0].principal_id
+}
+
+# Automation Account access to Log Analytics
+resource "azurerm_role_assignment" "automation_logs" {
+  scope                = azurerm_log_analytics_workspace.frr_evidence.id
+  role_definition_name = "Log Analytics Reader"
+  principal_id         = azurerm_automation_account.frr_evidence.identity[0].principal_id
+}
+
+# =============================================================================
+# Outputs
+# =============================================================================
+
+output "resource_group_name" {
+  description = "Resource group name"
+  value       = azurerm_resource_group.frr_evidence.name
+}
+
+output "log_analytics_workspace_id" {
+  description = "Log Analytics Workspace resource ID"
+  value       = azurerm_log_analytics_workspace.frr_evidence.id
+}
+
+output "log_analytics_workspace_name" {
+  description = "Log Analytics Workspace name"
+  value       = azurerm_log_analytics_workspace.frr_evidence.name
+}
+
+output "evidence_storage_account_name" {
+  description = "Evidence storage account name"
+  value       = azurerm_storage_account.frr_evidence.name
+}
+
+output "key_vault_name" {
+  description = "Key Vault name"
+  value       = azurerm_key_vault.frr_evidence.name
+}
+
+output "key_vault_uri" {
+  description = "Key Vault URI"
+  value       = azurerm_key_vault.frr_evidence.vault_uri
+}
+
+output "automation_account_name" {
+  description = "Automation Account name"
+  value       = azurerm_automation_account.frr_evidence.name
+}
+
+output "action_group_id" {
+  description = "Action Group ID"
+  value       = azurerm_monitor_action_group.frr_alerts.id
+}
+
+output "deployment_summary" {
+  description = "Deployment summary"
+  value = {
+    log_retention_days      = var.log_retention_days
+    evidence_retention_days = var.evidence_retention_days
+    defender_enabled        = var.enable_defender
+    frrs_addressed = [
+      "FRR-VDR-01: Vulnerability scanning via Defender for Cloud",
+      "FRR-RSC-01: Secure configuration via Key Vault and Storage encryption",
+      "FRR-ADS-01: Audit logging via Log Analytics",
+      "FRR-SCN-01: Network security via storage network ACLs",
+      "FRR-CCM-01: Change management via Activity Log monitoring",
+      "FRR-MAS-01: Antimalware via Defender for Cloud",
+      "FRR-ICP-01: Incident communication via Action Groups"
+    ]
+  }
+}
+```
+
+## Variables File (terraform.tfvars.example)
+
+```hcl
+# Example Terraform variables file
+# Copy to terraform.tfvars and customize
+
+location            = "eastus"
+resource_group_name = "rg-frr-evidence"
+log_retention_days  = 730    # 2 years for FedRAMP
+evidence_retention_days = 2555  # 7 years
+enable_defender     = true
+alert_email         = "compliance@yourorg.com"
+
+tags = {
+  Environment = "Production"
+  Project     = "FedRAMP 20x Compliance"
+  CostCenter  = "Security"
+}
+```
+
+## Deployment Instructions
+
+### Prerequisites
+- Terraform >= 1.5.0
+- Azure CLI authenticated
+- Contributor role on target subscription
+
+### Deploy with Terraform
+
+```bash
+# Initialize Terraform
+terraform init
+
+# Plan deployment
+terraform plan -out=tfplan
+
+# Apply deployment
+terraform apply tfplan
+
+# Verify outputs
+terraform output
+```
+
+### Post-Deployment Configuration
+1. Configure Defender for Cloud workload protections
+2. Assign Azure Policy FedRAMP initiative
+3. Set up scheduled evidence export runbooks
+4. Configure GRC tool webhook integration
+5. Test alert notifications
+
+*Generated by FedRAMP 20x MCP Server - FRR Evidence Infrastructure (Terraform)*

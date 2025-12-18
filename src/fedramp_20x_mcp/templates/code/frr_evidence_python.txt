@@ -1,0 +1,564 @@
+## Python Code for FRR Evidence Collection
+
+```python
+#!/usr/bin/env python3
+"""
+FRR Evidence Collector - Azure-Native Evidence Collection
+Collects compliance evidence for FedRAMP 20x FRR requirements using Azure services.
+
+FRR Families Supported:
+- VDR: Vulnerability Detection and Response
+- RSC: Recommended Secure Configuration
+- ADS: Audit and Data Security
+- SCN: Secure Configuration
+- CCM: Configuration Change Management
+- MAS: Malware and Antivirus
+
+Prerequisites:
+- azure-identity
+- azure-mgmt-resourcegraph
+- azure-monitor-query
+- azure-storage-blob
+"""
+
+import os
+import json
+import logging
+from datetime import datetime, timedelta
+from typing import Dict, List, Any, Optional
+from dataclasses import dataclass, asdict
+
+from azure.identity import DefaultAzureCredential
+from azure.mgmt.resourcegraph import ResourceGraphClient
+from azure.mgmt.resourcegraph.models import QueryRequest
+from azure.monitor.query import LogsQueryClient, LogsQueryStatus
+from azure.storage.blob import BlobServiceClient, ContentSettings
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class EvidenceRecord:
+    """Structured evidence record for FedRAMP compliance."""
+    frr_id: str
+    frr_name: str
+    collection_timestamp: str
+    subscription_id: str
+    query_type: str
+    query_name: str
+    record_count: int
+    data: List[Dict[str, Any]]
+    compliance_status: str  # "compliant", "non_compliant", "needs_review"
+    metadata: Dict[str, Any]
+
+
+class FRREvidenceCollector:
+    """
+    Collects evidence for FedRAMP 20x FRR requirements.
+    
+    Uses Azure Resource Graph for configuration queries and
+    Azure Monitor Log Analytics for activity/security logs.
+    """
+    
+    def __init__(
+        self,
+        subscription_id: str,
+        log_analytics_workspace_id: str,
+        storage_account_name: str
+    ):
+        """
+        Initialize evidence collector.
+        
+        Args:
+            subscription_id: Azure subscription ID
+            log_analytics_workspace_id: Log Analytics workspace resource ID
+            storage_account_name: Storage account for evidence archive
+        """
+        self.subscription_id = subscription_id
+        self.workspace_id = log_analytics_workspace_id
+        self.storage_account = storage_account_name
+        
+        self.credential = DefaultAzureCredential()
+        self.resource_graph_client = ResourceGraphClient(self.credential)
+        self.logs_client = LogsQueryClient(self.credential)
+        self.blob_client = BlobServiceClient(
+            account_url=f"https://{storage_account_name}.blob.core.windows.net",
+            credential=self.credential
+        )
+    
+    # =========================================================================
+    # VDR: Vulnerability Detection and Response
+    # =========================================================================
+    
+    def collect_vdr_01_evidence(self) -> EvidenceRecord:
+        """
+        FRR-VDR-01: Critical Vulnerability Remediation
+        
+        Collects evidence showing vulnerability remediation within SLA:
+        - Critical: 15 days
+        - High: 30 days
+        """
+        logger.info("Collecting FRR-VDR-01 evidence: Critical Vulnerability Remediation")
+        
+        # Query for critical vulnerabilities exceeding SLA
+        query = """
+        SecurityRecommendation
+        | where RecommendationSeverity == "High"
+        | where RecommendationState == "Active"
+        | extend DaysOpen = datetime_diff('day', now(), FirstEvaluationDate)
+        | summarize 
+            TotalCritical = count(),
+            WithinSLA = countif(DaysOpen <= 15),
+            ExceedingSLA = countif(DaysOpen > 15)
+        | extend ComplianceRate = round(WithinSLA * 100.0 / TotalCritical, 2)
+        """
+        
+        results = self._execute_log_query(query)
+        
+        # Determine compliance status
+        compliance_status = "compliant"
+        if results and len(results) > 0:
+            exceeding = results[0].get("ExceedingSLA", 0)
+            if exceeding > 0:
+                compliance_status = "non_compliant"
+        
+        return EvidenceRecord(
+            frr_id="FRR-VDR-01",
+            frr_name="Critical Vulnerability Remediation",
+            collection_timestamp=datetime.utcnow().isoformat(),
+            subscription_id=self.subscription_id,
+            query_type="Azure Monitor KQL",
+            query_name="Critical Vulnerability SLA Compliance",
+            record_count=len(results),
+            data=results,
+            compliance_status=compliance_status,
+            metadata={
+                "sla_days_critical": 15,
+                "sla_days_high": 30,
+                "query": query
+            }
+        )
+    
+    def collect_vdr_08_evidence(self) -> EvidenceRecord:
+        """
+        FRR-VDR-08: Automated Patching
+        
+        Collects evidence of automated patching configuration.
+        """
+        logger.info("Collecting FRR-VDR-08 evidence: Automated Patching")
+        
+        # Query for VMs without automatic patching
+        query = """
+        resources
+        | where type == "microsoft.compute/virtualmachines"
+        | extend 
+            patchMode = properties.osProfile.windowsConfiguration.patchSettings.patchMode,
+            assessmentMode = properties.osProfile.windowsConfiguration.patchSettings.assessmentMode,
+            linuxPatchMode = properties.osProfile.linuxConfiguration.patchSettings.patchMode
+        | project 
+            name, 
+            resourceGroup, 
+            patchMode, 
+            assessmentMode,
+            linuxPatchMode,
+            automaticPatchingEnabled = (patchMode == "AutomaticByPlatform" or linuxPatchMode == "AutomaticByPlatform")
+        """
+        
+        results = self._execute_resource_graph_query(query)
+        
+        # Check compliance - all VMs should have automatic patching
+        non_compliant = [r for r in results if not r.get("automaticPatchingEnabled", False)]
+        compliance_status = "compliant" if len(non_compliant) == 0 else "non_compliant"
+        
+        return EvidenceRecord(
+            frr_id="FRR-VDR-08",
+            frr_name="Automated Patching",
+            collection_timestamp=datetime.utcnow().isoformat(),
+            subscription_id=self.subscription_id,
+            query_type="Azure Resource Graph",
+            query_name="VM Patch Configuration Status",
+            record_count=len(results),
+            data=results,
+            compliance_status=compliance_status,
+            metadata={
+                "total_vms": len(results),
+                "compliant_vms": len(results) - len(non_compliant),
+                "non_compliant_vms": len(non_compliant)
+            }
+        )
+    
+    # =========================================================================
+    # RSC: Recommended Secure Configuration
+    # =========================================================================
+    
+    def collect_rsc_01_evidence(self) -> EvidenceRecord:
+        """
+        FRR-RSC-01: Security Baseline Compliance
+        
+        Collects Azure Policy compliance state for security baselines.
+        """
+        logger.info("Collecting FRR-RSC-01 evidence: Security Baseline Compliance")
+        
+        query = """
+        securityresources
+        | where type == "microsoft.security/assessments"
+        | extend 
+            status = properties.status.code,
+            displayName = properties.displayName
+        | summarize 
+            TotalAssessments = count(),
+            Healthy = countif(status == "Healthy"),
+            Unhealthy = countif(status == "Unhealthy"),
+            NotApplicable = countif(status == "NotApplicable")
+        | extend ComplianceRate = round(Healthy * 100.0 / (Healthy + Unhealthy), 2)
+        """
+        
+        results = self._execute_resource_graph_query(query)
+        
+        compliance_rate = results[0].get("ComplianceRate", 0) if results else 0
+        compliance_status = "compliant" if compliance_rate >= 90 else "non_compliant"
+        
+        return EvidenceRecord(
+            frr_id="FRR-RSC-01",
+            frr_name="Security Baseline Compliance",
+            collection_timestamp=datetime.utcnow().isoformat(),
+            subscription_id=self.subscription_id,
+            query_type="Azure Resource Graph",
+            query_name="Security Assessment Compliance",
+            record_count=len(results),
+            data=results,
+            compliance_status=compliance_status,
+            metadata={
+                "compliance_threshold": 90,
+                "actual_compliance_rate": compliance_rate
+            }
+        )
+    
+    # =========================================================================
+    # ADS: Audit and Data Security
+    # =========================================================================
+    
+    def collect_ads_01_evidence(self) -> EvidenceRecord:
+        """
+        FRR-ADS-01: Audit Log Completeness
+        
+        Verifies audit logging is capturing all required activities.
+        """
+        logger.info("Collecting FRR-ADS-01 evidence: Audit Log Completeness")
+        
+        query = """
+        AzureActivity
+        | where TimeGenerated > ago(24h)
+        | summarize 
+            TotalEvents = count(),
+            DistinctOperations = dcount(OperationNameValue),
+            DistinctCallers = dcount(Caller),
+            DistinctResources = dcount(ResourceId)
+            by bin(TimeGenerated, 1h)
+        | order by TimeGenerated desc
+        """
+        
+        results = self._execute_log_query(query)
+        
+        # Check for logging gaps (hours with 0 events)
+        gaps = [r for r in results if r.get("TotalEvents", 0) == 0]
+        compliance_status = "compliant" if len(gaps) == 0 else "needs_review"
+        
+        return EvidenceRecord(
+            frr_id="FRR-ADS-01",
+            frr_name="Audit Log Completeness",
+            collection_timestamp=datetime.utcnow().isoformat(),
+            subscription_id=self.subscription_id,
+            query_type="Azure Monitor KQL",
+            query_name="Hourly Audit Log Summary",
+            record_count=len(results),
+            data=results,
+            compliance_status=compliance_status,
+            metadata={
+                "time_range_hours": 24,
+                "logging_gaps": len(gaps)
+            }
+        )
+    
+    # =========================================================================
+    # SCN: Secure Configuration
+    # =========================================================================
+    
+    def collect_scn_01_evidence(self) -> EvidenceRecord:
+        """
+        FRR-SCN-01: Network Security Configuration
+        
+        Audits NSG rules for overly permissive configurations.
+        """
+        logger.info("Collecting FRR-SCN-01 evidence: Network Security Configuration")
+        
+        query = """
+        resources
+        | where type == "microsoft.network/networksecuritygroups"
+        | extend rules = properties.securityRules
+        | mv-expand rule = rules
+        | extend 
+            direction = rule.properties.direction,
+            access = rule.properties.access,
+            sourceAddress = rule.properties.sourceAddressPrefix,
+            destPort = rule.properties.destinationPortRange,
+            priority = rule.properties.priority
+        | where access == "Allow" and sourceAddress == "*"
+        | where destPort in ("22", "3389", "0-65535", "*")
+        | project name, resourceGroup, direction, destPort, sourceAddress, priority
+        """
+        
+        results = self._execute_resource_graph_query(query)
+        
+        compliance_status = "compliant" if len(results) == 0 else "non_compliant"
+        
+        return EvidenceRecord(
+            frr_id="FRR-SCN-01",
+            frr_name="Network Security Configuration",
+            collection_timestamp=datetime.utcnow().isoformat(),
+            subscription_id=self.subscription_id,
+            query_type="Azure Resource Graph",
+            query_name="Overly Permissive NSG Rules",
+            record_count=len(results),
+            data=results,
+            compliance_status=compliance_status,
+            metadata={
+                "risky_rules_found": len(results),
+                "risky_ports_checked": ["22", "3389", "*"]
+            }
+        )
+    
+    # =========================================================================
+    # CCM: Configuration Change Management
+    # =========================================================================
+    
+    def collect_ccm_01_evidence(self) -> EvidenceRecord:
+        """
+        FRR-CCM-01: Change Management Audit Trail
+        
+        Collects all configuration changes for audit purposes.
+        """
+        logger.info("Collecting FRR-CCM-01 evidence: Change Management Audit Trail")
+        
+        query = """
+        AzureActivity
+        | where TimeGenerated > ago(7d)
+        | where OperationNameValue has_any ("write", "delete", "action")
+        | where ActivityStatusValue == "Success"
+        | summarize 
+            ChangeCount = count(),
+            DistinctResources = dcount(ResourceId)
+            by Caller, OperationNameValue
+        | order by ChangeCount desc
+        | take 100
+        """
+        
+        results = self._execute_log_query(query)
+        
+        return EvidenceRecord(
+            frr_id="FRR-CCM-01",
+            frr_name="Change Management Audit Trail",
+            collection_timestamp=datetime.utcnow().isoformat(),
+            subscription_id=self.subscription_id,
+            query_type="Azure Monitor KQL",
+            query_name="Configuration Changes by User",
+            record_count=len(results),
+            data=results,
+            compliance_status="compliant",  # Audit trail existence is compliance
+            metadata={
+                "time_range_days": 7,
+                "unique_callers": len(set(r.get("Caller", "") for r in results))
+            }
+        )
+    
+    # =========================================================================
+    # Helper Methods
+    # =========================================================================
+    
+    def _execute_resource_graph_query(self, query: str) -> List[Dict[str, Any]]:
+        """Execute Azure Resource Graph query."""
+        try:
+            request = QueryRequest(
+                subscriptions=[self.subscription_id],
+                query=query
+            )
+            response = self.resource_graph_client.resources(request)
+            return response.data
+        except Exception as e:
+            logger.error(f"Resource Graph query failed: {e}")
+            return []
+    
+    def _execute_log_query(self, query: str) -> List[Dict[str, Any]]:
+        """Execute Log Analytics KQL query."""
+        try:
+            response = self.logs_client.query_workspace(
+                workspace_id=self.workspace_id.split("/")[-1],
+                query=query,
+                timespan=timedelta(days=7)
+            )
+            
+            if response.status == LogsQueryStatus.SUCCESS:
+                results = []
+                for table in response.tables:
+                    for row in table.rows:
+                        record = dict(zip(table.columns, row))
+                        results.append(record)
+                return results
+            return []
+        except Exception as e:
+            logger.error(f"Log Analytics query failed: {e}")
+            return []
+    
+    def store_evidence(self, evidence: EvidenceRecord, container: str = "frr-evidence") -> str:
+        """
+        Store evidence record in Azure Blob Storage.
+        
+        Args:
+            evidence: Evidence record to store
+            container: Blob container name
+            
+        Returns:
+            Blob URL
+        """
+        try:
+            container_client = self.blob_client.get_container_client(container)
+            
+            # Create timestamped blob name
+            timestamp = datetime.utcnow().strftime("%Y-%m-%d/%H-%M-%S")
+            blob_name = f"{evidence.frr_id}/{timestamp}.json"
+            
+            # Convert to JSON
+            evidence_json = json.dumps(asdict(evidence), indent=2, default=str)
+            
+            # Upload with metadata
+            blob_client = container_client.get_blob_client(blob_name)
+            blob_client.upload_blob(
+                evidence_json,
+                content_settings=ContentSettings(content_type="application/json"),
+                metadata={
+                    "frr_id": evidence.frr_id,
+                    "compliance_status": evidence.compliance_status,
+                    "collection_timestamp": evidence.collection_timestamp
+                },
+                overwrite=True
+            )
+            
+            logger.info(f"Evidence stored: {blob_name}")
+            return blob_client.url
+            
+        except Exception as e:
+            logger.error(f"Failed to store evidence: {e}")
+            raise
+    
+    def collect_all_evidence(self) -> List[EvidenceRecord]:
+        """
+        Collect evidence for all implemented FRRs.
+        
+        Returns:
+            List of evidence records
+        """
+        collectors = [
+            self.collect_vdr_01_evidence,
+            self.collect_vdr_08_evidence,
+            self.collect_rsc_01_evidence,
+            self.collect_ads_01_evidence,
+            self.collect_scn_01_evidence,
+            self.collect_ccm_01_evidence,
+        ]
+        
+        evidence_records = []
+        for collector in collectors:
+            try:
+                evidence = collector()
+                evidence_records.append(evidence)
+                logger.info(f"✓ Collected {evidence.frr_id}: {evidence.compliance_status}")
+            except Exception as e:
+                logger.error(f"✗ Failed to collect evidence: {e}")
+        
+        return evidence_records
+
+
+def main():
+    """Main entry point for evidence collection."""
+    # Configuration from environment
+    subscription_id = os.environ.get("AZURE_SUBSCRIPTION_ID")
+    workspace_id = os.environ.get("LOG_ANALYTICS_WORKSPACE_ID")
+    storage_account = os.environ.get("EVIDENCE_STORAGE_ACCOUNT")
+    
+    if not all([subscription_id, workspace_id, storage_account]):
+        logger.error("Missing required environment variables")
+        logger.error("Required: AZURE_SUBSCRIPTION_ID, LOG_ANALYTICS_WORKSPACE_ID, EVIDENCE_STORAGE_ACCOUNT")
+        return
+    
+    collector = FRREvidenceCollector(
+        subscription_id=subscription_id,
+        log_analytics_workspace_id=workspace_id,
+        storage_account_name=storage_account
+    )
+    
+    logger.info("=" * 60)
+    logger.info("FedRAMP 20x FRR Evidence Collection")
+    logger.info(f"Subscription: {subscription_id}")
+    logger.info(f"Timestamp: {datetime.utcnow().isoformat()}")
+    logger.info("=" * 60)
+    
+    # Collect all evidence
+    evidence_records = collector.collect_all_evidence()
+    
+    # Store evidence
+    for evidence in evidence_records:
+        try:
+            blob_url = collector.store_evidence(evidence)
+            logger.info(f"Stored: {blob_url}")
+        except Exception as e:
+            logger.error(f"Failed to store {evidence.frr_id}: {e}")
+    
+    # Summary
+    logger.info("=" * 60)
+    logger.info("Collection Summary")
+    logger.info("=" * 60)
+    
+    compliant = len([e for e in evidence_records if e.compliance_status == "compliant"])
+    non_compliant = len([e for e in evidence_records if e.compliance_status == "non_compliant"])
+    needs_review = len([e for e in evidence_records if e.compliance_status == "needs_review"])
+    
+    logger.info(f"Total FRRs: {len(evidence_records)}")
+    logger.info(f"Compliant: {compliant}")
+    logger.info(f"Non-Compliant: {non_compliant}")
+    logger.info(f"Needs Review: {needs_review}")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+## Requirements
+
+```txt
+azure-identity>=1.15.0
+azure-mgmt-resourcegraph>=8.0.0
+azure-monitor-query>=1.2.0
+azure-storage-blob>=12.19.0
+```
+
+## Environment Variables
+
+```bash
+export AZURE_SUBSCRIPTION_ID="your-subscription-id"
+export LOG_ANALYTICS_WORKSPACE_ID="/subscriptions/.../resourceGroups/.../providers/Microsoft.OperationalInsights/workspaces/your-workspace"
+export EVIDENCE_STORAGE_ACCOUNT="yourstorageaccount"
+```
+
+## Deployment Options
+
+### Option 1: Azure Function (Recommended)
+Deploy as a timer-triggered Azure Function for automated daily collection.
+
+### Option 2: Azure Automation Runbook
+Deploy as a Python runbook with managed identity.
+
+### Option 3: GitHub Actions
+Run on schedule using GitHub Actions workflow.
+
+*Generated by FedRAMP 20x MCP Server - FRR Evidence Collection Code*

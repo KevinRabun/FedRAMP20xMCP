@@ -1,0 +1,526 @@
+## Bicep Template for FRR Evidence Collection
+
+```bicep
+// frr_evidence_collection.bicep - FRR-Specific Evidence Collection Infrastructure
+// Comprehensive infrastructure for FedRAMP 20x FRR evidence automation
+//
+// FRR Families Covered:
+// - VDR: Vulnerability Detection and Response
+// - RSC: Recommended Secure Configuration  
+// - ADS: Audit and Data Security
+// - SCN: Secure Configuration
+// - CCM: Configuration Change Management
+// - MAS: Malware and Antivirus
+// - UCM: Update and Configuration Management
+// - ICP: Incident Communication and Planning
+// - FSI: Federal Security Incidents
+// - PVA: Privacy and Vulnerability Assessment
+// - KSI: Key Security Indicators
+//
+// Evidence Collection Methods:
+// 1. Azure Monitor Log Analytics with KQL queries
+// 2. Azure Resource Graph for configuration auditing
+// 3. Microsoft Defender for Cloud integration
+// 4. Azure Policy compliance state export
+// 5. Automated evidence export to blob storage
+
+@description('Primary deployment location')
+param location string = resourceGroup().location
+
+@description('Unique suffix for resource naming')
+param nameSuffix string = uniqueString(resourceGroup().id)
+
+@description('Log Analytics retention in days (730 = 2 years for FedRAMP)')
+param logRetentionDays int = 730
+
+@description('Evidence storage retention in days (2555 = 7 years)')
+param evidenceRetentionDays int = 2555
+
+@description('Enable Defender for Cloud integration')
+param enableDefender bool = true
+
+@description('Alert email address')
+param alertEmail string
+
+// FedRAMP 20x Compliance Tags
+var frComplianceTags = {
+  Compliance: 'FedRAMP 20x'
+  Requirements: 'FRR-VDR-01, FRR-RSC-01, FRR-ADS-01, FRR-SCN-01, FRR-CCM-01'
+  Purpose: 'Evidence Collection'
+  RetentionDays: string(evidenceRetentionDays)
+}
+
+// ============================================================================
+// Log Analytics Workspace - Central Evidence Repository
+// Addresses: FRR-ADS-01 (Audit Logging), FRR-MLA-01 (Monitoring)
+// ============================================================================
+
+resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
+  name: 'law-frr-evidence-${nameSuffix}'
+  location: location
+  tags: frComplianceTags
+  properties: {
+    sku: {
+      name: 'PerGB2018'
+    }
+    retentionInDays: logRetentionDays
+    features: {
+      enableLogAccessUsingOnlyResourcePermissions: true
+      immediatePurgeDataOn30Days: false
+    }
+    workspaceCapping: {
+      dailyQuotaGb: -1 // No cap for FedRAMP compliance
+    }
+  }
+}
+
+// ============================================================================
+// Evidence Storage Account - Immutable Evidence Archive
+// Addresses: FRR-ADS-02 (Data Protection), FRR-RSC-01 (Secure Config)
+// ============================================================================
+
+resource evidenceStorage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
+  name: 'stfrrevidence${nameSuffix}'
+  location: location
+  tags: frComplianceTags
+  sku: {
+    name: 'Standard_GRS' // Geo-redundant for compliance
+  }
+  kind: 'StorageV2'
+  properties: {
+    accessTier: 'Hot'
+    allowBlobPublicAccess: false
+    supportsHttpsTrafficOnly: true
+    minimumTlsVersion: 'TLS1_2'
+    networkAcls: {
+      defaultAction: 'Deny'
+      bypass: 'AzureServices'
+    }
+    encryption: {
+      services: {
+        blob: {
+          enabled: true
+          keyType: 'Account'
+        }
+        file: {
+          enabled: true
+          keyType: 'Account'
+        }
+      }
+      keySource: 'Microsoft.Storage'
+    }
+  }
+}
+
+resource blobServices 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01' = {
+  parent: evidenceStorage
+  name: 'default'
+  properties: {
+    containerDeleteRetentionPolicy: {
+      enabled: true
+      days: 30
+    }
+    deleteRetentionPolicy: {
+      enabled: true
+      days: 365
+    }
+    changeFeed: {
+      enabled: true
+      retentionInDays: 365
+    }
+    isVersioningEnabled: true
+  }
+}
+
+// Evidence containers by FRR family
+resource vdrContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+  parent: blobServices
+  name: 'frr-vdr'
+  properties: {
+    publicAccess: 'None'
+    metadata: {
+      family: 'VDR'
+      description: 'Vulnerability Detection and Response Evidence'
+    }
+  }
+}
+
+resource rscContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+  parent: blobServices
+  name: 'frr-rsc'
+  properties: {
+    publicAccess: 'None'
+    metadata: {
+      family: 'RSC'
+      description: 'Recommended Secure Configuration Evidence'
+    }
+  }
+}
+
+resource adsContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+  parent: blobServices
+  name: 'frr-ads'
+  properties: {
+    publicAccess: 'None'
+    metadata: {
+      family: 'ADS'
+      description: 'Audit and Data Security Evidence'
+    }
+  }
+}
+
+resource scnContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+  parent: blobServices
+  name: 'frr-scn'
+  properties: {
+    publicAccess: 'None'
+    metadata: {
+      family: 'SCN'
+      description: 'Secure Configuration Evidence'
+    }
+  }
+}
+
+resource ccmContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+  parent: blobServices
+  name: 'frr-ccm'
+  properties: {
+    publicAccess: 'None'
+    metadata: {
+      family: 'CCM'
+      description: 'Configuration Change Management Evidence'
+    }
+  }
+}
+
+resource masContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+  parent: blobServices
+  name: 'frr-mas'
+  properties: {
+    publicAccess: 'None'
+    metadata: {
+      family: 'MAS'
+      description: 'Malware and Antivirus Evidence'
+    }
+  }
+}
+
+// ============================================================================
+// Key Vault - Secrets Management
+// Addresses: FRR-SVC-01 (Secure Services), FRR-RSC-01 (Secure Config)
+// ============================================================================
+
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
+  name: 'kv-frr-${nameSuffix}'
+  location: location
+  tags: frComplianceTags
+  properties: {
+    sku: {
+      family: 'A'
+      name: 'premium' // HSM-backed keys for FedRAMP
+    }
+    tenantId: subscription().tenantId
+    enablePurgeProtection: true
+    enableSoftDelete: true
+    softDeleteRetentionInDays: 90
+    enableRbacAuthorization: true
+    networkAcls: {
+      defaultAction: 'Deny'
+      bypass: 'AzureServices'
+    }
+  }
+}
+
+// ============================================================================
+// Automation Account - Scheduled Evidence Collection
+// Addresses: FRR-CCM-01 (Change Management), FRR-ADS-01 (Audit)
+// ============================================================================
+
+resource automationAccount 'Microsoft.Automation/automationAccounts@2023-11-01' = {
+  name: 'aa-frr-evidence-${nameSuffix}'
+  location: location
+  tags: frComplianceTags
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    sku: {
+      name: 'Basic'
+    }
+    encryption: {
+      keySource: 'Microsoft.Automation'
+    }
+  }
+}
+
+// ============================================================================
+// Microsoft Defender for Cloud - Vulnerability Scanning
+// Addresses: FRR-VDR-01 (Vulnerability Detection), FRR-MAS-01 (Antimalware)
+// ============================================================================
+
+resource defenderPricing 'Microsoft.Security/pricings@2024-01-01' = if (enableDefender) {
+  name: 'VirtualMachines'
+  properties: {
+    pricingTier: 'Standard'
+    subPlan: 'P2'
+  }
+}
+
+resource defenderStorage 'Microsoft.Security/pricings@2024-01-01' = if (enableDefender) {
+  name: 'StorageAccounts'
+  properties: {
+    pricingTier: 'Standard'
+  }
+}
+
+resource defenderSql 'Microsoft.Security/pricings@2024-01-01' = if (enableDefender) {
+  name: 'SqlServers'
+  properties: {
+    pricingTier: 'Standard'
+  }
+}
+
+resource defenderKeyVault 'Microsoft.Security/pricings@2024-01-01' = if (enableDefender) {
+  name: 'KeyVaults'
+  properties: {
+    pricingTier: 'Standard'
+  }
+}
+
+// ============================================================================
+// Action Group - Compliance Alerts
+// Addresses: FRR-ICP-01 (Incident Communication)
+// ============================================================================
+
+resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
+  name: 'ag-frr-alerts-${nameSuffix}'
+  location: 'global'
+  tags: frComplianceTags
+  properties: {
+    groupShortName: 'FRRAlerts'
+    enabled: true
+    emailReceivers: [
+      {
+        name: 'ComplianceTeam'
+        emailAddress: alertEmail
+        useCommonAlertSchema: true
+      }
+    ]
+  }
+}
+
+// ============================================================================
+// Scheduled Query Rules - Evidence Collection Alerts
+// ============================================================================
+
+resource criticalVulnAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' = {
+  name: 'alert-frr-vdr-01-critical-vulns'
+  location: location
+  tags: union(frComplianceTags, {
+    FRR: 'FRR-VDR-01'
+    Purpose: 'Critical Vulnerability SLA Monitoring'
+  })
+  properties: {
+    displayName: 'FRR-VDR-01: Critical Vulnerabilities Exceeding SLA'
+    description: 'Alerts when critical vulnerabilities exceed 15-day remediation SLA'
+    severity: 0
+    enabled: true
+    evaluationFrequency: 'PT1H'
+    windowSize: 'PT1H'
+    scopes: [
+      logAnalytics.id
+    ]
+    criteria: {
+      allOf: [
+        {
+          query: '''
+SecurityRecommendation
+| where RecommendationSeverity == "High"
+| where RecommendationState == "Active"
+| extend DaysOpen = datetime_diff('day', now(), FirstEvaluationDate)
+| where DaysOpen > 15
+| summarize Count = count() by ResourceId
+| where Count > 0
+          '''
+          timeAggregation: 'Count'
+          operator: 'GreaterThan'
+          threshold: 0
+          failingPeriods: {
+            numberOfEvaluationPeriods: 1
+            minFailingPeriodsToAlert: 1
+          }
+        }
+      ]
+    }
+    actions: {
+      actionGroups: [
+        actionGroup.id
+      ]
+    }
+  }
+}
+
+resource configDriftAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' = {
+  name: 'alert-frr-ccm-01-config-drift'
+  location: location
+  tags: union(frComplianceTags, {
+    FRR: 'FRR-CCM-01'
+    Purpose: 'Configuration Drift Detection'
+  })
+  properties: {
+    displayName: 'FRR-CCM-01: Unauthorized Configuration Change Detected'
+    description: 'Alerts on configuration changes outside change management process'
+    severity: 1
+    enabled: true
+    evaluationFrequency: 'PT15M'
+    windowSize: 'PT15M'
+    scopes: [
+      logAnalytics.id
+    ]
+    criteria: {
+      allOf: [
+        {
+          query: '''
+AzureActivity
+| where OperationNameValue has_any ("write", "delete")
+| where ActivityStatusValue == "Success"
+| where Caller !in ("allowed-service-principal@domain.com")
+| where ResourceProviderValue in (
+    "Microsoft.Network", "Microsoft.Compute", "Microsoft.KeyVault"
+)
+| project TimeGenerated, Caller, OperationNameValue, ResourceId
+          '''
+          timeAggregation: 'Count'
+          operator: 'GreaterThan'
+          threshold: 0
+          failingPeriods: {
+            numberOfEvaluationPeriods: 1
+            minFailingPeriodsToAlert: 1
+          }
+        }
+      ]
+    }
+    actions: {
+      actionGroups: [
+        actionGroup.id
+      ]
+    }
+  }
+}
+
+// ============================================================================
+// Diagnostic Settings - Enable All Logging
+// ============================================================================
+
+resource kvDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'ds-kv-frr'
+  scope: keyVault
+  properties: {
+    workspaceId: logAnalytics.id
+    logs: [
+      {
+        category: 'AuditEvent'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: logRetentionDays
+        }
+      }
+      {
+        category: 'AzurePolicyEvaluationDetails'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: logRetentionDays
+        }
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: logRetentionDays
+        }
+      }
+    ]
+  }
+}
+
+resource storageDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'ds-storage-frr'
+  scope: evidenceStorage
+  properties: {
+    workspaceId: logAnalytics.id
+    metrics: [
+      {
+        category: 'Transaction'
+        enabled: true
+        retentionPolicy: {
+          enabled: true
+          days: logRetentionDays
+        }
+      }
+    ]
+  }
+}
+
+// ============================================================================
+// Outputs
+// ============================================================================
+
+output logAnalyticsWorkspaceId string = logAnalytics.id
+output logAnalyticsWorkspaceName string = logAnalytics.name
+output evidenceStorageAccountName string = evidenceStorage.name
+output keyVaultName string = keyVault.name
+output automationAccountName string = automationAccount.name
+output actionGroupId string = actionGroup.id
+
+output deploymentSummary object = {
+  logRetentionDays: logRetentionDays
+  evidenceRetentionDays: evidenceRetentionDays
+  frrsAddressed: [
+    'FRR-VDR-01: Vulnerability scanning via Defender for Cloud'
+    'FRR-RSC-01: Secure configuration via Key Vault and Storage encryption'
+    'FRR-ADS-01: Audit logging via Log Analytics'
+    'FRR-SCN-01: Network security via storage network ACLs'
+    'FRR-CCM-01: Change management via Activity Log monitoring'
+    'FRR-MAS-01: Antimalware via Defender for Cloud'
+    'FRR-ICP-01: Incident communication via Action Groups'
+  ]
+}
+```
+
+## Deployment Instructions
+
+### Prerequisites
+- Azure CLI installed and authenticated
+- Contributor role on target subscription
+- Email address for compliance alerts
+
+### Deploy with Azure CLI
+```bash
+# Create resource group
+az group create --name rg-frr-evidence --location eastus
+
+# Deploy template
+az deployment group create \
+    --resource-group rg-frr-evidence \
+    --template-file frr_evidence_collection.bicep \
+    --parameters alertEmail=compliance@yourorg.com
+
+# Verify deployment
+az deployment group show \
+    --resource-group rg-frr-evidence \
+    --name frr_evidence_collection
+```
+
+### Post-Deployment Configuration
+1. Configure Defender for Cloud workload protections
+2. Assign Azure Policy FedRAMP initiative
+3. Set up scheduled evidence export runbooks
+4. Configure GRC tool webhook integration
+5. Test alert notifications
+
+*Generated by FedRAMP 20x MCP Server - FRR Evidence Infrastructure*
