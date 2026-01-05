@@ -125,8 +125,8 @@ class TestRequirementAccuracy:
     
     # Test critical KSI statements that were previously misunderstood
     @pytest.mark.parametrize("ksi_id,expected_statement", [
-        ("KSI-PIY-01", "Use authoritative sources to automatically maintain real-time inventories of all information resources."),
-        ("KSI-PIY-02", "Document the security objectives and requirements for each information resource or set of information resources."),
+        ("KSI-PIY-01", "Use authoritative sources to automatically generate real-time inventories of all information resources when needed."),
+        # KSI-PIY-02 is retired (superseded by KSI-AFR-01)
         ("KSI-SVC-01", "Implement improvements based on persistent evaluation of information resources for opportunities to improve security."),
         ("KSI-SVC-06", "Automate management, protection, and regular rotation of digital keys, certificates, and other secrets."),
     ])

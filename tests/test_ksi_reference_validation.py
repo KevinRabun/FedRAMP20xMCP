@@ -21,7 +21,7 @@ import pytest
 AUTHORITATIVE_KSI_DEFINITIONS = {
     # PIY - Policy and Inventory (NOT Privacy!)
     "KSI-PIY-01": "Automated Inventory",
-    "KSI-PIY-02": "Security Objectives and Requirements",
+    "KSI-PIY-02": None,  # RETIRED - superseded by KSI-AFR-01
     "KSI-PIY-03": "Documentation Requirements",
     "KSI-PIY-04": "Risk Assessment",
     "KSI-PIY-05": "Authorization",
@@ -342,7 +342,7 @@ class TestKSIDefinitionAccuracy:
     
     @pytest.mark.parametrize("ksi_id,expected_name", [
         ("KSI-PIY-01", "Automated Inventory"),
-        ("KSI-PIY-02", "Security Objectives and Requirements"),
+        # KSI-PIY-02 is retired (superseded by KSI-AFR-01)
         ("KSI-SVC-01", "Continuous Improvement"),
         ("KSI-SVC-02", "Network Encryption"),
         ("KSI-SVC-06", "Secret Management"),
