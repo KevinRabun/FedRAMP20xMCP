@@ -20,7 +20,7 @@ This server loads FedRAMP 20x data from the official [FedRAMP documentation repo
 
 ### Complete Data Coverage
 
-The server provides access to **271 requirements** (199 FRRs + 72 KSIs) plus **50 definitions** (FRDs) across FedRAMP 20x documents:
+The server provides access to **321 requirements** (199 FRRs + 72 KSIs + 50 FRDs) across FedRAMP 20x documents:
 
 **FedRAMP Requirements (FRR) - 199 requirements across 10 families:**
 - **ADS** - Authorization Data Sharing (20 requirements)
@@ -263,18 +263,17 @@ For CI/CD integration, multi-server setup with Azure and GitHub, or detailed tro
 
 The server provides **48 tools** organized into the following categories:
 
-**Core Tools (11):** Query requirements, definitions, KSIs, and KSI evidence automation
-**FRR Analysis Tools (7):** Analyze code against FedRAMP Requirements (FRR) with comprehensive compliance checking across all 199 requirements
+**Core Tools (8):** Query requirements (get_control, list_family_controls, search_requirements), definitions (get_definition, list_definitions, search_definitions), and KSIs (get_ksi, list_ksi)
+**KSI Tools (9):** KSI implementation status, evidence automation, evidence queries, evidence artifacts, implementation matrix, implementation summary, coverage summary, coverage status, family status
+**FRR Analysis Tools (7):** Analyze code against specific FRRs, all FRRs, or FRR families; list FRRs; get FRR metadata, evidence automation, and implementation status
 **Documentation Tools (3):** Search and retrieve FedRAMP documentation
-**Enhancement Tools (7):** Implementation examples, dependencies, effort estimation, architecture validation
-**Export Tools (3):** Excel/CSV export and KSI specification generation
-**Planning Tools (1):** Generate strategic implementation questions
-**Evidence Collection Automation Tools (3):** Infrastructure code, collection code, architecture guidance
-**Implementation Mapping Tools (2):** KSI family matrices and step-by-step implementation checklists
-**Code Analysis Tools (3):** AST-powered FedRAMP compliance scanning using tree-sitter for accurate, semantic analysis of IaC, application code, and CI/CD pipelines across 6 languages (Python, C#, Java, TypeScript/JavaScript, Bicep, Terraform)
+**Enhancement Tools (6):** Implementation examples, dependencies, effort estimation, cloud-native guidance, architecture validation, Rev 4 comparison
+**Export Tools (2):** Excel/CSV export
+**Planning Tools (2):** Generate implementation questions and step-by-step checklists
+**Evidence Collection Tools (4):** Infrastructure code templates, collection code, architecture guidance, KSI specifications
+**Code Analysis Tools (4):** AST-powered analysis of infrastructure code, application code, CI/CD pipelines, and FedRAMP config validation
 **Security Tools (2):** CVE vulnerability checking for packages and dependency files
-**Audit Tools (2):** KSI coverage summary and status checking
-**KSI Status Tools (1):** Implementation status tracking across all KSI families
+**Code Enrichment Tools (1):** Add FedRAMP requirement comments to code
 
 ### get_control
 Get detailed information about a specific FedRAMP requirement or control.

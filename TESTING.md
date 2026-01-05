@@ -35,7 +35,7 @@ python tests/run_all_tests.py
 
 ## Test Organization
 
-The test suite is organized into 7 primary test files plus pattern-specific test files:
+The test suite is organized into **31 test files** covering all aspects of the MCP server:
 
 ### Critical Tests
 
