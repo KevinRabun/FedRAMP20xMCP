@@ -12,6 +12,7 @@ from datetime import datetime
 # Test files to run
 TEST_FILES = [
     "test_data_loader.py",
+    "test_data_loader_live.py",  # Live GitHub repository parsing tests
     "test_cve_fetcher.py",
     "test_mcp_server_understanding.py",  # Verify MCP server understanding of requirements
     "test_ksi_requirement_validation.py",  # Validate patterns match requirement intent (30 tests)

@@ -54,6 +54,16 @@ The test suite is organized into 7 primary test files plus pattern-specific test
 - Search functionality
 - Definition lookups
 
+**`test_data_loader_live.py`** - **NEW: Live GitHub Repository Parsing**
+- Validates parser works with current FedRAMP/docs repository structure
+- Tests GitHub API connectivity and file listing
+- Verifies JSON parsing across all document types (KSI, FRR, FRD)
+- Validates NIST 800-53 control mappings
+- Checks data structure integrity
+- Verifies family categorization
+- Tests cache functionality
+- **Critical for detecting breaking changes in upstream FedRAMP repository**
+
 **`test_cve_fetcher.py`** - CVE/Vulnerability Checking
 - Package vulnerability scanning
 - Dependency file parsing (requirements.txt, package.json)
