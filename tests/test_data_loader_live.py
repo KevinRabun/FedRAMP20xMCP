@@ -241,7 +241,7 @@ class TestDataLoaderLive:
         
         # Known retired KSIs according to documentation
         known_retired = {"KSI-CMT-05", "KSI-MLA-03", "KSI-MLA-04", "KSI-MLA-06", 
-                        "KSI-SVC-03", "KSI-TPR-01", "KSI-TPR-02"}
+                        "KSI-PIY-02", "KSI-SVC-03", "KSI-TPR-01", "KSI-TPR-02"}
         
         retired_ksis = [k for k in ksis if k.get("retired") or k.get("status") == "retired"]
         retired_ids = {k.get("id") for k in retired_ksis}

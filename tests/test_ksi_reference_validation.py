@@ -323,6 +323,7 @@ class TestKSIReferenceValidation:
         retired_ksis = [
             "KSI-CMT-05",
             "KSI-MLA-03", "KSI-MLA-04", "KSI-MLA-06",
+            "KSI-PIY-02",
             "KSI-SVC-03",
             "KSI-TPR-01", "KSI-TPR-02",
         ]
