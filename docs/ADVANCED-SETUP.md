@@ -59,9 +59,7 @@ Create or update `.vscode/mcp.json` in your project with this configuration:
 ## What Each Server Provides
 
 **fedramp-20x-mcp** (This Server)
-- 329 FedRAMP 20x requirements
-- 72 Key Security Indicators
-- 50 official definitions
+- 321 FedRAMP 20x requirements (199 FRRs + 72 KSIs + 50 FRDs)
 - Official markdown documentation files
 - Implementation examples and Azure guidance
 - Evidence collection automation tools

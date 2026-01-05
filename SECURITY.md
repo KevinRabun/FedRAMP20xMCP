@@ -4,10 +4,10 @@
 
 We release patches for security vulnerabilities. The following versions are currently supported:
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 0.4.x   | :white_check_mark: |
-| < 0.4.0 | :x:                |
+| Version  | Supported          | Status   |
+| -------- | ------------------ | -------- |
+| 0.13.x   | :white_check_mark: | Current  |
+| < 0.13.0 | :x:                | Outdated |
 
 ## Reporting a Vulnerability
 
