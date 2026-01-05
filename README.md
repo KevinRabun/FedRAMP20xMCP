@@ -18,7 +18,7 @@ This server loads FedRAMP 20x data from the official [FedRAMP documentation repo
 
 **Azure Focus:** All implementation examples, architecture patterns, and vendor recommendations prioritize Microsoft Azure services (Azure Government, Microsoft Entra ID, Azure Key Vault, AKS, Azure Functions, Bicep, etc.) while remaining cloud-agnostic where appropriate.
 
-### Complete Data Coverage
+### Data Coverage
 
 The server provides access to **321 requirements** (199 FRRs + 72 KSIs + 50 FRDs) across FedRAMP 20x documents:
 
@@ -52,7 +52,7 @@ The server provides access to **321 requirements** (199 FRRs + 72 KSIs + 50 FRDs
 
 ## Features
 
-- **🎯 Automated Evidence Collection (NEW)**: Complete automation guidance for all 65 active KSIs with Azure-native services, ready-to-use queries, and artifact specifications
+- **🎯 Automated Evidence Collection (NEW)**: Automation guidance for 65 active KSIs with Azure-native services, ready-to-use queries, and artifact specifications
 - **Query by Control**: Get detailed information about specific FedRAMP requirements
 - **Query by Family**: List all requirements within a family
 - **Keyword Search**: Search across all requirements using keywords
@@ -63,7 +63,7 @@ The server provides access to **321 requirements** (199 FRRs + 72 KSIs + 50 FRDs
 - **Implementation Planning**: Generate strategic interview questions to help product managers and engineers think through FedRAMP 20x implementation considerations
 - **AST-Powered Code Analysis**: Advanced Abstract Syntax Tree parsing using tree-sitter for accurate, context-aware security analysis across Python, C#, Java, TypeScript/JavaScript, Bicep, and Terraform
 - **Semantic Analysis**: Deep code understanding with symbol resolution, control flow analysis, and interprocedural analysis capabilities
-- **🚀 Pattern-Based Architecture**: Unified analysis engine with 381 YAML patterns across 23 requirement families, providing comprehensive compliance checking for all KSIs and FRRs
+- **🚀 Pattern-Based Architecture**: Unified analysis engine with 381 YAML patterns across 23 requirement families, supporting compliance analysis for KSIs and FRRs
 - **Pattern Engine**: Declarative YAML-driven detection across 14 languages with AST-first analysis and intelligent finding categorization
 
 ### Pattern-Based Analysis Architecture
@@ -80,7 +80,7 @@ The server uses a **unified pattern-based architecture** for all FedRAMP 20x com
 **Pattern Coverage by Family:**
 - **Application Families**: ADS, AFR, CCM, CED, CMT, CNA, IAM, INR, MLA, PIY, RPL, RSC, SCN, SVC, TPR, UCM, VDR (17 families)
 - **Infrastructure Families**: COMMON, FSI, ICP, KSI, MAS, PVA (6 families)
-- **Complete KSI & FRR Mapping**: All 72 KSIs and 199 FRRs are covered through pattern definitions
+- **KSI & FRR Mapping**: 72 KSIs and 199 FRRs supported through pattern definitions
 
 **How It Works:**
 1. **Pattern Loading**: YAML patterns loaded from `data/patterns/` directory
@@ -322,12 +322,12 @@ List all Key Security Indicators.
 **Returns:** Complete list of all Key Security Indicators with their names
 
 ### get_ksi_evidence_automation
-Get comprehensive evidence automation recommendations for a specific KSI. **All 65 active KSIs** include complete automated evidence collection guidance.
+Get evidence automation recommendations for a specific KSI. **65 active KSIs** include automated evidence collection guidance.
 
 **Parameters:**
 - `ksi_id` (string): The KSI identifier (e.g., "KSI-IAM-01", "KSI-CNA-01")
 
-**Returns:** Comprehensive guidance for automating evidence collection including:
+**Returns:** Guidance for automating evidence collection including:
 - **Azure Services**: 5 Azure services per KSI (Log Analytics, Resource Graph, Azure Policy, Azure Monitor, etc.) with specific configuration guidance
   - *Note: Microsoft Defender for Cloud is recommended (not mandatory) for ~8-10 KSIs to streamline vulnerability scanning, security posture management, and compliance monitoring. Alternative tools (Qualys, Tenable, Trivy) can be used.*
 - **Collection Methods**: 4-5 automated collection approaches (continuous monitoring, scheduled assessments, event-driven triggers, log aggregation)
@@ -336,7 +336,7 @@ Get comprehensive evidence automation recommendations for a specific KSI. **All 
 - **Implementation Details**: Effort estimates, prerequisites, cost considerations, responsible parties (Security, DevOps, Compliance, Engineering)
 - **Code Examples**: Infrastructure-as-code templates (Bicep, Terraform) and automation scripts
 
-**Coverage:** 100% of active KSIs across all 11 families:
+**Coverage:** All 65 active KSIs across 11 families:
 - IAM (7): MFA, Privilege Management, Session Controls, Credential Lifecycle, User Termination, JIT Access, Shared Accounts
 - CNA (8): Network Segmentation, TLS Configuration, Connection Logging, Azure Monitor, Key Vault, Secrets Detection, Container Registry, GitHub Security
 - MLA (5): Log Aggregation, Retention, Tamper Detection, Search Capabilities, Alerting
@@ -439,18 +439,18 @@ result = analyze_frr_code(
 ```
 
 ### analyze_all_frrs
-Analyze code against all 199 FedRAMP requirements for comprehensive compliance checking.
+Analyze code against all 199 FedRAMP requirements for compliance analysis.
 
 **Parameters:**
 - `code` (string): Code to analyze
 - `language` (string): Language/platform (python, csharp, java, typescript, bicep, terraform, github-actions, azure-pipelines, gitlab-ci)
 - `file_path` (string, optional): File path for context
 
-**Returns:** Complete analysis results grouped by FRR family with summary statistics
+**Returns:** Analysis results grouped by FRR family with summary statistics
 
 **Use Cases:**
 - **Pre-deployment validation**: Check all code before production deployment
-- **Comprehensive audits**: Full compliance scan for certification preparation
+- **Compliance audits**: Analysis scan to support certification preparation
 - **Security reviews**: Identify all FedRAMP compliance gaps
 - **CI/CD integration**: Automated compliance checking in pipelines
 
@@ -558,9 +558,9 @@ Get detailed metadata for a specific FRR including NIST controls, related KSIs, 
 **Parameters:**
 - `frr_id` (string): FRR identifier (e.g., "FRR-VDR-01")
 
-**Returns:** Comprehensive FRR metadata including:
+**Returns:** FRR metadata including:
 - **FRR Details**: ID, name, family, requirement statement
-- **NIST 800-53 Controls**: Related security controls with full titles
+- **NIST 800-53 Controls**: Related security controls
 - **Related KSIs**: Key Security Indicators that align with this FRR
 - **Impact Levels**: Applicable authorization levels (Low/Moderate/High)
 - **Detection Strategy**: How the requirement can be validated (code analysis, configuration checks, process review)
@@ -591,7 +591,7 @@ Get evidence automation recommendations for a specific FRR.
 **Parameters:**
 - `frr_id` (string): FRR identifier (e.g., "FRR-VDR-01", "FRR-ADS-01")
 
-**Returns:** Comprehensive evidence automation guidance including:
+**Returns:** Evidence automation guidance including:
 - **Evidence Type**: Configuration-based, log-based, or API-based evidence
 - **Automation Feasibility**: High/Medium/Low automation potential
 - **Azure Services**: 3-5 recommended services for evidence collection
@@ -652,10 +652,10 @@ result = get_frr_implementation_status()
 **Output Example:**
 ```
 FRR Implementation Status:
-- VDR Family: 59/59 implemented (100%)
-- RSC Family: 10/10 implemented (100%)
-- ADS Family: 22/22 implemented (100%)
-- Total: 199/199 implemented (100%)
+- VDR Family: 59/59 patterns available
+- RSC Family: 10/10 patterns available
+- ADS Family: 22/22 patterns available
+- Total: 199/199 patterns available
 
 Code-Detectable: 145 FRRs (73%)
 Process-Based: 54 FRRs (27%)
@@ -707,7 +707,7 @@ Search FedRAMP official documentation markdown files for specific keywords.
 
 **Returns:** Matching documentation sections with context from all available markdown files
 
-**Note:** Automatically loads all markdown files from the docs directory, so new documentation is always searchable.
+**Note:** Automatically loads markdown files from the docs directory for searchability.
 
 ### get_documentation_file
 Get the full content of a specific FedRAMP documentation file.
@@ -784,7 +784,7 @@ Export FedRAMP 20x data to CSV files for data analysis and spreadsheet imports.
 - Export definitions: `export_to_csv("definitions")`
 
 ### generate_ksi_specification
-Generate a comprehensive product specification Word document for a KSI to guide engineering implementation and planning.
+Generate a product specification Word document for a KSI to guide engineering implementation and planning.
 
 **Parameters:**
 - `ksi_id` (string): The KSI identifier (e.g., "KSI-AFR-01")
@@ -824,7 +824,7 @@ Generate strategic interview questions for product managers and engineers to fac
 **Parameters:**
 - `requirement_id` (string): The requirement or KSI identifier (e.g., "FRR-CCM-01", "KSI-IAM-01")
 
-**Returns:** Comprehensive set of strategic questions organized by stakeholder role
+**Returns:** Strategic questions organized by stakeholder role
 
 **Question Categories:**
 1. **Strategic Questions for Product Managers** (10 questions):
@@ -1025,7 +1025,7 @@ Generate Infrastructure as Code templates (Bicep or Terraform) for automated evi
 - `ksi_id` (string): The Key Security Indicator identifier (e.g., "KSI-IAM-01", "KSI-MLA-01")
 - `infrastructure_type` (string): Either "bicep" or "terraform"
 
-**Returns:** Complete IaC templates for deploying evidence collection infrastructure
+**Returns:** IaC templates for deploying evidence collection infrastructure
 
 **Supported KSI Families:**
 - **IAM (Identity and Access Management)**: Microsoft Entra ID, Log Analytics workspaces, diagnostic settings, automation accounts
@@ -1055,13 +1055,13 @@ Generate business logic code (Python, C#, PowerShell, Java, or TypeScript) for c
 - `ksi_id` (string): The Key Security Indicator identifier (e.g., "KSI-IAM-01")
 - `language` (string): Either "python", "csharp", "powershell", "java", or "typescript" (also accepts "javascript")
 
-**Returns:** Complete code examples with authentication, evidence collection, and storage
+**Returns:** Code examples with authentication, evidence collection, and storage
 
 **Code Features:**
 - **Authentication**: Azure DefaultAzureCredential pattern for managed identity or local development
 - **Evidence Collection**: SDKs for Microsoft Graph API, Azure Resource Manager, Azure Monitor
 - **Evidence Storage**: Save to Azure Blob Storage with immutability and metadata tagging
-- **Error Handling**: Comprehensive try-catch patterns and logging
+- **Error Handling**: Try-catch patterns and logging
 - **Documentation**: Inline comments explaining each step
 
 **Supported Languages:**
@@ -1084,12 +1084,12 @@ Generate business logic code (Python, C#, PowerShell, Java, or TypeScript) for c
 - Error handling and retry logic
 
 ### get_evidence_automation_architecture
-Get comprehensive architecture guidance for automated evidence collection systems.
+Get architecture guidance for automated evidence collection systems.
 
 **Parameters:**
 - `scope` (string): Architecture scope - "minimal", "single-ksi", "category", or "all"
 
-**Returns:** Complete architecture patterns with components, data flows, and implementation guidance
+**Returns:** Architecture patterns with components, data flows, and implementation guidance
 
 **Architecture Scopes:**
 1. **minimal**: Quick-start architecture for pilot projects
@@ -1110,7 +1110,7 @@ Get comprehensive architecture guidance for automated evidence collection system
    - Automated reporting dashboards
    - Integration with Azure Policy
 
-4. **all**: Complete enterprise architecture for all 72 KSIs
+4. **all**: Enterprise architecture for 72 KSIs
    - Multi-region evidence collection
    - High-availability design
    - Automated compliance reporting
@@ -1136,13 +1136,13 @@ Get comprehensive architecture guidance for automated evidence collection system
 
 The server provides **18 prompts** for FedRAMP compliance workflows:
 
-### Comprehensive Planning & Assessment Prompts
+### Planning & Assessment Prompts
 
-**initial_assessment_roadmap** - Complete 6-phase roadmap for FedRAMP 20x authorization with checklists, deliverables, and critical success factors (engineering teams determine timelines)
+**initial_assessment_roadmap** - 6-phase roadmap for FedRAMP 20x authorization with checklists, deliverables, and critical success factors (engineering teams determine timelines)
 
 **gap_analysis** - Detailed gap analysis framework comparing current state against FedRAMP 20x requirements with prioritization and remediation planning
 
-**vendor_evaluation** - Comprehensive vendor assessment framework with category-specific questions, scorecard template, and evaluation criteria
+**vendor_evaluation** - Vendor assessment framework with category-specific questions, scorecard template, and evaluation criteria
 
 **migration_from_rev5** - Detailed migration plan from FedRAMP Rev 5 to 20x with 7-phase approach, gap analysis, and requirement mapping (teams determine timelines and budgets)
 
@@ -1152,9 +1152,9 @@ The server provides **18 prompts** for FedRAMP compliance workflows:
 
 **ksi_implementation_priorities** - Prioritized guide for implementing all 72 Key Security Indicators across 8 priority phases with dependency mapping (engineering teams determine rollout timelines)
 
-**azure_ksi_automation** - **Complete guide for implementing all 72 KSIs using Microsoft, Azure, and M365 capabilities** including PowerShell scripts, Azure CLI commands, Microsoft Graph API integration, KQL queries, Azure Functions/Logic Apps, evidence collection framework, and integration with Defender suite, Entra ID, Key Vault, and Sentinel
+**azure_ksi_automation** - **Guide for implementing 72 KSIs using Microsoft, Azure, and M365 capabilities** including PowerShell scripts, Azure CLI commands, Microsoft Graph API integration, KQL queries, Azure Functions/Logic Apps, evidence collection framework, and integration with Defender suite, Entra ID, Key Vault, and Sentinel
 
-**api_design_guide** - Complete guide for Authorization Data Sharing API (FRR-ADS) with endpoints, authentication, OSCAL formats, and examples
+**api_design_guide** - Guide for Authorization Data Sharing API (FRR-ADS) with endpoints, authentication, OSCAL formats, and examples
 
 **authorization_boundary_review** - Guidance for defining and documenting authorization boundaries, system interconnections, and data flows per FedRAMP 20x requirements
 
@@ -1162,15 +1162,15 @@ The server provides **18 prompts** for FedRAMP compliance workflows:
 
 **continuous_monitoring_setup** - Guide for establishing continuous monitoring programs aligned with FedRAMP 20x requirements including automation, metrics, and reporting
 
-**quarterly_review_checklist** - Comprehensive checklist for FedRAMP 20x quarterly reviews (FRR-CCM-QR) covering all 72 KSIs, vulnerability review, and change review
+**quarterly_review_checklist** - Checklist for FedRAMP 20x quarterly reviews (FRR-CCM-QR) covering 72 KSIs, vulnerability review, and change review
 
 **vulnerability_remediation_timeline** - Timeline and prioritization framework for vulnerability remediation aligned with FedRAMP 20x VDR requirements
 
 ### Audit & Documentation Prompts
 
-**audit_preparation** - Comprehensive guide for FedRAMP 20x assessment preparation with evidence gathering, common findings, and interview prep (teams determine preparation timeline)
+**audit_preparation** - Guide for FedRAMP 20x assessment preparation with evidence gathering, common findings, and interview prep (teams determine preparation timeline)
 
-**ato_package_checklist** - Complete checklist for Authority to Operate (ATO) package preparation including all required artifacts, templates, and submission requirements
+**ato_package_checklist** - Checklist for Authority to Operate (ATO) package preparation including required artifacts, templates, and submission requirements
 
 **documentation_generator** - OSCAL SSP templates, procedure templates (VDR, ICP, SCN), and KSI implementation documentation templates
 
@@ -1178,13 +1178,13 @@ The server provides **18 prompts** for FedRAMP compliance workflows:
 
 **frr_code_review** - Guide for reviewing code against FedRAMP Requirements (FRR) using AST-powered semantic analysis across all 10 FRR families (VDR, ADS, RSC, UCM, CCM, SCN, MAS, ICP, FSI, PVA) with PR workflow integration
 
-**frr_family_assessment** - Comprehensive family-specific assessment guide for all 199 FRR requirements with detailed checklists, assessment questions, and evidence planning for each of the 10 FRR families
+**frr_family_assessment** - Family-specific assessment guide for 199 FRR requirements with detailed checklists, assessment questions, and evidence planning for the 10 FRR families
 
 **frr_implementation_roadmap** - Strategic 16-week, 4-phase roadmap for implementing all 199 FRR requirements with prioritization framework, Azure service recommendations, and KSI integration strategies
 
 ## Combined KSI + FRR Analysis Examples
 
-The MCP server provides integrated analysis capabilities combining Key Security Indicators (KSI) with FedRAMP Revised Requirements (FRR) for comprehensive compliance validation. These examples demonstrate how to use both KSI code analyzers and FRR analysis tools together for holistic security assessments.
+The MCP server provides integrated analysis capabilities combining Key Security Indicators (KSI) with FedRAMP Revised Requirements (FRR) for compliance analysis. These examples demonstrate how to use both KSI code analyzers and FRR analysis tools together for holistic security assessments.
 
 ### Example 1: Network Segmentation (KSI-CNA-01 + FRR-RSC Family)
 
@@ -1445,13 +1445,13 @@ for frr in tc_frrs:
 
 **Integration Benefits:**
 - KSI-CED-01 validates evidence delivery mechanism
-- FRR-ADS family ensures all 22 authorization data sharing requirements met
+- FRR-ADS family supports 22 authorization data sharing requirements
 - Combined analysis identifies which KSIs map to which FRR endpoints
-- Comprehensive coverage of machine-readable compliance data requirements
+- Supports machine-readable compliance data requirements
 
-### Example 4: Comprehensive Pre-Deployment Scan
+### Example 4: Pre-Deployment Scan
 
-**Scenario:** Full compliance check before production deployment combining all KSIs and FRRs
+**Scenario:** Compliance analysis before production deployment combining KSIs and FRRs
 
 ```python
 # Complete infrastructure/application scan
@@ -1546,8 +1546,8 @@ print(f"  Combined Score: {(ksi_status['implementation_percentage'] + frr_status
 ```
 
 **Integration Benefits:**
-- Comprehensive scan across all 72 KSIs and 199 FRRs
-- Single command provides full compliance posture
+- Analysis across 72 KSIs and 199 FRRs
+- Single command provides compliance analysis results
 - Family-specific analysis highlights priority areas
 - Automated checklist for deployment approval
 - Tracking metrics for continuous improvement
@@ -1562,7 +1562,7 @@ print(f"  Combined Score: {(ksi_status['implementation_percentage'] + frr_status
    - `analyze_frr_family("VDR", code, language, file_path)` for vulnerability management
    - `analyze_frr_family("RSC", code, language, file_path)` for secure configuration
 
-3. **CI/CD Pipeline**: Full compliance scan before deployment
+3. **CI/CD Pipeline**: Compliance analysis before deployment
    - `factory.analyze_all_ksis(code, language, file_path)` for all KSIs
    - `analyze_all_frrs(code, language, file_path)` for all FRRs
 
