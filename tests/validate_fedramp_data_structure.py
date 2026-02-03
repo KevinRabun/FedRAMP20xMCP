@@ -427,16 +427,16 @@ class FedRAMPDataValidator:
         print()
         
         # Load data
-        print("📥 Loading data from FedRAMP repository...")
+        print("[INFO] Loading data from FedRAMP repository...")
         if not await self.load_data(force_refresh=force_refresh):
-            print("❌ CRITICAL: Failed to load data!")
+            print("[FAIL] CRITICAL: Failed to load data!")
             return False
         
-        print(f"✅ Data loaded successfully")
+        print(f"[OK] Data loaded successfully")
         print()
         
         # Run validations
-        print("🔍 Running validations...")
+        print("[INFO] Running validations...")
         print("-" * 40)
         
         self.validate_data_structure()
@@ -456,7 +456,7 @@ class FedRAMPDataValidator:
         failed_count = 0
         
         for result in self.results:
-            status = "✅ PASS" if result.passed else "❌ FAIL"
+            status = "[OK] PASS" if result.passed else "[FAIL] FAIL"
             print(f"{status}: {result.name}")
             print(f"       {result.message}")
             if result.details and not result.passed:
@@ -478,10 +478,10 @@ class FedRAMPDataValidator:
         print()
         
         if failed_count == 0:
-            print("🎉 All validations passed!")
+            print("[SUCCESS] All validations passed!")
             return True
         else:
-            print(f"⚠️  {failed_count} validation(s) failed!")
+            print(f"[WARN] {failed_count} validation(s) failed!")
             return False
 
 

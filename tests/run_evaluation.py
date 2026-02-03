@@ -62,17 +62,17 @@ async def main():
     
     # Generate report
     report_path = evaluator.generate_report(metrics, format=args.format)
-    print(f"\n📄 Report saved to: {report_path}")
+    print(f"\nReport saved to: {report_path}")
     
     # Return exit code based on pass rate
     if metrics.overall_pass_rate >= 0.9:
-        print("\n✅ EVALUATION PASSED")
+        print("\n[PASS] EVALUATION PASSED")
         return 0
     elif metrics.overall_pass_rate >= 0.7:
-        print("\n⚠️  EVALUATION PARTIAL PASS")
+        print("\n[WARN] EVALUATION PARTIAL PASS")
         return 0
     else:
-        print("\n❌ EVALUATION FAILED")
+        print("\n[FAIL] EVALUATION FAILED")
         return 1
 
 
