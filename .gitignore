@@ -63,6 +63,12 @@ htmlcov/
 .nox/
 temp_test_exports/
 
+# Evaluation reports (generated)
+tests/evaluator/reports/*.json
+tests/evaluator/reports/*.html
+tests/evaluator/reports/*.md
+!tests/evaluator/reports/README.md
+
 # Environment variables
 .env
 .env.local
@@ -74,3 +80,7 @@ temp_test_exports/
 # Build artifacts
 *.whl
 *.tar.gz
+
+
+#Ignore vscode AI rules
+.github\instructions\codacy.instructions.md

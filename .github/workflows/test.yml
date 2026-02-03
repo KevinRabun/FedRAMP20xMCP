@@ -47,3 +47,8 @@ jobs:
     
     - name: Test MCP server import
       run: python -c "from fedramp_20x_mcp import main; print('Import successful')"
+    
+    - name: Run MCP Server Evaluation (critical tests)
+      run: python tests/run_evaluation.py --critical-only --format json
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
