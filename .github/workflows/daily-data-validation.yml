@@ -134,20 +134,23 @@ jobs:
         python -c "
         import asyncio
         from fedramp_20x_mcp.data_loader import FedRAMPDataLoader
-        from fedramp_20x_mcp.server import create_server
         
         async def test_server():
             # Test data loader
             loader = FedRAMPDataLoader()
             data = await loader.load_data(force_refresh=True)
-            print(f'✅ Loaded {len(data[\"requirements\"])} requirements')
-            print(f'✅ Loaded {len(data[\"ksi\"])} KSIs')
-            print(f'✅ Loaded {len(data[\"definitions\"])} definitions')
-            print(f'✅ Found {len(data[\"families\"])} families')
+            print(f'[OK] Loaded {len(data[\"requirements\"])} requirements')
+            print(f'[OK] Loaded {len(data[\"ksi\"])} KSIs')
+            print(f'[OK] Loaded {len(data[\"definitions\"])} definitions')
+            print(f'[OK] Found {len(data[\"families\"])} families')
             
-            # Test server creation
-            server = create_server()
-            print('✅ MCP server created successfully')
+            # Test server module import (server initializes on import)
+            from fedramp_20x_mcp import server
+            print('[OK] MCP server module loaded successfully')
+            
+            # Verify mcp instance exists
+            assert hasattr(server, 'mcp'), 'Server mcp instance not found'
+            print('[OK] MCP server instance verified')
             
             return True
         
