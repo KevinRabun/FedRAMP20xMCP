@@ -66,7 +66,7 @@ class MCPServerEvaluator:
         # Tool implementations will be loaded lazily
         self._tools_loaded = False
         self._data_loader = None
-        self._tool_registry: Dict[str, callable] = {}
+        self._tool_registry: Dict[str, Any] = {}
     
     async def _ensure_tools_loaded(self) -> None:
         """Lazily load tool implementations."""
@@ -218,7 +218,7 @@ class MCPServerEvaluator:
                         score=0.0,
                         explanation=f"Execution error: {result}",
                     ))
-                else:
+                elif isinstance(result, EvaluationResult):
                     metrics.add_result(result)
         else:
             # Run sequentially (required for consistency tests)
@@ -295,8 +295,9 @@ class MCPServerEvaluator:
         consistency_tests = get_test_cases_by_category(TestCaseCategory.CONSISTENCY)
         
         # Reset consistency judge
-        if isinstance(self.judges[EvaluationCategory.CONSISTENCY], ConsistencyJudge):
-            self.judges[EvaluationCategory.CONSISTENCY].reset()
+        consistency_judge = self.judges[EvaluationCategory.CONSISTENCY]
+        if isinstance(consistency_judge, ConsistencyJudge):
+            consistency_judge.reset()
         
         all_tests = []
         for _ in range(iterations):

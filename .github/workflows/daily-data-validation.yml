@@ -10,7 +10,7 @@ on:
       force_refresh:
         description: 'Force refresh from FedRAMP repo (bypass cache)'
         required: false
-        default: 'true'
+        default: true
         type: boolean
 
 permissions:
