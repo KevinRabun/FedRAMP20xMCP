@@ -98,7 +98,16 @@ Costly assumption errors (never repeat):
 - SVC‑01 ≠ “Secrets Management” → **SVC‑06 is secrets**
 
 If requirement meaning unclear → **STOP & ask** (do not infer).
+**VERIFY APIs BEFORE CALLING THEM:**
+- NEVER assume a function exists based on common patterns
+- ALWAYS read the source file to verify function names and signatures
+- Before writing `from module import function_name`, confirm `function_name` exists
+- Check `__init__.py` exports and actual module contents
 
+Costly API assumption error (never repeat):
+- Assumed `create_server()` existed because it's a common pattern
+- Reality: Server uses module-level `mcp = FastMCP(...)` initialization
+- Result: CI failure from ImportError
 ---
 
 # 5. USER INSTRUCTION COMPLIANCE (ABSOLUTE)
