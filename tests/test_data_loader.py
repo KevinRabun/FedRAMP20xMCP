@@ -79,8 +79,8 @@ class TestDataLoader:
         """Test retrieving specific requirement"""
         await loader.load_data()
         
-        # Test with known FRR IDs (valid FRR families: ADS, CCM, FSI, ICP, KSI, MAS, PVA, RSC, SCN, UCM, VDR)
-        for req_id in ["FRR-VDR-01", "FRR-RSC-01", "FRR-SCN-01"]:
+        # Test with known FRR IDs (new format: FAMILY-GROUP-ID)
+        for req_id in ["VDR-EVA-EFA", "ADS-CSX-UTC", "SCN-SIG-NTF"]:
             req = loader.get_control(req_id)
             # Requirement might not exist in test data
             if req:
@@ -91,8 +91,8 @@ class TestDataLoader:
         """Test retrieving specific KSI"""
         await loader.load_data()
         
-        # Test with known KSI IDs
-        for ksi_id in ["KSI-IAM-01", "KSI-CNA-01", "KSI-VDR-01"]:
+        # Test with known KSI IDs (new descriptive format: KSI-CATEGORY-NAME)
+        for ksi_id in ["KSI-IAM-MFA", "KSI-CNA-DFP", "KSI-SVC-ASM"]:
             ksi = loader.get_ksi(ksi_id)
             # KSI might not exist in test data
             if ksi:
