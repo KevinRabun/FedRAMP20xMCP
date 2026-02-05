@@ -5,8 +5,12 @@ Validates that all KSI references in code, tests, and documentation match
 the authoritative FedRAMP 20x definitions from the cached data.
 
 This test prevents future misidentifications like:
-- KSI-PIY-01 being called "Encryption at Rest" instead of "Automated Inventory"
-- KSI-SVC-01 being called "Secrets Management" instead of "Continuous Improvement"
+- KSI-PIY-GIV being called "Encryption at Rest" instead of "Generating Inventories"
+- KSI-SVC-EIS being called "Secrets Management" instead of "Evaluating and Improving Security"
+
+Note: FedRAMP 20x v0.9.0-beta changed KSI IDs from numbered format (KSI-PIY-01) to
+descriptive format (KSI-PIY-GIV). The "fka" (formerly known as) field maps old IDs
+to new ones.
 """
 
 import json
@@ -16,104 +20,104 @@ from typing import Dict, List, Tuple
 import pytest
 
 
-# Authoritative KSI definitions from FedRAMP 20x
+# Authoritative KSI definitions from FedRAMP 20x v0.9.0-beta
 # Source: https://github.com/FedRAMP/docs
+# Note: IDs changed from numbered (KSI-PIY-01) to descriptive (KSI-PIY-GIV)
 AUTHORITATIVE_KSI_DEFINITIONS = {
     # PIY - Policy and Inventory (NOT Privacy!)
-    "KSI-PIY-01": "Automated Inventory",
-    "KSI-PIY-02": None,  # RETIRED - superseded by KSI-AFR-01
-    "KSI-PIY-03": "Documentation Requirements",
-    "KSI-PIY-04": "Risk Assessment",
-    "KSI-PIY-05": "Authorization",
-    "KSI-PIY-06": "Continuous Authorization",
-    "KSI-PIY-07": "Specialized Assessments",
-    "KSI-PIY-08": "Interconnections",
+    "KSI-PIY-GIV": "Generating Inventories",  # fka: KSI-PIY-01
+    "KSI-PIY-RES": "Reviewing Executive Support",  # fka: KSI-PIY-08
+    "KSI-PIY-RIS": "Reviewing Investments in Security",  # fka: KSI-PIY-06
+    "KSI-PIY-RSD": "Reviewing Security in the SDLC",  # fka: KSI-PIY-04
+    "KSI-PIY-RVD": "Reviewing Vulnerability Disclosures",  # fka: KSI-PIY-03
     
     # SVC - Service Configuration
-    "KSI-SVC-01": "Continuous Improvement",
-    "KSI-SVC-02": "Network Encryption",
-    "KSI-SVC-03": None,  # RETIRED - superseded by KSI-AFR-11
-    "KSI-SVC-04": "Configuration Automation",
-    "KSI-SVC-05": "Resource Integrity",
-    "KSI-SVC-06": "Secret Management",
-    "KSI-SVC-07": "Patching",
-    "KSI-SVC-08": "Malicious Code Protection",
-    "KSI-SVC-09": "Flaw Remediation",
-    "KSI-SVC-10": "Developer Security and Privacy",
+    "KSI-SVC-EIS": "Evaluating and Improving Security",  # fka: KSI-SVC-01
+    "KSI-SVC-SNT": "Securing Network Traffic",  # fka: KSI-SVC-02
+    "KSI-SVC-ACM": "Automating Configuration Management",  # fka: KSI-SVC-04
+    "KSI-SVC-VRI": "Validating Resource Integrity",  # fka: KSI-SVC-05
+    "KSI-SVC-ASM": "Automating Secret Management",  # fka: KSI-SVC-06
+    "KSI-SVC-PRR": "Preventing Residual Risk",  # fka: KSI-SVC-08
+    "KSI-SVC-VCM": "Validating Communications",  # fka: KSI-SVC-09
+    "KSI-SVC-RUD": "Removing Unwanted Data",  # fka: KSI-SVC-10
     
     # IAM - Identity and Access Management
-    "KSI-IAM-01": "Phishing-Resistant MFA",
-    "KSI-IAM-02": "Privileged Access",
-    "KSI-IAM-03": "Separation of Duties",
-    "KSI-IAM-04": "Least Privilege",
-    "KSI-IAM-05": "Service Accounts",
-    "KSI-IAM-06": "Suspicious Activity",
-    "KSI-IAM-07": "Session Management",
+    "KSI-IAM-MFA": "Enforcing Phishing-Resistant MFA",  # fka: KSI-IAM-01
+    "KSI-IAM-APM": "Adopting Passwordless Methods",  # fka: KSI-IAM-02
+    "KSI-IAM-SNU": "Securing Non-User Authentication",  # fka: KSI-IAM-03
+    "KSI-IAM-JIT": "Authorizing Just-in-Time",  # fka: KSI-IAM-04
+    "KSI-IAM-ELP": "Ensuring Least Privilege",  # fka: KSI-IAM-05
+    "KSI-IAM-SUS": "Responding to Suspicious Activity",  # fka: KSI-IAM-06
+    "KSI-IAM-AAM": "Automating Account Management",  # fka: KSI-IAM-07
     
     # CNA - Cloud Network Architecture
-    "KSI-CNA-01": "Restrict Network Traffic",
-    "KSI-CNA-02": "Boundary Protection",
-    "KSI-CNA-03": "Traffic Inspection",
-    "KSI-CNA-04": "Name Resolution",
-    "KSI-CNA-05": "DDoS Protection",
+    "KSI-CNA-RNT": "Restricting Network Traffic",  # fka: KSI-CNA-01
+    "KSI-CNA-MAT": "Minimizing Attack Surface",  # fka: KSI-CNA-02
+    "KSI-CNA-ULN": "Using Logical Networking",  # fka: KSI-CNA-03
+    "KSI-CNA-DFP": "Defining Functionality and Privileges",  # fka: KSI-CNA-04
+    "KSI-CNA-RVP": "Reviewing Protections",  # fka: KSI-CNA-05
+    "KSI-CNA-OFA": "Optimizing for Availability",  # fka: KSI-CNA-06
+    "KSI-CNA-IBP": "Implementing Best Practices",  # fka: KSI-CNA-07
+    "KSI-CNA-EIS": "Enforcing Intended State",  # fka: KSI-CNA-08
     
     # MLA - Monitoring, Logging, and Auditing
-    "KSI-MLA-01": "Security Information and Event Management (SIEM)",
-    "KSI-MLA-02": "Audit Record Retention",
-    "KSI-MLA-03": None,  # RETIRED
-    "KSI-MLA-04": None,  # RETIRED
-    "KSI-MLA-05": "Audit Record Review",
-    "KSI-MLA-06": None,  # RETIRED
-    "KSI-MLA-07": "Continuous Monitoring",
+    "KSI-MLA-OSM": "Operating SIEM Capability",  # fka: KSI-MLA-01
+    "KSI-MLA-RVL": "Reviewing Logs",  # fka: KSI-MLA-02
+    "KSI-MLA-EVC": "Evaluating Configurations",  # fka: KSI-MLA-05
+    "KSI-MLA-LET": "Logging Event Types",  # fka: KSI-MLA-07
+    "KSI-MLA-ALA": "Authorizing Log Access",  # fka: KSI-MLA-08
     
-    # CMT - Change Management and Transparency
-    "KSI-CMT-01": "Change Control Board",
-    "KSI-CMT-02": "Configuration Change Control",
-    "KSI-CMT-03": "Impact Analysis",
-    "KSI-CMT-04": "Transparency",
-    "KSI-CMT-05": None,  # RETIRED - superseded by KSI-AFR-05
+    # CMT - Change Management (and Transparency theme removed)
+    "KSI-CMT-LMC": "Logging Changes",  # fka: KSI-CMT-01
+    "KSI-CMT-RMV": "Redeploying vs Modifying",  # fka: KSI-CMT-02
+    "KSI-CMT-VTD": "Validating Throughout Deployment",  # fka: KSI-CMT-03
+    "KSI-CMT-RVP": "Reviewing Change Procedures",  # fka: KSI-CMT-04
     
-    # TPR - Third Party Risk
-    "KSI-TPR-01": None,  # RETIRED - superseded by KSI-AFR-01
-    "KSI-TPR-02": None,  # RETIRED - superseded by KSI-AFR-01
-    "KSI-TPR-03": "Third Party Contracts",
+    # SCR - Supply Chain Risk (fka TPR - Third Party Risk)
+    "KSI-SCR-MIT": "Mitigating Supply Chain Risk",  # fka: KSI-TPR-03
+    "KSI-RSC-MON": "Monitoring Supply Chain Risk",  # fka: KSI-TPR-04
     
-    # Additional themes
-    "KSI-VDR-01": "Vulnerability Scanning",
-    "KSI-SCN-01": "Baseline Configuration",
-    "KSI-RSC-01": "Contingency Planning",
-    "KSI-ADS-01": "Audit Storage",
+    # Additional categories
+    "KSI-AFR-VDR": "Vulnerability Detection and Response",  # fka: KSI-AFR-04
+    "KSI-AFR-SCN": "Significant Change Notifications",  # fka: KSI-AFR-05
+    "KSI-AFR-ADS": "Authorization Data Sharing",  # fka: KSI-AFR-03
+    "KSI-CED-RGT": "Reviewing General Training",  # fka: KSI-CED-01
+    "KSI-CED-RST": "Reviewing Role-Specific Training",  # fka: KSI-CED-02
+    "KSI-CED-DET": "Reviewing Development and Engineering Training",  # fka: KSI-CED-03
+    "KSI-CED-RRT": "Reviewing Response and Recovery Training",  # fka: KSI-CED-04
+    "KSI-INR-RIR": "Reviewing Incident Response Procedures",  # fka: KSI-INR-01
+    "KSI-INR-RPI": "Reviewing Past Incidents",  # fka: KSI-INR-02
+    "KSI-INR-AAR": "Generating After Action Reports",  # fka: KSI-INR-03
+    "KSI-RPL-RRO": "Reviewing Recovery Objectives",  # fka: KSI-RPL-01
+    "KSI-RPL-ARP": "Aligning Recovery Plan",  # fka: KSI-RPL-02
+    "KSI-RPL-ABO": "Aligning Backups with Objectives",  # fka: KSI-RPL-03
+    "KSI-RPL-TRC": "Testing Recovery Capabilities",  # fka: KSI-RPL-04
 }
 
 # Known wrong descriptions that should never appear
+# Using new IDs (with fka mapping for reference)
 FORBIDDEN_DESCRIPTIONS = {
-    "KSI-PIY-01": [
+    "KSI-PIY-GIV": [  # fka: KSI-PIY-01 - Generating Inventories
         "encryption at rest",
         "data encryption",
         "privacy",
         "pii",
         "data classification",
     ],
-    "KSI-PIY-02": [
-        "encryption in transit",
-        "tls",
-        "https",
-        "pii handling",
-    ],
-    "KSI-SVC-01": [
+    "KSI-SVC-EIS": [  # fka: KSI-SVC-01 - Evaluating and Improving Security
         "secrets management",
         "secret management", 
         "key vault",
         "error handling",
         "logging",
     ],
-    "KSI-SVC-02": [
+    "KSI-SVC-SNT": [  # fka: KSI-SVC-02 - Securing Network Traffic
         "secrets",
         "key vault",
         "input validation",
         "sql injection",
     ],
-    "KSI-SVC-06": [
+    "KSI-SVC-ASM": [  # fka: KSI-SVC-06 - Automating Secret Management
         "network security",
         "nsg",
         "firewall",
@@ -148,8 +152,10 @@ def find_ksi_references_in_file(file_path: Path) -> List[Tuple[int, str, str]]:
     """
     references = []
     
-    # Pattern to match KSI-XXX-NN with surrounding context
-    ksi_pattern = re.compile(r'(KSI-[A-Z]{2,3}-\d{2})[:\s]*([^"\n\r]{0,100})', re.IGNORECASE)
+    # Pattern to match KSI-XXX-YYY (new format) or KSI-XXX-NN (old format) with surrounding context
+    # New format: KSI-IAM-MFA, KSI-PIY-GIV, KSI-SVC-ASM (3+ chars for suffix)
+    # Old format: KSI-IAM-01, KSI-PIY-02, KSI-SVC-06 (2 digits)
+    ksi_pattern = re.compile(r'(KSI-[A-Z]{2,3}-[A-Z0-9]{2,4})[:\s]*([^"\n\r]{0,100})', re.IGNORECASE)
     
     try:
         with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
@@ -207,23 +213,23 @@ class TestKSIReferenceValidation:
         """Verify authoritative data contains KSI definitions."""
         assert authoritative_data, "Failed to load authoritative data"
         
-        # Check for key KSIs
-        requirements = authoritative_data.get("requirements", {})
-        assert "KSI-PIY-01" in requirements, "KSI-PIY-01 not in authoritative data"
-        assert "KSI-SVC-01" in requirements, "KSI-SVC-01 not in authoritative data"
+        # Check for key KSIs - using new format IDs (v0.9.0-beta)
+        ksis = authoritative_data.get("ksi", {})
+        assert "KSI-PIY-GIV" in ksis, "KSI-PIY-GIV (fka KSI-PIY-01) not in authoritative data"
+        assert "KSI-SVC-EIS" in ksis, "KSI-SVC-EIS (fka KSI-SVC-01) not in authoritative data"
         
         # Verify correct names
-        piy_01 = requirements.get("KSI-PIY-01", {})
-        assert piy_01.get("name") == "Automated Inventory", \
-            f"KSI-PIY-01 should be 'Automated Inventory', got '{piy_01.get('name')}'"
+        piy_giv = ksis.get("KSI-PIY-GIV", {})
+        assert piy_giv.get("name") == "Generating Inventories", \
+            f"KSI-PIY-GIV should be 'Generating Inventories', got '{piy_giv.get('name')}'"
         
-        svc_01 = requirements.get("KSI-SVC-01", {})
-        assert svc_01.get("name") == "Continuous Improvement", \
-            f"KSI-SVC-01 should be 'Continuous Improvement', got '{svc_01.get('name')}'"
+        svc_eis = ksis.get("KSI-SVC-EIS", {})
+        assert svc_eis.get("name") == "Evaluating and Improving Security", \
+            f"KSI-SVC-EIS should be 'Evaluating and Improving Security', got '{svc_eis.get('name')}'"
         
-        svc_06 = requirements.get("KSI-SVC-06", {})
-        assert svc_06.get("name") == "Secret Management", \
-            f"KSI-SVC-06 should be 'Secret Management', got '{svc_06.get('name')}'"
+        svc_asm = ksis.get("KSI-SVC-ASM", {})
+        assert svc_asm.get("name") == "Automating Secret Management", \
+            f"KSI-SVC-ASM should be 'Automating Secret Management', got '{svc_asm.get('name')}'"
     
     def test_no_forbidden_ksi_descriptions_in_tests(self, project_root):
         """Verify test files don't contain forbidden KSI descriptions."""
@@ -316,11 +322,16 @@ class TestKSIReferenceValidation:
         assert not violations, \
             f"PIY should be 'Policy and Inventory', not 'Privacy':\n" + "\n".join(violations)
     
-    def test_retired_ksis_not_actively_used(self, authoritative_data):
-        """Verify retired KSIs are properly marked in authoritative data."""
-        requirements = authoritative_data.get("requirements", {})
+    def test_retired_ksis_not_in_active_data(self, authoritative_data):
+        """Verify retired KSIs are not present in authoritative data.
         
-        retired_ksis = [
+        In FedRAMP 20x v0.9.0-beta, retired KSIs were removed entirely rather than
+        being marked with a 'retired' flag. This test verifies they don't appear.
+        """
+        ksis = authoritative_data.get("ksi", {})
+        
+        # Old retired KSI IDs that should not exist
+        retired_old_ids = [
             "KSI-CMT-05",
             "KSI-MLA-03", "KSI-MLA-04", "KSI-MLA-06",
             "KSI-PIY-02",
@@ -328,10 +339,14 @@ class TestKSIReferenceValidation:
             "KSI-TPR-01", "KSI-TPR-02",
         ]
         
-        for ksi_id in retired_ksis:
-            ksi_data = requirements.get(ksi_id, {})
-            assert ksi_data.get("retired") is True, \
-                f"{ksi_id} should be marked as retired in authoritative data"
+        for old_id in retired_old_ids:
+            assert old_id not in ksis, \
+                f"Retired {old_id} should not be in KSI data"
+            # Also check it doesn't appear as a new ID's fka value
+            for ksi_id, ksi_data in ksis.items():
+                fka = ksi_data.get("fka", "")
+                assert fka != old_id, \
+                    f"Retired {old_id} should not have a successor, found in {ksi_id}"
 
 
 class TestKSIDefinitionAccuracy:
@@ -342,19 +357,19 @@ class TestKSIDefinitionAccuracy:
         return load_authoritative_ksi_data()
     
     @pytest.mark.parametrize("ksi_id,expected_name", [
-        ("KSI-PIY-01", "Automated Inventory"),
-        # KSI-PIY-02 is retired (superseded by KSI-AFR-01)
-        ("KSI-SVC-01", "Continuous Improvement"),
-        ("KSI-SVC-02", "Network Encryption"),
-        ("KSI-SVC-06", "Secret Management"),
-        ("KSI-IAM-01", "Phishing-Resistant MFA"),
-        ("KSI-CNA-01", "Restrict Network Traffic"),
-        ("KSI-MLA-01", "Security Information and Event Management (SIEM)"),
+        # Using new KSI IDs from v0.9.0-beta
+        ("KSI-PIY-GIV", "Generating Inventories"),  # fka: KSI-PIY-01
+        ("KSI-SVC-EIS", "Evaluating and Improving Security"),  # fka: KSI-SVC-01
+        ("KSI-SVC-SNT", "Securing Network Traffic"),  # fka: KSI-SVC-02
+        ("KSI-SVC-ASM", "Automating Secret Management"),  # fka: KSI-SVC-06
+        ("KSI-IAM-MFA", "Enforcing Phishing-Resistant MFA"),  # fka: KSI-IAM-01
+        ("KSI-CNA-RNT", "Restricting Network Traffic"),  # fka: KSI-CNA-01
+        ("KSI-MLA-OSM", "Operating SIEM Capability"),  # fka: KSI-MLA-01
     ])
     def test_ksi_definition_matches_authoritative(self, authoritative_data, ksi_id, expected_name):
         """Verify KSI definition matches authoritative FedRAMP 20x source."""
-        requirements = authoritative_data.get("requirements", {})
-        ksi_data = requirements.get(ksi_id, {})
+        ksis = authoritative_data.get("ksi", {})
+        ksi_data = ksis.get(ksi_id, {})
         
         actual_name = ksi_data.get("name")
         assert actual_name == expected_name, \

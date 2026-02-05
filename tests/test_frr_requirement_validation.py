@@ -3,21 +3,22 @@
 FRR (FedRAMP Requirement) Pattern Validation Tests
 
 Validates that FRR analyzer patterns correctly detect compliant and non-compliant
-code for all 199 FedRAMP requirements across 11 families:
+code for all FedRAMP requirements across 11 families:
 
-- ADS (Authorization Data Sharing):             20 requirements
-- CCM (Collaborative Continuous Monitoring):    25 requirements  
-- FSI (FedRAMP Security Inbox):                 16 requirements
-- ICP (Incident Communications Procedures):      9 requirements
-- KSI (Key Security Indicators):                 2 requirements
-- MAS (Minimum Assessment Scope):               12 requirements
-- PVA (Persistent Validation and Assessment):   22 requirements
-- RSC (Recommended Secure Configuration):       10 requirements
-- SCN (Significant Change Notifications):       22 requirements
-- UCM (Using Cryptographic Modules):             4 requirements
-- VDR (Vulnerability Detection and Response):   57 requirements
+- ADS (Authorization Data Sharing)
+- CCM (Collaborative Continuous Monitoring)
+- FSI (FedRAMP Security Inbox)
+- ICP (Incident Communications Procedures)
+- KSI (Key Security Indicators)
+- MAS (Minimum Assessment Scope)
+- PVA (Persistent Validation and Assessment)
+- SCG (Secure Configuration Guide) - fka RSC
+- SCN (Significant Change Notifications)
+- UCM (Using Cryptographic Modules)
+- VDR (Vulnerability Detection and Response)
 
-Total: 199 FRRs × 2 test cases (positive + negative) = 398 pattern validation tests
+Note: FedRAMP 20x v0.9.0-beta changed FRR IDs from 'FRR-FAMILY-XX' format
+to 'FAMILY-GROUP-XXX' format (e.g., 'ADS-CSX-UTC' instead of 'FRR-ADS-01').
 
 This file validates PATTERN LOGIC and ANALYZER IMPLEMENTATION, not just data loading
 (data loading is covered by test_mcp_server_understanding.py).
@@ -38,11 +39,20 @@ def factory():
 
 @pytest.fixture
 def frr_ids():
-    """Get all FRR IDs from data loader"""
+    """Get all FRR IDs from data loader
+    
+    Note: FedRAMP 20x v0.9.0-beta changed FRR IDs from 'FRR-FAMILY-XX' format
+    to 'FAMILY-GROUP-XXX' format (e.g., 'ADS-CSX-UTC' instead of 'FRR-ADS-01').
+    Requirements are now identified by having a 'family' field.
+    """
     loader = FedRAMPDataLoader()
     asyncio.run(loader.load_data())
-    all_requirements = loader.search_controls("FRR-")
-    frr_data = [r for r in all_requirements if r.get('id', '').startswith('FRR-')]
+    # Search for requirements that have a 'family' field (not definitions)
+    # Get all requirements that are FRRs (have family field, not FRD definitions)
+    all_requirements = loader.search_controls("")
+    frr_data = [r for r in all_requirements 
+                if r.get('family') and not r.get('id', '').startswith('FRD-') 
+                and not r.get('id', '').startswith('KSI-')]
     return sorted([frr['id'] for frr in frr_data])
 
 
@@ -118,7 +128,7 @@ resource "azurerm_policy_assignment" "continuous" {{
 }}
 """, "terraform"),
     
-    "RSC": ("""
+    "SCG": ("""
 # COMPLIANT: Secure configuration per {frr_id}
 resource "azurerm_storage_account" "secure" {{
   name                      = "securestorage"
@@ -226,7 +236,7 @@ resource "azurerm_security_center_assessment" "manual_only" {{
 }}
 """, "terraform"),
     
-    "RSC": ("""
+    "SCG": ("""
 # NON-COMPLIANT: {frr_id} violation
 resource "azurerm_storage_account" "insecure" {{
   name = "insecurestorage"
@@ -258,17 +268,26 @@ hash_value = hashlib.md5(data).hexdigest()  # MD5 not FIPS approved
 
 
 def generate_test_cases():
-    """Generate positive and negative test cases for all FRRs"""
+    """Generate positive and negative test cases for all FRRs
+    
+    Note: FedRAMP 20x v0.9.0-beta changed FRR IDs from 'FRR-FAMILY-XX' format
+    to 'FAMILY-GROUP-XXX' format (e.g., 'ADS-CSX-UTC' instead of 'FRR-ADS-01').
+    """
     # Load FRR IDs from data loader
     loader = FedRAMPDataLoader()
     asyncio.run(loader.load_data())
-    all_requirements = loader.search_controls("FRR-")
-    frr_data = [r for r in all_requirements if r.get('id', '').startswith('FRR-')]
+    # Get all requirements that are FRRs (have family field)
+    all_requirements = loader.search_controls("")
+    frr_data = [r for r in all_requirements 
+                if r.get('family') and not r.get('id', '').startswith('FRD-')
+                and not r.get('id', '').startswith('KSI-')]
     frr_ids = sorted([frr['id'] for frr in frr_data])
     
     cases = []
     for frr_id in frr_ids:
-        family = frr_id.split('-')[1]
+        # New format: FAMILY-GROUP-XXX (e.g., ADS-CSX-UTC)
+        # Family is the first part of the ID
+        family = frr_id.split('-')[0]
         
         # Positive test
         pos_template, pos_lang = FAMILY_POSITIVE_PATTERNS.get(family, ("# Compliant: {frr_id}", "python"))
@@ -305,8 +324,11 @@ def run_tests():
     # Load FRR count dynamically
     loader = FedRAMPDataLoader()
     asyncio.run(loader.load_data())
-    all_requirements = loader.search_controls("FRR-")
-    frr_data = [r for r in all_requirements if r.get('id', '').startswith('FRR-')]
+    # Get all requirements that are FRRs (have family field)
+    all_requirements = loader.search_controls("")
+    frr_data = [r for r in all_requirements 
+                if r.get('family') and not r.get('id', '').startswith('FRD-')
+                and not r.get('id', '').startswith('KSI-')]
     frr_count = len(frr_data)
     
     print("\n" + "=" * 80)
@@ -314,9 +336,8 @@ def run_tests():
     print("=" * 80)
     print(f"\nValidating pattern coverage for all {frr_count} FRRs")
     print(f"Total tests: {frr_count * 2} (positive + negative for each FRR)")
-    print("\nFRR Distribution:")
-    print("  ADS: 20 | CCM: 25 | FSI: 16 | ICP:  9 | KSI:  2 | MAS: 12")
-    print("  PVA: 22 | RSC: 10 | SCN: 22 | UCM:  4 | VDR: 57")
+    print("\nNote: FedRAMP 20x v0.9.0-beta changed ID format from 'FRR-FAMILY-XX'")
+    print("      to 'FAMILY-GROUP-XXX' (e.g., 'ADS-CSX-UTC' instead of 'FRR-ADS-01')")
     print("=" * 80)
     print()
     pytest.main([__file__, "-v"])
