@@ -103,7 +103,8 @@ class TestKSITools:
     @pytest.mark.asyncio
     async def test_get_ksi_impl(self, data_loader):
         """Test get_ksi implementation"""
-        for ksi_id in ["KSI-IAM-01", "KSI-CNA-01", "KSI-VDR-01"]:
+        # Using new descriptive KSI IDs (v0.9.0-beta format)
+        for ksi_id in ["KSI-IAM-MFA", "KSI-CNA-RNT", "KSI-AFR-VDR"]:
             result = await ksi.get_ksi_impl(ksi_id, data_loader)
             assert result is not None
             assert isinstance(result, str)
@@ -127,21 +128,21 @@ class TestKSITools:
     @pytest.mark.asyncio
     async def test_get_ksi_evidence_automation_impl(self, data_loader):
         """Test get_ksi_evidence_automation implementation"""
-        result = await ksi.get_ksi_evidence_automation_impl("KSI-IAM-01", data_loader)
+        result = await ksi.get_ksi_evidence_automation_impl("KSI-IAM-MFA", data_loader)
         assert result is not None
         assert isinstance(result, str)
     
     @pytest.mark.asyncio
     async def test_get_ksi_evidence_queries_impl(self, data_loader):
         """Test get_ksi_evidence_queries implementation"""
-        result = await ksi.get_ksi_evidence_queries_impl("KSI-IAM-01", data_loader)
+        result = await ksi.get_ksi_evidence_queries_impl("KSI-IAM-MFA", data_loader)
         assert result is not None
         assert isinstance(result, str)
     
     @pytest.mark.asyncio
     async def test_get_ksi_evidence_artifacts_impl(self, data_loader):
         """Test get_ksi_evidence_artifacts implementation"""
-        result = await ksi.get_ksi_evidence_artifacts_impl("KSI-IAM-01", data_loader)
+        result = await ksi.get_ksi_evidence_artifacts_impl("KSI-IAM-MFA", data_loader)
         assert result is not None
         assert isinstance(result, str)
 
@@ -430,23 +431,23 @@ class TestToolIntegration:
     @pytest.mark.asyncio
     async def test_requirement_to_ksi_workflow(self, data_loader):
         """Test workflow from requirement to KSI"""
-        # 1. Get a requirement (using valid FRR-RSC instead of invalid FRR-IAM)
-        req_result = await requirements.get_control_impl("FRR-RSC-01", data_loader)
+        # 1. Get a requirement (using SCG family which has FRRs in new format)
+        req_result = await requirements.get_control_impl("SCG-HRD-SYS", data_loader)
         assert req_result is not None
         
         # 2. Get related KSI
-        ksi_result = await ksi.get_ksi_impl("KSI-IAM-01", data_loader)
+        ksi_result = await ksi.get_ksi_impl("KSI-IAM-MFA", data_loader)
         assert ksi_result is not None
     
     @pytest.mark.asyncio
     async def test_ksi_to_evidence_workflow(self, data_loader):
         """Test workflow from KSI to evidence collection"""
         # 1. Get KSI details
-        ksi_result = await ksi.get_ksi_impl("KSI-IAM-01", data_loader)
+        ksi_result = await ksi.get_ksi_impl("KSI-IAM-MFA", data_loader)
         assert ksi_result is not None
         
         # 2. Get evidence automation
-        evidence_result = await ksi.get_ksi_evidence_automation_impl("KSI-IAM-01", data_loader)
+        evidence_result = await ksi.get_ksi_evidence_automation_impl("KSI-IAM-MFA", data_loader)
         assert evidence_result is not None
         
         # 3. Skip infrastructure code test - requires template function

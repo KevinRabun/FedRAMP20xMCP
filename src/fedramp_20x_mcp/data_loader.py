@@ -40,6 +40,7 @@ class FedRAMPDataLoader:
         self._cache_timestamp: Optional[datetime] = None
         self._docs_cache: Optional[Dict[str, str]] = None
         self._docs_cache_timestamp: Optional[datetime] = None
+        self._fka_map: Dict[str, str] = {}  # Maps old IDs (fka) to new IDs
 
     def _get_cache_file(self) -> Path:
         """Get the cache file path."""
@@ -150,6 +151,7 @@ class FedRAMPDataLoader:
             if cached_data:
                 self._data_cache = cached_data
                 self._cache_timestamp = datetime.now()
+                self._build_fka_map()  # Build fka map for backward compatibility
                 return cached_data
 
         # Fetch from remote
@@ -208,6 +210,9 @@ class FedRAMPDataLoader:
         self._save_to_cache(all_data)
         self._data_cache = all_data
         self._cache_timestamp = datetime.now()
+        
+        # Build fka (formerly known as) reverse lookup for backward compatibility
+        self._build_fka_map()
 
         # Count actual JSON files vs logical sections
         json_file_count = len(files)
@@ -400,12 +405,44 @@ class FedRAMPDataLoader:
                             if short_name == "FRD" and "term" in req:
                                 all_data["definitions"][req.get("term", req_id)] = req
 
+    def _build_fka_map(self) -> None:
+        """
+        Build a reverse lookup map from old IDs (fka - formerly known as) to new IDs.
+        
+        This provides backward compatibility so code using old FedRAMP IDs like
+        'FRR-VDR-01' or 'KSI-IAM-01' can still find the requirements that are now
+        stored under new IDs like 'VDR-EVA-EFA' or 'KSI-IAM-MFA'.
+        """
+        self._fka_map.clear()
+        
+        if not self._data_cache:
+            return
+        
+        # Scan all requirements and KSIs for fka fields
+        for req_id, req in self._data_cache.get("requirements", {}).items():
+            if isinstance(req, dict) and "fka" in req:
+                fka = req["fka"]
+                if fka:
+                    self._fka_map[fka.upper()] = req_id
+        
+        # Also scan KSIs separately (they may have different fka structure)
+        for ksi_id, ksi in self._data_cache.get("ksi", {}).items():
+            if isinstance(ksi, dict) and "fka" in ksi:
+                fka = ksi["fka"]
+                if fka:
+                    self._fka_map[fka.upper()] = ksi_id
+        
+        logger.debug(f"Built fka map with {len(self._fka_map)} entries")
+
     def get_control(self, control_id: str) -> Optional[Dict[str, Any]]:
         """
         Get a specific requirement by ID.
+        
+        Supports both new IDs (e.g., 'VDR-EVA-EFA', 'KSI-IAM-MFA') and legacy IDs
+        (e.g., 'FRR-VDR-01', 'KSI-IAM-01') via the fka (formerly known as) mapping.
 
         Args:
-            control_id: The requirement identifier
+            control_id: The requirement identifier (new or legacy format)
 
         Returns:
             Requirement data or None if not found
@@ -413,7 +450,17 @@ class FedRAMPDataLoader:
         if not self._data_cache:
             return None
         
-        return self._data_cache["requirements"].get(control_id.upper())
+        normalized_id = control_id.upper()
+        
+        # Try direct lookup first
+        result = self._data_cache["requirements"].get(normalized_id)
+        if result:
+            return result
+        
+        # Fall back to fka (formerly known as) lookup for backward compatibility
+        if normalized_id in self._fka_map:
+            new_id = self._fka_map[normalized_id]
+            return self._data_cache["requirements"].get(new_id)
 
     def get_family_controls(self, family: str) -> List[Dict[str, Any]]:
         """
@@ -501,9 +548,12 @@ class FedRAMPDataLoader:
     def get_ksi(self, ksi_id: str) -> Optional[Dict[str, Any]]:
         """
         Get a Key Security Indicator by ID.
+        
+        Supports both new IDs (e.g., 'KSI-IAM-MFA') and legacy IDs
+        (e.g., 'KSI-IAM-01') via the fka (formerly known as) mapping.
 
         Args:
-            ksi_id: The KSI identifier
+            ksi_id: The KSI identifier (new or legacy format)
 
         Returns:
             KSI data or None if not found
@@ -511,7 +561,17 @@ class FedRAMPDataLoader:
         if not self._data_cache:
             return None
         
-        return self._data_cache["ksi"].get(ksi_id.upper())
+        normalized_id = ksi_id.upper()
+        
+        # Try direct lookup first
+        result = self._data_cache["ksi"].get(normalized_id)
+        if result:
+            return result
+        
+        # Fall back to fka (formerly known as) lookup for backward compatibility
+        if normalized_id in self._fka_map:
+            new_id = self._fka_map[normalized_id]
+            return self._data_cache["ksi"].get(new_id)
     
     def list_all_ksi(self) -> List[Dict[str, Any]]:
         """
