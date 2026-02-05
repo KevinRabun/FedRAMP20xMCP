@@ -97,12 +97,26 @@ async def export_to_excel(
             retired = ksi.get('retired', False)
             status = 'Retired' if retired else 'Active'
             statement = ksi.get('statement', '')
+            
+            # Handle varies_by_level - use moderate level statement if no top-level statement
+            if not statement and 'varies_by_level' in ksi:
+                varies = ksi.get('varies_by_level', {})
+                if 'moderate' in varies:
+                    statement = varies['moderate'].get('statement', '')
+                elif 'low' in varies:
+                    statement = varies['low'].get('statement', '')
+            
             note = ksi.get('note', '')
             
-            # Format controls
+            # Format controls - handle both old format (list of dicts) and new format (list of strings)
             controls = ksi.get('controls', [])
             if controls:
-                control_list = [f"{c.get('control_id', '').upper()} - {c.get('title', '')}" for c in controls]
+                if isinstance(controls[0], dict):
+                    # Old format: list of {control_id, title}
+                    control_list = [f"{c.get('control_id', '').upper()} - {c.get('title', '')}" for c in controls]
+                else:
+                    # New format: list of control ID strings
+                    control_list = [str(c).upper() for c in controls]
                 controls_str = '; '.join(control_list)
             else:
                 controls_str = ''

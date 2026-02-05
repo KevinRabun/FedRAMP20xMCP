@@ -184,152 +184,221 @@ class FedRAMPDataLoader:
             if not data:
                 continue
                 
-            # Extract document info
+            # Extract document info - handle consolidated format
             info = data.get("info", {})
             short_name = info.get("short_name", filename.replace(".json", ""))
             
             # Store the document
             all_data["documents"][short_name] = {
-                "name": info.get("name", ""),
+                "name": info.get("title", info.get("name", "")),
                 "short_name": short_name,
-                "effective": info.get("effective", {}),
-                "releases": info.get("releases", []),
+                "version": info.get("version", ""),
+                "last_updated": info.get("last_updated", ""),
                 "filename": filename,
             }
             
-            # Extract requirements from all sections
-            for section_key, section_data in data.items():
-                if section_key in ["$schema", "$id", "info"]:
-                    continue
-                    
-                # Each section can have subsections with requirements
-                if isinstance(section_data, dict):
-                    for subsection_key, subsection_data in section_data.items():
-                        # Handle KSI special structure: categories with 'indicators' lists
-                        if short_name == "KSI" and isinstance(subsection_data, dict) and "indicators" in subsection_data:
-                            indicator_list = subsection_data.get("indicators", [])
-                            category_name = subsection_data.get("name", subsection_key)
-                            
-                            for indicator in indicator_list:
-                                if isinstance(indicator, dict) and "id" in indicator:
-                                    ksi_id = indicator["id"]
-                                    
-                                    # Add document and category context
-                                    indicator["document"] = short_name
-                                    indicator["document_name"] = info.get("name", "")
-                                    indicator["section"] = f"{section_key}-{subsection_key}"
-                                    indicator["category"] = category_name
-                                    indicator["category_id"] = subsection_key
-                                    
-                                    # Store in requirements and KSI
-                                    all_data["requirements"][ksi_id] = indicator
-                                    all_data["ksi"][ksi_id] = indicator
-                                    
-                                    # Extract family from ID
-                                    family = ksi_id.split("-")[0] if "-" in ksi_id else "OTHER"
-                                    if family not in all_data["families"]:
-                                        all_data["families"][family] = []
-                                    all_data["families"][family].append(ksi_id)
-                        
-                        # Handle nested dict structure: check if it contains sub-dicts with 'requirements' key
-                        # This handles structures like FRR -> MAS -> base/application/exceptions -> requirements[]
-                        elif isinstance(subsection_data, dict) and not "requirements" in subsection_data:
-                            # Check if any nested values have 'requirements' key
-                            has_nested_requirements = any(
-                                isinstance(v, dict) and "requirements" in v 
-                                for v in subsection_data.values()
-                            )
-                            
-                            if has_nested_requirements:
-                                # Iterate over nested sections (base, application, exceptions, etc.)
-                                for nested_key, nested_data in subsection_data.items():
-                                    if isinstance(nested_data, dict) and "requirements" in nested_data:
-                                        req_list = nested_data.get("requirements", [])
-                                        nested_name = nested_data.get("name", nested_key)
-                                        nested_id = nested_data.get("id", f"{section_key}-{subsection_key}-{nested_key}")
-                                        
-                                        for req in req_list:
-                                            if isinstance(req, dict) and "id" in req:
-                                                req_id = req["id"]
-                                                
-                                                # Add document context
-                                                req["document"] = short_name
-                                                req["document_name"] = info.get("name", "")
-                                                req["section"] = f"{section_key}-{subsection_key}-{nested_key}"
-                                                req["subsection_name"] = nested_name
-                                                req["subsection_id"] = nested_id
-                                                req["category"] = subsection_key
-                                                
-                                                # Store by ID
-                                                all_data["requirements"][req_id] = req
-                                                
-                                                # Extract family from ID
-                                                family = req_id.split("-")[0] if "-" in req_id else "OTHER"
-                                                if family not in all_data["families"]:
-                                                    all_data["families"][family] = []
-                                                all_data["families"][family].append(req_id)
-                        
-                        # Handle direct dict structure with 'requirements' key
-                        elif isinstance(subsection_data, dict) and "requirements" in subsection_data:
-                            req_list = subsection_data.get("requirements", [])
-                            subsection_name = subsection_data.get("name", subsection_key)
-                            subsection_id = subsection_data.get("id", f"{section_key}-{subsection_key}")
-                            
-                            for req in req_list:
-                                if isinstance(req, dict) and "id" in req:
-                                    req_id = req["id"]
-                                    
-                                    # Add document context
-                                    req["document"] = short_name
-                                    req["document_name"] = info.get("name", "")
-                                    req["section"] = f"{section_key}-{subsection_key}"
-                                    req["subsection_name"] = subsection_name
-                                    req["subsection_id"] = subsection_id
-                                    
-                                    # Store by ID
-                                    all_data["requirements"][req_id] = req
-                                    
-                                    # Extract family from ID
-                                    family = req_id.split("-")[0] if "-" in req_id else "OTHER"
-                                    if family not in all_data["families"]:
-                                        all_data["families"][family] = []
-                                    all_data["families"][family].append(req_id)
-                                    
-                                    # Track definitions (FRD) separately
-                                    if short_name == "FRD" and "term" in req:
-                                        all_data["definitions"][req.get("term", req_id)] = req
-                        
-                        # Handle regular list-based requirements
-                        elif isinstance(subsection_data, list):
-                            for req in subsection_data:
-                                if isinstance(req, dict) and "id" in req:
-                                    req_id = req["id"]
-                                    
-                                    # Add document context
-                                    req["document"] = short_name
-                                    req["document_name"] = info.get("name", "")
-                                    req["section"] = f"{section_key}-{subsection_key}"
-                                    
-                                    # Store by ID
-                                    all_data["requirements"][req_id] = req
-                                    
-                                    # Extract family from ID (e.g., "AC" from "AC-1")
-                                    family = req_id.split("-")[0] if "-" in req_id else "OTHER"
-                                    if family not in all_data["families"]:
-                                        all_data["families"][family] = []
-                                    all_data["families"][family].append(req_id)
-                                    
-                                    # Track definitions (FRD) separately
-                                    if short_name == "FRD" and "term" in req:
-                                        all_data["definitions"][req.get("term", req_id)] = req
+            # Handle consolidated FRMR.documentation.json format
+            if "FRD" in data and "FRR" in data and "KSI" in data:
+                self._process_consolidated_format(data, all_data)
+            else:
+                # Legacy format handling (individual files)
+                self._process_legacy_format(data, info, short_name, all_data)
 
         # Save to cache
         self._save_to_cache(all_data)
         self._data_cache = all_data
         self._cache_timestamp = datetime.now()
 
-        logger.info(f"Loaded {len(all_data['requirements'])} requirements from {len(all_data['documents'])} documents")
+        # Count actual JSON files vs logical sections
+        json_file_count = len(files)
+        section_count = len(all_data['documents'])
+        logger.info(f"Loaded {len(all_data['requirements'])} requirements from {json_file_count} file(s) ({section_count} sections)")
         return all_data
+
+    def _process_consolidated_format(self, data: Dict[str, Any], all_data: Dict[str, Any]) -> None:
+        """
+        Process the new consolidated FRMR.documentation.json format.
+        
+        Structure:
+        - FRD: definitions at FRD.data.both.<def_id>
+        - FRR: requirements at FRR.<family>.data.<scope>.<group>.<req_id>
+        - KSI: indicators at KSI.<category>.indicators.<ksi_id>
+        """
+        # Process FRD (FedRAMP Definitions)
+        frd_section = data.get("FRD", {})
+        frd_info = frd_section.get("info", {})
+        frd_data = frd_section.get("data", {})
+        
+        # Store FRD document info
+        all_data["documents"]["FRD"] = {
+            "name": frd_info.get("name", "FedRAMP Definitions"),
+            "short_name": frd_info.get("short_name", "FRD"),
+            "web_name": frd_info.get("web_name", ""),
+        }
+        
+        # Process definitions from all scopes (both, 20x, rev5)
+        for scope, scope_data in frd_data.items():
+            if isinstance(scope_data, dict):
+                for def_id, definition in scope_data.items():
+                    if isinstance(definition, dict):
+                        # Enrich definition with metadata
+                        definition["id"] = def_id
+                        definition["document"] = "FRD"
+                        definition["scope"] = scope
+                        
+                        # Store by ID and by term
+                        all_data["definitions"][def_id] = definition
+                        if "term" in definition:
+                            all_data["definitions"][definition["term"]] = definition
+                        
+                        # Also store in requirements for unified search
+                        all_data["requirements"][def_id] = definition
+                        
+                        # Track in families
+                        if "FRD" not in all_data["families"]:
+                            all_data["families"]["FRD"] = []
+                        all_data["families"]["FRD"].append(def_id)
+        
+        # Process FRR (FedRAMP Requirements)
+        frr_section = data.get("FRR", {})
+        
+        for family_key, family_data in frr_section.items():
+            if not isinstance(family_data, dict):
+                continue
+                
+            family_info = family_data.get("info", {})
+            family_name = family_info.get("name", family_key)
+            
+            # Store family document info
+            all_data["documents"][f"FRR-{family_key}"] = {
+                "name": family_name,
+                "short_name": family_key,
+                "web_name": family_info.get("web_name", ""),
+            }
+            
+            # Process requirements from all scopes
+            req_data = family_data.get("data", {})
+            for scope, scope_data in req_data.items():
+                if not isinstance(scope_data, dict):
+                    continue
+                    
+                # scope_data contains groups (like CSX, AGM, etc.)
+                for group_key, group_data in scope_data.items():
+                    if not isinstance(group_data, dict):
+                        continue
+                        
+                    # group_data contains individual requirements
+                    for req_id, requirement in group_data.items():
+                        if not isinstance(requirement, dict):
+                            continue
+                            
+                        # Enrich requirement with metadata
+                        requirement["id"] = req_id
+                        requirement["document"] = f"FRR-{family_key}"
+                        requirement["family"] = family_key
+                        requirement["family_name"] = family_name
+                        requirement["group"] = group_key
+                        requirement["scope"] = scope
+                        
+                        # Store in requirements
+                        all_data["requirements"][req_id] = requirement
+                        
+                        # Track in families by first part of ID
+                        family_prefix = req_id.split("-")[0] if "-" in req_id else family_key
+                        if family_prefix not in all_data["families"]:
+                            all_data["families"][family_prefix] = []
+                        all_data["families"][family_prefix].append(req_id)
+        
+        # Process KSI (Key Security Indicators)
+        ksi_section = data.get("KSI", {})
+        
+        for category_key, category_data in ksi_section.items():
+            if not isinstance(category_data, dict):
+                continue
+                
+            category_id = category_data.get("id", f"KSI-{category_key}")
+            category_name = category_data.get("name", category_key)
+            category_theme = category_data.get("theme", "")
+            
+            # Store category document info
+            all_data["documents"][f"KSI-{category_key}"] = {
+                "name": category_name,
+                "short_name": category_key,
+                "web_name": category_data.get("web_name", ""),
+                "theme": category_theme,
+            }
+            
+            # Process indicators
+            indicators = category_data.get("indicators", {})
+            for ksi_id, indicator in indicators.items():
+                if not isinstance(indicator, dict):
+                    continue
+                    
+                # Enrich indicator with metadata
+                indicator["id"] = ksi_id
+                indicator["document"] = f"KSI-{category_key}"
+                indicator["category"] = category_name
+                indicator["category_id"] = category_key
+                indicator["theme"] = category_theme
+                
+                # Store in both ksi and requirements
+                all_data["ksi"][ksi_id] = indicator
+                all_data["requirements"][ksi_id] = indicator
+                
+                # Track in families
+                if "KSI" not in all_data["families"]:
+                    all_data["families"]["KSI"] = []
+                all_data["families"]["KSI"].append(ksi_id)
+
+    def _process_legacy_format(self, data: Dict[str, Any], info: Dict[str, Any], 
+                               short_name: str, all_data: Dict[str, Any]) -> None:
+        """
+        Process legacy individual JSON file format for backwards compatibility.
+        This handles the old multi-file structure where each family had its own JSON file.
+        """
+        # Extract requirements from all sections (legacy format)
+        for section_key, section_data in data.items():
+            if section_key in ["$schema", "$id", "info"]:
+                continue
+                
+            if not isinstance(section_data, dict):
+                continue
+                
+            for subsection_key, subsection_data in section_data.items():
+                # Handle KSI special structure
+                if short_name == "KSI" and isinstance(subsection_data, dict) and "indicators" in subsection_data:
+                    indicator_list = subsection_data.get("indicators", [])
+                    category_name = subsection_data.get("name", subsection_key)
+                    
+                    for indicator in indicator_list:
+                        if isinstance(indicator, dict) and "id" in indicator:
+                            ksi_id = indicator["id"]
+                            indicator["document"] = short_name
+                            indicator["category"] = category_name
+                            all_data["requirements"][ksi_id] = indicator
+                            all_data["ksi"][ksi_id] = indicator
+                            
+                            family = ksi_id.split("-")[0] if "-" in ksi_id else "OTHER"
+                            if family not in all_data["families"]:
+                                all_data["families"][family] = []
+                            all_data["families"][family].append(ksi_id)
+                
+                # Handle requirements lists
+                elif isinstance(subsection_data, dict) and "requirements" in subsection_data:
+                    req_list = subsection_data.get("requirements", [])
+                    for req in req_list:
+                        if isinstance(req, dict) and "id" in req:
+                            req_id = req["id"]
+                            req["document"] = short_name
+                            all_data["requirements"][req_id] = req
+                            
+                            family = req_id.split("-")[0] if "-" in req_id else "OTHER"
+                            if family not in all_data["families"]:
+                                all_data["families"][family] = []
+                            all_data["families"][family].append(req_id)
+                            
+                            if short_name == "FRD" and "term" in req:
+                                all_data["definitions"][req.get("term", req_id)] = req
 
     def get_control(self, control_id: str) -> Optional[Dict[str, Any]]:
         """

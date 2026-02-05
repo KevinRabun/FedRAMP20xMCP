@@ -113,7 +113,7 @@ namespace FedrampCompliance
     
     enriched = enrich_csharp_code(
         original_csharp,
-        ksi_ids=["KSI-SVC-06", "KSI-IAM-01"],
+        ksi_ids=["KSI-SVC-ASM", "KSI-IAM-MFA"],  # New descriptive IDs (Feb 2026 format)
         frr_ids=None,
         data_loader=data_loader
     )
@@ -127,8 +127,8 @@ namespace FedrampCompliance
     print(enriched)
     
     # Verify KSI IDs appear in comments
-    assert "KSI-SVC-06" in enriched, "KSI-SVC-06 not found in enriched code"
-    assert "KSI-IAM-01" in enriched, "KSI-IAM-01 not found in enriched code"
+    assert "KSI-SVC-ASM" in enriched, "KSI-SVC-ASM not found in enriched code"
+    assert "KSI-IAM-MFA" in enriched, "KSI-IAM-MFA not found in enriched code"
     print("\n[PASS] C# enrichment test passed!")
 
 
@@ -138,9 +138,10 @@ def test_requirement_header(data_loader):
     print("TEST: Requirement Header Generation")
     print("=" * 80)
     
+    # Use new descriptive IDs (Feb 2026 format)
     header = get_requirement_header(
-        ksi_ids=["KSI-IAM-01"],
-        frr_ids=["FRR-VDR-01"],
+        ksi_ids=["KSI-IAM-MFA"],
+        frr_ids=["VDR-EVA-EFA"],  # New format: family-group-id
         data_loader=data_loader,
         language="bicep"
     )
@@ -149,8 +150,8 @@ def test_requirement_header(data_loader):
     print("-" * 80)
     print(header)
     
-    assert "KSI-IAM-01" in header, "KSI ID not in header"
-    assert "FRR-VDR-01" in header, "FRR ID not in header"
+    assert "KSI-IAM-MFA" in header, "KSI ID not in header"
+    assert "VDR-EVA-EFA" in header, "FRR ID not in header"
     assert "Phishing-Resistant MFA" in header, "KSI name not in header"
     print("\n[PASS] Header generation test passed!")
 
@@ -161,8 +162,9 @@ def test_inline_comment(data_loader):
     print("TEST: Inline Requirement Comment")
     print("=" * 80)
     
+    # Use new descriptive ID (Feb 2026 format)
     comment = get_inline_requirement_comment(
-        "KSI-SVC-01",
+        "KSI-SVC-EIS",  # Evaluating and Improving Security (fka KSI-SVC-01)
         data_loader,
         language="bicep",
         compact=True
@@ -171,7 +173,7 @@ def test_inline_comment(data_loader):
     print(f"\nCompact Comment: {comment}")
     
     comment_full = get_inline_requirement_comment(
-        "KSI-SVC-01",
+        "KSI-SVC-EIS",
         data_loader,
         language="bicep",
         compact=False
@@ -179,7 +181,7 @@ def test_inline_comment(data_loader):
     
     print(f"Full Comment: {comment_full}")
     
-    assert "KSI-SVC-01" in comment, "KSI ID not in comment"
+    assert "KSI-SVC-EIS" in comment, "KSI ID not in comment"
     print("\n[PASS] Inline comment test passed!")
 
 

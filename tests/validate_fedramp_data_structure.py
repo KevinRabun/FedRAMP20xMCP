@@ -43,34 +43,34 @@ class FedRAMPDataValidator:
     EXPECTED_MIN_DEFINITIONS = 30
     EXPECTED_MIN_FAMILIES = 10
     
-    # Expected FRR families (based on FedRAMP 20x spec)
+    # Expected FRR families (based on FedRAMP 20x spec - updated Feb 2026)
     EXPECTED_FRR_FAMILIES = {
-        "FRR-VDR",  # Vulnerability Disclosure and Response
-        "FRR-RSC",  # Recommended Secure Configuration
-        "FRR-UCM",  # Unique Credential Management
-        "FRR-SCN",  # Security Control Notification
-        "FRR-ADS",  # Audit and Data Security
-        "FRR-CCM",  # Cloud Configuration Management
-        "FRR-MAS",  # Monitoring and Alerting System
-        "FRR-ICP",  # Incident Containment Plan
-        "FRR-FSI",  # Federal Security Integration
-        "FRR-PVA",  # Privacy and Vulnerability Assessment
+        "FRR-VDR",  # Vulnerability Detection and Response
+        "FRR-SCG",  # Secure Configuration Guide (formerly RSC)
+        "FRR-UCM",  # Using Cryptographic Modules
+        "FRR-SCN",  # Significant Change Notifications
+        "FRR-ADS",  # Authorization Data Sharing
+        "FRR-CCM",  # Collaborative Continuous Monitoring
+        "FRR-MAS",  # Minimum Assessment Scope
+        "FRR-ICP",  # Incident Communications Procedures
+        "FRR-FSI",  # FedRAMP Security Inbox
+        "FRR-PVA",  # Persistent Validation and Assessment
         "FRR-KSI",  # Key Security Indicators (meta-family)
     }
     
-    # Expected KSI categories (verified from FRMR.KSI.key-security-indicators.json)
+    # Expected KSI categories (verified from FRMR.documentation.json - updated Feb 2026)
     EXPECTED_KSI_PREFIXES = {
         "KSI-IAM",  # Identity and Access Management
         "KSI-CNA",  # Cloud Native Architecture
         "KSI-SVC",  # Service Configuration
-        "KSI-TPR",  # Third Party Risk
-        "KSI-CMT",  # Continuous Monitoring
-        "KSI-MLA",  # Machine Learning & AI
+        "KSI-SCR",  # Supply Chain Risk (formerly TPR)
+        "KSI-CMT",  # Change Management
+        "KSI-MLA",  # Monitoring, Logging, and Auditing
         "KSI-INR",  # Incident Response
-        "KSI-PIY",  # Privacy
-        "KSI-AFR",  # Automated FedRAMP
-        "KSI-RPL",  # Replication
-        "KSI-CED",  # Cryptographic Enforcement
+        "KSI-PIY",  # Policy and Inventory
+        "KSI-AFR",  # Authorization by FedRAMP
+        "KSI-RPL",  # Recovery Planning
+        "KSI-CED",  # Cybersecurity Education
     }
     
     # Required fields in requirement objects
@@ -182,15 +182,22 @@ class FedRAMPDataValidator:
         
         found_families = set(self.data.get("families", {}).keys())
         
-        # Check for FRR families (normalize by checking if any req ID starts with expected prefix)
+        # Check for FRR families
+        # New format: requirement IDs like "VDR-AGM-DRE" have family "VDR" as first part
+        # Old format: requirement IDs like "FRR-VDR-01" have "FRR-VDR" prefix
         requirements = self.data.get("requirements", {})
         req_prefixes: Set[str] = set()
         for req_id in requirements.keys():
-            if req_id.startswith("FRR-"):
-                # Extract family like "FRR-VDR" from "FRR-VDR-01"
-                parts = req_id.split("-")
-                if len(parts) >= 2:
-                    req_prefixes.add(f"{parts[0]}-{parts[1]}")
+            parts = req_id.split("-")
+            if len(parts) >= 2:
+                first_part = parts[0]
+                # New format: first part is the family (VDR, ADS, SCG, etc.)
+                # Old format: first part is "FRR", second is family
+                if first_part == "FRR":
+                    req_prefixes.add(f"FRR-{parts[1]}")
+                elif first_part not in ("KSI", "FRD"):
+                    # New format - treat first part as family prefix
+                    req_prefixes.add(f"FRR-{first_part}")
         
         # Also extract KSI prefixes
         ksis = self.data.get("ksi", {})
@@ -201,10 +208,14 @@ class FedRAMPDataValidator:
                 if len(parts) >= 2:
                     ksi_prefixes.add(f"{parts[0]}-{parts[1]}")
         
-        # Check FRR families
+        # Check FRR families - also check found_families which may have raw family names
         missing_frr_families = []
         for expected in self.EXPECTED_FRR_FAMILIES:
-            if expected not in req_prefixes and expected.replace("FRR-", "") not in found_families:
+            family_short = expected.replace("FRR-", "")
+            # Check: expected in prefixes, OR family_short in found_families, OR family_short in prefixes
+            if (expected not in req_prefixes and 
+                family_short not in found_families and
+                f"FRR-{family_short}" not in req_prefixes):
                 missing_frr_families.append(expected)
         
         if missing_frr_families:
@@ -363,21 +374,20 @@ class FedRAMPDataValidator:
             ))
             return
         
-        # Check that we have some known documents
-        known_docs = {"KSI", "FRD", "FRR"}
+        # Check that we have known document sections (FRR families, KSI categories, FRD)
         found_docs = set(documents.keys())
         
         # Check if any known docs are present (may be named differently)
         has_ksi = any("ksi" in d.lower() for d in found_docs)
         has_frd = any("frd" in d.lower() or "definition" in d.lower() for d in found_docs)
-        has_frr = any("frr" in d.lower() or "requirement" in d.lower() for d in found_docs)
+        has_frr = any("frr" in d.lower() or "vdr" in d.lower() or "ads" in d.lower() for d in found_docs)
         
         if has_ksi or has_frd or has_frr or len(found_docs) > 0:
             self.results.append(ValidationResult(
                 name="Document Metadata",
                 passed=True,
-                message=f"Found {len(documents)} documents",
-                details={"documents": list(documents.keys())}
+                message=f"Found {len(documents)} document sections",
+                details={"sections": list(documents.keys())}
             ))
         else:
             self.results.append(ValidationResult(
