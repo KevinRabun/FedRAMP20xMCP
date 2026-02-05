@@ -5,6 +5,38 @@ All notable changes to the FedRAMP 20x MCP Server will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-02-05
+
+### 🔄 FedRAMP 20x v0.9.0-beta Support
+
+This release adds full support for the FedRAMP 20x v0.9.0-beta consolidated data format, including backward compatibility for legacy requirement IDs.
+
+### Added
+
+- **Backward Compatibility for Legacy IDs**: The `fka` (formerly known as) field mapping enables code using old IDs like `FRR-VDR-01` or `KSI-IAM-01` to resolve to new format IDs like `VDR-CSO-DET` or `KSI-IAM-MFA`
+- **Consolidated Data Format Support**: Full support for the new `FRMR.documentation.json` unified format containing FRD definitions, FRR requirements, and KSI indicators in a single file
+- **Enhanced Data Loader**: `get_control()` and `get_ksi()` methods now support both new descriptive IDs and legacy numbered IDs
+
+### Changed
+
+- **ID Format Migration**: FedRAMP 20x v0.9.0-beta changed ID formats:
+  - KSI IDs: Numbered format (KSI-IAM-01) → Descriptive format (KSI-IAM-MFA)
+  - FRR IDs: Prefixed format (FRR-VDR-01) → Family-based format (VDR-EVA-EFA)
+- **Family Renames**: RSC → SCG (Secure Configuration Guide), TPR → SCR (Supply Chain Risk)
+- **Separate KSI Storage**: KSIs are now stored in a dedicated `ksi` cache key in addition to `requirements`
+
+### Fixed
+
+- Test suite updated to use new FedRAMP ID formats while maintaining backward compatibility validation
+- GitHub API test gracefully skips when authentication is unavailable
+- Data loader properly builds fka reverse lookup map on cache load
+
+### Technical Details
+
+- 910 tests passing (full pytest suite)
+- 11 core test files, 23 pattern test files
+- Backward compatibility verified for 253 legacy ID mappings
+
 ## [1.0.0] - 2026-01-13
 
 ### 🎉 Initial Stable Release
