@@ -19,13 +19,16 @@ Features:
 """
 
 import json
+import os
 import time
+import hashlib
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, asdict
 import urllib.request
 import urllib.error
+import urllib.parse
 import re
 
 
@@ -100,8 +103,8 @@ class CVEFetcher:
         Returns:
             List of Vulnerability objects
         """
-        # Check cache first
-        cache_key = f"{ecosystem}_{package_name}_{version or 'all'}"
+        # Check cache first (sanitize cache key for filesystem safety)
+        cache_key = self._sanitize_cache_key(f"{ecosystem}_{package_name}_{version or 'all'}")
         cached = self._get_from_cache(cache_key)
         if cached:
             return [Vulnerability(**v) for v in cached]
@@ -349,6 +352,27 @@ class CVEFetcher:
         else:
             return False
     
+    def _sanitize_cache_key(self, key: str) -> str:
+        """
+        Sanitize cache key to create a safe filename.
+        
+        Security: Prevents path traversal and special characters in filenames.
+        Appends hash suffix to ensure uniqueness and prevent collisions.
+        
+        Args:
+            key: Raw cache key
+            
+        Returns:
+            Sanitized key safe for use as filename with hash suffix for uniqueness
+        """
+        # Replace any non-alphanumeric characters (except - and _) with underscore
+        sanitized = re.sub(r'[^a-zA-Z0-9_-]', '_', key)
+        # Truncate to reasonable length
+        sanitized = sanitized[:150]
+        # Append hash of original key to ensure uniqueness and prevent collisions
+        key_hash = hashlib.sha256(key.encode()).hexdigest()[:16]
+        return f"{sanitized}_{key_hash}"
+    
     def _get_from_cache(self, cache_key: str) -> Optional[List[Dict]]:
         """Get cached vulnerability data."""
         cache_file = self.cache_dir / f"{cache_key}.json"
@@ -368,13 +392,29 @@ class CVEFetcher:
             return None
     
     def _save_to_cache(self, cache_key: str, data: List[Dict]) -> None:
-        """Save vulnerability data to cache."""
+        """
+        Save vulnerability data to cache with restricted permissions.
+        
+        Security: Creates file with owner-only permissions (0600) using thread-safe approach.
+        """
         cache_file = self.cache_dir / f"{cache_key}.json"
         
         try:
-            with open(cache_file, 'w') as f:
-                json.dump(data, f, indent=2)
+            # Create or truncate cache file with explicit owner-only permissions (0600)
+            # This is thread-safe unlike os.umask()
+            fd = os.open(cache_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+            try:
+                with os.fdopen(fd, 'w') as f:
+                    json.dump(data, f, indent=2)
+            except Exception:
+                # Close fd if fdopen failed or json.dump failed
+                try:
+                    os.close(fd)
+                except OSError:
+                    pass  # fd may already be closed by fdopen
+                raise
         except Exception as e:
+            # Broad exception catch is intentional - cache failures should never crash the app
             print(f"Failed to save cache: {e}", file=__import__('sys').stderr)
     
     def clear_cache(self) -> None:
@@ -403,7 +443,9 @@ class CVEFetcher:
             if ecosystem == "nuget":
                 # Query NuGet.org API for latest version
                 # API docs: https://learn.microsoft.com/nuget/api/overview
-                url = f"https://api.nuget.org/v3-flatcontainer/{package_name.lower()}/index.json"
+                # Security: URL-encode package name to prevent injection
+                safe_package = urllib.parse.quote(package_name.lower(), safe='')
+                url = f"https://api.nuget.org/v3-flatcontainer/{safe_package}/index.json"
                 request = urllib.request.Request(url)
                 request.add_header("User-Agent", "FedRAMP-20x-MCP-Analyzer/1.0")
                 
@@ -429,7 +471,9 @@ class CVEFetcher:
             
             elif ecosystem == "npm":
                 # Query npm registry for latest version
-                url = f"https://registry.npmjs.org/{package_name}"
+                # Security: URL-encode package name to prevent injection
+                safe_package = urllib.parse.quote(package_name, safe='@/')
+                url = f"https://registry.npmjs.org/{safe_package}"
                 request = urllib.request.Request(url)
                 request.add_header("User-Agent", "FedRAMP-20x-MCP-Analyzer/1.0")
                 
@@ -439,7 +483,9 @@ class CVEFetcher:
             
             elif ecosystem == "pypi":
                 # Query PyPI JSON API for latest version
-                url = f"https://pypi.org/pypi/{package_name}/json"
+                # Security: URL-encode package name to prevent injection
+                safe_package = urllib.parse.quote(package_name, safe='')
+                url = f"https://pypi.org/pypi/{safe_package}/json"
                 request = urllib.request.Request(url)
                 request.add_header("User-Agent", "FedRAMP-20x-MCP-Analyzer/1.0")
                 
@@ -449,7 +495,14 @@ class CVEFetcher:
             
             elif ecosystem == "maven":
                 # Query Maven Central for latest version
-                url = f"https://search.maven.org/solrsearch/select?q=g:%22{package_name.split(':')[0]}%22+AND+a:%22{package_name.split(':')[1]}%22&rows=1&wt=json"
+                # Security: URL-encode package name parts to prevent injection
+                parts = package_name.split(':')
+                if len(parts) >= 2:
+                    safe_group = urllib.parse.quote(parts[0], safe='')
+                    safe_artifact = urllib.parse.quote(parts[1], safe='')
+                    url = f"https://search.maven.org/solrsearch/select?q=g:%22{safe_group}%22+AND+a:%22{safe_artifact}%22&rows=1&wt=json"
+                else:
+                    return None
                 request = urllib.request.Request(url)
                 request.add_header("User-Agent", "FedRAMP-20x-MCP-Analyzer/1.0")
                 

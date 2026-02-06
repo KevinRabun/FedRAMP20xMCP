@@ -3,6 +3,7 @@ FedRAMP 20x MCP Server - Export Tools
 
 This module contains tool implementation functions for export.
 """
+import csv
 import json
 import logging
 import os
@@ -13,6 +14,65 @@ from typing import Any, Optional
 from ..data_loader import FedRAMPDataLoader
 
 logger = logging.getLogger(__name__)
+
+# Allowed directories for file export (security: prevent path traversal)
+ALLOWED_EXPORT_DIRS = [
+    Path.home() / "Downloads",
+    Path.home() / "Documents",
+    Path.home() / "Desktop",
+]
+
+
+def _validate_output_path(output_path: str) -> Path:
+    """
+    Validate and sanitize output path to prevent path traversal attacks.
+    
+    Args:
+        output_path: User-provided output path
+        
+    Returns:
+        Validated Path object
+        
+    Raises:
+        ValueError: If path is outside allowed directories or contains traversal
+    """
+    # Create Path object for validation
+    input_path = Path(output_path)
+    resolved = input_path.resolve()
+    
+    # Check for path traversal segments in original input path parts
+    if ".." in input_path.parts:
+        raise ValueError("Path traversal segments (..) are not allowed in output path")
+    
+    # Verify path is within allowed directories
+    is_allowed = False
+    for allowed_dir in ALLOWED_EXPORT_DIRS:
+        try:
+            resolved.relative_to(allowed_dir.resolve())
+            is_allowed = True
+            break
+        except ValueError:
+            continue
+    
+    if not is_allowed:
+        # Only show directory names, not full paths (security: avoid path disclosure)
+        allowed_str = ", ".join(d.name for d in ALLOWED_EXPORT_DIRS)
+        raise ValueError(f"Output path must be within allowed directories: {allowed_str}")
+    
+    # Ensure parent directory exists
+    resolved.parent.mkdir(parents=True, exist_ok=True)
+    
+    return resolved
+
+
+def _normalize_output_path(output_path: Optional[str]) -> Optional[str]:
+    if output_path is None:
+        return None
+    if not isinstance(output_path, str):
+        return None
+    if not output_path.strip():
+        return None
+    return output_path
 
 async def export_to_excel(
     export_type: str,
@@ -46,13 +106,23 @@ async def export_to_excel(
     
     await data_loader.load_data()
     
+    output_path = _normalize_output_path(output_path)
+
     # Determine output path
-    if output_path is None:
+    # Treat empty string or whitespace as None (MCP wrapper passes "" by default)
+    if output_path is None or not output_path.strip():
         downloads_folder = Path.home() / "Downloads"
         downloads_folder.mkdir(parents=True, exist_ok=True)  # Create if doesn't exist
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"FedRAMP_20x_{export_type}_{timestamp}.xlsx"
         output_path = str(downloads_folder / filename)
+    else:
+        # Validate user-provided path (security: prevent path traversal)
+        try:
+            validated_path = _validate_output_path(output_path)
+            output_path = str(validated_path)
+        except ValueError as e:
+            return f"Error: {e}"
     
     # Create workbook
     wb = Workbook()
@@ -253,7 +323,8 @@ async def export_to_excel(
 
 async def export_to_csv(
     export_type: str,
-    output_path: Optional[str] = None
+    output_path: Optional[str] = None,
+    data_loader: Optional[FedRAMPDataLoader] = None
 ) -> str:
     """
     Export FedRAMP 20x data to a CSV file.
@@ -268,14 +339,27 @@ async def export_to_csv(
     Returns:
         Path to the generated CSV file
     """
+    output_path = _normalize_output_path(output_path)
+
+    if data_loader is None:
+        data_loader = FedRAMPDataLoader()
+
     await data_loader.load_data()
     
     # Determine output path
     if output_path is None:
-        downloads_folder = str(Path.home() / "Downloads")
+        downloads_folder = Path.home() / "Downloads"
+        downloads_folder.mkdir(parents=True, exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"FedRAMP_20x_{export_type}_{timestamp}.csv"
-        output_path = os.path.join(downloads_folder, filename)
+        output_path = str(downloads_folder / filename)
+    else:
+        # Validate user-provided path (security: prevent path traversal)
+        try:
+            validated_path = _validate_output_path(output_path)
+            output_path = str(validated_path)
+        except ValueError as e:
+            return f"Error: {e}"
     
     if export_type == "ksi":
         # Export all KSIs
@@ -300,7 +384,10 @@ async def export_to_csv(
                 # Format controls
                 controls = ksi.get('controls', [])
                 if controls:
-                    control_list = [f"{c.get('control_id', '').upper()} - {c.get('title', '')}" for c in controls]
+                    if isinstance(controls[0], dict):
+                        control_list = [f"{c.get('control_id', '').upper()} - {c.get('title', '')}" for c in controls]
+                    else:
+                        control_list = [str(c).upper() for c in controls]
                     controls_str = '; '.join(control_list)
                 else:
                     controls_str = ''
@@ -365,7 +452,8 @@ async def export_to_csv(
 async def generate_ksi_specification(
     ksi_id: str,
     evidence_collection_strategy: str,
-    output_path: Optional[str] = None
+    output_path: Optional[str] = None,
+    data_loader: Optional[FedRAMPDataLoader] = None
 ) -> str:
     """
     Generate a product specification document for a KSI aligned with FedRAMP 20x requirements.
@@ -387,6 +475,11 @@ async def generate_ksi_specification(
     except ImportError:
         return "Error: python-docx package is required for Word document generation. Install with: pip install python-docx"
     
+    output_path = _normalize_output_path(output_path)
+
+    if data_loader is None:
+        data_loader = FedRAMPDataLoader()
+
     await data_loader.load_data()
     
     # Get the KSI
@@ -395,12 +488,20 @@ async def generate_ksi_specification(
         return f"Error: KSI '{ksi_id}' not found"
     
     # Determine output path
-    if output_path is None:
+    # Treat empty string or whitespace as None (MCP wrapper passes "" by default)
+    if output_path is None or not output_path.strip():
         downloads_folder = str(Path.home() / "Downloads")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         safe_name = ksi_id.replace('/', '_').replace('\\', '_')
         filename = f"KSI_Spec_{safe_name}_{timestamp}.docx"
         output_path = os.path.join(downloads_folder, filename)
+    else:
+        # Validate user-provided path (security: prevent path traversal)
+        try:
+            validated_path = _validate_output_path(output_path)
+            output_path = str(validated_path)
+        except ValueError as e:
+            return f"Error: {e}"
     
     # Create document
     doc = Document()
