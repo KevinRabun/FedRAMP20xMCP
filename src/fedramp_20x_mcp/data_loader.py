@@ -74,13 +74,22 @@ class FedRAMPDataLoader:
             return None
 
     def _save_to_cache(self, data: Dict[str, Any]) -> None:
-        """Save data to local cache."""
+        """
+        Save data to local cache with restricted permissions.
+        
+        Security: Sets file permissions to owner-only (0600) on Unix systems.
+        """
         cache_file = self._get_cache_file()
         
         try:
-            with open(cache_file, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2)
-                logger.info("Saved data to cache")
+            # Set restrictive umask for cache file creation (owner read/write only)
+            old_umask = os.umask(0o077)
+            try:
+                with open(cache_file, "w", encoding="utf-8") as f:
+                    json.dump(data, f, indent=2)
+                    logger.info("Saved data to cache")
+            finally:
+                os.umask(old_umask)
         except Exception as e:
             logger.error(f"Failed to save cache: {e}")
 

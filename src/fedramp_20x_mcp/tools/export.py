@@ -3,6 +3,7 @@ FedRAMP 20x MCP Server - Export Tools
 
 This module contains tool implementation functions for export.
 """
+import csv
 import json
 import logging
 import os
@@ -13,6 +14,53 @@ from typing import Any, Optional
 from ..data_loader import FedRAMPDataLoader
 
 logger = logging.getLogger(__name__)
+
+# Allowed directories for file export (security: prevent path traversal)
+ALLOWED_EXPORT_DIRS = [
+    Path.home() / "Downloads",
+    Path.home() / "Documents",
+    Path.home() / "Desktop",
+]
+
+
+def _validate_output_path(output_path: str) -> Path:
+    """
+    Validate and sanitize output path to prevent path traversal attacks.
+    
+    Args:
+        output_path: User-provided output path
+        
+    Returns:
+        Validated Path object
+        
+    Raises:
+        ValueError: If path is outside allowed directories or contains traversal
+    """
+    # Resolve to absolute path
+    resolved = Path(output_path).resolve()
+    
+    # Check for path traversal patterns in original input
+    if ".." in output_path:
+        raise ValueError("Path traversal patterns (..) are not allowed in output path")
+    
+    # Verify path is within allowed directories
+    is_allowed = False
+    for allowed_dir in ALLOWED_EXPORT_DIRS:
+        try:
+            resolved.relative_to(allowed_dir.resolve())
+            is_allowed = True
+            break
+        except ValueError:
+            continue
+    
+    if not is_allowed:
+        allowed_str = ", ".join(str(d) for d in ALLOWED_EXPORT_DIRS)
+        raise ValueError(f"Output path must be within allowed directories: {allowed_str}")
+    
+    # Ensure parent directory exists
+    resolved.parent.mkdir(parents=True, exist_ok=True)
+    
+    return resolved
 
 async def export_to_excel(
     export_type: str,
@@ -53,6 +101,13 @@ async def export_to_excel(
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"FedRAMP_20x_{export_type}_{timestamp}.xlsx"
         output_path = str(downloads_folder / filename)
+    else:
+        # Validate user-provided path (security: prevent path traversal)
+        try:
+            validated_path = _validate_output_path(output_path)
+            output_path = str(validated_path)
+        except ValueError as e:
+            return f"Error: {e}"
     
     # Create workbook
     wb = Workbook()
@@ -276,6 +331,13 @@ async def export_to_csv(
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"FedRAMP_20x_{export_type}_{timestamp}.csv"
         output_path = os.path.join(downloads_folder, filename)
+    else:
+        # Validate user-provided path (security: prevent path traversal)
+        try:
+            validated_path = _validate_output_path(output_path)
+            output_path = str(validated_path)
+        except ValueError as e:
+            return f"Error: {e}"
     
     if export_type == "ksi":
         # Export all KSIs
@@ -401,6 +463,13 @@ async def generate_ksi_specification(
         safe_name = ksi_id.replace('/', '_').replace('\\', '_')
         filename = f"KSI_Spec_{safe_name}_{timestamp}.docx"
         output_path = os.path.join(downloads_folder, filename)
+    else:
+        # Validate user-provided path (security: prevent path traversal)
+        try:
+            validated_path = _validate_output_path(output_path)
+            output_path = str(validated_path)
+        except ValueError as e:
+            return f"Error: {e}"
     
     # Create document
     doc = Document()
