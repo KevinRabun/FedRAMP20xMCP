@@ -410,7 +410,7 @@ class CVEFetcher:
                 # Close fd if fdopen failed or json.dump failed
                 try:
                     os.close(fd)
-                except:
+                except OSError:
                     pass  # fd may already be closed by fdopen
                 raise
         except Exception as e:
