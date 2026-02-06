@@ -414,6 +414,7 @@ class CVEFetcher:
                     pass  # fd may already be closed by fdopen
                 raise
         except Exception as e:
+            # Broad exception catch is intentional - cache failures should never crash the app
             print(f"Failed to save cache: {e}", file=__import__('sys').stderr)
     
     def clear_cache(self) -> None:

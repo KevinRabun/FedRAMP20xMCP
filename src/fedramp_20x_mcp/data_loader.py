@@ -97,6 +97,7 @@ class FedRAMPDataLoader:
                     pass  # fd may already be closed by fdopen
                 raise
         except Exception as e:
+            # Broad exception catch is intentional - cache failures should never crash the app
             logger.error(f"Failed to save cache: {e}")
 
     async def _fetch_file_list(self) -> List[Dict[str, Any]]:
