@@ -403,8 +403,16 @@ class CVEFetcher:
             # Create or truncate cache file with explicit owner-only permissions (0600)
             # This is thread-safe unlike os.umask()
             fd = os.open(cache_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-            with os.fdopen(fd, 'w') as f:
-                json.dump(data, f, indent=2)
+            try:
+                with os.fdopen(fd, 'w') as f:
+                    json.dump(data, f, indent=2)
+            except Exception:
+                # Close fd if fdopen failed or json.dump failed
+                try:
+                    os.close(fd)
+                except:
+                    pass  # fd may already be closed by fdopen
+                raise
         except Exception as e:
             print(f"Failed to save cache: {e}", file=__import__('sys').stderr)
     
