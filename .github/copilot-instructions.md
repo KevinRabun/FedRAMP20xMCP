@@ -68,7 +68,101 @@ contract:
 
 ---
 
-# 3. ACCOUNTABILITY — **NO SHORTCUTS EVER**
+# 3. GIT FLOW WORKFLOW (MANDATORY)
+
+**FIRST ACTION for any feature, bugfix, or enhancement work:**
+
+Before writing ANY code, create a feature branch:
+
+```powershell
+# Ensure main is up to date
+git checkout main
+git pull origin main
+
+# Create and switch to feature branch
+git checkout -b feature/<descriptive-name>
+```
+
+### Branch Naming Conventions
+
+| Type | Pattern | Example |
+|------|---------|---------|
+| Feature | `feature/<name>` | `feature/add-ksi-export-tool` |
+| Bugfix | `bugfix/<issue-or-desc>` | `bugfix/fix-cve-cache-expiry` |
+| Hotfix | `hotfix/<desc>` | `hotfix/critical-auth-fix` |
+| Release | `release/vX.Y.Z` | `release/v1.3.0` |
+
+### Workflow Steps
+
+1. **Create Branch** (ALWAYS FIRST)
+   ```powershell
+   git checkout main && git pull origin main
+   git checkout -b feature/<name>
+   ```
+
+2. **Develop with Atomic Commits**
+   - Commit frequently with clear messages
+   - Each commit should be a logical unit of work
+   - Format: `<type>: <description>` (e.g., `feat: add CSV export for KSIs`)
+
+3. **Keep Branch Updated**
+   ```powershell
+   git fetch origin main
+   git rebase origin/main  # or merge if preferred
+   ```
+
+4. **Run Tests Before Push**
+   ```powershell
+   python tests/run_all_tests.py
+   ```
+
+5. **Push and Create PR**
+   ```powershell
+   git push -u origin feature/<name>
+   # Then create PR via GitHub
+   ```
+
+6. **After PR Approval & Merge**
+   ```powershell
+   git checkout main
+   git pull origin main
+   git branch -d feature/<name>  # Delete local branch
+   ```
+
+### Commit Message Format
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+**Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
+
+**Examples:**
+- `feat(tools): add export_ksi_to_word tool`
+- `fix(analyzer): correct AST parsing for nested classes`
+- `docs: update README with new tool documentation`
+- `test: add coverage for backward compatibility IDs`
+
+### NEVER DO:
+- Commit directly to `main` (except for releases)
+- Push untested code
+- Force push to shared branches
+- Leave stale branches after merge
+
+### Verification Before Any Work:
+```powershell
+# Confirm you're on a feature branch, not main
+git branch --show-current
+# Should NOT show "main" when doing feature work
+```
+
+---
+
+# 4. ACCOUNTABILITY — **NO SHORTCUTS EVER**
 - Fix **root cause** in analyzers; NEVER weaken assertions to pass tests.  
 - “ALL” = **EVERY SINGLE ITEM** (tests, KSIs, FRRs).  
 - Report **honest numeric progress**:  
@@ -86,7 +180,7 @@ Fix analyzer so findings actually appear.
 
 ---
 
-# 4. NEVER ASSUME — VERIFY FIRST, CODE SECOND
+# 5. NEVER ASSUME — VERIFY FIRST, CODE SECOND
 Always read authoritative sources BEFORE code:
 - **KSI**: `FRMR.KSI.key-security-indicators.json`
 - **FRR Families**: `FRMR.*.json`
@@ -110,7 +204,7 @@ Costly API assumption error (never repeat):
 - Result: CI failure from ImportError
 ---
 
-# 5. USER INSTRUCTION COMPLIANCE (ABSOLUTE)
+# 6. USER INSTRUCTION COMPLIANCE (ABSOLUTE)
 - Follow **exact** approach, no substitutions.  
 - If user requests **pattern-by-pattern**, do not batch.  
 - If user requests **file-by-file**, do exactly that.  
@@ -119,7 +213,7 @@ Costly API assumption error (never repeat):
 
 ---
 
-# 6. PROJECT OVERVIEW (REFERENCE)
+# 7. PROJECT OVERVIEW (REFERENCE)
 - Loads FedRAMP 20x FRRs, KSIs, FRDs from JSON + docs.  
 - 48 MCP tools across 13 modules.  
 - Multi-language analyzers: Python, C#, Java, TS/JS, Bicep, Terraform, CI/CD.  
@@ -128,7 +222,7 @@ Costly API assumption error (never repeat):
 
 ---
 
-# 7. DATA & STATUS (REFERENCE)
+# 8. DATA & STATUS (REFERENCE)
 - **199 FRRs** (11 families)  
 - **50 FRDs**  
 - **72 KSIs**  
@@ -143,7 +237,7 @@ Authoritative sync auto-updates RETIRED flags based on upstream JSON.
 
 ---
 
-# 8. ANALYZER ARCHITECTURE & AST-FIRST REQUIREMENT
+# 9. ANALYZER ARCHITECTURE & AST-FIRST REQUIREMENT
 **Absolute rule:** Use **tree‑sitter AST** whenever available.
 
 Supported languages: Python, C#, Java, TS/JS, Bicep, Terraform.
@@ -171,7 +265,7 @@ Checklist (must be true):
 
 ---
 
-# 9. DEVELOPMENT RULES
+# 10. DEVELOPMENT RULES
 - Python 3.10+, MCP Python SDK 1.2+.  
 - Logging → stderr only.  
 - STDIO transport for MCP server.  
@@ -187,7 +281,7 @@ Template management:
 
 ---
 
-# 10. TESTING & COMMIT WORKFLOW (CRITICAL)
+# 11. TESTING & COMMIT WORKFLOW (CRITICAL)
 1. Set GitHub token for CVE tests:
    ```powershell
    $env:GITHUB_TOKEN = (gh auth token)
@@ -207,7 +301,7 @@ Template management:
 
 ---
 
-# 11. VERSION MANAGEMENT — ALL 3 FILES REQUIRED
+# 12. VERSION MANAGEMENT — ALL 3 FILES REQUIRED
 Update version **every release** in:
 1. `pyproject.toml`
 2. `server.json` (top-level + packages[0])
@@ -223,7 +317,7 @@ All 3 versions must match.
 
 ---
 
-# 12. CONTENT SOURCING REQUIREMENTS
+# 13. CONTENT SOURCING REQUIREMENTS
 All recommendations must cite authoritative FedRAMP IDs or Azure Well-Architected/CAF/Security Benchmark.
 
 **Correct:**  
@@ -234,7 +328,7 @@ All recommendations must cite authoritative FedRAMP IDs or Azure Well-Architecte
 
 ---
 
-# 13. PROHIBITED VS REQUIRED ACTIONS TABLE
+# 14. PROHIBITED VS REQUIRED ACTIONS TABLE
 
 | **Prohibited** | **Why** |
 |----------------|---------|
@@ -258,7 +352,7 @@ All recommendations must cite authoritative FedRAMP IDs or Azure Well-Architecte
 
 ---
 
-# 14. COMPLIANCE VALIDATION GATE (SELF‑CHECK BEFORE ANY OUTPUT)
+# 15. COMPLIANCE VALIDATION GATE (SELF‑CHECK BEFORE ANY OUTPUT)
 Assistant must verify:
 
 - No shortcuts taken.  
@@ -274,7 +368,7 @@ If ANY check fails → **stop and ask user**.
 
 ---
 
-# 15. CONTRASTIVE EXAMPLES
+# 16. CONTRASTIVE EXAMPLES
 
 **DO:**
 - Keep tests strict; fix analyzers.  
@@ -290,7 +384,7 @@ If ANY check fails → **stop and ask user**.
 
 ---
 
-# 16. VS CODE INLINE CHAT PROMPT TEMPLATE
+# 17. VS CODE INLINE CHAT PROMPT TEMPLATE
 Paste this when applying fixes:
 
 ```
@@ -310,7 +404,7 @@ Required Evidence:
 
 ---
 
-# 17. APPENDIX — RECENT VIOLATION (DO NOT REPEAT)
+# 18. APPENDIX — RECENT VIOLATION (DO NOT REPEAT)
 - 63 tests originally failing due to missing findings.  
 - Shortcut taken (weakened assertion).  
 - Tests “passed” but validated nothing.  
