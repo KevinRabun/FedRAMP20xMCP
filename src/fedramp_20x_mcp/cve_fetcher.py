@@ -21,6 +21,7 @@ Features:
 import json
 import os
 import time
+import hashlib
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Any
@@ -356,17 +357,21 @@ class CVEFetcher:
         Sanitize cache key to create a safe filename.
         
         Security: Prevents path traversal and special characters in filenames.
+        Appends hash suffix to ensure uniqueness and prevent collisions.
         
         Args:
             key: Raw cache key
             
         Returns:
-            Sanitized key safe for use as filename
+            Sanitized key safe for use as filename with hash suffix for uniqueness
         """
         # Replace any non-alphanumeric characters (except - and _) with underscore
         sanitized = re.sub(r'[^a-zA-Z0-9_-]', '_', key)
-        # Limit length to prevent filesystem issues
-        return sanitized[:200]
+        # Truncate to reasonable length
+        sanitized = sanitized[:150]
+        # Append hash of original key to ensure uniqueness and prevent collisions
+        key_hash = hashlib.sha256(key.encode()).hexdigest()[:16]
+        return f"{sanitized}_{key_hash}"
     
     def _get_from_cache(self, cache_key: str) -> Optional[List[Dict]]:
         """Get cached vulnerability data."""
@@ -390,18 +395,21 @@ class CVEFetcher:
         """
         Save vulnerability data to cache with restricted permissions.
         
-        Security: Sets file permissions to owner-only (0600) on Unix systems.
+        Security: Creates file with owner-only permissions (0600) using thread-safe approach.
         """
         cache_file = self.cache_dir / f"{cache_key}.json"
         
         try:
-            # Set restrictive umask for cache file creation (owner read/write only)
-            old_umask = os.umask(0o077)
+            # Create or truncate cache file with explicit owner-only permissions (0600)
+            # This is thread-safe unlike os.umask()
+            fd = os.open(cache_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
             try:
-                with open(cache_file, 'w') as f:
+                with os.fdopen(fd, 'w') as f:
                     json.dump(data, f, indent=2)
-            finally:
-                os.umask(old_umask)
+            except Exception:
+                # Ensure file descriptor is closed on error
+                os.close(fd)
+                raise
         except Exception as e:
             print(f"Failed to save cache: {e}", file=__import__('sys').stderr)
     

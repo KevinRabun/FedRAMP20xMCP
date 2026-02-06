@@ -77,19 +77,22 @@ class FedRAMPDataLoader:
         """
         Save data to local cache with restricted permissions.
         
-        Security: Sets file permissions to owner-only (0600) on Unix systems.
+        Security: Creates file with owner-only permissions (0600) using thread-safe approach.
         """
         cache_file = self._get_cache_file()
         
         try:
-            # Set restrictive umask for cache file creation (owner read/write only)
-            old_umask = os.umask(0o077)
+            # Create or truncate cache file with explicit owner-only permissions (0600)
+            # This is thread-safe unlike os.umask()
+            fd = os.open(cache_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
             try:
-                with open(cache_file, "w", encoding="utf-8") as f:
+                with os.fdopen(fd, "w", encoding="utf-8") as f:
                     json.dump(data, f, indent=2)
                     logger.info("Saved data to cache")
-            finally:
-                os.umask(old_umask)
+            except Exception:
+                # Ensure file descriptor is closed on error
+                os.close(fd)
+                raise
         except Exception as e:
             logger.error(f"Failed to save cache: {e}")
 

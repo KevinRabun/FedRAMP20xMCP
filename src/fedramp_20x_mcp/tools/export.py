@@ -36,12 +36,13 @@ def _validate_output_path(output_path: str) -> Path:
     Raises:
         ValueError: If path is outside allowed directories or contains traversal
     """
-    # Resolve to absolute path
-    resolved = Path(output_path).resolve()
+    # Create Path object for validation
+    input_path = Path(output_path)
+    resolved = input_path.resolve()
     
-    # Check for path traversal patterns in original input
-    if ".." in output_path:
-        raise ValueError("Path traversal patterns (..) are not allowed in output path")
+    # Check for path traversal segments in original input path parts
+    if ".." in input_path.parts:
+        raise ValueError("Path traversal segments (..) are not allowed in output path")
     
     # Verify path is within allowed directories
     is_allowed = False
@@ -54,7 +55,8 @@ def _validate_output_path(output_path: str) -> Path:
             continue
     
     if not is_allowed:
-        allowed_str = ", ".join(str(d) for d in ALLOWED_EXPORT_DIRS)
+        # Only show directory names, not full paths (security: avoid path disclosure)
+        allowed_str = ", ".join(d.name for d in ALLOWED_EXPORT_DIRS)
         raise ValueError(f"Output path must be within allowed directories: {allowed_str}")
     
     # Ensure parent directory exists
@@ -95,7 +97,8 @@ async def export_to_excel(
     await data_loader.load_data()
     
     # Determine output path
-    if output_path is None:
+    # Treat empty string or whitespace as None (MCP wrapper passes "" by default)
+    if output_path is None or not output_path.strip():
         downloads_folder = Path.home() / "Downloads"
         downloads_folder.mkdir(parents=True, exist_ok=True)  # Create if doesn't exist
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -326,7 +329,8 @@ async def export_to_csv(
     await data_loader.load_data()
     
     # Determine output path
-    if output_path is None:
+    # Treat empty string or whitespace as None (MCP wrapper passes "" by default)
+    if output_path is None or not output_path.strip():
         downloads_folder = str(Path.home() / "Downloads")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"FedRAMP_20x_{export_type}_{timestamp}.csv"
@@ -457,7 +461,8 @@ async def generate_ksi_specification(
         return f"Error: KSI '{ksi_id}' not found"
     
     # Determine output path
-    if output_path is None:
+    # Treat empty string or whitespace as None (MCP wrapper passes "" by default)
+    if output_path is None or not output_path.strip():
         downloads_folder = str(Path.home() / "Downloads")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         safe_name = ksi_id.replace('/', '_').replace('\\', '_')

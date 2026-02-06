@@ -216,6 +216,86 @@ class TestExportTools:
             result = await export.export_to_excel(export_type, None)
             assert result is not None
             assert isinstance(result, str)
+    
+    @pytest.mark.asyncio
+    async def test_export_with_empty_string_path(self, data_loader):
+        """Test that empty string output_path is treated as None (default Downloads)"""
+        # Test with empty string (MCP wrapper default)
+        result = await export.export_to_excel("ksi", "", data_loader)
+        assert result is not None
+        assert isinstance(result, str)
+        assert "Error" not in result
+        assert "Downloads" in result
+        
+        # Test with whitespace string
+        result = await export.export_to_csv("ksi", "   ", data_loader)
+        assert result is not None
+        assert isinstance(result, str)
+        assert "Error" not in result
+        assert "Downloads" in result
+    
+    def test_validate_output_path_allowed(self):
+        """Test _validate_output_path with allowed paths"""
+        from pathlib import Path
+        
+        # Test Downloads directory
+        downloads = Path.home() / "Downloads" / "test.xlsx"
+        validated = export._validate_output_path(str(downloads))
+        assert validated == downloads.resolve()
+        
+        # Test Documents directory
+        documents = Path.home() / "Documents" / "test.csv"
+        validated = export._validate_output_path(str(documents))
+        assert validated == documents.resolve()
+        
+        # Test Desktop directory
+        desktop = Path.home() / "Desktop" / "test.xlsx"
+        validated = export._validate_output_path(str(desktop))
+        assert validated == desktop.resolve()
+    
+    def test_validate_output_path_traversal_blocked(self):
+        """Test that path traversal attempts are blocked"""
+        import pytest
+        from pathlib import Path
+        
+        # Test explicit .. in path parts
+        with pytest.raises(ValueError) as exc_info:
+            export._validate_output_path(str(Path.home() / "Downloads" / ".." / "etc" / "passwd"))
+        assert "traversal" in str(exc_info.value).lower()
+        
+        # Test .. in path parts
+        with pytest.raises(ValueError) as exc_info:
+            export._validate_output_path(str(Path("..") / "etc" / "passwd"))
+        assert "traversal" in str(exc_info.value).lower()
+    
+    def test_validate_output_path_outside_allowed_blocked(self):
+        """Test that paths outside allowed directories are blocked"""
+        import pytest
+        from pathlib import Path
+        
+        # Test /tmp (not in allowed list)
+        with pytest.raises(ValueError) as exc_info:
+            export._validate_output_path("/tmp/test.xlsx")
+        assert "allowed directories" in str(exc_info.value).lower()
+        # Verify error doesn't leak full paths, only directory names
+        assert "/home/" not in str(exc_info.value)
+        assert "Downloads" in str(exc_info.value)
+        
+        # Test /etc
+        with pytest.raises(ValueError) as exc_info:
+            export._validate_output_path("/etc/test.csv")
+        assert "allowed directories" in str(exc_info.value).lower()
+    
+    def test_validate_output_path_benign_dotdot_allowed(self):
+        """Test that filenames containing '..' (but not as path segment) are allowed"""
+        from pathlib import Path
+        
+        # Filename with .. in the name should work (not a path traversal)
+        # Note: This test verifies the path.parts check vs string matching
+        downloads = Path.home() / "Downloads" / "file..with..dots.xlsx"
+        # This should NOT raise an error because '..' is not a path segment
+        validated = export._validate_output_path(str(downloads))
+        assert validated == downloads.resolve()
 
 
 class TestEnhancementsTools:
