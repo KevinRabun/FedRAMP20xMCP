@@ -64,6 +64,16 @@ def _validate_output_path(output_path: str) -> Path:
     
     return resolved
 
+
+def _normalize_output_path(output_path: Optional[str]) -> Optional[str]:
+    if output_path is None:
+        return None
+    if not isinstance(output_path, str):
+        return None
+    if not output_path.strip():
+        return None
+    return output_path
+
 async def export_to_excel(
     export_type: str,
     output_path: Optional[str] = None,
@@ -96,6 +106,8 @@ async def export_to_excel(
     
     await data_loader.load_data()
     
+    output_path = _normalize_output_path(output_path)
+
     # Determine output path
     # Treat empty string or whitespace as None (MCP wrapper passes "" by default)
     if output_path is None or not output_path.strip():
@@ -311,7 +323,8 @@ async def export_to_excel(
 
 async def export_to_csv(
     export_type: str,
-    output_path: Optional[str] = None
+    output_path: Optional[str] = None,
+    data_loader: Optional[FedRAMPDataLoader] = None
 ) -> str:
     """
     Export FedRAMP 20x data to a CSV file.
@@ -326,15 +339,20 @@ async def export_to_csv(
     Returns:
         Path to the generated CSV file
     """
+    output_path = _normalize_output_path(output_path)
+
+    if data_loader is None:
+        data_loader = FedRAMPDataLoader()
+
     await data_loader.load_data()
     
     # Determine output path
-    # Treat empty string or whitespace as None (MCP wrapper passes "" by default)
-    if output_path is None or not output_path.strip():
-        downloads_folder = str(Path.home() / "Downloads")
+    if output_path is None:
+        downloads_folder = Path.home() / "Downloads"
+        downloads_folder.mkdir(parents=True, exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"FedRAMP_20x_{export_type}_{timestamp}.csv"
-        output_path = os.path.join(downloads_folder, filename)
+        output_path = str(downloads_folder / filename)
     else:
         # Validate user-provided path (security: prevent path traversal)
         try:
@@ -366,7 +384,10 @@ async def export_to_csv(
                 # Format controls
                 controls = ksi.get('controls', [])
                 if controls:
-                    control_list = [f"{c.get('control_id', '').upper()} - {c.get('title', '')}" for c in controls]
+                    if isinstance(controls[0], dict):
+                        control_list = [f"{c.get('control_id', '').upper()} - {c.get('title', '')}" for c in controls]
+                    else:
+                        control_list = [str(c).upper() for c in controls]
                     controls_str = '; '.join(control_list)
                 else:
                     controls_str = ''
@@ -431,7 +452,8 @@ async def export_to_csv(
 async def generate_ksi_specification(
     ksi_id: str,
     evidence_collection_strategy: str,
-    output_path: Optional[str] = None
+    output_path: Optional[str] = None,
+    data_loader: Optional[FedRAMPDataLoader] = None
 ) -> str:
     """
     Generate a product specification document for a KSI aligned with FedRAMP 20x requirements.
@@ -453,6 +475,11 @@ async def generate_ksi_specification(
     except ImportError:
         return "Error: python-docx package is required for Word document generation. Install with: pip install python-docx"
     
+    output_path = _normalize_output_path(output_path)
+
+    if data_loader is None:
+        data_loader = FedRAMPDataLoader()
+
     await data_loader.load_data()
     
     # Get the KSI
