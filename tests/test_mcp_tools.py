@@ -255,7 +255,6 @@ class TestExportTools:
     
     def test_validate_output_path_traversal_blocked(self):
         """Test that path traversal attempts are blocked"""
-        import pytest
         from pathlib import Path
         
         # Test explicit .. in path parts
@@ -270,7 +269,6 @@ class TestExportTools:
     
     def test_validate_output_path_outside_allowed_blocked(self):
         """Test that paths outside allowed directories are blocked"""
-        import pytest
         from pathlib import Path
         
         # Test /tmp (not in allowed list)

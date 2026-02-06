@@ -85,14 +85,9 @@ class FedRAMPDataLoader:
             # Create or truncate cache file with explicit owner-only permissions (0600)
             # This is thread-safe unlike os.umask()
             fd = os.open(cache_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-            try:
-                with os.fdopen(fd, "w", encoding="utf-8") as f:
-                    json.dump(data, f, indent=2)
-                    logger.info("Saved data to cache")
-            except Exception:
-                # Ensure file descriptor is closed on error
-                os.close(fd)
-                raise
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+                logger.info("Saved data to cache")
         except Exception as e:
             logger.error(f"Failed to save cache: {e}")
 
