@@ -21,13 +21,17 @@ TEST_FILES = [
     "test_ksi_analyzers.py",
     "test_frr_analyzers.py",
     "test_mcp_tools.py",
-    "test_code_enrichment.py"
+    "test_code_enrichment.py",
+    "test_adversarial_judges.py",  # CRITICAL: Adversarial tests for quality/accuracy
 ]
 
 # Pattern test directories (run separately for better reporting)
 PATTERN_TEST_DIRS = [
     "generated_pattern_tests"
 ]
+
+# Critical test markers - tests that MUST pass for build
+CRITICAL_MARKERS = ["critical", "security"]
 
 
 def print_header(title):
@@ -226,6 +230,17 @@ def run_all_tests():
         print("  [FAIL] Some pattern tests failed")
     print()
     
+    # Check if adversarial tests passed
+    adversarial_passed = results.get("test_adversarial_judges.py", None)
+    print("Adversarial Tests (Quality Gate):")
+    if adversarial_passed is True:
+        print("  [PASS] All adversarial tests passed")
+    elif adversarial_passed is False:
+        print("  [FAIL] Adversarial tests failed - BUILD SHOULD FAIL")
+    else:
+        print("  [SKIP] Adversarial tests not run")
+    print()
+    
     # Overall result
     all_passed = (failed == 0 and passed > 0 and pattern_success)
     
@@ -240,6 +255,14 @@ def run_all_tests():
         print("[FAILURE] SOME TESTS FAILED")
         print("\nDo NOT commit until all tests pass!")
         print("Review the output above to fix failing tests.")
+        if adversarial_passed is False:
+            print("\n[CRITICAL] Adversarial tests failed!")
+            print("This indicates quality or accuracy issues that must be fixed.")
+            print("Common causes:")
+            print("  - Hallucinated information (fabricated KSI/FRR IDs)")
+            print("  - Misinformation (confused definitions - e.g., PIY-01 != encryption)")
+            print("  - Security vulnerabilities (injection attacks)")
+            print("  - Edge case handling issues")
         return False
     else:
         print("[WARNING] No tests were run")
