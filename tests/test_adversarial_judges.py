@@ -34,7 +34,6 @@ from evaluator.adversarial_test_cases import (
 )
 from evaluator.adversarial_judges import AdversarialCategory
 from evaluator.metrics import Verdict
-from evaluator.test_cases import Importance
 
 
 class TestAdversarialJudges:
