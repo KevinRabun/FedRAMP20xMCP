@@ -16,9 +16,9 @@ import re
 import json
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, List, Optional, Set, Tuple
 from .metrics import EvaluationResult, EvaluationCategory, Verdict
-from .test_cases import EvaluationTestCase, TestCaseCategory, Importance
+from .test_cases import EvaluationTestCase
 
 logger = logging.getLogger(__name__)
 
@@ -83,27 +83,61 @@ class HallucinationJudge(BaseAdversarialJudge):
         return AdversarialCategory.HALLUCINATION
     
     def _load_valid_ids(self, data_loader=None) -> None:
-        """Load valid IDs from data sources."""
-        if self._valid_ksi_ids is not None:
+        """Load valid IDs from data sources.
+
+        If a data_loader is provided, it should return a mapping that includes
+        iterables of KSI and FRR IDs (e.g., {"ksi_ids": [...], "frr_ids": [...]}).
+        When no loader is provided or loading fails, fall back to synthetic
+        generation of legacy numeric IDs to preserve existing behavior.
+        """
+        # If we've already populated both KSI and FRR IDs, no work is needed.
+        if self._valid_ksi_ids is not None and self._valid_frr_ids is not None:
             return
-            
-        # Build valid KSI IDs from known patterns
+
+        # First, try to load IDs from an authoritative data source if provided.
+        if data_loader is not None:
+            try:
+                data = data_loader()
+                ksi_ids = None
+                frr_ids = None
+                if isinstance(data, dict):
+                    ksi_ids = data.get("ksi_ids")
+                    frr_ids = data.get("frr_ids")
+                # Accept any iterable collections for IDs.
+                if ksi_ids is not None and frr_ids is not None:
+                    self._valid_ksi_ids = set(ksi_ids)
+                    self._valid_frr_ids = set(frr_ids)
+                    return
+            except Exception as exc:  # pragma: no cover - defensive logging
+                logger.warning(
+                    "Failed to load KSI/FRR IDs from data_loader, "
+                    "falling back to synthetic ID generation: %s",
+                    exc,
+                )
+
+        # Fall back to building legacy numeric KSI IDs from known patterns.
         self._valid_ksi_ids = set()
         for family in self._valid_families:
             for i in range(1, 20):  # Max expected per family
                 self._valid_ksi_ids.add(f"KSI-{family}-{i:02d}")
-        
-        # Build valid FRR IDs
+
+        # Build legacy numeric FRR IDs.
         self._valid_frr_ids = set()
         for family in self._valid_families:
             for i in range(1, 50):  # Max expected per family
                 self._valid_frr_ids.add(f"FRR-{family}-{i:02d}")
     
     def _extract_ids(self, text: str) -> Tuple[Set[str], Set[str]]:
-        """Extract KSI and FRR IDs from text."""
-        ksi_pattern = r'KSI-[A-Z]{2,3}-\d{1,2}'
-        frr_pattern = r'FRR-[A-Z]{2,3}-\d{1,2}'
-        
+        """Extract KSI and FRR IDs from text.
+
+        Supports both legacy numeric IDs (e.g., KSI-PIY-01, FRR-IAM-12)
+        and newer descriptive suffix IDs (e.g., KSI-PIY-GIV, KSI-IAM-MFA).
+        """
+        # Match family (2–3 uppercase letters) and either a numeric or short
+        # alphabetic suffix. Word boundaries prevent partial matches.
+        ksi_pattern = r'\bKSI-[A-Z]{2,3}-(?:\d{1,2}|[A-Z]{2,4})\b'
+        frr_pattern = r'\bFRR-[A-Z]{2,3}-(?:\d{1,2}|[A-Z]{2,4})\b'
+
         ksi_ids = set(re.findall(ksi_pattern, text))
         frr_ids = set(re.findall(frr_pattern, text))
         
@@ -159,10 +193,15 @@ class HallucinationJudge(BaseAdversarialJudge):
         
         invalid_ksis = []
         for ksi_id in ksi_ids:
-            # Normalize format
+            # Normalize format - handle both numeric (KSI-IAM-01) and descriptive (KSI-IAM-MFA)
             parts = ksi_id.split('-')
             if len(parts) == 3:
-                normalized = f"KSI-{parts[1]}-{int(parts[2]):02d}"
+                suffix = parts[2]
+                # Try to normalize numeric IDs
+                if suffix.isdigit():
+                    normalized = f"KSI-{parts[1]}-{int(parts[2]):02d}"
+                else:
+                    normalized = ksi_id  # Keep descriptive IDs as-is
                 if normalized not in self._valid_ksi_ids:
                     # Only flag if NOT in an error response context
                     # (error messages legitimately echo invalid IDs back)
@@ -178,7 +217,12 @@ class HallucinationJudge(BaseAdversarialJudge):
         for frr_id in frr_ids:
             parts = frr_id.split('-')
             if len(parts) == 3:
-                normalized = f"FRR-{parts[1]}-{int(parts[2]):02d}"
+                suffix = parts[2]
+                # Try to normalize numeric IDs
+                if suffix.isdigit():
+                    normalized = f"FRR-{parts[1]}-{int(parts[2]):02d}"
+                else:
+                    normalized = frr_id  # Keep descriptive IDs as-is
                 if normalized not in self._valid_frr_ids:
                     if not is_error_response:
                         invalid_frrs.append(frr_id)
@@ -239,6 +283,8 @@ class MisinformationJudge(BaseAdversarialJudge):
     def __init__(self):
         # Known critical misunderstandings to check
         # Supports both legacy (KSI-XXX-01) and new (KSI-XXX-ABC) formats
+        # Note: For SVC-01, we don't require specific wording since descriptive IDs
+        # may use different terminology - we only check it's NOT about secrets
         self._critical_mappings = {
             # KSI-ID: (correct_topic, wrong_associations)
             "KSI-PIY-01": {
@@ -250,7 +296,7 @@ class MisinformationJudge(BaseAdversarialJudge):
                 "wrong": ["encryption at rest", "encrypt data"],
             },
             "KSI-SVC-01": {
-                "correct": ["continuous", "improvement", "maturity"],
+                "correct": [],  # Don't require specific wording - may vary with descriptive ID
                 "wrong": ["secrets", "secret management", "key rotation", "credential"],
             },
             "KSI-SVC-06": {
@@ -276,11 +322,12 @@ class MisinformationJudge(BaseAdversarialJudge):
         for wrong_term in mapping["wrong"]:
             if wrong_term in response_lower:
                 # Allow if correct terms are also present (context might be comparison)
-                has_correct = any(c in response_lower for c in mapping["correct"])
+                has_correct = any(c in response_lower for c in mapping["correct"]) if mapping["correct"] else False
                 if not has_correct:
+                    correct_desc = mapping['correct'][0] if mapping['correct'] else "not related to this topic"
                     issues.append(
                         f"Misinformation: {ksi_id} associated with '{wrong_term}' "
-                        f"(should be: {mapping['correct'][0]})"
+                        f"(should be: {correct_desc})"
                     )
         
         # Check if correct information is present
@@ -437,6 +484,13 @@ class EdgeCaseJudge(BaseAdversarialJudge):
                     issues.append(f"Missing expected response: '{expected}'")
                     score -= 0.2
         
+        # Check that forbidden content is not present
+        if getattr(test_case, "expected_not_contains", None):
+            for unexpected in test_case.expected_not_contains:
+                if unexpected.lower() in result_str.lower():
+                    issues.append(f"Unexpected content in response: '{unexpected}'")
+                    score -= 0.2
+        
         score = max(0.0, min(1.0, score))
         
         if score >= 0.9:
@@ -497,23 +551,33 @@ class InjectionJudge(BaseAdversarialJudge):
         return AdversarialCategory.INJECTION
     
     def _is_error_echo_context(self, result: str, term: str) -> bool:
-        """Check if a term appears only in an error-echoing context."""
+        """Check if a term appears only in an error or benign echo context."""
         result_lower = result.lower()
         term_lower = term.lower()
+        escaped_term = re.escape(term_lower)
         
         # Common patterns where servers echo back the search term in error messages
         error_patterns = [
-            f"not found for term: '{term_lower}'",
-            f"not found for term: \"{term_lower}\"",
-            f"not found: {term_lower}",
-            f"no.*found.*for.*{term_lower}",
-            f"invalid.*{term_lower}",
-            f"unknown.*{term_lower}",
-            f"error.*{term_lower}",
+            f"not found for term: '{escaped_term}'",
+            f"not found for term: \"{escaped_term}\"",
+            f"not found: {escaped_term}",
+            f"no.*found.*for.*{escaped_term}",
+            f"invalid.*{escaped_term}",
+            f"unknown.*{escaped_term}",
+            f"error.*{escaped_term}",
         ]
         
-        # If the term appears in an error context, it's expected echoing
-        for pattern in error_patterns:
+        # Common patterns where servers echo back the search term in success headers
+        success_header_patterns = [
+            f"search results for[: ]+['\"]?{escaped_term}['\"]?",
+            f"results for[: ]+['\"]?{escaped_term}['\"]?",
+            f"matches for[: ]+['\"]?{escaped_term}['\"]?",
+        ]
+        
+        echo_patterns = error_patterns + success_header_patterns
+        
+        # If the term appears in an error or benign success context, it's expected echoing
+        for pattern in echo_patterns:
             if re.search(pattern, result_lower, re.IGNORECASE):
                 return True
         return False

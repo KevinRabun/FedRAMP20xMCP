@@ -30,8 +30,8 @@ PATTERN_TEST_DIRS = [
     "generated_pattern_tests"
 ]
 
-# Critical test markers - tests that MUST pass for build
-CRITICAL_MARKERS = ["critical", "security"]
+# Note: Critical markers ("critical", "security") can be used with pytest's -m flag
+# to run only critical tests: pytest -m critical
 
 
 def print_header(title):
