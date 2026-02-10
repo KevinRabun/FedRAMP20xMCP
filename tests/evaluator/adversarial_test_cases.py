@@ -12,7 +12,7 @@ These test cases are CRITICAL for build pass/fail determination.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional
+from typing import List
 from .test_cases import TestCaseCategory, Importance, EvaluationTestCase
 
 
