@@ -144,6 +144,29 @@ def load_authoritative_ksi_data() -> Dict:
     return {}
 
 
+def is_negated_phrase(context_lower: str, forbidden: str) -> bool:
+    """
+    Check if a forbidden phrase is being negated (explicitly stating what something is NOT).
+    
+    This avoids false positives when code documents what a KSI is NOT, e.g.:
+    "PIY-01 is Government Inventory, NOT encryption at rest"
+    """
+    import re as re_negation
+    # Patterns that indicate the phrase is being negated
+    negation_patterns = [
+        rf"not\s+{re_negation.escape(forbidden)}",  # "NOT encryption at rest"
+        rf"isn't\s+{re_negation.escape(forbidden)}",  # "isn't encryption at rest"
+        rf"is not\s+{re_negation.escape(forbidden)}",  # "is not encryption at rest"
+        rf"not about\s+{re_negation.escape(forbidden)}",  # "not about encryption"
+        rf"!=\s*.*{re_negation.escape(forbidden)}",  # code comparison
+    ]
+    
+    for pattern in negation_patterns:
+        if re_negation.search(pattern, context_lower):
+            return True
+    return False
+
+
 def find_ksi_references_in_file(file_path: Path) -> List[Tuple[int, str, str]]:
     """
     Find all KSI references in a file.
@@ -244,6 +267,9 @@ class TestKSIReferenceValidation:
                     context_lower = context.lower()
                     for forbidden in FORBIDDEN_DESCRIPTIONS[ksi_id]:
                         if forbidden in context_lower:
+                            # Skip if the phrase is explicitly negated (e.g., "NOT encryption at rest")
+                            if is_negated_phrase(context_lower, forbidden):
+                                continue
                             violations.append(
                                 f"{test_file.name}:{line_num} - {ksi_id} has forbidden description '{forbidden}' in: {context}"
                             )
@@ -264,9 +290,11 @@ class TestKSIReferenceValidation:
                     context_lower = context.lower()
                     for forbidden in FORBIDDEN_DESCRIPTIONS[ksi_id]:
                         if forbidden in context_lower:
+                            # Skip if the phrase is explicitly negated
+                            if is_negated_phrase(context_lower, forbidden):
+                                continue
                             violations.append(
-                                f"{tool_file.name}:{line_num} - {ksi_id} has forbidden description '{forbidden}'"
-                            )
+                                f"{tool_file.name}:{line_num} - {ksi_id} has forbidden description '{forbidden}'")
         
         assert not violations, \
             f"Found {len(violations)} forbidden KSI descriptions in tools:\n" + "\n".join(violations)

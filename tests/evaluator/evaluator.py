@@ -3,6 +3,13 @@ MCP Server Evaluator
 
 Main evaluator class that orchestrates the evaluation process,
 running test cases through appropriate judges and collecting metrics.
+
+Includes adversarial testing capabilities to detect:
+- Hallucinations
+- Misinformation  
+- Edge case failures
+- Injection vulnerabilities
+- Robustness issues
 """
 
 import asyncio
@@ -29,6 +36,20 @@ from .judges import (
     RelevanceJudge,
     ConsistencyJudge,
     get_judge,
+)
+from .adversarial_judges import (
+    BaseAdversarialJudge,
+    HallucinationJudge,
+    MisinformationJudge,
+    EdgeCaseJudge,
+    InjectionJudge,
+    RobustnessJudge,
+    AdversarialCategory,
+)
+from .adversarial_test_cases import (
+    ALL_ADVERSARIAL_TEST_CASES,
+    CRITICAL_ADVERSARIAL_TEST_CASES,
+    get_adversarial_test_cases_by_type,
 )
 
 logger = logging.getLogger(__name__)
@@ -61,6 +82,15 @@ class MCPServerEvaluator:
             EvaluationCategory.ANALYSIS_QUALITY: AnalysisQualityJudge(),
             EvaluationCategory.RELEVANCE: RelevanceJudge(),
             EvaluationCategory.CONSISTENCY: ConsistencyJudge(),
+        }
+        
+        # Initialize adversarial judges
+        self.adversarial_judges: Dict[str, BaseAdversarialJudge] = {
+            AdversarialCategory.HALLUCINATION: HallucinationJudge(),
+            AdversarialCategory.MISINFORMATION: MisinformationJudge(),
+            AdversarialCategory.EDGE_CASE: EdgeCaseJudge(),
+            AdversarialCategory.INJECTION: InjectionJudge(),
+            AdversarialCategory.ROBUSTNESS: RobustnessJudge(),
         }
         
         # Tool implementations will be loaded lazily
@@ -305,6 +335,152 @@ class MCPServerEvaluator:
         
         logger.info(f"Running {len(all_tests)} consistency checks ({iterations} iterations)...")
         return await self.run_test_cases(all_tests, parallel=False)
+    
+    async def evaluate_adversarial_test_case(
+        self,
+        test_case: EvaluationTestCase,
+        adversarial_type: str
+    ) -> EvaluationResult:
+        """
+        Evaluate a single test case using an adversarial judge.
+        
+        Args:
+            test_case: The test case to evaluate
+            adversarial_type: Type of adversarial test (hallucination, misinformation, etc.)
+            
+        Returns:
+            EvaluationResult with adversarial verdict
+        """
+        # Invoke the tool
+        start_time = time.perf_counter()
+        try:
+            result = await self._invoke_tool(test_case.tool_name, test_case.tool_params)
+            latency_ms = (time.perf_counter() - start_time) * 1000
+        except Exception as e:
+            latency_ms = (time.perf_counter() - start_time) * 1000
+            logger.error(f"Tool invocation failed for adversarial test {test_case.id}: {e}")
+            return EvaluationResult(
+                test_case_id=test_case.id,
+                category=EvaluationCategory.ACCURACY,
+                verdict=Verdict.ERROR,
+                score=0.0,
+                explanation=f"Tool invocation error: {str(e)}",
+                latency_ms=latency_ms,
+                metadata={"adversarial_type": adversarial_type},
+            )
+        
+        # Get appropriate adversarial judge
+        judge = self.adversarial_judges.get(adversarial_type)
+        if not judge:
+            # Fall back to standard accuracy judge
+            judge = self.judges[EvaluationCategory.ACCURACY]
+        
+        evaluation = judge.evaluate(test_case, result, latency_ms)
+        return evaluation
+    
+    async def run_adversarial_evaluation(self, critical_only: bool = False) -> EvaluationMetrics:
+        """
+        Run adversarial test suite.
+        
+        Args:
+            critical_only: If True, only run critical adversarial tests
+            
+        Returns:
+            EvaluationMetrics with adversarial results
+        """
+        test_cases = CRITICAL_ADVERSARIAL_TEST_CASES if critical_only else ALL_ADVERSARIAL_TEST_CASES
+        
+        logger.info(f"Running {len(test_cases)} adversarial test cases...")
+        metrics = EvaluationMetrics()
+        
+        for tc in test_cases:
+            # Determine adversarial type from tags
+            adversarial_type = None
+            for tag in tc.tags:
+                if tag in [AdversarialCategory.HALLUCINATION, AdversarialCategory.MISINFORMATION,
+                          AdversarialCategory.EDGE_CASE, AdversarialCategory.INJECTION,
+                          AdversarialCategory.ROBUSTNESS]:
+                    adversarial_type = tag
+                    break
+            
+            if not adversarial_type:
+                # Default to hallucination check
+                adversarial_type = AdversarialCategory.HALLUCINATION
+            
+            try:
+                result = await self.evaluate_adversarial_test_case(tc, adversarial_type)
+                metrics.add_result(result)
+            except Exception as e:
+                logger.error(f"Failed to evaluate adversarial test {tc.id}: {e}")
+                metrics.add_result(EvaluationResult(
+                    test_case_id=tc.id,
+                    category=EvaluationCategory.ACCURACY,
+                    verdict=Verdict.ERROR,
+                    score=0.0,
+                    explanation=f"Execution error: {e}",
+                    metadata={"adversarial_type": adversarial_type},
+                ))
+        
+        metrics.finalize()
+        logger.info(f"Adversarial evaluation complete: {metrics.overall_pass_rate:.1%} pass rate")
+        return metrics
+    
+    async def run_adversarial_by_type(self, adversarial_type: str) -> EvaluationMetrics:
+        """
+        Run adversarial tests of a specific type.
+        
+        Args:
+            adversarial_type: Type from AdversarialCategory
+            
+        Returns:
+            EvaluationMetrics for that adversarial type
+        """
+        test_cases = get_adversarial_test_cases_by_type(adversarial_type)
+        logger.info(f"Running {len(test_cases)} {adversarial_type} adversarial tests...")
+        
+        metrics = EvaluationMetrics()
+        for tc in test_cases:
+            try:
+                result = await self.evaluate_adversarial_test_case(tc, adversarial_type)
+                metrics.add_result(result)
+            except Exception as e:
+                logger.error(f"Failed: {e}")
+                metrics.add_result(EvaluationResult(
+                    test_case_id=tc.id,
+                    category=EvaluationCategory.ACCURACY,
+                    verdict=Verdict.ERROR,
+                    score=0.0,
+                    explanation=f"Execution error: {e}",
+                ))
+        
+        metrics.finalize()
+        return metrics
+    
+    async def run_full_evaluation_with_adversarial(self) -> EvaluationMetrics:
+        """
+        Run full evaluation including adversarial tests.
+        
+        Returns:
+            Combined EvaluationMetrics from standard and adversarial tests
+        """
+        logger.info("Starting full MCP Server evaluation with adversarial tests...")
+        
+        # Run standard tests
+        standard_metrics = await self.run_full_evaluation()
+        
+        # Run adversarial tests
+        adversarial_metrics = await self.run_adversarial_evaluation()
+        
+        # Merge metrics
+        combined = EvaluationMetrics()
+        for result in standard_metrics.results:
+            combined.add_result(result)
+        for result in adversarial_metrics.results:
+            combined.add_result(result)
+        combined.finalize()
+        
+        logger.info(f"Full evaluation complete: {combined.overall_pass_rate:.1%} combined pass rate")
+        return combined
     
     def generate_report(
         self,
