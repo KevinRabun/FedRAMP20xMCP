@@ -8,8 +8,8 @@ Actively probe and challenge the MCP server to detect:
 - Prompt injection vulnerabilities
 - Robustness issues with malformed input
 
-These judges MUST fail to pass build - they catch quality/accuracy issues
-that standard unit tests miss.
+These judges are part of the build gate: the build must not pass if they
+detect quality or accuracy issues that standard unit tests miss.
 """
 
 import re
