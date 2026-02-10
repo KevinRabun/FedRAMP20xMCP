@@ -45,7 +45,6 @@ from .adversarial_judges import (
     InjectionJudge,
     RobustnessJudge,
     AdversarialCategory,
-    get_adversarial_judge,
 )
 from .adversarial_test_cases import (
     ALL_ADVERSARIAL_TEST_CASES,
