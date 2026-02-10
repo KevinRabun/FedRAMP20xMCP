@@ -14,7 +14,6 @@ Includes markers for:
 
 import pytest
 import asyncio
-from typing import Generator
 from fedramp_20x_mcp.data_loader import FedRAMPDataLoader
 
 
