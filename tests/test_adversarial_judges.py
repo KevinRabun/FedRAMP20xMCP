@@ -28,6 +28,7 @@ from evaluator.adversarial_test_cases import (
     EDGE_CASE_TEST_CASES,
     INJECTION_TEST_CASES,
     ROBUSTNESS_TEST_CASES,
+    FALSE_POSITIVE_TEST_CASES,
 )
 from evaluator.adversarial_judges import AdversarialCategory
 from evaluator.metrics import Verdict
@@ -361,6 +362,111 @@ class TestAdversarialJudges:
             )
             assert result.verdict in [Verdict.PASS, Verdict.PARTIAL], (
                 f"Large result set handling failed for {tc.id}: {result.explanation}"
+            )
+    
+    # =========================================================================
+    # FALSE POSITIVE TESTS - Context-Aware Filtering
+    # =========================================================================
+    
+    @pytest.mark.asyncio
+    @pytest.mark.adversarial
+    @pytest.mark.false_positive
+    async def test_cli_tool_no_iam_findings(self, evaluator):
+        """
+        CLI tools without authentication should not get IAM/MFA findings.
+        
+        This validates the ApplicationContext feature reduces false positives
+        for application types that don't have authentication capabilities.
+        """
+        test_cases = [tc for tc in FALSE_POSITIVE_TEST_CASES if "CLI-IAM" in tc.id]
+        
+        for tc in test_cases:
+            result = await evaluator.evaluate_adversarial_test_case(
+                tc, AdversarialCategory.FALSE_POSITIVE
+            )
+            assert result.verdict in [Verdict.PASS, Verdict.PARTIAL], (
+                f"False positive: CLI tool got IAM findings: {result.explanation}"
+            )
+    
+    @pytest.mark.asyncio
+    @pytest.mark.adversarial
+    @pytest.mark.false_positive
+    async def test_cli_tool_no_tls_findings(self, evaluator):
+        """CLI tools without HTTP server should not get TLS/HSTS findings."""
+        test_cases = [tc for tc in FALSE_POSITIVE_TEST_CASES if "CLI-TLS" in tc.id]
+        
+        for tc in test_cases:
+            result = await evaluator.evaluate_adversarial_test_case(
+                tc, AdversarialCategory.FALSE_POSITIVE
+            )
+            assert result.verdict in [Verdict.PASS, Verdict.PARTIAL], (
+                f"False positive: CLI tool got TLS findings: {result.explanation}"
+            )
+    
+    @pytest.mark.asyncio
+    @pytest.mark.adversarial
+    @pytest.mark.false_positive
+    async def test_cli_tool_no_database_findings(self, evaluator):
+        """CLI tools without databases should not get SQL injection findings."""
+        test_cases = [tc for tc in FALSE_POSITIVE_TEST_CASES if "CLI-DB" in tc.id]
+        
+        for tc in test_cases:
+            result = await evaluator.evaluate_adversarial_test_case(
+                tc, AdversarialCategory.FALSE_POSITIVE
+            )
+            assert result.verdict in [Verdict.PASS, Verdict.PARTIAL], (
+                f"False positive: CLI tool got database findings: {result.explanation}"
+            )
+    
+    @pytest.mark.asyncio
+    @pytest.mark.adversarial
+    @pytest.mark.false_positive
+    @pytest.mark.critical
+    async def test_full_profile_preserves_all_findings(self, evaluator):
+        """
+        CRITICAL: 'full' profile must not suppress any findings.
+        
+        This ensures the context-aware filtering doesn't introduce
+        false negatives when no profile is specified or 'full' is used.
+        """
+        test_cases = [tc for tc in FALSE_POSITIVE_TEST_CASES if "FULL-PRESERVE" in tc.id]
+        
+        for tc in test_cases:
+            result = await evaluator.evaluate_adversarial_test_case(
+                tc, AdversarialCategory.FALSE_POSITIVE
+            )
+            assert result.verdict in [Verdict.PASS, Verdict.PARTIAL], (
+                f"False negative: 'full' profile suppressed findings: {result.explanation}"
+            )
+    
+    @pytest.mark.asyncio
+    @pytest.mark.adversarial
+    @pytest.mark.false_positive
+    async def test_no_profile_backward_compatible(self, evaluator):
+        """No application_profile should run full analysis (backward compatible)."""
+        test_cases = [tc for tc in FALSE_POSITIVE_TEST_CASES if "NOCONTEXT" in tc.id]
+        
+        for tc in test_cases:
+            result = await evaluator.evaluate_adversarial_test_case(
+                tc, AdversarialCategory.FALSE_POSITIVE
+            )
+            assert result.verdict != Verdict.ERROR, (
+                f"Backward compatibility broken: {result.explanation}"
+            )
+    
+    @pytest.mark.asyncio
+    @pytest.mark.adversarial
+    @pytest.mark.false_positive
+    async def test_unknown_profile_graceful_fallback(self, evaluator):
+        """Unknown profile names should fall back gracefully without crashing."""
+        test_cases = [tc for tc in FALSE_POSITIVE_TEST_CASES if "UNKNOWN" in tc.id]
+        
+        for tc in test_cases:
+            result = await evaluator.evaluate_adversarial_test_case(
+                tc, AdversarialCategory.FALSE_POSITIVE
+            )
+            assert result.verdict != Verdict.ERROR, (
+                f"Unknown profile caused error: {result.explanation}"
             )
     
     # =========================================================================

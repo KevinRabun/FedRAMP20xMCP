@@ -30,6 +30,7 @@ class AdversarialCategory:
     EDGE_CASE = "edge_case"
     INJECTION = "injection"
     ROBUSTNESS = "robustness"
+    FALSE_POSITIVE = "false_positive"
 
 
 class BaseAdversarialJudge(ABC):
@@ -752,6 +753,187 @@ class RobustnessJudge(BaseAdversarialJudge):
         )
 
 
+class FalsePositiveJudge(BaseAdversarialJudge):
+    """
+    Tests that context-aware filtering correctly reduces false positives.
+    
+    Validates that:
+    - CLI tools don't get IAM/MFA/RBAC findings when they have no authentication
+    - Non-web apps don't get HSTS/TLS findings
+    - Apps without databases don't get SQL injection/sanitization findings
+    - Apps without PII don't get privacy/data protection findings
+    - Context filtering metadata is included in results
+    - The 'full' profile preserves all findings (no false negatives)
+    
+    Test cases use application_profile in tool_params to trigger filtering.
+    The judge compares filtered vs unfiltered results to assess quality.
+    """
+    
+    @property
+    def adversarial_type(self) -> str:
+        return AdversarialCategory.FALSE_POSITIVE
+    
+    def _count_findings(self, result: Any) -> int:
+        """Count findings in an analyzer result dict."""
+        if isinstance(result, dict):
+            findings = result.get("findings", [])
+            if isinstance(findings, list):
+                return len(findings)
+            # Handle string results
+            result_str = str(result)
+        else:
+            result_str = str(result) if result else ""
+        
+        # Count finding markers in string output
+        count = result_str.count("**Finding")
+        if count == 0:
+            count = result_str.lower().count("finding")
+        return count
+    
+    def _has_context_metadata(self, result: Any) -> bool:
+        """Check if result includes application_context metadata."""
+        if isinstance(result, dict):
+            return "application_context" in result
+        result_str = str(result) if result else ""
+        return "application_context" in result_str or "context_filtered_count" in result_str
+    
+    def _check_category_suppressed(self, result: Any, category_keywords: list) -> bool:
+        """Check if findings from a given category are suppressed."""
+        if isinstance(result, dict):
+            findings = result.get("findings", [])
+            if isinstance(findings, list):
+                for finding in findings:
+                    title = ""
+                    desc = ""
+                    if isinstance(finding, dict):
+                        title = finding.get("title", "").lower()
+                        desc = finding.get("description", "").lower()
+                    else:
+                        title = str(finding).lower()
+                    combined = f"{title} {desc}"
+                    for keyword in category_keywords:
+                        if keyword.lower() in combined:
+                            return False  # Category NOT suppressed
+        else:
+            result_str = str(result).lower() if result else ""
+            for keyword in category_keywords:
+                if keyword.lower() in result_str:
+                    return False
+        return True  # Category suppressed (or no findings at all)
+    
+    def _extract_finding_titles_and_ids(self, result: Any) -> str:
+        """Extract only finding titles, descriptions, and requirement_ids for checking.
+        
+        This avoids false matches on recommendation text or summary sections
+        that may legitimately mention suppressed topics in a different context.
+        """
+        parts = []
+        if isinstance(result, dict):
+            findings = result.get("findings", [])
+            if isinstance(findings, list):
+                for finding in findings:
+                    if isinstance(finding, dict):
+                        parts.append(finding.get("title", ""))
+                        parts.append(finding.get("description", ""))
+                        parts.append(finding.get("requirement_id", ""))
+                        parts.append(finding.get("ksi_id", ""))
+        return " ".join(parts).lower()
+    
+    def evaluate(
+        self,
+        test_case: EvaluationTestCase,
+        actual_result: Any,
+        latency_ms: float
+    ) -> EvaluationResult:
+        result_str = str(actual_result) if actual_result else ""
+        finding_text = self._extract_finding_titles_and_ids(actual_result)
+        
+        issues = []
+        score = 1.0
+        
+        profile = test_case.tool_params.get("application_profile", "")
+        expects_reduction = "expects_reduction" in (test_case.tags or [])
+        expects_preserved = "expects_preserved" in (test_case.tags or [])
+        suppressed_categories = test_case.metadata.get("suppressed_categories", []) if hasattr(test_case, 'metadata') and test_case.metadata else []
+        
+        # Check 1: Context metadata should be present when profile is set
+        if profile and not self._has_context_metadata(actual_result):
+            issues.append("Missing application_context metadata in filtered results")
+            score -= 0.2
+        
+        # Check 2: If expects_reduction, verify findings are reduced
+        if expects_reduction:
+            finding_count = self._count_findings(actual_result)
+            if isinstance(actual_result, dict):
+                filtered_count = actual_result.get("context_filtered_count", 0)
+                if filtered_count == 0:
+                    issues.append(
+                        f"Expected context filtering to reduce findings for profile '{profile}', "
+                        f"but context_filtered_count=0"
+                    )
+                    score -= 0.4
+        
+        # Check 3: If expects_preserved, verify 'full' profile doesn't suppress
+        if expects_preserved:
+            if isinstance(actual_result, dict):
+                filtered_count = actual_result.get("context_filtered_count", 0)
+                if filtered_count > 0:
+                    issues.append(
+                        f"'full' profile should not filter any findings, "
+                        f"but {filtered_count} were filtered"
+                    )
+                    score -= 0.5
+        
+        # Check 4: Verify specific categories are suppressed in finding titles/descriptions
+        # Only check finding titles and descriptions, not recommendations or summaries
+        # which may legitimately reference suppressed topics in a different context
+        if test_case.expected_not_contains:
+            for forbidden in test_case.expected_not_contains:
+                if forbidden.lower() in finding_text:
+                    issues.append(f"False positive: '{forbidden}' should be suppressed by profile '{profile}'")
+                    score -= 0.3
+        
+        # Check 5: Verify expected findings are preserved
+        if test_case.expected_contains:
+            for expected in test_case.expected_contains:
+                if expected.lower() not in result_str.lower():
+                    issues.append(f"Legitimate finding missing: '{expected}' lost during context filtering")
+                    score -= 0.3
+        
+        # Check 6: No crashes from context filtering
+        if "traceback" in result_str.lower() or "error" in result_str.lower():
+            if "applicationcontext" in result_str.lower() or "application_context" in result_str.lower():
+                issues.append("Context filtering caused an error")
+                score -= 0.5
+        
+        score = max(0.0, min(1.0, score))
+        
+        if score >= 0.9:
+            verdict = Verdict.PASS
+            explanation = f"Context-aware filtering working correctly for profile '{profile}'"
+        elif score >= 0.5:
+            verdict = Verdict.PARTIAL
+            explanation = f"Partial context filtering: {'; '.join(issues)}"
+        else:
+            verdict = Verdict.FAIL
+            explanation = f"Context filtering issues: {'; '.join(issues)}"
+        
+        return EvaluationResult(
+            test_case_id=test_case.id,
+            category=EvaluationCategory.ACCURACY,
+            verdict=verdict,
+            score=score,
+            explanation=explanation,
+            actual=result_str[:500],
+            latency_ms=latency_ms,
+            metadata={
+                "adversarial_type": self.adversarial_type,
+                "issues": issues,
+                "profile": profile,
+            },
+        )
+
+
 # Factory function
 def get_adversarial_judge(adversarial_type: str) -> BaseAdversarialJudge:
     """Get the appropriate adversarial judge."""
@@ -761,6 +943,7 @@ def get_adversarial_judge(adversarial_type: str) -> BaseAdversarialJudge:
         AdversarialCategory.EDGE_CASE: EdgeCaseJudge,
         AdversarialCategory.INJECTION: InjectionJudge,
         AdversarialCategory.ROBUSTNESS: RobustnessJudge,
+        AdversarialCategory.FALSE_POSITIVE: FalsePositiveJudge,
     }
     return judges[adversarial_type]()
 
@@ -772,4 +955,5 @@ ALL_ADVERSARIAL_JUDGES = [
     EdgeCaseJudge,
     InjectionJudge,
     RobustnessJudge,
+    FalsePositiveJudge,
 ]

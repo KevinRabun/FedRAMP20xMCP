@@ -45,6 +45,7 @@ from .adversarial_judges import (
     EdgeCaseJudge,
     InjectionJudge,
     RobustnessJudge,
+    FalsePositiveJudge,
     AdversarialCategory,
     get_adversarial_judge,
 )
@@ -56,6 +57,7 @@ from .adversarial_test_cases import (
     EDGE_CASE_TEST_CASES,
     INJECTION_TEST_CASES,
     ROBUSTNESS_TEST_CASES,
+    FALSE_POSITIVE_TEST_CASES,
     get_adversarial_test_cases_by_type,
 )
 from .metrics import EvaluationMetrics, EvaluationResult
@@ -79,6 +81,7 @@ __all__ = [
     "EdgeCaseJudge",
     "InjectionJudge",
     "RobustnessJudge",
+    "FalsePositiveJudge",
     "AdversarialCategory",
     "get_adversarial_judge",
     # Adversarial test cases
@@ -89,5 +92,6 @@ __all__ = [
     "EDGE_CASE_TEST_CASES",
     "INJECTION_TEST_CASES",
     "ROBUSTNESS_TEST_CASES",
+    "FALSE_POSITIVE_TEST_CASES",
     "get_adversarial_test_cases_by_type",
 ]

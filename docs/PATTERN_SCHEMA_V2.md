@@ -421,6 +421,64 @@ testing:
 - ✅ Add new framework: update compliance_frameworks
 - ✅ Add new Azure service: update azure_guidance
 
+### Context-Aware Filtering
+- ✅ Reduce false positives using `application_profile` parameter
+- ✅ Predefined profiles: `cli-tool`, `mcp-server`, `web-app`, `api-service`, `library`, `batch-job`, `iac-only`
+- ✅ Tag-based capability gating (e.g., MFA findings suppressed when `has_authentication=False`)
+- ✅ Family-level suppression (e.g., IAM family suppressed for CLI tools)
+
+## Application Context Profiles
+
+When analyzing code, you can specify an `application_profile` parameter to reduce false positives
+for applications that don't have certain capabilities:
+
+| Profile | Auth | HTTP | DB | PII | Network | Use Case |
+|---------|------|------|----|-----|---------|----------|
+| `full` | ✓ | ✓ | ✓ | ✓ | ✓ | Default — all checks enabled |
+| `web-app` | ✓ | ✓ | ✓ | ✓ | ✓ | Web applications |
+| `api-service` | ✓ | ✓ | ✓ | ? | ✓ | REST/GraphQL APIs |
+| `cli-tool` | ✗ | ✗ | ✗ | ✗ | ✗ | Local CLI tools |
+| `mcp-server` | ✗ | ✗ | ✗ | ✗ | ✗ | MCP servers (stdio) |
+| `library` | ✗ | ✗ | ✗ | ✗ | ✗ | Shared libraries/SDKs |
+| `batch-job` | ✗ | ✗ | ✓ | ? | ? | Background workers |
+| `iac-only` | ? | ? | ? | ✗ | ? | IaC templates |
+
+✓ = enabled, ✗ = disabled (findings suppressed), ? = unknown (no filtering)
+
+### Example: Analyzing a CLI Tool
+
+```python
+# MCP tool call with application_profile
+analyze_application_code(
+    code="...",
+    language="python",
+    application_profile="cli-tool"
+)
+```
+
+This suppresses findings related to:
+- MFA, RBAC, IAM (no user accounts)
+- HSTS, TLS, CORS (no HTTP server)
+- Data deletion, backup (no database)
+- PII, data protection (no personal data)
+- Cross-border transfers (no network calls)
+
+### Custom Context
+
+For programmatic usage, create a custom `ApplicationContext`:
+
+```python
+from fedramp_20x_mcp.analyzers.application_context import ApplicationContext
+
+ctx = ApplicationContext(
+    has_authentication=False,
+    has_http_server=False,
+    has_database=True,        # Has database
+    has_pii=False,
+    has_network_calls=False,
+    excluded_tags={"container"},  # Also exclude container findings
+)
+
 ## Example: Complete V2 Pattern
 
 See `data/patterns/iam_patterns_v2_example.yaml` for a fully-populated example demonstrating all V2 schema fields.

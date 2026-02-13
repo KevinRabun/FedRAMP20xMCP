@@ -65,6 +65,7 @@ The server provides access to **321 requirements** (199 FRRs + 72 KSIs + 50 FRDs
 - **Semantic Analysis**: Deep code understanding with symbol resolution, control flow analysis, and interprocedural analysis capabilities
 - **🚀 Pattern-Based Architecture**: Unified analysis engine with 381 YAML patterns across 23 requirement families, supporting compliance analysis for KSIs and FRRs
 - **Pattern Engine**: Declarative YAML-driven detection across 14 languages with AST-first analysis and intelligent finding categorization
+- **🎯 Context-Aware Filtering (NEW)**: Reduce false positives by specifying your application type (`cli-tool`, `mcp-server`, `web-app`, `api-service`, `iac-only`, `library`, `batch-job`, `full`) via the `application_profile` parameter on analysis tools
 
 ### Pattern-Based Analysis Architecture
 
@@ -869,11 +870,14 @@ Analyze Infrastructure as Code (IaC) files for FedRAMP 20x compliance issues and
 - `file_type` (string): Type of IaC file - `"bicep"` or `"terraform"`
 - `file_path` (string): Path to the file being analyzed (for reporting)
 - `context` (string, optional): Additional context about the code (e.g., PR description)
+- `application_profile` (string, optional): Application type for context-aware filtering to reduce false positives. Supported profiles: `"cli-tool"`, `"mcp-server"`, `"web-app"`, `"api-service"`, `"iac-only"`, `"library"`, `"batch-job"`, `"full"` (default: no filtering)
 
 **Returns:**
 - **findings**: Array of compliance findings with requirement IDs, severity, descriptions, and recommendations
 - **summary**: Counts of high/medium/low priority issues and good practices
 - **pr_comment**: Formatted markdown suitable for GitHub/ADO PR comments
+- **application_context**: (when profile is set) Metadata about the active profile and capabilities
+- **context_filtered_count**: (when profile is set) Number of findings suppressed by context filtering
 
 **Supported Languages:**
 - **Bicep**: Azure Resource Manager templates
@@ -910,6 +914,7 @@ Analyze application code for FedRAMP 20x security compliance issues.
 - `language` (string): Programming language - `"python"`, `"csharp"`, `"java"`, `"typescript"`, or `"javascript"`
 - `file_path` (string): Path to the file being analyzed (for reporting)
 - `dependencies` (array, optional): List of project dependencies (e.g., `["flask==2.3.0", "requests==2.31.0"]`)
+- `application_profile` (string, optional): Application type for context-aware filtering. Same profiles as `analyze_infrastructure_code`.
 
 **Returns:**
 - **findings**: Array of security findings (same structure as infrastructure analysis)
@@ -953,6 +958,7 @@ Analyze CI/CD pipeline configurations for FedRAMP 20x DevSecOps compliance.
 - `code` (string): The pipeline configuration content (YAML/JSON)
 - `pipeline_type` (string): Type of pipeline - `"github-actions"`, `"azure-pipelines"`, `"gitlab-ci"`, or `"generic"`
 - `file_path` (string): Path to the pipeline file (for reporting)
+- `application_profile` (string, optional): Application type for context-aware filtering. Same profiles as `analyze_infrastructure_code`.
 
 **Returns:**
 - **findings**: Array of DevSecOps findings (same structure as code analysis)

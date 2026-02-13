@@ -5,6 +5,29 @@ All notable changes to the FedRAMP 20x MCP Server will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### 🎯 Context-Aware False Positive Reduction
+
+Adds an `application_profile` parameter to all code analysis tools, enabling users to specify their application type (CLI tool, MCP server, web app, etc.) to suppress irrelevant findings.
+
+### Added
+
+- **ApplicationContext Module** (`analyzers/application_context.py`): Capability-based context system with 8 predefined profiles (`cli-tool`, `mcp-server`, `web-app`, `api-service`, `iac-only`, `library`, `batch-job`, `full`)
+- **`application_profile` Parameter**: New optional parameter on `analyze_infrastructure_code`, `analyze_application_code`, and `analyze_cicd_pipeline` MCP tools
+- **FalsePositiveJudge**: New adversarial judge that validates context-aware filtering quality
+- **False Positive Adversarial Test Cases**: 7 new test cases covering CLI tool suppression, full profile preservation, backward compatibility, and unknown profile handling
+- **ApplicationContext Unit Tests**: 21 tests covering profiles, tag/family suppression, pattern integration, and serialization
+
+### Changed
+
+- **Pattern Engine**: `GenericPatternAnalyzer` now accepts `application_context` to pre-filter patterns by tags and families
+- **Analyzer Pipeline**: Context filtering threaded through `generic_adapter.py` → `pattern_tool_adapter.py` → `generic_analyzer.py`
+- **Traditional Analyzer Filtering**: Post-merge `_apply_context_filter()` suppresses traditional analyzer findings by keyword and family matching
+- **Evaluator Tool Registry**: Updated to support `application_profile` parameter for analyzer tools
+- **Test Runner**: `test_application_context.py` added to `run_all_tests.py`
+- **Pattern Schema V2 Docs**: Added Context-Aware Filtering section and Application Context Profiles table
+
 ## [1.2.0] - 2026-02-05
 
 ### 🔄 FedRAMP 20x v0.9.0-beta Support

@@ -7,6 +7,7 @@ Each KSI analyzer is self-contained with all language implementations.
 
 from .base import Finding, AnalysisResult, Severity, BaseAnalyzer
 from .ksi import BaseKSIAnalyzer, KSIAnalyzerFactory, get_factory
+from .application_context import ApplicationContext
 
 __all__ = [
     "Finding",
@@ -16,4 +17,5 @@ __all__ = [
     "BaseKSIAnalyzer",
     "KSIAnalyzerFactory",
     "get_factory",
+    "ApplicationContext",
 ]

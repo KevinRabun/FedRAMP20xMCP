@@ -12,6 +12,7 @@ from pathlib import Path
 
 from .base import AnalysisResult, Finding
 from .generic_analyzer import GenericPatternAnalyzer, PatternLoader, analyze_code
+from .application_context import ApplicationContext
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +50,8 @@ async def analyze_with_generic_analyzer(
     language: str,
     file_path: Optional[str] = None,
     families: Optional[List[str]] = None,
-    ksi_ids: Optional[List[str]] = None
+    ksi_ids: Optional[List[str]] = None,
+    application_context: Optional[ApplicationContext] = None
 ) -> AnalysisResult:
     """
     Analyze code using GenericPatternAnalyzer.
@@ -63,6 +65,7 @@ async def analyze_with_generic_analyzer(
         file_path: Optional file path for context
         families: Optional list of families to check (e.g., ['IAM', 'SCN'])
         ksi_ids: Optional list of specific KSI IDs to check
+        application_context: Optional ApplicationContext for filtering inapplicable findings
         
     Returns:
         AnalysisResult with findings from pattern matching
@@ -84,7 +87,8 @@ async def analyze_with_generic_analyzer(
             language=language,
             file_path=file_path or "",
             families=families,
-            ksi_ids=ksi_ids
+            ksi_ids=ksi_ids,
+            application_context=application_context
         )
         
         logger.debug(f"Generic analyzer found {len(result.findings)} findings")

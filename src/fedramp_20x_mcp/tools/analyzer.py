@@ -16,6 +16,7 @@ from ..analyzers.ksi.factory import get_factory as get_ksi_factory
 from ..analyzers.frr.factory import get_factory as get_frr_factory
 from ..analyzers import AnalysisResult, Finding, Severity
 from ..analyzers.pattern_tool_adapter import analyze_with_patterns, get_pattern_coverage
+from ..analyzers.application_context import ApplicationContext
 
 logger = logging.getLogger(__name__)
 
@@ -58,11 +59,62 @@ def _merge_findings(pattern_findings: list[Finding], traditional_findings: list[
     return merged
 
 
+def _apply_context_filter(findings: list[Finding], context: ApplicationContext) -> list[Finding]:
+    """
+    Filter findings based on application context to remove false positives.
+    
+    This is used as a post-merge filter for traditional analyzer findings that
+    don't go through the pattern engine's built-in context filtering.
+    
+    Uses keyword matching on finding titles and descriptions to detect
+    findings that relate to capabilities the application doesn't have.
+    
+    Args:
+        findings: List of findings to filter
+        context: ApplicationContext describing the application's capabilities
+        
+    Returns:
+        Filtered list of findings with inapplicable ones removed
+    """
+    suppressed_tags = context.get_suppressed_tags()
+    suppressed_families = context.get_suppressed_families()
+    
+    if not suppressed_tags and not suppressed_families:
+        return findings
+    
+    filtered = []
+    for finding in findings:
+        # Check if finding's pattern_id maps to a suppressed family
+        if finding.pattern_id and finding.requirement_id:
+            # Extract family from requirement_id like "KSI-IAM-01" -> "IAM"
+            parts = finding.requirement_id.split("-")
+            if len(parts) >= 2:
+                family = parts[1] if parts[0] in ("KSI", "FRR") else parts[0]
+                if family.upper() in suppressed_families:
+                    continue
+        
+        # Check if finding title/description contains suppressed keywords
+        finding_text = f"{finding.title or ''} {finding.description or ''}".lower()
+        skip = False
+        for tag in suppressed_tags:
+            # Match whole-ish words to avoid false suppression
+            tag_lower = tag.lower().replace("_", " ")
+            if tag_lower in finding_text:
+                skip = True
+                break
+        
+        if not skip:
+            filtered.append(finding)
+    
+    return filtered
+
+
 async def analyze_infrastructure_code_impl(
     code: str,
     file_type: str,
     file_path: Optional[str] = None,
-    context: Optional[str] = None
+    context: Optional[str] = None,
+    application_context: Optional[ApplicationContext] = None
 ) -> dict:
     """
     Analyze Infrastructure as Code for FedRAMP 20x compliance.
@@ -72,6 +124,9 @@ async def analyze_infrastructure_code_impl(
         file_type: Type of IaC file ("bicep" or "terraform")
         file_path: Optional path to the file being analyzed (for display purposes)
         context: Optional context about the changes (e.g., PR description)
+        application_context: Optional ApplicationContext for reducing false positives.
+                            Use ApplicationContext.from_string("cli-tool") for CLI tools,
+                            "mcp-server" for MCP servers, etc.
         
     Returns:
         Dictionary containing analysis results with findings and recommendations
@@ -98,7 +153,8 @@ async def analyze_infrastructure_code_impl(
         pattern_result = await analyze_with_patterns(
             code=code,
             language=file_type_lower,
-            file_path=file_path
+            file_path=file_path,
+            application_context=application_context
         )
         pattern_findings = pattern_result.findings
         logger.info(f"Pattern engine found {len(pattern_findings)} issues")
@@ -126,7 +182,15 @@ async def analyze_infrastructure_code_impl(
     
     # STEP 3: Merge and deduplicate findings
     all_findings = _merge_findings(pattern_findings, traditional_findings)
-    logger.info(f"Total unique findings after deduplication: {len(all_findings)}")
+    
+    # STEP 4: Apply application context filtering (post-merge)
+    filtered_count = 0
+    if application_context:
+        pre_filter = len(all_findings)
+        all_findings = _apply_context_filter(all_findings, application_context)
+        filtered_count = pre_filter - len(all_findings)
+    
+    logger.info(f"Total unique findings after deduplication: {len(all_findings)} (filtered {filtered_count} by context)")
     
     # Create aggregated result with hybrid metadata
     combined_result = AnalysisResult(
@@ -141,6 +205,11 @@ async def analyze_infrastructure_code_impl(
     output["traditional_findings_count"] = len(traditional_findings)
     output["total_findings"] = len(all_findings)
     output["pattern_coverage"] = await get_pattern_coverage()
+    
+    # Add application context metadata if provided
+    if application_context:
+        output["application_context"] = application_context.to_dict()
+        output["context_filtered_count"] = filtered_count
     
     # Add context if provided
     if context:
@@ -157,7 +226,8 @@ async def analyze_application_code_impl(
     code: str,
     language: str,
     file_path: Optional[str] = None,
-    dependencies: Optional[list[str]] = None
+    dependencies: Optional[list[str]] = None,
+    application_context: Optional[ApplicationContext] = None
 ) -> dict:
     """
     Analyze application code for FedRAMP 20x security compliance.
@@ -167,6 +237,9 @@ async def analyze_application_code_impl(
         language: Programming language ("python", "csharp", "java", "typescript", "javascript")
         file_path: Optional path to the file being analyzed
         dependencies: Optional list of dependencies/imports to check
+        application_context: Optional ApplicationContext for reducing false positives.
+                            Use ApplicationContext.from_string("cli-tool") for CLI tools,
+                            "mcp-server" for MCP servers, etc.
         
     Returns:
         Dictionary containing analysis results with findings and recommendations
@@ -199,7 +272,8 @@ async def analyze_application_code_impl(
         pattern_result = await analyze_with_patterns(
             code=code,
             language=language_normalized,
-            file_path=file_path
+            file_path=file_path,
+            application_context=application_context
         )
         pattern_findings = pattern_result.findings
         logger.info(f"Pattern engine found {len(pattern_findings)} issues")
@@ -227,7 +301,15 @@ async def analyze_application_code_impl(
     
     # STEP 3: Merge and deduplicate findings
     all_findings = _merge_findings(pattern_findings, traditional_findings)
-    logger.info(f"Total unique findings after deduplication: {len(all_findings)}")
+    
+    # STEP 4: Apply application context filtering (post-merge)
+    filtered_count = 0
+    if application_context:
+        pre_filter = len(all_findings)
+        all_findings = _apply_context_filter(all_findings, application_context)
+        filtered_count = pre_filter - len(all_findings)
+    
+    logger.info(f"Total unique findings after deduplication: {len(all_findings)} (filtered {filtered_count} by context)")
     
     # Create aggregated result with hybrid metadata
     combined_result = AnalysisResult(
@@ -243,6 +325,11 @@ async def analyze_application_code_impl(
     output["total_findings"] = len(all_findings)
     output["pattern_coverage"] = await get_pattern_coverage()
     
+    # Add application context metadata if provided
+    if application_context:
+        output["application_context"] = application_context.to_dict()
+        output["context_filtered_count"] = filtered_count
+    
     # Add dependencies info if provided
     if dependencies:
         output["dependencies_checked"] = dependencies
@@ -257,7 +344,8 @@ async def analyze_application_code_impl(
 async def analyze_cicd_pipeline_impl(
     code: str,
     pipeline_type: str,
-    file_path: Optional[str] = None
+    file_path: Optional[str] = None,
+    application_context: Optional[ApplicationContext] = None
 ) -> dict:
     """
     Analyze CI/CD pipeline configuration for FedRAMP 20x DevSecOps compliance.
@@ -266,6 +354,7 @@ async def analyze_cicd_pipeline_impl(
         code: The pipeline configuration content (YAML/JSON)
         pipeline_type: Type of pipeline ("github-actions", "azure-pipelines", "gitlab-ci", or "generic")
         file_path: Optional path to the pipeline file
+        application_context: Optional ApplicationContext for reducing false positives
         
     Returns:
         Dictionary containing analysis results with findings and recommendations
@@ -296,7 +385,8 @@ async def analyze_cicd_pipeline_impl(
         pattern_result = await analyze_with_patterns(
             code=code,
             language=language_normalized,
-            file_path=file_path
+            file_path=file_path,
+            application_context=application_context
         )
         pattern_findings = pattern_result.findings
         logger.info(f"Pattern engine found {len(pattern_findings)} issues")
@@ -324,7 +414,15 @@ async def analyze_cicd_pipeline_impl(
     
     # STEP 3: Merge and deduplicate findings
     all_findings = _merge_findings(pattern_findings, traditional_findings)
-    logger.info(f"Total unique findings after deduplication: {len(all_findings)}")
+    
+    # STEP 4: Apply application context filtering (post-merge)
+    filtered_count = 0
+    if application_context:
+        pre_filter = len(all_findings)
+        all_findings = _apply_context_filter(all_findings, application_context)
+        filtered_count = pre_filter - len(all_findings)
+    
+    logger.info(f"Total unique findings after deduplication: {len(all_findings)} (filtered {filtered_count} by context)")
     
     # Create aggregated result with hybrid metadata
     combined_result = AnalysisResult(
@@ -340,6 +438,11 @@ async def analyze_cicd_pipeline_impl(
     output["traditional_findings_count"] = len(traditional_findings)
     output["total_findings"] = len(all_findings)
     output["pattern_coverage"] = await get_pattern_coverage()
+    
+    # Add application context metadata if provided
+    if application_context:
+        output["application_context"] = application_context.to_dict()
+        output["context_filtered_count"] = filtered_count
     
     # Add formatted recommendations
     if combined_result.findings:
