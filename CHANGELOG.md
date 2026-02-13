@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-02-13
+
 ### 🎯 Context-Aware False Positive Reduction
 
 Adds an `application_profile` parameter to all code analysis tools, enabling users to specify their application type (CLI tool, MCP server, web app, etc.) to suppress irrelevant findings.
