@@ -380,9 +380,30 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
     
     # Code analyzer tools
     @mcp.tool()
-    async def analyze_infrastructure_code(code: str, file_type: str, file_path: Optional[str] = None, context: Optional[str] = None) -> dict:
-        """Analyze Infrastructure as Code (Bicep/Terraform) for FedRAMP 20x compliance issues."""
-        return await analyzer.analyze_infrastructure_code_impl(code, file_type, file_path, context)
+    async def analyze_infrastructure_code(
+        code: str,
+        file_type: str,
+        file_path: Optional[str] = None,
+        context: Optional[str] = None,
+        application_profile: Optional[str] = None
+    ) -> dict:
+        """
+        Analyze Infrastructure as Code (Bicep/Terraform) for FedRAMP 20x compliance issues.
+        
+        Args:
+            code: The IaC code content to analyze
+            file_type: Type of IaC file ("bicep" or "terraform")
+            file_path: Optional path to the file being analyzed
+            context: Optional context about the changes (e.g., PR description)
+            application_profile: Optional application profile to reduce false positives.
+                Supported profiles: "cli-tool", "mcp-server", "web-app", "api-service",
+                "iac-only", "library", "batch-job", "full" (default).
+                Example: Use "cli-tool" for a local CLI tool that reads YAML files
+                to suppress irrelevant MFA, RBAC, HSTS, and database findings.
+        """
+        from ..analyzers.application_context import ApplicationContext
+        app_ctx = ApplicationContext.from_string(application_profile) if application_profile else None
+        return await analyzer.analyze_infrastructure_code_impl(code, file_type, file_path, context, app_ctx)
     
     @mcp.tool()
     async def validate_fedramp_config(code: str, file_type: str, strict_mode: bool = True) -> dict:
@@ -413,14 +434,52 @@ def register_tools(mcp: "FastMCP", data_loader: "FedRAMPDataLoader"):
         return await validation.validate_fedramp_config_impl(code, file_type, strict_mode)
     
     @mcp.tool()
-    async def analyze_application_code(code: str, language: str, file_path: Optional[str] = None, dependencies: Optional[list[str]] = None) -> dict:
-        """Analyze application code (Python) for FedRAMP 20x security compliance issues."""
-        return await analyzer.analyze_application_code_impl(code, language, file_path, dependencies)
+    async def analyze_application_code(
+        code: str,
+        language: str,
+        file_path: Optional[str] = None,
+        dependencies: Optional[list[str]] = None,
+        application_profile: Optional[str] = None
+    ) -> dict:
+        """
+        Analyze application code for FedRAMP 20x security compliance issues.
+        
+        Args:
+            code: The application code content to analyze
+            language: Programming language ("python", "csharp", "java", "typescript", "javascript")
+            file_path: Optional path to the file being analyzed
+            dependencies: Optional list of dependencies/imports to check
+            application_profile: Optional application profile to reduce false positives.
+                Supported profiles: "cli-tool", "mcp-server", "web-app", "api-service",
+                "iac-only", "library", "batch-job", "full" (default).
+                Example: Use "cli-tool" for a local CLI tool that reads YAML files
+                to suppress irrelevant MFA, RBAC, HSTS, and database findings.
+        """
+        from ..analyzers.application_context import ApplicationContext
+        app_ctx = ApplicationContext.from_string(application_profile) if application_profile else None
+        return await analyzer.analyze_application_code_impl(code, language, file_path, dependencies, app_ctx)
     
     @mcp.tool()
-    async def analyze_cicd_pipeline(code: str, pipeline_type: str, file_path: Optional[str] = None) -> dict:
-        """Analyze CI/CD pipeline configuration (GitHub Actions/Azure Pipelines/GitLab CI) for FedRAMP 20x DevSecOps compliance."""
-        return await analyzer.analyze_cicd_pipeline_impl(code, pipeline_type, file_path)
+    async def analyze_cicd_pipeline(
+        code: str,
+        pipeline_type: str,
+        file_path: Optional[str] = None,
+        application_profile: Optional[str] = None
+    ) -> dict:
+        """
+        Analyze CI/CD pipeline configuration for FedRAMP 20x DevSecOps compliance.
+        
+        Args:
+            code: The pipeline configuration content (YAML/JSON)
+            pipeline_type: Type of pipeline ("github-actions", "azure-pipelines", "gitlab-ci", or "generic")
+            file_path: Optional path to the pipeline file
+            application_profile: Optional application profile to reduce false positives.
+                Supported profiles: "cli-tool", "mcp-server", "web-app", "api-service",
+                "iac-only", "library", "batch-job", "full" (default).
+        """
+        from ..analyzers.application_context import ApplicationContext
+        app_ctx = ApplicationContext.from_string(application_profile) if application_profile else None
+        return await analyzer.analyze_cicd_pipeline_impl(code, pipeline_type, file_path, app_ctx)
     
     # KSI Coverage Audit tools
     @mcp.tool()

@@ -13,6 +13,7 @@ from dataclasses import dataclass
 
 from .base import Finding, AnalysisResult, Severity
 from .ast_utils import ASTParser, CodeLanguage
+from .application_context import ApplicationContext
 
 
 @dataclass
@@ -200,7 +201,8 @@ class GenericPatternAnalyzer:
         language: str,
         file_path: str = "",
         families: Optional[List[str]] = None,
-        ksi_ids: Optional[List[str]] = None
+        ksi_ids: Optional[List[str]] = None,
+        application_context: Optional[ApplicationContext] = None
     ) -> AnalysisResult:
         """
         Analyze code using pattern matching.
@@ -211,14 +213,17 @@ class GenericPatternAnalyzer:
             file_path: Optional file path for context
             families: Optional list of families to check (e.g., ['IAM', 'SCN'])
             ksi_ids: Optional list of specific KSI IDs to check
+            application_context: Optional ApplicationContext for filtering inapplicable findings.
+                                 Use predefined profiles like ApplicationContext.cli_tool() or
+                                 ApplicationContext.from_string("cli-tool") to reduce false positives.
             
         Returns:
             AnalysisResult with findings
         """
         findings: List[Finding] = []
         
-        # Get applicable patterns
-        patterns = self._get_applicable_patterns(language, families, ksi_ids)
+        # Get applicable patterns (filtered by context if provided)
+        patterns = self._get_applicable_patterns(language, families, ksi_ids, application_context)
         
         # Parse code with tree-sitter if available
         tree = None
@@ -498,9 +503,10 @@ class GenericPatternAnalyzer:
         self,
         language: str,
         families: Optional[List[str]],
-        ksi_ids: Optional[List[str]]
+        ksi_ids: Optional[List[str]],
+        application_context: Optional[ApplicationContext] = None
     ) -> List[Pattern]:
-        """Get patterns applicable to this analysis."""
+        """Get patterns applicable to this analysis, filtered by application context."""
         if ksi_ids:
             # Get specific patterns by KSI ID
             patterns = []
@@ -509,17 +515,23 @@ class GenericPatternAnalyzer:
                 for pattern in self.pattern_loader.get_all_patterns():
                     if ksi_id in pattern.related_ksis:
                         patterns.append(pattern)
-            return patterns
-        
-        if families:
+        elif families:
             # Get patterns for specific families
             patterns = []
             for family in families:
                 patterns.extend(self.pattern_loader.get_patterns_for_family(family))
-            return patterns
+        else:
+            # Get all patterns for this language
+            patterns = self.pattern_loader.get_patterns_for_language(language)
         
-        # Get all patterns for this language
-        return self.pattern_loader.get_patterns_for_language(language)
+        # Apply application context filtering to reduce false positives
+        if application_context:
+            patterns = [
+                p for p in patterns
+                if application_context.should_include_pattern(p.tags, p.family)
+            ]
+        
+        return patterns
     
     def _check_pattern(
         self,
@@ -856,7 +868,8 @@ def analyze_code(
     language: str,
     file_path: str = "",
     families: Optional[List[str]] = None,
-    ksi_ids: Optional[List[str]] = None
+    ksi_ids: Optional[List[str]] = None,
+    application_context: Optional[ApplicationContext] = None
 ) -> AnalysisResult:
     """
     Analyze code using generic pattern analyzer.
@@ -869,9 +882,10 @@ def analyze_code(
         file_path: Optional file path
         families: Optional list of families to check
         ksi_ids: Optional list of KSI IDs to check
+        application_context: Optional ApplicationContext for filtering inapplicable findings
         
     Returns:
         AnalysisResult with findings
     """
     analyzer = GenericPatternAnalyzer()
-    return analyzer.analyze(code, language, file_path, families, ksi_ids)
+    return analyzer.analyze(code, language, file_path, families, ksi_ids, application_context)

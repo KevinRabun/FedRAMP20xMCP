@@ -22,6 +22,7 @@ TEST_FILES = [
     "test_frr_analyzers.py",
     "test_mcp_tools.py",
     "test_code_enrichment.py",
+    "test_application_context.py",  # ApplicationContext for reducing false positives
     "test_adversarial_judges.py",  # CRITICAL: Adversarial tests for quality/accuracy
 ]
 

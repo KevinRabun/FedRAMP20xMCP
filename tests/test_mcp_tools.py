@@ -386,6 +386,82 @@ steps:
         result = await analyzer.analyze_cicd_pipeline_impl(code, "azure-pipelines", "")
         assert result is not None
         assert isinstance(result, dict)
+    
+    # =========================================================================
+    # ApplicationContext / application_profile tests
+    # =========================================================================
+    
+    @pytest.mark.asyncio
+    async def test_analyze_application_code_with_cli_profile(self, data_loader):
+        """Test that CLI profile reduces false positives for CLI tools."""
+        from fedramp_20x_mcp.analyzers.application_context import ApplicationContext
+        
+        code = """
+import argparse
+import yaml
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('input')
+    args = parser.parse_args()
+    with open(args.input) as f:
+        data = yaml.safe_load(f)
+    print(data)
+
+if __name__ == '__main__':
+    main()
+"""
+        ctx = ApplicationContext.from_string("cli-tool")
+        result = await analyzer.analyze_application_code_impl(
+            code, "python", None, None, application_context=ctx
+        )
+        assert result is not None
+        assert isinstance(result, dict)
+        # CLI profile should include context metadata
+        assert "application_context" in result
+        assert "cli" in result["application_context"]["description"].lower()
+    
+    @pytest.mark.asyncio
+    async def test_analyze_application_code_with_full_profile(self, data_loader):
+        """Test that 'full' profile preserves all findings."""
+        from fedramp_20x_mcp.analyzers.application_context import ApplicationContext
+        
+        code = "from flask import Flask\napp = Flask(__name__)"
+        ctx = ApplicationContext.from_string("full")
+        result = await analyzer.analyze_application_code_impl(
+            code, "python", None, None, application_context=ctx
+        )
+        assert result is not None
+        assert isinstance(result, dict)
+        assert "application_context" in result
+        # Full profile should not filter anything
+        assert result.get("context_filtered_count", 0) == 0
+    
+    @pytest.mark.asyncio
+    async def test_analyze_infrastructure_code_with_profile(self, data_loader):
+        """Test infrastructure analysis accepts application_context."""
+        from fedramp_20x_mcp.analyzers.application_context import ApplicationContext
+        
+        code = "resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {}"
+        ctx = ApplicationContext.from_string("iac-only")
+        result = await analyzer.analyze_infrastructure_code_impl(
+            code, "bicep", "", "", application_context=ctx
+        )
+        assert result is not None
+        assert isinstance(result, dict)
+        assert "application_context" in result
+    
+    @pytest.mark.asyncio
+    async def test_analyze_with_none_context(self, data_loader):
+        """Test that None context works (backward compatibility)."""
+        code = "import os\nprint(os.environ.get('SECRET'))"
+        result = await analyzer.analyze_application_code_impl(
+            code, "python", None, None, application_context=None
+        )
+        assert result is not None
+        assert isinstance(result, dict)
+        # No context means no context metadata
+        assert "application_context" not in result or result["application_context"] is None
 
 
 class TestAuditTools:

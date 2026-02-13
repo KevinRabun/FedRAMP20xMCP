@@ -70,6 +70,17 @@ addopts = [
     "--strict-markers",
     "--strict-config",
 ]
+markers = [
+    "critical: Tests that must pass for build gate",
+    "security: Security-related tests",
+    "adversarial: Adversarial testing for quality/accuracy",
+    "hallucination: Tests for fabricated information",
+    "misinformation: Tests for confused/mixed-up definitions",
+    "edge_case: Tests for boundary conditions and unusual inputs",
+    "injection: Tests for prompt/command injection resistance",
+    "robustness: Tests for stability with malformed inputs",
+    "false_positive: Tests for context-aware false positive reduction",
+]
 
 [tool.coverage.run]
 source = ["src"]

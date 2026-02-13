@@ -44,6 +44,7 @@ from .adversarial_judges import (
     EdgeCaseJudge,
     InjectionJudge,
     RobustnessJudge,
+    FalsePositiveJudge,
     AdversarialCategory,
 )
 from .adversarial_test_cases import (
@@ -91,6 +92,7 @@ class MCPServerEvaluator:
             AdversarialCategory.EDGE_CASE: EdgeCaseJudge(),
             AdversarialCategory.INJECTION: InjectionJudge(),
             AdversarialCategory.ROBUSTNESS: RobustnessJudge(),
+            AdversarialCategory.FALSE_POSITIVE: FalsePositiveJudge(),
         }
         
         # Tool implementations will be loaded lazily
@@ -113,6 +115,14 @@ class MCPServerEvaluator:
             export, enhancements, evidence, analyzer, audit,
             security, ksi_status, validation
         )
+        from fedramp_20x_mcp.analyzers.application_context import ApplicationContext
+        
+        def _resolve_application_context(params):
+            """Resolve application_context from params (string profile or None)."""
+            profile = params.get("application_profile")
+            if profile:
+                return ApplicationContext.from_string(profile)
+            return None
         
         # Initialize data loader
         self._data_loader = FedRAMPDataLoader()
@@ -140,12 +150,18 @@ class MCPServerEvaluator:
                 p["frr_id"], p["code"], p["language"], p.get("file_path"), self._data_loader
             ),
             
-            # Analyzer tools
+            # Analyzer tools (with application_context support for false positive reduction)
             "analyze_infrastructure_code": lambda **p: analyzer.analyze_infrastructure_code_impl(
-                p["code"], p["file_type"], p.get("file_path"), p.get("context")
+                p["code"], p["file_type"], p.get("file_path"), p.get("context"),
+                application_context=_resolve_application_context(p)
             ),
             "analyze_application_code": lambda **p: analyzer.analyze_application_code_impl(
-                p["code"], p["language"], p.get("file_path"), p.get("dependencies")
+                p["code"], p["language"], p.get("file_path"), p.get("dependencies"),
+                application_context=_resolve_application_context(p)
+            ),
+            "analyze_cicd_pipeline": lambda **p: analyzer.analyze_cicd_pipeline_impl(
+                p["code"], p["pipeline_type"], p.get("file_path"),
+                application_context=_resolve_application_context(p)
             ),
         }
         

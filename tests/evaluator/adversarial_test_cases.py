@@ -438,6 +438,184 @@ CROSS_CUTTING_ADVERSARIAL_CASES = [
 
 
 # =============================================================================
+# FALSE POSITIVE TEST CASES
+# Test context-aware filtering to reduce false positives for different
+# application profiles (CLI tools, MCP servers, libraries, etc.)
+# =============================================================================
+
+# Sample code for a CLI tool that reads YAML files - no auth, no HTTP, no DB
+_CLI_TOOL_CODE = """
+import argparse
+import yaml
+import sys
+import os
+
+def main():
+    parser = argparse.ArgumentParser(description='Process YAML config')
+    parser.add_argument('input', help='Input YAML file')
+    parser.add_argument('--output', help='Output file')
+    args = parser.parse_args()
+    
+    with open(args.input, 'r') as f:
+        config = yaml.safe_load(f)
+    
+    result = process_config(config)
+    
+    if args.output:
+        with open(args.output, 'w') as f:
+            yaml.dump(result, f)
+    else:
+        print(yaml.dump(result))
+
+def process_config(config):
+    return {k: v for k, v in config.items() if v is not None}
+
+if __name__ == '__main__':
+    main()
+"""
+
+# Sample code for a web app with auth, HTTP, and database
+_WEB_APP_CODE = """
+from flask import Flask, request, session, redirect
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import check_password_hash
+import os
+
+app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY')
+db = SQLAlchemy(app)
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True)
+    password_hash = db.Column(db.String(120))
+    email = db.Column(db.String(120))
+
+@app.route('/login', methods=['POST'])
+def login():
+    user = User.query.filter_by(username=request.form['username']).first()
+    if user and check_password_hash(user.password_hash, request.form['password']):
+        session['user_id'] = user.id
+        return redirect('/dashboard')
+    return 'Invalid credentials', 401
+
+@app.route('/users')
+def list_users():
+    query = "SELECT * FROM users WHERE role = '" + request.args.get('role') + "'"
+    return db.engine.execute(query)
+"""
+
+FALSE_POSITIVE_TEST_CASES = [
+    # CLI tool should NOT get IAM/MFA/RBAC findings
+    EvaluationTestCase(
+        id="FP-CLI-IAM-001",
+        category=TestCaseCategory.ANALYSIS_QUALITY,
+        importance=Importance.HIGH,
+        tool_name="analyze_application_code",
+        tool_params={
+            "code": _CLI_TOOL_CODE,
+            "language": "python",
+            "application_profile": "cli-tool",
+        },
+        description="CLI tool should not get IAM/MFA/authentication findings",
+        expected_not_contains=["MFA", "multi-factor", "RBAC", "role-based access"],
+        tags=["adversarial", "false_positive", "expects_reduction"],
+    ),
+    # CLI tool should NOT get HSTS/TLS findings
+    EvaluationTestCase(
+        id="FP-CLI-TLS-001",
+        category=TestCaseCategory.ANALYSIS_QUALITY,
+        importance=Importance.HIGH,
+        tool_name="analyze_application_code",
+        tool_params={
+            "code": _CLI_TOOL_CODE,
+            "language": "python",
+            "application_profile": "cli-tool",
+        },
+        description="CLI tool should not get HSTS/TLS/HTTP security findings",
+        expected_not_contains=["HSTS", "TLS", "HTTPS", "transport layer"],
+        tags=["adversarial", "false_positive", "expects_reduction"],
+    ),
+    # CLI tool should NOT get database/SQL injection findings
+    EvaluationTestCase(
+        id="FP-CLI-DB-001",
+        category=TestCaseCategory.ANALYSIS_QUALITY,
+        importance=Importance.HIGH,
+        tool_name="analyze_application_code",
+        tool_params={
+            "code": _CLI_TOOL_CODE,
+            "language": "python",
+            "application_profile": "cli-tool",
+        },
+        description="CLI tool should not get database/SQL injection findings",
+        expected_not_contains=["SQL injection", "database sanitization", "parameterized queries"],
+        tags=["adversarial", "false_positive", "expects_reduction"],
+    ),
+    # 'full' profile should preserve ALL findings (no false negatives)
+    EvaluationTestCase(
+        id="FP-FULL-PRESERVE-001",
+        category=TestCaseCategory.ANALYSIS_QUALITY,
+        importance=Importance.CRITICAL,
+        tool_name="analyze_application_code",
+        tool_params={
+            "code": _WEB_APP_CODE,
+            "language": "python",
+            "application_profile": "full",
+        },
+        description="'full' profile must preserve all findings - no false negatives",
+        # Web app with real issues should still have findings
+        expected_contains=["finding"],
+        tags=["adversarial", "false_positive", "expects_preserved"],
+    ),
+    # No profile = full analysis (backward compatibility)
+    EvaluationTestCase(
+        id="FP-NOCONTEXT-001",
+        category=TestCaseCategory.ANALYSIS_QUALITY,
+        importance=Importance.HIGH,
+        tool_name="analyze_application_code",
+        tool_params={
+            "code": _WEB_APP_CODE,
+            "language": "python",
+            # No application_profile - should behave like 'full'
+        },
+        description="No application_profile should run full analysis (backward compatible)",
+        expected_contains=["finding"],
+        tags=["adversarial", "false_positive", "backward_compat"],
+    ),
+    # MCP server profile should suppress HTTP/TLS but keep other findings
+    EvaluationTestCase(
+        id="FP-MCP-001",
+        category=TestCaseCategory.ANALYSIS_QUALITY,
+        importance=Importance.MEDIUM,
+        tool_name="analyze_application_code",
+        tool_params={
+            "code": _CLI_TOOL_CODE,
+            "language": "python",
+            "application_profile": "mcp-server",
+        },
+        description="MCP server profile should suppress HTTP but keep relevant findings",
+        expected_not_contains=["HSTS", "TLS"],
+        tags=["adversarial", "false_positive", "expects_reduction"],
+    ),
+    # Invalid/unknown profile should fall back gracefully (not crash)
+    EvaluationTestCase(
+        id="FP-UNKNOWN-001",
+        category=TestCaseCategory.ANALYSIS_QUALITY,
+        importance=Importance.HIGH,
+        tool_name="analyze_application_code",
+        tool_params={
+            "code": _CLI_TOOL_CODE,
+            "language": "python",
+            "application_profile": "unknown-profile-xyz",
+        },
+        description="Unknown profile should fall back to full analysis, not crash",
+        expected_not_contains=["Traceback", "KeyError", "ValueError"],
+        tags=["adversarial", "false_positive", "edge_case"],
+    ),
+]
+
+
+# =============================================================================
 # Aggregate all adversarial test cases
 # =============================================================================
 
@@ -447,7 +625,8 @@ ALL_ADVERSARIAL_TEST_CASES = (
     EDGE_CASE_TEST_CASES +
     INJECTION_TEST_CASES +
     ROBUSTNESS_TEST_CASES +
-    CROSS_CUTTING_ADVERSARIAL_CASES
+    CROSS_CUTTING_ADVERSARIAL_CASES +
+    FALSE_POSITIVE_TEST_CASES
 )
 
 # Critical adversarial tests (must pass for build)

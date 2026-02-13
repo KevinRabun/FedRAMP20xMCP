@@ -16,6 +16,7 @@ from .generic_adapter import (
     get_patterns_for_requirement,
     validate_pattern_coverage
 )
+from .application_context import ApplicationContext
 
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,8 @@ async def analyze_with_patterns(
     language: str,
     file_path: Optional[str] = None,
     requirement_id: Optional[str] = None,
-    family: Optional[str] = None
+    family: Optional[str] = None,
+    application_context: Optional[ApplicationContext] = None
 ) -> AnalysisResult:
     """
     Analyze code using pattern engine (GenericPatternAnalyzer).
@@ -37,6 +39,7 @@ async def analyze_with_patterns(
         file_path: Optional file path for context
         requirement_id: Optional specific requirement to check (KSI or FRR ID)
         family: Optional family filter (IAM, MLA, VDR, etc.)
+        application_context: Optional ApplicationContext for filtering inapplicable findings
         
     Returns:
         AnalysisResult with findings from pattern engine
@@ -50,7 +53,8 @@ async def analyze_with_patterns(
         language=language,
         file_path=file_path,
         families=families,
-        ksi_ids=ksi_ids
+        ksi_ids=ksi_ids,
+        application_context=application_context
     )
 
 
