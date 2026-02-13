@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-02-13
+
 ### 🎯 Context-Aware False Positive Reduction
 
-Adds an `application_profile` parameter to all code analysis tools, enabling users to specify their application type (CLI tool, MCP server, web app, etc.) to suppress irrelevant findings.
+Adds an `application_profile` parameter to all code analysis tools, enabling users to specify their application type (CLI tool, MCP server, web app, etc.) to suppress irrelevant findings. A CLI tool analyzing script no longer gets flagged for missing MFA, TLS headers, or database encryption it doesn't use.
 
 ### Added
 
@@ -24,9 +26,14 @@ Adds an `application_profile` parameter to all code analysis tools, enabling use
 - **Pattern Engine**: `GenericPatternAnalyzer` now accepts `application_context` to pre-filter patterns by tags and families
 - **Analyzer Pipeline**: Context filtering threaded through `generic_adapter.py` → `pattern_tool_adapter.py` → `generic_analyzer.py`
 - **Traditional Analyzer Filtering**: Post-merge `_apply_context_filter()` suppresses traditional analyzer findings by keyword and family matching
-- **Evaluator Tool Registry**: Updated to support `application_profile` parameter for analyzer tools
+- **Evaluator Tool Registry**: Updated to support `application_profile` parameter for all analyzer tools including `analyze_cicd_pipeline`
 - **Test Runner**: `test_application_context.py` added to `run_all_tests.py`
 - **Pattern Schema V2 Docs**: Added Context-Aware Filtering section and Application Context Profiles table
+
+### Fixed
+
+- **Tag normalization**: Pattern YAML tags using hyphens (e.g., `security-headers`) now correctly match `CAPABILITY_TAG_MAP` entries using underscores
+- **Unused imports/variables**: Cleaned up `test_application_context.py` and `FalsePositiveJudge`
 
 ## [1.2.0] - 2026-02-05
 
