@@ -175,9 +175,9 @@ class ApplicationContext:
         # Check tag-level suppression
         suppressed_tags = self.get_suppressed_tags()
         if suppressed_tags and pattern_tags:
-            # Normalize tags for comparison
-            normalized_pattern_tags = {str(t).lower().replace(" ", "_") for t in pattern_tags}
-            normalized_suppressed = {str(t).lower().replace(" ", "_") for t in suppressed_tags}
+            # Normalize tags for comparison (handle hyphens, spaces, underscores)
+            normalized_pattern_tags = {str(t).lower().replace(" ", "_").replace("-", "_") for t in pattern_tags}
+            normalized_suppressed = {str(t).lower().replace(" ", "_").replace("-", "_") for t in suppressed_tags}
             if normalized_pattern_tags & normalized_suppressed:
                 return False
         

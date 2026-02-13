@@ -854,7 +854,7 @@ class FalsePositiveJudge(BaseAdversarialJudge):
         profile = test_case.tool_params.get("application_profile", "")
         expects_reduction = "expects_reduction" in (test_case.tags or [])
         expects_preserved = "expects_preserved" in (test_case.tags or [])
-        suppressed_categories = test_case.metadata.get("suppressed_categories", []) if hasattr(test_case, 'metadata') and test_case.metadata else []
+
         
         # Check 1: Context metadata should be present when profile is set
         if profile and not self._has_context_metadata(actual_result):
@@ -863,7 +863,6 @@ class FalsePositiveJudge(BaseAdversarialJudge):
         
         # Check 2: If expects_reduction, verify findings are reduced
         if expects_reduction:
-            finding_count = self._count_findings(actual_result)
             if isinstance(actual_result, dict):
                 filtered_count = actual_result.get("context_filtered_count", 0)
                 if filtered_count == 0:

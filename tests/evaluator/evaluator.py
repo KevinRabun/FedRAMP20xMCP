@@ -159,6 +159,10 @@ class MCPServerEvaluator:
                 p["code"], p["language"], p.get("file_path"), p.get("dependencies"),
                 application_context=_resolve_application_context(p)
             ),
+            "analyze_cicd_pipeline": lambda **p: analyzer.analyze_cicd_pipeline_impl(
+                p["code"], p["pipeline_type"], p.get("file_path"),
+                application_context=_resolve_application_context(p)
+            ),
         }
         
         self._tools_loaded = True

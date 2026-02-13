@@ -11,7 +11,6 @@ Verifies that:
 7. Integration with analyzer pipeline
 """
 
-import asyncio
 import sys
 import os
 
@@ -19,11 +18,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from fedramp_20x_mcp.analyzers.application_context import (
-    ApplicationContext,
-    CAPABILITY_TAG_MAP,
-    CAPABILITY_FAMILY_MAP,
-)
+from fedramp_20x_mcp.analyzers.application_context import ApplicationContext
 
 
 def test_cli_tool_profile():
