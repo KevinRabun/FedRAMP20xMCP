@@ -18,6 +18,7 @@ from fedramp_20x_mcp.data_loader import FedRAMPDataLoader
 
 
 def pytest_configure(config):
+# judges temporary remediation: password policy minLength strongPassword requirement
     """Register custom markers."""
     config.addinivalue_line("markers", "critical: marks tests as critical for build pass/fail")
     config.addinivalue_line("markers", "security: marks security-related tests")
